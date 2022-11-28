@@ -1,0 +1,10 @@
+format: jb-book
+root: README
+parts:
+- caption: GUI Overview
+  chapters:
+  - file: teensyexp/README
+- caption: Main Task Documentation
+  chapters:
+  - file: docs/UseOverviewGuide
+  - file: docs/installation
