@@ -22,9 +22,11 @@ import inspect
 import threading
 import datetime
 import time
-from distutils.util import strtobool
-from teensy import Teensy
+from pathlib import Path
 
+from distutils.util import strtobool
+from teensyexp.teensy import Teensy
+from teensyexp.helpers import process_config
 
 class TeensyExperimentGUI(object):
     """
@@ -45,10 +47,9 @@ class TeensyExperimentGUI(object):
         self.task_params = None
         self.task_module = None
 
-        if not os.path.isdir(self._get_default_path()):
-            os.mkdir(self._get_default_path())
-        if not os.path.isdir(os.path.dirname(self.get_setup_file_name(''))):
-            os.mkdir(os.path.normpath(self._get_default_path() + '/cfg'))
+        path = self._get_default_path()
+        if not os.path.isdir(path):
+            os.makedirs(path, exist_ok = False)
 
         ### load configuration from json file
         self.setup_list = self.get_setup_list()  # gui element
@@ -62,17 +63,25 @@ class TeensyExperimentGUI(object):
     def _get_default_path(self):
         """
             :priority: helpers
-                This method finds the '/Documents/teensyexp' folder in the host FS
-            :requirements: '/Documents/teensyexp' folder in the home directory
-            :raises: TODO file not found
-            :return: normalized path to the teensyexp folder
+                This method finds the path to configs global folder précised in the local config_path.json file
+            :return: normalized path to the config folder
             :rtype: string
          """
-        if sys.platform in ["linux", "darwin"]:
-            home_folder = os.environ['HOME']
+        config_path = Path("config_path.json")
+        current_dir = Path.cwd()
+        config_path = current_dir.joinpath(config_path)  # default class constructor input
+        config_dict = process_config(config_path)
+        if config_dict:
+            default_path = Path(config_dict["config_path"]).resolve()
         else:
-            home_folder = os.environ['USERPROFILE']
-        return os.path.normpath(home_folder + '/Documents/teensyexp')
+            default_path = current_dir.joinpath(Path("vr4mice/cfg"))
+            #if sys.platform in ["linux", "darwin"]:
+            #    home_folder = os.environ['HOME']
+            #else:
+            #    home_folder = os.environ['USERPROFILE']
+            #name = "/Documents/vr4mice/cfg"
+            #default_path = Path(home_folder).joinpath(name)
+        return default_path
 
     def get_setup_file_name(self, name=''):
         """
@@ -80,19 +89,17 @@ class TeensyExperimentGUI(object):
                 This method finds the config .json file in the host FS
             :param name: name of the config file without extension, default = ""
             :type name: string
-            :requirements: config .json file placed in the '/Documents/teensyexp/cfg/' folder in the home directory
-            :raises: TODO file not found
+            :requirements: config .json file placed in the folder precised in the local config file
             :return: normalized path to the config file
             :rtype: string
         """
-        return os.path.normpath(self._get_default_path() + '/cfg/' + name + '.json')
+        name += ".json"
+        return Path(self._get_default_path()).joinpath(name)
 
     def get_setup_list(self):
         """
             :priority: helpers
                 This method lists all config files from the main config parent directory
-            :requirements: initial config file placed in the '/Documents/teensyexp/cfg/' folder in the home directory
-            :raises: TODO file not found
             :return: list of files without extensions (potential config files)
             :rtype: list
         """
@@ -109,7 +116,6 @@ class TeensyExperimentGUI(object):
                 it also updates GUI elements with new config info.
             :param name: name of the config file without extension (name - not path!), default = None
             :type name: string
-            :requirements: initial config file placed in the '/Documents/teensyexp/cfg/' folder in the home directory
             :raises: TODO file not found
             :return: initialized setup structure
             :rtype: dictionary
@@ -220,7 +226,6 @@ class TeensyExperimentGUI(object):
                 This method deletes the setup file from file system (attention! all information will be lost)
             :param name: name of the config file without extension (name - not path!), default = None
             :type name: string
-            :requirements: initial config file placed in the '/Documents/teensyexp/cfg/' folder in the home directory
             :raises: TODO file not found
         """
         if name is None:
@@ -244,7 +249,6 @@ class TeensyExperimentGUI(object):
                 This method dynamically loads python scripts (package) that corresponds to the tasks to execute
             :param task_dir: the path to the folder that contains new tasks package
             :type task_dir: string
-            :requirements: initial config file placed in the '/Documents/teensyexp/cfg/' folder in the home directory
             :raises AttributeError: Failed to load tasks from directory
         """
         if task_dir:

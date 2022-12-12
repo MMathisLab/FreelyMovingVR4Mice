@@ -4,18 +4,17 @@
 import json
 import logging
 from pathlib import Path
+logging.getLogger().setLevel(logging.INFO)
 
 def process_config(config_file_path: Path) -> dict:
     """
-        Function that processes the task_config file and verifies its content
+        Function that processes the config file and verifies its content
 
-        Example of json task_config file:
+        Example of json config file:
 
         config.json
         {
-            "model_absolute_path": "/home/user/Models/model_name,
-            "dlc_video_absolute_path": "/home/user/Videos/video.mp4",
-            "ar_env_unity_absolute_path": "unity_ar/Augmented_reality.exe"
+            "config_path": "/home/user/config,
         }
 
         Args:
@@ -29,8 +28,11 @@ def process_config(config_file_path: Path) -> dict:
 
     # Check if the config file path is a valid Path object,
     # and if it exists on the file system
-    if not isinstance(config_file_path, Path) or not config_file_path.exists():
-        logging.error(str(config_file_path) + " does not exist.")
+    if not isinstance(config_file_path, Path):
+        config_file_path = Path(config_file_path)
+
+    if not config_file_path.exists():
+        logging.debug(str(config_file_path) + " does not exist.")
         return None
 
     # Read the contents of the config file
@@ -38,18 +40,19 @@ def process_config(config_file_path: Path) -> dict:
         with open(config_file_path) as task_config_file:
             config_dict = json.load(task_config_file)
     except OSError as err:
-        logging.error(err)
+        logging.info(err)
         return None
 
     # Check if all necessary keys are present in the config file
-    keys = ["model_absolute_path", "dlc_video_absolute_path", "ar_env_unity_absolute_path"]
+    keys = ["config_path"]
     for k in keys:
         if k not in config_dict:
-            logging.error(k + " not in " + config_file_path)
+            logging.debug(k + " not in " + config_file_path)
 
-    for paths in config_dict.values():
-        if not Path(paths).exists():
-            logging.error(str(paths) + " does not exist.")
+    for paths, keys in config_dict.items():
+        paths = Path(paths).absolute()
+        if not paths.exists():
+            logging.debug(str(paths) + " does not exist.")
             return None
-
+        config_dict[keys] = paths
     return config_dict

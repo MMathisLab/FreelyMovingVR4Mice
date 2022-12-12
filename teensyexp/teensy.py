@@ -39,8 +39,8 @@ class Teensy(object):
         self.input_data = []
         self.output_data = []
 
-        if self.inputs is not "[]" and len(self.inputs) != 0:
-             self.start_read_buffer()
+        if  self.n_inputs > 0:
+            self.start_read_buffer()
 
     def connect_serial(self):
         """
@@ -59,11 +59,14 @@ class Teensy(object):
         self.ser.reset_input_buffer()
 
     def read_on_thread(self):
-        buffer = "" 
+        buffer = None
         delta = 1
         while self.reading:
             if self.ser.inWaiting() > delta:
-                buffer = buffer + self.ser.read()#(self.ser.in_waiting)
+                if buffer:
+                    buffer = buffer + self.ser.read()#(self.ser.in_waiting)
+                else:
+                    buffer = self.ser.read()
                 if self.end_bytes in buffer:
                     lines = buffer.split(self.end_bytes)
                     buffer = lines[-1]

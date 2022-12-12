@@ -4,7 +4,7 @@ Task to prime (or clean) water line
 GK 05/24/19
 '''
 
-from teensyexp.tasks_abc import GuiTask
+from teensyexp.tasks_abc.gui_task import GuiTask
 from tkinter import Tk, Toplevel, Label, Entry, Button, Radiobutton, IntVar, BooleanVar, StringVar
 import time
 import threading

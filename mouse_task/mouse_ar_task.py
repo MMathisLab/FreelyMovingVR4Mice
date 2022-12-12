@@ -6,27 +6,28 @@
 
     Note: the model path should be defined in the local task_config.json file
 """
-from teensyexp.tasks_abc.unity_task import UnityTask
-from teensyexp.tasks_abc.gui_task import GuiTask
+
 from tkinter import Tk, Toplevel, Button
 import os
 from pathlib import Path
 import numpy as np
 import time
-
 import pandas as pd
-from mouse_task.dlc_utils.dlcProcessor import MyProcessor
 import cv2
 import numpy as np
 from deeplabcut.utils.auxfun_videos import VideoReader
 from tqdm import trange
-from mouse_task.dlc_utils.video import Video
 from dlclive import DLCLive
 
+from mouse_task.helpers import process_config
+from mouse_task.dlc_utils.video import Video
 from mouse_task.dlc_utils.kfilter import OneEuroFilter
+from mouse_task.dlc_utils.dlcProcessor import MyProcessor
+from teensyexp.tasks_abc.unity_task import UnityTask
+from teensyexp.tasks_abc.gui_task import GuiTask
 
 config_name = Path("task_config.json")
-current_dir = Path().absolute()
+current_dir = Path(__file__).parent
 config_path = current_dir.joinpath(config_name) # default class constructor input
 
 class ARVisualDiscrim(UnityTask, GuiTask):
@@ -68,9 +69,9 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         # err messages are showed on process_config() function level
             return
 
-        model_path = config_dict["model_name"]
-        dlc_video_path = config_dict["dlc_video_path"]
-        env_path = config_dict["ar_env"]
+        model_path = config_dict["model_absolute_path"]
+        dlc_video_path = config_dict["dlc_video_absolute_path"]
+        env_path = config_dict["ar_env_unity_absolute_path"]
 
         super().__init__(teensy, env_path, monitor=monitor, write_video=write_video, fps=fps, epochs=epochs, epoch_trials=True)
 
