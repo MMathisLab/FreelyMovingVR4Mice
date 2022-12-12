@@ -75,12 +75,6 @@ class TeensyExperimentGUI(object):
             default_path = Path(config_dict["config_path"]).resolve()
         else:
             default_path = current_dir.joinpath(Path("vr4mice/cfg"))
-            #if sys.platform in ["linux", "darwin"]:
-            #    home_folder = os.environ['HOME']
-            #else:
-            #    home_folder = os.environ['USERPROFILE']
-            #name = "/Documents/vr4mice/cfg"
-            #default_path = Path(home_folder).joinpath(name)
         return default_path
 
     def get_setup_file_name(self, name=''):
