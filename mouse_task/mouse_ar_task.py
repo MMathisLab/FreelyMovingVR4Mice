@@ -37,9 +37,11 @@ class ARVisualDiscrim(UnityTask, GuiTask):
     """
 
     def __init__(self, teensy, monitor=None, write_video=False, fps=60.0,
-                 epochs=[250],
+                 epochs=[250], epoch_labels = ["baseline"],
                  config_file_path = config_path,
-                 reward_size = 45):
+                 reward_size = 45, cropped_image = [55,610,55,455], rotate_camera = 270, Prop_Obj_on_Left = 0.5, 
+                 slit_size = 2, slit_depth = 2, target_spread = 4):
+
         """
             Class constructor: initialises dlc processor, dlc live, video reader
             Uses the constructor from parent UnityTask class that creats unity env
@@ -62,6 +64,8 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         self.t_count = None
         self.filt = None
         self.params = None
+       
+     
 
         config_dict = process_config(config_file_path)
 
@@ -75,8 +79,27 @@ class ARVisualDiscrim(UnityTask, GuiTask):
 
         super().__init__(teensy, env_path, monitor=monitor, write_video=write_video, fps=fps, epochs=epochs, epoch_trials=True)
 
-        # reward size
-        self.reward_size = reward_size
+        # Game parameters
+        self.reward_size = self.as_list(reward_size)
+        self.cropped_image = self.as_list(cropped_image)
+        self.rotate_camera = self.as_list(rotate_camera)
+        
+        self.Prob_Obj_on_Left = self.as_list(Prop_Obj_on_Left)
+        self.slit_size = self.as_list(slit_size)
+        self.slit_depth = self.as_list(slit_depth)
+        self.epoch_labels = self.as_list(epoch_labels)
+
+        self.n_rewards = 0
+
+        # create empty vectors to keep track of game parameters per trial
+        self.trial_epoch_labels = []
+        self.trial_reward_size = []
+        self.trial_Prob_Obj_on_Left = []
+        self.trial_slit_size = []
+        self.trial_slit_depth = []
+
+
+
 
         # setup video steam and DLC stuff
         self.dlc_proc = MyProcessor()
@@ -87,8 +110,9 @@ class ARVisualDiscrim(UnityTask, GuiTask):
 
     def init_dlc_live(self):
         """
-            method that initialises the DLC FRAME
+            method that initializes the DLC FRAME
             it grabs and filters the current mouse's state
+            This is only run on the first frame of the game
         """
 
         self.t_count = 0
@@ -102,9 +126,9 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         head_angle = self.params [2]
 
         # interp mouse pixel space into arena space
-        x = np.interp(x,[55,610], [-10,10])
-        z = np.interp(z,[55,455], [-4,-15])
-        degrees = (head_angle - (90+180)) % 360; 
+        x = np.interp(x,[self.cropped_image [0],self.cropped_image [1]], [-10,10])
+        z = np.interp(z,[self.cropped_image [2],self.cropped_image [2]], [-4,-15])
+        degrees = (head_angle - (self.rotate_camera)) % 360; 
         output = np.array([x,z,degrees])
         return(output.reshape((1,-1)))
 
@@ -112,6 +136,7 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         """
             inner method that runS DLC on every frame
             used in get_action(), called by teensyexp's module Agent
+            This is run on every frame after the dlc processor is initialised
         """
         # run DLC on every frame to be given as input to the agent
         frame = self.vid.read_frame(shrink = 1)
@@ -124,15 +149,15 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         head_angle = self.params [2]
 
         # interp mouse pixel space into arena space
-        x = np.interp(x,[55,610], [-10,10])
-        z = np.interp(z,[55,455], [-4,-15])
-        degrees = (head_angle - (90+180)) % 360; 
+        x = np.interp(x,[self.cropped_image [0],self.cropped_image [1]], [-10,10])
+        z = np.interp(z,[self.cropped_image [2],self.cropped_image [2]], [-4,-15])
+        degrees = (head_angle - (self.rotate_camera)) % 360; 
         output = np.array([x,z,degrees])
         return(output.reshape((1,-1)))
 
         
 
-    # This gui function needs to be here     
+    # This gui function needs to be here - currently this is not used   
     def create_gui(self, parent):
         """
             method inherited from gui_task parent class interface
@@ -141,10 +166,26 @@ class ARVisualDiscrim(UnityTask, GuiTask):
 
     # can use this function to save data to the .pickle file and send parameters to unity
     def set_channel(self):
-         """
-            method inherited from task parent class interface
         """
-         pass
+            method inherited from task parent class interface
+            This function sends parameters to unity when the game is reset - ie at the beginning of each trial
+        """
+
+        this_Prob_obj_left = self.get_epoch_value("Prob_Obj_on_Left")
+        this_slit_size = self.get_epoch_value("slit_size")
+        this_slit_depth = self.get_epoch_value("slit_depth")
+
+
+        self.channel.set_property("Prob_Obj_on_Left", this_Prob_obj_left)
+        self.channel.set_property("slit_size", this_slit_size)
+        self.channel.set_property("slit_depth", this_slit_depth)
+
+
+        self.trial_epoch_labels.append(self.get_epoch_value("epoch_labels"))
+        self.trial_split_size.append(this_slit_size)
+        self.trial_split_depth.append(this_slit_depth)
+
+
 
     def get_action(self):
         """
@@ -163,8 +204,10 @@ class ARVisualDiscrim(UnityTask, GuiTask):
             method to set up the reward
         """
         if self.reward > 0:
+            print("___ Rewarded ___")
             print(self.reward_size)
-            #self.teensy.write('water', [self.reward_size]) #TODO(tom)
+            self.teensy.write('water', [self.reward_size]) 
+            self.n_rewards += 1
 
     def reset_environment(self):
         """
@@ -184,7 +227,8 @@ class ARVisualDiscrim(UnityTask, GuiTask):
 
         return {
                 'position' : pos,
-                'h_angle' : h_angle
+                'h_angle' : h_angle,
+                'rewards' : self.n_rewards
             }
 
         

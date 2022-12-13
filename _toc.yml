@@ -8,3 +8,5 @@ parts:
   chapters:
   - file: docs/UseOverviewGuide
   - file: docs/DLCUnity
+  - file: docs/installSumUp
+  - file: docs/VisualDiscrim

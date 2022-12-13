@@ -59,3 +59,9 @@ share/python-wheels/
 MANIFEST
 .cache
 
+# ignore jupyter book build folder 
+_build/*
+
+# developing on a mac
+*.DS_Store
+._*
