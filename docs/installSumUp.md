@@ -9,9 +9,9 @@ $ git clone git@github.com:MMathisLab/FreelyMovingVR4Mice.git
 ```
 $ cd FreelyMovingVR4Mice (choose branch if needed)
 
-1. create new conda environment:
+1. create new conda environment with local pip:
 ```
-$ conda create --name vr4mice
+$ conda create --name vr4mice pip
 ```
 $ conda activate name_of_env
 2. install *vr4mice* package  (_use pip install -e . if package is under development_)
