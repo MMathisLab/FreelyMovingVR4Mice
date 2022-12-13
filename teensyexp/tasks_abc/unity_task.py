@@ -45,7 +45,7 @@ class UnityTask(Task):
         self.agent_num = 0
         self.channel = FloatPropertiesChannel()
 
-        self.epochs = np.cumsum(self._as_list(epochs))
+        self.epochs = np.cumsum(self.as_list(epochs))
         self.epoch_trials = epoch_trials
         self.epoch = 0
         self.episode = 0
