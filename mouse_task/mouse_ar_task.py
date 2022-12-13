@@ -59,6 +59,7 @@ class ARVisualDiscrim(UnityTask, GuiTask):
                 instance of ARVisualDiscrim class
 
         """
+        
 
         #initialised in init_DLC_live()
         self.t_count = None
@@ -180,7 +181,7 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         self.channel.set_property("slit_size", this_slit_size)
         self.channel.set_property("slit_depth", this_slit_depth)
 
-
+        # add trial parameters to trial vectors so that we can save them to the log file
         self.trial_epoch_labels.append(self.get_epoch_value("epoch_labels"))
         self.trial_split_size.append(this_slit_size)
         self.trial_split_depth.append(this_slit_depth)
@@ -190,7 +191,7 @@ class ARVisualDiscrim(UnityTask, GuiTask):
     def get_action(self):
         """
             method that get actions from DLC and parse them to unity
-            called by teensyexp's module Agent
+            called by teensyexp's module Agent, This function is called on every frame of the game.
         """
         if not self.initialized:
             output = self.init_dlc_live()

@@ -24,14 +24,14 @@ class UnityTask(Task):
 
             Args:
 
-                teensy(Teensy object): instnace of teensy class
+                teensy(Teensy object): instance of teensy class
                 env(str): the path to the Unity game executable
                 agent_group(int): indicator of the group of the agent to be controlled, should almost always be left as the default (0)
                 monitor(int): the monitor on which to display the game
                 fullscreen(int): should the monitor be displayed in fullscreen mode (1) or as a window (0)
                 write_video(boolean): should a video of visual observations be written. Caution: if possible, games should not include visual observations, as this really slows down the speed of the game.
                 fps(float): the frame rate at which to write the video of visual observations
-                epochs: how many trials (or how long) before parameter should be changed. The task will end at the end of the last epochis the game trial based (1) or time based (0)
+                epochs: how many trials (or how long) before parameter should be changed. The task will end at the end of the last epoch is the game trial based (1) or time based (0)
                 epoch_trials(boolean): is the game trial based (1) or time based (0)
 
                 call of parent's class constructor
@@ -94,7 +94,7 @@ class UnityTask(Task):
         super().start()
 
 
-    def _as_list(self, val):
+    def as_list(self, val):
         """
             helpers: cast to list
         """
@@ -284,7 +284,7 @@ class UnityTask(Task):
 
     def stop(self):
         """
-            stop the task: senf stop message to teensy via parent's call
+            stop the task: send stop message to teensy via parent's call
             close the unity env
         """
         super().stop()

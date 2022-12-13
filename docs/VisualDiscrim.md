@@ -70,12 +70,12 @@ def set_channel(self):
             This function sends parameters to unity when the game is reset - ie at the beginning of each trial
         """
 
-        # extract paramters for the current trial
+        # extract parameters for the current trial using self.get_epoch_value()
         this_Prob_obj_left = self.get_epoch_value("Prob_Obj_on_Left")
         this_slit_size = self.get_epoch_value("slit_size")
         this_slit_depth = self.get_epoch_value("slit_depth")
 
-
+        # send the parameters to unity 
         self.channel.set_property("Prob_Obj_on_Left", this_Prob_obj_left)
         self.channel.set_property("slit_size", this_slit_size)
         self.channel.set_property("slit_depth", this_slit_depth)
@@ -86,7 +86,7 @@ def set_channel(self):
         self.trial_split_depth.append(this_slit_depth)
 ```
 
-Here the parameter for the current trial is extracted by self.get_epoch_value(). In this example, all 
+In this function, first the parameter for the current trial is extracted by self.get_epoch_value(). In this example script, we have no block like structure ie. each trial uses the same parameters, so for each trial the parameters are identical for all 250 trials. If you want to add block like structure see the "adding block structure" section below. The function, after getting the parameters for this trial, then sends them to unity using the self.channel.set_property() function. In the unity game there is a similar c# function which is waiting for these parameters so the string that is parsed has to be identical to how they are defined in the unity game. Finally, this function appends a vector which represents what the parameter was for each trail within the whole session, this is then saved 
 
 
 
