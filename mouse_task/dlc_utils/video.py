@@ -1,8 +1,6 @@
 import os
 import cv2
 
-
-
 class Video:
     def __init__(self, video_path):
         if not os.path.isfile(video_path):

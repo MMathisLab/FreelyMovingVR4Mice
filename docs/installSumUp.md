@@ -8,9 +8,9 @@ The FreelyMovingVR4Mice repository contains main **vr4mice** package (src code: 
 $ git clone TODO(add repo's lonk)
 ```
 
-1. set up conda environment: (_if --name option is omitted the default name of conda environment is vr4mice_)
+1. create new conda environment:
 ```
-$ conda env create -f environment.yml --name name_of_env
+$ conda create --name vr4mice
 ```
 
 2. install *vr4mice* package  (_use pip install -e . if package is under development_)
