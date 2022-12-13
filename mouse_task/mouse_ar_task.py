@@ -96,8 +96,8 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         self.trial_epoch_labels = []
         self.trial_reward_size = []
         self.trial_Prob_Obj_on_Left = []
-        self.trial_slit_size = []
-        self.trial_slit_depth = []
+        self.trial_split_size = []
+        self.trial_split_depth = []
 
 
 
