@@ -11,7 +11,7 @@ $ cd FreelyMovingVR4Mice (choose branch if needed)
 
 1. create new conda environment with local pip:
 ```
-$ conda create --name vr4mice python=3.7 pip
+$ conda create --name vr4mice python=3.9 pip
 ```
 $ conda activate name_of_env
 2. install *vr4mice* package  (_use pip install -e . if package is under development_)

@@ -3,7 +3,7 @@ root: README
 parts:
 - caption: Overview
   chapters:
-  - file: docs/DLCUnity
+  - file: docs/vr4mice_overview
 - caption: Building the rig
   chapters:
   - file: docs/Parts_list
