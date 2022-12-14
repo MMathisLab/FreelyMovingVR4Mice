@@ -83,7 +83,7 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         # Game parameters
         self.reward_size = self.as_list(reward_size)
         self.cropped_image = self.as_list(cropped_image)
-        self.rotate_camera = self.as_list(rotate_camera)
+        self.rotate_camera = rotate_camera
         
         self.Prob_Obj_on_Left = self.as_list(Prop_Obj_on_Left)
         self.slit_size = self.as_list(slit_size)
