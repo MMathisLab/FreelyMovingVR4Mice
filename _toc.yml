@@ -1,12 +1,17 @@
 format: jb-book
 root: README
 parts:
-- caption: GUI Overview
+- caption: Overview
   chapters:
-  - file: teensyexp/README
-- caption: Main Task Documentation
-  chapters:
-  - file: docs/UseOverviewGuide
   - file: docs/DLCUnity
+- caption: Building the rig
+  chapters:
+  - file: docs/Parts_list
+  - file: docs/building_the_box
+  - file: docs/Building_the_cage
+- caption: Installation
+  chapters:
   - file: docs/installSumUp
+- caption: Software package Documentation
+  chapters:
   - file: docs/VisualDiscrim

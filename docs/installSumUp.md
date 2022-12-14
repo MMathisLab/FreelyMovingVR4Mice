@@ -1,6 +1,6 @@
 
 The FreelyMovingVR4Mice repository contains main **vr4mice** package (src code: teensyexp folder) and **mouse_task** module that is the input for **vr4mice**
-### Installation:
+### Installation
 
 1. download source code
 
