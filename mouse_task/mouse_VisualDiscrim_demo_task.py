@@ -83,7 +83,7 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         # Game parameters
         self.reward_size = self.as_list(reward_size)
         self.cropped_image = self.as_list(cropped_image)
-        self.rotate_camera = self.as_list(rotate_camera)
+        self.rotate_camera = rotate_camera
         
         self.Prob_Obj_on_Left = self.as_list(Prop_Obj_on_Left)
         self.slit_size = self.as_list(slit_size)
@@ -127,9 +127,9 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         head_angle = self.params [2]
 
         # interp mouse pixel space into arena space
-        x = np.interp(x,[self.cropped_image [0],self.cropped_image [1]], [-10,10])
-        z = np.interp(z,[self.cropped_image [2],self.cropped_image [2]], [-4,-15])
-        degrees = (head_angle - (self.rotate_camera)) % 360; 
+        x = np.interp(x,[55,610], [-10,10])
+        z = np.interp(z,[55,610], [-4,-15])
+        degrees = (head_angle - (90+180)) % 360; 
         output = np.array([x,z,degrees])
         return(output.reshape((1,-1)))
 
@@ -150,9 +150,9 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         head_angle = self.params [2]
 
         # interp mouse pixel space into arena space
-        x = np.interp(x,[self.cropped_image [0],self.cropped_image [1]], [-10,10])
-        z = np.interp(z,[self.cropped_image [2],self.cropped_image [2]], [-4,-15])
-        degrees = (head_angle - (self.rotate_camera)) % 360; 
+        x = np.interp(x,[55,610], [-10,10])
+        z = np.interp(z,[55,610], [-4,-15])
+        degrees = (head_angle - (90+180)) % 360; 
         output = np.array([x,z,degrees])
         return(output.reshape((1,-1)))
 
