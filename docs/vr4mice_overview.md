@@ -25,7 +25,7 @@ To run an augmented reality experiment, teensy experiments requires two objects:
 
 2. A python "mouse task" script - These are a class of scripts that can be loaded within the teensy experiments GUI and handle the organization of the task. In the case of FreelyMovingVR4mice these will be behavioral parameters calculated from DLClive keypoints coordinates. This script specifies what parameters will be sent to the game and the teensy throughout the experiment. These can be on a frame by frame, trial by trial or block by block basis. Currently, we provide two example teensy task scripts: The first script that reads from a movie of a mouse, this script can be used to test your installation of teensy experiments and a second script which runs on a incoming video stream from the camera. This second script can be modified as we come up with the final idea for the experiment and the training tasks!
 
-These documents provide an explanation of how to use both of these objects is be provided within this documentation alongside an explanation of how to build the rig and installation.
+These documents provide an explanation of how to use both of these objects alongside an explanation of how to build the rig and installation.
 
 
 

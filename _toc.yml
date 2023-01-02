@@ -6,17 +6,17 @@ parts:
   - file: docs/vr4mice_overview
 - caption: Building the rig
   chapters:
-  - file: docs/Parts_list
-  - file: docs/building_the_box
-  - file: docs/Building_the_cage
+  - file: docs/Rig_building/Parts_list
+  - file: docs/Rig_building/building_the_box
+  - file: docs/Rig_building/Building_the_cage
 - caption: Installation
   chapters:
-  - file: docs/installSumUp
-  - file: docs/create_desktop_icon
+  - file: docs/Installation/installSumUp
+  - file: docs/Installation/create_desktop_icon
 - caption: Teensy setup
   chapters:
-  - file: docs/Teensy_box_design
-  - file: docs/teensy_config
+  - file: docs/Rig_building/Teensy_box_design
+  - file: docs/Rig_building/teensy_config
 - caption: Software package Documentation
   chapters:
   - file: docs/VisualDiscrim
