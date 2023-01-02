@@ -13,6 +13,10 @@ parts:
   chapters:
   - file: docs/installSumUp
   - file: docs/create_desktop_icon
+- caption: Teensy setup
+  chapters:
+  - file: docs/Teensy_box_design
+  - file: docs/teensy_config
 - caption: Software package Documentation
   chapters:
   - file: docs/VisualDiscrim
