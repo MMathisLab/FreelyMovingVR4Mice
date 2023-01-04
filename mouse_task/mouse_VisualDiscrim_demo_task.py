@@ -9,6 +9,10 @@
 
 from tkinter import Tk, Toplevel, Button
 import os
+#os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+
 from pathlib import Path
 import numpy as np
 import time
@@ -18,6 +22,7 @@ import numpy as np
 from deeplabcut.utils.auxfun_videos import VideoReader
 from tqdm import trange
 from dlclive import DLCLive
+import time as time
 
 from mouse_task.helpers import process_config
 from mouse_task.dlc_utils.video import Video
@@ -25,6 +30,8 @@ from mouse_task.dlc_utils.kfilter import OneEuroFilter
 from mouse_task.dlc_utils.dlcProcessor import MyProcessor
 from teensyexp.tasks_abc.unity_task import UnityTask
 from teensyexp.tasks_abc.gui_task import GuiTask
+
+
 
 config_name = Path("task_config.json")
 current_dir = Path(__file__).parent
@@ -65,6 +72,7 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         self.t_count = None
         self.filt = None
         self.params = None
+        
        
      
 
@@ -119,12 +127,13 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         self.t_count = 0
         _ = self.dlc_live.init_inference(self.vid.read_frame(shrink=1))
         frame = self.vid.read_frame(shrink = 1)
-        self.params = self.dlc_live.get_pose(frame)
+        self.params = np.array(self.dlc_live.get_pose(frame))
         self.filt = OneEuroFilter(t0 = self.t_count, x0 = np.array(self.params), beta=0.01, min_cutoff=0.01)
         self.t_count = self.t_count + 1
         x = self.params [0]
         z = self.params [1]
         head_angle = self.params [2]
+        
 
         # interp mouse pixel space into arena space
         x = np.interp(x,[55,610], [-10,10])
@@ -139,21 +148,24 @@ class ARVisualDiscrim(UnityTask, GuiTask):
             used in get_action(), called by teensyexp's module Agent
             This is run on every frame after the dlc processor is initialised
         """
+        
         # run DLC on every frame to be given as input to the agent
         frame = self.vid.read_frame(shrink = 1)
-        params = self.dlc_live.get_pose(frame)
+        params = np.array(self.dlc_live.get_pose(frame))
         self.params =self.filt(self.t_count, np.array(params))
         self.t_count = self.t_count + 1
-       
+    
         x = self.params [0]
         z = self.params [1]
         head_angle = self.params [2]
+
 
         # interp mouse pixel space into arena space
         x = np.interp(x,[55,610], [-10,10])
         z = np.interp(z,[55,610], [-4,-15])
         degrees = (head_angle - (90+180)) % 360; 
         output = np.array([x,z,degrees])
+
         return(output.reshape((1,-1)))
 
         
@@ -207,7 +219,7 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         if self.reward > 0:
             print("___ Rewarded ___")
             print(self.reward_size)
-            self.teensy.write('water', [self.reward_size]) 
+            #self.teensy.write('water', [self.reward_size]) 
             self.n_rewards += 1
 
     def reset_environment(self):

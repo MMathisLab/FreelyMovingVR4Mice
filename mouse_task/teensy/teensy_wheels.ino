@@ -116,6 +116,15 @@ float fmap(float x, float a, float b, float c, float d)
 
 void loop() {
 
+}
+//can we try with an empty loop?
+// I have another idea - can you remember i was intially trying this as a standalone version ?
+// maybe we should check that that script works? teensy or VR? 
+//because now f.ex. on ubuntu I was testing with seb's teensy. no idea what it has
+// i dont think the teensy script is the issue because that same arduino has worked on ur machine and server 5, omg, OMG what?
+// so for standalone, what do you want to try? can u send me the python scripts that are on my machine on server 5? oh wait maybe they are on basecamp gimmie a sec
+void loop_1() {
+
   int curr_time = millis();
   potVal = 0;//analogRead(anglePotPin);
   // read commands
