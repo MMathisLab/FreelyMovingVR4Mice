@@ -7,5 +7,5 @@ cd "C:\Users\Windows\Documents\Mathis_lab_code\FreelyMovingVR4Mice\"
 vr4mice
 ```
 
-You will have to adjust the path after the cd to reflect the path to you cloned FreelyMovingVR4Mice repo.
+You will have to adjust the path after the cd to reflect the path to your cloned FreelyMovingVR4Mice repo.
 Then save this file as 'vr4mice.bat' if you get an error saying that command prompt could not not find activate then follow this [tutorial](https://www.edureka.co/community/163047/conda-is-not-recognized-as-internal-or-external-command) to add conda to you computers system path. You should then be able to just click on this icon on your desktop to load the GUI!

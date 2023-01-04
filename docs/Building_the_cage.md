@@ -1,1 +1,0 @@
-# Cage for mounting monitors and cameras
