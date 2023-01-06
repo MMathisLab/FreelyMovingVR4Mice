@@ -1,6 +1,6 @@
 
 The FreelyMovingVR4Mice repository contains main **vr4mice** package (src code: teensyexp folder) and **mouse_task** module that is the input for **vr4mice**
-### Installation
+# Installation
 
 1. download source code
 
@@ -24,13 +24,17 @@ $ pip install .
 $ pip install TODO(add repo's link)
 ```
 
-### Getting Started
-#### Setting up your experimental system
-### Teensy part ####
+## Getting Started
+
+### Setting up your experimental system
+#### Teensy 
   - Connect teensy microcontroller ([example of code to upload](../../mouse_task/teensy/teensy_AR.ino))
   - check rights on port access (modify via sudo chmod if needed)
-### Config files ####
+#### Config files 
   - Set up the [config files](./Config_file_setup.md)
+#### desktop icon
+  -  How to create [desktop icon](./create_desktop_icon.md) using a .bat script (windows)
+
 
 
 
