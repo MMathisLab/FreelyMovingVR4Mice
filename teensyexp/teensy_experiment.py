@@ -8,6 +8,7 @@ Note(mary): API documentation added 11/08/2022
 """
 
 import os
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 import sys
 import shutil
 import json
@@ -761,11 +762,11 @@ class TeensyExperimentGUI(object):
                     return
             self._dump_data(data_to_save, filename)
 
-            if self.unity_task:
-                tmp_file = os.path.normpath(self._get_default_path() + '/tmp/unity_video.avi')
-                if os.path.isfile(tmp_file):
-                    video_file = filename.replace('.pickle', '_video.avi')
-                    shutil.move(tmp_file, video_file)
+            #if self.unity_task:
+               # tmp_file = os.path.normpath(self._get_default_path() + '/tmp/unity_video.avi')
+               # if os.path.isfile(tmp_file):
+               #     video_file = filename.replace('.pickle', '_video.avi')
+               #     shutil.move(tmp_file, video_file)
 
     def check_close(self):
         """

@@ -79,7 +79,7 @@ class Teensy(object):
             saves the time of start
         """
         self.start_read_time = time.time()
-        self.reading = True
+        self.reading = False #True
         threading.Thread(target=self.read_on_thread, daemon=True).start()
 
     def read(self, index=-1, input=None):

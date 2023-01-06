@@ -1,0 +1,1 @@
+{"task_dir": "C:/Users/Windows/Documents/Mathis_lab_code/FreelyMovingVR4Mice/mouse_task", "rigs": {"arduino": {"port": "COM3", "baudrate": "115200", "inputs": [], "outputs": {"start": {"command": "A"}, "stop": {"command": "Z"}, "reboot": {"command": "Y"}, "water": {"command": "W", "params": ["ms"]}}}}, "subjects": ["Tom", ""], "out_dir": ["C:/Users/Windows/Documents/data"]}
