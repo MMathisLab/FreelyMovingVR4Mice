@@ -102,6 +102,34 @@ def set_channel(self):
 
 In this function, first the parameter for the current trial is extracted by self.get_epoch_value(). In this example script, we have no block like structure ie. each trial uses the same parameters, so for each trial the parameters are identical for all 250 trials. If you want to add block like structure see the "adding block structure" section below. The function, after getting the parameters for this trial, then sends them to unity using the self.channel.set_property() function. In the unity game there is a similar c# function which is waiting for these parameters so the string that is parsed has to be identical to how they are defined in the unity game. Finally, this function appends a vector which represents what the parameter was for each trail within the whole session, these vectors can then be saved in the get_data() function at the end of the script. 
 
+
+
+```{code-cell} ipython3
+:tags: [get_action]
+    def get_action(self):
+        """
+            method that get actions from DLC and parse them to unity
+            called by teensyexp's module Agent, This function is called on every frame of the game.
+        """
+        data = self.queue.read(position='last', clear=False)
+        if data is None:
+            return np.array([0, 0, 0]).reshape((1, -1))
+        
+        x = data[0]
+        z = data[1]
+        head_angle = data[2]
+
+
+        # interp mouse pixel space into arena space
+        x = np.interp(x,[55,610], [-6,6])
+        z = np.interp(z,[55,610], [-4,-15])
+        degrees = (head_angle - (90+180)) % 360; 
+        output = np.array([x,z,degrees])
+        print(output)
+        return(output.reshape((1,-1)))
+
+```
+
 #### Adding block like structure
 In addition, to the parameters being identical across trials we may also like to add block like structure such as a baseline and pertubation block. An example of this could be the visual discrimination task without occluders for the first 100 trial followed by 100 trials with occulders. This can be achieved by passing the parameters to the class as lists:
 
