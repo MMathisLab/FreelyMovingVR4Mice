@@ -1,10 +1,25 @@
 format: jb-book
 root: README
 parts:
-- caption: GUI Overview
+- caption: Overview
   chapters:
-  - file: teensyexp/README
-- caption: Main Task Documentation
+  - file: docs/vr4mice_overview
+- caption: Building the rig
   chapters:
-  - file: docs/UseOverviewGuide
-  - file: docs/DLCUnity
+  - file: docs/Rig_building/Parts_list
+  - file: docs/Rig_building/building_the_box
+  - file: docs/Rig_building/Building_the_cage
+- caption: Teensy setup
+  chapters:
+  - file: docs/Rig_building/Teensy_box_design
+  - file: docs/Rig_building/teensy_config
+  - file: docs/Rig_building/writing_a_teensy_sketch
+- caption: Installation of vr4mice and config file setup
+  chapters:
+  - file: docs/Installation/installSumUp
+  - file: docs/Installation/Config_file_setup
+  - file: docs/Installation/Run_a_session
+  - file: docs/Installation/create_desktop_icon
+- caption: Software package Documentation
+  chapters:
+  - file: docs/VisualDiscrim
