@@ -1,0 +1,719 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Augmented reality visual discrimination task &#8212; FreelyMovingVR4Mice</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../_static/sphinx-thebe.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Create a desktop icon to launch Teensy experiments" href="Installation/create_desktop_icon.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">FreelyMovingVR4Mice</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search this book..." aria-label="Search this book..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../README.html">
+                    FreelyMovingVR4Mice
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Overview
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="vr4mice_overview.html">
+   FreelyMovingVR4mice overview
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Building the rig
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="Rig_building/Parts_list.html">
+   Parts list
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="Rig_building/building_the_box.html">
+   Perspex box for housing the mouse
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="Rig_building/Building_the_cage.html">
+   Cage for mounting monitors and cameras
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Teensy setup
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="Rig_building/Teensy_box_design.html">
+   Teensy box design
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="Rig_building/teensy_config.html">
+   Configuring the teensy board and uploading the code
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="Rig_building/writing_a_teensy_sketch.html">
+   Writing Teensy sketch for Vr4mice
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Installation of vr4mice and config file setup
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="Installation/installSumUp.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="Installation/Config_file_setup.html">
+   Config files
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="Installation/Run_a_session.html">
+   How to run a session
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="Installation/create_desktop_icon.html">
+   Create a desktop icon to launch Teensy experiments
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Software package Documentation
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Augmented reality visual discrimination task
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<div class="menu-dropdown menu-dropdown-launch-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Launch interactive content">
+      <i class="fas fa-rocket"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://mybinder.org/v2/gh/MMathisLab/FreelyMovingVR4Mice/main?urlpath=tree/docs/docs/VisualDiscrim.md"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Launch on Binder"
+>
+  
+
+<span class="headerbtn__icon-container">
+  
+    <img src="../_static/images/logo_binder.svg">
+  </span>
+<span class="headerbtn__text-container">Binder</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://colab.research.google.com/github/MMathisLab/FreelyMovingVR4Mice/examples/yourdemo.ipynb/github/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/docs/VisualDiscrim.md"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Launch on Colab"
+>
+  
+
+<span class="headerbtn__icon-container">
+  
+    <img src="../_static/images/logo_colab.png">
+  </span>
+<span class="headerbtn__text-container">Colab</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/MMathisLab/FreelyMovingVR4Mice"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/MMathisLab/FreelyMovingVR4Mice/issues/new?title=Issue%20on%20page%20%2Fdocs/VisualDiscrim.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="../_sources/docs/VisualDiscrim.ipynb"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download notebook file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="headerbtn__text-container">.ipynb</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="../_sources/docs/VisualDiscrim.md"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.md</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#python-task-script-outline">
+   Python “Task” script - Outline
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#gui-parameters">
+     Gui Parameters
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#adding-new-game-parameters">
+       Adding new game parameters
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#adding-block-like-structure">
+       Adding block like structure
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+    </nav>
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>Augmented reality visual discrimination task</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#python-task-script-outline">
+   Python “Task” script - Outline
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#gui-parameters">
+     Gui Parameters
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#adding-new-game-parameters">
+       Adding new game parameters
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#adding-block-like-structure">
+       Adding block like structure
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
+  <section class="tex2jax_ignore mathjax_ignore" id="augmented-reality-visual-discrimination-task">
+<h1>Augmented reality visual discrimination task<a class="headerlink" href="#augmented-reality-visual-discrimination-task" title="Permalink to this headline">#</a></h1>
+<p>In this task, a mouse the mouse looks through a slit in the wall and has to report which side an object of interest is on. This object of interest (a green cube) randomly appears on the left or right side of the arena and is occluded by the slit. On the other side a blue cube appears. The idea is that you have one script like this for each task type that you want to run. These task files are designed to control augmented reality games that have either trial like structure or trial-and-block structure (such as baseline, perturbation and washout trials). This current script can therefore be thought of as a template for future tasks that you want to employ. This document describes how the task is run and how to modify these scripts to build new tasks.</p>
+<section id="python-task-script-outline">
+<h2>Python “Task” script - Outline<a class="headerlink" href="#python-task-script-outline" title="Permalink to this headline">#</a></h2>
+<p>The python <a class="reference external" href="https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/mary/demo/mouse_task/mouse_ar_task.py">task</a> acts as an interface between DLClive and the unity <a class="reference external" href="https://github.com/MMathisLab/FreelyMovingVR4Mice/tree/mary/demo/mouse_task/unity_ar">build</a> and the teensy. It can be selected from within the teensy experiments GUI by clicking on the “edit” button one the task have been selected from the dropdown menu. Here parameters such as reward size and the probability that the cube will appear on the left can be set. This python script then logs all the data about the experiment such as the mouses position in the arena, when water was given and which side the mouse reported that the target was on.</p>
+<p>In takes the form of a parent class over a base class (called unity_task) and receives inputs within the <strong>init</strong>() function. These inputs can easily be modified from within the teensy experiments GUI by first loading the task and clicking on the edit button. This will present you with a window where these inputs can be modified. When the task is run (by clicking ready, followed by start) these inputs are assigned to class variables so that they can be made available to all the methods of the class.</p>
+<p>There are four main functions within the script that control different aspects of the game:</p>
+<ol class="simple">
+<li><p>set_channel() - this is called at the beginning of each trail and can be used to send parameters to the unity game.</p></li>
+<li><p>get_action() - this function is called on every frame and its output is sent as “actions” to the unity game. In our case of wanting to use a freely moving animal to control the game this function runs a DLClive processor on the incoming video stream from the behavioral cameras to extract out the animals x,y positions and its heading angle. These coordinates from the images are then mapped to game coordinates and sent to the unity game to control the game cameras, changing how the environment is rendered on the screens.</p></li>
+<li><p>check_reward() - this function is called on every frame and checks if a reward has been given within the unity game. If it has the function sends a command to the teensy to deliver a water reward.</p></li>
+<li><p>get_data() - this function is called when the “save task data” button within the GUI is pressed at the end of an experiment. This saves the data into a pickle file with the mouse_name that is defined in the GUI, followed by the data and the attempt (Dodo_170722_1.pkl)</p></li>
+</ol>
+<p>If you want to modify the task handling you can edit the code within these functions to change how the task runs.</p>
+<section id="gui-parameters">
+<h3>Gui Parameters<a class="headerlink" href="#gui-parameters" title="Permalink to this headline">#</a></h3>
+<p>Here is an explanation of the parameters that can be set in the GUI:</p>
+<ol class="simple">
+<li><p>reward_size -  This specifies how may ms the water valve should be open for</p></li>
+<li><p>Prop_Obj_on_Left -  probability that the object of interest (green cube) will appear on the left</p></li>
+<li><p>cropped_image - The pixel dimensions of the image of the box that the mouse walking around in [left, right, top, bottom] all dimensions are in pixels. These are then mapped to the game space and sent to unity to control.</p></li>
+</ol>
+<p>such parameters can either be used to control aspects of the game that need to be sent to the teensy such as reward size. Or these parameters can be sent to the unity game on a trial by trial basis to control the unity game parameters.</p>
+<section id="adding-new-game-parameters">
+<h4>Adding new game parameters<a class="headerlink" href="#adding-new-game-parameters" title="Permalink to this headline">#</a></h4>
+<p>New parameters can be added to this task by placing them within the arguments of this class, as done with the “new_param” in the code cell below. These parameters will automatically appear in the GUI when you click on the edit button.</p>
+<div class="cell tag_mytag docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">teensy</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">write_video</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span>
+                <span class="n">cropped_image</span> <span class="o">=</span> <span class="p">[</span><span class="mi">55</span><span class="p">,</span><span class="mi">610</span><span class="p">,</span><span class="mi">55</span><span class="p">,</span><span class="mi">455</span><span class="p">],</span> <span class="n">rotate_camera</span> <span class="o">=</span> <span class="mi">270</span><span class="p">,</span>
+                <span class="n">epochs</span><span class="o">=</span><span class="p">[</span><span class="mi">250</span><span class="p">],</span> <span class="n">epoch_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;baseline&quot;</span><span class="p">],</span>
+                <span class="n">config_file_path</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">,</span>
+                <span class="n">reward_size</span> <span class="o">=</span> <span class="mi">45</span><span class="p">,</span> <span class="n">Prop_Obj_on_Left</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> 
+                <span class="n">slit_size</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">slit_depth</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">target_spread</span> <span class="o">=</span> <span class="mi">4</span><span class="p">):</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>If you want to send these parameters to the teensy you can use the <span class="xref myst">write function</span>.
+For example see the <span class="xref myst">check_reward</span> function below. This function gets input from the unity game on every frame in the form of a binary vector where 0 represents no reward and 1 represents a time frame when the reward was given. When this reward vector is above zero the function sends a command to the water pin on the teensy, telling it to open the valve for a set number of ms:</p>
+<div class="cell tag_check_reward docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">check_reward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            method to set up the reward</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;___ Rewarded ___&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reward_size</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">teensy</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;water&#39;</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">reward_size</span><span class="p">])</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_rewards</span> <span class="o">+=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Alternatively, parameters can also be sent the unity game and the beginning of the each trail to set up various features of the game, this can be done by adding them as a “side channel” in the <span class="xref myst">set_channel</span> function:</p>
+<div class="cell tag_set_channel docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">set_channel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            method inherited from task parent class interface</span>
+<span class="sd">            This function sends parameters to unity when the game is reset - ie at the beginning of each trial</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># extract parameters for the current trial using self.get_epoch_value()</span>
+        <span class="n">this_Prob_obj_left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_epoch_value</span><span class="p">(</span><span class="s2">&quot;Prob_Obj_on_Left&quot;</span><span class="p">)</span>
+        <span class="n">this_slit_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_epoch_value</span><span class="p">(</span><span class="s2">&quot;slit_size&quot;</span><span class="p">)</span>
+        <span class="n">this_slit_depth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_epoch_value</span><span class="p">(</span><span class="s2">&quot;slit_depth&quot;</span><span class="p">)</span>
+
+        <span class="c1"># send the parameters to unity </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel</span><span class="o">.</span><span class="n">set_property</span><span class="p">(</span><span class="s2">&quot;Prob_Obj_on_Left&quot;</span><span class="p">,</span> <span class="n">this_Prob_obj_left</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel</span><span class="o">.</span><span class="n">set_property</span><span class="p">(</span><span class="s2">&quot;slit_size&quot;</span><span class="p">,</span> <span class="n">this_slit_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel</span><span class="o">.</span><span class="n">set_property</span><span class="p">(</span><span class="s2">&quot;slit_depth&quot;</span><span class="p">,</span> <span class="n">this_slit_depth</span><span class="p">)</span>
+
+        <span class="c1"># add trial parameters to trial vectors so that we can save them to the log file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trial_epoch_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_epoch_value</span><span class="p">(</span><span class="s2">&quot;epoch_labels&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trial_split_size</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">this_slit_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trial_split_depth</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">this_slit_depth</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>In this function, first the parameter for the current trial is extracted by self.get_epoch_value(). In this example script, we have no block like structure ie. each trial uses the same parameters, so for each trial the parameters are identical for all 250 trials. If you want to add block like structure see the “adding block structure” section below. The function, after getting the parameters for this trial, then sends them to unity using the self.channel.set_property() function. In the unity game there is a similar c# function which is waiting for these parameters so the string that is parsed has to be identical to how they are defined in the unity game. Finally, this function appends a vector which represents what the parameter was for each trail within the whole session, these vectors can then be saved in the get_data() function at the end of the script.</p>
+<div class="cell tag_get_action docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">get_action</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            method that get actions from DLC and parse them to unity</span>
+<span class="sd">            called by teensyexp&#39;s module Agent, This function is called on every frame of the game.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">position</span><span class="o">=</span><span class="s1">&#39;last&#39;</span><span class="p">,</span> <span class="n">clear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        
+        <span class="n">x</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">head_angle</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+
+        <span class="c1"># interp mouse pixel space into arena space</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">x</span><span class="p">,[</span><span class="mi">55</span><span class="p">,</span><span class="mi">610</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">])</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">z</span><span class="p">,[</span><span class="mi">55</span><span class="p">,</span><span class="mi">610</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">15</span><span class="p">])</span>
+        <span class="n">degrees</span> <span class="o">=</span> <span class="p">(</span><span class="n">head_angle</span> <span class="o">-</span> <span class="p">(</span><span class="mi">90</span><span class="o">+</span><span class="mi">180</span><span class="p">))</span> <span class="o">%</span> <span class="mi">360</span><span class="p">;</span> 
+        <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="n">degrees</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="adding-block-like-structure">
+<h4>Adding block like structure<a class="headerlink" href="#adding-block-like-structure" title="Permalink to this headline">#</a></h4>
+<p>In addition, to the parameters being identical across trials we may also like to add block like structure such as a baseline and pertubation block. An example of this could be the visual discrimination task without occluders for the first 100 trial followed by 100 trials with occulders. This can be achieved by passing the parameters to the class as lists:</p>
+<div class="cell tag_set_channel docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">teensy</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">write_video</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span> <span class="n">cropped_image</span> <span class="o">=</span> <span class="p">[</span><span class="mi">55</span><span class="p">,</span><span class="mi">610</span><span class="p">,</span><span class="mi">55</span><span class="p">,</span><span class="mi">455</span><span class="p">],</span> <span class="n">rotate_camera</span> <span class="o">=</span> <span class="p">[</span><span class="mi">270</span><span class="p">],</span>
+                 <span class="n">epochs</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">],</span> <span class="n">epoch_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;baseline&quot;</span><span class="p">,</span> <span class="s2">&quot;occulded&quot;</span><span class="p">],</span>
+                 <span class="n">config_file_path</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">,</span>
+                 <span class="n">reward_size</span> <span class="o">=</span> <span class="p">[</span><span class="mi">45</span><span class="p">,</span><span class="mi">45</span><span class="p">],</span>  <span class="n">Prop_Obj_on_Left</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">],</span> 
+                 <span class="n">slit_size</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">slit_depth</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">target_spread</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]):</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Here we have modified the blocks to have 100 trial each by specifying that epochs = [100,100]. We have then named these blocks using epoch_lables = [“baseline”, “occuluded”]. Then the only parameter that changes between these two blocks is the size of the slit that the mouse has to look through to see the targets. in the first block this is set to be 10 (the slit is so wide that the objects are unoccluded) where as in the second block the slit size is much lower (slit_size = 2). Under this framework if we call the self.get_epoch_value() the first element in the list is returned if the trial number is less than 100 but if it is more than 100 then the second element in the parameter list is returned.</p>
+<p>Being able to change the parameters in this way allows the user to have control over the task structure and the aesthetics of the game from the GUI</p>
+</section>
+</section>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            kernelName: "python3",
+            path: "./docs"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="Installation/create_desktop_icon.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Create a desktop icon to launch Teensy experiments</p>
+        </div>
+    </a>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By MWMathis Lab<br/>
+  
+      &copy; Copyright 2022.<br/>
+    <div class="extra_footer">
+      <div>Powered by <a href="https://jupyterbook.org/">Jupyter Book</a>.</div>
+
+    </div>
+</p>
+        </footer>
+    </div>
+    
+</div>
+
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
+</html>
