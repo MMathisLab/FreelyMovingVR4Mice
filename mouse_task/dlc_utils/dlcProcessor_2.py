@@ -8,9 +8,10 @@ import numpy as np
 from dlclive import Processor
 from math import sqrt, acos, atan2, copysign, pi, degrees
 
-class MyProcessor(Processor):
-    def __init__(self, queue=None):
-        self.queue = queue
+class MyProcessor2(Processor):
+    def __init__(self,  baudrate=115200, pulse_freq=50, pulse_width=5, max_stim_dur=0):
+        super().__init__()
+       # self.queue = queue
 
     def process(self, pose, **kwargs):
         xy = pose[:, :2]
@@ -26,7 +27,6 @@ class MyProcessor(Processor):
         heading = atan2(body_axis[1], body_axis[0])
         heading = degrees(heading)
         vals = *center, heading % (360), head_angle
-        if self.queue is not None:
-            self.queue.write(vals)
-        #print(vals)
-        return pose, vals
+       # if self.queue is not None:
+       #     self.queue.write(vals)
+        return pose
