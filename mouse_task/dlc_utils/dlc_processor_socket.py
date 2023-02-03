@@ -12,12 +12,14 @@ from math import sqrt, acos, atan2, copysign, pi, degrees
 class MyProcessor_socket(Processor):
     def __init__(self, baudrate=115200, pulse_freq=50, pulse_width=5, max_stim_dur=0):
         super().__init__()
+       # self.queue = queue
         self.address = ('localhost', 6000)     # family is deduced to be 'AF_INET'
         self.listener =  Listener(self.address, authkey=b'secret password')
         self.conn = self.listener.accept()
         print('connection accepted from', self.listener.last_accepted)
-       # self.queue = queue
-
+        self.center_x =[]
+        self.center_y = []
+        
     def process(self, pose, **kwargs):
         xy = pose[:, :2]
         conf = pose[:, 2]
@@ -28,11 +30,16 @@ class MyProcessor_socket(Processor):
         head_axis /= sqrt(np.sum(head_axis ** 2))
         cross = body_axis[0] * head_axis[1] - head_axis[0] * body_axis[1]
         sign = copysign(1, cross)  # Positive when looking left
-        head_angle = acos(body_axis @ head_axis) * sign
+        try:
+            head_angle = acos(body_axis @ head_axis) * sign
+        except ValueError:
+            head_angle = 0
         heading = atan2(body_axis[1], body_axis[0])
         heading = degrees(heading)
         vals = *center, heading % (360), head_angle
-        self.conn.send([center [0], center [1]])
+        #self.center_x.append(center [0], center[1])
+        
+        self.conn.send([vals [0], vals [1], vals [2], vals [3]])
        # if self.queue is not None:
        #     self.queue.write(vals)
         #print(vals)

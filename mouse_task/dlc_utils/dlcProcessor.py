@@ -22,7 +22,10 @@ class MyProcessor(Processor):
         head_axis /= sqrt(np.sum(head_axis ** 2))
         cross = body_axis[0] * head_axis[1] - head_axis[0] * body_axis[1]
         sign = copysign(1, cross)  # Positive when looking left
-        head_angle = acos(body_axis @ head_axis) * sign
+        try:
+            head_angle = acos(body_axis @ head_axis) * sign
+        except ValueError:
+            head_angle = 0
         heading = atan2(body_axis[1], body_axis[0])
         heading = degrees(heading)
         vals = *center, heading % (360), head_angle

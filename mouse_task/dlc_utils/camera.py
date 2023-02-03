@@ -13,11 +13,11 @@ import importlib
 import time
 
 import tkinter as tk
-from tkinter import Tk, Toplevel, Button, Label
+from tkinter import Tk, Toplevel, Button, Label, Canvas
 from PIL import Image, ImageTk, ImageDraw
 from functools import partial
 import multiprocess as mp
-
+import numpy as np
 
 class FakeGUI:
     def __init__(self, cam_pose_proc, queue, parent=None, show_kpts=False):
@@ -25,6 +25,9 @@ class FakeGUI:
         if show_kpts:
             self.display_frame_label = Label(self.display_window)
             self.display_frame_label.pack()
+            # self.canvas = Canvas(self.display_window)
+            # self.canvas.pack(fill="both", expand=1)
+            # self.streaming_image = self.canvas.create_image(0, 0, anchor="nw", image=None)
         else:
             self.display_window = None
         self.cam_pose_proc = cam_pose_proc
@@ -32,21 +35,33 @@ class FakeGUI:
         all_colors = getattr(cc, 'fire')
         self.display_colors = all_colors[:: int(len(all_colors) / 50)]
         self.display_radius = 4
-        self.display_lik_thresh = .3 
+        self.display_lik_thresh = .0001 
+        self.btn = Button(self.display_window, text='try', command=self.display_frame)
+        self.btn.pack()
+        self.close_btn = Button(self.display_window, text='close', command=self.cam_pose_proc.stop_capture_process)
+        self.close_btn.pack()
 
     def display_frame(self):
         
         if self.cam_pose_proc and self.display_window:
 
             frame = self.cam_pose_proc.get_display_frame()
-
             if frame is not None:
                 img = Image.fromarray(frame)
                 if frame.ndim == 3:
                     b, g, r = img.split()
                     img = Image.merge("RGB", (r, g, b))
 
-                pose = self.cam_pose_proc.get_display_pose()
+                # pose = self.cam_pose_proc.get_display_pose()
+                pose = None
+                img_draw = ImageDraw.Draw(img)
+                coords = np.random.rand(4) * 200
+                print(coords)
+                img_draw.ellipse(
+                    coords.astype(int),
+                    fill=self.display_colors[0],
+                    outline=self.display_colors[0],
+                )
                 if pose is not None:
                     pose = pose[0]
                     im_size = (frame.shape[1], frame.shape[0])
@@ -84,10 +99,13 @@ class FakeGUI:
                             except Exception as e:
                                 print(e)
 
+                # self.latest_img = ImageTk.PhotoImage(image=img)
                 imgtk = ImageTk.PhotoImage(image=img)
                 self.display_frame_label.imgtk = imgtk
                 self.display_frame_label.configure(image=imgtk)
+                # self.canvas.itemconfig(self.streaming_image, image=self.latest_img)
 
+            # self.display_window.after(10, self.display_frame)
             self.display_frame_label.after(10, self.display_frame)
 
     def get_from_queue(self):
@@ -132,7 +150,7 @@ def spawn_camera(cam_tis=None, dlc_params=None, queue=None):
     dlc_proc_params = dlc_params["processor"]
     dlc_proc_params.update(cfg["processor_args"])
     print(dlc_proc_params)
-    dlc_proc_params["processor_args"] = {"queue": None}
+    # dlc_proc_params["processor_args"] = {"queue": None}
  
     dlc_params_ = cfg["dlc_options"]["model"].copy()
     dlc_params_["processor"] = dlc_proc_params
@@ -157,5 +175,8 @@ if __name__ == '__main__': # and '__file__' in globals():
 #print(TIS_CAM().GetDevices()[0])
     queue = ClearableMPQueue(maxsize=100)
     cam_pose_proc = spawn_camera(queue=queue)
-    gui = FakeGUI(cam_pose_proc, queue, show_kpts=True)
+    mainwindow = tk.Tk()
+    gui = FakeGUI(cam_pose_proc, queue, show_kpts=True, parent=mainwindow)
+
+    mainwindow.mainloop()
     #proc = spawn_camera()

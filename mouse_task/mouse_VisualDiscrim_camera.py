@@ -75,7 +75,7 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         self.params = None
         
         self.queue = ClearableMPQueue(maxsize=100)
-        self.cam_pose_proc = spawn_camera(queue=self.queue)
+        self.cam_pose_proc = spawn_camera(queue=None)
 
         config_dict = process_config(config_file_path)
 
