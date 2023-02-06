@@ -133,12 +133,12 @@ class ARVisualDiscrim(UnityTask):
         this_read = self.dlcClient.read()
         print(this_read)
         if this_read != None:
-            params = np.array(this_read ["vals"])
-            self.params =self.filt(self.t_count, np.array(params))
+            self.params = np.array(this_read ["vals"])
+            #self.params =self.filt(self.t_count, np.array(params))
             self.t_count = self.t_count + 1
             
         else:
-            params = np.array([0.01,1,2]) + self.t_count
+            self.params = np.array([0.01,1,2]) + self.t_count
             
         
     
