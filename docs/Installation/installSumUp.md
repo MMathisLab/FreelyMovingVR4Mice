@@ -21,7 +21,7 @@ $ pip install .
 3. Note: it's possible to install **vr4mice** package directly from git:
 
 ```
-$ pip install TODO(add repo's link) heelo
+$ pip install TODO(add repo's link)
 ```
 
 ## Getting Started
