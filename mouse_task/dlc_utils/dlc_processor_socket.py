@@ -1,28 +1,26 @@
 import cv2
 import numpy as np
-<<<<<<< HEAD
-from deeplabcut.utils.auxfun_videos import VideoReader
-=======
 #from .Video_handler import VideoReader
->>>>>>> tom/dev_socket
 from tqdm import trange
 from dlclive import DLCLive
+from multiprocessing.connection import Listener
 
 import numpy as np
 from dlclive import Processor
 from math import sqrt, acos, atan2, copysign, pi, degrees
 
-class MyProcessor(Processor):
-<<<<<<< HEAD
-
-    def process(self, pose):
+class MyProcessor_socket(Processor):
+    def __init__(self, baudrate=115200, pulse_freq=50, pulse_width=5, max_stim_dur=0):
+        super().__init__()
+       # self.queue = queue
+        self.address = ('localhost', 6000)     # family is deduced to be 'AF_INET'
+        self.listener =  Listener(self.address, authkey=b'secret password')
+        self.conn = self.listener.accept()
+        print('connection accepted from', self.listener.last_accepted)
+        self.center_x =[]
+        self.center_y = []
         
-=======
-    def __init__(self, queue=None):
-        self.queue = queue
-
     def process(self, pose, **kwargs):
->>>>>>> tom/dev_socket
         xy = pose[:, :2]
         conf = pose[:, 2]
         center = np.average(xy, axis=0, weights=conf)
@@ -32,14 +30,6 @@ class MyProcessor(Processor):
         head_axis /= sqrt(np.sum(head_axis ** 2))
         cross = body_axis[0] * head_axis[1] - head_axis[0] * body_axis[1]
         sign = copysign(1, cross)  # Positive when looking left
-<<<<<<< HEAD
-        head_angle = acos(body_axis @ head_axis) * sign
-        heading = atan2(body_axis[1], body_axis[0])
-        heading = degrees(heading)
-        return(*center, heading % (360), head_angle)
-
-
-=======
         try:
             head_angle = acos(body_axis @ head_axis) * sign
         except ValueError:
@@ -47,8 +37,10 @@ class MyProcessor(Processor):
         heading = atan2(body_axis[1], body_axis[0])
         heading = degrees(heading)
         vals = *center, heading % (360), head_angle
-        if self.queue is not None:
-            self.queue.write(vals)
+        #self.center_x.append(center [0], center[1])
+        
+        self.conn.send([vals [0], vals [1], vals [2], vals [3]])
+       # if self.queue is not None:
+       #     self.queue.write(vals)
         #print(vals)
-        return pose, vals
->>>>>>> tom/dev_socket
+        return pose

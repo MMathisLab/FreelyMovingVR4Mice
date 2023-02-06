@@ -2,19 +2,32 @@
 To build the cage you will want to cut the thor labs [optical rails](https://www.thorlabs.com/thorproduct.cfm?partnumber=XE25RL2) down to size and then thread them with an imperial thread drill.
 Here are the sizes that you will need to cut:
 
+<<<<<<< HEAD
 - 4 x 540mm Cage floor pieces
 - 4 x 540mm Cage top pieces
 - 4 x 600mm Cage vertical pieces
 - 1 x 540mm cross bar for camera mounting
+=======
+4 x 540mm Cage floor pieces
+4 x 540mm Cage top pieces
+4 x 600mm Cage vertical pieces
+1 x 540mm cross bar for camera mounting
+>>>>>>> tom/dev_socket
 
 
 ## making the monitor mounts
 To mount the monitors you will need to 3D print:
+<<<<<<< HEAD
 - 8x top monitor mounts
 - 8x bottom monitor mounts
 - 16x right angled brackets (XE25A90)
 
  These can also be 3D printed from the Thor labs cad file, but i recommend having 8 real metal pieces for the bottom monitor mounts since these will bear the weight of the monitors
+=======
+8x top monitor mounts
+8x bottom monitor mounts
+16x right angled brackets (XE25A90) - These can also be 3D printed from the Thor labs cad file, but i recommend having 8 real metal pieces for the bottom monitor mounts since these will bear the weight of the monitors
+>>>>>>> tom/dev_socket
 
 Attach the 3D printed parts onto the right angled brackets, these should just slot in to the right angled brackets by placing the cylindrical part of the 3D printed pieces into the circular whole on the right angled bracket. Then slot these onto the monitors with the bottom pieces attaching to the bottom of the monitor and the top pieces on the top of the monitor.
 
