@@ -1,0 +1,3 @@
+[submodule "DeepLabCut-live-GUI"]
+	path = DeepLabCut-live-GUI
+	url = https://github.com/DeepLabCut/DeepLabCut-live-GUI.git

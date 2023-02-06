@@ -5,12 +5,13 @@ from tqdm import trange
 from dlclive import DLCLive
 
 import numpy as np
-from dlclive import Processor
+from dlclive.processor.processor import Processor
 from math import sqrt, acos, atan2, copysign, pi, degrees
 
-class MyProcessor(Processor):
-    def __init__(self, queue=None):
-        self.queue = queue
+class MyProcessor2(Processor):
+    def __init__(self,  con = 50):
+        super().__init__()
+       # self.queue = queue
 
     def process(self, pose, **kwargs):
         xy = pose[:, :2]
@@ -26,10 +27,20 @@ class MyProcessor(Processor):
             head_angle = acos(body_axis @ head_axis) * sign
         except ValueError:
             head_angle = 0
+        head_angle = acos(body_axis @ head_axis) * sign
         heading = atan2(body_axis[1], body_axis[0])
         heading = degrees(heading)
         vals = *center, heading % (360), head_angle
-        if self.queue is not None:
-            self.queue.write(vals)
-        #print(vals)
-        return pose, vals
+        print(vals)
+       # if self.queue is not None:
+       #     self.queue.write(vals)
+        return pose
+    
+    def save(self, file=None):
+
+        ### save stim on and stim off times
+        save_code = 0
+        return save_code
+    
+    
+   

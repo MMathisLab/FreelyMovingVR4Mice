@@ -19,17 +19,18 @@ import time
 import pandas as pd
 import cv2
 import numpy as np
-from deeplabcut.utils.auxfun_videos import VideoReader
+
 from tqdm import trange
-from dlclive import DLCLive
+
 import time as time
+from multiprocessing.connection import Client
 
 from mouse_task.helpers import process_config
-from mouse_task.dlc_utils.video import Video
-from mouse_task.dlc_utils.kfilter import OneEuroFilter
-from mouse_task.dlc_utils.dlcProcessor import MyProcessor
+
 from teensyexp.tasks_abc.unity_task import UnityTask
 from teensyexp.tasks_abc.gui_task import GuiTask
+from teensyexp.tasks_abc.dlc_socket import DLCClient
+from mouse_task.kfilter import OneEuroFilter
 
 
 
@@ -37,7 +38,7 @@ config_name = Path("task_config.json")
 current_dir = Path(__file__).parent
 config_path = current_dir.joinpath(config_name) # default class constructor input
 
-class ARVisualDiscrim(UnityTask, GuiTask):
+class ARVisualDiscrim(UnityTask):
     """
         Augmented Reality Visual discrimination
         Class that represents mouse task, inherits from UnityTask and GuiTask teensyexp module's classes
@@ -72,10 +73,13 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         self.t_count = None
         self.filt = None
         self.params = None
+        self.address = ('localhost', 6000)
+        self.dlcClient = DLCClient(address=self.address)
+        self.t_count = 0
+        self.params = np.array([0,0,0])
+        self.filt = OneEuroFilter(t0 = self.t_count, x0 = np.array(self.params), beta=0.01, min_cutoff=0.01)
         
-       
-     
-
+    
         config_dict = process_config(config_file_path)
 
         if config_dict is None:
@@ -106,41 +110,16 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         self.trial_Prob_Obj_on_Left = []
         self.trial_split_size = []
         self.trial_split_depth = []
-
-
+        self.dlc_x = []
+        self.dlc_y = []
+        self.dlc_heading = [] 
+        self.dlc_time_step = []
 
 
         # setup video steam and DLC stuff
-        self.dlc_proc = MyProcessor()
-        self.dlc_live = DLCLive(model_path, processor=self.dlc_proc,display=True, resize =0.6)
-        self.video_path = dlc_video_path
-        self.vid = VideoReader(video_path=self.video_path)
+     
         self.initialized = False
 
-    def init_dlc_live(self):
-        """
-            method that initializes the DLC FRAME
-            it grabs and filters the current mouse's state
-            This is only run on the first frame of the game
-        """
-
-        self.t_count = 0
-        _ = self.dlc_live.init_inference(self.vid.read_frame(shrink=1))
-        frame = self.vid.read_frame(shrink = 1)
-        self.params = np.array(self.dlc_live.get_pose(frame))
-        self.filt = OneEuroFilter(t0 = self.t_count, x0 = np.array(self.params), beta=0.01, min_cutoff=0.01)
-        self.t_count = self.t_count + 1
-        x = self.params [0]
-        z = self.params [1]
-        head_angle = self.params [2]
-        
-
-        # interp mouse pixel space into arena space
-        x = np.interp(x,[55,610], [-10,10])
-        z = np.interp(z,[55,610], [-4,-15])
-        degrees = (head_angle - (90+180)) % 360; 
-        output = np.array([x,z,degrees])
-        return(output.reshape((1,-1)))
 
     def _get_dlc_on_frame(self):
         """
@@ -150,32 +129,39 @@ class ARVisualDiscrim(UnityTask, GuiTask):
         """
         
         # run DLC on every frame to be given as input to the agent
-        frame = self.vid.read_frame(shrink = 1)
-        params = np.array(self.dlc_live.get_pose(frame))
-        self.params =self.filt(self.t_count, np.array(params))
-        self.t_count = self.t_count + 1
+        #frame = self.vid.read_frame(shrink = 1)
+        this_read = self.dlcClient.read()
+        print(this_read)
+        if this_read != None:
+            self.params = np.array(this_read ["vals"])
+            #self.params =self.filt(self.t_count, np.array(params))
+            self.t_count = self.t_count + 1
+            
+        else:
+            self.params = np.array([0.01,1,2]) + self.t_count
+            
+        
     
         x = self.params [0]
         z = self.params [1]
         head_angle = self.params [2]
+        self.dlc_x.append(x)
+        self.dlc_y.append(z)
+        self.dlc_heading.append(head_angle)
+        
 
 
         # interp mouse pixel space into arena space
-        x = np.interp(x,[55,610], [-10,10])
-        z = np.interp(z,[55,610], [-4,-15])
+        x = np.interp(x,[0,480], [-6,6])
+        z = np.interp(z,[0,450], [-4,-15])
         degrees = (head_angle - (90+180)) % 360; 
         output = np.array([x,z,degrees])
-
         return(output.reshape((1,-1)))
 
         
 
     # This gui function needs to be here - currently this is not used   
-    def create_gui(self, parent):
-        """
-            method inherited from gui_task parent class interface
-        """
-        pass
+    
 
     # can use this function to save data to the .pickle file and send parameters to unity
     def set_channel(self):
@@ -205,11 +191,7 @@ class ARVisualDiscrim(UnityTask, GuiTask):
             method that get actions from DLC and parse them to unity
             called by teensyexp's module Agent, This function is called on every frame of the game.
         """
-        if not self.initialized:
-            output = self.init_dlc_live()
-            self.initialized = True  
-        else:
-            output = self._get_dlc_on_frame()
+        output = self._get_dlc_on_frame()
         return output
 
     def check_reward(self):
@@ -253,4 +235,7 @@ class ARVisualDiscrim(UnityTask, GuiTask):
                 dictionary with data
         """
         data_dict = super().get_data()
+        data_dict['dlc_x'] = np.array(self.dlc_x)
+        data_dict['dlc_y'] = np.array(self.dlc_x)
+        data_dict['dlc_heading'] = np.array(self.dlc_heading)
         return data_dict
