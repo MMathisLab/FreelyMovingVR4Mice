@@ -1,10 +1,12 @@
 # FreelyMovingVR4mice overview
-```{image} ../docs/images/Mouse_header.jpg
+
+```{image} ../docs/images/VR4mice_schematic.png
 :alt: AR
 :class: bg-primary mb-1
-:width: 400px
+:width: 500px
 :align: center
 ```
+
 This documentation provides a user guide for the installation and getting an augmented reality system up and running. 
 FreelyMovingVR4mice uses two GUIs (vr4mice and Deeplabcut-live-gui) that were both developed within the Mathis lab. These two packages communicate with each other through a socket and allow for dlc poses to be passed to a video game so that the video can be rendered dynamically in real time. 
 
@@ -21,12 +23,6 @@ FreelyMovingVR4mice uses two GUIs (vr4mice and Deeplabcut-live-gui) that were bo
 
 The augmented reality system runs on a python framework, vr4mice, this code was initially developed by Gary Kane, Michael Beauzile, and Mackenzie Mathis as a simple and scalable control suite for a host of systems neuroscience tasks. This was expanded with Thomas Sainsbury, Sebastien Hausmann, Mariia Popova and Jessy Lauer. This framework handles input and output to a teensy, parses actions to the Unity video game and handles all data logging for the experiments. In addition, it provides a simple GUI for the user to run the experiments and manually change parameters which control the experiments trial-like structure.
 
-```{image} ../docs/images/VR4mice_schematic.png
-:alt: AR
-:class: bg-primary mb-1
-:width: 400px
-:align: center
-```
 
 ## vr4mice GUI
 To run an augmented reality experiment, vr4mice requires two objects:
