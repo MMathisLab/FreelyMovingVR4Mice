@@ -24,7 +24,6 @@ $ pip install .
 $ pip install TODO(add repo's link)
 ```
 
-<<<<<<< HEAD
 ## Getting Started
 
 ### Setting up your experimental system
@@ -36,15 +35,6 @@ $ pip install TODO(add repo's link)
 #### desktop icon
   -  How to create [desktop icon](./create_desktop_icon.md) using a .bat script (windows)
 
-=======
-### Getting Started
-#### Setting up your experimental system
-### Teensy part ####
-  - Connect teensy microcontroller ([example of code to upload](../../mouse_task/teensy/teensy_AR.ino))
-  - check rights on port access (modify via sudo chmod if needed)
-### Config files ####
-  - Set up the [config files](./Config_file_setup.md)
->>>>>>> tom/dev_socket
 
 
 

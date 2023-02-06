@@ -4,7 +4,6 @@
 Lambda vector workstation:
 
 Operating system: Windows 10 Pro: Includes TensorFlow, PyTorch, CUDA, cuDNN, and Visual Studio. Processor: Intel Core i9-10900X: 10 cores, 3.70 GHz, 19.25 MB cache
-<<<<<<< HEAD
 
 CPU Cooler: Air cooling
 
@@ -18,14 +17,6 @@ Data drive: 2 TB SSD (SATA)
 
 Network: 2x 1 gigabit LAN (RJ45)
 
-=======
-CPU Cooler: Air cooling
-GPUs: 2x RTX 3080 
-Memory: 128 GB
-Operating system drive: 1 TB SSD (NVMe)
-Data drive: 2 TB SSD (SATA)
-Network: 2x 1 gigabit LAN (RJ45)
->>>>>>> tom/dev_socket
 Case: Lambda Vector case
 
 ## Cameras:
@@ -59,11 +50,7 @@ We will send across one of our custom PCB boards with these components attached 
 
 
 ## Monitors:
-<<<<<<< HEAD
 5x acer (SB241Y) + HDMI cables
-=======
-5x acer (need part number) + HDMI cables
->>>>>>> tom/dev_socket
 
 4 monitors for the mouse setup, 1 for launching the task.
 

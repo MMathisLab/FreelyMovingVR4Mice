@@ -85,11 +85,7 @@ class UnityTask(Task):
         self.vis_obs_ind = self.vis_obs_ind[0] if len(self.vis_obs_ind) > 0 else None
         if self.vis_obs_ind:
             vis_obs_shape = np.array(self.agent_spec.observation_shapes)[self.vis_obs_ind]
-<<<<<<< HEAD
             #self.vid_writer = self.create_vid_writer(vis_obs_shape, fps) if write_video and vis_obs_shape else None
-=======
-            self.vid_writer = self.create_vid_writer(vis_obs_shape, fps) if write_video and vis_obs_shape else None
->>>>>>> tom/dev_socket
         step_result = self.get_step_result()
         self.state = step_result.obs[self.vec_obs_ind]
         self.episode = 1
