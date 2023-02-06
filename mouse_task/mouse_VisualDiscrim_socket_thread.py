@@ -30,6 +30,7 @@ from mouse_task.helpers import process_config
 from teensyexp.tasks_abc.unity_task import UnityTask
 from teensyexp.tasks_abc.gui_task import GuiTask
 from teensyexp.tasks_abc.dlc_socket import DLCClient
+from mouse_task.kfilter import OneEuroFilter
 
 
 
@@ -74,6 +75,9 @@ class ARVisualDiscrim(UnityTask):
         self.params = None
         self.address = ('localhost', 6000)
         self.dlcClient = DLCClient(address=self.address)
+        self.t_count = 0
+        self.params = np.array([0,0,0])
+        self.filt = OneEuroFilter(t0 = self.t_count, x0 = np.array(self.params), beta=0.01, min_cutoff=0.01)
         
     
         config_dict = process_config(config_file_path)
@@ -129,12 +133,14 @@ class ARVisualDiscrim(UnityTask):
         this_read = self.dlcClient.read()
         print(this_read)
         if this_read != None:
-            self.params = np.array(this_read ["vals"])
+            params = np.array(this_read ["vals"])
+            self.params =self.filt(self.t_count, np.array(params))
+            self.t_count = self.t_count + 1
+            
         else:
-            self.params = np.array([0,0,0])
-    
-        #self.params =self.filt(self.t_count, np.array(params))
-        #self.t_count = self.t_count + 1
+            params = np.array([0.01,1,2]) + self.t_count
+            
+        
     
         x = self.params [0]
         z = self.params [1]
