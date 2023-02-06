@@ -76,4 +76,15 @@ The reason for 2 floor plates is so that the light diffuser can be sandwiched be
 ## Power supply
 1x Power Supply (12V Wall wart)
 
+## 3D printed parts
+8 x  Top monitor holder - `../stl_files/top_monitor_holder.stl`
+
+4 x Bottom monitor holder - `../stl_files/Bottom_monitor_holder_only.stl`
+
+4 x Bottom monitor holder with box adaptor - `../stl_files/Bottom_monitor_box_holder.stl`
+
+
+
+
+
 
