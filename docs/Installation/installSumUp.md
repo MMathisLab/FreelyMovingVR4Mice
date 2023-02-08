@@ -18,11 +18,13 @@ $ conda activate name_of_env
 ```
 $ pip install .
 ```
-3. Note: it's possible to install **vr4mice** package directly from git:
 
-```
-$ pip install TODO(add repo's link)
-```
+
+## Install DLCliveGUI
+You will also need to install DLCliveGUI on a separate conda environment (call this environment dlclive_gui) you can find installation instructions on how to do this [here](https://github.com/DeepLabCut/DeepLabCut-live-GUI/blob/master/docs/install.md). However, you will want to use a tensorflow 2.x version since the model that we use for the tracking was made with tensorflow 2. 
+
+you can then start the gui by typing ```dlclivegui``` when in the dlclive_gui envrioment.
+
 
 ## Getting Started
 
