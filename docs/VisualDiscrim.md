@@ -23,10 +23,10 @@ In takes the form of a parent class over a base class (called unity_task) and re
 
 There are four main functions within the script that control different aspects of the game:
 
-1. set_channel() - this is called at the beginning of each trail and can be used to send parameters to the unity game.
-2. get_action() - this function is called on every frame and its output is sent as "actions" to the unity game. In our case of wanting to use a freely moving animal to control the game this function runs a DLClive processor on the incoming video stream from the behavioral cameras to extract out the animals x,y positions and its heading angle. These coordinates from the images are then mapped to game coordinates and sent to the unity game to control the game cameras, changing how the environment is rendered on the screens.
-3. check_reward() - this function is called on every frame and checks if a reward has been given within the unity game. If it has the function sends a command to the teensy to deliver a water reward.
-4. get_data() - this function is called when the "save task data" button within the GUI is pressed at the end of an experiment. This saves the data into a pickle file with the mouse_name that is defined in the GUI, followed by the data and the attempt (Dodo_170722_1.pkl)
+1. ```set_channel()``` - this is called at the beginning of each trail and can be used to send parameters to the unity game.
+2. ```get_action()``` - this function is called on every frame and its output is sent as "actions" to the unity game. In our case of wanting to use a freely moving animal to control the game this function calls another function that reads the DLC data from a socket which the DLClivegui is sending data to. Currently, this data is the animals x,y positions and its heading angle. These coordinates from the images are then mapped to game coordinates and sent to the unity game to control the game cameras, changing how the environment is rendered on the screens.
+3. ```check_reward()``` - this function is called on every frame and checks if a reward has been given within the unity game. If it has the function sends a command to the teensy to deliver a water reward.
+4. ```get_data()``` - this function is called when the "save task data" button within the GUI is pressed at the end of an experiment. This saves the data into a pickle file with the mouse_name that is defined in the GUI, followed by the data and the attempt (Dodo_170722_1.pkl)
 
 If you want to modify the task handling you can edit the code within these functions to change how the task runs.
 
@@ -35,12 +35,14 @@ If you want to modify the task handling you can edit the code within these funct
 
 Here is an explanation of the parameters that can be set in the GUI:
 
-1. reward_size -  This specifies how may ms the water valve should be open for
-2. Prop_Obj_on_Left -  probability that the object of interest (green cube) will appear on the left
-3. cropped_image - The pixel dimensions of the image of the box that the mouse walking around in [left, right, top, bottom] all dimensions are in pixels. These are then mapped to the game space and sent to unity to control.
+1. ```reward_size``` -  This specifies how may ms the water valve should be open for (ms)
+2. ```Prop_Obj_on_Left``` -  The Probability that the object of interest (green cube) will appear on the left
+3. ```cropped_image``` - The pixel dimensions of the image of the box that the mouse walking around in [left, right, top, bottom] all dimensions are in pixels. These are then mapped to the game space and sent to unity to control.
+4. ```slit size``` - The size of the slit that the mouse has to look through to view the occluded objects
+5. ```slit depth``` - The depth of the slit ie. how thick the walls should be.
+6. ```Target spread```- The distance between the target and the distractor.
 
 such parameters can either be used to control aspects of the game that need to be sent to the teensy such as reward size. Or these parameters can be sent to the unity game on a trial by trial basis to control the unity game parameters.
-
 
 #### Adding new game parameters
 New parameters can be added to this task by placing them within the arguments of this class, as done with the "new_param" in the code cell below. These parameters will automatically appear in the GUI when you click on the edit button. 
@@ -130,14 +132,13 @@ In the augmented reality setup actions are sent from the DLCliveGUI via a socket
 ```
 We can then read from this thread periodically and send the data to unity by the ```dlcClient.read()``` method. In the python task script this is called within the ```_get_dlc_on_frame()```function. This function adds the incoming data to vectors which can be saved at the end of the experiment. It also maps the dlc data (which is in pixel coordinates from the camera images) to unity coordinates. 
 
-
 ```{code-cell} ipython3
 :tags: [_get_dlc_on_frame]
     
     def _get_dlc_on_frame(self):
         """
-            inner method that runS DLC on every frame
-            used in get_action(), called by teensyexp's module Agent
+            inner method that reads DLC on every frame
+            used in get_action(), called by vr4mice's module Agent
             This is run on every frame after the dlc processor is initialised
         """
         
@@ -179,5 +180,8 @@ Finally, this function gets called by the ```get_action()```function. This funct
         output = self._get_dlc_on_frame()
         return output
 ```
+
+### Data saving functionality
+At the end of the experiment, we want to save various forms of data such as trial by trial paramters and frame by frame actions that the animal took. This can be done by creating lists that can be appended with these parameters either when a trial begins or on each frame of the game. These can then all be saved into a .pkl file by the ```get_data()``` function in the python task file. Data gets saved by then clicking the save data button within the vr4mice GUI.
 
 
