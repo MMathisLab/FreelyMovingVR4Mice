@@ -103,36 +103,8 @@ def set_channel(self):
 In this function, first the parameter for the current trial is extracted by self.get_epoch_value(). In this example script, we have no block like structure ie. each trial uses the same parameters, so for each trial the parameters are identical for all 250 trials. If you want to add block like structure see the "adding block structure" section below. The function, after getting the parameters for this trial, then sends them to unity using the self.channel.set_property() function. In the unity game there is a similar c# function which is waiting for these parameters so the string that is parsed has to be identical to how they are defined in the unity game. Finally, this function appends a vector which represents what the parameter was for each trail within the whole session, these vectors can then be saved in the get_data() function at the end of the script. 
 
 
-
-```{code-cell} ipython3
-:tags: [get_action]
-    def get_action(self):
-        """
-            method that get actions from DLC and parse them to unity
-            called by teensyexp's module Agent, This function is called on every frame of the game.
-        """
-        data = self.queue.read(position='last', clear=False)
-        if data is None:
-            return np.array([0, 0, 0]).reshape((1, -1))
-        
-        x = data[0]
-        z = data[1]
-        head_angle = data[2]
-
-
-        # interp mouse pixel space into arena space
-        x = np.interp(x,[55,610], [-6,6])
-        z = np.interp(z,[55,610], [-4,-15])
-        degrees = (head_angle - (90+180)) % 360; 
-        output = np.array([x,z,degrees])
-        print(output)
-        return(output.reshape((1,-1)))
-
-```
-
 #### Adding block like structure
 In addition, to the parameters being identical across trials we may also like to add block like structure such as a baseline and pertubation block. An example of this could be the visual discrimination task without occluders for the first 100 trial followed by 100 trials with occulders. This can be achieved by passing the parameters to the class as lists:
-
 
 ```{code-cell} ipython3
 :tags: [set_channel]
@@ -148,8 +120,64 @@ Here we have modified the blocks to have 100 trial each by specifying that epoch
 Being able to change the parameters in this way allows the user to have control over the task structure and the aesthetics of the game from the GUI
 
 
+### Reading poses from DLC live
+In the augmented reality setup actions are sent from the DLCliveGUI via a socket to the computers localhost these can be read within the python task script using the [DLCClient class](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/teensyexp/tasks_abc/dlc_socket.py). This class gets initialized when the task script is loaded, and begins to read from the socket on a thread. 
+
+```{code-cell} ipython3
+:tags: [read on thread]
+    self.address = ('localhost', 6000)
+    self.dlcClient = DLCClient(address=self.address)
+```
+We can then read from this thread periodically and send the data to unity by the ```dlcClient.read()``` method. In the python task script this is called within the ```_get_dlc_on_frame()```function. This function adds the incoming data to vectors which can be saved at the end of the experiment. It also maps the dlc data (which is in pixel coordinates from the camera images) to unity coordinates. 
 
 
+```{code-cell} ipython3
+:tags: [_get_dlc_on_frame]
+    
+    def _get_dlc_on_frame(self):
+        """
+            inner method that runS DLC on every frame
+            used in get_action(), called by teensyexp's module Agent
+            This is run on every frame after the dlc processor is initialised
+        """
+        
+        # get dlc data from the socket if the value is not none
+        this_read = self.dlcClient.read()
+        print(this_read)
+        if this_read != None:
+            self.params = np.array(this_read ["vals"])
+        else:
+            self.params = np.array([0,0,0])
 
+        # add move x and y position and heading direction to vectors which can be saved    
+        x = self.params [0]
+        z = self.params [1]
+        head_angle = self.params [2]
+        self.dlc_x.append(x)
+        self.dlc_y.append(z)
+        self.dlc_heading.append(head_angle)
+        
+        # interp mouse pixel space into unity arena game space
+        x = np.interp(x,[0,480], [-6,6])
+        z = np.interp(z,[0,450], [-4,-15])
+        degrees = (head_angle - (90+180)) % 360; 
+        output = np.array([x,z,degrees])
+        return(output.reshape((1,-1)))
+
+```
+Finally, this function gets called by the ```get_action()```function. This function gets called everytime the unity game is ready for action. 
+
+
+```{code-cell} ipython3
+:tags: [_get_dlc_on_frame]
+    
+  def get_action(self):
+        """
+            method that get actions from DLC and parse them to unity
+            called by teensyexp's module Agent, This function is called on every frame of the game.
+        """
+        output = self._get_dlc_on_frame()
+        return output
+```
 
 

@@ -138,19 +138,17 @@ class ARVisualDiscrim(UnityTask):
             self.t_count = self.t_count + 1
             
         else:
-            self.params = np.array([0.01,1,2]) + self.t_count
-            
-        
+            self.params = np.array([0,0,0]) 
     
         x = self.params [0]
         z = self.params [1]
         head_angle = self.params [2]
+
+        # save incomming dlc data
         self.dlc_x.append(x)
         self.dlc_y.append(z)
         self.dlc_heading.append(head_angle)
-        
-
-
+    
         # interp mouse pixel space into arena space
         x = np.interp(x,[0,480], [-6,6])
         z = np.interp(z,[0,450], [-4,-15])
