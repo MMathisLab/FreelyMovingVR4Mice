@@ -30,7 +30,7 @@ you can then start the gui by typing ```dlclivegui``` when in the dlclive_gui en
 
 ### Setting up your experimental system
 #### Teensy 
-  - Connect teensy microcontroller ([example of code to upload](../../mouse_task/teensy/teensy_AR.ino))
+  - Connect teensy microcontroller and upload the teensy sketch ([example of code to upload](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/mouse_task/teensy/teensy_AR.ino))
   - check rights on port access (modify via sudo chmod if needed)
 #### Config files 
   - Set up the [config files](./Config_file_setup.md)
