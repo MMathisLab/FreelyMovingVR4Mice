@@ -45,14 +45,11 @@ class MyProcessor_socket(Processor):
         self.center_y = vals [1]
         self.heading_direction = vals [2]
         self.head_angle = vals [3]
-        #self.center_x.append(center [0], center[1])
         try:
             self.conn.send([vals [0], vals [1], vals [2], vals [3]])
         except:
             print("connection ended")
-       # if self.queue is not None:
-       #     self.queue.write(vals)
-        #print(vals)
+     
         return pose
     
     def save(self, file=None):
