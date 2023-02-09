@@ -1,9 +1,6 @@
 format: jb-book
-root: README
+root: docs/vr4mice_overview
 parts:
-- caption: Overview
-  chapters:
-  - file: docs/vr4mice_overview
 - caption: Building the rig
   chapters:
   - file: docs/Rig_building/Parts_list
