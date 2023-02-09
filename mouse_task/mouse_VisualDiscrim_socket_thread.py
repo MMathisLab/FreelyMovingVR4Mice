@@ -76,10 +76,7 @@ class ARVisualDiscrim(UnityTask):
         self.address = ('localhost', 6000)
         self.dlcClient = DLCClient(address=self.address)
         self.t_count = 0
-        self.params = np.array([0,0,0])
-        self.filt = OneEuroFilter(t0 = self.t_count, x0 = np.array(self.params), beta=0.01, min_cutoff=0.01)
         
-    
         config_dict = process_config(config_file_path)
 
         if config_dict is None:
@@ -134,28 +131,27 @@ class ARVisualDiscrim(UnityTask):
         print(this_read)
         if this_read != None:
             self.params = np.array(this_read ["vals"])
-            #self.params =self.filt(self.t_count, np.array(params))
+            if self.t_count == 0:
+                self.filt = OneEuroFilter(t0 = self.t_count, x0 = np.array(self.params), beta=0.01, min_cutoff=0.01)
+            else:
+                self.params =self.filt(self.t_count, np.array(self.params))
             self.t_count = self.t_count + 1
+            x = self.params [0]
+            z = self.params [1]
+            head_angle = self.params [2]
+            self.dlc_x.append(x)
+            self.dlc_y.append(z)
+            self.dlc_heading.append(head_angle)
             
+            # interp mouse pixel space into arena space
+            x = np.interp(x,[0,480], [-6,6])
+            z = np.interp(z,[0,450], [-4,-15])
+            degrees = (head_angle - (90+180)) % 360; 
+            output = np.array([x,z,degrees])
         else:
-            self.params = np.array([0.01,1,2]) + self.t_count
-            
-        
+            output = np.array([0,0,0])
     
-        x = self.params [0]
-        z = self.params [1]
-        head_angle = self.params [2]
-        self.dlc_x.append(x)
-        self.dlc_y.append(z)
-        self.dlc_heading.append(head_angle)
-        
-
-
-        # interp mouse pixel space into arena space
-        x = np.interp(x,[0,480], [-6,6])
-        z = np.interp(z,[0,450], [-4,-15])
-        degrees = (head_angle - (90+180)) % 360; 
-        output = np.array([x,z,degrees])
+     
         return(output.reshape((1,-1)))
 
         
