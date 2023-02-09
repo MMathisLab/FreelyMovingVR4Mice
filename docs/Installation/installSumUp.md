@@ -21,9 +21,9 @@ $ pip install .
 
 
 ## Install DLCliveGUI
-You will also need to install DLCliveGUI on a separate conda environment (call this environment dlclive_gui) you can find installation instructions on how to do this [here](https://github.com/DeepLabCut/DeepLabCut-live-GUI/blob/master/docs/install.md). However, you will want to use a tensorflow 2.x version since the model that we use for the tracking was made with tensorflow 2. 
+You will also need to install DLCliveGUI on a separate conda environment (call this environment dlclive_gui) you can find installation instructions on how to do this [here](https://github.com/DeepLabCut/DeepLabCut-live-GUI/blob/master/docs/install.md). However, you will want to use a tensorflow 2.x version since the model that we use for the tracking was made with tensorflow 2. Ensure that you also have the correct version of CUDA and cudnn installed on this conda environment for the tensorflow version that you are using.
 
-you can then start the gui by typing ```dlclivegui``` when in the dlclive_gui envrioment.
+you can then start the gui by typing ```dlclivegui``` when in the dlclive_gui environment.
 
 
 ## Getting Started
