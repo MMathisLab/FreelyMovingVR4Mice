@@ -33,3 +33,18 @@ class MyProcessor(Processor):
             self.queue.write(vals)
         #print(vals)
         return pose, vals
+    
+        def save(self, filename):
+
+        ### save stim on and stim off times
+
+        if filename[-4:] != ".npy":
+            filename += ".npy"
+        arr = np.array(self.led_times, dtype=float)
+        try:
+            np.save(filename, arr)
+            save_code = True
+        except Exception:
+            save_code = False
+
+        return save_code

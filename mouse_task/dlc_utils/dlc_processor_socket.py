@@ -4,6 +4,7 @@ import numpy as np
 from tqdm import trange
 from dlclive import DLCLive
 from multiprocessing.connection import Listener
+import pickle
 
 import numpy as np
 from dlclive import Processor
@@ -19,6 +20,8 @@ class MyProcessor_socket(Processor):
         print('connection accepted from', self.listener.last_accepted)
         self.center_x =[]
         self.center_y = []
+        self.heading_direction = []
+        self.head_angle = []
         
     def process(self, pose, **kwargs):
         xy = pose[:, :2]
@@ -37,10 +40,32 @@ class MyProcessor_socket(Processor):
         heading = atan2(body_axis[1], body_axis[0])
         heading = degrees(heading)
         vals = *center, heading % (360), head_angle
-        #self.center_x.append(center [0], center[1])
         
-        self.conn.send([vals [0], vals [1], vals [2], vals [3]])
+        self.center_x =vals [0]
+        self.center_y = vals [1]
+        self.heading_direction = vals [2]
+        self.head_angle = vals [3]
+        #self.center_x.append(center [0], center[1])
+        try:
+            self.conn.send([vals [0], vals [1], vals [2], vals [3]])
+        except:
+            print("connection ended")
        # if self.queue is not None:
        #     self.queue.write(vals)
         #print(vals)
         return pose
+    
+    def save(self, file=None):
+
+        ### save stim on and stim off times
+        save_code = 0
+        if file:
+            try:
+                pickle.dump(
+                    {"x_pos": self.center_x, "y_pos": self.center_y, "heading_direction": self.heading_direction, "head_angle": self.head_angle},
+                    open(file, "wb"),
+                )
+                save_code = 1
+            except Exception:
+                save_code = -1
+        return save_code
