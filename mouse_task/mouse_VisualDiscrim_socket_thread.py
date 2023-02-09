@@ -113,10 +113,6 @@ class ARVisualDiscrim(UnityTask):
         self.dlc_time_step = []
 
 
-        # setup video steam and DLC stuff
-     
-        self.initialized = False
-
 
     def _get_dlc_on_frame(self):
         """
@@ -126,7 +122,6 @@ class ARVisualDiscrim(UnityTask):
         """
         
         # run DLC on every frame to be given as input to the agent
-        #frame = self.vid.read_frame(shrink = 1)
         this_read = self.dlcClient.read()
         print(this_read)
         if this_read != None:
@@ -234,4 +229,7 @@ class ARVisualDiscrim(UnityTask):
         data_dict['dlc_x'] = np.array(self.dlc_x)
         data_dict['dlc_y'] = np.array(self.dlc_x)
         data_dict['dlc_heading'] = np.array(self.dlc_heading)
+        data_dict["block_labels"] = np.array(self.trial_epoch_labels)
+        data_dict["slit_size"] = np.array(self.trial_split_size)
+        data_dict["trial_split_depth"] = np.array(self.trial_split_depth)
         return data_dict
