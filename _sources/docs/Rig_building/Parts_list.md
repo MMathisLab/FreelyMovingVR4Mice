@@ -22,7 +22,7 @@ Case: Lambda Vector case
 ## Cameras:
 2 x imaging source cameras (DMK 37BUX28) + cables
 
-2 x Navitar lenses (8.5mm EFL, F1/4 1/2”)
+2 x Navitar lenses (3.5mm EFL, F1/4 1/2”)
 
 Two cameras are necessary if you would like to use 3d reconstruction.
 

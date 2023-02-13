@@ -453,6 +453,16 @@ title="Print to PDF"
      </li>
     </ul>
    </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#reading-poses-from-dlc-live">
+     Reading poses from DLC live
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#data-saving-functionality">
+     Data saving functionality
+    </a>
+   </li>
   </ul>
  </li>
 </ul>
@@ -496,6 +506,16 @@ title="Print to PDF"
      </li>
     </ul>
    </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#reading-poses-from-dlc-live">
+     Reading poses from DLC live
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#data-saving-functionality">
+     Data saving functionality
+    </a>
+   </li>
   </ul>
  </li>
 </ul>
@@ -517,19 +537,22 @@ title="Print to PDF"
 <p>In takes the form of a parent class over a base class (called unity_task) and receives inputs within the <strong>init</strong>() function. These inputs can easily be modified from within the teensy experiments GUI by first loading the task and clicking on the edit button. This will present you with a window where these inputs can be modified. When the task is run (by clicking ready, followed by start) these inputs are assigned to class variables so that they can be made available to all the methods of the class.</p>
 <p>There are four main functions within the script that control different aspects of the game:</p>
 <ol class="simple">
-<li><p>set_channel() - this is called at the beginning of each trail and can be used to send parameters to the unity game.</p></li>
-<li><p>get_action() - this function is called on every frame and its output is sent as “actions” to the unity game. In our case of wanting to use a freely moving animal to control the game this function runs a DLClive processor on the incoming video stream from the behavioral cameras to extract out the animals x,y positions and its heading angle. These coordinates from the images are then mapped to game coordinates and sent to the unity game to control the game cameras, changing how the environment is rendered on the screens.</p></li>
-<li><p>check_reward() - this function is called on every frame and checks if a reward has been given within the unity game. If it has the function sends a command to the teensy to deliver a water reward.</p></li>
-<li><p>get_data() - this function is called when the “save task data” button within the GUI is pressed at the end of an experiment. This saves the data into a pickle file with the mouse_name that is defined in the GUI, followed by the data and the attempt (Dodo_170722_1.pkl)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">set_channel()</span></code> - this is called at the beginning of each trail and can be used to send parameters to the unity game.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">get_action()</span></code> - this function is called on every frame and its output is sent as “actions” to the unity game. In our case of wanting to use a freely moving animal to control the game this function calls another function that reads the DLC data from a socket which the DLClivegui is sending data to. Currently, this data is the animals x,y positions and its heading angle. These coordinates from the images are then mapped to game coordinates and sent to the unity game to control the game cameras, changing how the environment is rendered on the screens.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">check_reward()</span></code> - this function is called on every frame and checks if a reward has been given within the unity game. If it has the function sends a command to the teensy to deliver a water reward.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">get_data()</span></code> - this function is called when the “save task data” button within the GUI is pressed at the end of an experiment. This saves the data into a pickle file with the mouse_name that is defined in the GUI, followed by the data and the attempt (Dodo_170722_1.pkl)</p></li>
 </ol>
 <p>If you want to modify the task handling you can edit the code within these functions to change how the task runs.</p>
 <section id="gui-parameters">
 <h3>Gui Parameters<a class="headerlink" href="#gui-parameters" title="Permalink to this headline">#</a></h3>
 <p>Here is an explanation of the parameters that can be set in the GUI:</p>
 <ol class="simple">
-<li><p>reward_size -  This specifies how may ms the water valve should be open for</p></li>
-<li><p>Prop_Obj_on_Left -  probability that the object of interest (green cube) will appear on the left</p></li>
-<li><p>cropped_image - The pixel dimensions of the image of the box that the mouse walking around in [left, right, top, bottom] all dimensions are in pixels. These are then mapped to the game space and sent to unity to control.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reward_size</span></code> -  This specifies how may ms the water valve should be open for (ms)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Prop_Obj_on_Left</span></code> -  The Probability that the object of interest (green cube) will appear on the left</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cropped_image</span></code> - The pixel dimensions of the image of the box that the mouse walking around in [left, right, top, bottom] all dimensions are in pixels. These are then mapped to the game space and sent to unity to control.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">slit</span> <span class="pre">size</span></code> - The size of the slit that the mouse has to look through to view the occluded objects</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">slit</span> <span class="pre">depth</span></code> - The depth of the slit ie. how thick the walls should be.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Target</span> <span class="pre">spread</span></code>- The distance between the target and the distractor.</p></li>
 </ol>
 <p>such parameters can either be used to control aspects of the game that need to be sent to the teensy such as reward size. Or these parameters can be sent to the unity game on a trial by trial basis to control the unity game parameters.</p>
 <section id="adding-new-game-parameters">
@@ -592,33 +615,6 @@ For example see the <span class="xref myst">check_reward</span> function below. 
 </div>
 </div>
 <p>In this function, first the parameter for the current trial is extracted by self.get_epoch_value(). In this example script, we have no block like structure ie. each trial uses the same parameters, so for each trial the parameters are identical for all 250 trials. If you want to add block like structure see the “adding block structure” section below. The function, after getting the parameters for this trial, then sends them to unity using the self.channel.set_property() function. In the unity game there is a similar c# function which is waiting for these parameters so the string that is parsed has to be identical to how they are defined in the unity game. Finally, this function appends a vector which represents what the parameter was for each trail within the whole session, these vectors can then be saved in the get_data() function at the end of the script.</p>
-<div class="cell tag_get_action docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">get_action</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            method that get actions from DLC and parse them to unity</span>
-<span class="sd">            called by teensyexp&#39;s module Agent, This function is called on every frame of the game.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">position</span><span class="o">=</span><span class="s1">&#39;last&#39;</span><span class="p">,</span> <span class="n">clear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
-        
-        <span class="n">x</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">head_angle</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-
-
-        <span class="c1"># interp mouse pixel space into arena space</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">x</span><span class="p">,[</span><span class="mi">55</span><span class="p">,</span><span class="mi">610</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">])</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">z</span><span class="p">,[</span><span class="mi">55</span><span class="p">,</span><span class="mi">610</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">15</span><span class="p">])</span>
-        <span class="n">degrees</span> <span class="o">=</span> <span class="p">(</span><span class="n">head_angle</span> <span class="o">-</span> <span class="p">(</span><span class="mi">90</span><span class="o">+</span><span class="mi">180</span><span class="p">))</span> <span class="o">%</span> <span class="mi">360</span><span class="p">;</span> 
-        <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="n">degrees</span><span class="p">])</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
-        <span class="k">return</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
-</pre></div>
-</div>
-</div>
-</div>
 </section>
 <section id="adding-block-like-structure">
 <h4>Adding block like structure<a class="headerlink" href="#adding-block-like-structure" title="Permalink to this headline">#</a></h4>
@@ -638,6 +634,72 @@ For example see the <span class="xref myst">check_reward</span> function below. 
 <p>Being able to change the parameters in this way allows the user to have control over the task structure and the aesthetics of the game from the GUI</p>
 </section>
 </section>
+<section id="reading-poses-from-dlc-live">
+<h3>Reading poses from DLC live<a class="headerlink" href="#reading-poses-from-dlc-live" title="Permalink to this headline">#</a></h3>
+<p>In the augmented reality setup actions are sent from the DLCliveGUI via a socket to the computers localhost these can be read within the python task script using the <a class="reference external" href="https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/teensyexp/tasks_abc/dlc_socket.py">DLCClient class</a>. This class gets initialized when the task script is loaded, and begins to read from the socket on a thread.</p>
+<div class="cell tag_read on thread docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="mi">6000</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">dlcClient</span> <span class="o">=</span> <span class="n">DLCClient</span><span class="p">(</span><span class="n">address</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>We can then read from this thread periodically and send the data to unity by the <code class="docutils literal notranslate"><span class="pre">dlcClient.read()</span></code> method. In the python task script this is called within the <code class="docutils literal notranslate"><span class="pre">_get_dlc_on_frame()</span></code>function. This function adds the incoming data to vectors which can be saved at the end of the experiment. It also maps the dlc data (which is in pixel coordinates from the camera images) to unity coordinates.</p>
+<div class="cell tag__get_dlc_on_frame docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">_get_dlc_on_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            inner method that reads DLC on every frame</span>
+<span class="sd">            used in get_action(), called by vr4mice&#39;s module Agent</span>
+<span class="sd">            This is run on every frame after the dlc processor is initialised</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># get dlc data from the socket if the value is not none</span>
+        <span class="n">this_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dlcClient</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">this_read</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">this_read</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">this_read</span> <span class="p">[</span><span class="s2">&quot;vals&quot;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="c1"># add move x and y position and heading direction to vectors which can be saved    </span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">head_angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dlc_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dlc_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dlc_heading</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">head_angle</span><span class="p">)</span>
+        
+        <span class="c1"># interp mouse pixel space into unity arena game space</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">x</span><span class="p">,[</span><span class="mi">0</span><span class="p">,</span><span class="mi">480</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">])</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">z</span><span class="p">,[</span><span class="mi">0</span><span class="p">,</span><span class="mi">450</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">15</span><span class="p">])</span>
+        <span class="n">degrees</span> <span class="o">=</span> <span class="p">(</span><span class="n">head_angle</span> <span class="o">-</span> <span class="p">(</span><span class="mi">90</span><span class="o">+</span><span class="mi">180</span><span class="p">))</span> <span class="o">%</span> <span class="mi">360</span><span class="p">;</span> 
+        <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="n">degrees</span><span class="p">])</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Finally, this function gets called by the <code class="docutils literal notranslate"><span class="pre">get_action()</span></code>function. This function gets called everytime the unity game is ready for action.</p>
+<div class="cell tag__get_dlc_on_frame docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="k">def</span> <span class="nf">get_action</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            method that get actions from DLC and parse them to unity</span>
+<span class="sd">            called by teensyexp&#39;s module Agent, This function is called on every frame of the game.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dlc_on_frame</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">output</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="data-saving-functionality">
+<h3>Data saving functionality<a class="headerlink" href="#data-saving-functionality" title="Permalink to this headline">#</a></h3>
+<p>At the end of the experiment, we want to save various forms of data such as trial by trial paramters and frame by frame actions that the animal took. This can be done by creating lists that can be appended with these parameters either when a trial begins or on each frame of the game. These can then all be saved into a .pkl file by the <code class="docutils literal notranslate"><span class="pre">get_data()</span></code> function in the python task file. Data gets saved by then clicking the save data button within the vr4mice GUI.</p>
+</section>
 </section>
 </section>
 
@@ -653,7 +715,7 @@ For example see the <span class="xref myst">check_reward</span> function below. 
             mode: "python"
         },
         kernelOptions: {
-            kernelName: "python3",
+            name: "python3",
             path: "./docs"
         },
         predefinedOutput: true
