@@ -34,7 +34,7 @@ class MyProcessor(Processor):
         #print(vals)
         return pose, vals
     
-        def save(self, filename):
+     def save(self, filename):
 
         ### save stim on and stim off times
 

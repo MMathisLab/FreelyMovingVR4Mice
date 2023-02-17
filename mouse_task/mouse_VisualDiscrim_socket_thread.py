@@ -47,8 +47,11 @@ class ARVisualDiscrim(UnityTask):
     def __init__(self, teensy, monitor=None, write_video=False, fps=60.0,
                  epochs=[250], epoch_labels = ["baseline"],
                  config_file_path = config_path,
-                 reward_size = 45, cropped_image = [55,610,55,455], rotate_camera = 270, Prop_Obj_on_Left = 0.5, 
-                 slit_size = 2, slit_depth = 2, target_spread = 4):
+                 reward_size = 45, cropped_image = [80,480,50,450], unity_arena_size = [-9, 9, 0, 15],
+                 R_report_box = [-6, -10, -10, 0],
+                 L_report_box = [6, 10, -10, 0], Start_box =  [-3, 3, -5, 0, 40],
+                 rotate_camera = 270, Prop_Obj_on_Left = 0.5, 
+                 slit_size = 2, slit_depth = 2, target_spread = 4, target_height = 2):
 
         """
             Class constructor: initialises dlc processor, dlc live, video reader
@@ -90,14 +93,22 @@ class ARVisualDiscrim(UnityTask):
         super().__init__(teensy, env_path, monitor=monitor, write_video=write_video, fps=fps, epochs=epochs, epoch_trials=True)
 
         # Game parameters
-        self.reward_size = self.as_list(reward_size)
-        self.cropped_image = self.as_list(cropped_image)
+        self.cropped_image = cropped_image
+        self.unity_arena_size = unity_arena_size
         self.rotate_camera = rotate_camera
+        self.R_report_box = R_report_box
+        self.L_report_box = L_report_box
+        self.start_box = Start_box
         
+        # Game trial parameters - add to class and enforce list structure
+        self.reward_size = self.as_list(reward_size)
         self.Prob_Obj_on_Left = self.as_list(Prop_Obj_on_Left)
         self.slit_size = self.as_list(slit_size)
         self.slit_depth = self.as_list(slit_depth)
         self.epoch_labels = self.as_list(epoch_labels)
+        self.target_spread = self.as_list(target_spread)
+        self.target_height = self.as_list(target_height)
+        
 
         self.n_rewards = 0
 
@@ -105,8 +116,11 @@ class ARVisualDiscrim(UnityTask):
         self.trial_epoch_labels = []
         self.trial_reward_size = []
         self.trial_Prob_Obj_on_Left = []
-        self.trial_split_size = []
-        self.trial_split_depth = []
+        self.trial_slit_size = []
+        self.trial_slit_depth = []
+        self.trial_target_spread = []
+        self.trial_target_height = []
+        
         self.dlc_x = []
         self.dlc_y = []
         self.dlc_heading = [] 
@@ -139,10 +153,11 @@ class ARVisualDiscrim(UnityTask):
             self.dlc_heading.append(head_angle)
             
             # interp mouse pixel space into arena space
-            x = np.interp(x,[0,480], [-6,6])
-            z = np.interp(z,[0,450], [-4,-15])
-            degrees = (head_angle - (90+180)) % 360; 
+            x = np.interp(x,[self.cropped_image[0],self.cropped_image[1]], [self.unity_arena_size [0],self.unity_arena_size [1]])
+            z = np.interp(z,[self.cropped_image[2],self.cropped_image[3]], [self.unity_arena_size [2],self.unity_arena_size [3]])
+            degrees = (head_angle - (self.rotate_camera)) % 360; 
             output = np.array([x,z,degrees])
+            print(degrees)
         else:
             output = np.array([0,0,0])
     
@@ -164,16 +179,42 @@ class ARVisualDiscrim(UnityTask):
         this_Prob_obj_left = self.get_epoch_value("Prob_Obj_on_Left")
         this_slit_size = self.get_epoch_value("slit_size")
         this_slit_depth = self.get_epoch_value("slit_depth")
+        this_target_spread = self.get_epoch_value("target_spread")
+        this_target_height = self.get_epoch_value("target_height")
 
 
-        self.channel.set_property("Prob_Obj_on_Left", this_Prob_obj_left)
-        self.channel.set_property("slit_size", this_slit_size)
+        self.channel.set_property("probGreenLeft", this_Prob_obj_left)
+        self.channel.set_property("slitSize", this_slit_size)
         self.channel.set_property("slit_depth", this_slit_depth)
+        self.channel.set_property("targetsFromMidline", this_target_spread)
+        self.channel.set_property("targetsheight", this_target_height)
+        
+        # set properties for start box, left report box and right report box
+        self.channel.set_property("L_box_x_min", self.L_report_box [0])
+        self.channel.set_property("L_box_x_max", self.L_report_box [1])
+        self.channel.set_property("L_box_z_min", self.L_report_box [2])
+        self.channel.set_property("L_box_z_min", self.L_report_box [3])
+        
+        self.channel.set_property("R_box_x_min", self.R_report_box [0])
+        self.channel.set_property("R_box_x_max", self.R_report_box [1])
+        self.channel.set_property("R_box_z_min", self.R_report_box [2])
+        self.channel.set_property("R_box_z_min", self.R_report_box [3])
+        
+        self.channel.set_property("TT_box_x_min", self.start_box [0])
+        self.channel.set_property("TT_box_x_max", self.start_box [1])
+        self.channel.set_property("TT_box_z_min", self.start_box [2])
+        self.channel.set_property("TT_box_Z_max", self.start_box [3])
+        self.channel.set_property("TT_box_angle", self.start_box [4])
+        
 
         # add trial parameters to trial vectors so that we can save them to the log file
         self.trial_epoch_labels.append(self.get_epoch_value("epoch_labels"))
-        self.trial_split_size.append(this_slit_size)
-        self.trial_split_depth.append(this_slit_depth)
+        self.trial_slit_size.append(this_slit_size)
+        self.trial_slit_depth.append(this_slit_depth)
+        self.trial_target_spread.append(this_target_spread)
+        self.trial_slit_depth.append(this_slit_depth)
+        self.trial_target_height.append(this_target_height)
+
 
 
 
@@ -183,6 +224,7 @@ class ARVisualDiscrim(UnityTask):
             called by teensyexp's module Agent, This function is called on every frame of the game.
         """
         output = self._get_dlc_on_frame()
+       
         return output
 
     def check_reward(self):
@@ -192,7 +234,7 @@ class ARVisualDiscrim(UnityTask):
         if self.reward > 0:
             print("___ Rewarded ___")
             print(self.reward_size)
-            #self.teensy.write('water', [self.reward_size]) 
+            self.teensy.write('water', [self.reward_size]) 
             self.n_rewards += 1
 
     def reset_environment(self):
@@ -227,9 +269,15 @@ class ARVisualDiscrim(UnityTask):
         """
         data_dict = super().get_data()
         data_dict['dlc_x'] = np.array(self.dlc_x)
-        data_dict['dlc_y'] = np.array(self.dlc_x)
+        data_dict['dlc_y'] = np.array(self.dlc_y)
         data_dict['dlc_heading'] = np.array(self.dlc_heading)
         data_dict["block_labels"] = np.array(self.trial_epoch_labels)
-        data_dict["slit_size"] = np.array(self.trial_split_size)
-        data_dict["trial_split_depth"] = np.array(self.trial_split_depth)
+        data_dict["slit_size"] = np.array(self.trial_slit_size)
+        data_dict["trial_slit_depth"] = np.array(self.trial_slit_depth)
+        data_dict["R_report_box"] = np.array(self.R_report_box)
+        data_dict["L_report_box"] = np.array(self.L_report_box)
+        data_dict["start_box"] = np.array(self.start_box)
+        data_dict["cropped_image"] = np.array(self.cropped_image)
+        data_dict["unity_arena_size"] = np.array(self.unity_arena_size)
+        data_dict["camera_roation"] = np.array(self.rotate_camera)
         return data_dict

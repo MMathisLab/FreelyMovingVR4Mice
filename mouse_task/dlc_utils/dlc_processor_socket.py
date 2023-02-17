@@ -49,6 +49,7 @@ class MyProcessor_socket(Processor):
             self.conn.send([vals [0], vals [1], vals [2], vals [3]])
         except:
             print("connection ended")
+            pass
      
         return pose
     
