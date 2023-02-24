@@ -1,10 +1,10 @@
 import cv2
 import numpy as np
-#from .Video_handler import VideoReader
-from tqdm import trange
-from dlclive import DLCLive
+
+
 from multiprocessing.connection import Listener
 import pickle
+import time
 
 import numpy as np
 from dlclive import Processor
@@ -22,6 +22,7 @@ class MyProcessor_socket(Processor):
         self.center_y = []
         self.heading_direction = []
         self.head_angle = []
+        self.time_stamp = []
         
     def process(self, pose, **kwargs):
         xy = pose[:, :2]
@@ -41,15 +42,13 @@ class MyProcessor_socket(Processor):
         heading = degrees(heading)
         vals = *center, heading % (360), head_angle
         
-        self.center_x =vals [0]
-        self.center_y = vals [1]
-        self.heading_direction = vals [2]
-        self.head_angle = vals [3]
-        try:
-            self.conn.send([vals [0], vals [1], vals [2], vals [3]])
-        except:
-            print("connection ended")
-            pass
+        self.center_x.append(vals [0])
+        self.center_y.append(vals [1])
+        self.heading_direction.append(vals [2])
+        self.head_angle.append(vals [3])
+        self.time_stamp.append(time.time())
+        
+        self.conn.send([vals [0], vals [1], vals [2], vals [3]])
      
         return pose
     
@@ -60,7 +59,7 @@ class MyProcessor_socket(Processor):
         if file:
             try:
                 pickle.dump(
-                    {"x_pos": self.center_x, "y_pos": self.center_y, "heading_direction": self.heading_direction, "head_angle": self.head_angle},
+                    {"time_stamp": self.time_stamp, "x_pos": self.center_x, "y_pos": self.center_y, "heading_direction": self.heading_direction, "head_angle": self.head_angle},
                     open(file, "wb"),
                 )
                 save_code = 1

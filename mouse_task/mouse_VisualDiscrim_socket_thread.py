@@ -47,11 +47,11 @@ class ARVisualDiscrim(UnityTask):
     def __init__(self, teensy, monitor=None, write_video=False, fps=60.0,
                  epochs=[250], epoch_labels = ["baseline"],
                  config_file_path = config_path,
-                 reward_size = 45, cropped_image = [80,480,50,450], unity_arena_size = [-9, 9, 0, 15],
-                 R_report_box = [-6, -10, -10, 0],
-                 L_report_box = [6, 10, -10, 0], Start_box =  [-3, 3, -5, 0, 40],
-                 rotate_camera = 270, Prop_Obj_on_Left = 0.5, 
-                 slit_size = 2, slit_depth = 2, target_spread = 4, target_height = 2):
+                 reward_size = 45, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
+                 R_report_box = [4, 10, -10, -8],
+                 L_report_box = [-10, -4, -10, -8], Start_box =  [-3, 3, -6, -3.5, 90],
+                 rotate_camera = 270, Prop_Obj_on_Left = 0.5, mouse_report_delay = 1,
+                 slit_size = 10, slit_depth = 2, target_spread = 4, target_height = 2):
 
         """
             Class constructor: initialises dlc processor, dlc live, video reader
@@ -108,6 +108,7 @@ class ARVisualDiscrim(UnityTask):
         self.epoch_labels = self.as_list(epoch_labels)
         self.target_spread = self.as_list(target_spread)
         self.target_height = self.as_list(target_height)
+        self.mouse_report_delay = self.as_list(mouse_report_delay)
         
 
         self.n_rewards = 0
@@ -125,6 +126,7 @@ class ARVisualDiscrim(UnityTask):
         self.dlc_y = []
         self.dlc_heading = [] 
         self.dlc_time_step = []
+        self.trial_mouse_report_delay = []
 
 
 
@@ -137,7 +139,7 @@ class ARVisualDiscrim(UnityTask):
         
         # run DLC on every frame to be given as input to the agent
         this_read = self.dlcClient.read()
-        print(this_read)
+        #print(this_read)
         if this_read != None:
             self.params = np.array(this_read ["vals"])
             if self.t_count == 0:
@@ -157,7 +159,7 @@ class ARVisualDiscrim(UnityTask):
             z = np.interp(z,[self.cropped_image[2],self.cropped_image[3]], [self.unity_arena_size [2],self.unity_arena_size [3]])
             degrees = (head_angle - (self.rotate_camera)) % 360; 
             output = np.array([x,z,degrees])
-            print(degrees)
+            print(x, " ", z, " ")
         else:
             output = np.array([0,0,0])
     
@@ -181,6 +183,7 @@ class ARVisualDiscrim(UnityTask):
         this_slit_depth = self.get_epoch_value("slit_depth")
         this_target_spread = self.get_epoch_value("target_spread")
         this_target_height = self.get_epoch_value("target_height")
+        this_mouse_report_delay = self.get_epoch_value("mouse_report_delay")
 
 
         self.channel.set_property("probGreenLeft", this_Prob_obj_left)
@@ -188,22 +191,23 @@ class ARVisualDiscrim(UnityTask):
         self.channel.set_property("slit_depth", this_slit_depth)
         self.channel.set_property("targetsFromMidline", this_target_spread)
         self.channel.set_property("targetsheight", this_target_height)
+        self.channel.set_property("mouseReportDelay", this_mouse_report_delay)
         
         # set properties for start box, left report box and right report box
         self.channel.set_property("L_box_x_min", self.L_report_box [0])
         self.channel.set_property("L_box_x_max", self.L_report_box [1])
         self.channel.set_property("L_box_z_min", self.L_report_box [2])
-        self.channel.set_property("L_box_z_min", self.L_report_box [3])
+        self.channel.set_property("L_box_z_max", self.L_report_box [3])
         
         self.channel.set_property("R_box_x_min", self.R_report_box [0])
         self.channel.set_property("R_box_x_max", self.R_report_box [1])
         self.channel.set_property("R_box_z_min", self.R_report_box [2])
-        self.channel.set_property("R_box_z_min", self.R_report_box [3])
+        self.channel.set_property("R_box_z_max", self.R_report_box [3])
         
         self.channel.set_property("TT_box_x_min", self.start_box [0])
         self.channel.set_property("TT_box_x_max", self.start_box [1])
         self.channel.set_property("TT_box_z_min", self.start_box [2])
-        self.channel.set_property("TT_box_Z_max", self.start_box [3])
+        self.channel.set_property("TT_box_z_max", self.start_box [3])
         self.channel.set_property("TT_box_angle", self.start_box [4])
         
 
@@ -214,6 +218,7 @@ class ARVisualDiscrim(UnityTask):
         self.trial_target_spread.append(this_target_spread)
         self.trial_slit_depth.append(this_slit_depth)
         self.trial_target_height.append(this_target_height)
+        self.trial_mouse_report_delay.append(this_mouse_report_delay)
 
 
 
@@ -234,7 +239,7 @@ class ARVisualDiscrim(UnityTask):
         if self.reward > 0:
             print("___ Rewarded ___")
             print(self.reward_size)
-            self.teensy.write('water', [self.reward_size]) 
+            self.teensy.write('water', [self.reward_size[0]]) 
             self.n_rewards += 1
 
     def reset_environment(self):
@@ -254,6 +259,9 @@ class ARVisualDiscrim(UnityTask):
         h_angle = None if self.state is None else "%0.2f" % (self.state[2])
 
         return {
+                'session time' : round(self.cur_time, 1),
+                'epoch' : self.epoch_labels[self.epoch],
+                'episode' : self.episode,
                 'position' : pos,
                 'h_angle' : h_angle,
                 'rewards' : self.n_rewards
@@ -280,4 +288,5 @@ class ARVisualDiscrim(UnityTask):
         data_dict["cropped_image"] = np.array(self.cropped_image)
         data_dict["unity_arena_size"] = np.array(self.unity_arena_size)
         data_dict["camera_roation"] = np.array(self.rotate_camera)
+        data_dict["mouse_report_delay"] = np.array(self.trial_mouse_report_delay)
         return data_dict

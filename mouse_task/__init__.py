@@ -1,6 +1,6 @@
 from .mouse_manual_water import ManualWater 
 from .mouse_VisualDiscrim_socket_thread import ARVisualDiscrim
-from .mouse_VlsualDiscrim_parameter_test import ParamTest
+
 #from .mouse_VisualDiscrim_demo_task import ARVisualDiscrim_video
 #from .mouse_VisualDiscrim_camera import ARVisualDiscrim
 #from .mouse_VisualDiscrim_socket import ARVisualDiscrim

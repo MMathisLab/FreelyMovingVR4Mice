@@ -1,17 +1,11 @@
-import cv2
-import numpy as np
-#from .Video_handler import VideoReader
-from tqdm import trange
-from dlclive import DLCLive
-
 import numpy as np
 from dlclive.processor.processor import Processor
-from math import sqrt, acos, atan2, copysign, pi, degrees
+from math import sqrt, acos, atan2, copysign, degrees
 
 class MyProcessor2(Processor):
     def __init__(self,  con = 50):
         super().__init__()
-       # self.queue = queue
+   
 
     def process(self, pose, **kwargs):
         xy = pose[:, :2]
