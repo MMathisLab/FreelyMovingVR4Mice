@@ -22,7 +22,8 @@ class ManualWater(GuiTask):
     def deliver_water(self):
 
         if self.n_delivered < self.current_pulses:
-            self.teensy.write('water', [self.current_reward])
+            self.teensy.write('r_water', [self.current_reward])
+            self.teensy.write('l_water', [self.current_reward])
             self.n_delivered += 1
 
             if self.continuous.get():

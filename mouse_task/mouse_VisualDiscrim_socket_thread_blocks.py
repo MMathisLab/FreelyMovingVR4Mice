@@ -38,20 +38,20 @@ config_name = Path("task_config.json")
 current_dir = Path(__file__).parent
 config_path = current_dir.joinpath(config_name) # default class constructor input
 
-class ARVisualDiscrim(UnityTask):
+class ARVisualDiscrim_blocks(UnityTask):
     """
         Augmented Reality Visual discrimination
         Class that represents mouse task, inherits from UnityTask and GuiTask teensyexp module's classes
     """
 
-    def __init__(self, teensy, monitor=None, write_video=False, fps=60.0,
+    def __init__(self, teensy, monitor=None, write_video=False, fps=60.0, session_label = ["AR_VD_blocks_training"],
                  epochs=[250], epoch_labels = ["baseline"],
                  config_file_path = config_path,
                  reward_size = 100, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
-                 R_report_box = [4, 10, -10, -8],
-                 L_report_box = [-10, -4, -10, -8], Start_box =  [-4, 4, -7, -4, 50],
-                 rotate_camera = 90, Prop_Obj_on_Left = 0.5, mouse_report_delay = 1,
-                 slit_size = 20, slit_depth = 2, target_spread = 5, target_height = 1):
+                 R_report_box = [5, 10, -5, -3],
+                 L_report_box = [-10, -5, -5, -3], Start_box =  [-4, 4, -9, -5, 90], 
+                 rotate_camera = 90, Prop_Obj_on_Left = 1, mouse_report_delay = 1,
+                 slit_size = 20, slit_depth = 2, target_spread = 8, target_height = 1, block_length = 20, start_box_delay = 0.25, velocity_threshold=0.5, distractor = 0.0):
 
         """
             Class constructor: initialises dlc processor, dlc live, video reader
@@ -80,6 +80,9 @@ class ARVisualDiscrim(UnityTask):
         self.dlcClient = DLCClient(address=self.address)
         self.t_count = 0
         self.degrees = 0
+        self.correct = 0
+        self.session_label = session_label
+        
         
         config_dict = process_config(config_file_path)
 
@@ -100,16 +103,21 @@ class ARVisualDiscrim(UnityTask):
         self.R_report_box = R_report_box
         self.L_report_box = L_report_box
         self.start_box = Start_box
+        self.start_box_delay = start_box_delay
+        self.velocity_threshold = velocity_threshold
         
         # Game trial parameters - add to class and enforce list structure
         self.reward_size = self.as_list(reward_size)
-        self.Prob_Obj_on_Left = self.as_list(Prop_Obj_on_Left)
         self.slit_size = self.as_list(slit_size)
         self.slit_depth = self.as_list(slit_depth)
         self.epoch_labels = self.as_list(epoch_labels)
         self.target_spread = self.as_list(target_spread)
         self.target_height = self.as_list(target_height)
         self.mouse_report_delay = self.as_list(mouse_report_delay)
+        self.Prob_Obj_on_Left = self.as_list(Prop_Obj_on_Left)
+        self.Obj_on_Left = 0.0
+        self.block_length = block_length
+        self.distractor = distractor
         
 
         self.n_rewards = 0
@@ -179,7 +187,8 @@ class ARVisualDiscrim(UnityTask):
             This function sends parameters to unity when the game is reset - ie at the beginning of each trial
         """
 
-        this_Prob_obj_left = self.get_epoch_value("Prob_Obj_on_Left")
+        this_Prob_obj_left = self.Prob_Obj_on_Left
+        print("prob left", this_Prob_obj_left)
         this_slit_size = self.get_epoch_value("slit_size")
         this_slit_depth = self.get_epoch_value("slit_depth")
         this_target_spread = self.get_epoch_value("target_spread")
@@ -193,6 +202,8 @@ class ARVisualDiscrim(UnityTask):
         self.channel.set_property("targetsFromMidline", this_target_spread)
         self.channel.set_property("targetsheight", this_target_height)
         self.channel.set_property("mouseReportDelay", this_mouse_report_delay)
+        self.channel.set_property("startBoxDelay", self.start_box_delay)
+        self.channel.set_property("velocityThreshold", self.velocity_threshold)
         
         # set properties for start box, left report box and right report box
         self.channel.set_property("L_box_x_min", self.L_report_box [0])
@@ -210,6 +221,8 @@ class ARVisualDiscrim(UnityTask):
         self.channel.set_property("TT_box_z_min", self.start_box [2])
         self.channel.set_property("TT_box_z_max", self.start_box [3])
         self.channel.set_property("TT_box_angle", self.start_box [4])
+        self.channel.set_property("distractor", self.distractor)
+    
         
 
         # add trial parameters to trial vectors so that we can save them to the log file
@@ -238,6 +251,7 @@ class ARVisualDiscrim(UnityTask):
             method to set up the reward
         """
         if self.reward > 0:
+            self.correct += 1
             
             if self.state [7] > 0:
                 print("___ Rewarded - left ___")
@@ -248,6 +262,15 @@ class ARVisualDiscrim(UnityTask):
                 print(self.reward_size)
                 self.teensy.write('r_water', [self.reward_size[0]])
             self.n_rewards += 1
+            
+            if self.correct == self.block_length:
+                if self.object_L == 0.0:
+                    self.Prob_Obj_on_Left = self.Prob_L
+                    self.object_L = 1.0
+                else:
+                    self.object_L = 0.0
+                    self.Prob_Obj_on_Left = self.Prob_R
+                self.correct = 0
 
     def reset_environment(self):
         """
@@ -283,6 +306,7 @@ class ARVisualDiscrim(UnityTask):
                 dictionary with data
         """
         data_dict = super().get_data()
+        data_dict ["session_label"] = self.session_label
         data_dict['dlc_x'] = np.array(self.dlc_x)
         data_dict['dlc_y'] = np.array(self.dlc_y)
         data_dict['dlc_heading'] = np.array(self.dlc_heading)
@@ -296,4 +320,7 @@ class ARVisualDiscrim(UnityTask):
         data_dict["unity_arena_size"] = np.array(self.unity_arena_size)
         data_dict["camera_roation"] = np.array(self.rotate_camera)
         data_dict["mouse_report_delay"] = np.array(self.trial_mouse_report_delay)
+        data_dict["velocity_threshold"] = self.velocity_threshold
+        data_dict["start_box_delay"] = self.start_box_delay
+        data_dict ["distractor"] = self.distractor
         return data_dict
