@@ -50,8 +50,8 @@ class ARVisualDiscrim_blocks(UnityTask):
                  reward_size = 100, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
                  R_report_box = [5, 10, -5, -3],
                  L_report_box = [-10, -5, -5, -3], Start_box =  [-4, 4, -9, -5, 90], 
-                 rotate_camera = 90, Prop_Obj_on_Left = 1, mouse_report_delay = 1,
-                 slit_size = 20, slit_depth = 2, target_spread = 8, target_height = 1, block_length = 20, start_box_delay = 0.25, velocity_threshold=0.5, distractor = 0.0):
+                 rotate_camera = 90, Prop_Obj_on_Left = 1.0, mouse_report_delay = 1,
+                 slit_size = 20, slit_depth = 2, target_spread = 8, target_size = 5, target_height = 1, block_length = 20, start_box_delay = 0.25, velocity_threshold=0.8, distractor = 0.0, grey_screen_active = 0.0):
 
         """
             Class constructor: initialises dlc processor, dlc live, video reader
@@ -82,6 +82,7 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.degrees = 0
         self.correct = 0
         self.session_label = session_label
+        self.grey_screen_active = grey_screen_active
         
         
         config_dict = process_config(config_file_path)
@@ -114,10 +115,13 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.target_spread = self.as_list(target_spread)
         self.target_height = self.as_list(target_height)
         self.mouse_report_delay = self.as_list(mouse_report_delay)
-        self.Prob_Obj_on_Left = self.as_list(Prop_Obj_on_Left)
-        self.Obj_on_Left = 0.0
+        self.Prob_Obj_on_Left = Prop_Obj_on_Left
+        self.Prob_L = Prop_Obj_on_Left
+        self.Prob_R = 1 - Prop_Obj_on_Left
+        self.object_L = 0.0
         self.block_length = block_length
         self.distractor = distractor
+        self.target_size = target_size
         
 
         self.n_rewards = 0
@@ -222,6 +226,8 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.channel.set_property("TT_box_z_max", self.start_box [3])
         self.channel.set_property("TT_box_angle", self.start_box [4])
         self.channel.set_property("distractor", self.distractor)
+        self.channel.set_property("targetSize", self.target_size)
+        self.channel.set_property("Grey_screen_active", self.grey_screen_active)
     
         
 
@@ -287,6 +293,12 @@ class ARVisualDiscrim_blocks(UnityTask):
         """
         pos = None if self.state is None else "%0.3f, %0.3f" % (self.state[0], self.state[1])
         h_angle = None if self.state is None else "%0.2f" % (self.state[2])
+        velocity = None if self.state is None else "%0.2f" % (self.state[-1])
+        in_left_box = None if self.state is None else "%0.2f" % (self.state[7])
+        in_right_box = None if self.state is None else "%0.2f" % (self.state[8])
+        
+        
+        
 
         return {
                 'session time' : round(self.cur_time, 1),
@@ -294,7 +306,10 @@ class ARVisualDiscrim_blocks(UnityTask):
                 'episode' : self.episode,
                 'position' : pos,
                 'h_angle' : self.degrees,
-                'rewards' : self.n_rewards
+                'rewards' : self.n_rewards,
+                'velocity' : velocity,
+                'in_left_box': in_left_box,
+                'in_right_box': in_right_box
             }
 
         
@@ -323,4 +338,6 @@ class ARVisualDiscrim_blocks(UnityTask):
         data_dict["velocity_threshold"] = self.velocity_threshold
         data_dict["start_box_delay"] = self.start_box_delay
         data_dict ["distractor"] = self.distractor
+        data_dict ["target_size"] = self.target_size
+        data_dict ["grey_screen_active"] = self.grey_screen_active
         return data_dict
