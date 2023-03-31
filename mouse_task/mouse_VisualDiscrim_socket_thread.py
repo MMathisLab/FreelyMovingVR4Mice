@@ -163,8 +163,6 @@ class ARVisualDiscrim(UnityTask):
             #print(x, " ", z, " ")
         else:
             output = np.array([0,0,0])
-    
-     
         return(output.reshape((1,-1)))
 
         
