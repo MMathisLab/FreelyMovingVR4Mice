@@ -16,11 +16,9 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 from pathlib import Path
 import numpy as np
 import time
-import pandas as pd
-import cv2
-import numpy as np
 
-from tqdm import trange
+
+import numpy as np
 
 import time as time
 from multiprocessing.connection import Client
@@ -47,9 +45,9 @@ class ARVisualDiscrim_blocks(UnityTask):
     def __init__(self, teensy, monitor=None, write_video=False, fps=60.0, session_label = ["AR_VD_blocks_training"],
                  epochs=[250], epoch_labels = ["baseline"],
                  config_file_path = config_path,
-                 reward_size = 100, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
-                 R_report_box = [5, 10, -5, -3],
-                 L_report_box = [-10, -5, -5, -3], Start_box =  [-4, 4, -9, -5, 90], 
+                 reward_size = 25, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
+                 R_report_box = [4, 10, -10, -8],
+                 L_report_box = [-10, -4, -10, -8], Start_box =  [-4, 4, -7, -3, 80], 
                  rotate_camera = 90, Prop_Obj_on_Left = 0.5, mouse_report_delay = 0.0,
                  slit_size = 20, slit_depth = 2, target_spread = 8, target_size = 3, target_height = 1, block_length = 20, start_box_delay = 0.25, velocity_threshold=8, distractor = 0.0, grey_screen_active = 0.0):
 

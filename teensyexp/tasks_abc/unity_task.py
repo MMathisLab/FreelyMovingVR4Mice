@@ -234,9 +234,10 @@ class UnityTask(Task):
         self.check_reward()
 
         ### get info ###
+        self.state = step_result.obs[self.vec_obs_ind]
         info = self.get_info()
         
-        self.state = step_result.obs[self.vec_obs_ind]
+        
          
         ### check reset, epochs, and condition to end session; update state ###
         if self.terminal:
