@@ -133,6 +133,7 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.trial_target_spread = []
         self.trial_target_height = []
         
+        self.dlc_read_time = []
         self.dlc_x = []
         self.dlc_y = []
         self.dlc_heading = [] 
@@ -164,6 +165,7 @@ class ARVisualDiscrim_blocks(UnityTask):
             self.dlc_x.append(x)
             self.dlc_y.append(z)
             self.dlc_heading.append(head_angle)
+            self.dlc_read_time.append(this_read ["time"])
             
             # interp mouse pixel space into arena space
             x = np.interp(x,[self.cropped_image[0],self.cropped_image[1]], [self.unity_arena_size [0],self.unity_arena_size [1]])
@@ -320,6 +322,7 @@ class ARVisualDiscrim_blocks(UnityTask):
         """
         data_dict = super().get_data()
         data_dict ["session_label"] = self.session_label
+        data_dict ["dlc_read_time"] = np.array(self.dlc_read_time)
         data_dict['dlc_x'] = np.array(self.dlc_x)
         data_dict['dlc_y'] = np.array(self.dlc_y)
         data_dict['dlc_heading'] = np.array(self.dlc_heading)
