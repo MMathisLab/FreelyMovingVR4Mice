@@ -17,8 +17,6 @@ This repository is the code base for Maushaus pipeline used for24/7 behavior mon
 
 `docker-compose.yml` definition of containers used in current system. `docker-compose` approach makes possible to define all needed containers in one place and manage their network: it's helpful to have the overview of all system components and their hierarchy in one place. Every container form `docker-compose`  can be rebuild/restart independently.
 
-`run.sh` runs the simple video populate scenario in`maushaus` default client container.
-
 ## Configure and run:
 0. check that mounts in docker-compose.yml corresponds to the desired mounts (ex. video folder)
 1. build docker server and client images
