@@ -11,8 +11,6 @@ This repository is the code base for VR4Mice pipeline.
 
 `scripts` folder contains python scripts that execute the sequence of actions to communicate with database (ex. setup-connect-populate). The input can be made via .json config file. Scripts are considered as ephemera scenarios, it's flexible part of the codebase and not the core datajoint pipeline's code.
 
-`tools` contains the system related functional code, by now it refers to transfer bash script to transfer files from rig-computer to the server.
-
 `Makefile` is here to facilitate the deployment of containers via `make build/up/down` short commands as well as the input of shell-arguments to docker.
 
 `docker-compose.yml` definition of containers used in current system. `docker-compose` approach makes possible to define all needed containers in one place and manage their network: it's helpful to have the overview of all system components and their hierarchy in one place. Every container form `docker-compose`  can be rebuild/restart independently.
