@@ -1,6 +1,6 @@
 ## Mathis lab VR4Mice datajoint pipeline 
 
-This repository is the code base for Maushaus pipeline used for24/7 behavior monitoring of mice.
+This repository is the code base for VR4Mice pipeline.
 
 `vr4mice` folder contains database's server related code 
    aka datajoin schema's definitions in `schema` subfolder as well as 
