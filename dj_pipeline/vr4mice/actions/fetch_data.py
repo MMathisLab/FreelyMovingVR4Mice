@@ -94,12 +94,10 @@ def fetch_tables() -> dict:
         'OptogeneticsVariant': exp.OptogeneticsVariant().fetch(as_dict=True),  # LT
         'opto_name': list(exp.Optogenetics().fetch('opto_name')),
 
-        # 'force_field_name': list(exp.ForceField().fetch('force_field_name')),
         # 'strength': list(exp.ForceField().fetch('strength')),
 
         'Task': exp.Task().fetch(as_dict=True),
         'task_type': exp.Task().get_pipeline_task_names('ar'),
-        # 'Joystick': list(exp.Joystick().fetch('joystick_name')),
 
         # 'surgery_type': list(mice.SurgeryType().fetch('surgery_type')),
 
