@@ -7,7 +7,7 @@ In general, the microcontroller will operate in one of two states: *task on* or 
 - Read commands sent over the serial port. Commands are sent in the following fashion:
   - The first byte represents the command (use a letter, such as `W` for water delivery)
   - Followed by parameters for the command, such as the duration to turn on the water valve, sent as 16-bit integers.
-  - (In task code, commands are sent by specifying the name of the command, followed by parameters. E.g., to deliver water for 100 ms: `teensy.write('water', [100])`
+  - In task code, commands are sent by specifying the name of the command, followed by parameters. E.g., to deliver water for 100 ms: `teensy.write('water', [100])`
   
 ## Structure of the sketch
 - At the top of the sketch, list important task constants. There should always be at least two: the baud rate (for serial communication with computer) and the sample rate (rate that teensy will write data to computer, in Hz). NOTE :: if using the [USB Serial on a Teensy board](https://www.pjrc.com/teensy/td_serial.html), the baud rate will always be 12mbit/s, no matter what you set here.
