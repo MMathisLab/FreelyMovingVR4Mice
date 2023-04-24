@@ -13,11 +13,11 @@ kernelspec:
 
 # Augmented reality visual discrimination task
 
-In this task, a mouse the mouse looks through a slit in the wall and has to report which side an object of interest is on. This object of interest (a green cube) randomly appears on the left or right side of the arena and is occluded by the slit. On the other side a blue cube appears. The idea is that you have one script like this for each task type that you want to run. These task files are designed to control augmented reality games that have either trial like structure or trial-and-block structure (such as baseline, perturbation and washout trials). This current script can therefore be thought of as a template for future tasks that you want to employ. This document describes how the task is run and how to modify these scripts to build new tasks.
+In this task, a mouse the mouse looks through a slit in the wall and has to report which side an object of interest is on. This object of interest (OOI) randomly appears on the left or right side of the arena and is occluded by the slit. On the other side a distractor appears. The idea is that you have one script like this for each task type that you want to run. These task files are designed to control augmented reality games that have either trial like structure or trial-and-block structure (such as baseline, perturbation and washout trials). This current script can therefore be thought of as a template for future tasks that you want to employ. This document describes how the task is run and how to modify these scripts to build new tasks.
 
 
 ## Python "Task" script - Outline
-The python [task](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/mary/demo/mouse_task/mouse_ar_task.py) acts as an interface between DLClive and the unity [build](https://github.com/MMathisLab/FreelyMovingVR4Mice/tree/mary/demo/mouse_task/unity_ar) and the teensy. It can be selected from within the teensy experiments GUI by clicking on the "edit" button one the task have been selected from the dropdown menu. Here parameters such as reward size and the probability that the cube will appear on the left can be set. This python script then logs all the data about the experiment such as the mouses position in the arena, when water was given and which side the mouse reported that the target was on. 
+The python [task](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/mary/demo/mouse_task/mouse_ar_task.py) acts as an interface between DLClive and the unity [build](https://github.com/MMathisLab/FreelyMovingVR4Mice/tree/mary/demo/mouse_task/unity_ar) and the teensy. It can be selected from within the teensy experiments GUI by clicking on the "edit" button one the task have been selected from the dropdown menu. Here parameters such as reward size and the probability that the OOI will appear on the left can be set. This python script then logs all the data about the experiment such as the mouses position in the arena, when water was given and which side the mouse reported that the target was on. 
 
 In takes the form of a parent class over a base class (called unity_task) and receives inputs within the __init__() function. These inputs can easily be modified from within the teensy experiments GUI by first loading the task and clicking on the edit button. This will present you with a window where these inputs can be modified. When the task is run (by clicking ready, followed by start) these inputs are assigned to class variables so that they can be made available to all the methods of the class.
 
@@ -27,22 +27,43 @@ There are four main functions within the script that control different aspects o
 2. ```get_action()``` - this function is called on every frame and its output is sent as "actions" to the unity game. In our case of wanting to use a freely moving animal to control the game this function calls another function that reads the DLC data from a socket which the DLClivegui is sending data to. Currently, this data is the animals x,y positions and its heading angle. These coordinates from the images are then mapped to game coordinates and sent to the unity game to control the game cameras, changing how the environment is rendered on the screens.
 3. ```check_reward()``` - this function is called on every frame and checks if a reward has been given within the unity game. If it has the function sends a command to the teensy to deliver a water reward.
 4. ```get_data()``` - this function is called when the "save task data" button within the GUI is pressed at the end of an experiment. This saves the data into a pickle file with the mouse_name that is defined in the GUI, followed by the data and the attempt (Dodo_170722_1.pkl)
-
 If you want to modify the task handling you can edit the code within these functions to change how the task runs.
 
 
 ### Gui Parameters
 
-Here is an explanation of the parameters that can be set in the GUI:
+Here is an explanation of the parameters that can be set in the GUI. Such parameters can either be used to control aspects of the game that need to be sent to the teensy such as reward size. Or these parameters can be sent to the unity game on a trial by trial basis to control the unity game parameters:
 
-1. ```reward_size``` -  This specifies how may ms the water valve should be open for (ms)
-2. ```Prop_Obj_on_Left``` -  The Probability that the object of interest (green cube) will appear on the left
-3. ```cropped_image``` - The pixel dimensions of the image of the box that the mouse walking around in [left, right, top, bottom] all dimensions are in pixels. These are then mapped to the game space and sent to unity to control.
-4. ```slit size``` - The size of the slit that the mouse has to look through to view the occluded objects
-5. ```slit depth``` - The depth of the slit ie. how thick the walls should be.
-6. ```Target spread```- The distance between the target and the distractor.
+1. teensy: Teensy object, instance of teensy class that controls the teensy microcontroller.
+2. monitor: Not used.
+3. write_video: Boolean, default is False. If True, video output will be recorded.
+4. fps: Float, frames per second for recorded video (default is 60.0). Currently, not used
+5. session_label: List, containing the name of the task type (default is ["AR_VD_blocks_training"]).
+6. epochs: List, containing the number of epochs (or trials) (default is [250]).
+7. epoch_labels: List, containing epoch labels or names of the blocks (default is ["baseline"]).
+8. config_file_path: Path object, path to the configuration .json file (see helpers.py for more information).
+9. reward_size: Integer, This specifies how may ms the water valve should be open for. This should be adjusted such that the reward given is approximately 3ul (default is 25).
+10. cropped_image: List, containing the dimensions of the cropped image (default is [0, 530, 0, 510]- [left, right, top, bottom]).
+11. unity_arena_size: List, containing the dimensions of the Unity arena (default is [-9, 9, -10, -2] - [left, right, top, bottom]).
+12. R_report_box: List, containing the dimensions of the right report box (default is [4, 10, -10, -8] - [left, right, top, bottom]).
+13. L_report_box: List, containing the dimensions of the left report box (default is [-10, -4, -10, -8] - [left, right, top, bottom]).
+14. Start_box: List, containing the dimensions of the start box and its angle (default is [-4, 4, -7, -3, 80]- [left, right, top, bottom]).
+15. rotate_camera: Integer, rotation angle of the camera (default is 90). This needs to be adjusted to your rig and then not changed.
+16. Prop_Obj_on_Left: Float, probability of the OOI being on the left side (default is 0.5).
+17. mouse_report_delay: Float, mouse report delay default is 0.
+18. Target selection: int, this parameter selects what object for the OOI (0 = white cube, 1 = black cube, 2 = teardrop, double teardrop)
+19. Distractor selection: int, this parameter selects what object for the distractor (0 = white cube, 1 = black cube, 2 = teardrop, double teardrop)
+20. occlusion_type: int, Allows the user to select the type of occlusion that they want to use. (0 = no occlusion, 1 = slit occlusion, 2 = central wall), default is no occlusion.
+21.  Camera_type: int, Allows the user to select between on (Camera_type = 0) and off axis camera (Camera_type = 1) modes.
+22. target_spread: Float, specifies the distance between the targets.
+23. target_size: int, specifies the size of the targets i recommend using size 1 for the teardrop and double teardrop.
+24. target_height: Float, specifies the height at which the targets are spawned.
+25. block_length: Specifies how many rewards the mouse has to get correct before the OOI switches sides. To enforce this make sure that you have the prop_object_on left parameter set to 1.0. If prob_object_on_left is set to .5 then this block length parameter has no effect as there is a 50:50 chance of the object appearing on the each side.
+26. start_box_delay: specifies the time that the animal needs to spend in the start box under the velocity threshold.
+27. distractor: int, this specifies whether the distractor is present or not. (0 = no distractor, 1 = distractor)
+28. grey_screen_active: specifes whether to show the grey ITI screen or not (0 = no grey screen, 1= grey screen)
+29.  Target_distance: the distance of the targets in y.
 
-such parameters can either be used to control aspects of the game that need to be sent to the teensy such as reward size. Or these parameters can be sent to the unity game on a trial by trial basis to control the unity game parameters.
 
 #### Adding new game parameters
 New parameters can be added to this task by placing them within the arguments of this class, as done with the "new_param" in the code cell below. These parameters will automatically appear in the GUI when you click on the edit button. 
@@ -105,8 +126,36 @@ def set_channel(self):
 In this function, first the parameter for the current trial is extracted by self.get_epoch_value(). In this example script, we have no block like structure ie. each trial uses the same parameters, so for each trial the parameters are identical for all 250 trials. If you want to add block like structure see the "adding block structure" section below. The function, after getting the parameters for this trial, then sends them to unity using the self.channel.set_property() function. In the unity game there is a similar c# function which is waiting for these parameters so the string that is parsed has to be identical to how they are defined in the unity game. Finally, this function appends a vector which represents what the parameter was for each trail within the whole session, these vectors can then be saved in the get_data() function at the end of the script. 
 
 
+
+```{code-cell} ipython3
+:tags: [get_action]
+    def get_action(self):
+        """
+            method that get actions from DLC and parse them to unity
+            called by teensyexp's module Agent, This function is called on every frame of the game.
+        """
+        data = self.queue.read(position='last', clear=False)
+        if data is None:
+            return np.array([0, 0, 0]).reshape((1, -1))
+        
+        x = data[0]
+        z = data[1]
+        head_angle = data[2]
+
+
+        # interp mouse pixel space into arena space
+        x = np.interp(x,[55,610], [-6,6])
+        z = np.interp(z,[55,610], [-4,-15])
+        degrees = (head_angle - (90+180)) % 360; 
+        output = np.array([x,z,degrees])
+        print(output)
+        return(output.reshape((1,-1)))
+
+```
+
 #### Adding block like structure
 In addition, to the parameters being identical across trials we may also like to add block like structure such as a baseline and pertubation block. An example of this could be the visual discrimination task without occluders for the first 100 trial followed by 100 trials with occulders. This can be achieved by passing the parameters to the class as lists:
+
 
 ```{code-cell} ipython3
 :tags: [set_channel]
@@ -183,5 +232,10 @@ Finally, this function gets called by the ```get_action()```function. This funct
 
 ### Data saving functionality
 At the end of the experiment, we want to save various forms of data such as trial by trial paramters and frame by frame actions that the animal took. This can be done by creating lists that can be appended with these parameters either when a trial begins or on each frame of the game. These can then all be saved into a .pkl file by the ```get_data()``` function in the python task file. Data gets saved by then clicking the save data button within the vr4mice GUI.
+
+
+
+
+
 
 
