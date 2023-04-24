@@ -16,6 +16,9 @@
 7. The `Makefile` provides a shortcut for calling commands.
 8. The `docker-compose.yml` file contains all Docker definitions, including the database Docker and client. New services can be added if a different configuration is needed. Volumes that correspond to the locations on the drive where all data will be stored are defined here.
 
+![Untitled presentation(4)](https://user-images.githubusercontent.com/43879378/234044336-e7693e02-e8de-4000-9dd0-1716a80002db.jpg)
+
+
 ### Datajoint ERD of vr4mice pipeline:
 ![vr4mice](https://user-images.githubusercontent.com/43879378/234043578-22b7c8d7-acc9-4f44-9b80-9ec7d25f13f2.png)
 
