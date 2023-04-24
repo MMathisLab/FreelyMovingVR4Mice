@@ -1,0 +1,21 @@
+{
+  "ip": "localhost",
+  "host": "",
+
+  "remote_dropdown_menu": "/home/vr4mice/test_menu.npy",
+  "host_dropdown_menu": "/home/vr4mice/gui_transfer/test_menu.npy",
+
+  "gui_output_folder": "/home/vr4mice/test_transfer/raw",
+  "cache": "default",
+
+  "remote_dst": "/home/vr4mice/test_transfer/",
+
+  "raw_data_src": "/home/vr4mice/test_transfer",
+  "dlc_path": "/home/vr4mice/test_transfer/dlc_video_raw",
+  "proc_path": "/home/vr4mice/test_transfer/dlc_video_raw",
+  "video_path": "/home/vr4mice/test_transfer/dlc_video_raw",
+  "camera_path": "/home/vr4mice/test_transfer/dlc_video_raw",
+  "teensy_path": "/home/vr4mice/test_transfer/raw",
+
+  "processed_path": "/home/vr4mice/test_transfer/processed_rig"
+}

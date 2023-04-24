@@ -1,0 +1,39 @@
+## Mathis lab Maushaus datajoint pipeline 
+
+This repository is the code base for Maushaus pipeline used for24/7 behavior monitoring of mice.
+
+`maushaus` folder contains database's server related code 
+   aka datajoin schema's definitions in `schema` subfolder as well as 
+  `actions` that describes interactions with the database. It's the core of pipeline: main development of pipeline happens here. 
+  `third_party` contains external modules (ex. dlc, kinematics, datajoint support). 
+  `utils` contains all dev-related functions to assume the functionality of pipeline.
+
+`prototype` folder contains system-related files, for example Dockefile for the client (term "client" applies to any process that addresses to the database and used to keep visible the database-server client-app architecture)
+
+`scripts` folder contains python scripts that execute the sequence of actions to communicate with database (ex. setup-connect-populate). The input can be made via .json config file. Scripts are considered as ephemera scenarios, it's flexible part of the codebase and not the core datajoint pipeline's code.
+
+`tools` contains the system related functional code, by now it refers to transfer bash script to transfer files from rig-computer to the server.
+
+`Makefile` is here to facilitate the deployment of containers via `make build/up/down` short commands as well as the input of shell-arguments to docker.
+
+`docker-compose.yml` definition of containers used in current system. `docker-compose` approach makes possible to define all needed containers in one place and manage their network: it's helpful to have the overview of all system components and their hierarchy in one place. Every container form `docker-compose`  can be rebuild/restart independently.
+`maushaus_database` container built on `datajoint/mysql` official image that represents the database-server on localhost for the MySQL data local storage.
+`maushaus` container built via defined Dockerfile and used for all clients interactions.
+
+`run.sh` runs the simple video populate scenario in`maushaus` default client container.
+
+## Configure and run:
+0. check that mounts in docker-compose.yml corresponds to the desired mounts (ex. video folder)
+1. build docker server and client images
+```
+make build
+```
+2. runs containers based on just created images
+```
+make up
+```
+3. adjust paths in .json config file ex. /video)
+run easy scenario that populated video tables from client container 
+```
+./run.sh
+```
