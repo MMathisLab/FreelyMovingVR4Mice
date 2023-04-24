@@ -65,8 +65,6 @@ Here is an explanation of the parameters that can be set in the GUI. Such parame
 29.  Target_distance: the distance of the targets in y.
 
 
-
-
 #### Adding new game parameters
 New parameters can be added to this task by placing them within the arguments of this class, as done with the "new_param" in the code cell below. These parameters will automatically appear in the GUI when you click on the edit button. 
 
