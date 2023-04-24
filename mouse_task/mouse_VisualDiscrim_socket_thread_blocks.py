@@ -49,7 +49,9 @@ class ARVisualDiscrim_blocks(UnityTask):
                  R_report_box = [4, 10, -10, -8],
                  L_report_box = [-10, -4, -10, -8], Start_box =  [-4, 4, -7, -3, 80], 
                  rotate_camera = 90, Prop_Obj_on_Left = 0.5, mouse_report_delay = 0.0,
-                 slit_size = 20, slit_depth = 2, target_spread = 8, target_size = 3, target_height = 1, block_length = 20, start_box_delay = 0.25, velocity_threshold=8, distractor = 0.0, grey_screen_active = 0.0):
+                 slit_size = 20, slit_depth = 2, target_selection = 0, distractor_selection = 1, occlusion_type = 0, 
+                 Camera_type = 0, target_spread = 8, target_size = 3, target_height = 1, block_length = 20, start_box_delay = 0.25, 
+                 velocity_threshold=8, distractor = 0.0, grey_screen_active = 0.0, target_distance = 3):
 
         """
             Class constructor: initialises dlc processor, dlc live, video reader
@@ -120,6 +122,12 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.block_length = block_length
         self.distractor = distractor
         self.target_size = target_size
+        self.target_selection = self.as_list(target_selection)
+        self.distractor_selection = self.as_list(distractor_selection)
+        self.occlusion_type = self.as_list(occlusion_type)
+        self.camera_type = Camera_type
+        self.target_distance =self.as_list(target_distance)
+        
         
 
         self.n_rewards = 0
@@ -132,6 +140,10 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.trial_slit_depth = []
         self.trial_target_spread = []
         self.trial_target_height = []
+        self.trial_target_selection = []
+        self.trial_distractor_selection = []
+        self.trial_occlusion_type = []
+        self.trial_target_distance = []
         
         self.dlc_read_time = []
         self.dlc_x = []
@@ -198,8 +210,15 @@ class ARVisualDiscrim_blocks(UnityTask):
         this_target_spread = self.get_epoch_value("target_spread")
         this_target_height = self.get_epoch_value("target_height")
         this_mouse_report_delay = self.get_epoch_value("mouse_report_delay")
+        this_target_selection = self.get_epoch_value("target_selection")
+        this_distractor_selection = self.get_epoch_value("distractor_selection")
+        this_occlusion_type = self.get_epoch_value("occlusion_type")
+        this_target_distance = self.get_epoch_value("target_distance")
 
 
+        self.channel.set_property("cameraSelection", self.camera_type)
+        self.channel.set_property("target_selection", this_target_selection)
+        self.channel.set_property("distractor_selection", this_distractor_selection)
         self.channel.set_property("probGreenLeft", this_Prob_obj_left)
         self.channel.set_property("slitSize", this_slit_size)
         self.channel.set_property("slit_depth", this_slit_depth)
@@ -208,6 +227,8 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.channel.set_property("mouseReportDelay", this_mouse_report_delay)
         self.channel.set_property("startBoxDelay", self.start_box_delay)
         self.channel.set_property("velocityThreshold", self.velocity_threshold)
+        self.channel.set_property("occlusion_type", this_occlusion_type)
+        self.channel.set_property("targetsZpos", this_target_distance)
         
         # set properties for start box, left report box and right report box
         self.channel.set_property("L_box_x_min", self.L_report_box [0])
@@ -239,6 +260,11 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.trial_slit_depth.append(this_slit_depth)
         self.trial_target_height.append(this_target_height)
         self.trial_mouse_report_delay.append(this_mouse_report_delay)
+        self.trial_distractor_selection.append(this_distractor_selection)
+        self.trial_target_selection.append(this_target_selection)
+        self.trial_occlusion_type.append(this_occlusion_type)
+        self.trial_target_distance.append(this_target_distance)
+        
 
 
 
@@ -341,4 +367,9 @@ class ARVisualDiscrim_blocks(UnityTask):
         data_dict ["distractor"] = self.distractor
         data_dict ["target_size"] = self.target_size
         data_dict ["grey_screen_active"] = self.grey_screen_active
+        data_dict ["camera_type"] = self.camera_type
+        data_dict ["target_selection"] = np.array(self.trial_target_selection)
+        data_dict ["distractor_selection"] = np.array(self.trial_distractor_selection)
+        data_dict ["occlusion_type"] = np.array(self.trial_occlusion_type)
+        data_dict ["target_distance"] = np.array(self.trial_target_distance)
         return data_dict
