@@ -48,8 +48,8 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
                  reward_size = 25, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
                  R_report_box = [4, 10, -10, -8],
                  L_report_box = [-10, -4, -10, -8], Start_box =  [-4, 4, -7, -3, 80], 
-                 rotate_camera = 90, Prop_Obj_on_Left = 1, mouse_report_delay = 0.0,
-                 slit_size = 20, slit_depth = 2, target_selection = 2, distractor_selection = 3, occlusion_type = 0, 
+                 rotate_camera = 90, Prop_Obj_on_Left = 1.0, mouse_report_delay = 0.0,
+                 slit_size = 20., slit_depth = 2., target_selection = 2., distractor_selection = 3., occlusion_type = 0, 
                  Camera_type = 0, target_spread = 4, target_size = 1, target_height = 1, block_length = 20, start_box_delay = 0.25, 
                  velocity_threshold=10, distractor = 0.0, grey_screen_active = 0.0, target_distance = 3):
 
