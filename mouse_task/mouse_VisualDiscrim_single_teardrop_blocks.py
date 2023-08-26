@@ -115,10 +115,10 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         self.target_spread = self.as_list(target_spread)
         self.target_height = self.as_list(target_height)
         self.mouse_report_delay = self.as_list(mouse_report_delay)
+        
         self.Prob_Obj_on_Left = Prop_Obj_on_Left
-        self.Prob_L = Prop_Obj_on_Left
-        self.Prob_R = 1 - Prop_Obj_on_Left
-        self.object_L = 0.0
+        self.Object_on_left = np.random.choice([0,1], p=[self.prob_R,self.prob_L])
+        self.block_L = np.random.choice([0,1], p=[0.5,0.5])
         self.block_length = block_length
         self.distractor = distractor
         self.target_size = target_size
@@ -219,7 +219,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         self.channel.set_property("cameraSelection", self.camera_type)
         self.channel.set_property("target_selection", this_target_selection)
         self.channel.set_property("distractor_selection", this_distractor_selection)
-        self.channel.set_property("probGreenLeft", this_Prob_obj_left)
+        self.channel.set_property("Object_on_left", self.Object_on_left)
         self.channel.set_property("slitSize", this_slit_size)
         self.channel.set_property("slit_depth", this_slit_depth)
         self.channel.set_property("targetsFromMidline", this_target_spread)
@@ -296,12 +296,14 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
             self.n_rewards += 1
             
             if self.correct == self.block_length:
-                if self.object_L == 0.0:
+                if self.block_Left == 0.0:
                     self.Prob_Obj_on_Left = self.Prob_L
-                    self.object_L = 1.0
+                    self.Object_on_left = np.random.choice([0,1], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])
+                    self.block_Left = 1.0
                 else:
-                    self.object_L = 0.0
+                    self.Object_on_left = np.random.choice([0,1], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
                     self.Prob_Obj_on_Left = self.Prob_R
+                    self.block_Left = 0.0
                 self.correct = 0
 
     def reset_environment(self):
