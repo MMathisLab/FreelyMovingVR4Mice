@@ -117,8 +117,8 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         self.mouse_report_delay = self.as_list(mouse_report_delay)
         
         self.Prob_Obj_on_Left = Prop_Obj_on_Left
-        self.Object_on_left = np.random.choice([0,1], p=[self.prob_R,self.prob_L])
-        self.block_L = np.random.choice([0,1], p=[0.5,0.5])
+        self.Object_on_left = np.random.choice([0.0,1.0], p=[self.prob_R,self.prob_L])
+        self.block_L = np.random.choice([0.0,1.0], p=[0.5,0.5])
         self.block_length = block_length
         self.distractor = distractor
         self.target_size = target_size
@@ -298,10 +298,10 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
             if self.correct == self.block_length:
                 if self.block_Left == 0.0:
                     self.Prob_Obj_on_Left = self.Prob_L
-                    self.Object_on_left = np.random.choice([0,1], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])
+                    self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])
                     self.block_Left = 1.0
                 else:
-                    self.Object_on_left = np.random.choice([0,1], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
+                    self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
                     self.Prob_Obj_on_Left = self.Prob_R
                     self.block_Left = 0.0
                 self.correct = 0
