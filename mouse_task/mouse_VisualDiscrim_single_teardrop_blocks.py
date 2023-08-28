@@ -117,7 +117,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         self.mouse_report_delay = self.as_list(mouse_report_delay)
         
         self.Prob_Obj_on_Left = Prop_Obj_on_Left
-        self.Object_on_left = np.random.choice([0.0,1.0], p=[self.prob_R,self.prob_L])
+        
         self.block_L = np.random.choice([0.0,1.0], p=[0.5,0.5])
         self.block_length = block_length
         self.distractor = distractor
