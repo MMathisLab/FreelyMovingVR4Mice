@@ -43,4 +43,8 @@ In this first session the mouse should be able to learn how to initiate a trial 
 Once the mouse is able to correctly report the object location on > 60% of the trials you can now add in the distractor.
 
 # Training Stage 2: Adding a distractor object
+Once the mouse is able to get this consistently add in the distractor.
+You can do this by setting the distractor parameter to 1.0. Make sure that the distraction selection parameter is set to 4 this selects the single teardrop as the distractor. 
+
+If the mouse is able to perform the task with greater that 70% then the mouse is trained
 
