@@ -503,7 +503,7 @@ If you want to modify the task handling you can edit the code within these funct
 <li><p>block_length: Specifies how many rewards the mouse has to get correct before the OOI switches sides. To enforce this make sure that you have the prop_object_on left parameter set to 1.0. If prob_object_on_left is set to .5 then this block length parameter has no effect as there is a 50:50 chance of the object appearing on the each side.</p></li>
 <li><p>start_box_delay: specifies the time that the animal needs to spend in the start box under the velocity threshold.</p></li>
 <li><p>distractor: int, this specifies whether the distractor is present or not. (0 = no distractor, 1 = distractor)</p></li>
-<li><p>grey_screen_active: specifes whether to show the grey ITI screen or not (0 = no grey screen, 1= grey screen)</p></li>
+<li><p>grey_screen_active: specifies whether to show the grey ITI screen or not (0 = no grey screen, 1= grey screen)</p></li>
 <li><p>Target_distance: the distance of the targets in y.</p></li>
 </ol>
 <section id="adding-new-game-parameters">
@@ -596,7 +596,7 @@ For example see the <span class="xref myst">check_reward</span> function below. 
 </section>
 <section id="adding-block-like-structure">
 <h4>Adding block like structure<a class="headerlink" href="#adding-block-like-structure" title="Permalink to this heading">#</a></h4>
-<p>In addition, to the parameters being identical across trials we may also like to add block like structure such as a baseline and pertubation block. An example of this could be the visual discrimination task without occluders for the first 100 trial followed by 100 trials with occulders. This can be achieved by passing the parameters to the class as lists:</p>
+<p>In addition, to the parameters being identical across trials we may also like to add block like structure such as a baseline and perturbation block. An example of this could be the visual discrimination task without occluders for the first 100 trial followed by 100 trials with occulders. This can be achieved by passing the parameters to the class as lists:</p>
 <div class="cell tag_set_channel docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">teensy</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">write_video</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span> <span class="n">cropped_image</span> <span class="o">=</span> <span class="p">[</span><span class="mi">55</span><span class="p">,</span><span class="mi">610</span><span class="p">,</span><span class="mi">55</span><span class="p">,</span><span class="mi">455</span><span class="p">],</span> <span class="n">rotate_camera</span> <span class="o">=</span> <span class="p">[</span><span class="mi">270</span><span class="p">],</span>
@@ -659,7 +659,7 @@ For example see the <span class="xref myst">check_reward</span> function below. 
 </div>
 </div>
 </div>
-<p>Finally, this function gets called by the <code class="docutils literal notranslate"><span class="pre">get_action()</span></code>function. This function gets called everytime the unity game is ready for action.</p>
+<p>Finally, this function gets called by the <code class="docutils literal notranslate"><span class="pre">get_action()</span></code>function. This function gets called every time the unity game is ready for action.</p>
 <div class="cell tag__get_dlc_on_frame docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>  <span class="k">def</span> <span class="nf">get_action</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
