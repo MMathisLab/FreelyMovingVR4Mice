@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Writing Teensy sketch for Vr4mice &#8212; FreelyMovingVR4Mice</title>
+    <title>Mouse training &#8212; FreelyMovingVR4Mice</title>
   
   
   
@@ -62,11 +62,10 @@ const thebe_selector_input = "pre"
 const thebe_selector_output = ".output, .cell_output"
 </script>
     <script async="async" src="../../_static/sphinx-thebe.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'docs/Rig_building/writing_a_teensy_sketch';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'docs/training_protocols/Training_protocol';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Installation" href="../Installation/installSumUp.html" />
-    <link rel="prev" title="Configuring the teensy board and uploading the code" href="teensy_config.html" />
+    <link rel="prev" title="Augmented reality visual discrimination task" href="../VisualDiscrim.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -168,16 +167,16 @@ const thebe_selector_output = ".output, .cell_output"
         </ul>
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">Building the rig</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="Parts_list.html">Parts list</a></li>
-<li class="toctree-l1"><a class="reference internal" href="building_the_box.html">Perspex box for housing the mouse</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Building_the_cage.html">Cage for mounting monitors and cameras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Rig_building/Parts_list.html">Parts list</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Rig_building/building_the_box.html">Perspex box for housing the mouse</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Rig_building/Building_the_cage.html">Cage for mounting monitors and cameras</a></li>
 
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Teensy setup</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="Teensy_box_design.html">Teensy box design</a></li>
-<li class="toctree-l1"><a class="reference internal" href="teensy_config.html">Configuring the teensy board and uploading the code</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Writing Teensy sketch for Vr4mice</a></li>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../Rig_building/Teensy_box_design.html">Teensy box design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Rig_building/teensy_config.html">Configuring the teensy board and uploading the code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Rig_building/writing_a_teensy_sketch.html">Writing Teensy sketch for Vr4mice</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Installation of vr4mice and config file setup</span></p>
 <ul class="nav bd-sidenav">
@@ -191,8 +190,8 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="../VisualDiscrim.html">Augmented reality visual discrimination task</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Training protocol</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../training_protocols/Training_protocol.html">Mouse training</a></li>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Mouse training</a></li>
 
 
 </ul>
@@ -266,7 +265,7 @@ const thebe_selector_output = ".output, .cell_output"
       
       
       
-      <li><a href="https://github.com/MMathisLab/FreelyMovingVR4Mice/issues/new?title=Issue%20on%20page%20%2Fdocs/Rig_building/writing_a_teensy_sketch.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/MMathisLab/FreelyMovingVR4Mice/issues/new?title=Issue%20on%20page%20%2Fdocs/training_protocols/Training_protocol.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -296,7 +295,7 @@ const thebe_selector_output = ".output, .cell_output"
       
       
       
-      <li><a href="../../_sources/docs/Rig_building/writing_a_teensy_sketch.md" target="_blank"
+      <li><a href="../../_sources/docs/training_protocols/Training_protocol.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -378,7 +377,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Writing Teensy sketch for Vr4mice</h1>
+    <h1>Mouse training</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -388,8 +387,21 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#structure-of-the-sketch">Structure of the sketch</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Mouse training</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general-mouse-training">General mouse training</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#water-restriction">Water restriction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mouse-handling">Mouse handling</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flushing-the-water-tubes">Flushing the water tubes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#monitoring-the-mice-during-training">Monitoring the mice during training</a></li>
 </ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#habituation">Habituation</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-1-single-target-with-blocks">Training Stage 1: Single target with blocks</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-2-adding-a-distractor-object">Training Stage 2: Adding a distractor object</a></li>
+</ul>
+
             </nav>
         </div>
     </div>
@@ -400,37 +412,55 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="writing-teensy-sketch-for-vr4mice">
-<h1>Writing Teensy sketch for Vr4mice<a class="headerlink" href="#writing-teensy-sketch-for-vr4mice" title="Permalink to this heading">#</a></h1>
-<p>In Vr4mice, the microcontroller plays the role of reading and executing commands from the task (e.g. turn on the water valve), and writing data from sensors (e.g. encoders or IR beam breaks) back to the task. Please see the <span class="xref myst">template</span> for an example of what this should look like.</p>
-<p>In general, the microcontroller will operate in one of two states: <em>task on</em> or <em>task off</em>. In the <em>task off</em> state, it will not write any data to the serial port, and it will wait for a <em>task on</em> command. In the <em>task_on</em> state, it will:</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="mouse-training">
+<h1>Mouse training<a class="headerlink" href="#mouse-training" title="Permalink to this heading">#</a></h1>
+<section id="general-mouse-training">
+<h2>General mouse training<a class="headerlink" href="#general-mouse-training" title="Permalink to this heading">#</a></h2>
+<p>This documents give a protocol for training mice in the AR setup. This protocol should be followed by all labs so that we can get consistent data. This is by no means the final protocol and will need to be adjusted as we perform the experiments but we should only deviate from it after we discussed a change in the monday meetings. This protocol should then be updated to reflect that.</p>
+<section id="water-restriction">
+<h3>Water restriction<a class="headerlink" href="#water-restriction" title="Permalink to this heading">#</a></h3>
+<p>For the duration of the experiment mice will be placed on water restriction so that we can give the mice water rewards as a reinforcer to learn the task. To check that the mice are healthy you will need to weigh them each day. We allow for mice to loose up to 10% of their body weight, if a mouse looses more than this we put them back on water to recover. If a mouse is gaining weight you may need to reduce the amount of water that they are given each day, particularly with smaller mice (&lt; 20 grams)</p>
+<p>Each day the mice will be given 1.5ml per day in total. This means that it is important to know the water droplet size coming from the spouts on the rig. You should aim to keep this water droplet size at approximately 5ul. Then depending on the number of successful trials you can subtract this amount from the 1.5ul so that you know how much to give them. Water can be given to the mice after each session using a small tub (or lens cap) where the measured amount of water can be placed. Typically the mice will drink this very quickly.</p>
+</section>
+<section id="mouse-handling">
+<h3>Mouse handling<a class="headerlink" href="#mouse-handling" title="Permalink to this heading">#</a></h3>
+<p>With behavioral training it is very important that stress on the mouse is kept to a minimum. Therefore mice should never be picked up by the tail. This has been shown to reduce the behavioral performance of mice and increase anxiety associated behaviors. Instead, pick up the mice using a plastic tube and if possible allow the mouse to voluntarily enter the tube. Do not force the mouse to go into the tube by boxing it into a corner, just try to be patient and at some point the mouse will enter the tube and you can gently pick the tube up and transfer it into the box. After a couple of days mice will be very happy entering the tube because they know that they will get water.</p>
+</section>
+<section id="flushing-the-water-tubes">
+<h3>Flushing the water tubes<a class="headerlink" href="#flushing-the-water-tubes" title="Permalink to this heading">#</a></h3>
+<p>Prior to each experimental session you want to make sure that there are no air bubbles in the water tubes. The best way to do this is to flush through the water. To do this place paper towels below each lick port to soak up water. Then insert a syringe plunger into each tube of the syringe casings which are acting as reservoirs for the lick ports. Then select the manual water task in the VR4mice gui and set the water duration to a large number such as 5000ms and start the pulse. water should come out of each port along with any trapped air. Top up the reservoirs with water to the 20 ml notch. Then clean up any residual water in the box well. You should also ensure that the tip of the tube that the mouse drinks from is poking out of the water port - mice tend to chew on these and sometimes they are not poking out enough to be easily accessible.</p>
+</section>
+<section id="monitoring-the-mice-during-training">
+<h3>Monitoring the mice during training<a class="headerlink" href="#monitoring-the-mice-during-training" title="Permalink to this heading">#</a></h3>
+<p>It is important to monitor the mice while they are training. Sometimes the mice will not be in the mood to be trained. if you try to push them further they can get frustrated and no longer will do the task. It is important that if the mice do this that you take them out of the box for 10 mins, give them a snack and then try again. If they do this again give them a break for the day.</p>
+</section>
+</section>
+<section id="habituation">
+<h2>Habituation<a class="headerlink" href="#habituation" title="Permalink to this heading">#</a></h2>
+<p>Habituation to the mouse handler (30mins - 1hr each day):</p>
 <ul class="simple">
-<li><p>Write data as sequences of 16-bit integers to the serial port at the desired sampling frequency, set by a constant <code class="docutils literal notranslate"><span class="pre">SAMPLE_RATE</span></code>. At frequencies &gt; 250 Hz, the vr4mice program will occasionally lag behind by a few milliseconds. But for sampling rates up to 1000 Hz, it can catch up and will not lose any samples). Samples are delineated by a two number sequence: <code class="docutils literal notranslate"><span class="pre">-32767,</span> <span class="pre">32767</span></code>.</p></li>
-<li><p>Read commands sent over the serial port. Commands are sent in the following fashion:</p>
-<ul>
-<li><p>The first byte represents the command (use a letter, such as <code class="docutils literal notranslate"><span class="pre">W</span></code> for water delivery)</p></li>
-<li><p>Followed by parameters for the command, such as the duration to turn on the water valve, sent as 16-bit integers.</p></li>
-<li><p>In task code, commands are sent by specifying the name of the command, followed by parameters. E.g., to deliver water for 100 ms: <code class="docutils literal notranslate"><span class="pre">teensy.write('water',</span> <span class="pre">[100])</span></code></p></li>
+<li><p>Day 1: Put hand in cage - just hold your hand in the cage for a while so that they can get used to you scent. allow the mice to sniff. Initially, they will be quite skittish but after a while they with get more confident. They may also bite/nibble on your finger, if they do try not to make sudden movements because this will scare them, instead just lightly move them away with your finger.</p></li>
+<li><p>Day 2: Picking mice up in the tube. Just wait for the mouse to enter the tube and then very gently lift the tube up off the ground and then place it back down. Each time you do that you can increase the length of time that they are in tube so that they get used to being picked up. repeat multiple times</p></li>
+<li><p>Day 3: Pick up the mouse in the tube and then hold the entrance of the tube next to the open palm of your hand. After a while the mouse with walk onto your palm. If the mouse is shaking just simply place it back in the cage and try again in a couple of minutes.</p></li>
 </ul>
-</li>
-</ul>
-<section id="structure-of-the-sketch">
-<h2>Structure of the sketch<a class="headerlink" href="#structure-of-the-sketch" title="Permalink to this heading">#</a></h2>
+<p>Habituation to the arena:</p>
 <ul class="simple">
-<li><p>At the top of the sketch, list important task constants. There should always be at least two: the baud rate (for serial communication with computer) and the sample rate (rate that teensy will write data to computer, in Hz). NOTE :: if using the <a class="reference external" href="https://www.pjrc.com/teensy/td_serial.html">USB Serial on a Teensy board</a>, the baud rate will always be 12mbit/s, no matter what you set here.</p></li>
-<li><p>Define the pin connections to the microcontroller.</p></li>
-<li><p>Initialize variables to control input/output. This will include a <code class="docutils literal notranslate"><span class="pre">task_on</span></code> and <code class="docutils literal notranslate"><span class="pre">last_print</span></code> variable to control writing to the serial port. For each command you wish to send to the microcontroller, we generally recomment a <code class="docutils literal notranslate"><span class="pre">command_on</span></code>, <code class="docutils literal notranslate"><span class="pre">command_start</span></code>, and <code class="docutils literal notranslate"><span class="pre">command_duration</span></code> variable.</p></li>
-<li><p>Define interrupts and the setup function. In the setup function, define pins as input or output (read vs. write), and attach interrupts to pins as needed.</p></li>
-<li><p>Define standard read and write functions for reading commands from and writing data to the serial port.</p></li>
-<li><p>Define the loop function: during execution, this function will be run continuously. It has three main sections:</p>
-<ul>
-<li><p>If a command is available, read and execute (e.g. turn on water valve and record how long it should be on)</p></li>
-<li><p>Check if any signals need to be turned off</p></li>
-<li><p>If in the <em>task on</em> state, write data to the serial port.</p></li>
-</ul>
-</li>
+<li><p>Day 4: Place them in the AR box for a short period of time give water using water ports (15-30 mins). You can do this by using the manual water task. Just select the task from the tasks dropdown menu in the task GUI.</p></li>
 </ul>
 </section>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="training-stage-1-single-target-with-blocks">
+<h1>Training Stage 1: Single target with blocks<a class="headerlink" href="#training-stage-1-single-target-with-blocks" title="Permalink to this heading">#</a></h1>
+<p>To start to train the mouse you want to select the VisualDiscrim_single_teardrop_blocks script. Initially, the mouse should be trained using single target. To select the target type you can change the target selection parameter in the GUI, by changing the number. In the meetings we decided that the target should be the “pacman” object (target_selection = 3.0). In these initial training sessions you also what to train in blocks where the target appears only on the left/right until the mouse gets n correct trials (I used 20 so lets stick to that), after which it switches to the target being spawned on the opposite side. The goal of these blocks is to eliminate any bias that the mouse has for one of the lick ports. Here is a complete list of parameters to be used on this first session:</p>
+<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/single_target_parameters.png"><img alt="" class="bg-primary mb-1 align-center" src="../../_images/single_target_parameters.png" style="width: 400px;" /></a>
+<p>In this first session the mouse should be able to learn how to initiate a trial and show signs of following the block trial structure ie. they should periodically alternative between left and right choices as the blocks change. If they are able to do this you can start to decrease the Prob_target_on_left parameter over subsequent days (from 1.0 to 0.75). This will have the effect of changing the probability that the target spawn location adheres to the block structure, producing odd-ball trials where the target is on the opposite side. If the mouse is able to get these odd ball trails then reduce the Prob_target_on_left parameter to 0.5.</p>
+<p>Once the mouse is able to correctly report the object location on &gt; 60% of the trials you can now add in the distractor.</p>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="training-stage-2-adding-a-distractor-object">
+<h1>Training Stage 2: Adding a distractor object<a class="headerlink" href="#training-stage-2-adding-a-distractor-object" title="Permalink to this heading">#</a></h1>
+<p>Once the mouse is able to get this consistently add in the distractor.
+You can do this by setting the distractor parameter to 1.0. Make sure that the distraction selection parameter is set to 4 this selects the single teardrop as the distractor.</p>
+<p>If the mouse is able to perform the task with greater that 70% then the mouse is trained</p>
 </section>
 
     <script type="text/x-thebe-config">
@@ -446,7 +476,7 @@ document.write(`
         },
         kernelOptions: {
             name: "python3",
-            path: "./docs/Rig_building"
+            path: "./docs/training_protocols"
         },
         predefinedOutput: true
     }
@@ -464,22 +494,13 @@ document.write(`
                   <!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
-       href="teensy_config.html"
+       href="../VisualDiscrim.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Configuring the teensy board and uploading the code</p>
+        <p class="prev-next-title">Augmented reality visual discrimination task</p>
       </div>
-    </a>
-    <a class="right-next"
-       href="../Installation/installSumUp.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Installation</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>
@@ -496,8 +517,21 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#structure-of-the-sketch">Structure of the sketch</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Mouse training</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general-mouse-training">General mouse training</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#water-restriction">Water restriction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mouse-handling">Mouse handling</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flushing-the-water-tubes">Flushing the water tubes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#monitoring-the-mice-during-training">Monitoring the mice during training</a></li>
 </ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#habituation">Habituation</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-1-single-target-with-blocks">Training Stage 1: Single target with blocks</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-2-adding-a-distractor-object">Training Stage 2: Adding a distractor object</a></li>
+</ul>
+
   </nav></div>
 
 </div></div>

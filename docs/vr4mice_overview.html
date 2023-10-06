@@ -189,6 +189,12 @@ const thebe_selector_output = ".output, .cell_output"
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="VisualDiscrim.html">Augmented reality visual discrimination task</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Training protocol</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="training_protocols/Training_protocol.html">Mouse training</a></li>
+
+
+</ul>
 
     </div>
 </nav></div>
@@ -431,6 +437,8 @@ FreelyMovingVR4mice uses two GUIs (vr4mice and Deeplabcut-live-gui) that were bo
 <p>To pass actions to <code class="docutils literal notranslate"><span class="pre">vr4mice</span></code> from dlc key points in real time you will also need a working installation of <a class="reference external" href="https://github.com/DeepLabCut/DeepLabCut-live-GUI">deeplabcutlive-gui</a>. This handles reading images from the camera and live pose extraction. Deeplabcutlive-gui requires that a <code class="docutils literal notranslate"><span class="pre">processor</span></code> script is loaded, this is a file that computes various attributes such as the x, y position of the mouse and then it sends this data to via a socket to the vr4mice gui. An example processor can be found in <code class="docutils literal notranslate"><span class="pre">mouse_task/dlc_utils/dlc_processor_socket.py</span></code></p>
 <p>These documents provide an explanation of how to use both of these objects alongside an explanation of how to build the rig and installation.</p>
 </section>
+<div class="toctree-wrapper compound">
+</div>
 <div class="toctree-wrapper compound">
 </div>
 <div class="toctree-wrapper compound">
