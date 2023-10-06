@@ -1,5 +1,10 @@
 from .mouse_manual_water import ManualWater 
 from .mouse_VisualDiscrim_socket_thread import ARVisualDiscrim
+from .mouse_VisualDiscrim_socket_thread_blocks import ARVisualDiscrim_blocks
+from .mouse_VisualDiscrim_single_teardrop_blocks import ARVisualDiscrim_single_teardrop
+
+
+
 #from .mouse_VisualDiscrim_demo_task import ARVisualDiscrim_video
 #from .mouse_VisualDiscrim_camera import ARVisualDiscrim
 #from .mouse_VisualDiscrim_socket import ARVisualDiscrim

@@ -1,22 +1,18 @@
-import cv2
-import numpy as np
-#from .Video_handler import VideoReader
-from tqdm import trange
-from dlclive import DLCLive
-
 import numpy as np
 from dlclive.processor.processor import Processor
-from math import sqrt, acos, atan2, copysign, pi, degrees
+from math import sqrt, acos, atan2, copysign, degrees
 
 class MyProcessor2(Processor):
     def __init__(self,  con = 50):
         super().__init__()
-       # self.queue = queue
+   
 
     def process(self, pose, **kwargs):
         xy = pose[:, :2]
         conf = pose[:, 2]
-        center = np.average(xy, axis=0, weights=conf)
+        head_xy = xy [[0, 1, 2, 3, 4, 5, 6, 26],:]
+        head_conf =  conf [[0, 1, 2, 3, 4, 5, 6, 26]]
+        center = np.average(head_xy, axis=0, weights=head_conf)
         body_axis = xy[7] - xy[13]  # tail_base -> neck
         body_axis /= sqrt(np.sum(body_axis ** 2))
         head_axis = xy[0] - xy[7]  # neck -> nose
