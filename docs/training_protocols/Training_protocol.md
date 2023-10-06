@@ -31,7 +31,8 @@ Habituation to the arena:
 # Training Stage 1: Single target with blocks
 To start to train the mouse you want to select the VisualDiscrim_single_teardrop_blocks script. Initially, the mouse should be trained using single target. To select the target type you can change the target selection parameter in the GUI, by changing the number. In the meetings we decided that the target should be the "pacman" object (target_selection = 3.0). In these initial training sessions you also what to train in blocks where the target appears only on the left/right until the mouse gets n correct trials (I used 20 so lets stick to that), after which it switches to the target being spawned on the opposite side. The goal of these blocks is to eliminate any bias that the mouse has for one of the lick ports. Here is a complete list of parameters to be used on this first session: 
 
-```{image} ../../docs/images/single_target_parameters.png
+
+```{image} ../../docs/images/Params.jpg
 :alt: 
 :class: bg-primary mb-1
 :width: 400px

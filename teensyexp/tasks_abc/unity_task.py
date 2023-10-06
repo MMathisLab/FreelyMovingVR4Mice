@@ -1,5 +1,5 @@
 """
-    Contains the defintion of UnityTask class that should be used for video-game based tasks
+    Contains the definition of UnityTask class that should be used for video-game based tasks
     for which the game is designed using the [Unity ML-Agents Platform]
 """
 import os
@@ -67,7 +67,7 @@ class UnityTask(Task):
 
     def start(self):
         """
-            method tp start unity game: initialises UnityEnvironment, extracts agents, set up state observations,
+            method tp start unity game: initializes UnityEnvironment, extracts agents, set up state observations,
             use parent's start() call to notify teensy
         """
         ### start unity game ###
