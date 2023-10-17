@@ -3,9 +3,11 @@
 This documents give a protocol for training mice in the AR setup. This protocol should be followed by all labs so that we can get consistent data. This is by no means the final protocol and will need to be adjusted as we perform the experiments but we should only deviate from it after we discussed a change in the monday meetings. This protocol should then be updated to reflect that.
 
 ### Water restriction
-For the duration of the experiment mice will be placed on water restriction so that we can give the mice water rewards as a reinforcer to learn the task. To check that the mice are healthy you will need to weigh them each day. We allow for mice to loose up to 10% of their body weight, if a mouse looses more than this we put them back on water to recover. If a mouse is gaining weight you may need to reduce the amount of water that they are given each day, particularly with smaller mice (< 20 grams)
 
-Each day the mice will be given 1.5ml per day in total. This means that it is important to know the water droplet size coming from the spouts on the rig. You should aim to keep this water droplet size at approximately 5ul. Then depending on the number of successful trials you can subtract this amount from the 1.5ul so that you know how much to give them. Water can be given to the mice after each session using a small tub (or lens cap) where the measured amount of water can be placed. Typically the mice will drink this very quickly.
+For the duration of the experiment mice will be placed on water restriction so that we can give the mice water rewards as a reinforcer to learn the task. To check that the mice are healthy you will need to weigh them each day. We allow for mice to loose up to 10% of their body weight, if a mouse looses more than this we put them back on water to recover.
+
+Each day the mice will be given 1.5ml per day in total, as a minimum. This means that it is important to know the water droplet size coming from the spouts on the rig. You should aim to keep this water droplet size at approximately 5ul. Then depending on the number of successful trials you can subtract this amount from the 1.5ul so that you know how much to give them. Water can be given to the mice after each session using a small tub (or lens cap) where the measured amount of water can be placed. Typically the mice will drink this very quickly.
+
 
 ### Mouse handling
 With behavioral training it is very important that stress on the mouse is kept to a minimum. Therefore mice should never be picked up by the tail. This has been shown to reduce the behavioral performance of mice and increase anxiety associated behaviors. Instead, pick up the mice using a plastic tube and if possible allow the mouse to voluntarily enter the tube. Do not force the mouse to go into the tube by boxing it into a corner, just try to be patient and at some point the mouse will enter the tube and you can gently pick the tube up and transfer it into the box. After a couple of days mice will be very happy entering the tube because they know that they will get water.
@@ -48,4 +50,24 @@ Once the mouse is able to get this consistently add in the distractor.
 You can do this by setting the distractor parameter to 1.0. Make sure that the distraction selection parameter is set to 4 this selects the single teardrop as the distractor. 
 
 If the mouse is able to perform the task with greater that 70% then the mouse is trained
+
+
+# Selecting other targets
+
+```{image} ../../docs/images/black_white_pacman.png
+:alt: 
+:class: bg-primary mb-1
+:width: 400px
+:align: center
+```
+You can also mix and match different targets and distators by altering the ```target_selection``` and ```distractor_selection``` parameters. Here is a list of the floats used and the respective targets that are spawned:
+
+-  ```0. = white cube```
+-  ```1. = black cube```
+-  ```2. = teardrop grey```
+-  ``` 3. = pacman grey``` 
+-  ```4. = teardrop black``` 
+-  ```5. = pacman black```
+-  ```6. = teardrop white```
+-  ```7. = pacman white```
 
