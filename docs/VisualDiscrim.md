@@ -61,7 +61,7 @@ Here is an explanation of the parameters that can be set in the GUI. Such parame
 25. block_length: Specifies how many rewards the mouse has to get correct before the OOI switches sides. To enforce this make sure that you have the prop_object_on left parameter set to 1.0. If prob_object_on_left is set to .5 then this block length parameter has no effect as there is a 50:50 chance of the object appearing on the each side.
 26. start_box_delay: specifies the time that the animal needs to spend in the start box under the velocity threshold.
 27. distractor: int, this specifies whether the distractor is present or not. (0 = no distractor, 1 = distractor)
-28. grey_screen_active: specifes whether to show the grey ITI screen or not (0 = no grey screen, 1 = grey screen)
+28. grey_screen_active: specifies whether to show the grey ITI screen or not (0 = no grey screen, 1= grey screen)
 29.  Target_distance: the distance of the targets in y.
 
 
@@ -154,7 +154,7 @@ In this function, first the parameter for the current trial is extracted by self
 ```
 
 #### Adding block like structure
-In addition, to the parameters being identical across trials we may also like to add block like structure such as a baseline and pertubation block. An example of this could be the visual discrimination task without occluders for the first 100 trial followed by 100 trials with occulders. This can be achieved by passing the parameters to the class as lists:
+In addition, to the parameters being identical across trials we may also like to add block like structure such as a baseline and perturbation block. An example of this could be the visual discrimination task without occluders for the first 100 trial followed by 100 trials with occulders. This can be achieved by passing the parameters to the class as lists:
 
 
 ```{code-cell} ipython3
@@ -216,7 +216,7 @@ We can then read from this thread periodically and send the data to unity by the
         return(output.reshape((1,-1)))
 
 ```
-Finally, this function gets called by the ```get_action()```function. This function gets called everytime the unity game is ready for action. 
+Finally, this function gets called by the ```get_action()```function. This function gets called every time the unity game is ready for action. 
 
 
 ```{code-cell} ipython3
