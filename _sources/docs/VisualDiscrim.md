@@ -51,8 +51,8 @@ Here is an explanation of the parameters that can be set in the GUI. Such parame
 15. rotate_camera: Integer, rotation angle of the camera (default is 90). This needs to be adjusted to your rig and then not changed.
 16. Prop_Obj_on_Left: Float, probability of the OOI being on the left side (default is 0.5).
 17. mouse_report_delay: Float, mouse report delay default is 0.
-18. Target selection: int, this parameter selects what object for the OOI (0 = white cube, 1 = black cube, 2 = teardrop, double teardrop)
-19. Distractor selection: int, this parameter selects what object for the distractor (0 = white cube, 1 = black cube, 2 = teardrop, double teardrop)
+18. Target selection: int, this parameter selects what object for the OOI (0. = white cube, 1. = black cube, 2. = teardrop grey, 3. = pacman grey, 4. = teardrop black, 5. = pacman black, 6. = teardrop white, 7. = pacman white)
+19. Distractor selection: int, this parameter selects what object for the distractor (0. = white cube, 1. = black cube, 2. = teardrop grey, 3. = pacman grey, 4. = teardrop black, 5. = pacman black, 6. = teardrop white, 7. = pacman white)
 20. occlusion_type: int, Allows the user to select the type of occlusion that they want to use. (0 = no occlusion, 1 = slit occlusion, 2 = central wall), default is no occlusion.
 21.  Camera_type: int, Allows the user to select between on (Camera_type = 0) and off axis camera (Camera_type = 1) modes.
 22. target_spread: Float, specifies the distance between the targets.
@@ -179,6 +179,7 @@ In the augmented reality setup actions are sent from the DLCliveGUI via a socket
     self.address = ('localhost', 6000)
     self.dlcClient = DLCClient(address=self.address)
 ```
+
 We can then read from this thread periodically and send the data to unity by the ```dlcClient.read()``` method. In the python task script this is called within the ```_get_dlc_on_frame()```function. This function adds the incoming data to vectors which can be saved at the end of the experiment. It also maps the dlc data (which is in pixel coordinates from the camera images) to unity coordinates. 
 
 ```{code-cell} ipython3

@@ -194,6 +194,7 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Mouse training</a></li>
 
 
+
 </ul>
 
     </div>
@@ -400,6 +401,7 @@ document.write(`
 </li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-1-single-target-with-blocks">Training Stage 1: Single target with blocks</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-2-adding-a-distractor-object">Training Stage 2: Adding a distractor object</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#selecting-other-targets">Selecting other targets</a></li>
 </ul>
 
             </nav>
@@ -419,8 +421,8 @@ document.write(`
 <p>This documents give a protocol for training mice in the AR setup. This protocol should be followed by all labs so that we can get consistent data. This is by no means the final protocol and will need to be adjusted as we perform the experiments but we should only deviate from it after we discussed a change in the monday meetings. This protocol should then be updated to reflect that.</p>
 <section id="water-restriction">
 <h3>Water restriction<a class="headerlink" href="#water-restriction" title="Permalink to this heading">#</a></h3>
-<p>For the duration of the experiment mice will be placed on water restriction so that we can give the mice water rewards as a reinforcer to learn the task. To check that the mice are healthy you will need to weigh them each day. We allow for mice to loose up to 10% of their body weight, if a mouse looses more than this we put them back on water to recover. If a mouse is gaining weight you may need to reduce the amount of water that they are given each day, particularly with smaller mice (&lt; 20 grams)</p>
-<p>Each day the mice will be given 1.5ml per day in total. This means that it is important to know the water droplet size coming from the spouts on the rig. You should aim to keep this water droplet size at approximately 5ul. Then depending on the number of successful trials you can subtract this amount from the 1.5ul so that you know how much to give them. Water can be given to the mice after each session using a small tub (or lens cap) where the measured amount of water can be placed. Typically the mice will drink this very quickly.</p>
+<p>For the duration of the experiment mice will be placed on water restriction so that we can give the mice water rewards as a reinforcer to learn the task. To check that the mice are healthy you will need to weigh them each day. We allow for mice to loose up to 10% of their body weight, if a mouse looses more than this we put them back on water to recover.</p>
+<p>Each day the mice will be given 1.5ml per day in total, as a minimum. This means that it is important to know the water droplet size coming from the spouts on the rig. You should aim to keep this water droplet size at approximately 5ul. Then depending on the number of successful trials you can subtract this amount from the 1.5ul so that you know how much to give them. Water can be given to the mice after each session using a small tub (or lens cap) where the measured amount of water can be placed. Typically the mice will drink this very quickly.</p>
 </section>
 <section id="mouse-handling">
 <h3>Mouse handling<a class="headerlink" href="#mouse-handling" title="Permalink to this heading">#</a></h3>
@@ -461,6 +463,21 @@ document.write(`
 <p>Once the mouse is able to get this consistently add in the distractor.
 You can do this by setting the distractor parameter to 1.0. Make sure that the distraction selection parameter is set to 4 this selects the single teardrop as the distractor.</p>
 <p>If the mouse is able to perform the task with greater that 70% then the mouse is trained</p>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="selecting-other-targets">
+<h1>Selecting other targets<a class="headerlink" href="#selecting-other-targets" title="Permalink to this heading">#</a></h1>
+<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/black_white_pacman.png"><img alt="" class="bg-primary mb-1 align-center" src="../../_images/black_white_pacman.png" style="width: 400px;" /></a>
+<p>You can also mix and match different targets and distators by altering the <code class="docutils literal notranslate"><span class="pre">target_selection</span></code> and <code class="docutils literal notranslate"><span class="pre">distractor_selection</span></code> parameters. Here is a list of the floats used and the respective targets that are spawned:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">0.</span> <span class="pre">=</span> <span class="pre">white</span> <span class="pre">cube</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1.</span> <span class="pre">=</span> <span class="pre">black</span> <span class="pre">cube</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">2.</span> <span class="pre">=</span> <span class="pre">teardrop</span> <span class="pre">grey</span></code></p></li>
+<li><p><code class="docutils literal notranslate"> <span class="pre">3.</span> <span class="pre">=</span> <span class="pre">pacman</span> <span class="pre">grey</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">4.</span> <span class="pre">=</span> <span class="pre">teardrop</span> <span class="pre">black</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">5.</span> <span class="pre">=</span> <span class="pre">pacman</span> <span class="pre">black</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">6.</span> <span class="pre">=</span> <span class="pre">teardrop</span> <span class="pre">white</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">7.</span> <span class="pre">=</span> <span class="pre">pacman</span> <span class="pre">white</span></code></p></li>
+</ul>
 </section>
 
     <script type="text/x-thebe-config">
@@ -530,6 +547,7 @@ You can do this by setting the distractor parameter to 1.0. Make sure that the d
 </li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-1-single-target-with-blocks">Training Stage 1: Single target with blocks</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-2-adding-a-distractor-object">Training Stage 2: Adding a distractor object</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#selecting-other-targets">Selecting other targets</a></li>
 </ul>
 
   </nav></div>
