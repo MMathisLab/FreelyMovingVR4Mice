@@ -7,6 +7,7 @@ parts:
   - file: docs/Rig_building/building_the_box
   - file: docs/Rig_building/Building_the_cage
 - caption: Software, Building Unity Games
+  chapters:
   - file: docs/Unity_Game
 - caption: Software Control, Teensy setup
   chapters:
