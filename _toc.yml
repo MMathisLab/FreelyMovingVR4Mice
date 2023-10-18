@@ -1,27 +1,27 @@
 format: jb-book
 root: docs/vr4mice_overview
 parts:
-- caption: Hardware: Building the rig
+- caption: Hardware, Building the rig
   chapters:
   - file: docs/Rig_building/Parts_list
   - file: docs/Rig_building/building_the_box
   - file: docs/Rig_building/Building_the_cage
-- caption: Software: Building Unity Games
+- caption: Software, Building Unity Games
   - file: docs/Unity_Game
-- caption: Software control: Teensy setup
+- caption: Software Control, Teensy setup
   chapters:
   - file: docs/Rig_building/Teensy_box_design
   - file: docs/Rig_building/teensy_config
   - file: docs/Rig_building/writing_a_teensy_sketch
-- caption: Software: Installation of vr4mice and config file setup
+- caption: Software, Installation of vr4mice and config file setup
   chapters:
   - file: docs/Installation/installSumUp
   - file: docs/Installation/Config_file_setup
   - file: docs/Installation/Run_a_session
   - file: docs/Installation/create_desktop_icon
-- caption: Dev: Software package Documentation
+- caption: Dev, Software package Documentation
   chapters:
   - file: docs/VisualDiscrim
-- caption: Experiments: Training protocol
+- caption: Experiments, Training protocol
   chapters:
   - file: docs/training_protocols/Training_protocol
