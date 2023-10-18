@@ -1,12 +1,12 @@
 # Augmented Reality Games
 
-#### 💡 Developer Note
-````{admonition}
+This Document outlines the code required to build the Unity games.
+
+````{admonition} Developer Note
+:class: dropdown
 DEV NOTE: This repo contains version 2 of the augmented reality game, 
 orginally developed here: https://github.com/AdaptiveMotorControlLab/AugmentedRealityVersion2/blob/master/README.md
 ````
-
-This Document outlines the code required to build the Unity games.
 
 ## Installation
 
