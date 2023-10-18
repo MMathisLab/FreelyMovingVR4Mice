@@ -20,3 +20,6 @@ parts:
 - caption: Software package Documentation
   chapters:
   - file: docs/VisualDiscrim
+- caption: Training protocol
+  chapters:
+  - file: docs/training_protocols/Training_protocol
