@@ -30,7 +30,7 @@ public class CameraSelect : MonoBehaviour
 
     void SetResetParams(){
         resetParams = Academy.Instance.FloatProperties;
-        CameraSelection =resetParams.GetPropertyWithDefault("cameraSelection", 0f);
+        CameraSelection =resetParams.GetPropertyWithDefault("cameraSelection", 1f);
    
    }
 }
