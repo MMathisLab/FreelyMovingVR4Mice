@@ -119,14 +119,18 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         self.Prob_Obj_on_Left = Prop_Obj_on_Left
         
         self.block_Left = np.random.choice([0.0,1.0], p=[0.5,0.5])
+        print("block_left", self.block_Left)
+        
         
         if self.block_Left == 0.0:    
             print("Right block")
-            self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])   
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])  
+            
         else:
             print("Left block")
             self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
-                    
+        
+        print("Object_on_left: ", self.Object_on_left)          
                     
         self.block_length = block_length
         self.distractor = distractor
@@ -228,7 +232,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         self.channel.set_property("cameraSelection", self.camera_type)
         self.channel.set_property("target_selection", this_target_selection)
         self.channel.set_property("distractor_selection", this_distractor_selection)
-        self.channel.set_property("Object_on_left", self.Object_on_left)
+        self.channel.set_property("Object_on_Left", self.Object_on_left)
         self.channel.set_property("slitSize", this_slit_size)
         self.channel.set_property("slit_depth", this_slit_depth)
         self.channel.set_property("targetsFromMidline", this_target_spread)
@@ -303,17 +307,27 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
                 print(self.reward_size)
                 self.teensy.write('r_water', [self.reward_size[0]])
             self.n_rewards += 1
-            
+           
             if self.correct == self.block_length:
                 if self.block_Left == 0.0:
-                   
-                    self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])
-                    self.block_Left = 1.0
+                     self.block_Left = 1.0
                 else:
-                    self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
-                    
                     self.block_Left = 0.0
                 self.correct = 0
+                
+            
+            if self.block_Left == 0.0:
+                   
+                self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])
+                
+                   
+            else:
+                self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
+            
+            print("object on left", self.Object_on_left) 
+                    
+                
+            
 
     def reset_environment(self):
         """

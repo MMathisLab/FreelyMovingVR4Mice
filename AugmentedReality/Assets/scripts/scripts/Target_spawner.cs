@@ -106,7 +106,7 @@ public class Target_spawner : MonoBehaviour
     public void Spawn_distractor()
     {
         SetResetParams();
-        if(object_on_left == 0.0f)
+        if(object_on_left == 1.0f)
     {
         Debug.Log("object on left");
         targetSpawnerGL();
@@ -128,7 +128,7 @@ public class Target_spawner : MonoBehaviour
      public void Spawn()
     {
         SetResetParams();
-        if(object_on_left == 0.0f)
+        if(object_on_left == 1.0f)
     {
         targetSpawnerGL_1T();
         green_on_left = true;
