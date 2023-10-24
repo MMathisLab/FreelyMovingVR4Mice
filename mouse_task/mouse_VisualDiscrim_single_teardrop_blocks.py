@@ -45,13 +45,13 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
     def __init__(self, teensy, monitor=None, write_video=False, fps=60.0, session_label = ["AR_VD_single_teardrop_blocks"],
                  epochs=[250], epoch_labels = ["single_teardrop"],
                  config_file_path = config_path,
-                 reward_size = 25, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
-                 R_report_box = [4, 10, -10, -8],
-                 L_report_box = [-10, -4, -10, -8], Start_box =  [-4, 4, -7, -3, 80], 
+                 reward_size = 100, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
+                 R_report_box = [5, 10, -5, -3],
+                 L_report_box = [-10, -5, -5, -3], Start_box =  [-4, 4, -9, -5, 90], 
                  rotate_camera = 90., Prob_Obj_on_Left = 1.0, mouse_report_delay = 0.0,
-                 slit_size = 20., slit_depth = 2., target_selection = 2., distractor_selection = 3., occlusion_type = 0, 
-                 Camera_type = 0.0, target_spread = 4., target_size = 1., target_height = 1., block_length = 20., start_box_delay = 0.25, 
-                 velocity_threshold=10., distractor = 0.0, grey_screen_active = 0.0, target_distance = 3):
+                 slit_size = 20., slit_depth = 2., target_selection = 7., distractor_selection = 4., occlusion_type = 0.0, 
+                 Camera_type = 1.0, target_spread = 4., target_size = 2., target_height = 3., block_length = 20., start_box_delay = 0.25, 
+                 velocity_threshold=8., distractor = 0.0, grey_screen_active = 0.0, target_distance = 3):
 
         """
             Class constructor: initialises dlc processor, dlc live, video reader
