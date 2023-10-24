@@ -178,7 +178,7 @@ public class Target_spawner : MonoBehaviour
     targetsFromMidline = resetParams.GetPropertyWithDefault("targetsFromMidline", 2f);
     slitSize = resetParams.GetPropertyWithDefault("slitSize", 2f);
     slitDepth = resetParams.GetPropertyWithDefault("slit_depth", 0.01f);
-    object_on_left = resetParams.GetPropertyWithDefault("Object_on_Left", 1.0f);
+    object_on_left = resetParams.GetPropertyWithDefault("Object_on_Left", 0.0f);
     wall_height =  resetParams.GetPropertyWithDefault("wall_height", 2f);
     target_selection = resetParams.GetPropertyWithDefault("target_selection", 4f);
     distractor_selection = resetParams.GetPropertyWithDefault("distractor_selection", 5f);
