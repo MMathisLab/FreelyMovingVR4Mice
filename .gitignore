@@ -65,3 +65,9 @@ _build/*
 # developing on a mac
 *.DS_Store
 ._*
+
+# no longer track config files
+mouse_task/task_config.json
+config_path.json
+.config_path.json
+vr4mice/cfg/*

@@ -16,7 +16,7 @@ FreelyMovingVR4mice uses two GUIs (vr4mice and Deeplabcut-live-gui) that were bo
 - GPU for DeepLabCut, with at least 8 GB of memory
 
 ## Software requirements
-- Python3+ (tested on: 3.9)
+- Python3+ (tested on: 3.7)
 - Unity3D (versions tested: 2019.3.2.f1)
 - see `setup.py` for additional requirements
 

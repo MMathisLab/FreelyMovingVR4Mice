@@ -10,7 +10,7 @@ The local _**vr4mice/cfg**_ is the default "config folder" (in case of absence o
 
 
 ## Task config file 
-This config file specfies the paths to dlc models and the unity game
+This config file specifies the paths to dlc models and the unity game
 Adjust absolute paths in [mouse_task/task_config.json](mouse_task/task_config.json)
 
 "model_absolute_path": path to model to apply</br>
