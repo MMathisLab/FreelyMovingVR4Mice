@@ -11,7 +11,7 @@ from dlclive import Processor
 from math import sqrt, acos, atan2, copysign, pi, degrees
 
 class MyProcessor_socket(Processor):
-    def __init__(self, baudrate=115200, pulse_freq=50, pulse_width=5, max_stim_dur=0):
+    def __init__(self):
         super().__init__()
        # self.queue = queue
         self.address = ('localhost', 6000)     # family is deduced to be 'AF_INET'
