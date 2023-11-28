@@ -349,7 +349,7 @@ public class Mouse_move : Agent
     start_box_delay = resetParams.GetPropertyWithDefault("startBoxDelay", 0.25f);
     velocity_threshold = resetParams.GetPropertyWithDefault("velocityThreshold", 0.5f);
     report_box_delay = resetParams.GetPropertyWithDefault("reportBoxDelay", 0.1f);
-    distractor = resetParams.GetPropertyWithDefault("distractor", 0.0f);
+    distractor = resetParams.GetPropertyWithDefault("distractor", 1.0f);
     L_box_x_min = resetParams.GetPropertyWithDefault("L_box_x_min", -10f);
     L_box_x_max = resetParams.GetPropertyWithDefault("L_box_x_max", -6f);
     L_box_z_min = resetParams.GetPropertyWithDefault("L_box_z_min", -10f);
