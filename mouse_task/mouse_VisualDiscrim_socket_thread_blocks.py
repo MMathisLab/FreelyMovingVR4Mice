@@ -55,7 +55,7 @@ class ARVisualDiscrim_blocks(UnityTask):
 
         """
             Class constructor: initialises dlc processor, dlc live, video reader
-            Uses the constructor from parent UnityTask class that creats unity env
+            Uses the constructor from parent UnityTask class that creates unity env
 
             Args:
                 teensy(Teensy object): instance of teensy class that controls teensy microcontroller

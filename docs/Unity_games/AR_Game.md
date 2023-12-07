@@ -59,7 +59,7 @@ git reset --hard 803e62ff32f731995c11254a06c9ae15fe0a7567
 
 - Go to the `ml-agents` folder you cloned previously and select `com.unity.ml-agents/package.json`. This should import the `ml-agents` package.
 
-- If you now click on the ▶️ play icon, the game should start to run with no comiple errors.
+- If you now click on the ▶️ play icon, the game should start to run with no compile errors.
 
 
-ℹ️ If you encouter any problems, let the Mathis lab (as of now - 07.12.23 - contact Célia Benquet) know so that they can update this document with solutions!
+ℹ️ If you encounter any problems, let the Mathis lab (as of now - 07.12.23 - contact Célia Benquet) know so that they can update this document with solutions!
