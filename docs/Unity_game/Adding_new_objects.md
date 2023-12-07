@@ -14,7 +14,7 @@ To create new objects, or to edit the shape of existing objects in you will need
 2. Details on how to make and sculpt objects can be found in this youtube tutorial - https://www.youtube.com/watch?v=AMQcuRHWyOg.
 3. This tutorial was useful for creating the original tear drop - https://blender.stackexchange.com/questions/199456/how-to-model-a-teardrop-shape
 
-When saving objects from blender to use in unity you want to export the selected object as a ``.FBX format``. This is a format that is also readable by unity. To do this you want to follow these steps: 
+When saving objects from blender to use in unity you want to export the selected object as a `.FBX format`. This is a format that is also readable by unity. To do this you want to follow these steps: 
 
 1. File > Export_as > Fbx
 ```{image} ../../docs/images/save_as_fbx.png
