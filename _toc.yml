@@ -1,7 +1,7 @@
 format: jb-book
 root: docs/vr4mice_overview
 parts:
-- caption: Hardware Building the rig
+- caption: Hardware, Building the rig
   chapters:
   - file: docs/Rig_building/Parts_list
   - file: docs/Rig_building/building_the_box
