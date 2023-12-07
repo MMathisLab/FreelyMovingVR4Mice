@@ -1,6 +1,6 @@
 # Update the `AugmentedReality` game
 
-The `FreelyMovingVR4Mice` repo is a classical GitHub repository. Below you will find classical resources on how to develop and manage code on GitHub. It is loosly based on the GitHub documentation on [how to contribute to projects](https://docs.github.com/en/get-started/quickstart/contributing-to-projects).
+The `FreelyMovingVR4Mice` repo is a classical GitHub repository. Below you will find classical resources on how to develop and manage code on GitHub. It is loosely based on the GitHub documentation on [how to contribute to projects](https://docs.github.com/en/get-started/quickstart/contributing-to-projects).
 
 
 If you want to update game, here is the classical process:
