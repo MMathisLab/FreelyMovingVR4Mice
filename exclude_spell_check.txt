@@ -1,3 +1,3 @@
-./mouse_task/visual_discrim_unity_build/MonoBleedingEdge/etc/mono/browscap.ini
-./teensyexp/teensy.py
-./mouse_task/unity_ar/MonoBleedingEdge/etc/mono/browscap.ini
+mouse_task/visual_discrim_unity_build/MonoBleedingEdge/etc/mono/browscap.ini
+teensyexp/teensy.py
+mouse_task/unity_ar/MonoBleedingEdge/etc/mono/browscap.ini
