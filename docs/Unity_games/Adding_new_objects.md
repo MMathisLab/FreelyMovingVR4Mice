@@ -1,5 +1,5 @@
 # Adding new target objects
-This page describes how to add new targets and distractor objects to the unity game such as the tear drop and the white pacman seen below:
+This page describes how to add new targets and distractor objects to the unity game such as the tear drop and the white pacman below.
 
 ```{image} ../../docs/images/black_white_pacman.png
 :alt: black_white
@@ -116,4 +116,4 @@ To add this newly made object to the list of objects that are used in the game:
 
 You just created a new target! 💫 The object can then be selected when running the `Vr4mice` game by changing either the `Target_selection` or `Distractor_selection` parameters in the python GUI with the number used corresponding to the index within the `Targets` list.
 
-Now, to make the object available for all users (and your future self), you can follow {doc}`../../docs/Unity_games/update_Unity_Game.md` to push the changes on the GitHub repo.
+Now, to make the object available for all users (and your future self), you can follow {doc}`../../docs/Unity_games/update_Unity_Game` to push the changes on the GitHub repo.
