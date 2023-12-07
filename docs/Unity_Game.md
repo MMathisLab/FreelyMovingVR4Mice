@@ -1,4 +1,4 @@
-# Augmented Reality Games
+# The Unity Augmented Reality Game installation
 
 This Document outlines the code required to build the Unity games.
 
