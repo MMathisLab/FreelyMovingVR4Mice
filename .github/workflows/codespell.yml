@@ -18,4 +18,4 @@ jobs:
       - name: Codespell
         uses: codespell-project/actions-codespell@v1
         with:
-          exclude_file: 'exclude-spell-check.txt'
+          exclude_file: 'exclude_spell_check.txt'
