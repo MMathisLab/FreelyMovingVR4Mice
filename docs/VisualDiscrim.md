@@ -232,7 +232,7 @@ Finally, this function gets called by the ```get_action()```function. This funct
 ```
 
 ### Data saving functionality
-At the end of the experiment, we want to save various forms of data such as trial by trial paramters and frame by frame actions that the animal took. This can be done by creating lists that can be appended with these parameters either when a trial begins or on each frame of the game. These can then all be saved into a .pkl file by the ```get_data()``` function in the python task file. Data gets saved by then clicking the save data button within the vr4mice GUI.
+At the end of the experiment, we want to save various forms of data such as trial by trial parameters and frame by frame actions that the animal took. This can be done by creating lists that can be appended with these parameters either when a trial begins or on each frame of the game. These can then all be saved into a .pkl file by the ```get_data()``` function in the python task file. Data gets saved by then clicking the save data button within the vr4mice GUI.
 
 
 
