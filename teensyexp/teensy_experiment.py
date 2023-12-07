@@ -861,7 +861,7 @@ class TeensyExperimentGUI(object):
                                                                                  column=2)
         cur_row += 1
 
-        # select attmept
+        # select attempt
         Label(window, text="Attempt: ").grid(sticky="n", row=cur_row, column=0)
         self.attempt = StringVar(window)
         self.attempt_entry = Combobox(window, textvariable=self.attempt, width=combobox_width)

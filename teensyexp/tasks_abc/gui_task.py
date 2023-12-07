@@ -14,7 +14,7 @@ class GuiTask(Task):
         """
             class's constructor, use parent's constructor
             Args:
-                teensy(Teensy object): instnace of teensy class
+                teensy(Teensy object): instance of teensy class
         """
         super().__init__(teensy)
 

@@ -51,8 +51,8 @@ Here is an explanation of the parameters that can be set in the GUI. Such parame
 15. rotate_camera: Integer, rotation angle of the camera (default is 90). This needs to be adjusted to your rig and then not changed.
 16. Prop_Obj_on_Left: Float, probability of the OOI being on the left side (default is 0.5).
 17. mouse_report_delay: Float, mouse report delay default is 0.
-18. Target selection: int, this parameter selects what object for the OOI (0 = white cube, 1 = black cube, 2 = teardrop, double teardrop)
-19. Distractor selection: int, this parameter selects what object for the distractor (0 = white cube, 1 = black cube, 2 = teardrop, double teardrop)
+18. Target selection: int, this parameter selects what object for the OOI (0. = white cube, 1. = black cube, 2. = teardrop grey, 3. = pacman grey, 4. = teardrop black, 5. = pacman black, 6. = teardrop white, 7. = pacman white)
+19. Distractor selection: int, this parameter selects what object for the distractor (0. = white cube, 1. = black cube, 2. = teardrop grey, 3. = pacman grey, 4. = teardrop black, 5. = pacman black, 6. = teardrop white, 7. = pacman white)
 20. occlusion_type: int, Allows the user to select the type of occlusion that they want to use. (0 = no occlusion, 1 = slit occlusion, 2 = central wall), default is no occlusion.
 21.  Camera_type: int, Allows the user to select between on (Camera_type = 0) and off axis camera (Camera_type = 1) modes.
 22. target_spread: Float, specifies the distance between the targets.
@@ -61,7 +61,7 @@ Here is an explanation of the parameters that can be set in the GUI. Such parame
 25. block_length: Specifies how many rewards the mouse has to get correct before the OOI switches sides. To enforce this make sure that you have the prop_object_on left parameter set to 1.0. If prob_object_on_left is set to .5 then this block length parameter has no effect as there is a 50:50 chance of the object appearing on the each side.
 26. start_box_delay: specifies the time that the animal needs to spend in the start box under the velocity threshold.
 27. distractor: int, this specifies whether the distractor is present or not. (0 = no distractor, 1 = distractor)
-28. grey_screen_active: specifes whether to show the grey ITI screen or not (0 = no grey screen, 1= grey screen)
+28. grey_screen_active: specifies whether to show the grey ITI screen or not (0 = no grey screen, 1= grey screen)
 29.  Target_distance: the distance of the targets in y.
 
 
@@ -154,7 +154,7 @@ In this function, first the parameter for the current trial is extracted by self
 ```
 
 #### Adding block like structure
-In addition, to the parameters being identical across trials we may also like to add block like structure such as a baseline and pertubation block. An example of this could be the visual discrimination task without occluders for the first 100 trial followed by 100 trials with occulders. This can be achieved by passing the parameters to the class as lists:
+In addition, to the parameters being identical across trials we may also like to add block like structure such as a baseline and perturbation block. An example of this could be the visual discrimination task without occluders for the first 100 trial followed by 100 trials with occulders. This can be achieved by passing the parameters to the class as lists:
 
 
 ```{code-cell} ipython3
@@ -179,6 +179,7 @@ In the augmented reality setup actions are sent from the DLCliveGUI via a socket
     self.address = ('localhost', 6000)
     self.dlcClient = DLCClient(address=self.address)
 ```
+
 We can then read from this thread periodically and send the data to unity by the ```dlcClient.read()``` method. In the python task script this is called within the ```_get_dlc_on_frame()```function. This function adds the incoming data to vectors which can be saved at the end of the experiment. It also maps the dlc data (which is in pixel coordinates from the camera images) to unity coordinates. 
 
 ```{code-cell} ipython3
@@ -215,7 +216,7 @@ We can then read from this thread periodically and send the data to unity by the
         return(output.reshape((1,-1)))
 
 ```
-Finally, this function gets called by the ```get_action()```function. This function gets called everytime the unity game is ready for action. 
+Finally, this function gets called by the ```get_action()```function. This function gets called every time the unity game is ready for action. 
 
 
 ```{code-cell} ipython3
@@ -231,7 +232,7 @@ Finally, this function gets called by the ```get_action()```function. This funct
 ```
 
 ### Data saving functionality
-At the end of the experiment, we want to save various forms of data such as trial by trial paramters and frame by frame actions that the animal took. This can be done by creating lists that can be appended with these parameters either when a trial begins or on each frame of the game. These can then all be saved into a .pkl file by the ```get_data()``` function in the python task file. Data gets saved by then clicking the save data button within the vr4mice GUI.
+At the end of the experiment, we want to save various forms of data such as trial by trial parameters and frame by frame actions that the animal took. This can be done by creating lists that can be appended with these parameters either when a trial begins or on each frame of the game. These can then all be saved into a .pkl file by the ```get_data()``` function in the python task file. Data gets saved by then clicking the save data button within the vr4mice GUI.
 
 
 
