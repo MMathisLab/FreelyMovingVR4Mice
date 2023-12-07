@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Installation &#8212; FreelyMovingVR4Mice</title>
+    <title>Adding new target objects &#8212; FreelyMovingVR4Mice</title>
   
   
   
@@ -62,12 +62,12 @@ const thebe_selector_input = "pre"
 const thebe_selector_output = ".output, .cell_output"
 </script>
     <script async="async" src="../../_static/sphinx-thebe.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'docs/Installation/installSumUp';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'docs/Unity_games/Adding_new_objects';</script>
     <link rel="shortcut icon" href="../../_static/logo.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Config files" href="Config_file_setup.html" />
-    <link rel="prev" title="Cage for mounting monitors and cameras" href="../Rig_building/Building_the_cage.html" />
+    <link rel="next" title="Teensy box design" href="../Rig_building/Teensy_box_design.html" />
+    <link rel="prev" title="Rebuild a Unity game" href="build_Unity_Game.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -177,18 +177,18 @@ const thebe_selector_output = ".output, .cell_output"
 
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software, Installation of vr4mice and config file setup</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Config_file_setup.html">Config files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Run_a_session.html">How to run a session</a></li>
-<li class="toctree-l1"><a class="reference internal" href="create_desktop_icon.html">Create a desktop icon to launch Teensy experiments</a></li>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../Installation/installSumUp.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation/Config_file_setup.html">Config files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation/Run_a_session.html">How to run a session</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation/create_desktop_icon.html">Create a desktop icon to launch Teensy experiments</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software, Unity Games</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../Unity_games/AR_Game.html">Augmented Reality Game installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Unity_games/update_Unity_Game.html">Update the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Unity_games/build_Unity_Game.html">Rebuild a Unity game</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Unity_games/Adding_new_objects.html">Adding new target objects</a></li>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="AR_Game.html">Augmented Reality Game installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="update_Unity_Game.html">Update the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_Unity_Game.html">Rebuild a Unity game</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Adding new target objects</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software Control, Teensy setup</span></p>
 <ul class="nav bd-sidenav">
@@ -277,7 +277,7 @@ const thebe_selector_output = ".output, .cell_output"
       
       
       
-      <li><a href="https://github.com/MMathisLab/FreelyMovingVR4Mice/issues/new?title=Issue%20on%20page%20%2Fdocs/Installation/installSumUp.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/MMathisLab/FreelyMovingVR4Mice/issues/new?title=Issue%20on%20page%20%2Fdocs/Unity_games/Adding_new_objects.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -307,7 +307,7 @@ const thebe_selector_output = ".output, .cell_output"
       
       
       
-      <li><a href="../../_sources/docs/Installation/installSumUp.md" target="_blank"
+      <li><a href="../../_sources/docs/Unity_games/Adding_new_objects.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -391,7 +391,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Installation</h1>
+    <h1>Adding new target objects</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -401,16 +401,10 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-dlclivegui">Install DLCliveGUI</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-started">Getting Started</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-up-your-experimental-system">Setting up your experimental system</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teensy">Teensy</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#config-files">Config files</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#desktop-icon">desktop icon</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sculpting-objects-in-blender">Sculpting objects in Blender</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#importing-the-file-into-unity">Importing the file into Unity</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-a-material">Adding a material</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-the-object-to-the-list-of-targets-and-distractors">Adding the object to the list of targets and distractors</a></li>
 </ul>
             </nav>
         </div>
@@ -422,57 +416,78 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <p>The FreelyMovingVR4Mice repository contains main <strong>vr4mice</strong> package (src code: teensyexp folder) and <strong>mouse_task</strong> module that is the input for <strong>vr4mice</strong></p>
-<section class="tex2jax_ignore mathjax_ignore" id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="adding-new-target-objects">
+<h1>Adding new target objects<a class="headerlink" href="#adding-new-target-objects" title="Permalink to this heading">#</a></h1>
+<p>This page describes how to add new targets and distractor objects to the unity game such as the tear drop and the white pacman below.</p>
+<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/black_white_pacman.png"><img alt="black_white" class="bg-primary mb-1 align-center" src="../../_images/black_white_pacman.png" style="width: 800px;" /></a>
+<section id="sculpting-objects-in-blender">
+<h2>Sculpting objects in Blender<a class="headerlink" href="#sculpting-objects-in-blender" title="Permalink to this heading">#</a></h2>
+<p>To create new objects, or to edit the shape of existing objects, you will need to use <a class="reference external" href="https://www.blender.org/">Blender</a>:</p>
 <ol class="arabic simple">
-<li><p>download source code</p></li>
+<li><p>To install Blender visit <a class="reference external" href="https://www.blender.org/">their website</a>.</p></li>
 </ol>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone git@github.com:MMathisLab/FreelyMovingVR4Mice.git
-</pre></div>
-</div>
-<p>$ cd FreelyMovingVR4Mice (choose branch if needed)</p>
+<p><strong>Useful resources on how to use Blender:</strong></p>
+<ul class="simple">
+<li><p>Details on how to make and sculpt objects can be found in this <a class="reference external" href="https://www.youtube.com/watch?v=AMQcuRHWyOg">youtube tutorial</a>.</p></li>
+<li><p><a class="reference external" href="https://blender.stackexchange.com/questions/199456/how-to-model-a-teardrop-shape">This tutorial</a> was useful for creating the original tear drop.</p></li>
+</ul>
+<ol class="arabic" start="2">
+<li><p>When saving objects from Blender to use in Unity you want to export the selected object as a <code class="docutils literal notranslate"><span class="pre">.FBX</span> <span class="pre">format</span></code>. This is a format that is also readable by Unity. To do this you want to follow these steps:</p>
 <ol class="arabic simple">
-<li><p>create new conda environment with local pip:</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">File</span></code> &gt;&gt; <code class="docutils literal notranslate"><span class="pre">Export</span></code> &gt;&gt; <code class="docutils literal notranslate"><span class="pre">Fbx</span></code>.</p></li>
 </ol>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ conda create --name vr4mice python=3.7 pip
-</pre></div>
-</div>
-<p>$ conda activate name_of_env
-2. install <em>vr4mice</em> package  (<em>use pip install -e . if package is under development</em>)</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install .
-</pre></div>
-</div>
-<section id="install-dlclivegui">
-<h2>Install DLCliveGUI<a class="headerlink" href="#install-dlclivegui" title="Permalink to this heading">#</a></h2>
-<p>DLClivegui handles reading from the camera and live pose estimation. Before installing DLClivegui you will need to install the correct drivers and C libraries for your camera. You can find links to these <a class="reference external" href="https://github.com/DeepLabCut/DeepLabCut-live-GUI/blob/master/docs/camera_support.md">here</a>. Make sure you add the C libraries to your system path if you are using a windows machine.</p>
-<p>You will also need to install DLCliveGUI on a separate conda environment (call this environment dlclive_gui) you can find installation instructions on how to do this <a class="reference external" href="https://github.com/DeepLabCut/DeepLabCut-live-GUI/blob/master/docs/install.md">here</a>. However, you will want to use a tensorflow 2.x version since the model that we use for the tracking was made with tensorflow 2. Ensure that you also have the correct version of CUDA and cudnn installed on this conda environment for the tensorflow version that you are using.</p>
-<p>you can then start the gui by typing <code class="docutils literal notranslate"><span class="pre">dlclivegui</span></code> when in the dlclive_gui environment.</p>
+<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/save_as_fbx.png"><img alt="save_as_fbx" class="bg-primary mb-1 align-center" src="../../_images/save_as_fbx.png" style="width: 700px;" /></a>
+<ol class="arabic simple" start="2">
+<li><p>Make sure you tick <code class="docutils literal notranslate"><span class="pre">Selected</span> <span class="pre">Objects</span></code> only and click on <code class="docutils literal notranslate"><span class="pre">Export</span> <span class="pre">FBX</span></code>.</p></li>
+</ol>
+<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/fbx_save_options.png"><img alt="fbx_save_options" class="bg-primary mb-1 align-center" src="../../_images/fbx_save_options.png" style="width: 700px;" /></a>
+</li>
+</ol>
+<p>ℹ️ If you have any issues with this, you can find more detailed steps alongside an explanation of the different save options <a class="reference external" href="https://all3dp.com/2/blender-to-unity-how-to-import-blender-models-in-unity/#:~:text=Importing%20a%20Blender%20File%20to%20Unity,-Importing%20a%20Blender&amp;text=Alternatively%2C%20move%20and%20save%20the,That's%20it">here</a>.</p>
 </section>
-<section id="getting-started">
-<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">#</a></h2>
-<section id="setting-up-your-experimental-system">
-<h3>Setting up your experimental system<a class="headerlink" href="#setting-up-your-experimental-system" title="Permalink to this heading">#</a></h3>
-<section id="teensy">
-<h4>Teensy<a class="headerlink" href="#teensy" title="Permalink to this heading">#</a></h4>
-<ul class="simple">
-<li><p>Connect teensy microcontroller and upload the teensy sketch (<a class="reference external" href="https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/mouse_task/teensy/teensy_AR.ino">example of code to upload</a>)</p></li>
-<li><p>check rights on port access (modify via sudo chmod if needed)</p></li>
+<section id="importing-the-file-into-unity">
+<h2>Importing the file into Unity<a class="headerlink" href="#importing-the-file-into-unity" title="Permalink to this heading">#</a></h2>
+<p>To import the object into Unity</p>
+<ul>
+<li><p>Open the Unity editor.</p></li>
+<li><p>Click on the <code class="docutils literal notranslate"><span class="pre">asset</span> <span class="pre">tab</span></code> and then <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">asset</span></code> and find the <code class="docutils literal notranslate"><span class="pre">.fbx</span></code> file that you want to import.</p></li>
+<li><p>Once imported the object will appear in the editor. Put the object into the prefab folder in the unity project. You should see that this object has a little play button on it. If you click on this play button the object will unravel and reveal multiple objects. We only want the object that looks like a “mesh” so drag this into the game and it should appear as a pink object - the reason that the object is pink is because it has no material attached to it.</p>
+<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/importing_to_unity.png"><img alt="importing_to_unity" class="bg-primary mb-1 align-center" src="../../_images/importing_to_unity.png" style="width: 700px;" /></a>
+</li>
 </ul>
 </section>
-<section id="config-files">
-<h4>Config files<a class="headerlink" href="#config-files" title="Permalink to this heading">#</a></h4>
-<ul class="simple">
-<li><p>Set up the <a class="reference internal" href="Config_file_setup.html"><span class="doc std std-doc">config files</span></a></p></li>
+<section id="adding-a-material">
+<h2>Adding a material<a class="headerlink" href="#adding-a-material" title="Permalink to this heading">#</a></h2>
+<p>To create a new material:</p>
+<ul>
+<li><p>Click on the materials folder in the asset folder of the project tab.</p></li>
+<li><p>Right click on a spare space within this <code class="docutils literal notranslate"><span class="pre">folder</span></code> &gt;&gt; <code class="docutils literal notranslate"><span class="pre">Create</span></code> &gt;&gt; <code class="docutils literal notranslate"><span class="pre">Material</span></code>.</p>
+<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/create_material.png"><img alt="create_material" class="bg-primary mb-1 align-center" src="../../_images/create_material.png" style="width: 700px;" /></a>
+</li>
+<li><p>Give the material a name, i.e. <code class="docutils literal notranslate"><span class="pre">blue</span></code>.</p></li>
+<li><p>Click on it to get the inspector window for that object to pop up. Then you can click on the color picker and change the color of the material. In this case I have gone for a blue.</p>
+<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/create_material_2.png"><img alt="create_material_2" class="bg-primary mb-1 align-center" src="../../_images/create_material_2.png" style="width: 700px;" /></a>
+</li>
+<li><p>Drag an drop the material onto the object we just imported and it will turn it to the color of the material.</p>
+<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/create_material_3.png"><img alt="create_material_3" class="bg-primary mb-1 align-center" src="../../_images/create_material_3.png" style="width: 700px;" /></a>
+</li>
+<li><p>Drag this colored object into the prefab folder so that we can programmatically spawn it (rather than it always being present in the game!). And give it a clear name.</p></li>
 </ul>
 </section>
-<section id="desktop-icon">
-<h4>desktop icon<a class="headerlink" href="#desktop-icon" title="Permalink to this heading">#</a></h4>
-<ul class="simple">
-<li><p>How to create <a class="reference internal" href="create_desktop_icon.html"><span class="doc std std-doc">desktop icon</span></a> using a .bat script (windows)</p></li>
+<section id="adding-the-object-to-the-list-of-targets-and-distractors">
+<h2>Adding the object to the list of targets and distractors<a class="headerlink" href="#adding-the-object-to-the-list-of-targets-and-distractors" title="Permalink to this heading">#</a></h2>
+<p>To add this newly made object to the list of objects that are used in the game:</p>
+<ul>
+<li><p>In the hierarchy window, select <code class="docutils literal notranslate"><span class="pre">scenario</span></code> &gt;&gt; <code class="docutils literal notranslate"><span class="pre">plane</span></code>. This will open the inspector window for the plane object on the right hand side of the screen.</p>
+<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/target_spawner_1.png"><img alt="target_spawner_1" class="bg-primary mb-1 align-center" src="../../_images/target_spawner_1.png" style="width: 700px;" /></a>
+</li>
+<li><p>Scroll down in this window until you find the <code class="docutils literal notranslate"><span class="pre">target</span> <span class="pre">spawner</span></code> script.</p></li>
+<li><p>Scroll down some more and you will see a field called <code class="docutils literal notranslate"><span class="pre">Targets</span></code>. This <code class="docutils literal notranslate"><span class="pre">Targets</span></code> object is a list of individual game objects which can be spawned in the game. To add a new object increase the <code class="docutils literal notranslate"><span class="pre">size</span></code> parameter by 1 and then you will see an empty slot appear (it will say <code class="docutils literal notranslate"><span class="pre">None</span> <span class="pre">(Game</span> <span class="pre">Object)</span></code>). You can simply drag an drop the object that you recently imported onto this slot.</p>
+<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/target_spawner_2.png"><img alt="target_spawner_2" class="bg-primary mb-1 align-center" src="../../_images/target_spawner_2.png" style="width: 400px;" /></a>
+</li>
 </ul>
-</section>
-</section>
+<p>You just created a new target! 💫 The object can then be selected when running the <code class="docutils literal notranslate"><span class="pre">Vr4mice</span></code> game by changing either the <code class="docutils literal notranslate"><span class="pre">Target_selection</span></code> or <code class="docutils literal notranslate"><span class="pre">Distractor_selection</span></code> parameters in the python GUI with the number used corresponding to the index within the <code class="docutils literal notranslate"><span class="pre">Targets</span></code> list.</p>
+<p>Now, to make the object available for all users (and your future self), you can follow <a class="reference internal" href="update_Unity_Game.html"><span class="doc">Update the AugmentedReality game</span></a> to push the changes on the GitHub repo.</p>
 </section>
 </section>
 
@@ -489,7 +504,7 @@ document.write(`
         },
         kernelOptions: {
             name: "python3",
-            path: "./docs/Installation"
+            path: "./docs/Unity_games"
         },
         predefinedOutput: true
     }
@@ -507,20 +522,20 @@ document.write(`
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../Rig_building/Building_the_cage.html"
+       href="build_Unity_Game.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Cage for mounting monitors and cameras</p>
+        <p class="prev-next-title">Rebuild a Unity game</p>
       </div>
     </a>
     <a class="right-next"
-       href="Config_file_setup.html"
+       href="../Rig_building/Teensy_box_design.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Config files</p>
+        <p class="prev-next-title">Teensy box design</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -539,16 +554,10 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-dlclivegui">Install DLCliveGUI</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-started">Getting Started</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-up-your-experimental-system">Setting up your experimental system</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teensy">Teensy</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#config-files">Config files</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#desktop-icon">desktop icon</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sculpting-objects-in-blender">Sculpting objects in Blender</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#importing-the-file-into-unity">Importing the file into Unity</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-a-material">Adding a material</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-the-object-to-the-list-of-targets-and-distractors">Adding the object to the list of targets and distractors</a></li>
 </ul>
   </nav></div>
 
