@@ -9,6 +9,7 @@ parts:
 - caption: Software, Building Unity Games
   chapters:
   - file: docs/Unity_Game
+  - file: docs/Unity_game/Adding_new_objects
 - caption: Software Control, Teensy setup
   chapters:
   - file: docs/Rig_building/Teensy_box_design
