@@ -1,6 +1,6 @@
 """
     Script contains helpers for GUI:
-    simple logical or arithmetics operations
+    simple logical or arithmetic operations
 """
 
 

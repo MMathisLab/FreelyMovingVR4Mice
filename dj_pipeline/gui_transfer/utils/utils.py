@@ -324,7 +324,7 @@ def transfer_files(transfer_files):
         Any exceptions that occur during file transfer.
 
     """
-    ip = config.get_ip  # check connexion - gui ? modify ? cache ? config ?
+    ip = config.get_ip  # check connection - gui ? modify ? cache ? config ?
     host = config.get_host
     # check/create
     if ip != "localhost":
@@ -362,7 +362,7 @@ def move_files(files_info):
         shutil.move(src, dst)
 
 
-def init_watcher():  # launch dlc + wait/tranfer once created (queue), init watcher on  folder
+def init_watcher():  # launch dlc + wait/transfer once created (queue), init watcher on  folder
     pass
 
 

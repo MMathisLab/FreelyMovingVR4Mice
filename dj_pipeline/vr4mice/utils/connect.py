@@ -5,7 +5,7 @@ from vr4mice.utils.logger import Logger, config_logger
 from vr4mice.utils.schema_config import connect_to_database
 
 """
-    Script with different connexion modes based on the number of input arguments:
+    Script with different connection modes based on the number of input arguments:
     The address of database precised in the DJ_HOST env variable,
     If the password as the same as the name it can be used as the one input argument
     

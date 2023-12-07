@@ -87,7 +87,7 @@ class OutputPlots(dj.Computed):
         """
             key: VR4Mice
         """
-        filename = full_path  # start ananlysis function
+        filename = full_path  # start analysis function
         self.insert1(key, filename)
         # send mail
 

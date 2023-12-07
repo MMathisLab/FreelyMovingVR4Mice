@@ -35,7 +35,7 @@
 1. assuming that jupiter notebook is installed, vr4mice repository is loaded, and base_schemas are pip-installed
 2. update information in the `env.py` file (IP of server, user name provided by administrator)
 3. from working vr4mice directory start jupiter notebook  and create new Python3 page
-4. ```%run env.py``` to load enviromental variables
+4. ```%run env.py``` to load environmental variables
 5. ```%run scripts/minimal_run.py connect``` to connect
 7. bravo, data can be fetched ```vr4mice.Dataset()``` (relative imports were done in the run script)
 

@@ -41,7 +41,7 @@ if __name__ == '__main__':
         sys_elms = {
             transfer.get_nick(): transfer
         }
-        # start to run (in order of appereance)
+        # start to run (in order of appearance)
 
         for v in dj_elms.values():
             v.run(dj_dict, json_dict, date)

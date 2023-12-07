@@ -22,11 +22,11 @@ def get_type(filename):
     Returns:
        str: A string representing the type of the file. The possible values are:
            - "video_path": If the filename contains "VIDEO".
-           - "camera_path": If the file contians "TS" (timestamps from camera gui)
+           - "camera_path": If the file contains "TS" (timestamps from camera gui)
            - "dlc_path": If the file is a DLC model file
            - "proc_path": If the file is a processed data file (contains "PROC")
            - "teensy_path": If the file is not any of the above types, returns "teensy_path"
-           (as it's the ony one file that hasn't keyword)
+           (as it's the only one file that hasn't keyword)
     """
     types = {
         "video_path": "VIDEO",  # get video type, duration
@@ -319,7 +319,7 @@ class Transfer(Template):
         if filenames is not None and len(filenames) > 0:
             mice_part = mouse.values != dict()
 
-            if mice_part:  # mouse was already setted   #TODO for all cases re-new
+            if mice_part:  # mouse was already set   #TODO for all cases re-new
                 current_mouse = mouse.values["mouse_name"].currentText()
 
             ret = check_files(key, filenames, self.get_format(key))  # todo adjust
