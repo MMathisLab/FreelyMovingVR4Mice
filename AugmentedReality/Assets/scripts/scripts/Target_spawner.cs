@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using MLAgents;
+using Unity.MLAgents;
 //using UnityEngine.UIElements;
 using UnityEngine.UI;
 
@@ -27,7 +27,7 @@ public class Target_spawner : MonoBehaviour
     public Vector3 Rwall_pos; 
     public float wall_height;
     bool mouse_can_report;
-    IFloatProperties resetParams;
+    // IFloatProperties resetParams;
     public Renderer rend;
     public GameObject[] targets;
     public float target_selection = 0f;
@@ -171,19 +171,20 @@ public class Target_spawner : MonoBehaviour
     
     void SetResetParams(){
 
-    resetParams = Academy.Instance.FloatProperties;
-    targetsheight =resetParams.GetPropertyWithDefault("targetsHeight", 2);
-    targetsZpos = resetParams.GetPropertyWithDefault("targetDistance", 4);
-    target_size = resetParams.GetPropertyWithDefault("targetSize", 1);
-    targetsFromMidline = resetParams.GetPropertyWithDefault("targetsFromMidline", 2f);
-    slitSize = resetParams.GetPropertyWithDefault("slitSize", 2f);
-    slitDepth = resetParams.GetPropertyWithDefault("slit_depth", 0.01f);
-    object_on_left = resetParams.GetPropertyWithDefault("Object_on_Left", 0.0f);
-    wall_height =  resetParams.GetPropertyWithDefault("wall_height", 2f);
-    target_selection = resetParams.GetPropertyWithDefault("target_selection", 7f);
-    distractor_selection = resetParams.GetPropertyWithDefault("distractor_selection", 6f);
-    occlusion_type = resetParams.GetPropertyWithDefault("occlusion_type", 0f);
-    targetsZpos =  resetParams.GetPropertyWithDefault("targetsZpos", 3f);
+    var environmentParameters = Academy.Instance.EnvironmentParameters; 
+
+    targetsheight =environmentParameters.GetWithDefault("targetsHeight", 2);
+    targetsZpos = environmentParameters.GetWithDefault("targetDistance", 4);
+    target_size = environmentParameters.GetWithDefault("targetSize", 1);
+    targetsFromMidline = environmentParameters.GetWithDefault("targetsFromMidline", 2f);
+    slitSize = environmentParameters.GetWithDefault("slitSize", 2f);
+    slitDepth = environmentParameters.GetWithDefault("slit_depth", 0.01f);
+    object_on_left = environmentParameters.GetWithDefault("Object_on_Left", 0.0f);
+    wall_height =  environmentParameters.GetWithDefault("wall_height", 2f);
+    target_selection = environmentParameters.GetWithDefault("target_selection", 7f);
+    distractor_selection = environmentParameters.GetWithDefault("distractor_selection", 6f);
+    occlusion_type = environmentParameters.GetWithDefault("occlusion_type", 0f);
+    targetsZpos =  environmentParameters.GetWithDefault("targetsZpos", 3f);
    
    }
  

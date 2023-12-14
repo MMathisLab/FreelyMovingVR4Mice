@@ -1,9 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using MLAgents;
+using Unity.MLAgents;
+using Unity.MLAgents.Sensors;
+using Unity.MLAgents.Actuators; 
 //using UnityEngine.UIElements;
-using UnityEngine.UI;
+using UnityEngine.UI; 
 
 
 public class Mouse_move : Agent
@@ -53,10 +55,6 @@ public class Mouse_move : Agent
   public float distractor;
   public bool targets_visable = false;
   public Image sync;
-  
-
-  IFloatProperties resetParams;
-  
  
 
     // Start is called before the first frame update
@@ -68,7 +66,7 @@ public class Mouse_move : Agent
         ITIScreenOff();
     }
 
-    public override void AgentReset()
+    public override void OnEpisodeBegin()
     {
       SetResetParams();
       
@@ -124,7 +122,7 @@ public class Mouse_move : Agent
     }
 
 
-    public override void AgentAction(float[] vectorAction)
+    public override void OnActionReceived(ActionBuffers actions)
     {
       float thisReward = 0;
       totalEpisodeTime += Time.deltaTime;
@@ -135,9 +133,9 @@ public class Mouse_move : Agent
           targets_visable = true;
         }
         
-        float x = vectorAction[0];
-        float z = vectorAction[1];
-        float head_angle = vectorAction[2];
+        float x = actions.ContinuousActions[0];
+        float z = actions.ContinuousActions[1];
+        float head_angle = actions.ContinuousActions[2];
         
         this.transform.position = new Vector3(x, 0.5f, z);
         this.transform.eulerAngles = new Vector3(0.0f, head_angle, 0.0f);
@@ -180,30 +178,29 @@ public class Mouse_move : Agent
     }
 
 
-    public override void CollectObservations()
+    public override void CollectObservations(VectorSensor sensor)
     {
       // log agent position and heading direction
-      AddVectorObs(this.transform.position.x);
-      AddVectorObs(this.transform.position.z);
-      AddVectorObs(this.transform.eulerAngles.y);
-      AddVectorObs(mouse_can_report);
-      AddVectorObs(ITI);
-      AddVectorObs(plane.GetComponent<Target_spawner>().green_on_left);
-      AddVectorObs(mouse_report_correct);
-      AddVectorObs(mouseInLeft_box);
-      AddVectorObs(mouseInRight_box);
-      AddVectorObs(speed);
-      AddVectorObs(sync.GetComponent<PhotodiodeChange>().sync_state);
+      sensor.AddObservation(this.transform.position.x);
+      sensor.AddObservation(this.transform.position.z);
+      sensor.AddObservation(this.transform.eulerAngles.y);
+      sensor.AddObservation(mouse_can_report);
+      sensor.AddObservation(ITI);
+      sensor.AddObservation(plane.GetComponent<Target_spawner>().green_on_left);
+      sensor.AddObservation(mouse_report_correct);
+      sensor.AddObservation(mouseInLeft_box);
+      sensor.AddObservation(mouseInRight_box);
+      sensor.AddObservation(speed);
+      sensor.AddObservation(sync.GetComponent<PhotodiodeChange>().sync_state);
     }
 
-    public override float[] Heuristic()
-    {
-        var action = new float[3];
-        action[0] = this.transform.position.x;
-        action[1] = this.transform.position.z;
-        action[2] = this.transform.eulerAngles.y;
-        return action;
-    }
+    public override void Heuristic(in ActionBuffers actionsOut)
+  {
+    ActionSegment<float> continuousActionsOut = actionsOut.ContinuousActions;
+    continuousActionsOut[0] = this.transform.position.x;
+    continuousActionsOut[1] = this.transform.position.z;
+    continuousActionsOut[2] = this.transform.eulerAngles.y;
+  }
 
 
     /* void EpisdoeTimeOut(){
@@ -249,7 +246,7 @@ public class Mouse_move : Agent
             //Debug.Log(speed);
             start_box_delay += Time.deltaTime;
             if (start_box_delay > box_delay){
-             Done();
+             EndEpisode();
              ITI = false;
             
             }
@@ -344,29 +341,32 @@ public class Mouse_move : Agent
     
 
     void SetResetParams(){
-    resetParams = Academy.Instance.FloatProperties;
-    mouseReportDelay = resetParams.GetPropertyWithDefault("mouseReportDelay", 5f);
-    start_box_delay = resetParams.GetPropertyWithDefault("startBoxDelay", 0.25f);
-    velocity_threshold = resetParams.GetPropertyWithDefault("velocityThreshold", 0.5f);
-    report_box_delay = resetParams.GetPropertyWithDefault("reportBoxDelay", 0.1f);
-    distractor = resetParams.GetPropertyWithDefault("distractor", 1.0f);
-    L_box_x_min = resetParams.GetPropertyWithDefault("L_box_x_min", -10f);
-    L_box_x_max = resetParams.GetPropertyWithDefault("L_box_x_max", -6f);
-    L_box_z_min = resetParams.GetPropertyWithDefault("L_box_z_min", -10f);
-    L_box_z_max = resetParams.GetPropertyWithDefault("L_box_z_max", 0f);
 
-    R_box_x_min = resetParams.GetPropertyWithDefault("R_box_x_min", 6f);
-    R_box_x_max = resetParams.GetPropertyWithDefault("R_box_x_max", 10f);
-    R_box_z_min = resetParams.GetPropertyWithDefault("R_box_z_min", -10f);
-    R_box_z_max = resetParams.GetPropertyWithDefault("R_box_z_max", 0f);
+    // resetParams = Academy.Instance.FloatProperties;
+    var environmentParameters = Academy.Instance.EnvironmentParameters; 
 
-    TT_box_x_min = resetParams.GetPropertyWithDefault("TT_box_x_min", -4f);
-    TT_box_x_max = resetParams.GetPropertyWithDefault("TT_box_x_max", 4f);
-    TT_box_z_min = resetParams.GetPropertyWithDefault("TT_box_z_min", -5f);
-    TT_box_z_max = resetParams.GetPropertyWithDefault("TT_box_z_max", 0f);
-    TT_box_angle = resetParams.GetPropertyWithDefault("TT_box_angle", 90f);
+    mouseReportDelay = environmentParameters.GetWithDefault("mouseReportDelay", 5f);
+    start_box_delay = environmentParameters.GetWithDefault("startBoxDelay", 0.25f);
+    velocity_threshold = environmentParameters.GetWithDefault("velocityThreshold", 0.5f);
+    report_box_delay = environmentParameters.GetWithDefault("reportBoxDelay", 0.1f);
+    distractor = environmentParameters.GetWithDefault("distractor", 1.0f);
+    L_box_x_min = environmentParameters.GetWithDefault("L_box_x_min", -10f);
+    L_box_x_max = environmentParameters.GetWithDefault("L_box_x_max", -6f);
+    L_box_z_min = environmentParameters.GetWithDefault("L_box_z_min", -10f);
+    L_box_z_max = environmentParameters.GetWithDefault("L_box_z_max", 0f);
 
-    ITIGreyScreen = resetParams.GetPropertyWithDefault("Grey_screen_active", 0f);
+    R_box_x_min = environmentParameters.GetWithDefault("R_box_x_min", 6f);
+    R_box_x_max = environmentParameters.GetWithDefault("R_box_x_max", 10f);
+    R_box_z_min = environmentParameters.GetWithDefault("R_box_z_min", -10f);
+    R_box_z_max = environmentParameters.GetWithDefault("R_box_z_max", 0f);
+
+    TT_box_x_min = environmentParameters.GetWithDefault("TT_box_x_min", -4f);
+    TT_box_x_max = environmentParameters.GetWithDefault("TT_box_x_max", 4f);
+    TT_box_z_min = environmentParameters.GetWithDefault("TT_box_z_min", -5f);
+    TT_box_z_max = environmentParameters.GetWithDefault("TT_box_z_max", 0f);
+    TT_box_angle = environmentParameters.GetWithDefault("TT_box_angle", 90f);
+
+    ITIGreyScreen = environmentParameters.GetWithDefault("Grey_screen_active", 0f);
 
    }
 

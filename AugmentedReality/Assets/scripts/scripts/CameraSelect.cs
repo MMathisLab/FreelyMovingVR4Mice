@@ -1,13 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using MLAgents;
+using Unity.MLAgents;
 //using UnityEngine.UIElements;
 using UnityEngine.UI;
 
 public class CameraSelect : MonoBehaviour
 {
-    IFloatProperties resetParams;
     public float CameraSelection;
     public Camera offAxisCamera;
     public Camera onAxisCamera;
@@ -29,8 +28,9 @@ public class CameraSelect : MonoBehaviour
     }
 
     void SetResetParams(){
-        resetParams = Academy.Instance.FloatProperties;
-        CameraSelection =resetParams.GetPropertyWithDefault("cameraSelection", 1f);
+        var environmentParameters = Academy.Instance.EnvironmentParameters; 
+
+        CameraSelection =environmentParameters.GetWithDefault("cameraSelection", 1f);
    
    }
 }
