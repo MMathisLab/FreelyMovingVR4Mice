@@ -54,6 +54,23 @@ We will send across one of our custom PCB boards with these components attached 
 
 4 monitors for the mouse setup, 1 for launching the task.
 
+**Calibration:**
+- For all, brightness: 18.
+- For the side and back monitors: 153 pixels full screen image (see plot of luminance across pixels)
+
+```{image} ../../docs/images/monitor_luminance.png
+:alt: monitors_luminance
+:class: bg-primary mb-1
+:width: 400px
+:align: center
+```
+
+
+## Anti-reflection material: 
+
+4x [0.9 neutral density filters](https://www.amazon.com/Filters-Neutral-Density-Compact-Roll/dp/B0C5KT8H5P/ref=sr_1_3?crid=LZW094XXVJMZ&keywords=LEE+Filters+211+0.9+Neutral+Density+Filter&qid=1698694952&sprefix=lee+filters+211+0.9+neutral+density+filter%2Caps%2C412&sr=8-3). For all screens, to decrease the monitor luminance into the 10 cd/m2 range.
+
+1x [Anti-glare adhesive](https://www.amazon.com/dp/B0BZ33NP92?ref_=cm_sw_r_cso_cp_apin_dp_MFR3FADA7P2NRNE6F3CY&starsLeft=1&language=en-US&th=1). For the floor. The size is not exactly the same as the setup floor. The seam needs to be at the back of the box (close to the back monitor). Mice do not seem to show interest in it (or very briefly at the beginning).
 
 
 ## Transparent Perspex box:
