@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5178045695821774786}
   - component: {fileID: 1504365327381267259}
   m_Layer: 0
-  m_Name: ball_blck
+  m_Name: ball_black
   m_TagString: Targets
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
