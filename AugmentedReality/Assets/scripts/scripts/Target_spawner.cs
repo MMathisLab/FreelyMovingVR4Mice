@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using MLAgents;
@@ -180,8 +180,8 @@ public class Target_spawner : MonoBehaviour
     slitDepth = resetParams.GetPropertyWithDefault("slit_depth", 0.01f);
     object_on_left = resetParams.GetPropertyWithDefault("Object_on_Left", 0.0f);
     wall_height =  resetParams.GetPropertyWithDefault("wall_height", 2f);
-    target_selection = resetParams.GetPropertyWithDefault("target_selection", 0f);
-    distractor_selection = resetParams.GetPropertyWithDefault("distractor_selection", 6f);
+    target_selection = resetParams.GetPropertyWithDefault("target_selection", 9f);
+    distractor_selection = resetParams.GetPropertyWithDefault("distractor_selection", 7f);
     occlusion_type = resetParams.GetPropertyWithDefault("occlusion_type", 0f);
     targetsZpos =  resetParams.GetPropertyWithDefault("targetsZpos", 3f);
    

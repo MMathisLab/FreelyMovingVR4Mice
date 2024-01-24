@@ -1501,6 +1501,11 @@ MonoBehaviour:
   - {fileID: 4652152425070727200, guid: 22e8384589821474fb1eec523f302e3a, type: 3}
   - {fileID: 519858048209239232, guid: ff47e47b261db4e7f9fe7f8050120400, type: 3}
   - {fileID: 4652152425070727200, guid: 305b2565dbffb491f89f742c125f243b, type: 3}
+  - {fileID: 2352980130383153557, guid: 95cc6b89762e27b469f132a963c8b957, type: 3}
+  - {fileID: 8542884411546502650, guid: 4b10ab4fa22988d4d89a67d781cd6281, type: 3}
+  - {fileID: 2405952501624695108, guid: 94b6699c308574e4ab08cd641309c49c, type: 3}
+  - {fileID: 2453319069253011305, guid: 59b5adb3fad04404584f0e2eb5da12f5, type: 3}
+  - {fileID: 2447646095060785184, guid: eab12aeb86710ba4983caf5a835b0b13, type: 3}
   target_selection: 2
   distractor_selection: 3
   occlusion_type: 1
