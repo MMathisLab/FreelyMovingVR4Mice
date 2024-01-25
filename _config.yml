@@ -13,6 +13,7 @@ execute:
   execute_notebooks: "off"
 
 html:
+  favicon: "docs/images/logo.png"
   extra_navbar: ""
   use_issues_button: true
   use_repository_button: true
