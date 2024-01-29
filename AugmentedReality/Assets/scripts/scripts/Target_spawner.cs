@@ -13,6 +13,7 @@ public class Target_spawner : MonoBehaviour
     public float target_size = 1;
     public GameObject blue_target;
     public GameObject green_target;
+    public float target_rotation = 0f;
     public GameObject R_wall;
     public GameObject L_wall;
     public GameObject occluding_wall;
@@ -73,8 +74,8 @@ public class Target_spawner : MonoBehaviour
 
     void targetSpawnerGL()
     {
-        bt =Instantiate(blue_target, new Vector3(+targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, 0f, -90f));
-        gt =Instantiate(green_target, new Vector3(-targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, 0f, 90f));
+        bt =Instantiate(blue_target, new Vector3(+targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, target_rotation, -90f));
+        gt =Instantiate(green_target, new Vector3(-targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, -target_rotation, 90f));
         
     }
 
@@ -86,20 +87,20 @@ public class Target_spawner : MonoBehaviour
      void targetSpawnerGL_1T()
     {
         
-        gt =Instantiate(green_target, new Vector3(-targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, 0f, 90f));
+        gt =Instantiate(green_target, new Vector3(-targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, -target_rotation, 90f));
         
     }
 
     void targetSpawnerGR()
     {
-         bt = Instantiate(blue_target, new Vector3(-targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, 0f, 90f));
-         gt = Instantiate(green_target, new Vector3(+targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, 0f, -90f));
+         bt = Instantiate(blue_target, new Vector3(-targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, -target_rotation, 90f));
+         gt = Instantiate(green_target, new Vector3(+targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, +target_rotation, -90f));
     }
 
      void targetSpawnerGR_1T()
     {
          
-         gt = Instantiate(green_target, new Vector3(+targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, 0f, -90f));
+         gt = Instantiate(green_target, new Vector3(+targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, target_rotation, -90f));
     }
 
 
@@ -178,13 +179,13 @@ public class Target_spawner : MonoBehaviour
     targetsFromMidline = resetParams.GetPropertyWithDefault("targetsFromMidline", 2f);
     slitSize = resetParams.GetPropertyWithDefault("slitSize", 2f);
     slitDepth = resetParams.GetPropertyWithDefault("slit_depth", 0.01f);
-    object_on_left = resetParams.GetPropertyWithDefault("Object_on_Left", 0.0f);
+    object_on_left = resetParams.GetPropertyWithDefault("Object_on_Left", 1.0f);
     wall_height =  resetParams.GetPropertyWithDefault("wall_height", 2f);
-    target_selection = resetParams.GetPropertyWithDefault("target_selection", 9f);
-    distractor_selection = resetParams.GetPropertyWithDefault("distractor_selection", 7f);
-    occlusion_type = resetParams.GetPropertyWithDefault("occlusion_type", 0f);
+    target_selection = resetParams.GetPropertyWithDefault("target_selection", 8f);
+    distractor_selection = resetParams.GetPropertyWithDefault("distractor_selection", 4f);
+    occlusion_type = resetParams.GetPropertyWithDefault("occlusion_type", 1f);
     targetsZpos =  resetParams.GetPropertyWithDefault("targetsZpos", 3f);
-   
+    target_rotation = resetParams.GetPropertyWithDefault("target_rotation", 45f);
    }
  
 }
