@@ -99,7 +99,6 @@ public class Target_spawner : MonoBehaviour
 
      void targetSpawnerGR_1T()
     {
-         
          gt = Instantiate(green_target, new Vector3(+targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, target_rotation, -90f));
     }
 
