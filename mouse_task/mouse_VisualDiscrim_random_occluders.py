@@ -42,8 +42,8 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         Class that represents mouse task, inherits from UnityTask and GuiTask teensyexp module's classes
     """
 
-    def __init__(self, teensy, monitor=None, write_video=False, fps=60.0, session_label = ["AR_VD_single_teardrop_blocks"],
-                 epochs=[250], epoch_labels = ["single_teardrop"],
+    def __init__(self, teensy, monitor=None, write_video=False, fps=60.0, session_label = ["random_occluders"],
+                 epochs=[250], epoch_labels = ["random_occluders"],
                  config_file_path = config_path,
                  reward_size = 100, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
                  R_report_box = [5, 10, -5, -3],
