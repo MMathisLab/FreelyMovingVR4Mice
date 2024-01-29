@@ -36,7 +36,7 @@ config_name = Path("task_config.json")
 current_dir = Path(__file__).parent
 config_path = current_dir.joinpath(config_name) # default class constructor input
 
-class ARVisualDiscrim_single_teardrop(UnityTask):
+class ARVisualDiscrim_randomoccluders(UnityTask):
     """
         Augmented Reality Visual discrimination
         Class that represents mouse task, inherits from UnityTask and GuiTask teensyexp module's classes
@@ -111,7 +111,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         # Game trial parameters - add to class and enforce list structure
         self.reward_size = self.as_list(reward_size)
         slit_sizes_list = self.as_list(slit_size)
-        self.slit_sizes =  np.linspace(slit_sizes_list[0], slit_sizes_list [1], slit_sizes_list [2])
+        self.slit_sizes =  np.linspace(slit_sizes_list[0], slit_sizes_list [1], int(slit_sizes_list [2]))
 
         
         self.slit_depth = self.as_list(slit_depth)
@@ -225,6 +225,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         this_Prob_obj_left = self.Prob_Obj_on_Left
         print("prob left", this_Prob_obj_left)
         this_slit_size = np.random.choice(self.slit_sizes)
+        print("slit_size", this_slit_size)
         this_slit_depth = self.get_epoch_value("slit_depth")
         this_target_spread = self.get_epoch_value("target_spread")
         this_target_height = self.get_epoch_value("target_height")
@@ -356,6 +357,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         velocity = None if self.state is None else "%0.2f" % (self.state[-1])
         in_left_box = None if self.state is None else "%0.2f" % (self.state[7])
         in_right_box = None if self.state is None else "%0.2f" % (self.state[8])
+        
         
         
         
