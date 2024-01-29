@@ -50,7 +50,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
                  L_report_box = [-10, -5, -5, -3], Start_box =  [-4, 4, -9, -5, 90], 
                  rotate_camera = 90., Prob_Obj_on_Left = 1.0, mouse_report_delay = 0.0,
                  slit_size = 20., slit_depth = 2., target_selection = 7., distractor_selection = 4., occlusion_type = 0.0, 
-                 Camera_type = 1.0, target_spread = 4., target_size = 2., target_height = 3., block_length = 20., start_box_delay = 0.25, 
+                 Camera_type = 1.0, target_spread = 4., target_size = 2., target_rotation = 0, target_height = 3., block_length = 20., start_box_delay = 0.25, 
                  velocity_threshold=8., distractor = 0.0, grey_screen_active = 0.0, target_distance = 3):
 
         """
@@ -115,6 +115,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         self.target_spread = self.as_list(target_spread)
         self.target_height = self.as_list(target_height)
         self.mouse_report_delay = self.as_list(mouse_report_delay)
+        self.target_rotation = self.as_list(target_rotation)
         
         self.Prob_Obj_on_Left = Prob_Obj_on_Left
         
@@ -157,6 +158,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         self.trial_distractor_selection = []
         self.trial_occlusion_type = []
         self.trial_target_distance = []
+        self.trial_target_rotation = []
         
         self.dlc_read_time = []
         self.dlc_x = []
@@ -227,6 +229,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         this_distractor_selection = self.get_epoch_value("distractor_selection")
         this_occlusion_type = self.get_epoch_value("occlusion_type")
         this_target_distance = self.get_epoch_value("target_distance")
+        this_target_rotation = self.get_epoch_value("target_rotation")
 
 
         self.channel.set_property("cameraSelection", self.camera_type)
@@ -242,6 +245,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         self.channel.set_property("velocityThreshold", self.velocity_threshold)
         self.channel.set_property("occlusion_type", this_occlusion_type)
         self.channel.set_property("targetsZpos", this_target_distance)
+        self.channel.set_property("target_rotation", this_target_rotation)
         
         # set properties for start box, left report box and right report box
         self.channel.set_property("L_box_x_min", self.L_report_box [0])
@@ -277,6 +281,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         self.trial_target_selection.append(this_target_selection)
         self.trial_occlusion_type.append(this_occlusion_type)
         self.trial_target_distance.append(this_target_distance)
+        self.trial_target_rotation.append(this_target_rotation)
         
 
 
@@ -397,4 +402,5 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         data_dict ["distractor_selection"] = np.array(self.trial_distractor_selection)
         data_dict ["occlusion_type"] = np.array(self.trial_occlusion_type)
         data_dict ["target_distance"] = np.array(self.trial_target_distance)
+        data_dict ["target_rotation"] = np.array(self.trial_target_rotation)
         return data_dict
