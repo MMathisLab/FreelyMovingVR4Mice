@@ -1476,15 +1476,16 @@ MonoBehaviour:
     type: 3}
   green_target: {fileID: 7753537967675398325, guid: 6ded6b7416771acbeba367c1d57d824a,
     type: 3}
-  R_wall: {fileID: 0}
-  L_wall: {fileID: 0}
+  target_rotation: 0
+  R_wall: {fileID: 9040276326741326889, guid: ab7a779f87e40c6128a099befe7c4ad5, type: 3}
+  L_wall: {fileID: 9040276326741326889, guid: ab7a779f87e40c6128a099befe7c4ad5, type: 3}
   occluding_wall: {fileID: 9040276326741326889, guid: ab7a779f87e40c6128a099befe7c4ad5,
     type: 3}
   middle_occluding_wall: {fileID: 5534557085160616922, guid: f0bc92783595a844ea1e4b169e0c6733,
     type: 3}
   probGreenLeft: 1
   slitSize: 2
-  slitDepth: 0
+  slitDepth: 2
   green_on_left: 0
   bt: {fileID: 0}
   gt: {fileID: 0}
@@ -1762,7 +1763,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1230777770}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.08, y: 0, z: 0}
   m_LocalScale: {x: 0.5, y: 4, z: 0.33333334}
   m_Children: []
   m_Father: {fileID: 1077272872}
