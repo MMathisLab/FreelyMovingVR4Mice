@@ -49,7 +49,7 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
                  R_report_box = [5, 10, -4, -2],
                  L_report_box = [-10, -5, -4, -2], Start_box =  [-4, 4, -9, -5, 90], 
                  rotate_camera = 90., Prob_Obj_on_Left = 0.5, mouse_report_delay = 0.0,
-                 slit_size = [4.,10.,5], slit_depth = 2., target_selection = 7., distractor_selection = 4., occlusion_type = 1.0, 
+                 slit_size = [4.,10.,5], slit_depth = 0.1, target_selection = 8., distractor_selection = 4., occlusion_type = 1.0, 
                  Camera_type = 1.0, target_spread = 4., target_rotation = 0, target_size = 2., target_height = 3., block_length = 20., start_box_delay = 0.25, 
                  velocity_threshold=10., distractor = 1.0, grey_screen_active = 0.0, target_distance = 3):
 
