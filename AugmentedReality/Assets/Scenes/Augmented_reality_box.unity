@@ -1477,14 +1477,15 @@ MonoBehaviour:
   green_target: {fileID: 7753537967675398325, guid: 6ded6b7416771acbeba367c1d57d824a,
     type: 3}
   target_rotation: 0
-  R_wall: {fileID: 9040276326741326889, guid: ab7a779f87e40c6128a099befe7c4ad5, type: 3}
-  L_wall: {fileID: 9040276326741326889, guid: ab7a779f87e40c6128a099befe7c4ad5, type: 3}
+  Ri_wall: {fileID: 9040276326741326889, guid: ab7a779f87e40c6128a099befe7c4ad5, type: 3}
+  Le_wall: {fileID: 9040276326741326889, guid: ab7a779f87e40c6128a099befe7c4ad5, type: 3}
   occluding_wall: {fileID: 9040276326741326889, guid: ab7a779f87e40c6128a099befe7c4ad5,
     type: 3}
   middle_occluding_wall: {fileID: 5534557085160616922, guid: f0bc92783595a844ea1e4b169e0c6733,
     type: 3}
   probGreenLeft: 1
-  slitSize: 2
+  slitSize: 20
+  hslitSize: 0
   slitDepth: 2
   green_on_left: 0
   bt: {fileID: 0}

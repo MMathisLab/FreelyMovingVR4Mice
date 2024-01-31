@@ -14,12 +14,13 @@ public class Target_spawner : MonoBehaviour
     public GameObject blue_target;
     public GameObject green_target;
     public float target_rotation = 0f;
-    public GameObject R_wall;
-    public GameObject L_wall;
+    public GameObject Ri_wall;
+    public GameObject Le_wall;
     public GameObject occluding_wall;
     public GameObject middle_occluding_wall;
     public float probGreenLeft;
-    public float slitSize =2;
+    public float slitSize;
+    public float hslitSize;
     public float slitDepth;
     public bool green_on_left;
     public GameObject bt;
@@ -49,20 +50,29 @@ public class Target_spawner : MonoBehaviour
         if (occlusion_type == 2f){
             middle_occlusion();
         }
+        //walls_reset();
     }
 
 
     void occlusion_slit(){
-        slitSize =  slitSize/2;
-        Lwall_pos = new Vector3 (-5f - slitSize,  wall_height, slitDepth/2);
-        Rwall_pos = new Vector3 (+5f + slitSize,  wall_height,  slitDepth/2);
-        GameObject L_wall = Instantiate(occluding_wall, Lwall_pos,transform.rotation* Quaternion.Euler (0f, 90f, 0f), this.transform.GetChild(0).transform);
-        L_wall.name = "L_wall";
-        L_wall.transform.localScale += new Vector3(slitDepth-1f, 0f, 0f);
+        hslitSize =  slitSize/2;
+        Lwall_pos = new Vector3 (-5f - hslitSize,  wall_height, slitDepth/2);
+        Rwall_pos = new Vector3 (+5f + hslitSize,  wall_height,  slitDepth/2);
+        Le_wall = Instantiate(occluding_wall, Lwall_pos,transform.rotation* Quaternion.Euler (0f, 90f, 0f), this.transform.GetChild(0).transform);
+        Le_wall.name = "Le_wall";
+        Le_wall.transform.localScale += new Vector3(slitDepth-1f, 0f, 0f);
         
-        GameObject R_wall = Instantiate(occluding_wall, Rwall_pos,transform.rotation* Quaternion.Euler (0f, 90f, 0f), this.transform.GetChild(0).transform);
-        R_wall.name = "R_wall";
-        R_wall.transform.localScale += new Vector3(slitDepth-1f, 0f, 0f);
+        Ri_wall = Instantiate(occluding_wall, Rwall_pos,transform.rotation* Quaternion.Euler (0f, 90f, 0f), this.transform.GetChild(0).transform);
+        Ri_wall.name = "Ri_wall";
+        Ri_wall.transform.localScale += new Vector3(slitDepth-1f, 0f, 0f);
+    }
+    public void walls_reset(){
+        hslitSize =  slitSize/2;
+        Destroy(Le_wall);
+        Destroy(Ri_wall);
+        occlusion_slit();
+        //Ri_wall.transform.position.x = +5f + hslitSize;
+
     }
 
     void middle_occlusion(){
@@ -82,6 +92,8 @@ public class Target_spawner : MonoBehaviour
     void setTag(){
         bt.tag = "Targets";
         gt.tag = "Targets";
+        Ri_wall.tag ="Wall";
+        Le_wall.tag ="Wall";
     }
 
      void targetSpawnerGL_1T()
@@ -155,6 +167,8 @@ public class Target_spawner : MonoBehaviour
      {
          Destroy(targets[i]);
      }
+    
+
     }
 
     public void Targets_set_visable(){
