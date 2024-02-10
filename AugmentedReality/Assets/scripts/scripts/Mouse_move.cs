@@ -99,7 +99,7 @@ public class Mouse_move : Agent
       ITIScreenOff();
       ITI = false;
       
-
+      plane.GetComponent<Target_spawner>().walls_reset();
 
       
       //this.transform.position = new Vector3(0, 0.5f, -6);

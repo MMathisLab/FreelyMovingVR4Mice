@@ -36,22 +36,22 @@ config_name = Path("task_config.json")
 current_dir = Path(__file__).parent
 config_path = current_dir.joinpath(config_name) # default class constructor input
 
-class ARVisualDiscrim_single_teardrop(UnityTask):
+class ARVisualDiscrim_randomoccluders(UnityTask):
     """
         Augmented Reality Visual discrimination
         Class that represents mouse task, inherits from UnityTask and GuiTask teensyexp module's classes
     """
 
-    def __init__(self, teensy, monitor=None, write_video=False, fps=60.0, session_label = ["AR_VD_single_teardrop_blocks"],
-                 epochs=[250], epoch_labels = ["single_teardrop"],
+    def __init__(self, teensy, monitor=None, write_video=False, fps=60.0, session_label = ["random_occluders"],
+                 epochs=[250], epoch_labels = ["random_occluders"],
                  config_file_path = config_path,
-                 reward_size = 100, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
+                 reward_size = 53, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
                  R_report_box = [5, 10, -4, -2],
                  L_report_box = [-10, -5, -4, -2], Start_box =  [-4, 4, -9, -5, 90], 
                  rotate_camera = 90., Prob_Obj_on_Left = 0.5, mouse_report_delay = 0.0,
-                 slit_size = 4.3, slit_depth = 2., target_selection = 7., distractor_selection = 4., occlusion_type = 1.0, 
-                 Camera_type = 1.0, target_spread = 4., target_size = 2., target_rotation = 0, target_height = 3., block_length = 20., start_box_delay = 0.25, 
-                 velocity_threshold=10., distractor = 1.0, grey_screen_active = 0.0, target_distance = 3):
+                 slit_size = [4.,10.,5], slit_depth = 0.1, target_selection = 7., distractor_selection = 4., occlusion_type = 1.0, 
+                 Camera_type = 1.0, target_spread = 4., target_rotation = 0, target_size = 2., target_height = 3., block_length = 20., start_box_delay = 0.25, 
+                 velocity_threshold=10., distractor = 1.0, grey_screen_active = 0.0, target_distance = 4):
 
         """
             Class constructor: initialises dlc processor, dlc live, video reader
@@ -104,12 +104,16 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         self.R_report_box = R_report_box
         self.L_report_box = L_report_box
         self.start_box = Start_box
+       
         self.start_box_delay = start_box_delay
         self.velocity_threshold = velocity_threshold
         
         # Game trial parameters - add to class and enforce list structure
         self.reward_size = self.as_list(reward_size)
-        self.slit_size = self.as_list(slit_size)
+        slit_sizes_list = self.as_list(slit_size)
+        self.slit_sizes =  np.linspace(slit_sizes_list[0], slit_sizes_list [1], int(slit_sizes_list [2]))
+
+        
         self.slit_depth = self.as_list(slit_depth)
         self.epoch_labels = self.as_list(epoch_labels)
         self.target_spread = self.as_list(target_spread)
@@ -220,7 +224,8 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
 
         this_Prob_obj_left = self.Prob_Obj_on_Left
         print("prob left", this_Prob_obj_left)
-        this_slit_size = self.get_epoch_value("slit_size")
+        this_slit_size = np.random.choice(self.slit_sizes)
+        print("slit_size", this_slit_size)
         this_slit_depth = self.get_epoch_value("slit_depth")
         this_target_spread = self.get_epoch_value("target_spread")
         this_target_height = self.get_epoch_value("target_height")
@@ -352,6 +357,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         velocity = None if self.state is None else "%0.2f" % (self.state[-1])
         in_left_box = None if self.state is None else "%0.2f" % (self.state[7])
         in_right_box = None if self.state is None else "%0.2f" % (self.state[8])
+        
         
         
         
