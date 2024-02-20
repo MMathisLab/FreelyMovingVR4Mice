@@ -104,5 +104,5 @@ def get_rc_params():
                                 'font.weight':'bold'
                                })
 
-    plt.rc('axes.spines',top=False,bottom=True,left=True,right=False);
+    plt.rc('axes.spines',top=False,bottom=True,left=True,right=False)
     plt.rc('axes',edgecolor=font_color)
