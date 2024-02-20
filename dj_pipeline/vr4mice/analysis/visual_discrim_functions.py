@@ -19,6 +19,8 @@ def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_examp
     pandas DataFrame containing relevant information. It also extracts box coordinates and dimensions
     into a separate DataFrame.
 
+    currently this function loads from the pickle file - this is tempory and we should use the Datajoint function once everybody is set up
+
     Parameters:
     - path (str): The directory path where the data file is located.
     - mouse_name (str): The name of the mouse or subject for which the data is being loaded.
@@ -97,11 +99,13 @@ def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_examp
     return(df, box_df)
 
 def convert_angles(df):
+    # this function converts the animals heading direction relative to the screen
     clean_angles = np.rad2deg(np.sin(np.deg2rad(df['head_dir'])))
     return clean_angles
 
 
 def get_rc_params():
+    # a function to keep the plot styles similar in the notebooks
     font_color='black'
     font_size=18
     plt.rcParams.update({'text.color' : font_color,
@@ -118,3 +122,14 @@ def get_rc_params():
 
     plt.rc('axes.spines',top=False,bottom=True,left=True,right=False)
     plt.rc('axes',edgecolor=font_color)
+
+
+def get_mouse_list():
+    # this is a temporay function just to keep track of the tolias lab data sets that we have 
+    # and so that we can easily import into notebooks
+    mouse_list =  [{"mouse_name": "30559", "date":"2024-02-16", "attempt":"1"},
+               {"mouse_name": "30559", "date":"2024-02-15", "attempt":"1"},
+               {"mouse_name": "30559", "date":"2024-02-14", "attempt":"1"},
+               {"mouse_name": "30559", "date":"2024-02-13", "attempt":"1"},
+               {"mouse_name": "30561", "date":"2024-02-16", "attempt":"1"}]
+    return(mouse_list)
