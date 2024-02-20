@@ -57,8 +57,10 @@ def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_examp
     df = df [df.trial != 1]
     df.x = np.interp(df.x,  [-9,9], [-27, 27])
     df.y = np.interp(df.y, [-10,-2], [-27, 27])
-    
-    
+
+    df ["mouse_name"] = mouse_name
+    df ["attempt"] = attempt
+    df ["date"] = date 
     
     box_df = pd.DataFrame()
     box_df ["left_box_x_min"] = np.interp(state_dict ["L_box_x_min"],  [-9,9], [-27, 27])
