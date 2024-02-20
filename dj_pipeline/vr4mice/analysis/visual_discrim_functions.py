@@ -133,3 +133,11 @@ def get_mouse_list():
                {"mouse_name": "30559", "date":"2024-02-13", "attempt":"1"},
                {"mouse_name": "30561", "date":"2024-02-16", "attempt":"1"}]
     return(mouse_list)
+
+
+def get_all_tolias_mice(mouse_list, path):
+    # function to grab tolias lab mice and make a big dataframe out of them
+    big_df = []
+    for m in mouse_list:
+        big_df.append(load_data(path=path, mouse_name=m["mouse_name"], date=m ["date"], attempt=m ["attempt"])[0])
+    return(pd.concat(big_df))
