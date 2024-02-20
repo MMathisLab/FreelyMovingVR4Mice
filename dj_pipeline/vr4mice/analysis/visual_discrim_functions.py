@@ -82,3 +82,7 @@ def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_examp
     else: 
         df ["trial_step_fraction"] = df.groupby(["trial"], as_index = True, group_keys=False).apply(lambda x: x.iloc[:]/x.iloc [-1])["trial_step"]
     return(df, box_df)
+
+def convert_angles(df):
+    clean_angles = np.rad2deg(np.sin(np.deg2rad(df['head_dir'])))
+    return clean_angles
