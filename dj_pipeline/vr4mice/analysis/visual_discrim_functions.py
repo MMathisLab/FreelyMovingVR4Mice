@@ -91,11 +91,10 @@ def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_examp
         df ["trial_L_choice"] = df.groupby(["trial"], as_index=False)["mouse_in_L"].transform(lambda x: x.iloc [-1])
     else: 
         df ["trial_step_fraction"] = df.groupby(["trial"], as_index = True, group_keys=False).apply(lambda x: x.iloc[:]/x.iloc [-1])["trial_step"]
-
+    
     df ["mouse_name"] = mouse_name
     df ["attempt"] = attempt
     df ["date"] = date 
-    
     return(df, box_df)
 
 def convert_angles(df):
@@ -143,10 +142,10 @@ def get_all_tolias_mice(mouse_list, path):
     return(pd.concat(big_df))
 
 
-def get_spatial_normalisation_params(data):
+def get_spatial_normalisation_params(data, spatial_ybins = [-10, 24, 50]):
     data["norm_head_dir"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["head_dir"].transform(lambda x: x - x.iloc[0])
     data["trial_length"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["step_time"].transform(lambda x: x.iloc[-1]-x.iloc[0])["step_time"]
-    data["bins"] = pd.cut(data["y"], bins = np.linspace(-10,24,50)) 
+    data["bins"] = pd.cut(data["y"], bins = np.linspace(spatial_ybins[0],spatial_ybins[1],spatial_ybins[2])) 
     data["norm_y"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["y"].transform(lambda x: x - x.iloc[0])
     data["norm_x"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["x"].transform(lambda x: x - x.iloc[0])
     data["bin_centres"] = data["bins"].apply(lambda x: x.mid).astype("float") - 25
