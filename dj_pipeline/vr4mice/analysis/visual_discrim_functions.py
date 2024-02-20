@@ -58,10 +58,7 @@ def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_examp
     df.x = np.interp(df.x,  [-9,9], [-27, 27])
     df.y = np.interp(df.y, [-10,-2], [-27, 27])
 
-    df ["mouse_name"] = mouse_name
-    df ["attempt"] = attempt
-    df ["date"] = date 
-    
+   
     box_df = pd.DataFrame()
     box_df ["left_box_x_min"] = np.interp(state_dict ["L_box_x_min"],  [-9,9], [-27, 27])
     box_df ["left_box_x_max"] = np.interp(state_dict ["L_box_x_max"],  [-9,9], [-27, 27])
@@ -92,6 +89,11 @@ def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_examp
         df ["trial_L_choice"] = df.groupby(["trial"], as_index=False)["mouse_in_L"].transform(lambda x: x.iloc [-1])
     else: 
         df ["trial_step_fraction"] = df.groupby(["trial"], as_index = True, group_keys=False).apply(lambda x: x.iloc[:]/x.iloc [-1])["trial_step"]
+
+    df ["mouse_name"] = mouse_name
+    df ["attempt"] = attempt
+    df ["date"] = date 
+    
     return(df, box_df)
 
 def convert_angles(df):
