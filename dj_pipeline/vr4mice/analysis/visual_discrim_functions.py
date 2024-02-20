@@ -141,3 +141,15 @@ def get_all_tolias_mice(mouse_list, path):
     for m in mouse_list:
         big_df.append(load_data(path=path, mouse_name=m["mouse_name"], date=m ["date"], attempt=m ["attempt"])[0])
     return(pd.concat(big_df))
+
+
+def get_spatial_normalisation_params(data):
+    data ["norm_head_dir"] = data.groupby("trial", as_index=False)["head_dir"].transform(lambda x: x - x.iloc[0])
+    data ["rewarded"] = data.groupby(["trial"], as_index=False)["reward"].transform("max")["reward"]
+        #data = data [data.rewarded > 0.0].copy()
+    data ["trial_length"] = data.groupby(["trial"], as_index=False)["step_time"].transform(lambda x: x.iloc[-1]-x.iloc[0])["step_time"]
+    data["bins"] = pd.cut(data["y"], bins = np.linspace(-10,24,50)) 
+    data["norm_y"] = data.groupby("trial", as_index=False)["y"].transform(lambda x: x - x.iloc[0])
+    data["norm_x"] = data.groupby("trial", as_index=False)["x"].transform(lambda x: x - x.iloc[0])
+    data["bin_centres"] = data["bins"].apply(lambda x: x.mid).astype("float") - 25
+    return(data)
