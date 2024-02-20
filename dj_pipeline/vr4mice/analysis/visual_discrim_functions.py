@@ -139,7 +139,7 @@ def get_all_tolias_mice(mouse_list, path):
     big_df = []
     for m in mouse_list:
         big_df.append(load_data(path=path, mouse_name=m["mouse_name"], date=m ["date"], attempt=m ["attempt"])[0])
-    return(pd.concat(big_df))
+    return(pd.concat(big_df).reset_index())
 
 
 def get_spatial_normalisation_params(data, spatial_ybins = [-10, 24, 50]):
