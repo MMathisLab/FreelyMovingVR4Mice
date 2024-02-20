@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_example_data/", mouse_name = "Anchovy", date = "2023-02-23", attempt = "2", no_iti = True):
@@ -86,3 +87,22 @@ def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_examp
 def convert_angles(df):
     clean_angles = np.rad2deg(np.sin(np.deg2rad(df['head_dir'])))
     return clean_angles
+
+
+def get_rc_params():
+    font_color='black'
+    font_size=18
+    plt.rcParams.update({'text.color' : font_color,
+                                'axes.labelcolor' : font_color,
+                                'axes.labelsize':font_size,
+                                'axes.titleweight': 'bold',
+                                'axes.titlesize': font_size,
+                                'xtick.labelcolor': font_color,
+                                'xtick.labelsize':font_size,
+                                'ytick.labelcolor': font_color,
+                                'ytick.labelsize': font_size,
+                                'font.weight':'bold'
+                               })
+
+    plt.rc('axes.spines',top=False,bottom=True,left=True,right=False);
+    plt.rc('axes',edgecolor=font_color)
