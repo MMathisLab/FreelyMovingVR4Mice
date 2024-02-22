@@ -23,14 +23,15 @@ def connect_to_database(user, prefix="", create_tables=True, storage="/storage")
     - The location argument is the location of the storage directory where DataJoint will store data files.
     """
 
-    dj.config["stores"] = {
-        # read-only store
-        "data": {
-            "protocol": "file",
-            "location": storage,
-            "stage": storage
-        },
-    }
+    ## Removed while filepath@data not in use.
+    # dj.config["stores"] = {
+    #     # read-only store
+    #     "data": {
+    #         "protocol": "file",
+    #         "location": storage,
+    #         "stage": storage
+    #     },
+    # }
 
     dj.config['database.misc.schema_prefix'] = prefix
     dj.config['database.misc.create_tables'] = create_tables

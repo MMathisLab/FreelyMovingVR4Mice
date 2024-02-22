@@ -17,9 +17,9 @@ class VideoToAnalyze(dj.Manual):
         path should be added from main Video pipelines table
     """
     definition = """
-        idx : int 
-        video_filepath: char(255)
-        ---
+    idx : int
+    video_filepath: varchar(255)
+    ---
     """
 
 
@@ -53,9 +53,9 @@ class DLC(dj.Manual):  # params?
     -> ModelName
     
     ---
-    keypoints_filepath: filepath@data # keypoints hdf5
-    proc_filepath: filepath@data  # computed dlc metrics
 
+    keypoints_filepath: varchar(255) # keypoints hdf5
+    proc_filepath: varchar(255)  # computed dlc metrics
     """
 
     @property

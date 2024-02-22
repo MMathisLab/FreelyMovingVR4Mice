@@ -5,8 +5,8 @@ import datajoint as dj
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
 
-from base_schemas.schemas import exp
-from base_schemas.schemas import mice
+# from base_schemas.schemas import exp
+# from base_schemas.schemas import mice
 
 schema_name = "vr4mice"
 schema = get_schema(schema_name, locals())
@@ -22,7 +22,7 @@ class Camera(dj.Lookup):
     """
 
     definition = """
-    camera: char(128)
+    camera: varchar(128)
     """
     contents = [["Imagingsource"]]
 
@@ -39,26 +39,26 @@ class Dataset(dj.Manual):
     definition = """
     dataset: varchar(512)
     ---
-    exp_teensy_filepath: filepath@data # pickle file
-    exp_session_filepath: filepath@data  # npy file
 
+    exp_teensy_filepath: varchar(255) # pickle file
+    exp_session_filepath: varchar(255)  # npy file
     """
 
 
-@schema
-class VR4Mice(dj.Manual):
-    """
-        VR4Mice definition table:
-        links together Dataset with base Mouse, Exp schemas
-    """
-
-    definition = """
-   -> Dataset
-   ---
-   -> mice.Mouse
-   -> exp.Session
-   
-   """
+# TODO: This should be moved to its own schema.
+# @schema
+# class VR4Mice(dj.Manual):
+#     """
+#         VR4Mice definition table:
+#         links together Dataset with base Mouse, Exp schemas
+#     """
+#
+#     definition = """
+#    -> Dataset
+#    ---
+#    -> mice.Mouse
+#    -> exp.Session
+#    """
 
 
 @schema
@@ -78,9 +78,9 @@ class Video(dj.Manual):
     fps: int
     width: int
     height: int
-    video_filepath: char(255)
-    timestamp_filepath: filepath@data
     
+    video_filepath: varchar(255)
+    timestamp_filepath: varchar(255)
     """
     # idx to reference the video in analysis table
 
@@ -111,9 +111,9 @@ class DLC(dj.Manual):
     -> Video
     -> ModelName
     ---
-    keypoints_filepath: filepath@data # keypoints hdf5
-    proc_filepath: filepath@data  # computed dlc metrics
     
+    keypoints_filepath: varchar(255) # keypoints hdf5
+    proc_filepath: varchar(255)  # computed dlc metrics
     """
 
 

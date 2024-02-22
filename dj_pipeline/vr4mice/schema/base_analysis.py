@@ -78,14 +78,14 @@ class BoxDataFrame(dj.Computed):
 @schema
 class OutputPlots(dj.Computed):
     definition = """
-        -> DataFrame
-        filename: file@path
-     ---
-     """
+    -> DataFrame
+    filename: varchar(255)
+    ---
+    """
 
     def make(self, key, full_path):
         """
-            key: VR4Mice
+            key: Dataset
         """
         filename = full_path  # start analysis function
         self.insert1(key, filename)
@@ -93,7 +93,7 @@ class OutputPlots(dj.Computed):
 
     def get_path(self, base, key, ext=".png"):
         """
-            key: VR4Mice
+            key: Dataset
         """
         # (todo) check if exists
 

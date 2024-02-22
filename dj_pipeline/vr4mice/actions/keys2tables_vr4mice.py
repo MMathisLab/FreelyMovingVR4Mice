@@ -207,7 +207,7 @@ dj_tables = {  # in order
     "VideoToAnalyze": dlc.VideoToAnalyze(),
     "DLC": dlc.DLC(),  # .npy
     "Video": vr4mice.Video(),  # .npy
-    "VR4Mice": vr4mice.VR4Mice(),  # .npy
+    # "VR4Mice": vr4mice.VR4Mice(),  # .npy # This table will be moved to another schema.
 }
 
 vr4mice = {
