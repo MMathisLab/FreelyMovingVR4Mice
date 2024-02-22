@@ -36,13 +36,13 @@ class DataFrame(dj.Computed):
         trial_step: blob
         trial_step_time: blob
         trial_step_fraction: blob
-        trial_R_choice: blob
-        trial_L_choice: blob
         trial_step_fraction: blob
         
         rewarded: blob
         choices: blob
         box_entries: blob
+        trial_r_choice: blob
+        trial_l_choice: blob
     """
 
     def make(self, key):
