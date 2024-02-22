@@ -14,19 +14,19 @@ def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_examp
     pandas DataFrame containing relevant information. It also extracts box coordinates and dimensions
     into a separate DataFrame.
 
-    currently this function loads from the pickle file - this is tempory and we should use the Datajoint function once everybody is set up
+    Note: 
+        Currently this function loads from the pickle file - this is tempory and we should use the Datajoint function once everybody is set up
 
     Parameters:
-    - path (str): The directory path where the data file is located.
-    - mouse_name (str): The name of the mouse or subject for which the data is being loaded.
-    - date (str): The date of the data in the format 'YYYY-MM-DD'.
-    - attempt (str): The attempt or session number for the data.
-    - no_iti (bool): A flag indicating whether to exclude inter-trial intervals (ITIs) from the data.
+        path (str): The directory path where the data file is located.
+        mouse_name (str): The name of the mouse or subject for which the data is being loaded.
+        date (str): The date of the data in the format 'YYYY-MM-DD'.
+        attempt (str): The attempt or session number for the data.
+        no_iti (bool): A flag indicating whether to exclude inter-trial intervals (ITIs) from the data.
 
     Returns:
-    - df (pandas DataFrame): A DataFrame containing the preprocessed behavioral data.
-    - box_df (pandas DataFrame): A DataFrame containing the coordinates and dimensions of left, right,
-      and target boxes.
+        df (pandas DataFrame): A DataFrame containing the preprocessed behavioral data.
+        box_df (pandas DataFrame): A DataFrame containing the coordinates and dimensions of left, right, and target boxes.
     
     """
     
@@ -83,7 +83,7 @@ def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_examp
     df ["mouse_name"] = mouse_name
     df ["attempt"] = attempt
     df ["date"] = date 
-
+    
     # Create the box dataframe
     box_df = pd.DataFrame()
     box_df = _define_box(box_df, state_dict, which="left")
@@ -91,6 +91,18 @@ def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_examp
     box_df = _define_box(box_df, state_dict, which="tt")
     box_df = box_df.iloc[1]
     
+    # Group the trials per x-position at trial initialization
+    start, end = box_df["tt_box_x_min"], box_df["tt_box_x_max"]
+    x_start_n_bins = 3
+    bin_edges = np.linspace(start, end, x_start_n_bins+1)
+    bin_midpoints = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+    starting_positions = df.groupby('trial')['x'].first().reset_index()
+    starting_positions['bin_idx'] = np.digitize(starting_positions['x'], bin_edges, right=False) - 1  # Adjust bin index to be 0-based
+    starting_positions['x_init_bin_center'] = starting_positions['bin_idx'].apply(lambda x: bin_midpoints[x] if x < len(bin_midpoints) else np.nan)
+
+    df = pd.merge(df, starting_positions[['trial', 'x_init_bin_center']], on='trial', how='left')
+
     return(df, box_df)
 
 
@@ -139,22 +151,23 @@ def get_rc_params():
 
 
 def get_mouse_list():
-    # this is a temporay function just to keep track of the tolias lab data sets that we have 
+    #NOTE(tom): This is a temporay function just to keep track of the tolias lab data sets that we have 
     # and so that we can easily import into notebooks
     mouse_list =  [{"mouse_name": "30559", "date":"2024-02-16", "attempt":"1"},
                {"mouse_name": "30559", "date":"2024-02-15", "attempt":"1"},
                {"mouse_name": "30559", "date":"2024-02-14", "attempt":"1"},
                {"mouse_name": "30559", "date":"2024-02-13", "attempt":"1"},
                {"mouse_name": "30561", "date":"2024-02-16", "attempt":"1"}]
-    return(mouse_list)
+    return mouse_list
 
 
 def get_all_tolias_mice(mouse_list, path):
-    # function to grab tolias lab mice and make a big dataframe out of them
+    """ Grab tolias lab mice and make a big dataframe out of them. """
     big_df = []
     for m in mouse_list:
-        big_df.append(load_data(path=path, mouse_name=m["mouse_name"], date=m ["date"], attempt=m ["attempt"])[0])
-    return(pd.concat(big_df).reset_index())
+        df, box_df = load_data(path=path, mouse_name=m["mouse_name"], date=m ["date"], attempt=m ["attempt"])
+        big_df.append(df)
+    return pd.concat(big_df).reset_index(), box_df
 
 
 def get_spatial_normalisation_params(data, spatial_ybins = [-10, 24, 50]):
@@ -164,4 +177,4 @@ def get_spatial_normalisation_params(data, spatial_ybins = [-10, 24, 50]):
     data["norm_y"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["y"].transform(lambda x: x - x.iloc[0])
     data["norm_x"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["x"].transform(lambda x: x - x.iloc[0])
     data["bin_centres"] = data["bins"].apply(lambda x: x.mid).astype("float") - 25
-    return(data)
+    return data
