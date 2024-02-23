@@ -39,7 +39,6 @@ class Dataset(dj.Manual):
     definition = """
     dataset: varchar(512)
     ---
-
     exp_teensy_filepath: varchar(255) # pickle file
     exp_session_filepath: varchar(255)  # npy file
     """
@@ -78,7 +77,6 @@ class Video(dj.Manual):
     fps: int
     width: int
     height: int
-    
     video_filepath: varchar(255)
     timestamp_filepath: varchar(255)
     """
@@ -111,7 +109,6 @@ class DLC(dj.Manual):
     -> Video
     -> ModelName
     ---
-    
     keypoints_filepath: varchar(255) # keypoints hdf5
     proc_filepath: varchar(255)  # computed dlc metrics
     """
@@ -138,7 +135,6 @@ class MouseState(dj.Manual):  # variable State
     mouse_report_correct: longblob  # mouse_report_correct
     report_left: longblob   # mouse_reports_left
     report_right: longblob  # mouse_reports right
-    
     """
 
 
@@ -166,7 +162,6 @@ class State(dj.Manual):
     dlc_x: longblob             # pos in dlc coords 
     dlc_y: longblob             # pos in dlc coords 
     dlc_heading: longblob       # pos in dlc coords 
-    
     """
 
 
@@ -199,7 +194,6 @@ class Metadata(dj.Manual):
     
     targets_height: longblob            # the distance between the targets
     target_from_midline: longblob       # the distance between the targets and the ground   (500*floats)
-    
     """
 
 
@@ -227,5 +221,4 @@ class Box(dj.Manual):
     tt_box_z_min: mediumblob
     tt_box_z_max: mediumblob
     tt_box_angle: mediumblob
-
     """

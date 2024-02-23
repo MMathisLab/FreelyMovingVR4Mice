@@ -23,26 +23,26 @@ class DataFrame(dj.Computed):
     """
 
     definition = """
-        -> vr4mice.VR4Mice
-        ---
-        velocity: blob
-        head_dir: blob
-        
-        x: blob
-        y: blob
-        box_df: blob
-        
-        trial_rewarded: blob
-        trial_step: blob
-        trial_step_time: blob
-        trial_step_fraction: blob
-        trial_step_fraction: blob
-        
-        rewarded: blob
-        choices: blob
-        box_entries: blob
-        trial_r_choice: blob
-        trial_l_choice: blob
+    -> vr4mice.VR4Mice
+    ---
+    velocity: blob
+    head_dir: blob
+    
+    x: blob
+    y: blob
+    box_df: blob
+    
+    trial_rewarded: blob
+    trial_step: blob
+    trial_step_time: blob
+    trial_step_fraction: blob
+    trial_r_choice: blob
+    trial_l_choice: blob
+    trial_step_fraction: blob
+    
+    rewarded: blob
+    choices: blob
+    box_entries: blob
     """
 
     def make(self, key):
@@ -55,23 +55,22 @@ class DataFrame(dj.Computed):
 @schema
 class BoxDataFrame(dj.Computed):
     definition = """
-       -> vr4mice.VR4Mice
-       ---
-       left_box_x_min: blob
-       left_box_x_max: blob
-       left_box_z_min: blob
-       left_box_z_max: blob
-       
-       right_box_x_min: blob
-       right_box_x_max: blob
-       right_box_z_min: blob
-       right_box_z_max: blob
-       
-       tt_box_x_min: blob
-       tt_box_x_max: blob
-       tt_box_z_min: blob
-       tt_box_z_max: blob
-       
+    -> vr4mice.VR4Mice
+    ---
+    left_box_x_min: blob
+    left_box_x_max: blob
+    left_box_z_min: blob
+    left_box_z_max: blob
+    
+    right_box_x_min: blob
+    right_box_x_max: blob
+    right_box_z_min: blob
+    right_box_z_max: blob
+    
+    tt_box_x_min: blob
+    tt_box_x_max: blob
+    tt_box_z_min: blob
+    tt_box_z_max: blob
     """
 
 

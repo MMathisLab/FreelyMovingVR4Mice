@@ -51,9 +51,7 @@ class DLC(dj.Manual):  # params?
     definition = """
     -> VideoToAnalyze
     -> ModelName
-    
     ---
-
     keypoints_filepath: varchar(255) # keypoints hdf5
     proc_filepath: varchar(255)  # computed dlc metrics
     """
