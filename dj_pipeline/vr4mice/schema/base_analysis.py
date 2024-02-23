@@ -5,8 +5,6 @@ from pathlib import Path
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
 
-from base_schemas.schemas import exp
-from base_schemas.schemas import mice
 from vr4mice.schema import vr4mice
 from vr4mice.analysis.analysis import create_data_frame
 
@@ -22,8 +20,10 @@ class DataFrame(dj.Computed):
         Host main dataframe for analysis.
     """
 
+    # TODO: This used to point to vr4mice.VR4Mice
+    #       will probably point this to the next version when it's available
     definition = """
-    -> vr4mice.VR4Mice
+    -> vr4mice.Dataset
     ---
     velocity: blob
     head_dir: blob
@@ -54,8 +54,10 @@ class DataFrame(dj.Computed):
 
 @schema
 class BoxDataFrame(dj.Computed):
+    # TODO: This used to point to vr4mice.VR4Mice
+    #       will probably point this to the next version when it's available
     definition = """
-    -> vr4mice.VR4Mice
+    -> vr4mice.Dataset
     ---
     left_box_x_min: blob
     left_box_x_max: blob
