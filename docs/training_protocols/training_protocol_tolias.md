@@ -120,7 +120,7 @@ rim of arena more than once)
 
 **Steps:**
 
-- *Step 1: Arena prepartion:*
+- *Step 1: Arena preparation:*
     - Flush bubbles from the water tubing with 5000ms manual water at least twice.
     - Refill syringe reservoirs for both water ports up to 20 mL to attain consistent water pressure across ports and sessions. Water is acquired from same source used to fill water bottles in colony housing, and replaced weekly.
     - The arena is in a quiet, dark room with minimal red lights. 
