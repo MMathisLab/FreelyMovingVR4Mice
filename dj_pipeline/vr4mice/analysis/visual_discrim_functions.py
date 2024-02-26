@@ -171,8 +171,15 @@ def get_all_tolias_mice(mouse_list, path):
 
 
 def get_spatial_normalisation_params(data, spatial_ybins = [-13, 24, 50]):
-    data["norm_head_dir"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["head_dir"].transform(lambda x: x - x.iloc[0])
-    data["trial_length"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["time_elapsed"].transform(lambda x: x.iloc[-1]-x.iloc[0])
+    data["norm_head_dir"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["head_dir"].transform(lambda x: x - np.mean(x.iloc[:5]))
+    data["trial_length"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["time_elapsed"].transform(lambda x: x.iloc[-1]-np.mean(x.iloc[:5]))
+    data["trial_traj_path_length"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["velocity"].transform("sum")
+    data ["trial_init_x"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["x"].transform(lambda x: x.iloc[0])
+    data ["trial_init_y"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["y"].transform(lambda y: y.iloc[0])
+    data ["trial_end_x"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["x"].transform(lambda x: x.iloc[-1])
+    data ["trial_end_y"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["y"].transform(lambda y: y.iloc[-1])
+    data ["trial_direct_path"] = np.sqrt((((data.trial_init_x - data.trial_end_x)**2) + (data.trial_init_y - data.trial_end_y)**2))
+    data ["trial_tortuosity"] = data.trial_traj_path_length / data.trial_direct_path
     data["bins"] = pd.cut(data["y"], bins = np.linspace(spatial_ybins[0],spatial_ybins[1],spatial_ybins[2])) 
     data["norm_y"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["y"].transform(lambda x: x - x.iloc[0])
     data["norm_x"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["x"].transform(lambda x: x - x.iloc[0])
