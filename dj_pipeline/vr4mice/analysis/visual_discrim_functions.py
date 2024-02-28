@@ -1,9 +1,8 @@
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import sklearn.linear_model
+import sklearn.model_selection
 
 
 def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_example_data/", mouse_name = "Anchovy", date = "2023-02-23", attempt = "2", no_iti = True):
@@ -129,7 +128,8 @@ def _define_box(box_df, state_dict, which):
     box_df[f"{which}_box_z_max"] = np.interp(state_dict[f"{l_which}_box_z_max"], [-10, -2], [-27, 27])
 
     return box_df
-    
+
+
 def get_rc_params():
     # a function to keep the plot styles similar in the notebooks
     font_color='black'
@@ -183,5 +183,34 @@ def get_spatial_normalisation_params(data, spatial_ybins = [-13, 24, 50]):
     data["bins"] = pd.cut(data["y"], bins = np.linspace(spatial_ybins[0],spatial_ybins[1],spatial_ybins[2])) 
     data["norm_y"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["y"].transform(lambda x: x - x.iloc[0])
     data["norm_x"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["x"].transform(lambda x: x - x.iloc[0])
-    data["bin_centres"] = data["bins"].apply(lambda x: x.mid).astype("float") - 25
+    data["bin_centers"] = data["bins"].apply(lambda x: x.mid).astype("float") - 25
     return data
+
+
+def predict_decision(df, label="norm_x", n_splits=10):
+    """Predict the decision of the animal based on the `label` data, through a logistic regression.
+
+    Args:
+        df: The dataframe.
+        label: The name of the column in the `df` dataframe.
+        n_splits: The number of splits fo the cross validation.
+
+    Returns:
+        The initial dataframe with an extra `pred` column, containing the probability that the 
+        animal went to the right.
+    """
+    
+    data = df[label].values
+    labels = df.trial_R_choice.values
+    
+    data = data.reshape(-1,1)
+    pred = np.empty((data.shape[0], 2))
+    
+    kf = sklearn.model_selection.KFold(n_splits=n_splits)
+    for i, (train_index, test_index) in enumerate(kf.split(data)):
+        clf = sklearn.linear_model.LogisticRegression().fit(data[train_index], labels[train_index])
+        pred[test_index] = clf.predict_proba(data[test_index])
+        
+    df.loc[:,"pred"] = pred[:,1]
+    
+    return df
