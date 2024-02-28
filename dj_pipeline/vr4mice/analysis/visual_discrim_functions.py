@@ -153,11 +153,23 @@ def get_rc_params():
 def get_mouse_list():
     #NOTE(tom): This is a temporay function just to keep track of the tolias lab data sets that we have 
     # and so that we can easily import into notebooks
-    mouse_list =  [{"mouse_name": "30559", "date":"2024-02-16", "attempt":"1"},
+    mouse_list =  [
+               {"mouse_name": "30559", "date":"2024-02-26", "attempt":"1"},
+               {"mouse_name": "30559", "date":"2024-02-20", "attempt":"1"},
+               {"mouse_name": "30559", "date":"2024-02-19", "attempt":"1"},
+               {"mouse_name": "30559", "date":"2024-02-19", "attempt":"1"},
+               {"mouse_name": "30559", "date":"2024-02-16", "attempt":"1"},
                {"mouse_name": "30559", "date":"2024-02-15", "attempt":"1"},
                {"mouse_name": "30559", "date":"2024-02-14", "attempt":"1"},
                {"mouse_name": "30559", "date":"2024-02-13", "attempt":"1"},
-               {"mouse_name": "30561", "date":"2024-02-16", "attempt":"1"}]
+               {"mouse_name": "30561", "date":"2024-02-16", "attempt":"1"},
+               {"mouse_name": "30561", "date":"2024-02-19", "attempt":"1"},
+               {"mouse_name": "30561", "date":"2024-02-20", "attempt":"1"},
+               {"mouse_name": "30561", "date":"2024-02-21", "attempt":"1"},
+               {"mouse_name": "30561", "date":"2024-02-22", "attempt":"1"},
+               {"mouse_name": "30561", "date":"2024-02-23", "attempt":"1"},
+               #{"mouse_name": "30561", "date":"2024-02-26", "attempt":"1"}, # more aperture sizes
+            ]
     return mouse_list
 
 
