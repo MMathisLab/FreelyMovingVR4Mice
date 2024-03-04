@@ -1,9 +1,12 @@
-import matplotlib.pyplot as plt
+
 import pandas as pd
 import numpy as np
 import sklearn.linear_model
 import sklearn.model_selection
 import scipy.interpolate
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 
 
 def load_data(path: str="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_example_data/", 
@@ -175,6 +178,7 @@ def get_rc_params():
 def get_mouse_list():
     #NOTE(tom): This is a temporay function just to keep track of the tolias lab data sets that we have 
     # and so that we can easily import into notebooks
+
     mouse_list =  [
                {"mouse_name": "30559", "date":"2024-02-26", "attempt":"1"}, #0
                {"mouse_name": "30559", "date":"2024-02-20", "attempt":"1"}, #1
@@ -219,6 +223,7 @@ def create_bins(data, spatial_ybins = [-13, 24, 50]):
     data["bins"] = pd.cut(data["y"], bins = np.linspace(spatial_ybins[0],spatial_ybins[1],spatial_ybins[2])) 
     data["bin_centers"] = data["bins"].apply(lambda x: x.mid).astype("float") - 25
     return data
+
 
 
 def predict_decision(df, label="norm_x", n_splits=10):
@@ -324,4 +329,41 @@ def interpolate(df, n_points=100, interpolation_columns=["mouse_name", "date", "
     
     return final_interpolated_df
 
+
+
+
+
+def calculate_choice_bin(df, trial_rewarded = 0.5, trial_tortuosity_thresh = 100):
+    mean_mice = df.groupby(["mouse_name", "date", "attempt", "aperture", "trial_L_choice", "bin_centres"], as_index=False).mean(numeric_only=True)
+    mean_mice ["over_bound"] = (abs(mean_mice.norm_x) > 5).diff() > 0
+    mean_mice ["y_over_bound"] = mean_mice ["bin_centres"] [mean_mice ["over_bound"]]
+    mean_mice = mean_mice [(mean_mice ["bin_centres"] > -20) & (mean_mice ["bin_centres"] < -5)]
+    mean_mice = mean_mice.dropna().copy()
+    mean_mice = mean_mice.groupby(["mouse_name", "date", "attempt", "aperture"], as_index=False).last()
+    plt.figure(figsize=(3,6))
+    sns.lineplot(data=mean_mice, x="aperture", y="y_over_bound", estimator =None, units=zip(mean_mice.mouse_name, mean_mice.date), sort=False, color="black", alpha=0.5)
+    sns.scatterplot(data=mean_mice, x="aperture", y="y_over_bound", color="black")
+    plt.xlim(0,15)
+    plt.ylim(-15,0)
+    plt.xlabel("aperture")
+    plt.ylabel("Distance from screen (cm)")
+    return(mean_mice)
+
+
+def plot_choice_per_mouse(df, mouse_list):
+    fig, ax = plt.subplots(4,3, figsize=(20,20), sharex=True, sharey=True)
+    ax = ax.ravel()
+    for i in range(len(mouse_list)):
+        m = mouse_list [i]
+        mouse = df [(df.mouse_name == m["mouse_name"]) &  (df.date == m["date"])]
+
+        
+        mouse = mouse [mouse.trial_rewarded > 0.5]
+        mouse = mouse [mouse.trial_tortuosity < 100]
+        sns.lineplot(data = mouse,x= "bin_centres", 
+                             y="norm_x", style="aperture", hue="trial_L_choice",
+                             errorbar="se", palette= ['#FD672C', "#5C0A72"], ax= ax[i])
+        ax[i].set_ylabel("x (normalised)")
+        ax[i].set_xlabel("Distance to screen (cm)")
+        ax[i].set_title(str(mouse.mouse_name.iloc [0]) + "_"  + str(mouse.date.iloc [0]))
 
