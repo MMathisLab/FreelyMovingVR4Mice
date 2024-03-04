@@ -212,3 +212,21 @@ def calculate_choice_bin(df, trial_rewarded = 0.5, trial_tortuosity_thresh = 100
     plt.xlabel("aperture")
     plt.ylabel("Distance from screen (cm)")
     return(mean_mice)
+
+
+def plot_choice_per_mouse(df, mouse_list):
+    fig, ax = plt.subplots(4,3, figsize=(20,20), sharex=True, sharey=True)
+    ax = ax.ravel()
+    for i in range(len(mouse_list)):
+        m = mouse_list [i]
+        mouse = df [(df.mouse_name == m["mouse_name"]) &  (df.date == m["date"])]
+
+        
+        mouse = mouse [mouse.trial_rewarded > 0.5]
+        mouse = mouse [mouse.trial_tortuosity < 100]
+        sns.lineplot(data = mouse,x= "bin_centres", 
+                             y="norm_x", style="aperture", hue="trial_L_choice",
+                             errorbar="se", palette= ['#FD672C', "#5C0A72"], ax= ax[i])
+        ax[i].set_ylabel("x (normalised)")
+        ax[i].set_xlabel("Distance to screen (cm)")
+        ax[i].set_title(str(mouse.mouse_name.iloc [0]) + "_"  + str(mouse.date.iloc [0]))
