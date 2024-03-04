@@ -1,13 +1,20 @@
+
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
+import sklearn.linear_model
+import sklearn.model_selection
+import scipy.interpolate
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_example_data/", mouse_name = "Anchovy", date = "2023-02-23", attempt = "2", no_iti = True):
+
+def load_data(path: str="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_example_data/", 
+              mouse_name: str="Anchovy", 
+              date: str="2023-02-23", 
+              attempt: str="2", 
+              no_iti: bool=True, 
+              first_n_samples: int=5):
     """
     Load and preprocess behavioral data and box coordinates.
 
@@ -24,7 +31,8 @@ def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_examp
         date (str): The date of the data in the format 'YYYY-MM-DD'.
         attempt (str): The attempt or session number for the data.
         no_iti (bool): A flag indicating whether to exclude inter-trial intervals (ITIs) from the data.
-
+        first_n_sample (int): The first n samples to average to normalize trajectories.
+    
     Returns:
         df (pandas DataFrame): A DataFrame containing the preprocessed behavioral data.
         box_df (pandas DataFrame): A DataFrame containing the coordinates and dimensions of left, right, and target boxes.
@@ -49,21 +57,27 @@ def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_examp
                        "mouse_in_R":  state_dict ["state"] [:,8]})
     
     df ["head_dir"] = _convert_head_angle(df)
+    df["norm_head_dir"] = df.groupby("trial", as_index=False)["head_dir"].transform(lambda x: x - np.mean(x.iloc[:first_n_samples]))
+
     df = df [df.trial != 1] #NOTE(celia): drop first trial which is DLC-live initialization trial
     
-    df.x = np.interp(df.x,  [-9,9], [-27, 27])
-    df.y = np.interp(df.y, [-10,-2], [-27, 27])
+    df["x"] = np.interp(df.x,  [-9,9], [-27, 27])
+    df["norm_x"] = df.groupby("trial", as_index=False)["x"].transform(lambda x: x - x.iloc[0])
+
+    df["y"] = np.interp(df.y, [-10,-2], [-27, 27])
+    df["norm_y"] = df.groupby("trial", as_index=False)["y"].transform(lambda x: x - x.iloc[0])
+
     
-    df ["trial_rewarded"] = df.groupby(["trial"], as_index=False)["reward"].transform(lambda x: x.max())
-    df [["trial_step", "trial_step_time"]] = df.groupby(["trial"], as_index = True, group_keys=False)[["step", "step_time"]].apply(lambda x: x.iloc[:] - x.iloc[0])
+    df ["trial_rewarded"] = df.groupby("trial", as_index=False)["reward"].transform(lambda x: x.max())
+    df [["trial_step", "trial_step_time"]] = df.groupby("trial", as_index = True, group_keys=False)[["step", "step_time"]].apply(lambda x: x.iloc[:] - x.iloc[0])
 
     if no_iti == True:
         df = df [df.iti == 0.0]
-        df ["trial_step_fraction"] = df.groupby(["trial"], as_index = True, group_keys=False)["trial_step"].apply(lambda x: x.iloc[:]/x.iloc [-1])
-        df ["trial_R_choice"] = df.groupby(["trial"], as_index=False)["mouse_in_R"].transform(lambda x: x.iloc [-1])
-        df ["trial_L_choice"] = df.groupby(["trial"], as_index=False)["mouse_in_L"].transform(lambda x: x.iloc [-1])
+        df ["trial_step_fraction"] = df.groupby("trial", as_index = True, group_keys=False)["trial_step"].apply(lambda x: x.iloc[:]/x.iloc [-1])
+        df ["trial_R_choice"] = df.groupby("trial", as_index=False)["mouse_in_R"].transform(lambda x: x.iloc [-1])
+        df ["trial_L_choice"] = df.groupby("trial", as_index=False)["mouse_in_L"].transform(lambda x: x.iloc [-1])
     else: 
-        df ["trial_step_fraction"] = df.groupby(["trial"], as_index = True, group_keys=False)["trial_step"].apply(lambda x: x.iloc[:]/x.iloc [-1])
+        df ["trial_step_fraction"] = df.groupby("trial", as_index = True, group_keys=False)["trial_step"].apply(lambda x: x.iloc[:]/x.iloc [-1])
 
     # resampling to 50Hz
     df['time'] = pd.to_datetime(df['step_time'], unit='s')
@@ -80,6 +94,15 @@ def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_examp
     
     df ["velocity_y"] = np.gradient(df.y, df.time_elapsed)
     df['acceleration_y'] = np.gradient(df['velocity_y'], df.time_elapsed)
+    
+    df["trial_length"] = df.groupby("trial", as_index=False)["time_elapsed"].transform(lambda x: x.iloc[-1]-np.mean(x.iloc[:5]))
+    df["trial_traj_path_length"] = df.groupby("trial", as_index=False)["velocity"].transform("sum")
+    df ["trial_init_x"] = df.groupby("trial", as_index=False)["x"].transform(lambda x: x.iloc[0])
+    df ["trial_init_y"] = df.groupby("trial", as_index=False)["y"].transform(lambda y: y.iloc[0])
+    df ["trial_end_x"] = df.groupby("trial", as_index=False)["x"].transform(lambda x: x.iloc[-1])
+    df ["trial_end_y"] = df.groupby("trial", as_index=False)["y"].transform(lambda y: y.iloc[-1])
+    df ["trial_direct_path"] = np.sqrt((((df.trial_init_x - df.trial_end_x)**2) + (df.trial_init_y - df.trial_end_y)**2))
+    df ["trial_tortuosity"] = df.trial_traj_path_length / df.trial_direct_path
     
     df ["mouse_name"] = mouse_name
     df ["attempt"] = attempt
@@ -130,7 +153,8 @@ def _define_box(box_df, state_dict, which):
     box_df[f"{which}_box_z_max"] = np.interp(state_dict[f"{l_which}_box_z_max"], [-10, -2], [-27, 27])
 
     return box_df
-    
+
+
 def get_rc_params():
     # a function to keep the plot styles similar in the notebooks
     font_color='black'
@@ -154,18 +178,24 @@ def get_rc_params():
 def get_mouse_list():
     #NOTE(tom): This is a temporay function just to keep track of the tolias lab data sets that we have 
     # and so that we can easily import into notebooks
-    mouse_list =  [{"mouse_name": "30559", "date":"2024-02-16", "attempt":"1"},
-               {"mouse_name": "30559", "date":"2024-02-15", "attempt":"1"},
-               {"mouse_name": "30559", "date":"2024-02-14", "attempt":"1"},
-               {"mouse_name": "30559", "date":"2024-02-13", "attempt":"1"},
-               {"mouse_name": "30561", "date":"2024-02-16", "attempt":"1"},
-               {"mouse_name": "30561", "date":"2024-02-19", "attempt":"1"},
-               {"mouse_name": "30561", "date":"2024-02-20", "attempt":"1"},
-               {"mouse_name": "30561", "date":"2024-02-21", "attempt":"1"},
-               {"mouse_name": "30561", "date":"2024-02-22", "attempt":"1"},
-               {"mouse_name": "30561", "date":"2024-02-23", "attempt":"1"},
-               #{"mouse_name": "30561", "date":"2024-02-26", "attempt":"1"} # aperture =3.5
-               ]
+
+    mouse_list =  [
+               {"mouse_name": "30559", "date":"2024-02-26", "attempt":"1"}, #0
+               {"mouse_name": "30559", "date":"2024-02-20", "attempt":"1"}, #1
+               {"mouse_name": "30559", "date":"2024-02-19", "attempt":"1"}, #2
+               {"mouse_name": "30559", "date":"2024-02-19", "attempt":"1"}, #3
+               {"mouse_name": "30559", "date":"2024-02-16", "attempt":"1"}, #4
+               {"mouse_name": "30559", "date":"2024-02-15", "attempt":"1"}, #5
+               {"mouse_name": "30559", "date":"2024-02-14", "attempt":"1"}, #6
+               {"mouse_name": "30559", "date":"2024-02-13", "attempt":"1"}, #7
+               {"mouse_name": "30561", "date":"2024-02-16", "attempt":"1"}, #8
+               {"mouse_name": "30561", "date":"2024-02-19", "attempt":"1"}, #9
+               {"mouse_name": "30561", "date":"2024-02-20", "attempt":"1"}, #10
+               {"mouse_name": "30561", "date":"2024-02-21", "attempt":"1"}, #11
+               {"mouse_name": "30561", "date":"2024-02-22", "attempt":"1"}, #12
+               {"mouse_name": "30561", "date":"2024-02-23", "attempt":"1"}, #13
+               #{"mouse_name": "30561", "date":"2024-02-26", "attempt":"1"}, # more aperture sizes
+            ]
     return mouse_list
 
 
@@ -178,21 +208,127 @@ def get_all_tolias_mice(mouse_list, path):
     return pd.concat(big_df).reset_index(), box_df
 
 
-def get_spatial_normalisation_params(data, spatial_ybins = [-13, 24, 50]):
-    data["norm_head_dir"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["head_dir"].transform(lambda x: x - np.mean(x.iloc[:5]))
-    data["trial_length"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["time_elapsed"].transform(lambda x: x.iloc[-1]-np.mean(x.iloc[:5]))
-    data["trial_traj_path_length"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["velocity"].transform("sum")
-    data ["trial_init_x"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["x"].transform(lambda x: x.iloc[0])
-    data ["trial_init_y"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["y"].transform(lambda y: y.iloc[0])
-    data ["trial_end_x"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["x"].transform(lambda x: x.iloc[-1])
-    data ["trial_end_y"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["y"].transform(lambda y: y.iloc[-1])
-    data ["trial_direct_path"] = np.sqrt((((data.trial_init_x - data.trial_end_x)**2) + (data.trial_init_y - data.trial_end_y)**2))
-    data ["trial_tortuosity"] = data.trial_traj_path_length / data.trial_direct_path
+
+def create_bins(data, spatial_ybins = [-13, 24, 50]): 
+    """Create bins on the y axis of the data.
+
+    Args:
+        data: A dataframe.
+        spatial_ybins (List[int]): 3 values list, respectively first and last values to consider and number of bins to consider.
+
+    Returns:
+        The dataframe with 2 extra columns, the bin corresponding to each sample, and the center of that interval.
+    
+    """
     data["bins"] = pd.cut(data["y"], bins = np.linspace(spatial_ybins[0],spatial_ybins[1],spatial_ybins[2])) 
-    data["norm_y"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["y"].transform(lambda x: x - x.iloc[0])
-    data["norm_x"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["x"].transform(lambda x: x - x.iloc[0])
-    data["bin_centres"] = data["bins"].apply(lambda x: x.mid).astype("float") - 25
+    data["bin_centers"] = data["bins"].apply(lambda x: x.mid).astype("float") - 25
     return data
+
+
+
+def predict_decision(df, label="norm_x", n_splits=10):
+    """Predict the decision of the animal based on the `label` data, through a logistic regression.
+
+    Args:
+        df: The dataframe.
+        label: The name of the column in the `df` dataframe.
+        n_splits: The number of splits fo the cross validation.
+
+    Returns:
+        The initial dataframe with an extra `pred` column, containing the probability that the 
+        animal went to the right.
+    """
+    
+    data = df[label].values
+    labels = df.trial_R_choice.values
+    
+    data = data.reshape(-1,1)
+    pred = np.empty((data.shape[0], 2))
+    
+    kf = sklearn.model_selection.KFold(n_splits=n_splits)
+    for i, (train_index, test_index) in enumerate(kf.split(data)):
+        clf = sklearn.linear_model.LogisticRegression().fit(data[train_index], labels[train_index])
+        pred[test_index] = clf.predict_proba(data[test_index])
+        
+    df.loc[:,"pred"] = pred[:,1]
+    
+    return df
+
+
+def interpolate_group(group, n_points, interpolation_columns, value_columns):
+    """Interpolate for the provided group of data.
+
+    Args:
+        group: A dataframe containing the data to interpolate.
+        num_points (int): the number of points to interpolate.
+        interpolation_columns (List[str]): List of the names of the columns to group the data by.
+        value_columns (List[str]): List of the names of the columns containing the values to interpolate.
+
+    Returns:
+        pandas DataFrame of length `n_points`, containing the interpolated data and the interpolation 
+        columns data for all groups.
+
+    """
+    # Generate new evenly spaced x values within the original range for interpolation
+    x_new = np.linspace(group.index.min(), group.index.max(), n_points)
+    
+    # Retrieve groupby identifiers (they are uniform within the group)
+    ids = {}
+    for group_column in interpolation_columns:
+        ids[group_column] = group[group_column].iloc[0]
+    
+    # Dictionary to collect new interpolated values
+    interpolated_data = {'time': x_new}
+    
+    for column in value_columns:
+        x = group.index
+        y = group[column]
+        
+        # Fit Cubic Spline
+        cs = scipy.interpolate.CubicSpline(x, y)
+        
+        # Interpolate y values at the new x positions
+        y_new = cs(x_new)
+        
+        # Store the interpolated values
+        interpolated_data[column] = y_new
+    
+    interpolated_df = pd.DataFrame(interpolated_data)
+    
+    for group_column in interpolation_columns:
+        interpolated_df[group_column] = ids[group_column]
+    
+    return interpolated_df
+
+
+
+def interpolate(df, n_points=100, interpolation_columns=["mouse_name", "date", "attempt", "trial"], value_columns=["x", "norm_x", "velocity", "head_dir"]):
+    """
+    Interpolates the variables in the value columns provided for each group formed by the interpolation columns.
+    
+    Note: Check keys of the output for interpolated_df attributes.
+    Note: By default group the data frame by ["mouse_name", "date", "attempt", "trial"].
+
+    The dataframe is grouped by `interpolation_columns` and the values contained in the columns 
+    `value_columns` are interpolated so that each group is `n_points` samples.
+    
+    Args:
+        df: pandas DataFrame containing the data to be interpolated.
+        num_points (int): the number of points to interpolate.
+        interpolation_columns (List[str]): List of the names of the columns to group the data by.
+        value_columns (List[str]): List of the names of the columns containing the values to interpolate.
+
+    Returns:
+        pandas DataFrame containing the interpolated data and the interpolation columns data for all groups.
+    """
+    interpolated_dfs = []
+
+    # Compute the interpolation for each trial
+    interpolated_dfs = [interpolate_group(group, n_points, interpolation_columns, value_columns) for _, group in df.groupby(interpolation_columns)]
+    final_interpolated_df = pd.concat(interpolated_dfs).reset_index(drop=True)
+    
+    return final_interpolated_df
+
 
 
 
@@ -230,3 +366,4 @@ def plot_choice_per_mouse(df, mouse_list):
         ax[i].set_ylabel("x (normalised)")
         ax[i].set_xlabel("Distance to screen (cm)")
         ax[i].set_title(str(mouse.mouse_name.iloc [0]) + "_"  + str(mouse.date.iloc [0]))
+
