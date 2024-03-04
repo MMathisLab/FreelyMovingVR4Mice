@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 def load_data(path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_example_data/", mouse_name = "Anchovy", date = "2023-02-23", attempt = "2", no_iti = True):
@@ -157,7 +158,14 @@ def get_mouse_list():
                {"mouse_name": "30559", "date":"2024-02-15", "attempt":"1"},
                {"mouse_name": "30559", "date":"2024-02-14", "attempt":"1"},
                {"mouse_name": "30559", "date":"2024-02-13", "attempt":"1"},
-               {"mouse_name": "30561", "date":"2024-02-16", "attempt":"1"}]
+               {"mouse_name": "30561", "date":"2024-02-16", "attempt":"1"},
+               {"mouse_name": "30561", "date":"2024-02-19", "attempt":"1"},
+               {"mouse_name": "30561", "date":"2024-02-20", "attempt":"1"},
+               {"mouse_name": "30561", "date":"2024-02-21", "attempt":"1"},
+               {"mouse_name": "30561", "date":"2024-02-22", "attempt":"1"},
+               {"mouse_name": "30561", "date":"2024-02-23", "attempt":"1"},
+               #{"mouse_name": "30561", "date":"2024-02-26", "attempt":"1"} # aperture =3.5
+               ]
     return mouse_list
 
 
@@ -185,3 +193,22 @@ def get_spatial_normalisation_params(data, spatial_ybins = [-13, 24, 50]):
     data["norm_x"] = data.groupby(["mouse_name", "date", "attempt", "trial"], as_index=False)["x"].transform(lambda x: x - x.iloc[0])
     data["bin_centres"] = data["bins"].apply(lambda x: x.mid).astype("float") - 25
     return data
+
+
+
+
+def calculate_choice_bin(df, trial_rewarded = 0.5, trial_tortuosity_thresh = 100):
+    mean_mice = df.groupby(["mouse_name", "date", "attempt", "aperture", "trial_L_choice", "bin_centres"], as_index=False).mean(numeric_only=True)
+    mean_mice ["over_bound"] = (abs(mean_mice.norm_x) > 5).diff() > 0
+    mean_mice ["y_over_bound"] = mean_mice ["bin_centres"] [mean_mice ["over_bound"]]
+    mean_mice = mean_mice [(mean_mice ["bin_centres"] > -20) & (mean_mice ["bin_centres"] < -5)]
+    mean_mice = mean_mice.dropna().copy()
+    mean_mice = mean_mice.groupby(["mouse_name", "date", "attempt", "aperture"], as_index=False).last()
+    plt.figure(figsize=(3,6))
+    sns.lineplot(data=mean_mice, x="aperture", y="y_over_bound", estimator =None, units=zip(mean_mice.mouse_name, mean_mice.date), sort=False, color="black", alpha=0.5)
+    sns.scatterplot(data=mean_mice, x="aperture", y="y_over_bound", color="black")
+    plt.xlim(0,15)
+    plt.ylim(-15,0)
+    plt.xlabel("aperture")
+    plt.ylabel("Distance from screen (cm)")
+    return(mean_mice)
