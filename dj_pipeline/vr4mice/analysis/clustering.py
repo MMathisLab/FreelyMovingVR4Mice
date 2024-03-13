@@ -5,18 +5,18 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 import umap
 
-import visual_discrim_functions
+import analysis.visual_discrim_functions as vs
 
 
-def interpolate_data(df):
+def interpolate_data(df, n_points=200):
     
-    return visual_discrim_functions.interpolate(df, n_points=200, value_columns=["y", "x", "norm_x", "norm_y", "velocity", "head_dir",
+    return vs.interpolate(df, n_points=n_points, value_columns=["y", "x", "norm_x", "norm_y", "velocity", "head_dir",
                                                               "aperture", "trial_R_choice", "trial_length", 
                                                               "trial_rewarded", "trial_tortuosity", "trial_traj_path_length",
                                                               "trial_init_x", "trial_end_x", "trial_init_y"])
     
     
-def cluster(res, method: str = "pca"):
+def cluster(res, method: str = "pca", return_data =False):
     """Compute dimensionality reduction using the method provided.
     
     NOTE(celia): to later refactorize, really ugly;
@@ -29,9 +29,10 @@ def cluster(res, method: str = "pca"):
         the latents computed with the required `method`.
     """
     
-    data_x = np.concatenate(res.groupby(["mouse_name", "date", "attempt", "trial"]).norm_x.apply(np.array).values).reshape(-1,200)
+    data_x = np.concatenate(res.groupby(["mouse_name", "date", "attempt", "trial" ]).norm_x.apply(np.array).values).reshape(-1,200)
     data_y = np.concatenate(res.groupby(["mouse_name", "date", "attempt", "trial"]).norm_y.apply(np.array).values).reshape(-1,200)
     data_head_dir = np.concatenate(res.groupby(["mouse_name", "date", "attempt", "trial"]).head_dir.apply(np.array).values).reshape(-1,200)
+    velocity = np.concatenate(res.groupby(["mouse_name", "date", "attempt", "trial"]).velocity.apply(np.array).values).reshape(-1,200)
 
     data = np.concatenate([data_x, data_y], axis=1) #NOTE(celia): to adapt based on the data to include
     
@@ -43,8 +44,10 @@ def cluster(res, method: str = "pca"):
         #print(pca.explained_variance_ratio_)
     else: 
         raise NotImplementedError(f"{method}")
-
-    return standard_embedding
+    if return_data == True:
+        return data
+    else:
+        return standard_embedding
 
 
 
