@@ -6,7 +6,7 @@ import sklearn.model_selection
 import scipy.interpolate
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import analysis.dlc_helpers as dlc_helpers
 
 
 def load_data(path: str="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_example_data/", 
@@ -81,7 +81,7 @@ def load_data(path: str="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_
 
     # resampling to 50Hz
     df['time'] = pd.to_datetime(df['step_time'], unit='s')
-    df = df.set_index("time").groupby("trial", as_index=False).resample('0.02s').mean().interpolate().reset_index()
+    df = df.set_index("time").groupby("trial", as_index=False).resample('0.01s').mean().interpolate().reset_index()
     
     reference_datetime = df['time'].iloc[0]
     df['time_elapsed'] = (df['time'] - reference_datetime).dt.total_seconds()
@@ -107,6 +107,7 @@ def load_data(path: str="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_
     df ["mouse_name"] = mouse_name
     df ["attempt"] = attempt
     df ["date"] = date 
+    df ["start_time"] = state_dict ["start_time"]
     
     # Create the box dataframe
     box_df = pd.DataFrame()
@@ -129,6 +130,16 @@ def load_data(path: str="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_
 
     return(df, box_df)
 
+
+def load_and_sync_dlc_w_game(mouse_name, date, attempt, path, game_data):
+    dlc_dict = dlc_helpers.load_dlc_proc(mouse_name =mouse_name, date = date, attempt=attempt, path=path)
+    filt_dlc = dlc_helpers.filter_dlc(dlc_dict.copy())
+    dlc_s = dlc_helpers.sync_dlc_w_game(game_data, filt_dlc.copy())
+    dlc_var =  dlc_helpers.compute_dlc_variables(dlc_s.iloc[:,:-3].copy())
+    df_out = pd.concat([game_data, dlc_var], axis=1)
+    df_out ["head_angle_veloctiy"] = df_out.head_angle.diff()
+    df_out ["head_dir_veloctiy"] = df_out.head_angle.diff()
+    return(df_out)
 
 def _convert_head_angle(df):
     # this function converts the animals heading direction relative to the screen
@@ -198,11 +209,13 @@ def get_mouse_list():
     return mouse_list
 
 
-def get_all_tolias_mice(mouse_list, path):
+def get_all_tolias_mice(mouse_list, path, load_dlc=True):
     """ Grab tolias lab mice and make a big dataframe out of them. """
     big_df = []
     for m in mouse_list:
         df, box_df = load_data(path=path, mouse_name=m["mouse_name"], date=m ["date"], attempt=m ["attempt"])
+        if load_dlc == True:
+            df = load_and_sync_dlc_w_game(path=path, mouse_name=m["mouse_name"], date=m ["date"], attempt=m ["attempt"], game_data=df)
         big_df.append(df)
     return pd.concat(big_df).reset_index(), box_df
 
