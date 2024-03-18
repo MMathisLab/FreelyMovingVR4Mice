@@ -1,4 +1,3 @@
-
 import pandas as pd
 import numpy as np
 import sklearn.linear_model
@@ -6,15 +5,18 @@ import sklearn.model_selection
 import scipy.interpolate
 import matplotlib.pyplot as plt
 import seaborn as sns
-import analysis.dlc_helpers as dlc_helpers
+import dlc_helpers as dlc_helpers
+
+from typing import List
 
 
-def load_data(path: str="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_example_data/", 
-              mouse_name: str="Anchovy", 
-              date: str="2023-02-23", 
-              attempt: str="2", 
-              no_iti: bool=True, 
-              first_n_samples: int=5):
+def load_data(path: str ="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_example_data/", 
+              mouse_name: str ="Anchovy", 
+              date: str ="2023-02-23", 
+              attempt: str ="2", 
+              no_iti: bool =True, 
+              first_n_samples: int =5,
+              spatial_ybins: List[int] =[-27, 27, 75]):
     """
     Load and preprocess behavioral data and box coordinates.
 
@@ -56,17 +58,31 @@ def load_data(path: str="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_
                        "mouse_in_L":  state_dict ["state"] [:,7], 
                        "mouse_in_R":  state_dict ["state"] [:,8]})
     
-    df ["head_dir"] = _convert_head_angle(df)
-    df["norm_head_dir"] = df.groupby("trial", as_index=False)["head_dir"].transform(lambda x: x - np.mean(x.iloc[:first_n_samples]))
-
     df = df [df.trial != 1] #NOTE(celia): drop first trial which is DLC-live initialization trial
-    
+
     df["x"] = np.interp(df.x,  [-9,9], [-27, 27])
-    df["norm_x"] = df.groupby("trial", as_index=False)["x"].transform(lambda x: x - x.iloc[0])
-
     df["y"] = np.interp(df.y, [-10,-2], [-27, 27])
-    df["norm_y"] = df.groupby("trial", as_index=False)["y"].transform(lambda x: x - x.iloc[0])
 
+    df["bins_y"] = pd.cut(df["y"], bins = np.linspace(spatial_ybins[0],spatial_ybins[1],spatial_ybins[2])) 
+    df["bins_x"] = pd.cut(df["x"], bins = np.linspace(spatial_ybins[0],spatial_ybins[1],spatial_ybins[2])) 
+
+    df["head_dir_no_processing"] = df["head_dir"]
+    df["head_dir"] = _convert_head_angle(df)
+    #df["norm_head_dir"] = df.groupby("trial", as_index=False)["head_dir"].transform(lambda x: x - np.mean(x.iloc[:first_n_samples]))
+    #mean_head_dir_bin = df[df['bins_x'].apply(lambda x: 6.7 in x)].groupby("trial", as_index=False)["head_dir"].mean()
+    #df["norm_head_dir_new"] = df.groupby("trial", as_index=False)["head_dir"].transform(lambda x: x - mean_head_dir_bin)
+
+    df["norm_x"] = df.groupby("trial", as_index=False)["x"].transform(lambda x: x - np.mean(x.iloc[:first_n_samples]))
+    #mean_x_bin = df["trial"].map(df[df['bins_y'].apply(lambda x: 6.7 in x)].groupby("trial")["x"].mean())
+    # df[df['bins_y'].apply(lambda x: 6.7 in x)].groupby("trial", as_index=False)["x"].mean()
+    #df["norm_x_new"] = df["x"] - mean_x_bin
+    # df.groupby("trial", as_index=False)["x"].transform(lambda x: x - mean_x_bin)
+
+    df["norm_y"] = df.groupby("trial", as_index=False)["y"].transform(lambda x: x - np.mean(x.iloc[:first_n_samples]))
+    #mean_y_bin = df[df['bins_x'].apply(lambda x: 0 in x)]["y"].mean()
+    #df["norm_y_new"] = df.groupby("trial", as_index=False)["y"].transform(lambda x: x - mean_y_bin)
+
+    df = df.drop(columns=["bins_x", "bins_y"])
     
     df ["trial_rewarded"] = df.groupby("trial", as_index=False)["reward"].transform(lambda x: x.max())
     df [["trial_step", "trial_step_time"]] = df.groupby("trial", as_index = True, group_keys=False)[["step", "step_time"]].apply(lambda x: x.iloc[:] - x.iloc[0])
@@ -80,15 +96,25 @@ def load_data(path: str="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_
         df ["trial_step_fraction"] = df.groupby("trial", as_index = True, group_keys=False)["trial_step"].apply(lambda x: x.iloc[:]/x.iloc [-1])
 
     # resampling to 50Hz
-    df['time'] = pd.to_datetime(df['step_time'], unit='s')
-    df = df.set_index("time").groupby("trial", as_index=False).resample('0.01s').mean().interpolate().reset_index()
+    #df['time'] = pd.to_datetime(df['step_time'], unit='s')
+    #df = df.set_index("time").groupby("trial", as_index=False).resample('0.01s').mean().interpolate().reset_index()
+    categorical_columns = ["mouse_in_R", "mouse_in_L", "aperture", "reward", "iti"]
+    continuous_columns = df.columns[~df.columns.isin(categorical_columns)]
     
+    df['time'] = pd.to_datetime(df['step_time'], unit='s')
+    categorical_resampled = df.set_index("time").groupby('trial', as_index=False)[categorical_columns].resample('0.02s').first()
+    continuous_resampled = df.set_index("time").groupby('trial', as_index=False)[continuous_columns].resample('0.02s').mean().interpolate()
+    df = pd.concat([continuous_resampled, categorical_resampled], axis=1).reset_index()
+
     reference_datetime = df['time'].iloc[0]
     df['time_elapsed'] = (df['time'] - reference_datetime).dt.total_seconds()
     
     # velocity and acceleration computed from time_elapsed difference (fixed interval)
     df["velocity"] = np.sqrt((np.gradient(df.x, df.time_elapsed)**2) + (np.gradient(df.y, df.time_elapsed) **2))  
 
+    df ["angular_velocity"] = np.gradient(df.head_dir, df.time_elapsed)
+    df['angular_acceleration'] = np.gradient(df['angular_velocity'], df.time_elapsed)
+    
     df ["velocity_x"] = np.gradient(df.x, df.time_elapsed)
     df['acceleration_x'] = np.gradient(df['velocity_x'], df.time_elapsed)
     
@@ -97,23 +123,30 @@ def load_data(path: str="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_
     
     df["trial_length"] = df.groupby("trial", as_index=False)["time_elapsed"].transform(lambda x: x.iloc[-1]-np.mean(x.iloc[:5]))
     df["trial_traj_path_length"] = df.groupby("trial", as_index=False)["velocity"].transform("sum")
-    df ["trial_init_x"] = df.groupby("trial", as_index=False)["x"].transform(lambda x: x.iloc[0])
-    df ["trial_init_y"] = df.groupby("trial", as_index=False)["y"].transform(lambda y: y.iloc[0])
-    df ["trial_end_x"] = df.groupby("trial", as_index=False)["x"].transform(lambda x: x.iloc[-1])
-    df ["trial_end_y"] = df.groupby("trial", as_index=False)["y"].transform(lambda y: y.iloc[-1])
-    df ["trial_direct_path"] = np.sqrt((((df.trial_init_x - df.trial_end_x)**2) + (df.trial_init_y - df.trial_end_y)**2))
-    df ["trial_tortuosity"] = df.trial_traj_path_length / df.trial_direct_path
+    df["trial_init_x"] = df.groupby("trial", as_index=False)["x"].transform(lambda x: x.iloc[0])
+    df["trial_init_y"] = df.groupby("trial", as_index=False)["y"].transform(lambda y: y.iloc[0])
+    df["trial_end_x"] = df.groupby("trial", as_index=False)["x"].transform(lambda x: x.iloc[-1])
+    df["trial_end_y"] = df.groupby("trial", as_index=False)["y"].transform(lambda y: y.iloc[-1])
+    df["trial_direct_path"] = np.sqrt((((df.trial_init_x - df.trial_end_x)**2) + (df.trial_init_y - df.trial_end_y)**2))
+    df["trial_tortuosity"] = df.trial_traj_path_length / df.trial_direct_path
     
-    df ["mouse_name"] = mouse_name
-    df ["attempt"] = attempt
-    df ["date"] = date 
-    df ["start_time"] = state_dict ["start_time"]
+    df["mouse_name"] = mouse_name
+    df["attempt"] = attempt
+    df["date"] = date 
+    df["start_time"] = state_dict["start_time"]
+    df["choice"] = df.trial_L_choice.replace([0, 1], ["right", "left"])
+    df["session"] = df['mouse_name'].astype(str) + '_' + df['date'].astype(str) + '_' + df['attempt'].astype(str)
     
     # Create the box dataframe
     box_df = pd.DataFrame()
     box_df = _define_box(box_df, state_dict, which="left")
     box_df = _define_box(box_df, state_dict, which="right")
     box_df = _define_box(box_df, state_dict, which="tt")
+    box_df["left_reward_x"] = df[(df.reward>0.5) & (df.trial_L_choice>0.5)]["x"].mean()
+    box_df["left_reward_z"] =df[(df.reward>0.5) & (df.trial_L_choice>0.5)]["y"].mean()
+    box_df["right_reward_x"] = df[(df.reward>0.5) & (df.trial_R_choice>0.5)]["x"].mean()
+    box_df["right_reward_z"] =df[(df.reward>0.5) & (df.trial_R_choice>0.5)]["y"].mean()
+    
     box_df = box_df.iloc[1]
     
     # Group the trials per x-position at trial initialization
@@ -127,19 +160,28 @@ def load_data(path: str="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_
     starting_positions['x_init_bin_center'] = starting_positions['bin_idx'].apply(lambda x: bin_midpoints[x] if x < len(bin_midpoints) else np.nan)
 
     df = pd.merge(df, starting_positions[['trial', 'x_init_bin_center']], on='trial', how='left')
-
+    
     return(df, box_df)
 
 
 def load_and_sync_dlc_w_game(mouse_name, date, attempt, path, game_data):
+    """Add the filtered head angle and head direction and compute derivatives."""
+    
     dlc_dict = dlc_helpers.load_dlc_proc(mouse_name =mouse_name, date = date, attempt=attempt, path=path)
     filt_dlc = dlc_helpers.filter_dlc(dlc_dict.copy())
     dlc_s = dlc_helpers.sync_dlc_w_game(game_data, filt_dlc.copy())
     dlc_var =  dlc_helpers.compute_dlc_variables(dlc_s.iloc[:,:-3].copy())
+    
     df_out = pd.concat([game_data, dlc_var], axis=1)
-    df_out ["head_angle_veloctiy"] = df_out.head_angle.diff()
-    df_out ["head_dir_veloctiy"] = df_out.head_angle.diff()
-    return(df_out)
+    
+    df_out["heading_angle_velocity"] = np.gradient(df_out.head_angle, df_out.time_elapsed) #df_out.head_angle.diff()
+    df_out["heading_dir_velocity"] = np.gradient(df_out.heading_dir, df_out.time_elapsed) #df_out.heading_dir.diff()
+    
+    df_out["heading_angle_acceleration"] = np.gradient(df_out.heading_angle_velocity, df_out.time_elapsed) #df_out.head_angle.diff()
+    df_out["heading_dir_accleration"] = np.gradient(df_out.heading_dir_velocity, df_out.time_elapsed) #df_out.heading_dir.diff()
+    
+    return df_out
+
 
 def _convert_head_angle(df):
     # this function converts the animals heading direction relative to the screen
@@ -162,6 +204,8 @@ def _define_box(box_df, state_dict, which):
     box_df[f"{which}_box_x_max"] = np.interp(state_dict[f"{l_which}_box_x_max"], [-9, 9], [-27, 27])
     box_df[f"{which}_box_z_min"] = np.interp(state_dict[f"{l_which}_box_z_min"], [-10, -2], [-27, 27])
     box_df[f"{which}_box_z_max"] = np.interp(state_dict[f"{l_which}_box_z_max"], [-10, -2], [-27, 27])
+    box_df[f"{which}_box_x_center"] = (box_df[f"{which}_box_x_min"] + box_df[f"{which}_box_x_max"]) / 2
+    box_df[f"{which}_box_z_center"] = (box_df[f"{which}_box_z_min"] + box_df[f"{which}_box_z_max"]) / 2
 
     return box_df
 
@@ -355,8 +399,6 @@ def interpolate(df, n_points=100, interpolation_columns=["mouse_name", "date", "
     final_interpolated_df = pd.concat(interpolated_dfs).reset_index(drop=True)
     
     return final_interpolated_df
-
-
 
 
 
