@@ -420,7 +420,7 @@ def calculate_choice_bin(df, trial_rewarded = 0.5, trial_tortuosity_thresh = 100
     return(mean_mice)
 
 
-def plot_choice_per_mouse(df, mouse_list, df=):
+def plot_choice_per_mouse(df, mouse_list):
     fig, ax = plt.subplots(4,3, figsize=(20,20), sharex=True, sharey=True)
     ax = ax.ravel()
     for i in range(len(mouse_list)):
