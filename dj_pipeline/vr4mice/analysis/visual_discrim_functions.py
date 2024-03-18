@@ -138,7 +138,7 @@ def load_and_sync_dlc_w_game(mouse_name, date, attempt, path, game_data):
     dlc_var =  dlc_helpers.compute_dlc_variables(dlc_s.iloc[:,:-3].copy())
     df_out = pd.concat([game_data, dlc_var], axis=1)
     df_out ["head_angle_veloctiy"] = df_out.head_angle.diff()
-    df_out ["head_dir_veloctiy"] = df_out.head_angle.diff()
+    df_out ["head_dir_veloctiy"] = df_out.heading_dir.diff()
     return(df_out)
 
 def _convert_head_angle(df):
@@ -377,7 +377,7 @@ def calculate_choice_bin(df, trial_rewarded = 0.5, trial_tortuosity_thresh = 100
     return(mean_mice)
 
 
-def plot_choice_per_mouse(df, mouse_list):
+def plot_choice_per_mouse(df, mouse_list, df=):
     fig, ax = plt.subplots(4,3, figsize=(20,20), sharex=True, sharey=True)
     ax = ax.ravel()
     for i in range(len(mouse_list)):
