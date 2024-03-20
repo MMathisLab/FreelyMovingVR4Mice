@@ -20,6 +20,8 @@ class DataFrame(dj.Computed):
     Host main dataframe for analysis.
     """
 
+    # TODO: This used to point to vr4mice.VR4Mice
+    #       will probably point this to the next version when it's available
     definition = """
     -> vr4mice.Dataset
     ---
@@ -94,6 +96,8 @@ class DataFrame(dj.Computed):
 
 @schema
 class BoxDataFrame(dj.Computed):
+    # TODO: This used to point to vr4mice.VR4Mice
+    #       will probably point this to the next version when it's available
     definition = """
     -> DataFrame
     ---
@@ -101,7 +105,7 @@ class BoxDataFrame(dj.Computed):
     left_box_x_max: blob
     left_box_z_min: blob
     left_box_z_max: blob
-
+    
     right_box_x_min: blob
     right_box_x_max: blob
     right_box_z_min: blob
@@ -140,7 +144,7 @@ class OutputPlots(dj.Computed):
     definition = """
     -> vr4mice.Dataset
     ---
-    filename:  char(254)
+    filename:  varchar(255)
     """
 
     def make(self, key):

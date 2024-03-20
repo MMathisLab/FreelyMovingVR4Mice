@@ -23,7 +23,7 @@ def connect_to_database(user, prefix="", create_tables=True, storage="/storage")
     - The create_tables argument is useful if you want to create tables in the database if they don't already exist.
     - The location argument is the location of the storage directory where DataJoint will store data files.
     """
-
+    
     # deprecated
     # dj.config["stores"] = {
     # read-only store
@@ -34,8 +34,6 @@ def connect_to_database(user, prefix="", create_tables=True, storage="/storage")
     #     },
     # }
 
-    # dj.config['query_cache'] = os.path.expanduser('~/dj_query_cache') # todo(mary) make caching work
-
     dj.config["database.misc.schema_prefix"] = prefix
     dj.config["database.misc.create_tables"] = create_tables
     dj.config["enable_python_native_blobs"] = True
@@ -45,10 +43,8 @@ def connect_to_database(user, prefix="", create_tables=True, storage="/storage")
     dj.config["database.password"] = user.password
 
     conn = dj.conn()
-    # activate query caching for a namespace called 'main'
-    # conn.set_query_cache(query_cache='v1_')
 
-
+    
 def get_schema(name, _locals):
     """
     Returns a DataJoint schema object for the given name.

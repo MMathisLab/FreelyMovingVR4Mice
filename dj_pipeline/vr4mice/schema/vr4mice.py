@@ -138,11 +138,8 @@ class MouseState(dj.Manual):  # variable State
     mouse_report_correct: longblob  # mouse_report_correct
     report_left: longblob   # mouse_reports_left
     report_right: longblob  # mouse_reports right
-
     velocity=NULL: longblob # new
-    
     """
-
     # frame_flip: longblob    # new
 
 
@@ -209,7 +206,7 @@ class Metadata(dj.Manual):
     
     targets_height: longblob            # the distance between the targets
     target_from_midline: longblob       # the distance between the targets and the ground   (500*floats)
-    
+
     targets_z_pos=NULL: longblob             # new
     target_rotation=NULL: longblob           # new
     target_distance=NULL: longblob           # new
@@ -222,9 +219,7 @@ class Metadata(dj.Manual):
     camera_selection=NULL: longblob          # new
     target_selection=NULL: longblob          # new
     distractor_selection=NULL: longblob      # new
-    
     """
-
 
 @schema
 class Box(dj.Manual):
