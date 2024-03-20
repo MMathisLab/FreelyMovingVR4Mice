@@ -1,7 +1,7 @@
 import sys
 
 from vr4mice.utils.logger import Logger, config_logger
-from vr4mice.utils.connect import connect
+from base_actions.connect import connect
 
 """
     The main script that is entry point for all interactions with database:
@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     mode = sys.argv[1]
 
-    connect(tag="test_")
+    connect(tag="")  # to check: last from Oct: v1_
 
     if mode == "set_mouse":
         from test.generators.fake_mice import insert_fake_mouse
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     elif mode == "populate":
         from vr4mice.actions.populate_rig import populate_rig
 
-        populate_rig(path="/storage/data")
+        populate_rig(path="/data/data")
 
     elif mode == "fetch":
         from vr4mice.actions.fetch_data import fetch_data
@@ -45,9 +45,12 @@ if __name__ == "__main__":
     elif mode == "connect":
         from vr4mice.schema import vr4mice
 
+        pass
+
     elif mode == "update":  # sync with main: missing data in existed tables
         pass
 
     elif mode == "sync_days":
         from vr4mice.actions.sync_days import sync_days
-        sync_days(path="/storage/data")
+
+        sync_days(path="/data/data")

@@ -4,17 +4,17 @@ services:
     image: datajoint/mysql:5.7 
     container_name: vr4mice_db
     ports:
-      - "3306:3306"
+            - "127.0.0.1:3309:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=simple
     volumes:
-      - /mnt/md0/vr4mice_database/database:/var/lib/mysql
-  app:
+      - /mnt/database/vr4mice/vr4mice_database/database/:/var/lib/mysql
+  client:
     image: "vr4mice_app"
     container_name: vr4mice
     build:
       context: .
-      dockerfile: docker/client/Dockerfile
+      dockerfile: Dockerfile
       args:
         - user
         - usern
@@ -23,15 +23,24 @@ services:
     #    - db
     volumes:
         - "./:/app"
-          #- "/shared:/shared"
-          #  - "/mnt/md0/vr4mice_database/data:/storage"
+          #- "/shared:/shared" TODO: reorginize folders
+ 
+        - "/mnt/database/vr4mice/vr4mice_database/data:/data"
+        - "./base/base_min_schemas:/base_schemas"
+        - "./base/base_actions:/base_actions"
+
+          #- "/mnt/database/auxPipelines-DataJoint_Mathis/vr_wheels:/app"
+          #- "/mnt/database/auxPipelines-DataJoint_Mathis/base_schemas:/base_schemas"
+          #- "/mnt/database/auxPipelines-DataJoint_Mathis/base_actions:/base_actions"
+          #- "/mnt/database/data/:/data"
+          #- "/mnt/database/shared:/shared"
+
     working_dir: /app
     environment:
-      - DJ_HOST="127.0.0.1"
+      - DJ_HOST="127.0.0.1:3309"
       - DJ_USER=root
       - DJ_PWD=simple
       - DJ_SUPPORT_FILEPATH_MANAGEMENT=TRUE
       - DJ_SUPPORT_ADAPTED_TYPES=TRUE
-      - STORAGE="/storage"
     stdin_open: true
     tty: true

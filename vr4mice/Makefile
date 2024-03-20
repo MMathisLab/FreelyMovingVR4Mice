@@ -1,13 +1,76 @@
-build:
-	@docker-compose build --build-arg user=$(shell id -u) --build-arg usern=$(shell id -un) --no-cache
-up:
-	@docker-compose up  -d #--abort-on-container-exit --exit-code-from client_app
-down:
+git_repo :=auxPipelines-DataJoint_Mathis
+mount :=/mnt/database
+base_schemas_path="$(mount)/$(git_repo)/base_schemas"
+base_actions_path="$(mount)/$(git_repo)/base_actions"
+#todo: add commit in docker build
+
+BUILD_ARGS := \
+	--build-arg uid=$(shell id -u) \
+	--build-arg gid=$(shell id -g) \
+       	--build-arg user_name=$(shell id -un) #\
+	#--build-arg base_schemas_path="." \
+	#--build-arg base_actions_path="." #\
+	#--no-cache
+
+build_all:
+	#@cp -r $(base_schemas_path) . && \
+	#cp -r $(base_actions_path) . && \
+
+	@docker-compose build $(BUILD_ARGS)
+	@docker-compose up -d
+
+	#@cd $(mount)/DataJoint_mathis/replication && ./set_up.sh
+	
+	#rm -r base_schemas && \
+	#rm -r base_actions
+
+up_all:
+	@docker-compose up -d
+	@docker-compose exec client bash -c "pip install /base_schemas/ ; pip install /base_actions/" 1>/dev/null
+
+base_install:
+	@docker-compose exec client bash -c "pip install /base_schemas/ ; pip install /base_actions/" 1>/dev/null
+
+#@cd $(mount)/DataJoint_mathis/replication && ./restart.sh
+
+down_all:
 	@docker-compose down
 
-build_client:
-	@docker-compose build --build-arg user=$(shell id -u) --build-arg usern=$(shell id -un) app
-up_client:
-	@docker-compose up -d app
+replica_set_up:
+	@cd $(mount)/replication && ./set_up.sh
+
+replica_restart:
+	@cd $(mount)/replication && ./restart.sh
+
+client_build:
+	#@cp -r $(base_schemas_path) . && \
+	#cp -r $(base_actions_path) . && \
+	
+	docker-compose build $(BUILD_ARGS) client #&& \
+	#rm -r base_schemas && \
+	#rm -r base_actions
+
+client_up:
+	@docker-compose up -d client
+	@docker-compose exec client bash -c "pip install /base_schemas/ ; pip install /base_actions/" 1>/dev/null
+
+client_up_scale: client_build
+	@docker-compose up -d --scale client=2
+
+client_stop:
+	@docker-compose stop client
+
+client_rm:
+	@docker-compose rm client
+
+client_down: client_stop
+	@docker-compose rm client
+
 ipython:
-	docker-compose exec app ipython	
+	@docker-compose exec client ipython
+
+bash:
+	@docker-compose exec client bash
+
+mysql:
+	@mysql --defaults-group-suffix=-vr4mice -A
