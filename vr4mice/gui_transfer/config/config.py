@@ -71,40 +71,40 @@ def get_system_config(config_path="default", config_name="config.json"):
 
 class Config:
     """
-       A class for managing system configuration settings.
+    A class for managing system configuration settings.
 
-       Attributes:
-       -----------
-       config_dict : dict
-           A dictionary containing the configuration settings loaded from the config file.
-       cache_file : str
-           A string representing the path to the cache file.
+    Attributes:
+    -----------
+    config_dict : dict
+        A dictionary containing the configuration settings loaded from the config file.
+    cache_file : str
+        A string representing the path to the cache file.
 
-       Methods:
-       --------
-       get_ip()
-           Returns the IP address of the configured system.
-       get_host()
-           Returns the host address of the configured system.
-       get_dst_path()
-           Returns the destination path for remote files.
-       get_menu_path()
-           Copies the remote dropdown menu to the local host and returns its path.
-       get_gui_output_folder_path()
-           Returns the path to the configured GUI output folder.
-       get_cache_file_path()
-           Returns the path to the cache file.
-       get_processed_path()
-           Returns the path to the configured processed data folder.
-       get_path(key)
-           Returns the path for a given key.
-       get_config(key)
-           Returns the configuration value for a given key.
-       update(key, value)
-           Updates the value for a given configuration key.
+    Methods:
+    --------
+    get_ip()
+        Returns the IP address of the configured system.
+    get_host()
+        Returns the host address of the configured system.
+    get_dst_path()
+        Returns the destination path for remote files.
+    get_menu_path()
+        Copies the remote dropdown menu to the local host and returns its path.
+    get_gui_output_folder_path()
+        Returns the path to the configured GUI output folder.
+    get_cache_file_path()
+        Returns the path to the cache file.
+    get_processed_path()
+        Returns the path to the configured processed data folder.
+    get_path(key)
+        Returns the path for a given key.
+    get_config(key)
+        Returns the configuration value for a given key.
+    update(key, value)
+        Updates the value for a given configuration key.
 
-        Todo: check that all default paths exist
-       """
+     Todo: check that all default paths exist
+    """
 
     config_dict = get_system_config(config_path="default", config_name="config.json")
     cache_file = Path(__file__).parent.absolute().joinpath("cache.json")
@@ -119,11 +119,11 @@ class Config:
 
     @property
     def get_dst_path(self):
-        return self.config_dict["remote_dst"]   #todo make here : video/data
+        return self.config_dict["remote_dst"]  # todo make here : video/data
 
     @property
     def get_menu_path(self):
-        #scp
+        # scp
         ip = self.get_ip
         if ip != "localhost":
             host = self.get_host
