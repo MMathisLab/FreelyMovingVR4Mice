@@ -1,0 +1,36 @@
+*.ipynb
+data/
+s3/
+tmp/
+logs/
+
+# Libraries
+*.lvlibp
+*.llb
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+
+# Metadata
+*.aliases
+*.lvlps
+
+# cached files
+__pycache__/
+.ipynb_checkpoints/
+
+# files for testing
+
+# ignore personal login information for server
+
+*local_config.json
+*config.json
+*cache.json
+*.npy
+
