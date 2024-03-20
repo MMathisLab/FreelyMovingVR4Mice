@@ -19,21 +19,14 @@ services:
         - user
         - usern
     network_mode: host
-    #depends_on:
-    #    - db
     volumes:
         - "./:/app"
-          #- "/shared:/shared" TODO: reorginize folders
- 
+        - "/shared:/shared"
+
         - "/mnt/database/vr4mice/vr4mice_database/data:/data"
+
         - "./base/base_min_schemas:/base_schemas"
         - "./base/base_actions:/base_actions"
-
-          #- "/mnt/database/auxPipelines-DataJoint_Mathis/vr_wheels:/app"
-          #- "/mnt/database/auxPipelines-DataJoint_Mathis/base_schemas:/base_schemas"
-          #- "/mnt/database/auxPipelines-DataJoint_Mathis/base_actions:/base_actions"
-          #- "/mnt/database/data/:/data"
-          #- "/mnt/database/shared:/shared"
 
     working_dir: /app
     environment:
