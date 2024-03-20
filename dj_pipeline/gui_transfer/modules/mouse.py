@@ -4,16 +4,18 @@ from PyQt5.QtCore import Qt
 from utils.alert import AlertMsg
 from utils.helpers import get_idx, get_size, get_step
 from modules.template import Template
+
 """
     Script contains the mouse related GUI module 
 """
 
+
 def _set_mice_labels():
     """
-        Creates a dictionary of labels to be used as prompts for user input during an experiment setup.
+    Creates a dictionary of labels to be used as prompts for user input during an experiment setup.
 
-        Returns:
-            dict: A dictionary containing labels for user prompts.
+    Returns:
+        dict: A dictionary containing labels for user prompts.
     """
     return {
         "mouse_name": "Select mouse name:",
@@ -23,39 +25,39 @@ def _set_mice_labels():
         "dob": "Date of birth (yyyy-mm-dd):",
         "sex": "Sex of the mouse:",
         "last_exp": "Last experiment (yyyy-mm-dd):",
-        "strain": "Mouse strain:"
+        "strain": "Mouse strain:",
     }
 
 
 class Mouse(Template):
     """
-       Represents a mouse-related GUI part.
+    Represents a mouse-related GUI part.
 
-       Args:
-           widget (QWidget): The parent widget for the template.
+    Args:
+        widget (QWidget): The parent widget for the template.
 
-       Attributes:
-           info (dict): Dictionary containing information about the mouse.
-           auto_mouse (bool): Flag indicating if the mouse is authorized to be updated
-                                automatically or not (ex. when new file is selected)
+    Attributes:
+        info (dict): Dictionary containing information about the mouse.
+        auto_mouse (bool): Flag indicating if the mouse is authorized to be updated
+                             automatically or not (ex. when new file is selected)
 
-       Methods:
-           set_mouse_info(mouse_dict, name=None):
-               Set the mouse information using a mouse dictionary and optional name.
-           _mouse_details(dj_dict, json_dict, **kwargs):
-               Selects a mouse in the combo box and initializes the GUI's form with labels to show the mouse information.
-           _selected_mouse_callback(event, dj_dict):
-               Fill the information buffer dictionary with selected mouse information.
-           update_mouse(mouse, dj_dict):
-               Updates the mouse name according to the selected file.
-           set_auto(val):
-               Set the auto_mouse attribute to True or False.
-           get_auto():
-               Returns the value of the auto_mouse attribute.
-           run(dj_dict, json_dict, date):
-               Runs the mouse details display.
+    Methods:
+        set_mouse_info(mouse_dict, name=None):
+            Set the mouse information using a mouse dictionary and optional name.
+        _mouse_details(dj_dict, json_dict, **kwargs):
+            Selects a mouse in the combo box and initializes the GUI's form with labels to show the mouse information.
+        _selected_mouse_callback(event, dj_dict):
+            Fill the information buffer dictionary with selected mouse information.
+        update_mouse(mouse, dj_dict):
+            Updates the mouse name according to the selected file.
+        set_auto(val):
+            Set the auto_mouse attribute to True or False.
+        get_auto():
+            Returns the value of the auto_mouse attribute.
+        run(dj_dict, json_dict, date):
+            Runs the mouse details display.
 
-       """
+    """
 
     def __init__(self, widget):
 
@@ -80,27 +82,27 @@ class Mouse(Template):
         """
         self.info = {
             "mouse_name": name,  # mouse
-            "start_date": mouse_dict['start_date'],  # inter
-            "day": mouse_dict['day'],  # ? session
-            "mouse_id": mouse_dict['mouse_id'],  # mouse
-            "dob": mouse_dict['dob'],  # mouse
-            "sex": mouse_dict['sex'],  # mouse
-            "last_exp": mouse_dict['last_exp'],  # inter
-            "strain": mouse_dict['strain']  # mouse/strain
+            "start_date": mouse_dict["start_date"],  # inter
+            "day": mouse_dict["day"],  # ? session
+            "mouse_id": mouse_dict["mouse_id"],  # mouse
+            "dob": mouse_dict["dob"],  # mouse
+            "sex": mouse_dict["sex"],  # mouse
+            "last_exp": mouse_dict["last_exp"],  # inter
+            "strain": mouse_dict["strain"],  # mouse/strain
         }
 
     def _mouse_details(self, dj_dict, json_dict, **kwargs):
         """
-            Function to select a mouse from a dropdown menu and display information about the mouse.
+        Function to select a mouse from a dropdown menu and display information about the mouse.
 
-            The function pre-initializes the GUI's form with labels that will later show information about the selected mouse.
-            For default values, the function uses data from a JSON cache.
+        The function pre-initializes the GUI's form with labels that will later show information about the selected mouse.
+        For default values, the function uses data from a JSON cache.
 
-            Args:
-                dj_dict (dict): A dictionary containing information about the mouse menu.
-                json_dict (dict): A dictionary containing cached information in JSON format.
-                **kwargs: Additional keyword arguments.
-            """
+        Args:
+            dj_dict (dict): A dictionary containing information about the mouse menu.
+            json_dict (dict): A dictionary containing cached information in JSON format.
+            **kwargs: Additional keyword arguments.
+        """
         section_name = "MOUSE DETAILS"
         label = QLabel(section_name)
         self.main_layout.addWidget(label)  # , alignment=Qt.AlignCenter)
@@ -127,16 +129,21 @@ class Mouse(Template):
 
             if key == "mouse_name":
                 self.values[key] = QComboBox(self.widget)
-                options = ['-'] + list(dj_dict['MouseDict'])  # list = unpack (get keys aka names)
+                options = ["-"] + list(
+                    dj_dict["MouseDict"]
+                )  # list = unpack (get keys aka names)
                 len_elm = get_size(options)
                 self.values[key].setFixedWidth(int(len_elm))
 
                 layout.addWidget(self.values[key], i, j + 1, alignment=Qt.AlignLeft)
                 self.values[key].addItems(options)
                 self.values[key].activated[str].connect(
-                    lambda evt, temp=dj_dict: self._selected_mouse_callback(evt, temp))
+                    lambda evt, temp=dj_dict: self._selected_mouse_callback(evt, temp)
+                )
                 if key in json_dict.keys():
-                    self.values[key].setCurrentText(json_dict[key])  # todo(mary) cache vs default
+                    self.values[key].setCurrentText(
+                        json_dict[key]
+                    )  # todo(mary) cache vs default
 
             else:
                 self.values[key] = QLabel("")
@@ -149,16 +156,16 @@ class Mouse(Template):
 
     def _selected_mouse_callback(self, event, dj_dict):
         """
-            Function to fill the information from selected mouse to the buffer info dictionary
-            Args:
-                name(str): mouse name
-                dj_dict(dict): menu dictionary
+        Function to fill the information from selected mouse to the buffer info dictionary
+        Args:
+            name(str): mouse name
+            dj_dict(dict): menu dictionary
         """
         # finding the content of current item in combo box
         name = self.values["mouse_name"].currentText()
 
-        if name in dj_dict['MouseDict'].keys():
-            mouse_dict = dj_dict['MouseDict'][name]
+        if name in dj_dict["MouseDict"].keys():
+            mouse_dict = dj_dict["MouseDict"][name]
         else:
             return False
 
@@ -185,10 +192,12 @@ class Mouse(Template):
             ret = dlg.exec()
             if ret == 1:
                 # update mouse
-                options = list(dj_dict['MouseDict'])
+                options = list(dj_dict["MouseDict"])
                 tmp = [x.lower() for x in options]
                 if mouse.lower() not in tmp:
-                    msg = "Mouse " + mouse + " doesn't exist in the database!"  # todo(mary) case sensitive
+                    msg = (
+                        "Mouse " + mouse + " doesn't exist in the database!"
+                    )  # todo(mary) case sensitive
                     AlertMsg(self.widget, msg).exec()
                     return False
                 for x in options:

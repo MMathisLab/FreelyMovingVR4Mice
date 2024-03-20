@@ -1,8 +1,14 @@
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QPushButton, QVBoxLayout
 from PyQt5.QtCore import QCoreApplication
 
-from utils.utils import check_missing_data, generate_file, \
-    transfer_files, get_filled_info, adjust_keys, move_files
+from utils.utils import (
+    check_missing_data,
+    generate_file,
+    transfer_files,
+    get_filled_info,
+    adjust_keys,
+    move_files,
+)
 from utils.alert import AlertMsg
 
 """
@@ -42,7 +48,8 @@ class Gui(QWidget):
         submit = QPushButton(self)
         submit.setText("Submit")
         submit.clicked.connect(
-            lambda evt, args=args: self._submit_callback((evt, args)))
+            lambda evt, args=args: self._submit_callback((evt, args))
+        )
 
         quit = QPushButton(self)
         quit.setText("Quit")
@@ -74,8 +81,12 @@ class Gui(QWidget):
 
         for key, a in args.items():
             if key != "transfer":
-                adjust_keys(info=a.get_info(), values=a.get_values(),
-                            primary_keys=a.get_primary_keys(), key2info=a.get_key2info())
+                adjust_keys(
+                    info=a.get_info(),
+                    values=a.get_values(),
+                    primary_keys=a.get_primary_keys(),
+                    key2info=a.get_key2info(),
+                )
 
         # generate output files
         npy_file, json_file = generate_file(args)
@@ -116,6 +127,6 @@ class Gui(QWidget):
 
     def run(self, args):
         """
-            entry point
+        entry point
         """
         self._navigation_buttons(args)

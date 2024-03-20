@@ -13,6 +13,7 @@ class AlertMsg(QDialog):
     (default: False).
 
     """
+
     def __init__(self, parent=None, msg="", cancel=False):
         if msg == "":
             return False

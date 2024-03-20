@@ -1,4 +1,5 @@
 import datajoint as dj
+import os
 
 
 def connect_to_database(user, prefix="", create_tables=True, storage="/storage"):
@@ -22,10 +23,10 @@ def connect_to_database(user, prefix="", create_tables=True, storage="/storage")
     - The create_tables argument is useful if you want to create tables in the database if they don't already exist.
     - The location argument is the location of the storage directory where DataJoint will store data files.
     """
-
-    ## Removed while filepath@data not in use.
+    
+    # deprecated
     # dj.config["stores"] = {
-    #     # read-only store
+    # read-only store
     #     "data": {
     #         "protocol": "file",
     #         "location": storage,
@@ -33,17 +34,17 @@ def connect_to_database(user, prefix="", create_tables=True, storage="/storage")
     #     },
     # }
 
-    dj.config['database.misc.schema_prefix'] = prefix
-    dj.config['database.misc.create_tables'] = create_tables
-    dj.config['enable_python_native_blobs'] = True
+    dj.config["database.misc.schema_prefix"] = prefix
+    dj.config["database.misc.create_tables"] = create_tables
+    dj.config["enable_python_native_blobs"] = True
 
-    dj.config['database.host'] = user.host
-    dj.config['database.user'] = user.name
-    dj.config['database.password'] = user.password
+    dj.config["database.host"] = user.host
+    dj.config["database.user"] = user.name
+    dj.config["database.password"] = user.password
 
-    dj.conn()
+    conn = dj.conn()
 
-
+    
 def get_schema(name, _locals):
     """
     Returns a DataJoint schema object for the given name.

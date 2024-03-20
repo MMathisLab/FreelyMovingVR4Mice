@@ -17,8 +17,8 @@ logger = Logger.get_logger()
 @schema
 class Camera(dj.Lookup):
     """
-        Camera definition table:
-        to be updated if new camera name comes
+    Camera definition table:
+    to be updated if new camera name comes
     """
 
     definition = """
@@ -30,10 +30,10 @@ class Camera(dj.Lookup):
 @schema
 class Dataset(dj.Manual):
     """
-        Dataset definition table:
-        stores dataset names, representing VR experiments;
-        keeps raw pickle and npy files
-        format: mouse_name_doe_attempt
+    Dataset definition table:
+    stores dataset names, representing VR experiments;
+    keeps raw pickle and npy files
+    format: mouse_name_doe_attempt
     """
 
     definition = """
@@ -63,9 +63,9 @@ class Dataset(dj.Manual):
 @schema
 class Video(dj.Manual):
     """
-        Video definition table:
-        Stores raw video files metadata, as well as timestamp files
-        and the path to the raw video on the rig's PC
+    Video definition table:
+    Stores raw video files metadata, as well as timestamp files
+    and the path to the raw video on the rig's PC
     """
 
     definition = """
@@ -73,12 +73,14 @@ class Video(dj.Manual):
     -> Camera    
     doe: date  # YYYY-MM-DD
     ---  
-    duration: int
-    fps: int
-    width: int
-    height: int
-    video_filepath: varchar(255)
-    timestamp_filepath: varchar(255)
+    duration=NULL: int
+    fps=NULL: int
+    width=NULL: int
+    height=NULL: int
+    video_filepath="": varchar(255)
+    timestamp_filepath="": varchar(255)
+    
+    camera_type=NULL: float 
     """
     # idx to reference the video in analysis table
 
@@ -86,11 +88,11 @@ class Video(dj.Manual):
 @schema
 class ModelName(dj.Lookup):
     """
-        ModelName definition table:
-        stores the names of the DLC models applied to the video analysis;
-        can be extended in case of the new model type;
-        currently associated with model name used in the dlc gui output
-     """
+    ModelName definition table:
+    stores the names of the DLC models applied to the video analysis;
+    can be extended in case of the new model type;
+    currently associated with model name used in the dlc gui output
+    """
 
     definition = """
     model_name: varchar(255)
@@ -102,9 +104,10 @@ class ModelName(dj.Lookup):
 @schema
 class DLC(dj.Manual):
     """
-       DLC definition table:
-       stores local paths to keypoints and processed keypoints files
+    DLC definition table:
+    stores local paths to keypoints and processed keypoints files
     """
+
     definition = """
     -> Video
     -> ModelName
@@ -117,9 +120,9 @@ class DLC(dj.Manual):
 @schema
 class MouseState(dj.Manual):  # variable State
     """
-        MouseState definition table:
-        stores mouse game-related position and events @todo(check thomas)
-        fetched from teensy output pickle file
+    MouseState definition table:
+    stores mouse game-related position and events @todo(check thomas)
+    fetched from teensy output pickle file
     """
 
     definition = """
@@ -135,16 +138,18 @@ class MouseState(dj.Manual):  # variable State
     mouse_report_correct: longblob  # mouse_report_correct
     report_left: longblob   # mouse_reports_left
     report_right: longblob  # mouse_reports right
+    velocity=NULL: longblob # new
     """
+    # frame_flip: longblob    # new
 
 
 @schema
 class State(dj.Manual):
     """
-         State definition table:
-         stores trial related information  @todo(thomas)
-         fetched from teensy output pickle file
-     """
+    State definition table:
+    stores trial related information  @todo(thomas)
+    fetched from teensy output pickle file
+    """
 
     definition = """
     -> MouseState
@@ -157,8 +162,13 @@ class State(dj.Manual):
     reward: longblob   
     terminal: longblob
     
-    mouse_report_delay: longblob
-               
+    mouse_report_delay=NULL: longblob
+    
+    start_box_delay=NULL: longblob       # new
+    velocity_threshold=NULL: longblob    # new
+    occlusion_type=NULL: longblob        # new
+    dlc_read_time=NULL: longblob         # new
+        
     dlc_x: longblob             # pos in dlc coords 
     dlc_y: longblob             # pos in dlc coords 
     dlc_heading: longblob       # pos in dlc coords 
@@ -168,9 +178,9 @@ class State(dj.Manual):
 @schema
 class Metadata(dj.Manual):
     """
-         Metadata definition table:
-         stores metadata @todo(thomas)
-         fetched from teensy output pickle file
+    Metadata definition table:
+    stores metadata @todo(thomas)
+    fetched from teensy output pickle file
     """
 
     # unity params
@@ -185,7 +195,9 @@ class Metadata(dj.Manual):
     
     start_box:  longblob               # the coordinates of the box that the mouse has to enter to start a trial
     camera_rotation: longblob          # the camera rotation, to make sure the right camera angle is displayed in the game
-    prop_obj_on_left: longblob         # the probability that the object of interest is one the left
+    prop_obj_on_left=NULL: longblob         # the probability that the object of interest is one the left
+    
+    obj_on_left=NULL: longblob              # the object of interest is one the left
     
     slit_size: longblob                # The size of the slit that the mouse has to look through
     slit_depth: longblob               # the depth of the slit 
@@ -194,15 +206,27 @@ class Metadata(dj.Manual):
     
     targets_height: longblob            # the distance between the targets
     target_from_midline: longblob       # the distance between the targets and the ground   (500*floats)
-    """
 
+    targets_z_pos=NULL: longblob             # new
+    target_rotation=NULL: longblob           # new
+    target_distance=NULL: longblob           # new
+
+    distractor=NULL: longblob                # new
+    target_size=NULL: longblob               # new
+    grey_screen_active=NULL: longblob        # new
+    session_label=NULL: longblob             # new
+    
+    camera_selection=NULL: longblob          # new
+    target_selection=NULL: longblob          # new
+    distractor_selection=NULL: longblob      # new
+    """
 
 @schema
 class Box(dj.Manual):
     """
-        Box definition table:
-        stores box positions @todo(thomas)
-        fetched from teensy output pickle file
+    Box definition table:
+    stores box positions @todo(thomas)
+    fetched from teensy output pickle file
     """
 
     definition = """

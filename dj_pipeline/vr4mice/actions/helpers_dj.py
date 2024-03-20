@@ -3,6 +3,7 @@ import os, shutil
 from base_schemas.schemas import mice
 from vr4mice.utils.logger import Logger
 from pathlib import Path
+
 """
     Ensemble of functions referenced in the "local definition" dictionary 
     for local definition of database attributes 
@@ -27,7 +28,7 @@ def get_session_incr(raw_data=None, **kwargs):
     """
 
     if raw_data is not None:
-        mouse = mice.Mouse() & 'mouse_name = "%s"' % raw_data['mouse_name']
+        mouse = mice.Mouse() & 'mouse_name = "%s"' % raw_data["mouse_name"]
         return mouse.get_session_increment()
     return None
 
@@ -37,6 +38,13 @@ def no_value(**kwargs):
     Used for "None" attributes
     """
     return "none"
+
+
+def get_camera_idx(**kwargs):
+    """
+    Default: 1
+    """
+    return 1
 
 
 def default(**kwargs):
@@ -50,7 +58,7 @@ def no_value_opto(**kwargs):
     """
     Used for no optogenetics case
     """
-    return ['none', -1, -1, -1, 'none', 'none', 'none']
+    return ["none", -1, -1, -1, "none", "none", "none"]
 
 
 def no_joystick(**kwargs):
@@ -89,10 +97,12 @@ def get_state(raw_data=None, key=None, **kwargs):
         "head_dir": 2,
         "mouse_can_report": 3,
         "iti": 4,
-        "obj_left": 5,
-        "mouse_report_correct": 6,
+        "mouse_report_correct": 5,  # todo: check idx
+        "obj_left": 6,
         "report_left": 7,
         "report_right": 8,
+        "velocity": 9,
+        # "frame_flip": 10
     }
 
     if key not in keys:
@@ -102,12 +112,16 @@ def get_state(raw_data=None, key=None, **kwargs):
     idx = keys[key]
 
     for s in raw_data["state"]:
-        data.append(s[idx])
-
+        if idx < len(s):
+            data.append(s[idx])
+        else:
+            data.append(None)
     return data
 
 
-def get_path(raw_data=None, key=None, transformer=None, **kwargs):
+def get_path(
+    raw_data=None, key=None, transformer=None, srcf="/data", dstf="processed", **kwargs
+):
     """
     A function that gets the path from the raw_data file, verifies that the file exists,
     and moves it in the processed folder.
@@ -121,10 +135,8 @@ def get_path(raw_data=None, key=None, transformer=None, **kwargs):
     Returns:
     str: The file path for the specified key or False if problem
 
-    Note: stage "/storage" is relative to the container and should be known by datajoint stores: foxed path
     Todo: support of multiple paths
     """
-    stages = "/storage"
     flag = False
 
     # exp session key doesn't exist in npy file, so adjusted here as has the same destination
@@ -132,7 +144,7 @@ def get_path(raw_data=None, key=None, transformer=None, **kwargs):
         key = "exp_teensy_filepath"
         flag = True
 
-    raw_key = transformer[key]
+    raw_key = transformer[key]  # note: assuming that for all paths needed - ??
     file_info = raw_data[raw_key]
     filename = file_info["filename"]
 
@@ -141,28 +153,28 @@ def get_path(raw_data=None, key=None, transformer=None, **kwargs):
         filename = str(filename) + ".npy"
 
     # windows paths conventions
-    src = file_info['dst'].replace("\\", "/")
+    src = file_info["dst"].replace("\\", "/")
     src = src.replace("//", "/")
     src = Path(src).name
     path = Path(src).joinpath(filename)
-    path = Path(stages).joinpath(path)
+    path = Path(srcf).joinpath(path)
 
     if path.exists():
         parent = path.parent
 
         if parent.name == "data":
-            processed = Path(parent.parent).joinpath("processed")
+            processed = Path(parent.parent).joinpath(dstf)
             if not os.path.exists(processed):
                 os.makedirs(processed)
             processed = processed.joinpath(filename)
             shutil.move(path, processed)
 
-            logger.info(str(path) + " --> " + str(processed))
+            logger.info("Moving: " + str(path) + " --> " + str(processed))
 
             path = str(processed)
         return path
     else:
-        logger.info("[PROBLEM]:" + str(path))
+        logger.warning("Path doesn not exist: " + str(path))
         return False  # todo err
 
 
@@ -170,15 +182,17 @@ def get_remote_path(raw_data=None, key=None, transformer=None, **kwargs):
     raw_key = transformer[key]
     file_info = raw_data[raw_key]  # todo multiple paths... ? for dlc
     filename = file_info["filename"]
-    src = file_info['src']
-    path = Path(src).joinpath(filename)
-    return str(path)
+    src = file_info["src"]
+    if src:
+        path = Path(src).joinpath(filename)
+        return str(path)
+    return None
 
 
 def get_model_name(raw_data=None, key=None, transformer=None, **kwargs):
     """
-        Extracts the model name from the dlc file name
-        todo: if multiple paths/make user select model
+    Extracts the model name from the dlc file name
+    todo: if multiple paths/make user select model
     """
     file_info = raw_data["dlc_path"]
     filename = file_info["filename"]
@@ -189,8 +203,8 @@ def get_model_name(raw_data=None, key=None, transformer=None, **kwargs):
 
 def get_camera(raw_data=None, key=None, transformer=None, **kwargs):
     """
-        Extracts the camera name from the dlc file name
-        todo: if multiple paths/make user select camera name
+    Extracts the camera name from the dlc file name
+    todo: if multiple paths/make user select camera name
     """
     file_info = raw_data["dlc_path"]
     filename = file_info["filename"]
@@ -201,6 +215,6 @@ def get_camera(raw_data=None, key=None, transformer=None, **kwargs):
 
 def get_video_meta(raw_data=None, key=None, **kwargs):
     """
-        Extracts video's metadata
+    Extracts video's metadata
     """
     return raw_data["video_meta"][key]

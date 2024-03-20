@@ -5,7 +5,7 @@ from base_schemas.schemas import mice
     Minimal Schema version for experimental information
 """
 
-schema = dj.schema('exp', locals(), create_tables=True)
+schema = dj.schema("exp", locals(), create_tables=True)
 
 
 @schema
@@ -18,9 +18,7 @@ class Experimenter(dj.Lookup):
 
     """
 
-    contents = [
-        ['user', 'Test User']
-    ]
+    contents = [["user", "Test User"]]
 
 
 @schema
@@ -31,7 +29,7 @@ class Anesthesia(dj.Lookup):
     anesthesia_details = ''     : varchar(1024) # longer description
     """
     contents = [
-        ['awake', 'mouse is awake and no immediate hx of anesthesia'],
+        ["awake", "mouse is awake and no immediate hx of anesthesia"],
     ]
 
 
@@ -43,7 +41,7 @@ class Rig(dj.Lookup):
     details       : varchar(2048)   # Description of the setup
     """
     contents = [
-        [1, 'AR'],
+        [1, "AR"],
     ]
 
 
@@ -56,7 +54,7 @@ class OptogeneticsRegion(dj.Lookup):
     opto_region_details = ''  : varchar(2048)   # brain region
     """
     contents = [
-        ['none', 'no optogenetics was applied during the session'],
+        ["none", "no optogenetics was applied during the session"],
     ]
 
 
@@ -69,7 +67,7 @@ class OptogeneticsTiming(dj.Lookup):
     opto_timing_details = ''  : varchar(2048)   # details about timing
     """
     contents = [
-        ['none', ''],
+        ["none", ""],
     ]
 
 
@@ -81,7 +79,7 @@ class OptogeneticsVariant(dj.Lookup):
     opto_variant_details = ''  : varchar(2048)  # details about the variant
     """
     contents = [
-        ['none', 'no optogentics used'],
+        ["none", "no optogentics used"],
     ]
 
 
@@ -89,7 +87,7 @@ class OptogeneticsVariant(dj.Lookup):
 class Optogenetics(dj.Lookup):
     definition = """  # Optogenetics used in the session
 
-    opto_name     : char(128)   # optogenetic protocol abbreviation
+    opto_name     : char(128)   # optogenetic protocoll abbreviation
     -----
     pulse_frequency    : double      # Pulse frequency in Hz
     pulse_length       : double      # Pulse length in ms
@@ -99,7 +97,7 @@ class Optogenetics(dj.Lookup):
     -> OptogeneticsVariant
     """
     contents = [
-        ['none', -1, -1, -1, 'none', 'none', 'none'],
+        ["none", -1, -1, -1, "none", "none", "none"],
     ]
 
 
@@ -111,14 +109,18 @@ class Task(dj.Lookup):
     task_details = ''  : varchar(2048)
     """
 
-    __ar_tasks = [['AR_visual_discrimination',
-                   'mouse in AR has to decide which side a white cube is on by reporting its location at the lick port']]
+    __ar_tasks = [
+        [
+            "AR_visual_discrimination",
+            "mouse in AR has to decide which side a white cube is on by reporting its location at the lick port",
+        ]
+    ]
     contents = [
         *__ar_tasks,
     ]
 
     __pipeline_to_tasks = {
-        'ar': __ar_tasks,
+        "ar": __ar_tasks,
     }
 
     @classmethod
@@ -146,7 +148,10 @@ class Session(dj.Manual):
 
     @classmethod
     def get_sessions_for_pipeline(cls, pipeline_name):
-        return cls & ["task_name = '{}'".format(task) for task in Task.get_pipeline_task_names(pipeline_name)]
+        return cls & [
+            "task_name = '{}'".format(task)
+            for task in Task.get_pipeline_task_names(pipeline_name)
+        ]
 
 
 @schema

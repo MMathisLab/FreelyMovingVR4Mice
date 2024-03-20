@@ -11,14 +11,15 @@ from modules.exp import Exp
 from modules.opto import Opto
 from modules.transfer import Transfer
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     menu = config.get_menu_path
     if menu is False:
         sys.exit()
 
-    dj_dict, date, json_dict = load_dj_input(path_dj_data=menu,
-                                             path_json=config.get_cache_file_path)
+    dj_dict, date, json_dict = load_dj_input(
+        path_dj_data=menu, path_json=config.get_cache_file_path
+    )
 
     app = QApplication(sys.argv)
     elms = dict()
@@ -38,10 +39,8 @@ if __name__ == '__main__':
             exp.get_nick(): exp,
             opto.get_nick(): opto,
         }
-        sys_elms = {
-            transfer.get_nick(): transfer
-        }
-        # start to run (in order of appearance)
+        sys_elms = {transfer.get_nick(): transfer}
+        # start to run (in order of appereance)
 
         for v in dj_elms.values():
             v.run(dj_dict, json_dict, date)
