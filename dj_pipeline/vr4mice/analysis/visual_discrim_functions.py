@@ -174,11 +174,11 @@ def load_and_sync_dlc_w_game(mouse_name, date, attempt, path, game_data):
     
     df_out = pd.concat([game_data, dlc_var], axis=1)
     
-    df_out["heading_angle_velocity"] = np.gradient(df_out.head_angle, df_out.time_elapsed) #df_out.head_angle.diff()
+    df_out["head_angle_velocity"] = np.gradient(df_out.head_angle, df_out.time_elapsed) #df_out.head_angle.diff()
     df_out["heading_dir_velocity"] = np.gradient(df_out.heading_dir, df_out.time_elapsed) #df_out.heading_dir.diff()
     
-    df_out["heading_angle_acceleration"] = np.gradient(df_out.heading_angle_velocity, df_out.time_elapsed) #df_out.head_angle.diff()
-    df_out["heading_dir_accleration"] = np.gradient(df_out.heading_dir_velocity, df_out.time_elapsed) #df_out.heading_dir.diff()
+    df_out["head_angle_acceleration"] = np.gradient(df_out.head_angle_velocity, df_out.time_elapsed) #df_out.head_angle.diff()
+    df_out["heading_dir_acceleration"] = np.gradient(df_out.heading_dir_velocity, df_out.time_elapsed) #df_out.heading_dir.diff()
     
     return df_out
 
@@ -298,33 +298,6 @@ def get_spatial_normalisation_params(data, spatial_ybins = [-13, 24, 50]):
     data["bin_centres"] = data["bins"].apply(lambda x: x.mid).astype("float") - 25
     return data
 
-def predict_decision(df, label="norm_x", n_splits=10):
-    """Predict the decision of the animal based on the `label` data, through a logistic regression.
-
-    Args:
-        df: The dataframe.
-        label: The name of the column in the `df` dataframe.
-        n_splits: The number of splits fo the cross validation.
-
-    Returns:
-        The initial dataframe with an extra `pred` column, containing the probability that the 
-        animal went to the right.
-    """
-    
-    data = df[label].values
-    labels = df.trial_R_choice.values
-    
-    data = data.reshape(-1,1)
-    pred = np.empty((data.shape[0], 2))
-    
-    kf = sklearn.model_selection.KFold(n_splits=n_splits)
-    for i, (train_index, test_index) in enumerate(kf.split(data)):
-        clf = sklearn.linear_model.LogisticRegression().fit(data[train_index], labels[train_index])
-        pred[test_index] = clf.predict_proba(data[test_index])
-        
-    df.loc[:,"pred"] = pred[:,1]
-    
-    return df
 
 
 def interpolate_group(group, n_points, interpolation_columns, value_columns):
