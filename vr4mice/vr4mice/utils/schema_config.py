@@ -1,4 +1,5 @@
 import datajoint as dj
+import os
 
 
 def connect_to_database(user, prefix="", create_tables=True, storage="/storage"):
@@ -23,24 +24,29 @@ def connect_to_database(user, prefix="", create_tables=True, storage="/storage")
     - The location argument is the location of the storage directory where DataJoint will store data files.
     """
 
-    dj.config["stores"] = {
-        # read-only store
-        "data": {
-            "protocol": "file",
-            "location": storage,
-            "stage": storage
-        },
-    }
+    # deprecated
+    # dj.config["stores"] = {
+    # read-only store
+    #     "data": {
+    #         "protocol": "file",
+    #         "location": storage,
+    #         "stage": storage
+    #     },
+    # }
 
-    dj.config['database.misc.schema_prefix'] = prefix
-    dj.config['database.misc.create_tables'] = create_tables
-    dj.config['enable_python_native_blobs'] = True
+    # dj.config['query_cache'] = os.path.expanduser('~/dj_query_cache') # todo(mary) make caching work
 
-    dj.config['database.host'] = user.host
-    dj.config['database.user'] = user.name
-    dj.config['database.password'] = user.password
+    dj.config["database.misc.schema_prefix"] = prefix
+    dj.config["database.misc.create_tables"] = create_tables
+    dj.config["enable_python_native_blobs"] = True
 
-    dj.conn()
+    dj.config["database.host"] = user.host
+    dj.config["database.user"] = user.name
+    dj.config["database.password"] = user.password
+
+    conn = dj.conn()
+    # activate query caching for a namespace called 'main'
+    # conn.set_query_cache(query_cache='v1_')
 
 
 def get_schema(name, _locals):

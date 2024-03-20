@@ -5,7 +5,7 @@ from vr4mice.utils.logger import Logger, config_logger
 from vr4mice.utils.schema_config import connect_to_database
 
 """
-    Script with different connection modes based on the number of input arguments:
+    Script with different connexion modes based on the number of input arguments:
     The address of database precised in the DJ_HOST env variable,
     If the password as the same as the name it can be used as the one input argument
     
@@ -31,14 +31,16 @@ def connect(tag, db_host=os.environ["DJ_HOST"]):
         elif len(sys.argv) == 3:
             pwd = sys.argv[2]
 
-        connect_to_database(LoginUser(user_name=name,
-                                      user_password=pwd,
-                                      db_host=db_host),
-                            prefix=tag,
-                            create_tables=True)
-                            #storage="app")
+        connect_to_database(
+            LoginUser(user_name=name, user_password=pwd, db_host=db_host),
+            prefix=tag,
+            create_tables=True,
+            storage="app",
+        )
     else:
-        connect_to_database(LoginUser(),  # db_host=db_host),
-                            prefix=tag,
-                            create_tables=True)
-                            #storage="app")
+        connect_to_database(
+            LoginUser(),  # db_host=db_host),
+            prefix=tag,
+            create_tables=True,
+            storage="app",
+        )

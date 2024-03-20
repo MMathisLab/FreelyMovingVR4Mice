@@ -2,9 +2,11 @@ import datajoint as dj
 import logging
 from datetime import datetime as dt
 from pathlib import Path
+
 """
     Logger initialisation script
 """
+
 
 class Logger:
     __logger = None
@@ -39,7 +41,8 @@ class Logger:
             stream_handler = logging.StreamHandler()
             # different formatter, more readable in console
             stream_formatter = formatter = logging.Formatter(
-                "%(asctime)-s::%(levelname)s::%(filename)s::%(message)s")
+                "%(asctime)-s::%(levelname)s::%(filename)s::%(message)s"
+            )
             stream_handler.setFormatter(stream_formatter)
             logger.addHandler(stream_handler)
 
