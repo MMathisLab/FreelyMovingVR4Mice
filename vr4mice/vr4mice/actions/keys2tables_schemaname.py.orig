@@ -5,18 +5,18 @@
 """
 
 local_def = {
-    "attributeB": functionB,
-    "attributeY": no_value_function,
-}
+    'attributeB': functionB,
+    'attributeY': no_value_function,
+    }
 
 table1 = [
-    "attributeX",
-    "attributeY",
+    'attributeX',
+    'attributeY',
 ]
 
 table2 = [
-    "attributeA",
-    "attributeB",
+    'attributeA',
+    'attributeB',
 ]
 
 tables = {
@@ -54,5 +54,6 @@ base = {
     "tables": tables,
     "dj_tables": dj_tables,
     "local_def": local_def,
-    "transformer": transformer,
+    "transformer": transformer
 }
+
