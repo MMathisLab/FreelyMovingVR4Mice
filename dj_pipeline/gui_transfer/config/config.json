@@ -1,7 +1,7 @@
 {
   "ip": "localhost",
   "host": "",
-
+  
   "remote_dropdown_menu": "/home/vr4mice/test_menu.npy",
   "host_dropdown_menu": "/home/vr4mice/gui_transfer/test_menu.npy",
 

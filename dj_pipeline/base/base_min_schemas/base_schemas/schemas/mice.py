@@ -9,7 +9,7 @@ import datajoint as dj
 import PIL.Image
 from base_schemas.utils import datastore
 
-schema = dj.schema('mice', locals(), create_tables=True)
+schema = dj.schema("mice", locals(), create_tables=True)
 
 
 @schema
@@ -22,7 +22,7 @@ class Strain(dj.Lookup):
     stock_number    : varchar(255)
     """
     contents = [
-        ['N/A', 'N/A', 'N/A'],
+        ["N/A", "N/A", "N/A"],
     ]
 
 
@@ -59,12 +59,14 @@ class Mouse(dj.Manual):
             minimum date of all the experiments in the query result.
         """
 
-        if len(self) != 1: # Check if self corresponds only to a single mouse
-            raise Exception('Query resulted in %i mice! Only 1 result allowed...' % len(self))
+        if len(self) != 1:  # Check if self corresponds only to a single mouse
+            raise Exception(
+                "Query resulted in %i mice! Only 1 result allowed..." % len(self)
+            )
 
         from . import exp
 
-        daysOfExperiments = (exp.Session() & self).fetch('doe')
+        daysOfExperiments = (exp.Session() & self).fetch("doe")
         if len(daysOfExperiments) > 0:
             startDate = min(daysOfExperiments)
         else:
@@ -89,6 +91,7 @@ class Mouse(dj.Manual):
             return 1
 
         import datetime
+
         dateToday = datetime.date.today()
         return (dateToday - startDate).days + 1
 
@@ -113,12 +116,14 @@ class Mouse(dj.Manual):
         - If there are no sessions in the current query result, the session increment is assumed to be 0.
         """
 
-        if len(self) != 1: # Check if self corresponds only to a single mouse
-            raise Exception('Query resulted in %i mice! Only 1 result allowed...' % len(self))
+        if len(self) != 1:  # Check if self corresponds only to a single mouse
+            raise Exception(
+                "Query resulted in %i mice! Only 1 result allowed..." % len(self)
+            )
 
         from . import exp
 
-        sessionNumbers = (exp.Session() & self).fetch('session_increment')
+        sessionNumbers = (exp.Session() & self).fetch("session_increment")
         if len(sessionNumbers) > 0:
             return max(sessionNumbers) + 1
         else:
@@ -133,7 +138,7 @@ class SurgeryType(dj.Lookup):
     ---
     """
     contents = [
-        ['N/A'],
+        ["N/A"],
     ]
 
 
@@ -178,7 +183,7 @@ class MouseLicensingGeneva(dj.Lookup):
     informal_title     : varchar(2048)
     """
     contents = [
-        ['N/A', 'default licence'],
+        ["N/A", "default licence"],
     ]
 
 
@@ -193,11 +198,11 @@ class MouseScoreSheet_BodyCondition(dj.Lookup):
     
     """
     contents = [
-        ['BodyCondition1', 'emaciated'],
-        ['BodyCondition2', 'under-conditioned'],
-        ['BodyCondition3', 'well-conditioned'],
-        ['BodyCondition4', 'over-conditioned'],
-        ['BodyCondition5', '5 obese'],
+        ["BodyCondition1", "emaciated"],
+        ["BodyCondition2", "under-conditioned"],
+        ["BodyCondition3", "well-conditioned"],
+        ["BodyCondition4", "over-conditioned"],
+        ["BodyCondition5", "5 obese"],
     ]
 
 
@@ -210,11 +215,11 @@ class MouseScoreSheet_GeneralAssay(dj.Lookup):
     define_score     : varchar(2048)
     """
     contents = [
-        ['Assay1', '1 or less euthanize cannot not aroused'],
-        ['Assay2', '2 or less euthanize unable to rouse without large stim'],
-        ['Assay3', '3 not groomed slow movements'],
-        ['Assay4', '4 slightly lethargic'],
-        ['Assay5', '5 normal behavior'],
+        ["Assay1", "1 or less euthanize cannot not aroused"],
+        ["Assay2", "2 or less euthanize unable to rouse without large stim"],
+        ["Assay3", "3 not groomed slow movements"],
+        ["Assay4", "4 slightly lethargic"],
+        ["Assay5", "5 normal behavior"],
     ]
 
 
@@ -227,8 +232,8 @@ class MouseScoreSheet_HousingAssesment(dj.Lookup):
     define_score     : varchar(2048)
     """
     contents = [
-        ['Yes', 'animal built housing as normal'],
-        ['No', 'watch animal for signs of stress'],
+        ["Yes", "animal built housing as normal"],
+        ["No", "watch animal for signs of stress"],
     ]
 
 

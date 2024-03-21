@@ -1,6 +1,4 @@
-from PyQt5.QtWidgets import QLabel, QGridLayout, QTextEdit, \
-    QPushButton, \
-    QFileDialog
+from PyQt5.QtWidgets import QLabel, QGridLayout, QTextEdit, QPushButton, QFileDialog
 
 from utils.helpers import get_max, get_pattern
 from modules.template import Template
@@ -53,8 +51,12 @@ def _set_path_format():
         "teensy_path": "*_*_?.pickle",
         "video_path": ["*_*_*_*.avi", "*_*_*_*_VIDEO.*"],  # get video type, duration
         "camera_path": ["TIMESTAMP_*_*_*.npy", "TS_*_*_*.npy", "*_*_*_TS.npy"],
-        "dlc_path": ["*DLC*.h5", "*DLC*_meta.pickle", "*_*_*_*_DLC.hdf5"],  # precise type : model name
-        "proc_path": ["*PROC"]
+        "dlc_path": [
+            "*DLC*.h5",
+            "*DLC*_meta.pickle",
+            "*_*_*_*_DLC.hdf5",
+        ],  # precise type : model name
+        "proc_path": ["*PROC"],
     }
 
 
@@ -112,6 +114,7 @@ class Transfer(Template):
     """
     Class to handle file transfer.
     """
+
     def __init__(self, widget, keys=None):
         """
         Initialize Transfer class.
@@ -218,7 +221,7 @@ class Transfer(Template):
         Returns:
           list: The processed files.
         """
-        args = ['gui_output', 'teensy_path']
+        args = ["gui_output", "teensy_path"]
         ret = list()
         for a in args:
             ret.append(self.get_transfer_files(key=a))
@@ -242,7 +245,7 @@ class Transfer(Template):
             args (dict): The arguments dictionary
                         that contains links to other fields of gui, to have access to mouse/exp/opto
         """
-        section_name = 'FILES FOR TRANSFER'
+        section_name = "FILES FOR TRANSFER"
         label = QLabel(section_name)
         self.main_layout.addWidget(label)
         label.setStyleSheet("font-weight: bold")
@@ -260,12 +263,15 @@ class Transfer(Template):
             # no_file.setText("no file")
             # layout.addWidget(no_file, i, j) #todo(mary)
 
-            msg = 'Add ' + self.get_labels(key) + ' file'
+            msg = "Add " + self.get_labels(key) + " file"
             file_browse = QPushButton(msg)
             file_browse.setFixedWidth(len_elm)
 
             file_browse.clicked.connect(
-                lambda evt, key=key, args=args: self._open_file_dialog(evt, key, dj_dict, args))
+                lambda evt, key=key, args=args: self._open_file_dialog(
+                    evt, key, dj_dict, args
+                )
+            )
 
             layout.addWidget(file_browse, i, j)
             self.files_labels[key] = QTextEdit("")  # QLabel("")
@@ -301,25 +307,27 @@ class Transfer(Template):
         format = self.get_format(key)
         multiple_on = False
 
-        if multiple_on and key == "dlc_path":  # todo automatically for certain cases/pre-selection
+        if (
+            multiple_on and key == "dlc_path"
+        ):  # todo automatically for certain cases/pre-selection
             filenames, _ = QFileDialog.getOpenFileNames(
                 self.widget,
                 "Select Files",
                 config.get_path(key),
-                "Images (" + get_pattern(key, format) + ")"
+                "Images (" + get_pattern(key, format) + ")",
             )
         else:
             filenames, _ = QFileDialog.getOpenFileName(
                 self.widget,
                 "Select Files",
                 config.get_path(key),  # where
-                "Images (" + get_pattern(key, format) + ")"
+                "Images (" + get_pattern(key, format) + ")",
             )
 
         if filenames is not None and len(filenames) > 0:
             mice_part = mouse.values != dict()
 
-            if mice_part:  # mouse was already set   #TODO for all cases re-new
+            if mice_part:  # mouse was already set  #TODO for all cases re-new
                 current_mouse = mouse.values["mouse_name"].currentText()
 
             ret = check_files(key, filenames, self.get_format(key))  # todo adjust
@@ -330,7 +338,11 @@ class Transfer(Template):
             if isinstance(ret, tuple):  # update data in gui according to file
                 _mouse, _attempt, _date = ret
 
-                if mice_part and mouse.update_mouse(_mouse, dj_dict) and mouse.get_auto():
+                if (
+                    mice_part
+                    and mouse.update_mouse(_mouse, dj_dict)
+                    and mouse.get_auto()
+                ):
                     # mouse.set_auto(False) # once?
                     exp.update_date(_date)
                     exp.update_attempt(_attempt)
@@ -370,7 +382,10 @@ class Transfer(Template):
                 if clip.fps:
                     self.info["video_meta"]["fps"] = clip.fps
                 if clip.size:
-                    self.info["video_meta"]["width"], self.info["video_meta"]["height"] = clip.size
+                    (
+                        self.info["video_meta"]["width"],
+                        self.info["video_meta"]["height"],
+                    ) = clip.size
 
                     # todo err
 
@@ -400,7 +415,9 @@ class Transfer(Template):
                     logger.info("ERR: " + str(filepath) + " not found.")
                 self._set_file(key, filepath)  # file added
                 self._set_cache_paths(key, filepath)  # update cache with parent folder
-                self.files_labels[key].setText(str(filepath))  # show selected path on gui
+                self.files_labels[key].setText(
+                    str(filepath)
+                )  # show selected path on gui
                 processed_keys.append(key)
         return processed_keys
 
@@ -420,7 +437,7 @@ class Transfer(Template):
         self.transfer_file[key] = {
             "filename": str(Path(filename).name),
             "src": str(Path(filename).parent),
-            "dst": str(dst)
+            "dst": str(dst),
         }
 
     def set_npy(self, npy_file):

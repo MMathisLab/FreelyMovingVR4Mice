@@ -31,14 +31,16 @@ def connect(tag, db_host=os.environ["DJ_HOST"]):
         elif len(sys.argv) == 3:
             pwd = sys.argv[2]
 
-        connect_to_database(LoginUser(user_name=name,
-                                      user_password=pwd,
-                                      db_host=db_host),
-                            prefix=tag,
-                            create_tables=True)
-                            #storage="app")
+        connect_to_database(
+            LoginUser(user_name=name, user_password=pwd, db_host=db_host),
+            prefix=tag,
+            create_tables=True,
+            storage="app",
+        )
     else:
-        connect_to_database(LoginUser(),  # db_host=db_host),
-                            prefix=tag,
-                            create_tables=True)
-                            #storage="app")
+        connect_to_database(
+            LoginUser(),  # db_host=db_host),
+            prefix=tag,
+            create_tables=True,
+            storage="app",
+        )

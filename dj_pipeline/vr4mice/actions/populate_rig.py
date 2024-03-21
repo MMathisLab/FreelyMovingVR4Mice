@@ -1,9 +1,12 @@
 import os
+import re
+from datetime import datetime
 import numpy as np
 import pickle
 from pathlib import Path
 
 from vr4mice.utils.logger import Logger
+
 """
     Script that populates database according on the input data from files and key2tables hints.
 """
@@ -15,7 +18,7 @@ from vr4mice.actions.keys2tables_vr4mice import vr4mice
 SKIP_DUPLICATES = True
 
 
-def get_filenames(ext, path='/tmp') -> dict:
+def get_filenames(ext, path="/tmp") -> dict:
     """
     Get a dictionary of filenames with the specified extensions from the given path.
 
@@ -28,7 +31,9 @@ def get_filenames(ext, path='/tmp') -> dict:
     """
 
     output = dict()
-    for file in os.listdir(path):
+    file_list = sorted(os.listdir(path))
+
+    for file in file_list:
         for e in ext:
             if file.endswith(e):
                 if e not in output.keys():
@@ -38,19 +43,19 @@ def get_filenames(ext, path='/tmp') -> dict:
     return output
 
 
-def get_new_file(filename, path='/tmp'):
+def get_new_file(filename, path="/tmp"):
     """
-       Load data from a new file and return it as a dictionary.
+    Load data from a new file and return it as a dictionary.
 
-       Args:
-           filename (str): The name of the file to load.
-           path (str, optional): The path to the directory where the file is located.
-                                 Defaults to '/tmp'.
+    Args:
+        filename (str): The name of the file to load.
+        path (str, optional): The path to the directory where the file is located.
+                              Defaults to '/tmp'.
 
-       Returns:
-           Tuple[Dict, str]: A tuple containing two elements:
-               - A dictionary containing the loaded data.
-               - A string with the name of the file (without extension).
+    Returns:
+        Tuple[Dict, str]: A tuple containing two elements:
+            - A dictionary containing the loaded data.
+            - A string with the name of the file (without extension).
     """
     name = Path(filename).stem
     if Path(filename).suffix == ".npy":
@@ -61,83 +66,196 @@ def get_new_file(filename, path='/tmp'):
             return pickle.load(fd), name
 
 
-def check_keys(value, raw_data, key, schema) -> bool:
+def check_keys(value, raw_data, key, schema, none=True) -> bool:
     """
-        Check if all keys in the given list `value` are present in the `raw_data` dictionary
+    Check if all keys in the given list `value` are present in the `raw_data` dictionary
+    or can be derived from it using the schema information.
+
+    Args:
+        value (list): A list of keys to check.
+        raw_data (dict): A dictionary containing the raw data to be validated.
+        key (str): A string representing the current key being validated.
+        schema (dict): A dictionary containing the schema information for the current key.
+
+    Returns:
+        A boolean value indicating whether all the keys in `value` are present in `raw_data`
         or can be derived from it using the schema information.
 
-        Args:
-            value (list): A list of keys to check.
-            raw_data (dict): A dictionary containing the raw data to be validated.
-            key (str): A string representing the current key being validated.
-            schema (dict): A dictionary containing the schema information for the current key.
+    Notes:
+        - The `schema` dictionary should contain the following keys:
+            - "local_def": A dictionary of local definitions to use when processing the raw data.
+            - "transformer": A dictionary of transformation functions to use when processing the raw data.
 
-        Returns:
-            A boolean value indicating whether all the keys in `value` are present in `raw_data`
-            or can be derived from it using the schema information.
+        - If a key in `value` is not found in `raw_data`, the function checks whether it is defined in
+          the `local_def` dictionary. If not, it checks whether it can be derived from `raw_data` using
+          the `transformer` dictionary. If it can't be derived, the function logs an alert and returns False.
 
-        Notes:
-            - The `schema` dictionary should contain the following keys:
-                - "local_def": A dictionary of local definitions to use when processing the raw data.
-                - "transformer": A dictionary of transformation functions to use when processing the raw data.
-
-            - If a key in `value` is not found in `raw_data`, the function checks whether it is defined in
-              the `local_def` dictionary. If not, it checks whether it can be derived from `raw_data` using
-              the `transformer` dictionary. If it can't be derived, the function logs an alert and returns False.
-
-        todo: optimize, make list of potential none
-        """
+    todo: optimize, make list of potential none
+    """
+    if none:
+        none_vals = dict()
+    else:
+        none_vals = None
 
     for v in value:
         if v not in raw_data.keys():
 
             if v not in schema["local_def"]:
-                if v not in schema["transformer"].keys() or \
-                        (v in schema["transformer"].keys()
-                         and schema["transformer"][v] not in raw_data.keys()):  # check exceptions
+                transformers = ["transformer"]
+                transformers_schema = {}
 
-                    logger.info("[ALERT] " + str(v) +
-                                " not found; can't insert data for " + str(key))
-                    return False
-    return True
+                for t in transformers:
+                    if t in schema.keys():
+                        transformers_schema = schema[t]
+
+                    if v not in transformers_schema.keys() or (
+                        v in transformers_schema.keys()
+                        and (transformers_schema[v] not in raw_data.keys())
+                    ):
+                        # todo: add check exceptions
+                        if none:
+                            logger.warning(
+                                str(v)
+                                + " not found; "
+                                + str(v)
+                                + " will be presented as None."
+                            )
+                            none_vals[v] = None
+                        else:
+                            logger.warning(
+                                str(v)
+                                + " not found; can't insert data for "
+                                + str(key)
+                                + " Aborted."
+                            )
+                            return False, None
+
+                    elif (
+                        v in transformers_schema.keys()
+                        and transformers_schema[v] in raw_data.keys()
+                    ):
+                        if v in none_vals.keys():
+                            logger.warning(str(v) + " found.")
+                            del none_vals[v]
+    return True, none_vals
 
 
 def populate(table_name, attributes, raw_data, schema) -> None:
     """
-       Populates the given table in the database with the given attributes and raw data.
+    Populates the given table in the database with the given attributes and raw data.
 
-       Args:
-           table_name (str): The name of the table to populate.
-           attributes (list): A list of attributes to populate in the table.
-           raw_data (dict): A dictionary containing the raw data to populate the table with.
-           schema (dict): A dictionary containing information about the schema and tables.
+    Args:
+        table_name (str): The name of the table to populate.
+        attributes (list): A list of attributes to populate in the table.
+        raw_data (dict): A dictionary containing the raw data to populate the table with.
+        schema (dict): A dictionary containing information about the schema and tables.
 
-       Notes:
-           - The function populates the given table in the database with the data obtained from the
-             raw_data dictionary.
-           - If a special processing function is defined for a given attribute, it is used to generate
-             the value of that attribute.
-           - If duplicates are found, they are skipped and not inserted into the table.
-           - The function logs a message indicating whether the population was successful or not.
-       """
+    Notes:
+        - The function populates the given table in the database with the data obtained from the
+          raw_data dictionary.
+        - If a special processing function is defined for a given attribute, it is used to generate
+          the value of that attribute.
+        - If duplicates are found, they are skipped and not inserted into the table.
+        - The function logs a message indicating whether the population was successful or not.
+    """
     data = dict()
 
     for a in attributes:
         # check if there is a special processing for the generation of value of given attribute
         if a in schema["local_def"].keys():
-            data[a] = schema["local_def"][a](raw_data=raw_data, key=a,
-                                             transformer=schema["transformer"])
+            data[a] = schema["local_def"][a](
+                raw_data=raw_data, key=a, transformer=schema["transformer"]
+            )
         else:  # dj_def-orientated
             label = a
-            if a in schema["transformer"].keys():
-                label = schema["transformer"][a]
-            data[a] = raw_data[label]
+            transformers = ["transformer"]
+            for t in transformers:
+                if t in schema.keys():
+                    if a in schema[t].keys():
+                        label = schema[t][a]
+                        logger.info("Note: " + label + " variable name changed to " + a)
+
+                if label in raw_data.keys():
+                    data[a] = raw_data[label]
+
+    logger.info("Populating: " + str(table_name))  # todo check return code
 
     schema["dj_tables"][table_name].insert1(data, skip_duplicates=SKIP_DUPLICATES)
     logger.info("[POPULATED OK] " + str(table_name))  # todo check return code
 
 
-def populate_rig(path) -> None:
+def parse_date(filename):
+    # Regular expression to match the date pattern in the filename
+    date_pattern = r"(\d{4}-\d{2}-\d{2})"
+
+    # Search for the date pattern in the filename
+    match = re.search(date_pattern, filename)
+
+    if match:
+        # Extract the matched date string
+        date_str = match.group(1)
+
+        # Parse the date string into a datetime object
+        parsed_date = datetime.strptime(date_str, "%Y-%m-%d")
+
+        return parsed_date
+    else:
+        return None
+
+
+def get_files_paths(dataset, remote_src=None, local_src="/data", data="/data"):
+    """
+    Simulation of data from gui .npy, if it's missing
+    # todo: add files move if one folder
+    # todo: move this function to a separate file
+    """
+    dlc_video_path = local_src + "/dlc_video"
+
+    files_info = {
+        "teensy_path": {
+            "filename": dataset + ".pickle",
+            "src": remote_src,
+            "dst": local_src + data,
+        },
+        "dlc_path": {
+            "filename": "Imagingsource_" + dataset + "_DLC.hdf5",
+            "src": remote_src,
+            "dst": dlc_video_path,
+        },
+        "camera_path": {
+            "filename": "Imagingsource_" + dataset + "_TS.npy",
+            "src": remote_src,
+            "dst": dlc_video_path,
+        },
+        "video_path": {
+            "filename": "Imagingsource_" + dataset + "_VIDEO.avi",
+            "src": "Imagingsource_" + dataset + "_VIDEO.avi",
+            "dst": dlc_video_path,  # false (remote only)
+        },
+        "proc_path": {
+            "filename": "Imagingsource_" + dataset + "_PROC",
+            "src": remote_src,
+            "dst": dlc_video_path,
+        },
+        "gui_output": {
+            "filename": dataset + ".npy",
+            "src": remote_src,
+            "dst": local_src + data,
+        },
+        "video_meta": {
+            "duration": None,
+            "fps": None,
+            "width": None,
+            "height": None,
+        },
+        "time_stamp": None,
+        "doe": parse_date(dataset),
+        "dataset": dataset,
+    }
+    return files_info
+
+
+def populate_rig(path="/data/data", gui=False) -> None:
     """
     Populates database tables with data from files in the specified directory.
 
@@ -164,41 +282,69 @@ def populate_rig(path) -> None:
     dataset = name of file : mouse_name_doe_attempt
     """
 
-    ext = [
-        ".npy",
-        ".pickle"
-    ]  # format: pickle/npy
+    ext = [".npy", ".pickle"]  # format: pickle/npy
 
     dir_list = get_filenames(ext, path)
 
+    # Case: if .pickl is here and .npy (as optional)
+    # TODO: make it independent by dataset
     if ".pickle" in dir_list.keys():
 
         for pickle_file in dir_list[".pickle"]:
+            logger.info("Processing file: " + str(pickle_file))
             raw_data_pickle, dataset = get_new_file(pickle_file, path)
 
             raw_data_npy = None
 
+            # todo: add check that it's not Imagingsource/S!!
+            # if finds some (it's dlc_video) => move it
+
             if ".npy" in dir_list.keys():  # todo(mary) optimize
                 for npy_file in dir_list[".npy"]:
-                    logger.info(npy_file)
-                    # compare dataset
-                    # (can be modified if names of files for same dataset are not similar)
+                    # Note: algo should be modified if names of files for same dataset are not similar
+                    # (if GUI is not used f.ex.)
                     if Path(npy_file).stem == dataset:
+                        logger.info("Processing file: " + str(npy_file))
                         raw_data_npy, dataset = get_new_file(npy_file, path)
                         break
 
             # if .npy file is missing return
             if raw_data_npy is None:
-                logger.info("RETURN")
-                # todo problem
-                return
+                if gui:
+                    logger.warning(
+                        "Attention: .npy file from GUI was not found for "
+                        + str(dataset)
+                        + "; As .npy files from gui were expected (gui flag is true) the population will be aborted."
+                    )
+                    return False
 
-            # all datasets combined
-            raw_data = {**raw_data_pickle, **raw_data_npy}
-            # populate all schemas
-            schemas = [base, vr4mice]
+                logger.info(
+                    "Attention: .npy file from GUI was not found for "
+                    + str(dataset)
+                    + "; As .npy files from gui can be skipped (gui flag is false) the population will be continued."
+                )
+
+                # as there is no .npy, we have to restore some parts of raw_data
+                # (mostly info about filepaths location)
+                files_info = get_files_paths(
+                    dataset=dataset, remote_src=None, local_src="/data", data=path
+                )  # paths correspond to docker env
+                raw_data = {**files_info, **raw_data_pickle}
+                schemas = [vr4mice]
+
+            else:  # all datasets combined
+                raw_data = {**raw_data_pickle, **raw_data_npy}
+                # populate all schemas
+                schemas = [base, vr4mice]
+
             for schema in schemas:
                 # populate all tables
-                for table_name, attributes in schema["tables"].items():  # get attributes
-                    if check_keys(attributes, raw_data, table_name, schema=schema):
+                for table_name, attributes in schema[
+                    "tables"
+                ].items():  # get attributes
+                    flag, none_vals = check_keys(
+                        attributes, raw_data, table_name, schema=schema
+                    )
+                    if flag:
+                        raw_data = {**raw_data, **none_vals}
                         populate(table_name, attributes, raw_data, schema=schema)
