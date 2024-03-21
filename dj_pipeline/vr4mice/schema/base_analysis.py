@@ -241,7 +241,7 @@ def insert_send_mail(key, tuple_, table, filename, send=False):
             send_email.email(email, filename, error=False, message=None)
 
     except Exception as err:
-        err = "Error while populating the Sumamry table\n" + str(err)
+        err = "Error while populating the Summary table\n" + str(err)
         logger.warning(err)
         if send:
             send_email.email(email, None, error=True, message=err)

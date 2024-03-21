@@ -373,7 +373,7 @@ def move_files(files_info):
         shutil.move(src, dst)
 
 
-def init_watcher():  # launch dlc + wait/tranfer once created (queue), init watcher on  folder
+def init_watcher():  # launch dlc + wait/transfer once created (queue), init watcher on  folder
     pass
 
 
