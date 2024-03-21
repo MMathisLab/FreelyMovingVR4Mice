@@ -37,14 +37,14 @@ def mouse_in_db(name, date, date_format="%Y-%m-%d"):
 def sync_days(path, date_format="%Y-%m-%d"):
     """
     Synchronize the info about current experiment day for every mouse dataset
-    Sorts dates, and updates day va;ues in the .npy files according to calculated order.
+    Sorts dates, and updates day values in the .npy files according to calculated order.
 
     Args:
     path (str): A string representing the path of the directory containing datasets files
     date_format (str, optional): A string representing the date format used in the data files' names.
     Defaults to "%Y-%m-%d".
 
-    todo: can be splitted and refactored, but not the main codebase
+    todo: can be split and refactored, but not the main codebase
     """
     ext = [".npy"]
 

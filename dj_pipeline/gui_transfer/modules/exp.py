@@ -158,7 +158,7 @@ class Exp(Template):
                 else:
                     self._create_input_field(key, layout, i, j)
 
-                    # todo special fileds
+                    # todo special fields
                     if key == "attempt":  # TODO check and init
                         self.values[key].setText("1")
 

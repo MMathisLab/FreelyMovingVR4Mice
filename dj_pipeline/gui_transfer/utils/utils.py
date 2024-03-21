@@ -335,7 +335,7 @@ def transfer_files(transfer_files):
         Any exceptions that occur during file transfer.
 
     """
-    ip = config.get_ip  # check connexion - gui ? modify ? cache ? config ?
+    ip = config.get_ip  # check connection - gui ? modify ? cache ? config ?
     host = config.get_host
     # check/create
     if ip != "localhost":

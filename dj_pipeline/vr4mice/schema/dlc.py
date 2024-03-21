@@ -12,7 +12,7 @@ schema = get_schema(schema_name, locals())
 logger = Logger.get_logger()
 
 
-# to do add dataset in key, as now it's bu filepath and that's sad
+# to do add dataset in key, as now it's by filepath and that's sad
 
 
 @schema

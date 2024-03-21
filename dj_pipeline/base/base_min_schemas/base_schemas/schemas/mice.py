@@ -149,7 +149,7 @@ class Surgery(dj.Manual):
     -> Mouse
     ---
     -> SurgeryType                          # link to type of surgery
-    surgery_details     : varchar(1024)     # descritpion of the aim of the surgery
+    surgery_details     : varchar(1024)     # description of the aim of the surgery
     surgery_date=None   : varchar(256)      # date of the surgery
     """
 

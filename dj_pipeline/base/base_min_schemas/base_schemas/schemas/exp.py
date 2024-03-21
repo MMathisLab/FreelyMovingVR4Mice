@@ -87,7 +87,7 @@ class OptogeneticsVariant(dj.Lookup):
 class Optogenetics(dj.Lookup):
     definition = """  # Optogenetics used in the session
 
-    opto_name     : char(128)   # optogenetic protocoll abbreviation
+    opto_name     : char(128)   # optogenetic protocol abbreviation
     -----
     pulse_frequency    : double      # Pulse frequency in Hz
     pulse_length       : double      # Pulse length in ms
