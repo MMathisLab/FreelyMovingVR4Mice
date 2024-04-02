@@ -6,6 +6,7 @@ from pathlib import Path
     Logger initialisation script
 """
 
+
 class Logger:
     __logger = None
 

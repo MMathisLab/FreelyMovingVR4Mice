@@ -45,9 +45,7 @@ def sync_days(path, date_format="%Y-%m-%d"):
 
     todo: can be split and refactored, but not the main codebase
     """
-    ext = [
-        ".npy"
-    ]
+    ext = [".npy"]
 
     dir_list = get_filenames(ext, path)
 
@@ -63,14 +61,15 @@ def sync_days(path, date_format="%Y-%m-%d"):
         name = tmp[0]
         attempt = tmp[2]
 
-        ret = mouse_in_db(name, date) # check if mice in the database
+        ret = mouse_in_db(name, date)  # check if mice in the database
         if ret == None:
             raw_dir.append([date, name, attempt])
         else:
             print(ret)
             ret_arr[filename] = ret
 
-    sorted_dir = sorted(raw_dir, key=lambda day: datetime.strptime(day[0], date_format))
+    sorted_dir = sorted(raw_dir,
+                        key=lambda day: datetime.strptime(day[0], date_format))
 
     idx = 1
     prec = ""

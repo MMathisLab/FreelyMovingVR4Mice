@@ -97,7 +97,8 @@ def check_keys(value, raw_data, key, schema) -> bool:
                          and schema["transformer"][v] not in raw_data.keys()):  # check exceptions
 
                     logger.info("[ALERT] " + str(v) +
-                                " not found; can't insert data for " + str(key))
+                                " not found; can't insert data for " +
+                                str(key))
                     return False
     return True
 
@@ -125,7 +126,8 @@ def populate(table_name, attributes, raw_data, schema) -> None:
     for a in attributes:
         # check if there is a special processing for the generation of value of given attribute
         if a in schema["local_def"].keys():
-            data[a] = schema["local_def"][a](raw_data=raw_data, key=a,
+            data[a] = schema["local_def"][a](raw_data=raw_data,
+                                             key=a,
                                              transformer=schema["transformer"])
         else:  # dj_def-orientated
             label = a
@@ -133,7 +135,8 @@ def populate(table_name, attributes, raw_data, schema) -> None:
                 label = schema["transformer"][a]
             data[a] = raw_data[label]
 
-    schema["dj_tables"][table_name].insert1(data, skip_duplicates=SKIP_DUPLICATES)
+    schema["dj_tables"][table_name].insert1(data,
+                                            skip_duplicates=SKIP_DUPLICATES)
     logger.info("[POPULATED OK] " + str(table_name))  # todo check return code
 
 
@@ -164,10 +167,7 @@ def populate_rig(path) -> None:
     dataset = name of file : mouse_name_doe_attempt
     """
 
-    ext = [
-        ".npy",
-        ".pickle"
-    ]  # format: pickle/npy
+    ext = [".npy", ".pickle"]  # format: pickle/npy
 
     dir_list = get_filenames(ext, path)
 
@@ -199,6 +199,13 @@ def populate_rig(path) -> None:
             schemas = [base, vr4mice]
             for schema in schemas:
                 # populate all tables
-                for table_name, attributes in schema["tables"].items():  # get attributes
-                    if check_keys(attributes, raw_data, table_name, schema=schema):
-                        populate(table_name, attributes, raw_data, schema=schema)
+                for table_name, attributes in schema["tables"].items(
+                ):  # get attributes
+                    if check_keys(attributes,
+                                  raw_data,
+                                  table_name,
+                                  schema=schema):
+                        populate(table_name,
+                                 attributes,
+                                 raw_data,
+                                 schema=schema)

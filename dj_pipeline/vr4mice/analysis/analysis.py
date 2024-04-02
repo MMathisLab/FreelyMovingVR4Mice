@@ -9,6 +9,7 @@ from scipy import stats
 
 from vr4mice.schema import vr4mice
 
+
 def style():
     """
     This function sets the font color, size and weight, and axis label properties
@@ -16,17 +17,18 @@ def style():
     """
     font_color = 'black'
     font_size = 18
-    plt.rcParams.update({'text.color': font_color,
-                         'axes.labelcolor': font_color,
-                         'axes.labelsize': font_size,
-                         'axes.titleweight': 'bold',
-                         'axes.titlesize': font_size,
-                         'xtick.labelcolor': font_color,
-                         'xtick.labelsize': font_size,
-                         'ytick.labelcolor': font_color,
-                         'ytick.labelsize': font_size,
-                         'font.weight': 'bold'
-                         })
+    plt.rcParams.update({
+        'text.color': font_color,
+        'axes.labelcolor': font_color,
+        'axes.labelsize': font_size,
+        'axes.titleweight': 'bold',
+        'axes.titlesize': font_size,
+        'xtick.labelcolor': font_color,
+        'xtick.labelsize': font_size,
+        'ytick.labelcolor': font_color,
+        'ytick.labelsize': font_size,
+        'font.weight': 'bold'
+    })
 
     plt.rc('axes.spines', top=False, bottom=True, left=True, right=False)
     plt.rc('axes', edgecolor=font_color)
@@ -59,23 +61,26 @@ def create_data_frame(key, no_iti=True):
     """
     # this function creates the main dataframe for analysis => todo think to externalize
     dataset = (vr4mice.VR4Mice() & key).fetch()[0][0]
-    mouse_state = (vr4mice.MouseState() & {"dataset": dataset}).fetch(as_dict=True)[0]
+    mouse_state = (vr4mice.MouseState() & {
+        "dataset": dataset
+    }).fetch(as_dict=True)[0]
     state = (vr4mice.State() & {"dataset": dataset}).fetch(as_dict=True)[0]
 
-    df = pd.DataFrame(
-        {"step": state["step"],
-         "step_time": state["step_time"],
-         "trial": state["episode"],
-         "reward": state["reward"],
-         "x": mouse_state["x_pos"],
-         "y": mouse_state["z_pos"],
-         "head_dir": mouse_state["head_dir"],
-         "mouse_can_report": mouse_state["mouse_can_report"],
-         "iti": mouse_state["iti"],
-         "object_on_left": mouse_state["obj_left"],
-         "mouse_correct": mouse_state["mouse_report_correct"],
-         "mouse_in_L": mouse_state["report_left"],
-         "mouse_in_R": mouse_state["report_right"]})
+    df = pd.DataFrame({
+        "step": state["step"],
+        "step_time": state["step_time"],
+        "trial": state["episode"],
+        "reward": state["reward"],
+        "x": mouse_state["x_pos"],
+        "y": mouse_state["z_pos"],
+        "head_dir": mouse_state["head_dir"],
+        "mouse_can_report": mouse_state["mouse_can_report"],
+        "iti": mouse_state["iti"],
+        "object_on_left": mouse_state["obj_left"],
+        "mouse_correct": mouse_state["mouse_report_correct"],
+        "mouse_in_L": mouse_state["report_left"],
+        "mouse_in_R": mouse_state["report_right"]
+    })
 
     df = df[df.trial != 1]
 
@@ -85,13 +90,16 @@ def create_data_frame(key, no_iti=True):
 
     df_output["head_dir"] = _convert_angles(df)
 
-    df_output["x"] = np.interp(df.x, [-9, 9], [-27, 27])  # todo ask Tom to add for interpoltaion coordinates
+    df_output["x"] = np.interp(
+        df.x, [-9, 9],
+        [-27, 27])  # todo ask Tom to add for interpoltaion coordinates
     df_output["y"] = np.interp(df.y, [-10, -2], [-27, 27])
 
     box_df_output = _get_box_df(dataset)
-    box_df_output = box_df_output.iloc[1] #todo ask Tom
+    box_df_output = box_df_output.iloc[1]  #todo ask Tom
 
-    df_output["trial_rewarded"] = df.groupby(["trial"], as_index=False)["reward"].transform(lambda x: np.max(x))
+    df_output["trial_rewarded"] = df.groupby(
+        ["trial"], as_index=False)["reward"].transform(lambda x: np.max(x))
 
     df_output[["trial_step", "trial_step_time"]] = \
         df.groupby(["trial"], as_index=True, group_keys=False).apply(lambda x: x.iloc[:] - x.iloc[0])[
@@ -101,10 +109,12 @@ def create_data_frame(key, no_iti=True):
         df = df[df.iti == 0.0]
         df_output["trial_step_fraction"] = \
             df.groupby(["trial"], as_index=True, group_keys=False).apply(lambda x: x.iloc[:] / x.iloc[-1])["trial_step"]
-        df_output["trial_R_choice"] = df.groupby(["trial"], as_index=False)["mouse_in_R"].transform(
-            lambda x: x.iloc[-1])
-        df_output["trial_L_choice"] = df.groupby(["trial"], as_index=False)["mouse_in_L"].transform(
-            lambda x: x.iloc[-1])
+        df_output["trial_R_choice"] = df.groupby(
+            ["trial"],
+            as_index=False)["mouse_in_R"].transform(lambda x: x.iloc[-1])
+        df_output["trial_L_choice"] = df.groupby(
+            ["trial"],
+            as_index=False)["mouse_in_L"].transform(lambda x: x.iloc[-1])
     else:
         df_output["trial_step_fraction"] = \
             df.groupby(["trial"], as_index=True, group_keys=False).apply(lambda x: x.iloc[:] / x.iloc[-1])["trial_step"]
@@ -119,7 +129,9 @@ def create_data_frame(key, no_iti=True):
 
 def _get_box_df(dataset):
 
-    box_df = pd.DataFrame((vr4mice.Box() & {"dataset": dataset}).fetch(as_dict=True)[0])
+    box_df = pd.DataFrame((vr4mice.Box() & {
+        "dataset": dataset
+    }).fetch(as_dict=True)[0])
     # unity game dimension to real sm
     # metadata
     a = 9
@@ -128,20 +140,30 @@ def _get_box_df(dataset):
     d = 27
 
     # same indexes among blocks
-    box_df.left_box_x_min = np.interp(box_df.left_box_x_min, [-1*a, a], [-1*d, d])
-    box_df.left_box_x_max = np.interp(box_df.left_box_x_max, [-1*a, a], [-1*d, d])
-    box_df.left_box_z_min = np.interp(box_df.left_box_z_min, [b, c], [-1*d, d])
-    box_df.left_box_z_max = np.interp(box_df.left_box_z_max, [b, c], [-1*d, d])
+    box_df.left_box_x_min = np.interp(box_df.left_box_x_min, [-1 * a, a],
+                                      [-1 * d, d])
+    box_df.left_box_x_max = np.interp(box_df.left_box_x_max, [-1 * a, a],
+                                      [-1 * d, d])
+    box_df.left_box_z_min = np.interp(box_df.left_box_z_min, [b, c],
+                                      [-1 * d, d])
+    box_df.left_box_z_max = np.interp(box_df.left_box_z_max, [b, c],
+                                      [-1 * d, d])
 
-    box_df.right_box_x_min = np.interp(box_df.right_box_x_min, [-1*a, a], [-1*d, d])
-    box_df.right_box_x_max = np.interp(box_df.right_box_x_max, [-1*a, a], [-1*d, d])
-    box_df.right_box_z_min = np.interp(box_df.right_box_z_min, [b, c], [-1*d, d])
-    box_df.right_box_z_max = np.interp(box_df.right_box_z_max, [b, c], [-1*d, d])
+    box_df.right_box_x_min = np.interp(box_df.right_box_x_min, [-1 * a, a],
+                                       [-1 * d, d])
+    box_df.right_box_x_max = np.interp(box_df.right_box_x_max, [-1 * a, a],
+                                       [-1 * d, d])
+    box_df.right_box_z_min = np.interp(box_df.right_box_z_min, [b, c],
+                                       [-1 * d, d])
+    box_df.right_box_z_max = np.interp(box_df.right_box_z_max, [b, c],
+                                       [-1 * d, d])
 
-    box_df.tt_box_x_min = np.interp(box_df.tt_box_x_min, [-1*a, a], [-1*d, d])
-    box_df.tt_box_x_max = np.interp(box_df.tt_box_x_max, [-1*a, a], [-1*d, d])
-    box_df.tt_box_z_min = np.interp(box_df.tt_box_z_min, [b, c], [-1*d, d])
-    box_df.tt_box_z_max = np.interp(box_df.tt_box_z_max, [b, c], [-1*d, d])
+    box_df.tt_box_x_min = np.interp(box_df.tt_box_x_min, [-1 * a, a],
+                                    [-1 * d, d])
+    box_df.tt_box_x_max = np.interp(box_df.tt_box_x_max, [-1 * a, a],
+                                    [-1 * d, d])
+    box_df.tt_box_z_min = np.interp(box_df.tt_box_z_min, [b, c], [-1 * d, d])
+    box_df.tt_box_z_max = np.interp(box_df.tt_box_z_max, [b, c], [-1 * d, d])
 
     return box_df
 
@@ -161,16 +183,27 @@ def _plot_boxes(box_df, ax):
     """
     start_box = plt.Rectangle((box_df["tt_box_x_min"], box_df["tt_box_z_min"]),
                               abs(box_df.tt_box_x_min - box_df.tt_box_x_max),
-                              abs(box_df.tt_box_z_min - box_df.tt_box_z_max), fill=False, linewidth=4,
-                              edgecolor='#009B9E', alpha=.6)
-    left_box = plt.Rectangle((box_df["left_box_x_min"], box_df.left_box_z_min),
-                             abs(box_df.left_box_x_min - box_df.left_box_x_max),
-                             abs(box_df.left_box_z_min - box_df.left_box_z_max), fill=False, linewidth=4,
-                             edgecolor='#5C0A72', alpha=.6)
-    right_box = plt.Rectangle((box_df["right_box_x_min"], box_df.right_box_z_min),
-                              abs(box_df.right_box_x_min - box_df.right_box_x_max),
-                              abs(box_df.right_box_z_min - box_df.right_box_z_max), fill=False, linewidth=4,
-                              edgecolor='#FD672C', alpha=.6)
+                              abs(box_df.tt_box_z_min - box_df.tt_box_z_max),
+                              fill=False,
+                              linewidth=4,
+                              edgecolor='#009B9E',
+                              alpha=.6)
+    left_box = plt.Rectangle(
+        (box_df["left_box_x_min"], box_df.left_box_z_min),
+        abs(box_df.left_box_x_min - box_df.left_box_x_max),
+        abs(box_df.left_box_z_min - box_df.left_box_z_max),
+        fill=False,
+        linewidth=4,
+        edgecolor='#5C0A72',
+        alpha=.6)
+    right_box = plt.Rectangle(
+        (box_df["right_box_x_min"], box_df.right_box_z_min),
+        abs(box_df.right_box_x_min - box_df.right_box_x_max),
+        abs(box_df.right_box_z_min - box_df.right_box_z_max),
+        fill=False,
+        linewidth=4,
+        edgecolor='#FD672C',
+        alpha=.6)
     ax.add_patch(start_box)
     ax.add_patch(left_box)
     ax.add_patch(right_box)
@@ -193,7 +226,11 @@ def _plot_rewards(rewarded, ax):
     ax[0].set_xlim(-1, 1)
     ax[0].set_ylabel("Prob.")
     ax[0].set_title("Rewarded")
-    sns.barplot(data=rewarded, x="object_on_left", y="reward", ax=ax[1], palette=['#FD672C', "#5C0A72"])
+    sns.barplot(data=rewarded,
+                x="object_on_left",
+                y="reward",
+                ax=ax[1],
+                palette=['#FD672C', "#5C0A72"])
     ax[1].set_ylim(0, 1)
     ax[1].set_ylabel("Prob.")
     ax[1].set_xlabel("Object location")
@@ -202,8 +239,12 @@ def _plot_rewards(rewarded, ax):
     ax[2].bar(rewarded.trial, rewarded.reward, color="grey")
 
     # PLOT
-    ax[2].plot(rewarded.reward.rolling(15, min_periods=1, win_type='gaussian', center=True).mean(std=3),
-               color="#B52916", linewidth=3)
+    ax[2].plot(rewarded.reward.rolling(15,
+                                       min_periods=1,
+                                       win_type='gaussian',
+                                       center=True).mean(std=3),
+               color="#B52916",
+               linewidth=3)
     ax[2].set_ylabel("Rewarded")
 
 
@@ -241,14 +282,23 @@ def _plot_all_trajectories(df, box_df, ax):
     """
     for i in range(1, np.max(df.trial)):
         # PLOT
-        ax.plot(df.x[(df.trial == i)], df.y[(df.trial == i)], c="black", alpha=0.2, linewidth=2)
+        ax.plot(df.x[(df.trial == i)],
+                df.y[(df.trial == i)],
+                c="black",
+                alpha=0.2,
+                linewidth=2)
     first = df.groupby("trial").first()
     ax.scatter(first.x, first.y, c="#2250C8", alpha=1, s=30, zorder=100)
     rewards = np.where(df["reward"] > 0)[0]
     # print(rewards)
     R_choices = np.where(df["reward"] > 0)[0]
     trial_start = np.diff(df["trial"])
-    ax.scatter(df.x.iloc[rewards], df.y.iloc[rewards], c="#B52916", alpha=0.7, s=30, zorder=100)
+    ax.scatter(df.x.iloc[rewards],
+               df.y.iloc[rewards],
+               c="#B52916",
+               alpha=0.7,
+               s=30,
+               zorder=100)
     _plot_boxes(box_df=box_df, ax=ax)
     ax.set_xlim(-28, 28)
     ax.set_ylim(-28, 28)
@@ -267,14 +317,15 @@ def _plot_rewarded_trial_trajectories(df, box_df, ax):
     Returns:
         None
     """
-    df = df.groupby('trial', as_index=False).apply(lambda group: group.iloc[1:, :])
+    df = df.groupby('trial',
+                    as_index=False).apply(lambda group: group.iloc[1:, :])
 
     rewarded = df.groupby(["trial"], as_index=False).max()
 
-    RR = df[(df.trial.isin(rewarded.trial[rewarded.reward == 1.0])) & (
-        df.trial.isin(rewarded.trial[rewarded.object_on_left == 0.0]))]
-    LR = df[(df.trial.isin(rewarded.trial[rewarded.reward == 1.0])) & (
-        df.trial.isin(rewarded.trial[rewarded.object_on_left == 1.0]))]
+    RR = df[(df.trial.isin(rewarded.trial[rewarded.reward == 1.0]))
+            & (df.trial.isin(rewarded.trial[rewarded.object_on_left == 0.0]))]
+    LR = df[(df.trial.isin(rewarded.trial[rewarded.reward == 1.0]))
+            & (df.trial.isin(rewarded.trial[rewarded.object_on_left == 1.0]))]
 
     _plot_all_trajectories(RR, box_df, ax=ax[0])
     _plot_all_trajectories(LR, box_df, ax=ax[1])
@@ -304,18 +355,30 @@ def _plot_choices_by_trial(df, ax):
         None.
     """
 
-    df = df.groupby('trial', as_index=False).apply(lambda group: group.iloc[1:, :])
+    df = df.groupby('trial',
+                    as_index=False).apply(lambda group: group.iloc[1:, :])
     rewarded = df[df.reward == 1.0]
     last = df.groupby(["trial"], as_index=False).last()
     # ax.bar(rewarded.trial, rewarded.object_on_left,)
     # PLOT
-    ax.plot(last.trial, last.mouse_in_L.rolling(10, center=True, win_type="gaussian", min_periods=1).mean(std=5),
-            c="black", linewidth=3)
+    ax.plot(last.trial,
+            last.mouse_in_L.rolling(10,
+                                    center=True,
+                                    win_type="gaussian",
+                                    min_periods=1).mean(std=5),
+            c="black",
+            linewidth=3)
     ax.scatter(last.trial, last.mouse_in_L, c="black", alpha=0.3)
-    ax.scatter(rewarded.trial[(rewarded.reward == 1.0) & (rewarded.mouse_in_L == 1.0)],
-               rewarded.mouse_in_L[(rewarded.reward == 1.0) & rewarded.mouse_in_L == 1.0], c="#5C0A72")
-    ax.scatter(rewarded.trial[(rewarded.reward == 1.0) & (rewarded.mouse_in_R == 1.0)],
-               rewarded.mouse_in_L[(rewarded.reward == 1.0) & rewarded.mouse_in_R == 1.0], c='#FD672C')
+    ax.scatter(rewarded.trial[(rewarded.reward == 1.0)
+                              & (rewarded.mouse_in_L == 1.0)],
+               rewarded.mouse_in_L[(rewarded.reward == 1.0)
+                                   & rewarded.mouse_in_L == 1.0],
+               c="#5C0A72")
+    ax.scatter(rewarded.trial[(rewarded.reward == 1.0)
+                              & (rewarded.mouse_in_R == 1.0)],
+               rewarded.mouse_in_L[(rewarded.reward == 1.0)
+                                   & rewarded.mouse_in_R == 1.0],
+               c='#FD672C')
     ax.set_xlabel("Trials")
     ax.set_ylabel("Choice (1 = Left)")
 
@@ -333,8 +396,10 @@ def _time_to_rewards(df):  # split
         box_entries
     """
 
-    box_entries = df[(df.mouse_in_R == 1.0) | (df.mouse_in_L == 1.0)].groupby("trial", as_index=False).first()  #
-    box_entries["rewarded"] = df.groupby(["trial"], as_index=False).max()["reward"]  #
+    box_entries = df[(df.mouse_in_R == 1.0) | (df.mouse_in_L == 1.0)].groupby(
+        "trial", as_index=False).first()  #
+    box_entries["rewarded"] = df.groupby(["trial"],
+                                         as_index=False).max()["reward"]  #
 
     return box_entries
 
@@ -351,41 +416,84 @@ def _plot_time_to_rewards(box_entries, ax):
     cat1 = box_entries[box_entries['rewarded'] == 1.0]
     cat2 = box_entries[box_entries['rewarded'] == 0.0]
 
-    p_value = stats.ttest_ind(np.log(cat1['trial_step_time']), np.log(cat2['trial_step_time']))[1]
+    p_value = stats.ttest_ind(np.log(cat1['trial_step_time']),
+                              np.log(cat2['trial_step_time']))[1]
 
-    g = sns.stripplot(data=box_entries, x="rewarded", y="trial_step_time", palette=["#284553", "#B52916"],
-                      hue="rewarded", ax=ax[0], alpha=0.7, legend=False, zorder=1)
+    g = sns.stripplot(data=box_entries,
+                      x="rewarded",
+                      y="trial_step_time",
+                      palette=["#284553", "#B52916"],
+                      hue="rewarded",
+                      ax=ax[0],
+                      alpha=0.7,
+                      legend=False,
+                      zorder=1)
     # sns.boxplot(data = time_diff, x = "reward", y = "step_time", palette = ["#284553", "#B52916"], hue = "reward")
 
-    sns.pointplot(data=box_entries, x="rewarded", y="trial_step_time", estimator=np.mean, markers="D", scale=1,
-                  color="black", ax=ax[0], join=False)
+    sns.pointplot(data=box_entries,
+                  x="rewarded",
+                  y="trial_step_time",
+                  estimator=np.mean,
+                  markers="D",
+                  scale=1,
+                  color="black",
+                  ax=ax[0],
+                  join=False)
     g.set_yscale("log")
     g.set_title("Time to report")
     g.set_ylabel("log(Seconds)")
     g.set_xlabel("Reward")
-    g.set_xticks([0.0, 1.0], ["incorrect", "correct"], rotation=45, fontsize=10)
-    g.annotate('p={p_value:.3f}', xy=(0.75, 0.95), xycoords='axes fraction', fontsize=12, color='black')
+    g.set_xticks([0.0, 1.0], ["incorrect", "correct"],
+                 rotation=45,
+                 fontsize=10)
+    g.annotate('p={p_value:.3f}',
+               xy=(0.75, 0.95),
+               xycoords='axes fraction',
+               fontsize=12,
+               color='black')
 
     cat1 = box_entries[box_entries['mouse_in_L'] == 1.0]
     cat2 = box_entries[box_entries['mouse_in_L'] == 0.0]
-    p_value = stats.ttest_ind(np.log(cat1['trial_step_time']), np.log(cat2['trial_step_time']))[1]
+    p_value = stats.ttest_ind(np.log(cat1['trial_step_time']),
+                              np.log(cat2['trial_step_time']))[1]
 
     box_entries = box_entries[box_entries.rewarded == 1.0]
-    p = sns.stripplot(data=box_entries, x="mouse_in_L", y="trial_step_time", palette=['#FD672C', "#5C0A72"],
-                      hue="mouse_in_L", ax=ax[1], alpha=0.7, legend=False, zorder=1)
+    p = sns.stripplot(data=box_entries,
+                      x="mouse_in_L",
+                      y="trial_step_time",
+                      palette=['#FD672C', "#5C0A72"],
+                      hue="mouse_in_L",
+                      ax=ax[1],
+                      alpha=0.7,
+                      legend=False,
+                      zorder=1)
     # sns.boxplot(data = time_diff, x = "reward", y = "step_time", palette = ["#284553", "#B52916"], hue = "reward")
 
-    sns.pointplot(data=box_entries, x="mouse_in_L", y="trial_step_time", estimator=np.mean, markers="D", scale=1,
-                  color="black", ax=ax[1], join=False)
+    sns.pointplot(data=box_entries,
+                  x="mouse_in_L",
+                  y="trial_step_time",
+                  estimator=np.mean,
+                  markers="D",
+                  scale=1,
+                  color="black",
+                  ax=ax[1],
+                  join=False)
     p.set_yscale("log")
     p.set_title("Time to Report")
     p.set_ylabel("log(Seconds)")
     p.set_xlabel("Choice (rewarded)")
     p.set_xticks([0.0, 1.0], ["R", "L"])
-    p.annotate('p={p_value:.3f}', xy=(0.75, 0.95), xycoords='axes fraction', fontsize=12, color='black')
+    p.annotate('p={p_value:.3f}',
+               xy=(0.75, 0.95),
+               xycoords='axes fraction',
+               fontsize=12,
+               color='black')
 
 
-def interpolate_trials_cubic_spline(df, num_points, column_trial='trial', column_velocity='velocity'):
+def interpolate_trials_cubic_spline(df,
+                                    num_points,
+                                    column_trial='trial',
+                                    column_velocity='velocity'):
     """
     Interpolates velocity and heading direction variables for each trial.
     [DJ trialInterpolated table], note: check keys of the output for interpolated_df attributes
@@ -404,13 +512,16 @@ def interpolate_trials_cubic_spline(df, num_points, column_trial='trial', column
     grouped = df.groupby(column_trial)
 
     # Initialize an empty data frame to store the interpolated data
-    interpolated_df = pd.DataFrame(
-        columns=[column_trial, 'index', column_velocity, "heading_dir", "trial_reward", "choice_R", "choice_L"])
+    interpolated_df = pd.DataFrame(columns=[
+        column_trial, 'index', column_velocity, "heading_dir", "trial_reward",
+        "choice_R", "choice_L"
+    ])
 
     # Iterate through the groups (trials)
     for trial, group in grouped:
         # Create a new index for interpolation
-        new_index = np.linspace(group.index.min(), group.index.max(), num_points)
+        new_index = np.linspace(group.index.min(), group.index.max(),
+                                num_points)
 
         # Perform cubic spline interpolation on the velocity data
         cs = CubicSpline(group.index, group[column_velocity])
@@ -419,24 +530,34 @@ def interpolate_trials_cubic_spline(df, num_points, column_trial='trial', column
         interpolated_trial_step_fraction = cs(new_index)
         cs = CubicSpline(group.index, group["head_dir"])
         head_dir = cs(new_index)
-        trial_reward = np.repeat(np.max(df.reward[group.index]), len(interpolated_velocity))
-        R_choice = np.repeat(np.max(df.mouse_in_R[group.index]), len(interpolated_velocity))
-        L_choice = np.repeat(np.max(df.mouse_in_L[group.index]), len(interpolated_velocity))
+        trial_reward = np.repeat(np.max(df.reward[group.index]),
+                                 len(interpolated_velocity))
+        R_choice = np.repeat(np.max(df.mouse_in_R[group.index]),
+                             len(interpolated_velocity))
+        L_choice = np.repeat(np.max(df.mouse_in_L[group.index]),
+                             len(interpolated_velocity))
 
         # Create a new data frame for the interpolated data of the current trial
         interpolated_trial_df = pd.DataFrame({
-            column_trial: trial,
-            'index': np.linspace(0, num_points, num_points) / num_points,
-            column_velocity: interpolated_velocity,
-            "heading_dir": head_dir,
-            "trial_reward": trial_reward,
-            "choice_R": R_choice,
-            "choice_L": L_choice
-
+            column_trial:
+            trial,
+            'index':
+            np.linspace(0, num_points, num_points) / num_points,
+            column_velocity:
+            interpolated_velocity,
+            "heading_dir":
+            head_dir,
+            "trial_reward":
+            trial_reward,
+            "choice_R":
+            R_choice,
+            "choice_L":
+            L_choice
         })
 
         # Append the interpolated data to the final data frame
-        interpolated_df = interpolated_df.append(interpolated_trial_df, ignore_index=True)
+        interpolated_df = interpolated_df.append(interpolated_trial_df,
+                                                 ignore_index=True)
 
     return interpolated_df
 
@@ -454,14 +575,28 @@ def _plot_heading_direction(df, ax):
     """
 
     int_df = interpolate_trials_cubic_spline(df, 200)  # FETCH
-    g = sns.lineplot(data=int_df, x="index", y="heading_dir", hue="choice_L", style="trial_reward",
-                     palette=['#FD672C', "#5C0A72"], ax=ax,
-                     style_order=int_df['trial_reward'].sort_values(ascending=False).unique())
+    g = sns.lineplot(data=int_df,
+                     x="index",
+                     y="heading_dir",
+                     hue="choice_L",
+                     style="trial_reward",
+                     palette=['#FD672C', "#5C0A72"],
+                     ax=ax,
+                     style_order=int_df['trial_reward'].sort_values(
+                         ascending=False).unique())
 
-    choice_legend = plt.legend(handles=g.get_lines()[:2], labels=["Correct", "Incorrect"], title="Right",
-                               loc='center right', bbox_to_anchor=(1, 0.7), fontsize=6)
-    reward_legend = plt.legend(handles=g.get_lines()[2:], labels=["Correct", "Incorrect"], title="Left",
-                               loc='center right', bbox_to_anchor=(1, 0.4), fontsize=6)
+    choice_legend = plt.legend(handles=g.get_lines()[:2],
+                               labels=["Correct", "Incorrect"],
+                               title="Right",
+                               loc='center right',
+                               bbox_to_anchor=(1, 0.7),
+                               fontsize=6)
+    reward_legend = plt.legend(handles=g.get_lines()[2:],
+                               labels=["Correct", "Incorrect"],
+                               title="Left",
+                               loc='center right',
+                               bbox_to_anchor=(1, 0.4),
+                               fontsize=6)
 
     # Add the custom legends to the plot
     ax.add_artist(choice_legend)
@@ -487,21 +622,40 @@ def _plot_trial_velocities(df, ax):
     """
 
     int_df = interpolate_trials_cubic_spline(df, 200)
-    g = sns.lineplot(data=int_df, x="index", y="velocity", hue="trial_reward", palette=["#284553", "#B52916"], ax=ax[0])
+    g = sns.lineplot(data=int_df,
+                     x="index",
+                     y="velocity",
+                     hue="trial_reward",
+                     palette=["#284553", "#B52916"],
+                     ax=ax[0])
     g.set_xlabel("Trial length (interpolated)")
     g.set_ylabel("Velocity (cm/S)")
 
     handles, labels = ax[0].get_legend_handles_labels()
-    ax[0].legend(handles=handles, labels=["Incorrect", "Correct"], title="rewarded", loc='upper right')
+    ax[0].legend(handles=handles,
+                 labels=["Incorrect", "Correct"],
+                 title="rewarded",
+                 loc='upper right')
 
-    p = sns.lineplot(data=int_df, x="index", y="velocity", hue="choice_L", palette=['#FD672C', "#5C0A72"], ax=ax[1])
+    p = sns.lineplot(data=int_df,
+                     x="index",
+                     y="velocity",
+                     hue="choice_L",
+                     palette=['#FD672C', "#5C0A72"],
+                     ax=ax[1])
     p.set_xlabel("Trial length (interpolated)")
     p.set_ylabel("Velocity (cm/S)")
     handles, labels = ax[1].get_legend_handles_labels()
-    ax[1].legend(handles=handles, labels=['R', 'L'], title="choice", loc='upper right')
+    ax[1].legend(handles=handles,
+                 labels=['R', 'L'],
+                 title="choice",
+                 loc='upper right')
 
 
-def vr4mice_summary_plots(key, save_path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/", database=True):
+def vr4mice_summary_plots(
+        key,
+        save_path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/",
+        database=True):
     """
     Generate a summary plot for a given dataset.
     final results to email
@@ -546,7 +700,9 @@ def vr4mice_summary_plots(key, save_path="/Users/thomassainsbury/Documents/Mathi
     heading_angle_plot = fig.add_subplot(gs[3, 4:6])
 
     _plot_all_trajectories(df=df, box_df=df["box_df"], ax=ax1)
-    _plot_rewarded_trial_trajectories(df=df, box_df=df["box_df"], ax=[ax2, ax3])
+    _plot_rewarded_trial_trajectories(df=df,
+                                      box_df=df["box_df"],
+                                      ax=[ax2, ax3])
 
     _plot_time_to_rewards(df, ax=[time_plots_1, time_plots_2])
     _plot_trial_velocities(df, ax=[velocity_plot_reward, velocity_plot_choice])
@@ -557,7 +713,8 @@ def vr4mice_summary_plots(key, save_path="/Users/thomassainsbury/Documents/Mathi
 
     # check if exists:
     full_path = base_analysis.OutputPlots.get_path(base=save_path,
-                                                   key=key, ext=".png")
+                                                   key=key,
+                                                   ext=".png")
     plt.savefig(full_path)
     # path relative to docker
 

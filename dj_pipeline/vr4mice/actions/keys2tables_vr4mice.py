@@ -9,18 +9,14 @@ from vr4mice.actions.helpers_dj import no_value, get_state, \
 """
 
 transformer = {  # todo add file preprocessing
-
     'prop_obj_on_left': 'probGreenLeft',
     'slit_size': 'slitSize',  # meta
-
     'target_from_midline': 'targetsFromMidline',
     'targets_height': 'targetsheight',
-
     'report_delay': 'mouseReportDelay',
     'right_report_box': 'R_report_box',  # meta
     'left_report_box': 'L_report_box',  # meta
     'camera_rotation': 'camera_roation',
-
     'left_box_x_min': 'L_box_x_min',
     'left_box_x_max': 'L_box_x_max',
     'left_box_z_min': 'L_box_z_min',
@@ -34,10 +30,8 @@ transformer = {  # todo add file preprocessing
     'tt_box_z_min': 'TT_box_z_min',
     'tt_box_z_max': 'TT_box_z_max',
     'tt_box_angle': 'TT_box_angle',
-
     'keypoints_filepath': 'dlc_path',  # local : FS ?!
     'proc_filepath': 'proc_path',
-
     'exp_teensy_filepath': 'teensy_path',  # pickle, local
     'timestamp_filepath': 'camera_path',  # TS, : FS
     'video_filepath': 'video_path',  # remote
@@ -54,18 +48,14 @@ local_def = {
     "obj_left": get_state,
     "report_left": get_state,
     "report_right": get_state,
-
     'keypoints_filepath': get_path,
     'proc_filepath': get_path,
-
     'exp_teensy_filepath': get_path,
     'exp_session_filepath': get_path,
     'timestamp_filepath': get_path,
-
     'video_filepath': get_remote_path,
     "model_name": get_model_name,  # from file name?
     "camera": get_camera,  # from file name?
-
     "duration": get_video_meta,
     "fps": get_video_meta,
     "width": get_video_meta,
@@ -73,12 +63,7 @@ local_def = {
 }
 
 # KEYS #
-dataset = [
-    "dataset",
-
-    "exp_teensy_filepath",
-    "exp_session_filepath"
-]
+dataset = ["dataset", "exp_teensy_filepath", "exp_session_filepath"]
 
 vr4mice_table = [
     "dataset",  #
@@ -106,14 +91,12 @@ dlc_video = [
 keypoints = [
     "video_filepath",
     "model_name",  #
-
     'keypoints_filepath',
     'proc_filepath'
 ]
 
 box = [
     "dataset",
-
     'left_box_x_min',
     'left_box_x_max',
     'left_box_z_min',
@@ -130,24 +113,10 @@ box = [
 ]
 
 metadata = [
-    "dataset",
-
-    "cropped_image",
-    "unity_arena_size",
-    "right_report_box",
-    "left_report_box",
-
-    "start_box",
-    "camera_rotation",
-    "prop_obj_on_left",
-
-    "slit_size",
-    "slit_depth",
-    "trial_slit_depth",
-    "block_labels",
-
-    "targets_height",
-    "target_from_midline"
+    "dataset", "cropped_image", "unity_arena_size", "right_report_box",
+    "left_report_box", "start_box", "camera_rotation", "prop_obj_on_left",
+    "slit_size", "slit_depth", "trial_slit_depth", "block_labels",
+    "targets_height", "target_from_midline"
     # "Box",
 ]
 
@@ -166,7 +135,6 @@ mouse_state = [  # corresponds to variable state
 
 state = [
     "dataset",
-
     "start_time",
     "episode",
     "step",
@@ -177,7 +145,6 @@ state = [
 
     # "MouseState",  #
     "mouse_report_delay",
-
     "dlc_x",
     "dlc_y",
     "dlc_heading",
@@ -199,7 +166,6 @@ tables = {  # order matters (dependencies))
 
 dj_tables = {  # in order
     "Dataset": vr4mice.Dataset(),
-
     "MouseState": vr4mice.MouseState(),
     "State": vr4mice.State(),
     "Metadata": vr4mice.Metadata(),

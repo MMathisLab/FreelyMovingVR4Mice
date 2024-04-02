@@ -7,7 +7,7 @@
 local_def = {
     'attributeB': functionB,
     'attributeY': no_value_function,
-    }
+}
 
 table1 = [
     'attributeX',
@@ -31,7 +31,6 @@ dj_tables = {
 transformer = {
     "dj_attribute_name": "raw_data_name",
 }
-
 """
     obligatory fields:
     
@@ -56,4 +55,3 @@ base = {
     "local_def": local_def,
     "transformer": transformer
 }
-

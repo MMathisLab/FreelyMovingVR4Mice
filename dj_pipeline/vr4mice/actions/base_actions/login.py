@@ -5,7 +5,6 @@ import os
 
 
 class LoginUser:
-
     """Represents a user who is authorized to log into a database.
 
     Attributes:
@@ -25,12 +24,15 @@ class LoginUser:
         host (str): The IP address of the server hosting the database.
 
     """
+
     def __init__(self, local=True):
         self.user_name = os.environ["DJ_USER"]
         self.user_password = os.environ["DJ_PWD"]
-        self.db_host = os.environ["DJ_HOST"].replace('"','')
+        self.db_host = os.environ["DJ_HOST"].replace('"', '')
 
-    def __init__(self, user_name=os.environ["DJ_USER"], user_password=os.environ["DJ_PWD"],
+    def __init__(self,
+                 user_name=os.environ["DJ_USER"],
+                 user_password=os.environ["DJ_PWD"],
                  db_host=os.environ["DJ_HOST"]):
         self.user_name = user_name
         self.user_password = user_password

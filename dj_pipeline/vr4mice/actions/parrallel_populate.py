@@ -48,12 +48,10 @@ def parallel_populate_videos(
 
     dj_config = dict(dj.config)
 
-    ret_paths = joblib.Parallel(n_jobs=n_jobs)(
-        worker(video_path, dj_config) for video_path in paths)
+    ret_paths = joblib.Parallel(n_jobs=n_jobs)(worker(video_path, dj_config)
+                                               for video_path in paths)
 
-    failed_paths = [
-        filename for filename in ret_paths if filename is not None
-    ]
+    failed_paths = [filename for filename in ret_paths if filename is not None]
     logger.info(f"""Summary:
                         Successfully populated {len(ret_paths) - len(failed_paths)} video files
                         from dataset {dataset}""")

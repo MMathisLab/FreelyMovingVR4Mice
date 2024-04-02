@@ -10,17 +10,16 @@ local_def = {
     'joystick_name': no_value,
     'force_field_name': no_value,
     #'opto_name': no_value_opto,
-
     'pulse_frequency': default,
     'pulse_length': default,
     'laser_power': default,
-    }
+}
 
 # KEYS #
 session = [
-    'mouse_name', #
-    'day', #
-    'attempt', #
+    'mouse_name',  #
+    'day',  #
+    'attempt',  #
     'doe',
     'session_increment',
     'rig_id',
@@ -34,7 +33,7 @@ session = [
 ]
 
 score_sheet = [
-    'mouse_name', #
+    'mouse_name',  #
     'license',
     'general_assay',
     'housing_assay',
@@ -68,22 +67,21 @@ tables = {
     "Optogenetics": opto,
     "Session": session,
     "MouseScoreSheet": score_sheet,
-
     "MouseScoreSheet_WaterRestriction": scores_sheet_water,
     "SessionScoreSheet": session_score_sheet,
 }
 
 dj_tables = {
     "MouseScoreSheet": mice.MouseScoreSheet(),
-    "MouseScoreSheet_WaterRestriction": mice.MouseScoreSheet_WaterRestriction(),
+    "MouseScoreSheet_WaterRestriction":
+    mice.MouseScoreSheet_WaterRestriction(),
     "SessionScoreSheet": exp.SessionScoreSheet(),
     "Optogenetics": exp.Optogenetics(),
     "Session": exp.Session(),
     "Mice": mice.Mouse(),
 }
 
-transformer = {
-}
+transformer = {}
 
 base = {
     "tables": tables,
@@ -91,4 +89,3 @@ base = {
     "local_def": local_def,
     "transformer": transformer
 }
-
