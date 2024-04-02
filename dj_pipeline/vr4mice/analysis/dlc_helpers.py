@@ -1,12 +1,13 @@
+import bisect
+from math import acos, atan2, copysign, degrees, pi, sqrt
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.signal import savgol_filter
-import matplotlib.pyplot as plt
+from IPython.display import clear_output, display
+from scipy.signal import find_peaks, hilbert, savgol_filter
+
 import seaborn as sns
-from scipy.signal import savgol_filter, hilbert, find_peaks
-from math import sqrt, acos, atan2, copysign, pi, degrees
-from IPython.display import display, clear_output
-import bisect
 
 
 def get_dlc_steps_in_VR_game(step_time, dlc_times):

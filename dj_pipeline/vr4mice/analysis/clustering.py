@@ -1,11 +1,10 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-
 from sklearn.decomposition import PCA
-import umap
 
 import analysis.visual_discrim_functions as vs
+import umap
 
 
 def interpolate_data(df, n_points=200):

@@ -1,8 +1,9 @@
-from analysis.dlc_helpers import filter_dlc, dlc_savgol_filter, dlc_interpolate
-import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
+import numpy as np
 from IPython.display import HTML
+from matplotlib.animation import FuncAnimation
+
+from analysis.dlc_helpers import dlc_interpolate, dlc_savgol_filter, filter_dlc
 
 
 def plot_frame_keypoints(dlc_dict, frame_number=1, heading_direction=None):
@@ -108,9 +109,6 @@ def make_animated_movie(
     ani.save(path, fps=10, extra_args=['-vcodec', 'libx264'])
 
 
-import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib.animation import FuncAnimation
 
 
 # Your existing function, slightly modified to fit into the animation framework

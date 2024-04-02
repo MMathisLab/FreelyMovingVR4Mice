@@ -1,13 +1,16 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 import os
-from scipy.interpolate import CubicSpline
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from scipy import stats
+from scipy.interpolate import CubicSpline
+
+import seaborn as sns
+from vr4mice.schema import vr4mice
+
 #from scipy.signal import savgol_filter, hilbert, find_peaks
 
-from vr4mice.schema import vr4mice
 
 
 def style():
