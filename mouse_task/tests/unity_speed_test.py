@@ -11,17 +11,12 @@ from mlagents_envs.environment import UnityEnvironment
 from mlagents_envs.side_channel.engine_configuration_channel import EngineConfig, EngineConfigurationChannel
 
 
-print("Python version:")
-print(sys.version)
 
-# check Python version
-if (sys.version_info[0] < 3):
-    raise Exception("ERROR: ML-Agents Toolkit (v0.3 onwards) requires Python 3")
-
-engine_configuration_channel = EngineConfigurationChannel()
-env = UnityEnvironment(base_port = 5004, file_name=env_name, side_channels = [engine_configuration_channel])
 address = ('localhost', 6000)
 dlcClient = DLCClient(address=address)
+engine_configuration_channel = EngineConfigurationChannel()
+env = UnityEnvironment(base_port = 5004, file_name=env_name, side_channels = [engine_configuration_channel])
+
 #Reset the environment
 env.reset()
 sent_times = deque()
@@ -33,7 +28,7 @@ group_name = env.get_agent_groups()[0]
 group_spec = env.get_agent_group_spec(group_name)
 
 # Set the time scale of the engine
-engine_configuration_channel.set_configuration_parameters(time_scale = 1.0)
+
 start_time = time.time()
 
 env.reset()

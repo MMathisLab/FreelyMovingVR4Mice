@@ -22,7 +22,6 @@ class MyProcessor_socket():
     def process(self):
         self.vals = self.vals+0.01 
         print(self.vals)
-
         self.conn.send([time.time(), self.vals [0], self.vals [1], self.vals [2], self.vals [3]])
         #self.time_stamp.append(time.time)
         time.sleep(1/50)

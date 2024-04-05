@@ -248,7 +248,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DecisionPeriod: 1
-  DecisionStep: 0
   TakeActionsBetweenDecisions: 0
 --- !u!114 &121224359
 MonoBehaviour:
@@ -279,7 +278,6 @@ MonoBehaviour:
   TeamId: 0
   m_UseChildSensors: 1
   m_UseChildActuators: 1
-  m_DeterministicInference: 0
   m_ObservableAttributeHandling: 0
 --- !u!114 &121224360
 MonoBehaviour:
@@ -2616,7 +2614,7 @@ Canvas:
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
-  m_TargetDisplay: 3
+  m_TargetDisplay: 1
 --- !u!224 &1883528559
 RectTransform:
   m_ObjectHideFlags: 0
