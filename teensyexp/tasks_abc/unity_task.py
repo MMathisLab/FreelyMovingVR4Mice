@@ -80,6 +80,7 @@ class UnityTask(Task):
 
         ### set up state observations and video (if necessary)
         obs_dim = [len(shape) for shape in self.agent_spec.observation_shapes]
+        #print(obs_dim)
         self.vec_obs_ind = np.where([d == 1 for d in obs_dim])[0][0]
         self.vis_obs_ind = np.where([d == 3 for d in obs_dim])[0]
         self.vis_obs_ind = self.vis_obs_ind[0] if len(self.vis_obs_ind) > 0 else None

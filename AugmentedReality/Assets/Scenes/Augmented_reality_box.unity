@@ -324,6 +324,7 @@ MonoBehaviour:
   R_box_x_max: 0
   R_box_z_min: 0
   R_box_z_max: 0
+  offaxis: {fileID: 1159814513}
   TT_box_x_min: 0
   TT_box_x_max: 0
   TT_box_z_min: 0
@@ -607,6 +608,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d081fb598c4f6644bec0850bcb0b121, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  main_camera: {fileID: 1159814509}
+  photodiode: {fileID: 1883528558}
 --- !u!1 &330501135
 GameObject:
   m_ObjectHideFlags: 0
@@ -697,7 +700,7 @@ Camera:
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
-  m_FOVAxisMode: 0
+  m_FOVAxisMode: 1
   m_Iso: 200
   m_ShutterSpeed: 0.005
   m_Aperture: 16
@@ -1645,7 +1648,7 @@ GameObject:
   - component: {fileID: 1159814515}
   m_Layer: 0
   m_Name: Off_axis_camera
-  m_TagString: Untagged
+  m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

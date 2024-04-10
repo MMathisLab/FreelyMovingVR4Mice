@@ -31,6 +31,7 @@ def save_data(path="/Users/thomassainsbury/Documents/Mathis_lab/socket_test_2/re
 while True:
     this_read = dlcClient.read()
     if (this_read != None):
+        print(this_read)
         time_from_send.append(this_read ["time"])
         time_from_rec.append(time.time())
         previous_used.append(this_read ["previous"])

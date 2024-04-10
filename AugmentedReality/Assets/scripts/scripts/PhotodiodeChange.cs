@@ -13,7 +13,7 @@ public class PhotodiodeChange : MonoBehaviour
         squareImage = GetComponent<Image>();
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         ChangeColor();
         if (squareImage.color == Color.black){

@@ -17,12 +17,12 @@ class MyProcessor_socket():
         print('connection accepted from', self.listener.last_accepted)
         self.time_stamp = []
         self.st = time.time()
-        self.vals = np.array([300.,300.,2.,3.])
+        self.vals = np.array([0.,-9.,2.,3.])
         
     def process(self):
-        self.vals = self.vals+0.01 
+        self.vals = self.vals 
         print(self.vals)
-        self.conn.send([time.time(), self.vals [0], self.vals [1], self.vals [2], self.vals [3]])
+        self.conn.send([time.time(), np.sin(time.time())*9, self.vals [1], self.vals [2], self.vals [3]])
         #self.time_stamp.append(time.time)
         time.sleep(1/50)
         #print(self.st - time.time())
