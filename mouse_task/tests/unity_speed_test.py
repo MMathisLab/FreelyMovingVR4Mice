@@ -5,6 +5,7 @@ from collections import deque
 from teensyexp.tasks_abc.dlc_deque_socket import DLCClient
 from mlagents_envs.environment import UnityEnvironment
 from mlagents_envs.environment import ActionTuple, BaseEnv
+from mlagents_envs.side_channel.engine_configuration_channel import EngineConfigurationChannel
 from mlagents_envs.side_channel.environment_parameters_channel import EnvironmentParametersChannel
 
 # Define the path to the Unity environment binary
@@ -12,8 +13,8 @@ env_name = "/Users/thomassainsbury/Documents/Mathis_lab/Mathis_lab_code/FreelyMo
 train_mode = True  # Whether to run the environment in training or inference mode
 
 # Initialize DLCClient and Unity environment
-#channel = EngineConfigurationChannel()
 channel = EnvironmentParametersChannel()
+#channel = EnvironmentParametersChannel()
 env = UnityEnvironment(file_name=env_name, side_channels=[channel])
 
 #channel.set_configuration_parameters(time_scale = 1)
@@ -54,13 +55,14 @@ dlcClient = DLCClient(address=address)
 
 
 
-while (time.time() - start_time) < 60:
+
+
+while (time.time() - start_time) < 20:
     this_read = dlcClient.read()
     if this_read is None:
          print(this_read)
     if this_read is not None:
         #if this_read ["time"] - this_read ["vals"][0] < 0.01:
-            
         sent_times.append(this_read ["vals"][0])
         read_times.append(this_read ["time"])
         data.append(this_read ["vals"][1])

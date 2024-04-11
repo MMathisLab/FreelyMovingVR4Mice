@@ -35,10 +35,13 @@ class DLCClient(object):
             this_read = self.input_data.pop()
             rec_time = time.time()
             self.input_data = deque()
+            self.previous = this_read
             
             #print(this_read)
             #print("read from incomming:", rec_time, this_read)
             return {"time": rec_time, "vals": this_read, "previous": 0}
+
+            
         
         #elif self.previous:
         #    rec_time, this_read = self.previous.pop()
