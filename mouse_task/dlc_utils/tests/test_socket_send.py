@@ -24,7 +24,7 @@ class MyProcessor_socket():
         #print(self.vals)
         self.conn.send([time.time(), np.sin(time.time())*9, self.vals [1], self.vals [2], self.vals [3]])
         #self.time_stamp.append(time.time)
-        time.sleep(1/50)
+        time.sleep(1/20)
         #print(self.st - time.time())
 
 socket = MyProcessor_socket()

@@ -23,10 +23,17 @@ public class activate_displays : MonoBehaviour
             }
             
         }
-        else
+        if (Display.displays.Length == 1) 
         {
           main_camera.GetComponent<Camera>().targetDisplay = 0;  
           photodiode.targetDisplay = 0;
+          //Debug.Log(main_camera.GetComponent<Camera>().enabled);
+          //Display.displays[0].Activate();
+        }
+        if (Display.displays.Length == 2) 
+        {
+          main_camera.GetComponent<Camera>().targetDisplay = 0;  
+          
           //Debug.Log(main_camera.GetComponent<Camera>().enabled);
           //Display.displays[0].Activate();
         }
