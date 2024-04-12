@@ -22,3 +22,5 @@ start_time = time.time()
 
 while time.time() - start_time < 10:
     task.loop()
+
+task.stop()
