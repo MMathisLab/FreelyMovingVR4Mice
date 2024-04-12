@@ -44,7 +44,7 @@ public class Mouse_move : Agent
   public float R_box_x_max;
   public float R_box_z_min;
   public float R_box_z_max;
-
+  public Camera offaxis;
   public float TT_box_x_min;
   public float TT_box_x_max;
   public float TT_box_z_min;
@@ -143,6 +143,7 @@ public class Mouse_move : Agent
         speed = currVel.magnitude;
         prevPos = this.transform.position;
         //Debug.Log(speed);
+       
         mouseInRight_box = agentInBox(R_box_x_min, R_box_x_max, R_box_z_min, R_box_z_max, false);
         
         mouseInLeft_box = agentInBox(L_box_x_min, L_box_x_max, L_box_z_min, L_box_z_max, false);
