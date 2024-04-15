@@ -5,7 +5,9 @@ import time
 import numpy as np
 
 # Configure the serial port
-ser = serial.Serial('/dev/tty.usbmodem1402', 9600)  # Adjust 'COM1' to your serial port and 9600 to your baud rate
+ser = serial.Serial(
+    "/dev/cu.usbmodem11302", 9600
+)  # Adjust 'COM1' to your serial port and 9600 to your baud rate
 
 # Prepare to collect data
 data = []
@@ -21,10 +23,10 @@ while True:
         break  # Timeout reached, stop reading
 
     if ser.in_waiting > 0:
-        line = ser.readline().decode('utf-8').rstrip()
-        now = time.time() - start_time# Current time
-        print(f'[{now}] Received: {line}')
-        
+        line = ser.readline().decode("utf-8").rstrip()
+        now = time.time() - start_time  # Current time
+        print(f"[{now}] Received: {line}")
+
         # Record data and timestamp
         timestamps.append(now)
         data.append(float(line))  # Assuming incoming data is a float
@@ -36,11 +38,11 @@ ser.close()
 data = np.array(data)
 
 plt.plot(timestamps, data)
-#times = np.array(timestamps)[data > 0]
-#print(np.mean(np.diff(times)))
-plt.title('Serial Data')
-plt.xlabel('Time')
-plt.ylabel('Value')
+# times = np.array(timestamps)[data > 0]
+# print(np.mean(np.diff(times)))
+plt.title("Serial Data")
+plt.xlabel("Time")
+plt.ylabel("Value")
 plt.grid(True)
 plt.xticks(rotation=45)
 plt.show()

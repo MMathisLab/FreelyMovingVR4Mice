@@ -262,12 +262,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 11
+    VectorObservationSize: 12
     NumStackedVectorObservations: 1
     m_ActionSpec:
-      m_NumContinuousActions: 3
+      m_NumContinuousActions: 4
       BranchSizes: 
-    VectorActionSize: 03000000
+    VectorActionSize: 04000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
     hasUpgradedBrainParametersWithActionSpec: 1
@@ -334,6 +334,7 @@ MonoBehaviour:
   speed: 0
   distractor: 0
   targets_visable: 0
+  photodiode_change_value: 0
   sync: {fileID: 804046499}
 --- !u!54 &121224361
 Rigidbody:
@@ -1131,6 +1132,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sync_state: 0
+  mouse_agent: {fileID: 121224360}
 --- !u!1 &815752298
 GameObject:
   m_ObjectHideFlags: 0

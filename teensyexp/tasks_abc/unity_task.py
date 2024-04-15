@@ -10,6 +10,9 @@ import numpy as np
 from mlagents_envs.environment import ActionTuple
 from mlagents_envs.environment import UnityEnvironment
 from mlagents_envs.side_channel.float_properties_channel import FloatPropertiesChannel
+from mlagents_envs.side_channel.environment_parameters_channel import (
+    EnvironmentParametersChannel,
+)
 import cv2
 from teensyexp.tasks_abc.task import Task
 
@@ -55,7 +58,8 @@ class UnityTask(Task):
         self.display_args = ["-monitor", str(monitor), "-fullscreen", str(fullscreen)]
         self.agent_group = agent_group
         self.agent_num = 0
-        self.channel = FloatPropertiesChannel()
+        self.channel = EnvironmentParametersChannel()
+        # self.channel = FloatPropertiesChannel()
 
         self.epochs = np.cumsum(self.as_list(epochs))
         self.epoch_trials = epoch_trials
@@ -110,7 +114,7 @@ class UnityTask(Task):
 
         # Access the environment state
         decision_steps, terminal_steps = self.env.get_steps(self.agent)
-        state = decision_steps.obs[self.vec_obs_ind]
+        self.state = decision_steps.obs[self.vec_obs_ind]
         self.episode = 1
 
         # - - - - - - - - - - - PREVIOUS VERSION - - - - - - - - - - - #
@@ -190,13 +194,13 @@ class UnityTask(Task):
         if self.agent_num in terminal_steps.agent_id:
             # Return TerminalSteps which contains the last observation, reward, etc., for the agent
             step_result = terminal_steps[self.agent_num]
-            done = True
+            # done = True
         else:
             # Return DecisionSteps which contains the current observation, reward, etc., for the agent
             step_result = decision_steps[self.agent_num]
-            done = False
+            # done = False
 
-        return step_result, done
+        return step_result
 
     def get_state(self):
         """
@@ -241,15 +245,29 @@ class UnityTask(Task):
         if self.agent_spec.action_spec.is_continuous():
             dtype = np.float32
             action_size = self.agent_spec.action_spec.continuous_size
-        else:
+            # action = np.zeros(action_size, dtype=dtype)
+            action = np.array(
+                [
+                    np.sin(time.time()) * 9,
+                    -9.0,
+                    0.59740335,
+                    np.abs(np.sin(time.time() * 4)),
+                ],
+                dtype=dtype,
+            )
+            # action = np.array(
+            #     [
+            #         0.0,
+            #         -9.0,
+            #         0.59740335,
+            #         np.abs(np.sin(time.time() * 4)),
+            #     ],
+            #     dtype=dtype,
+            # )
+
+        if self.agent_spec.action_spec.is_discrete():
             dtype = np.int32
             action_size = self.agent_spec.action_spec.discrete_size
-
-        # Create a zero action array based on the action type and size
-        if self.agent_spec.action_spec.is_continuous():
-            action = np.zeros(action_size, dtype=dtype)
-        else:
-            # For discrete actions, we need an array for each branch, each set to zero
             action = np.zeros(len(action_size), dtype=dtype)
 
         return action
@@ -266,7 +284,7 @@ class UnityTask(Task):
         increments agent's number
         """
         self.set_channel()
-        self.log_channel()
+        # self.log_channel()
         self.env.reset()
         self.agent_num += 1
         step_result = self.get_step_result()
@@ -294,25 +312,33 @@ class UnityTask(Task):
         self.action_vec.append(self.action)
 
         ### take step in environment ###
-
         action_tuple = ActionTuple()
         action_tuple.add_continuous(self.action.reshape(1, -1))
         self.env.set_actions(self.agent, action_tuple)
+        # print("Action: ", self.action)
 
-        # self.env.set_actions(self.agent, self.action)
         self.env.step()  # unity env++
 
         ### get observations ###
-        step_result, done = self.get_step_result()
+        step_result = self.get_step_result()
         if hasattr(self, "vid_writer"):
             self.vid_writer.write(step_result.obs[self.vis_obs_ind])
 
-        self.reward = step_result.reward
+        ### Get the new simulation results ###
+        decision_steps, terminal_steps = self.env.get_steps(self.agent)
+
+        # Check if the agent is done (terminated)
+        if self.agent_num in terminal_steps.agent_id:
+            self.reward = terminal_steps[self.agent_num].reward
+            done = True
+        if self.agent_num in decision_steps.agent_id:
+            self.reward = decision_steps[self.agent_num].reward
+            done = False
+
         self.reward_vec.append(self.reward)
         self.ep_reward += self.reward
 
         self.terminal = done  # last frame --> next trial
-        # self.terminal = step_result
         self.terminal_vec.append(self.terminal)
         self.check_reward()
 
@@ -361,7 +387,7 @@ class UnityTask(Task):
             "episode": np.array(self.episode_vec),
             "step": np.array(self.step_vec),
             "step_time": np.array(self.time_vec),
-            "state": np.array(self.state_vec),
+            "state": np.array(self.state_vec, dtype=object),
             "action": np.array(self.action_vec),
             "reward": np.array(self.reward_vec),
             "terminal": np.array(self.terminal_vec),
