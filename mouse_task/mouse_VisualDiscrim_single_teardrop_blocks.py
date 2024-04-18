@@ -215,7 +215,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         this_read = self.dlcClient.read()
         # print(this_read)
         if this_read != None:
-            print(this_read)
+            # print(this_read)
             self.params = np.array(this_read["vals"])
             if self.t_count == 0:
                 self.filt = OneEuroFilter(
@@ -238,20 +238,21 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
             self.dlc_read_time.append(this_read["time"])
 
             ## interpolate mouse pixel space into arena space ##
-            x = np.interp(
-                x,
-                [self.cropped_image[0], self.cropped_image[1]],
-                [self.unity_arena_size[0], self.unity_arena_size[1]],
-            )
-            z = np.interp(
-                z,
-                [self.cropped_image[2], self.cropped_image[3]],
-                [self.unity_arena_size[2], self.unity_arena_size[3]],
-            )
+            # x = np.interp(
+            #     x,
+            #     [self.cropped_image[0], self.cropped_image[1]],
+            #     [self.unity_arena_size[0], self.unity_arena_size[1]],
+            # )
+            # z = np.interp(
+            #     z,
+            #     [self.cropped_image[2], self.cropped_image[3]],
+            #     [self.unity_arena_size[2], self.unity_arena_size[3]],
+            # )
             self.degrees = (head_angle - (self.rotate_camera)) % 360
             output = np.array([x, z, self.degrees, photodiode_intensity])
             # print(x, " ", z, " ")
         else:
+            print("missed dlc frame")
             output = np.array([0, 0, 0, photodiode_intensity])
 
         return output.reshape((1, -1))

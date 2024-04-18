@@ -27,15 +27,16 @@ class MyProcessor_socket:
         self.conn.send(
             [
                 time.time(),
-                np.sin(time.time() * 4) * 10,
+                np.sin(time.time()) * 9,
                 self.vals[1],
                 self.vals[2],
                 self.vals[3],
-                np.abs(np.sin(time.time() * 4)),
+                (np.sin(time.time() * 4) + 1) / 2,
             ]
         )
         # self.time_stamp.append(time.time)
-        time.sleep(1 / 20)
+        ## Sending data at 50Hz ##
+        time.sleep(1 / 50)
         # print(self.st - time.time())
 
 

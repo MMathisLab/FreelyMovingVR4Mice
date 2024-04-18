@@ -251,7 +251,7 @@ class UnityTask(Task):
                     np.sin(time.time()) * 9,
                     -9.0,
                     0.59740335,
-                    np.abs(np.sin(time.time() * 4)),
+                    (np.sin(time.time() * 4) + 1) / 2,
                 ],
                 dtype=dtype,
             )
