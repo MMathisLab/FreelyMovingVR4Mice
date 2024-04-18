@@ -128,7 +128,8 @@ For example:
    vr4mice.Dataset()
   ```
    Note: if the subfolder name is different (not `/data/data` but `/data/rawdata` for example, change the path in `run.py` script).
-
+   Attention: ignore .npy files by now, as it needs some pre-initialisation part for base schemas (don't put .npy in /data/data)
+   
 ##### Additional Configurations
 
 10. The logs can be checked in the logs current folder.
