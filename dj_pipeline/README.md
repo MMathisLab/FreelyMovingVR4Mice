@@ -148,3 +148,8 @@ For example:
 10. The logs can be checked in the logs current folder.
 
 11. *(Optional)* Configure cron jobs for regular populating and menu file generation.
+```bash
+0 2 * * * bash /mnt/database/auxPipelines-DataJoint_Mathis/vr4mice/cron_script.sh >> ~/vrlogs/cron.log 2>&1
+
+@reboot  bash /mnt/database/auxPipelines-DataJoint_Mathis/vr4mice/cron_script_reboot.sh >> ~/vrlogs/cron.log 2>&1
+```
