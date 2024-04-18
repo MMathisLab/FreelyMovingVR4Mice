@@ -76,8 +76,15 @@ For example:
    mkdir -p /path/to/data_directory
    # For example: (Attention concerning permissions on /mnt,
    # Run ```sudo chmod 0777 /mnt``` if needed or change the location)
+   
    mkdir -p /mnt/database/vr4mice/vr4mice_database/database
    mkdir -p /mnt/database/vr4mice/vr4mice_database/data
+   
+   # if gui is not used /data/dlc_video /data/data have to be created manually
+   mkdir -p /mnt/database/vr4mice/vr4mice_database/data/data/data
+   mkdir -p /mnt/database/vr4mice/vr4mice_database/data/data/dlc_video
+   
+   # if gui is not used: unused
    mkdir -p /shared
    ```
 4. To make the database accessible from any machine in the local subnet, change the IP in docker-compose to the server's IP (and choose the port). Find the IP address via `ifconfig`.
@@ -112,7 +119,7 @@ For example:
    
 9. Test populate:
    Upload some files from GUI(s): .pickle .npy in the `/mnt/database/vr4mice/vr4mice_database/data/data` folder (2 times data) and run:
- 
+   Note: place .hdf5, PROC.TS.npy files in `/mnt/database/vr4mice/vr4mice_database/data/data/dlc_video` respectively (/data/dlc_video path for container)
  ```bash
    %run run.py populate
    # Import some schemas and check that Dataset is here
