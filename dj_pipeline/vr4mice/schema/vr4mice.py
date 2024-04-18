@@ -1,7 +1,6 @@
 from typing import List
 
 import datajoint as dj
-
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
 

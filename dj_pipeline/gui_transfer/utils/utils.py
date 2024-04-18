@@ -1,14 +1,14 @@
 import json
-from pathlib import Path
-from datetime import datetime
-import numpy as np
-from utils.alert import AlertMsg
-from config.config import config
-from utils.logger import Logger
-import subprocess
 import shutil
+import subprocess
+from datetime import datetime
+from pathlib import Path
 
-from PyQt5.QtWidgets import QComboBox, QLineEdit, QLabel, QPlainTextEdit
+import numpy as np
+from config.config import config
+from PyQt5.QtWidgets import QComboBox, QLabel, QLineEdit, QPlainTextEdit
+from utils.alert import AlertMsg
+from utils.logger import Logger
 
 
 def load_dj_input(path_dj_data, path_json):

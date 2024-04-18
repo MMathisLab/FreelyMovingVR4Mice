@@ -1,5 +1,6 @@
-import datajoint as dj
 import os
+
+import datajoint as dj
 
 
 def connect_to_database(user, prefix="", create_tables=True, storage="/storage"):

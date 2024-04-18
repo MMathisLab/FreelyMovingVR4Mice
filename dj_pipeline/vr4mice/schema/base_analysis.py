@@ -1,12 +1,11 @@
+from pathlib import Path
 from typing import List
 
 import datajoint as dj
-from pathlib import Path
+import pandas as pd
+from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
-
-from vr4mice.schema import vr4mice
-import pandas as pd
 
 schema_name = "base_analysis"
 schema = get_schema(schema_name, locals())
