@@ -6,7 +6,7 @@ _**config_path.json**_ should to be placed in the working directory</br>
 _**config_path.json**_ contains the absolute or relative path to the "config folder" where all experiment-related config files are placed
 </br>_Default:_ </br>
 _**FreelyMovingVR4Mice**_ is considered to be the default working directory (local) </br>
-The local _**vr4mice/cfg**_ is the default "config folder" (in case of absence of _config_path.json_)
+The local `vr4mice/cfg` is the default "config folder" (in case of absence of _config_path.json_)
 
 
 ## Task config file 
@@ -17,7 +17,7 @@ Adjust absolute paths in [mouse_task/task_config.json](mouse_task/task_config.js
 "dlc_video_absolute_path": path to video file to process</br>
 "ar_env_unity_absolute_path": path to unity binary environment</br>
 
-_Note: don't modify config file location and key-words in .json_
+***Note: don't modify config file location and key-words in .json***
 
 
 ## Rig config file

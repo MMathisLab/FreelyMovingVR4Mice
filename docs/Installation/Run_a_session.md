@@ -1,18 +1,21 @@
 # How to run a session
-Run: 
 
-cd to the vr4mice directory and then:
+Activate your conda environment where you installed the **vr4mice** package source code like this:
 ```
-$ vr4mice
+conda activate name_of_env
 ```
-and the gui that controls the experiment logic should appear!
+Then, to start a session, you can run:
+```
+vr4mice
+```
+Finally, the GUI that controls the experiment logic should appear!
 
-Alternatively, you can add these commands to a .bat script so that all you need to do it click on an icon on your [desktop](./create_desktop_icon.md)
+Alternatively, you can add these commands to a .bat script so that all you need to do it click on an icon on your [desktop](./create_desktop_icon.md).
 
-</br>_**Note:**_ close the program via gui via stop-close, and not via crtl-C/crtl-Z 
+</br>_**Note:**_ close the program via GUI via stop-close, and not via **crtl-C**/**crtl-Z** 
 
 
-### Interactions with gui
+### Interactions with GUI
 
 First:
   - Select your desired configuration

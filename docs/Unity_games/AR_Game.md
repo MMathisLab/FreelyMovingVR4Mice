@@ -2,32 +2,28 @@
 
 This page outlines the steps required to install the Unity Augmented Reality game(s).
 
-### Install Unity
+### Install Unity:
 
-#### Download and install Anaconda.
+#### Download and install Anaconda:
 
 You can install Anaconda from the [Anaconda website](https://www.anaconda.com/products/individual) directly.
 
-#### Download and install unity (version 2019.3.2).
+#### Download and install unity (version 2022.3.15f1).
 
 Install both in the same order: 
 - Download [UnityHub](https://unity3d.com/fr/get-unity/download).
-- Download the right version (2019.3.2) of [Unity Editor](https://unity3d.com/fr/unity/whats-new/2019).
+- Download the right version (2022.3.15f1) of [Unity Editor](https://unity3d.com/fr/unity/whats-new/2019).
 
-#### Install the MLagents package.
+#### Install the MLagents package:
 
-- Clone the `ml-agents` [github repo](https://github.com/Unity-Technologies/ml-agents).
+***Nota bene***: _you can skip this part if you already cloned the repository while following the {doc}`../../docs/Installation/installSumUp`_
 
-```
-git clone git@github.com:Unity-Technologies/ml-agents.git
-```
+- Clone the `ml-agents` [github repo](https://github.com/Unity-Technologies/ml-agents):
 
-- Reset the version back to the one that we are using:
-
-```
-cd ml_agent
-git reset --hard 803e62ff32f731995c11254a06c9ae15fe0a7567
-```
+	```
+	git clone --branch release_21 https://github.com/Unity-Technologies/ml-agents.git
+	```
+	(_the `--branch release_21` option will switch to the tag of the latest stable release, which currently is **21** and is the one we use. Omitting that will get the main branch which is potentially unstable_)
 
 ### Add the `AugmentedReality` project to Unity.
 
@@ -36,7 +32,7 @@ git reset --hard 803e62ff32f731995c11254a06c9ae15fe0a7567
 - Open the project. 🚨 You should get a `Unity Package Manager Error` pop-up message saying that Unity cannot find the `mlagents` package. Click `Continue` so the project opens anyway.
 
 (unity:mlagents)=
-### Add the `mlagents` package to your project.
+### Add the `mlagents` package to your project:
 
 - Go to `Window` >> `Package manager` >> click on the `+` icon.
 
