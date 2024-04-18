@@ -1,0 +1,36 @@
+name: Code Formatting
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  format-code:
+    name: Format Python code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: |
+          pip install black isort
+
+      - name: Format code with Black and Isort
+        run: |
+          black .
+          isort .
+
+      - name: Check for changes
+        run: |
+          git diff --exit-code || (echo "Code formatting changes detected, please run black and isort locally and commit changes" && exit 1)
