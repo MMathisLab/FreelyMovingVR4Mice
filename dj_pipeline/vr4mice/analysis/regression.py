@@ -4,15 +4,138 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
 import sklearn
-from matplotlib.collections import LineCollection
-from sklearn.model_selection import LeaveOneGroupOut
+import torch
+import matplotlib.collections
+import sklearn.model_selection
+import sklearn.preprocessing
 
 import plotting
+import lstm
 import seaborn as sns
 
+device = "cuda:0"
 
-def predict_decision(df, label="norm_x", n_splits=10, per_mouse=False):
-    """Predict the decision of the animal based on the `label` data, through a logistic regression.
+def train_lstm(df, 
+               label, 
+               learning_rate=0.01, 
+               weight_decay=0.01,
+               num_layers=1, 
+               hidden_units=16, 
+               output_size=1, 
+               num_epochs=1000,
+               per_trial=True,
+               logger=None):
+    """LSTM to predict the decision of the animal.
+    
+    Sessions and trials are considered independently in the model.
+    
+    Args:
+        df: The dataframe.
+        label: The name of the column in the `df` dataframe.
+        learning_rate: 
+        num_layers: 
+        hidden_units: 
+        output_size:
+        num_epochs:
+        per_trial:
+        
+    Returns:
+        The initial dataframe with an extra `pred` column, containing the probability that the 
+        animal went to the left.
+    """
+    
+    # Preprocessing
+    multi_data = []
+    multi_labels = []
+    sessions = []
+    
+    group = "session_trial"
+
+    for session in df[group].unique():
+        df_session = df[(df[group]==session)]
+        points = df_session[label].values.T
+        
+        multi_data.append(torch.Tensor(sklearn.preprocessing.StandardScaler().fit_transform(points.T))[:,None,:])
+        multi_labels.append(torch.Tensor(np.expand_dims(df_session.trial_R_choice.values, axis=1).astype(int)))
+        sessions.append(df_session["session"].values[0])
+    
+    logger.info(np.unique(np.array(sessions)).shape)
+    
+    # Data splitting per trial, so that balanced between sessions
+    indices = np.arange(len(sessions))
+    
+    sss = sklearn.model_selection.StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
+    train_indices, val_indices = next(sss.split(indices, sessions))
+    
+    logger.info(len(train_indices))
+    logger.info(len(val_indices))
+
+    sessions_data = [multi_data[i] for i in train_indices]
+    sessions_val_data = [multi_data[i] for i in val_indices]
+    
+    sessions_labels = [multi_labels[i] for i in train_indices]
+    sessions_val_labels = [multi_labels[i] for i in val_indices]
+
+    # Define the model & parameters
+    model = lstm.LSTMModel(input_size=sessions_data[0].shape[-1], 
+                           hidden_units=hidden_units, 
+                           output_size=output_size,
+                           num_layers=num_layers, 
+                           device=device).to(device)
+
+    criterion = torch.nn.MSELoss()  # For regression tasks; use nn.CrossEntropyLoss() for classification
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+
+    for epoch in range(num_epochs):
+        model.train()
+        for session_data, session_label in zip(sessions_data, sessions_labels):
+            session_data, session_label = session_data.to(device), session_label.to(device)
+            model.hidden = model.init_hidden(batch_size=1)#session_data.shape[0])
+            
+            optimizer.zero_grad()
+            
+            outputs = model(session_data)
+            loss = criterion(outputs, session_label)
+            
+            loss.backward()
+            optimizer.step()
+        
+        if epoch % 10 == 0:
+            model.eval()
+            with torch.no_grad():
+                test_losses = []
+                for test_data, test_label in zip(sessions_val_data, sessions_val_labels):
+                    test_data, test_label = test_data.to(device), test_label.to(device)
+                    model.hidden = model.init_hidden(batch_size=1)#test_data.shape[0])
+
+                    test_outputs = model(test_data)
+                    test_loss = criterion(test_outputs, test_label)
+                    test_losses.append(test_loss.item())
+
+                avg_test_loss = sum(test_losses) / len(test_losses)
+                if logger is not None: 
+                    logger.info(f'Epoch [{epoch}/{num_epochs}], Train Loss: {loss.item():.4f}, Test Loss: {avg_test_loss:.4f}')
+                else: 
+                    print(f'Epoch [{epoch}/{num_epochs}], Train Loss: {loss.item():.4f}, Test Loss: {avg_test_loss:.4f}')
+    
+    # Inference for all sessions, using trained model
+    model.to(device)
+    model.eval()
+
+    outputs = []
+    with torch.no_grad():
+        for session_data in multi_data:
+            model.hidden = model.init_hidden(batch_size=1)#session_data.shape[0])
+            
+            session_data = session_data.to(device)
+            outputs.append(model(session_data).detach().cpu().numpy())
+    
+    
+    df.loc[:, "pred"] = np.concatenate(outputs)
+    return df, model, val_indices
+    
+def train_logistic_regression(df, label="norm_x", n_splits=10, per_mouse=False):
+    """Logistic regression to predict th decision of the animal.
     
     Example: 
     ```
@@ -36,11 +159,11 @@ def predict_decision(df, label="norm_x", n_splits=10, per_mouse=False):
     
     Returns:
         The initial dataframe with an extra `pred` column, containing the probability that the 
-        animal went to the right.
+        animal went to the left.
     """
 
     data = df[label].values
-    labels = df.trial_R_choice.values
+    labels = df.trial_L_choice.values
 
     if not isinstance(label, list):
         data = data.reshape(-1, 1)
@@ -50,7 +173,7 @@ def predict_decision(df, label="norm_x", n_splits=10, per_mouse=False):
 
     if per_mouse:
         sessions = df.session.values
-        logo = LeaveOneGroupOut()
+        logo = sklearn.model_selection.LeaveOneGroupOut()
         for i, (train_index,
                 test_index) in enumerate(logo.split(data, labels, sessions)):
             model.fit(data[train_index], labels[train_index])
@@ -63,6 +186,23 @@ def predict_decision(df, label="norm_x", n_splits=10, per_mouse=False):
 
     df.loc[:, "pred"] = pred[:, 1]
 
+    return df, model
+
+
+
+def predict_decision(df, label, model, model_args): 
+    if model == "logistic_regression": 
+        df, model = train_logistic_regression(df, label, 
+                                    n_splits=model_args["n_splits"], 
+                                    per_mouse=model_args["per_mouse"])
+    elif model == "lstm": 
+        df, model, _ = train_lstm(df, label,
+                                 learning_rate=model_args["lr"],
+                                 num_layers=model_args["num_layers"], 
+                                 hidden_units=model_args["hidden_units"],
+                                 num_classes=model_args["num_classes"],
+                                 num_epochs=model_args["num_epochs"])
+        
     return df, model
 
 
@@ -118,33 +258,38 @@ def find_decision_point_per_trial(trial_data, threshold_uncertainty):
             return trial_data.loc[index]
 
 
-def plot_proba_per_trial(df, trials):
+def plot_proba_per_trial(df, trials, time=False, logdir=None, save=None):
     fig, ax = plt.subplots(5, 3, figsize=(15, 15))
     ax = ax.flatten()
     for session_id, session in enumerate(df.session.unique()):
-        for trial_id, trial in df[df["session"] == session].groupby(["trial"]):
+        for trial_id, trial in df[df["session"] == session].groupby(["session_trial"]):
             if trial_id[0] in trials:
+                
                 # Reset index within each group for a uniform timescale
                 trial = trial.reset_index(drop=True)
-                sns.lineplot(data=trial,
-                             x="bin_centers",
-                             y="pred",
-                             ax=ax[session_id],
-                             errorbar="se")
-                #trial["pred"].plot(ax[session_id])
+                if time: 
+                    trial["pred"].plot(ax=ax[session_id])
+                else:
+                    sns.lineplot(data=trial,
+                                x="bin_centers",
+                                y="pred",
+                                ax=ax[session_id],
+                                errorbar="se")
             else:
                 continue
 
-    #plt.savefig("seaborn_plot.svg")
+    if save is not None:
+        plt.savefig(logdir + f"{save}_proba_plot.png")
 
 
 def plot_decision_points_on_trajectory(df,
                                        df_box,
                                        decision_point=None,
                                        color="red",
-                                       session="30559_2024-02-19_1",
                                        trials=list(range(25, 30)),
-                                       ax=None):
+                                       ax=None,
+                                       logdir=None,
+                                       save=None):
     """
     
     Example: 
@@ -181,20 +326,19 @@ def plot_decision_points_on_trajectory(df,
                df_box["left_reward_z"],
                color="purple")
 
-    for trial in df[df["session"] == session].trial.unique():
+    for trial in df.session_trial.unique():
         if trial in trials:
 
             points = np.array([
-                df[(df["session"] == session) & (df["trial"] == trial)]["x"],
-                df[(df["session"] == session) & (df["trial"] == trial)]["y"]
+                df[df["session_trial"] == trial]["x"],
+                df[df["session_trial"] == trial]["y"]
             ]).T.reshape(-1, 1, 2)
             segments = np.concatenate([points[:-1], points[1:]], axis=1)
 
-            lc = LineCollection(segments,
+            lc = matplotlib.collections.LineCollection(segments,
                                 cmap='PuOr_r',
                                 norm=plt.Normalize(0, 1))
-            lc.set_array(df[(df["session"] == session)
-                            & (df["trial"] == trial)]["pred"])
+            lc.set_array(df[df["session_trial"] == trial]["pred"])
             lc.set_linewidth(2)
 
             ax.add_collection(lc)
@@ -204,15 +348,16 @@ def plot_decision_points_on_trajectory(df,
             if decision_point is not None:
                 mpl.rcParams['lines.markersize'] = 10
                 ax.scatter(
-                    decision_point[(decision_point["session"] == session)
-                                   & (decision_point["trial"] == trial)]["x"],
-                    decision_point[(decision_point["session"] == session)
-                                   & (decision_point["trial"] == trial)]["y"],
+                    decision_point[df["session_trial"] == trial]["x"],
+                    decision_point[df["session_trial"] == trial]["y"],
                     color=color)
 
             ax.legend([], [], frameon=False)
         else:
             continue
+        
+    if save is not None:
+        plt.savefig(logdir + f"{save}_trajectories_plot.png")
 
 
 def find_decision_point_from_distance(trial_data, df_box):
@@ -283,7 +428,7 @@ def find_decision_point_from_value(trial_data,
     return trial_data.iloc[idx, :]
 
 
-def pair_plot(decision_point, ax=None):
+def pair_plot(decision_point, ax=None, save=False):
 
     if ax is None:
         fig = plt.figure(figsize=(3, 5))
@@ -315,4 +460,7 @@ def pair_plot(decision_point, ax=None):
     print(
         stats.ttest_rel(mean_mice[mean_mice["aperture"] == 4.3]["y"],
                         mean_mice[mean_mice["aperture"] == 12]["y"]))
-    #plt.savefig("seaborn_plot.svg")
+    
+    if save:
+        plt.savefig("pair_plot.svg")
+
