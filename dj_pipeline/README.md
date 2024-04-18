@@ -128,8 +128,20 @@ For example:
    vr4mice.Dataset()
   ```
    Note: if the subfolder name is different (not `/data/data` but `/data/rawdata` for example, change the path in `run.py` script).
-   Attention: ignore .npy files by now, as it needs some pre-initialisation part for base schemas (don't put .npy in /data/data)
    
+   Attention: ignore .npy files by now, as it needs some pre-initialisation part for base schemas (don't put .npy in /data/data)
+
+   To populate analysis run:
+ ```bash
+   from vr4mice.schema import base_analysis, federated_db
+   base_analysis.DataFrame.populate()
+   base_analysis.BoxDataFrame()
+   base_analysis.OutputPlots.populate()
+
+ # or via run.py
+   %run run.py analysis
+```
+
 ##### Additional Configurations
 
 10. The logs can be checked in the logs current folder.
