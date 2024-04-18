@@ -221,6 +221,7 @@ class Metadata(dj.Manual):
     distractor_selection=NULL: longblob      # new
     """
 
+
 @schema
 class Box(dj.Manual):
     """

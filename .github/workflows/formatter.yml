@@ -20,7 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.9
 
       - name: Install dependencies
         run: |
@@ -28,8 +28,9 @@ jobs:
 
       - name: Format code with Black and Isort
         run: |
-          black .
-          isort .
+          black dj_pipeline
+          #isort dj_pipeline
+
 
       - name: Check for changes
         run: |
