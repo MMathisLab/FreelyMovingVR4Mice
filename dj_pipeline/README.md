@@ -117,7 +117,7 @@ For example:
    from vr4mice.schema import vr4mice
    vr4mice.Dataset()```
    
-9. Test populate:
+9. **Test populate:**
    Upload some files from GUI(s): .pickle .npy in the `/mnt/database/vr4mice/vr4mice_database/data/data` folder (2 times data) and run:
    Note: place .hdf5, PROC.TS.npy files in `/mnt/database/vr4mice/vr4mice_database/data/data/dlc_video` respectively (/data/dlc_video path for container)
  ```bash
@@ -129,7 +129,7 @@ For example:
   ```
    Note: if the subfolder name is different (not `/data/data` but `/data/rawdata` for example, change the path in `run.py` script).
    
-   Attention: ignore .npy files by now, as it needs some pre-initialisation part for base schemas (don't put .npy in /data/data)
+   **Attention:** ignore .npy files by now, as it needs some pre-initialisation part for base schemas (don't put .npy in /data/data)
 
    To populate analysis run:
  ```bash
