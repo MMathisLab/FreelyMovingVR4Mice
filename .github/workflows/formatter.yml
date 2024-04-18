@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install black isort
+          pip install black==22.6 isort
 
       - name: Format code with Black and Isort
         run: |
