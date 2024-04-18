@@ -80,9 +80,10 @@ For example:
    mkdir -p /mnt/database/vr4mice/vr4mice_database/database
    mkdir -p /mnt/database/vr4mice/vr4mice_database/data
    
-   # if gui is not used /data/dlc_video /data/data have to be created manually
+   # if gui is not used /data/dlc_video /data/data /data/summary_plots have to be created manually
    mkdir -p /mnt/database/vr4mice/vr4mice_database/data/data/data
    mkdir -p /mnt/database/vr4mice/vr4mice_database/data/data/dlc_video
+   mkdir -p /mnt/database/vr4mice/vr4mice_database/data/summary_plots
    
    # if gui is not used: unused
    mkdir -p /shared
