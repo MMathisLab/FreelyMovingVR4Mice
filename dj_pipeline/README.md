@@ -55,13 +55,75 @@ For example:
 `from vr4mice.schema import vr4mice` \
 `vr4mice.Dataset()`
 
-#### DataJoint database deployment (on server or locally):
+## DataJoint database deployment (on server or locally): Setup Instructions
 
 1. Ensure that Docker Compose is installed and that the user is added to the Docker group.
+   - Refer to the [Docker installation guide](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository).
+    ```bash
+    # Add user to the Docker group
+   sudo usermod -aG docker <username>
+    ```
 2. Download the current repository.
+   - Make sure your git key is active. [Learn how to generate a SSH key for git](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key).
+   ```bash
+   git clone git@github.com:MMathisLab/FreelyMovingVR4Mice.git
+   cd dj_pipeline
+   ```
 3. Adjust the paths in the shared volumes for the database storage and shared volumes.
-4. Build the Docker Compose using the command "make build" to create the image for the DataJoint database and client container (do not use "sudo").
-5. Modify the root credentials via MySQL and grant user rights via MySQL using the appropriate user-related file (a template is provided in the "mysql_acces" folder).
-6. Configure cron jobs for regular populating and menu file generation.
-7. To connect to the DataJoint database, follow the instructions for local or remote connection provided in the previous section.
+   ```bash
+   # Create folders if needed to store the data and database
+   mkdir -p /path/to/database_directory
+   mkdir -p /path/to/data_directory
+   # For example: (Attention concerning permissions on /mnt,
+   # Run ```sudo chmod 0777 /mnt``` if needed or change the location)
+   mkdir -p /mnt/database/vr4mice/vr4mice_database/database
+   mkdir -p /mnt/database/vr4mice/vr4mice_database/data
+   mkdir -p /shared
+   ```
+4. To make the database accessible from any machine in the local subnet, change the IP in docker-compose to the server's IP (and choose the port). Find the IP address via `ifconfig`.
 
+##### Building and Running
+
+5. Build the Docker Compose using the command `make build_all` to create the image for the DataJoint database and client container (do not use "sudo"). Note: this command will also start the containers.
+   make build_all
+
+6. Add default MySQL credentials to `~/.my.cnf` file:
+   ```bash
+   [client-vr4mice]
+   host=127.0.0.1
+   user=root
+   password=simple
+   port=3309
+   ```
+   Now you can run `make mysql` to connect to the database from MySQL interface. Here you can create a new user or change the credentials of an existing one.
+
+7. Install base schemas inside the container by running `make base_install` from the host.
+   ```make base_install```
+
+##### Remote Access and Testing
+
+8. To connect to the DataJoint database remotely, follow the instructions for local or remote connection provided in the previous section. To connect from the same server under the root account, you can call `make ipython` that will place you in the container's IPython shell.
+   ```bash
+   %run run.py connect
+   # Import some schemas to play with 
+   from base_schemas.schemas import exp, mice
+   from vr4mice.schema import vr4mice
+   vr4mice.Dataset()```
+   
+9. Test populate:
+   Upload some files from GUI(s): .pickle .npy in the `/mnt/database/vr4mice/vr4mice_database/data/data` folder (2 times data) and run:
+ 
+ ```bash
+   %run run.py populate
+   # Import some schemas and check that Dataset is here
+   from base_schemas.schemas import exp, mice
+   from vr4mice.schema import vr4mice
+   vr4mice.Dataset()
+  ```
+   Note: if the subfolder name is different (not `/data/data` but `/data/rawdata` for example, change the path in `run.py` script).
+
+##### Additional Configurations
+
+10. The logs can be checked in the logs current folder.
+
+11. *(Optional)* Configure cron jobs for regular populating and menu file generation.
