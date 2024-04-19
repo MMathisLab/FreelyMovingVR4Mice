@@ -25,14 +25,14 @@ Install both in the same order:
 	```
 	(_the `--branch release_21` option will switch to the tag of the latest stable release, which currently is **21** and is the one we use. Omitting that will get the main branch which is potentially unstable_)
 
-### Add the `AugmentedReality` project to Unity.
+### Add and Open the `AugmentedReality` project to Unity.
 
 - Open the Unity-Hub app.
 - Go to `Add` >> ``Add from disk`` and add the `FreelyMovingVR4Mice/AugmentedReality` folder as a project (you should have the repo cloned on your computer for that step -- see {doc}`../../docs/Installation/installSumUp` if that's not the case).
-- Open the project. 🚨 You should get a `Unity Package Manager Error` pop-up message saying that Unity cannot find the `mlagents` package. Click `Continue` so the project opens anyway.
+- Open the project.
 
 (unity:mlagents)=
-### Add the `mlagents` package to your project:
+<!-- ### Add the `mlagents` package to your project:
 
 - Go to `Window` >> `Package manager` >> click on the `+` icon.
 
@@ -56,6 +56,6 @@ Install both in the same order:
 - Go to the `ml-agents` folder you cloned previously and select `com.unity.ml-agents/package.json`. This should import the `ml-agents` package.
 
 - If you now click on the ▶️ play icon, the game should start to run with no compile errors.
-
+ -->
 
 ℹ️ If you encounter any problems, let the Mathis lab (as of now - 07.12.23 - contact Célia Benquet) know so that they can update this document with solutions!
