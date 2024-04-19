@@ -63,6 +63,8 @@ while (time.time() - start_time) < 10:
     this_read = dlcClient.read()
     # if this_read is None:
     # 	 print(this_read)
+    if this_read is None:
+        time.sleep(0)
     if this_read is not None:
         # if this_read ["time"] - this_read ["vals"][0] < 0.01:
         print(f"sent data: {this_read['vals'][1]}")
