@@ -33,11 +33,10 @@ When you come to use the GUI for the first time you will have to setup the rig c
 
 - First connect the teensy to the computer using the USB cable
 - Then launch the GUI 
-- open the dropdown menu under config and click on add new config
-Then specify: 
-    - The serial port of the specific microcontroller (e.g. on windows, COM1)
-    - The baud rate, specified in the arduino sketch
-    - List the inputs that are read from the microcontroller, separated by commas. For example, this could be lever presses.
+- Open the dropdown menu under config and click on add new config, then specify: 
+    - The ***serial port*** of the specific microcontroller (e.g. on windows, COM1)
+    - The ***baud rate***, specified in the arduino sketch
+    - List the ***inputs*** that are read from the microcontroller, separated by commas. For example, this could be lever presses.
     - For each different command you would like to write to the microcontroller, click Add Output, and provide:
     - Name for the command (e.g. water). The string character associated with the command (that you have coded into the arduino sketch; e.g. W). Parameters for the command, separated by commas (e.g. duration)
     - Add subjects as desired

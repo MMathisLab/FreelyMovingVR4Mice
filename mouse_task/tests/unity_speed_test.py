@@ -79,7 +79,13 @@ while (time.time() - start_time) < 10:
 
         # Set the actions
         random_action = np.array(
-            [this_read["vals"][1], this_read["vals"][2], 0.59740335], dtype=np.float32
+            [
+                this_read["vals"][1],
+                this_read["vals"][2],
+                0.59740335,
+                this_read["vals"][-1],
+            ],
+            dtype=np.float32,
         ).reshape(1, -1)
         print(random_action)
         action_tuple = ActionTuple()

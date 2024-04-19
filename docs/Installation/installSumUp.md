@@ -14,7 +14,7 @@ The FreelyMovingVR4Mice repository contains main **vr4mice** package (src code: 
 	git clone --branch release_21 https://github.com/Unity-Technologies/ml-agents.git
 	```
 	```
-	cd ml-agents-release_21/
+	cd ml-agents/
 	```
 	- Inside this main directory find the `ml-agents-envs/` sub-directory and open, with any text editor, the `setup.py` file found within it. Near the end of the file, find the list of required dependecies and modify the numpy version: change it from `"numpy==1.21.2"` to `"numpy==1.23.3"` then save. When that is done, run the following two commands in order:
 		```
@@ -23,11 +23,27 @@ The FreelyMovingVR4Mice repository contains main **vr4mice** package (src code: 
 		```
 		python -m pip install ./ml-agents
 		```
+		> ***Nota bene***: if you're on a Mac with Apple Silicon (i.e. M1 chip, M2, etc...) you might encounter an **error** when executing the second command of the above pair. This is because `mlagents` depends on the `onnx==1.12.0` package version. Apple Silicon support, though, has only been introduced starting with `onnx==1.13.0` which, itself, depends on a slightly newer version of `protobuf` than `mlagents`. So, if you see
+		> ```
+		>	note: This error originates from a subprocess, and is likely not a problem with pip.
+		>	ERROR: Failed building wheel for onnx
+		>	Running setup.py clean for onnx
+		>Failed to build onnx
+		>ERROR: Could not build wheels for onnx, which is required to install pyproject.toml-based projects
+		>```
+		> it likely means you may need to do the following to solve the problem:
+		> - in the `ml-agents/ml-agents/setup.py` file modify `"onnx==1.12.0"` to `"onnx==1.13.0"` and `"protobuf>=3.6,<3.20"` to `"protobuf>=3.6,<=3.20.2"`
+		> - in the `ml-agents/ml-agents-envs/setup.py` file modify `"protobuf>=3.6,<3.20"` to `"protobuf>=3.6,<=3.20.2"`
+		> - save everything and run:
+		>	```
+		>	python -m pip install ./ml-agents
+		>	```
+		> 	Make sure everything goes smoothly.
 	- To check the installation was successful, run the following command:
 		```
 		mlagents-learn -h
 		```
-		This should print-out the manual on how to use the `mlagents-learn` command.
+		This should print-out the **help** manual on how to use the `mlagents-learn` command.
 
 3. Finally go "up" one level (back to the location where you cloned the previous repository) and download the **vr4mice** source code:
 	```
@@ -44,6 +60,11 @@ The FreelyMovingVR4Mice repository contains main **vr4mice** package (src code: 
 		```
 		pip install .
 		```
+	- To check everything installed successfully (assuming no **ERRORS** were displayed in the process), try to run the following in your conda environment:
+		```
+		vr4mice
+		```
+		The GUI should appear on your screen!
 
 ## Install DLCliveGUI
 DLClivegui handles reading from the camera and live pose estimation. Before installing DLClivegui you will need to install the correct drivers and C libraries for your camera. You can find links to these [here](https://github.com/DeepLabCut/DeepLabCut-live-GUI/blob/master/docs/camera_support.md). Make sure you add the C libraries to your system path if you are using a windows machine.
@@ -63,7 +84,7 @@ you can then start the gui by typing `dlclivegui` when in the dlclive_gui enviro
   - check rights on port access (modify via sudo chmod if needed)
 #### Config files 
   - Set up the [config files](./Config_file_setup.md)
-#### desktop icon
+#### Desktop icon
   -  How to create [desktop icon](./create_desktop_icon.md) using a .bat script (windows)
 
 
