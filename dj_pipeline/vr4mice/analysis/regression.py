@@ -40,11 +40,12 @@ def predict_decision(df, label="norm_x", n_splits=10, per_mouse=False):
     """
 
     data = df[label].values
-    labels = df.trial_R_choice.values
+    labels = df.trial_L_choice.values
 
     if not isinstance(label, list):
         data = data.reshape(-1, 1)
-        pred = np.empty((data.shape[0], 2))
+    pred = np.empty((data.shape[0], 2))
+    scores = np.empty((data.shape[0]))
 
     model = sklearn.linear_model.LogisticRegression()
 
@@ -61,7 +62,9 @@ def predict_decision(df, label="norm_x", n_splits=10, per_mouse=False):
         for i, (train_index, test_index) in enumerate(kf.split(data)):
             model.fit(data[train_index], labels[train_index])
             pred[test_index] = model.predict_proba(data[test_index])
+            scores[test_index] = (model.predict(data[test_index]) == labels[test_index])
 
+    df.loc[:, "pred_score"] = scores
     df.loc[:, "pred"] = pred[:, 1]
 
     return df, model
