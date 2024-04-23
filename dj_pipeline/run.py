@@ -1,4 +1,4 @@
-import sys
+import sys, os
 
 from base_actions.connect import connect
 from vr4mice.utils.logger import Logger, config_logger
@@ -20,6 +20,27 @@ from vr4mice.utils.logger import Logger, config_logger
 """
 logger = Logger.get_logger()
 
+
+def create_folder_if_not_exist(folder_path):
+    if not os.path.exists(folder_path):
+        try:
+            os.makedirs(folder_path)
+            logger.info(f"Folder '{folder_path}' created successfully.")
+        except OSError as e:
+            logger.warning(f"Error: {e}")
+            exit(1)
+    else:
+        logger.info(f"Folder '{folder_path}' already exists.")
+
+
+def check_folder_existence(folder_path):
+    if not os.path.exists(folder_path):
+        logger.warning(f"Folder '{folder_path}' does not exist. Exiting.")
+        sys.exit(1)
+    else:
+        logger.info(f"Folder '{folder_path}' exists.")
+
+
 if __name__ == "__main__":
     config_logger(level="INFO", debug=False)
 
@@ -35,12 +56,25 @@ if __name__ == "__main__":
     elif mode == "populate":
         from vr4mice.actions.populate_rig import populate_rig
 
-        populate_rig(path="/data/data")
+        path = "/data/data"
+        check_folder_existence(path)
+        populate_rig(path)
 
     elif mode == "fetch":
         from vr4mice.actions.fetch_data import fetch_data
 
+        path = "/shared"
+        check_folder_existence(path)
+
         fetch_data(dst="/shared/gui_menu.npy")
+
+    elif mode == "analysis":
+        from vr4mice.schema import base_analysis, federated_db
+
+        create_folder_if_not_exist("/data/summary_plots")
+        base_analysis.DataFrame.populate()
+        base_analysis.BoxDataFrame()
+        base_analysis.OutputPlots.populate()
 
     elif mode == "connect":
         from vr4mice.schema import vr4mice
