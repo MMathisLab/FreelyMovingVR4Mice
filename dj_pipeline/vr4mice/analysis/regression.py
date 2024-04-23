@@ -56,19 +56,19 @@ def train_lstm(df,
         points = df_session[label].values.T
         
         multi_data.append(torch.Tensor(sklearn.preprocessing.StandardScaler().fit_transform(points.T))[:,None,:])
-        multi_labels.append(torch.Tensor(np.expand_dims(df_session.trial_R_choice.values, axis=1).astype(int)))
+        multi_labels.append(torch.Tensor(np.expand_dims(df_session.trial_L_choice.values, axis=1).astype(int)))
         sessions.append(df_session["session"].values[0])
     
-    logger.info(np.unique(np.array(sessions)).shape)
+    #logger.info(np.unique(np.array(sessions)).shape)
     
     # Data splitting per trial, so that balanced between sessions
     indices = np.arange(len(sessions))
     
-    sss = sklearn.model_selection.StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
+    sss = sklearn.model_selection.StratifiedShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
     train_indices, val_indices = next(sss.split(indices, sessions))
     
-    logger.info(len(train_indices))
-    logger.info(len(val_indices))
+    #logger.info(len(train_indices))
+    #logger.info(len(val_indices))
 
     sessions_data = [multi_data[i] for i in train_indices]
     sessions_val_data = [multi_data[i] for i in val_indices]
@@ -167,7 +167,7 @@ def train_logistic_regression(df, label="norm_x", n_splits=10, per_mouse=False):
 
     if not isinstance(label, list):
         data = data.reshape(-1, 1)
-        pred = np.empty((data.shape[0], 2))
+    pred = np.empty((data.shape[0], 2))
 
     model = sklearn.linear_model.LogisticRegression()
 
@@ -242,18 +242,18 @@ def find_decision_point_per_trial(trial_data, threshold_uncertainty):
     threshold_left = threshold_uncertainty
 
     # Filter values above the threshold
-    if all(trial_data["trial_R_choice"] > 0.5):
+    if all(trial_data["trial_L_choice"] > 0.5):
         above_threshold = trial_data[trial_data['pred'] > threshold_right]
     else:
         above_threshold = trial_data[trial_data['pred'] < threshold_left]
 
     for index in above_threshold.index:
         subsequent_values = trial_data.loc[index:]['pred']
-        if all(trial_data["trial_R_choice"] > 0.5) and all(
+        if all(trial_data["trial_L_choice"] > 0.5) and all(
                 subsequent_values >= above_threshold.loc[index, 'pred']):
             # Returning the step of the decision point
             return trial_data.loc[index]
-        elif all(trial_data["trial_R_choice"] < 0.5) and all(
+        elif all(trial_data["trial_L_choice"] < 0.5) and all(
                 subsequent_values <= above_threshold.loc[index, 'pred']):
             return trial_data.loc[index]
 
@@ -363,7 +363,7 @@ def plot_decision_points_on_trajectory(df,
 def find_decision_point_from_distance(trial_data, df_box):
     #print(trial_data["trial"].values[0], trial_data["session"].values[0])
 
-    if all(trial_data["trial_R_choice"] > 0.5):
+    if all(trial_data["trial_L_choice"] > 0.5):
         trial_data = trial_data[trial_data["mouse_in_R"] < 1]
         #trial_data["dist"] = abs(df_box["right_reward_x"] - trial_data["x"])
         trial_data["dist"] = np.sqrt(
@@ -390,7 +390,7 @@ def find_decision_point_from_value(trial_data,
                                    label="heading_dir_velocity"):
     #print(trial_data["trial"].values[0], trial_data["session"].values[0])
 
-    if all(trial_data["trial_R_choice"] > 0.5):
+    if all(trial_data["trial_L_choice"] > 0.5):
         trial_data = trial_data[trial_data["mouse_in_R"] < 1]
         trial_data["dist"] = abs(df_box["right_reward_x"] - trial_data["x"])
     else:
@@ -403,7 +403,7 @@ def find_decision_point_from_value(trial_data,
                           <= 0)
     good_dir = trial_data  #[(trial_data["next"])]
 
-    if all(trial_data["trial_R_choice"] > 0.5):
+    if all(trial_data["trial_L_choice"] > 0.5):
         test = ((good_dir["y"] > df_box["right_reward_z"]) &
                 (good_dir["dist"] < 2))
         good_dir = good_dir[~test]

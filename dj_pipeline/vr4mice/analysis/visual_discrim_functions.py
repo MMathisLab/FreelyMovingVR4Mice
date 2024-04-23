@@ -310,53 +310,59 @@ def interpolate_group(group, n_points, interpolation_columns, value_columns):
         value_columns (List[str]): List of the names of the columns containing the values to interpolate.
 
     Returns:
-        pandas DataFrame of length `n_points`, containing the interpolated data and the interpolation 
+        pandas DataFrame of length `n_points`, containing the interpolated data and the interpolation
         columns data for all groups.
 
     """
     # Generate new evenly spaced x values within the original range for interpolation
     x_new = np.linspace(group.index.min(), group.index.max(), n_points)
-    
+
     # Retrieve groupby identifiers (they are uniform within the group)
     ids = {}
     for group_column in interpolation_columns:
         ids[group_column] = group[group_column].iloc[0]
-    
+
     # Dictionary to collect new interpolated values
-    interpolated_data = {'time': x_new}
-    
+    interpolated_data = {"time": x_new}
+
     for column in value_columns:
         x = group.index
         y = group[column]
-        
+
         # Fit Cubic Spline
         cs = scipy.interpolate.CubicSpline(x, y)
-        
+
         # Interpolate y values at the new x positions
         y_new = cs(x_new)
-        
+
         # Store the interpolated values
         interpolated_data[column] = y_new
-    
+
     interpolated_df = pd.DataFrame(interpolated_data)
-    
+
     for group_column in interpolation_columns:
         interpolated_df[group_column] = ids[group_column]
-    
+
     return interpolated_df
 
 
 
-def interpolate(df, n_points=100, interpolation_columns=["mouse_name", "date", "attempt", "trial"], value_columns=["x", "norm_x", "velocity", "head_dir"]):
+
+def interpolate(
+    df,
+    n_points=100,
+    interpolation_columns=["session", "trial"],
+    value_columns=["x", "norm_x", "velocity", "head_dir"],
+):
     """
     Interpolates the variables in the value columns provided for each group formed by the interpolation columns.
-    
+
     Note: Check keys of the output for interpolated_df attributes.
     Note: By default group the data frame by ["mouse_name", "date", "attempt", "trial"].
 
-    The dataframe is grouped by `interpolation_columns` and the values contained in the columns 
+    The dataframe is grouped by `interpolation_columns` and the values contained in the columns
     `value_columns` are interpolated so that each group is `n_points` samples.
-    
+
     Args:
         df: pandas DataFrame containing the data to be interpolated.
         num_points (int): the number of points to interpolate.
@@ -369,11 +375,13 @@ def interpolate(df, n_points=100, interpolation_columns=["mouse_name", "date", "
     interpolated_dfs = []
 
     # Compute the interpolation for each trial
-    interpolated_dfs = [interpolate_group(group, n_points, interpolation_columns, value_columns) for _, group in df.groupby(interpolation_columns)]
+    interpolated_dfs = [
+        interpolate_group(group, n_points, interpolation_columns, value_columns)
+        for _, group in df.groupby(interpolation_columns)
+    ]
     final_interpolated_df = pd.concat(interpolated_dfs).reset_index(drop=True)
-    
-    return final_interpolated_df
 
+    return final_interpolated_df
 
 
 def calculate_choice_bin(df, trial_rewarded = 0.5, trial_tortuosity_thresh = 100):
