@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.MLAgents;
@@ -7,65 +7,73 @@ using UnityEngine.UI;
 
 public class Target_spawner : MonoBehaviour
 {
-	public float targetsFromMidline = 1;
-	public float targetsZpos = 3;
-	public float targetsheight = 4;
-	public float target_size = 1;
-	public GameObject blue_target;
-	public GameObject green_target;
-	public GameObject R_wall;
-	public GameObject L_wall;
-	public GameObject occluding_wall;
-	public GameObject middle_occluding_wall;
-	public float probGreenLeft;
-	public float slitSize = 2;
-	public float slitDepth;
-	public bool green_on_left;
-	public GameObject bt;
-	public GameObject gt;
-	public Vector3 Lwall_pos;
-	public Vector3 Rwall_pos;
-	public float wall_height;
-	bool mouse_can_report;
-	// IFloatProperties resetParams;
-	public Renderer rend;
-	public GameObject[] targets;
-	public float target_selection = 0f;
-	public float distractor_selection = 0f;
-	public float occlusion_type = 0f;
-	public float object_on_left;
+    public float targetsFromMidline = 1;
+    public float targetsZpos = 3;
+    public float targetsheight = 4;
+    public float target_size = 1;
+    public GameObject blue_target;
+    public GameObject green_target;
+    public float target_rotation = 0f;
+    public GameObject Ri_wall;
+    public GameObject Le_wall;
+    public GameObject occluding_wall;
+    public GameObject middle_occluding_wall;
+    public float probGreenLeft;
+    public float slitSize;
+    public float hslitSize;
+    public float slitDepth;
+    public bool green_on_left;
+    public GameObject bt;
+    public GameObject gt;
+    public Vector3 Lwall_pos;
+    public Vector3 Rwall_pos; 
+    public float wall_height;
+    bool mouse_can_report;
+    IFloatProperties resetParams;
+    public Renderer rend;
+    public GameObject[] targets;
+    public float target_selection = 0f;
+    public float distractor_selection = 0f;
+    public float occlusion_type = 0f;
+    public float object_on_left;
+
+  
+   
+    // Start is called before the first frame update
+    void Start()
+    {
+        SetResetParams();
+        targetSelection();
+        if (occlusion_type == 1f){
+            occlusion_slit();
+        }
+        if (occlusion_type == 2f){
+            middle_occlusion();
+        }
+        //walls_reset();
+    }
 
 
+    void occlusion_slit(){
+        hslitSize =  slitSize/2;
+        Lwall_pos = new Vector3 (-5f - hslitSize,  wall_height, slitDepth/2);
+        Rwall_pos = new Vector3 (+5f + hslitSize,  wall_height,  slitDepth/2);
+        Le_wall = Instantiate(occluding_wall, Lwall_pos,transform.rotation* Quaternion.Euler (0f, 90f, 0f), this.transform.GetChild(0).transform);
+        Le_wall.name = "Le_wall";
+        Le_wall.transform.localScale += new Vector3(slitDepth-1f, 0f, 0f);
+        
+        Ri_wall = Instantiate(occluding_wall, Rwall_pos,transform.rotation* Quaternion.Euler (0f, 90f, 0f), this.transform.GetChild(0).transform);
+        Ri_wall.name = "Ri_wall";
+        Ri_wall.transform.localScale += new Vector3(slitDepth-1f, 0f, 0f);
+    }
+    public void walls_reset(){
+        hslitSize =  slitSize/2;
+        Destroy(Le_wall);
+        Destroy(Ri_wall);
+        occlusion_slit();
+        //Ri_wall.transform.position.x = +5f + hslitSize;
 
-	// Start is called before the first frame update
-	void Start()
-	{
-		SetResetParams();
-		targetSelection();
-		if (occlusion_type == 1f)
-		{
-			occlusion_slit();
-		}
-		if (occlusion_type == 2f)
-		{
-			middle_occlusion();
-		}
-	}
-
-
-	void occlusion_slit()
-	{
-		slitSize = slitSize / 2;
-		Lwall_pos = new Vector3(-5f - slitSize, wall_height, slitDepth / 2);
-		Rwall_pos = new Vector3(+5f + slitSize, wall_height, slitDepth / 2);
-		GameObject L_wall = Instantiate(occluding_wall, Lwall_pos, transform.rotation * Quaternion.Euler(0f, 90f, 0f), this.transform.GetChild(0).transform);
-		L_wall.name = "L_wall";
-		L_wall.transform.localScale += new Vector3(slitDepth - 1f, 0f, 0f);
-
-		GameObject R_wall = Instantiate(occluding_wall, Rwall_pos, transform.rotation * Quaternion.Euler(0f, 90f, 0f), this.transform.GetChild(0).transform);
-		R_wall.name = "R_wall";
-		R_wall.transform.localScale += new Vector3(slitDepth - 1f, 0f, 0f);
-	}
+    }
 
 	void middle_occlusion()
 	{
@@ -75,37 +83,37 @@ public class Target_spawner : MonoBehaviour
 		M_wall.transform.localScale += new Vector3(slitDepth - 1f, wall_height, slitSize);
 	}
 
-	void targetSpawnerGL()
-	{
-		bt = Instantiate(blue_target, new Vector3(+targetsFromMidline, targetsheight, targetsZpos), transform.rotation * Quaternion.Euler(90f, 0f, -90f));
-		gt = Instantiate(green_target, new Vector3(-targetsFromMidline, targetsheight, targetsZpos), transform.rotation * Quaternion.Euler(90f, 0f, 90f));
+    void targetSpawnerGL()
+    {
+        bt =Instantiate(blue_target, new Vector3(+targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, target_rotation, -90f));
+        gt =Instantiate(green_target, new Vector3(-targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, -target_rotation, 90f));
+        
+    }
 
-	}
+    void setTag(){
+        bt.tag = "Targets";
+        gt.tag = "Targets";
+        Ri_wall.tag ="Wall";
+        Le_wall.tag ="Wall";
+    }
 
-	void setTag()
-	{
-		bt.tag = "Targets";
-		gt.tag = "Targets";
-	}
+     void targetSpawnerGL_1T()
+    {
+        
+        gt =Instantiate(green_target, new Vector3(-targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, -target_rotation, 90f));
+        
+    }
 
-	void targetSpawnerGL_1T()
-	{
+    void targetSpawnerGR()
+    {
+         bt = Instantiate(blue_target, new Vector3(-targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, -target_rotation, 90f));
+         gt = Instantiate(green_target, new Vector3(+targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, +target_rotation, -90f));
+    }
 
-		gt = Instantiate(green_target, new Vector3(-targetsFromMidline, targetsheight, targetsZpos), transform.rotation * Quaternion.Euler(90f, 0f, 90f));
-
-	}
-
-	void targetSpawnerGR()
-	{
-		bt = Instantiate(blue_target, new Vector3(-targetsFromMidline, targetsheight, targetsZpos), transform.rotation * Quaternion.Euler(90f, 0f, 90f));
-		gt = Instantiate(green_target, new Vector3(+targetsFromMidline, targetsheight, targetsZpos), transform.rotation * Quaternion.Euler(90f, 0f, -90f));
-	}
-
-	void targetSpawnerGR_1T()
-	{
-
-		gt = Instantiate(green_target, new Vector3(+targetsFromMidline, targetsheight, targetsZpos), transform.rotation * Quaternion.Euler(90f, 0f, -90f));
-	}
+     void targetSpawnerGR_1T()
+    {
+         gt = Instantiate(green_target, new Vector3(+targetsFromMidline, targetsheight, targetsZpos), transform.rotation* Quaternion.Euler (90f, target_rotation, -90f));
+    }
 
 
 	public void Spawn_distractor()
@@ -154,15 +162,16 @@ public class Target_spawner : MonoBehaviour
 		blue_target = targets[(int)distractor_selection];
 	}
 
-	public void DestroyTargets()
-	{
+    public void DestroyTargets(){
+    
+    GameObject [] targets = GameObject.FindGameObjectsWithTag ("Targets");
+    for(var i = 0 ; i < targets.Length ; i ++)
+     {
+         Destroy(targets[i]);
+     }
+    
 
-		GameObject[] targets = GameObject.FindGameObjectsWithTag("Targets");
-		for (var i = 0; i < targets.Length; i++)
-		{
-			Destroy(targets[i]);
-		}
-	}
+    }
 
 	public void Targets_set_visable()
 	{

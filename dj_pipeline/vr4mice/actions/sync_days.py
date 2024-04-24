@@ -2,6 +2,7 @@ from vr4mice.actions.populate_rig import get_filenames, get_new_file
 from pathlib import Path
 import numpy as np
 from datetime import datetime
+
 """
     Script that helps to synchronise the days of experiments if there is a mismatch.
 """
@@ -45,9 +46,7 @@ def sync_days(path, date_format="%Y-%m-%d"):
 
     todo: can be split and refactored, but not the main codebase
     """
-    ext = [
-        ".npy"
-    ]
+    ext = [".npy"]
 
     dir_list = get_filenames(ext, path)
 
@@ -63,7 +62,7 @@ def sync_days(path, date_format="%Y-%m-%d"):
         name = tmp[0]
         attempt = tmp[2]
 
-        ret = mouse_in_db(name, date) # check if mice in the database
+        ret = mouse_in_db(name, date)  # check if mice in the database
         if ret == None:
             raw_dir.append([date, name, attempt])
         else:

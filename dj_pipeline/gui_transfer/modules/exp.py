@@ -1,14 +1,23 @@
 import logging
-from PyQt5.QtWidgets import QLabel, QGridLayout, QComboBox, \
-    QVBoxLayout, QCheckBox, QPlainTextEdit, QLineEdit
+from PyQt5.QtWidgets import (
+    QLabel,
+    QGridLayout,
+    QComboBox,
+    QVBoxLayout,
+    QCheckBox,
+    QPlainTextEdit,
+    QLineEdit,
+)
 from PyQt5.QtCore import Qt
 
 from utils.helpers import get_idx, get_min_len
 from utils.alert import AlertMsg
 from modules.template import Template
+
 """
     Script contains the experiment's session related GUI module 
 """
+
 
 def _set_exp_labels():
     """
@@ -48,16 +57,16 @@ def _set_exp_choices(dj_dict):
              strings representing the available choices for each field.
     """
     return {
-        "experimenter_name": dj_dict['experimenter_name'],
-        "Rig": dj_dict['Rig'],
-        "Task": dj_dict['Task'],
-        "task_type": dj_dict['task_type'],
+        "experimenter_name": dj_dict["experimenter_name"],
+        "Rig": dj_dict["Rig"],
+        "Task": dj_dict["Task"],
+        "task_type": dj_dict["task_type"],
         # "force_field:" dj_dict['ForceField'],
-        "MouseLicensing": dj_dict['MouseLicensing'],  # different name
-        "Anesthesia": dj_dict['Anesthesia'],
-        "MouseScoreSheet_BodyCondition": dj_dict['MouseScoreSheet_BodyCondition'],
-        "MouseScoreSheet_GeneralAssay": dj_dict['MouseScoreSheet_GeneralAssay'],
-        "MouseScoreSheet_HousingAssesment": dj_dict['MouseScoreSheet_HousingAssesment'],
+        "MouseLicensing": dj_dict["MouseLicensing"],  # different name
+        "Anesthesia": dj_dict["Anesthesia"],
+        "MouseScoreSheet_BodyCondition": dj_dict["MouseScoreSheet_BodyCondition"],
+        "MouseScoreSheet_GeneralAssay": dj_dict["MouseScoreSheet_GeneralAssay"],
+        "MouseScoreSheet_HousingAssesment": dj_dict["MouseScoreSheet_HousingAssesment"],
         # "surgery_type": dj_dict['surgery_type']
     }
 
@@ -95,9 +104,13 @@ class Exp(Template):
            dj_dict: Dictionary with DataJoint tables and their corresponding rows.
            widget: QWidget object containing the GUI.
         """
-        super().__init__(widget=widget, nick="exp",
-                         labels=_set_exp_labels(), choices=_set_exp_choices(dj_dict),
-                         primary_keys=_set_primary_keys())
+        super().__init__(
+            widget=widget,
+            nick="exp",
+            labels=_set_exp_labels(),
+            choices=_set_exp_choices(dj_dict),
+            primary_keys=_set_primary_keys(),
+        )
 
         self.special_fields = {
             "doe": self._doe,
@@ -114,7 +127,7 @@ class Exp(Template):
            json_dict: Dictionary with experiment details.
            date: Date of the experiment.
         """
-        section_name = 'EXPERIMENT DETAILS'
+        section_name = "EXPERIMENT DETAILS"
         label = QLabel(section_name)
         self.main_layout.addWidget(label)  # , alignment=Qt.AlignCenter)
         label.setStyleSheet("font-weight: bold")
@@ -131,8 +144,9 @@ class Exp(Template):
 
             if key in self.special_fields.keys():
                 i += 1
-                self._create_special_field(key=key, labels=labels, layout=layout,
-                                           i=i, date=date)
+                self._create_special_field(
+                    key=key, labels=labels, layout=layout, i=i, date=date
+                )
             else:
                 label = QLabel(labels[key])
                 layout.addWidget(label, i, j, alignment=Qt.AlignLeft)
@@ -176,7 +190,7 @@ class Exp(Template):
                 for d in delete:
                     choices[key].remove(d)
 
-        if key == "Rig":    #todo general
+        if key == "Rig":  # todo general
             choices[key] = [choices[key][11]]
         return choices
 
@@ -236,15 +250,15 @@ class Exp(Template):
 
     def update_date(self, date, key="doe"):
         """
-         Updates the date of an experiment.
+        Updates the date of an experiment.
 
-         Args:
-             date (str): The new date of the experiment.
-             key (str): The key to use for storing the date of the experiment. Default is "doe".
+        Args:
+            date (str): The new date of the experiment.
+            key (str): The key to use for storing the date of the experiment. Default is "doe".
 
-         Returns:
-             bool: True if the date is updated, False otherwise.
-         """
+        Returns:
+            bool: True if the date is updated, False otherwise.
+        """
         curr_date = self.values[key].text()
         if curr_date != date:
             msg = "Date of experiment will be updated according to selected file."
@@ -265,7 +279,7 @@ class Exp(Template):
 
           Returns:
               bool: True if the attempt was updated, False otherwise.
-          """
+        """
         curr_attempt = self.values[key].text()
         if curr_attempt != attempt:
             msg = "Attempt will be updated according to selected file."

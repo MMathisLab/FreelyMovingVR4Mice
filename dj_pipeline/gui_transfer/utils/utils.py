@@ -8,8 +8,7 @@ from utils.logger import Logger
 import subprocess
 import shutil
 
-from PyQt5.QtWidgets import QComboBox, \
-    QLineEdit, QLabel, QPlainTextEdit
+from PyQt5.QtWidgets import QComboBox, QLineEdit, QLabel, QPlainTextEdit
 
 
 def load_dj_input(path_dj_data, path_json):
@@ -28,7 +27,6 @@ def load_dj_input(path_dj_data, path_json):
         json_dict (dict): A dictionary containing data from the JSON file.
     """
 
-
     # load dictionary with entries of the dropdown menus
     # todo if doesn't exist
     dj_data = np.load(path_dj_data, allow_pickle=True)
@@ -37,7 +35,7 @@ def load_dj_input(path_dj_data, path_json):
 
     # get db import related datetime
     now = datetime.now()
-    date = now.strftime('%Y-%m-%d')
+    date = now.strftime("%Y-%m-%d")
 
     if Path(path_json).exists():
         with open(path_json) as json_file:  # todo(mary) err case
@@ -63,28 +61,33 @@ def get_dataset(info_mouse, info_exp):
     """
     # create file extension for the server, format? ->  different for pipelines?
 
-    dataset = str(info_mouse["mouse_name"]) + "_" + \
-              str(info_exp["doe"]) + "_" + str(info_exp["attempt"])
+    dataset = (
+        str(info_mouse["mouse_name"])
+        + "_"
+        + str(info_exp["doe"])
+        + "_"
+        + str(info_exp["attempt"])
+    )
 
     return dataset
 
 
 def generate_file(args):
     """
-      Function that saves all data to the output directories. Generated .npy data
-      goes in the gui_output folder, and for caching, a local cache.json file is used.
+    Function that saves all data to the output directories. Generated .npy data
+    goes in the gui_output folder, and for caching, a local cache.json file is used.
 
-      Args:
-          args (dict): A dictionary containing the following keys:
-              "mouse" (object): An object containing information about the mouse.
-              "exp" (object): An object containing experiment-related information.
-              "transfer" (object): An object containing transfer-related information.
+    Args:
+        args (dict): A dictionary containing the following keys:
+            "mouse" (object): An object containing information about the mouse.
+            "exp" (object): An object containing experiment-related information.
+            "transfer" (object): An object containing transfer-related information.
 
-      Returns:
-          tuple: A tuple containing the following values:
-              output_file1 (Path): A path to the .npy output file.
-              output_file2 (Path): A path to the .json output file.
-      """
+    Returns:
+        tuple: A tuple containing the following values:
+            output_file1 (Path): A path to the .npy output file.
+            output_file2 (Path): A path to the .json output file.
+    """
     # precise for dataset params
     info_mouse = args["mouse"].get_info()
     info_exp = args["exp"].get_info()
@@ -103,14 +106,14 @@ def generate_file(args):
     # .npy
     if not Path(p).exists():
         Path(p).mkdir(parents=True, exist_ok=True)
-    output_file1 = Path(p).joinpath(filename + '.npy')
+    output_file1 = Path(p).joinpath(filename + ".npy")
     np.save(str(output_file1), data)
 
     # .json
-    output_file2 = Path(p).joinpath(filename + '.json')
+    output_file2 = Path(p).joinpath(filename + ".json")
     with open(output_file2, "w") as output_file:
         json.dump(data, output_file, indent=2, sort_keys=True, default=str)
-    #output_file2 = Path(p).joinpath(filename + '.json')
+    # output_file2 = Path(p).joinpath(filename + '.json')
 
     # caching update
     output_file3 = str(config.get_cache_file_path)
@@ -174,7 +177,11 @@ def check_missing_data(widget, args):
     for k in keys_files:
         if k not in existed_keys or transfer_file[k] is None:
             # allert attach key file
-            msg = "Missing data: please, select " + args["transfer"].get_labels(k) + " file for transfer!"
+            msg = (
+                "Missing data: please, select "
+                + args["transfer"].get_labels(k)
+                + " file for transfer!"
+            )
             dlg = AlertMsg(widget, msg)
             dlg.exec()
             return False
@@ -196,7 +203,9 @@ def check_files(key, filename, format, current_mouse=None):
        The name of the file(s) if they exist and have the correct file format, or False otherwise.
     """
 
-    if filename and isinstance(filename, list) or isinstance(filename, tuple):  # dlc (2 files case)
+    if (
+        filename and isinstance(filename, list) or isinstance(filename, tuple)
+    ):  # dlc (2 files case)
         ret = False
         for f in filename:
             ret = check_file_format(key, f, format, current_mouse)
@@ -211,7 +220,9 @@ def check_files(key, filename, format, current_mouse=None):
     return ret
 
 
-def check_file_format(key, filename, format, current_mouse=None):  # todo mouse name check
+def check_file_format(
+    key, filename, format, current_mouse=None
+):  # todo mouse name check
     """
     Check if the file format of the given file matches the expected format for the given key.
 
@@ -432,10 +443,9 @@ def get_options(choices, key, key2info, primary_keys):
     list: A list of options for the given key.
     """
     if isinstance(choices[key][0], dict):
-        options = ['-'] + build_option_text(choices, key,
-                                            key2info, primary_keys)
+        options = ["-"] + build_option_text(choices, key, key2info, primary_keys)
     else:
-        options = ['-'] + choices[key]
+        options = ["-"] + choices[key]
     return options
 
 

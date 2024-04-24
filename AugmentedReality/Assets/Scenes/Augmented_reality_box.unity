@@ -1590,15 +1590,17 @@ MonoBehaviour:
     type: 3}
   green_target: {fileID: 7753537967675398325, guid: 6ded6b7416771acbeba367c1d57d824a,
     type: 3}
-  R_wall: {fileID: 0}
-  L_wall: {fileID: 0}
+  target_rotation: 0
+  Ri_wall: {fileID: 9040276326741326889, guid: ab7a779f87e40c6128a099befe7c4ad5, type: 3}
+  Le_wall: {fileID: 9040276326741326889, guid: ab7a779f87e40c6128a099befe7c4ad5, type: 3}
   occluding_wall: {fileID: 9040276326741326889, guid: ab7a779f87e40c6128a099befe7c4ad5,
     type: 3}
   middle_occluding_wall: {fileID: 5534557085160616922, guid: f0bc92783595a844ea1e4b169e0c6733,
     type: 3}
   probGreenLeft: 1
-  slitSize: 2
-  slitDepth: 0
+  slitSize: 20
+  hslitSize: 0
+  slitDepth: 2
   green_on_left: 0
   bt: {fileID: 0}
   gt: {fileID: 0}
@@ -1615,6 +1617,11 @@ MonoBehaviour:
   - {fileID: 4652152425070727200, guid: 22e8384589821474fb1eec523f302e3a, type: 3}
   - {fileID: 519858048209239232, guid: ff47e47b261db4e7f9fe7f8050120400, type: 3}
   - {fileID: 4652152425070727200, guid: 305b2565dbffb491f89f742c125f243b, type: 3}
+  - {fileID: 2352980130383153557, guid: 95cc6b89762e27b469f132a963c8b957, type: 3}
+  - {fileID: 8542884411546502650, guid: 4b10ab4fa22988d4d89a67d781cd6281, type: 3}
+  - {fileID: 2405952501624695108, guid: 94b6699c308574e4ab08cd641309c49c, type: 3}
+  - {fileID: 926688499320207335, guid: b7e01d49585db0343881b5243b58033b, type: 3}
+  - {fileID: 2447646095060785184, guid: eab12aeb86710ba4983caf5a835b0b13, type: 3}
   target_selection: 2
   distractor_selection: 3
   occlusion_type: 1
@@ -1890,7 +1897,7 @@ Transform:
   m_GameObject: {fileID: 1230777770}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.08, y: 0, z: 0}
   m_LocalScale: {x: 0.5, y: 4, z: 0.33333334}
   m_ConstrainProportionsScale: 0
   m_Children: []

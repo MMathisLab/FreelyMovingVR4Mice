@@ -98,10 +98,10 @@ public class Mouse_move : Agent
 		L_box_delay = 0f;
 		R_box_delay = 0f;
 
-		ITIScreenOff();
-		ITI = false;
-
-
+      ITIScreenOff();
+      ITI = false;
+      
+      plane.GetComponent<Target_spawner>().walls_reset();
 
 
 		//this.transform.position = new Vector3(0, 0.5f, -6);
