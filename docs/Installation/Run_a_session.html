@@ -192,7 +192,7 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software Control, Teensy setup</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../Rig_building/Teensy_box_design.html">Teensy box design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Rig_building/Teensy_box_design.html">Teensy Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Rig_building/teensy_config.html">Configuring the teensy board and uploading the code</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Rig_building/writing_a_teensy_sketch.html">Writing Teensy sketch for Vr4mice</a></li>
 </ul>
@@ -403,7 +403,12 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interactions-with-gui">Interactions with gui</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#in-the-vr4mice-gui">In the VR4mice GUI</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-up-a-session-in-the-vr4mice-gui">set up a session in the VR4mice GUI</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#open-dlclive-gui">Open DLCLive-GUI</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#on-the-v4mice-window">On the v4mice window</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#on-the-dlclive-gui-window">On the DLCLive-GUI window</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#saving-data">Saving data</a></li>
 </ul>
             </nav>
         </div>
@@ -425,8 +430,11 @@ document.write(`
 <p>and the gui that controls the experiment logic should appear!</p>
 <p>Alternatively, you can add these commands to a .bat script so that all you need to do it click on an icon on your <a class="reference internal" href="create_desktop_icon.html"><span class="doc std std-doc">desktop</span></a></p>
 <p></br><em><strong>Note:</strong></em> close the program via gui via stop-close, and not via crtl-C/crtl-Z</p>
-<section id="interactions-with-gui">
-<h2>Interactions with gui<a class="headerlink" href="#interactions-with-gui" title="Permalink to this heading">#</a></h2>
+<section id="in-the-vr4mice-gui">
+<h2>In the VR4mice GUI<a class="headerlink" href="#in-the-vr4mice-gui" title="Permalink to this heading">#</a></h2>
+</section>
+<section id="set-up-a-session-in-the-vr4mice-gui">
+<h2>set up a session in the VR4mice GUI<a class="headerlink" href="#set-up-a-session-in-the-vr4mice-gui" title="Permalink to this heading">#</a></h2>
 <p>First:</p>
 <ul class="simple">
 <li><p>Select your desired configuration</p></li>
@@ -438,12 +446,50 @@ document.write(`
 <li><p>Select subject, attempt and save directory</p></li>
 <li><p>Select the appropriate task directory</p></li>
 <li><p>Select the task and edit task parameters</p></li>
-<li><p>Click <code class="docutils literal notranslate"><span class="pre">Ready</span></code> to initialize the task</p></li>
+</ul>
+</section>
+<section id="open-dlclive-gui">
+<h2>Open DLCLive-GUI<a class="headerlink" href="#open-dlclive-gui" title="Permalink to this heading">#</a></h2>
+<ul class="simple">
+<li><p>In your DLClive conda environment type in <code class="docutils literal notranslate"><span class="pre">dlclivegui</span></code> into the terminal to open the DLC GUI</p></li>
+<li><p>Initialize the camera by clicking the <code class="docutils literal notranslate"><span class="pre">Init_Cam</span></code> button (a window should pop up with an a live video stream from the camera)</p></li>
+<li><p>select the <code class="docutils literal notranslate"><span class="pre">processor</span></code>file and click <code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">proc</span></code></p></li>
+<li><p>Choose the dlc model that you are going to use from the dropdown list</p></li>
+<li><p>select the <code class="docutils literal notranslate"><span class="pre">subject</span> <span class="pre">name</span></code></p></li>
+<li><p>click setup <code class="docutils literal notranslate"><span class="pre">session</span> <span class="pre">button</span></code></p></li>
+<li><p>Then click the <code class="docutils literal notranslate"><span class="pre">init</span> <span class="pre">dlc</span></code>, and wait to see the GPUs load once this has loaded (you can see this in the terminal. DLClive is now waiting for a socket with the vr4mice gui to be established</p></li>
+</ul>
+</section>
+<section id="on-the-v4mice-window">
+<h2>On the v4mice window<a class="headerlink" href="#on-the-v4mice-window" title="Permalink to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Click <code class="docutils literal notranslate"><span class="pre">Ready</span></code> to initialize the task and complete the socket</p></li>
 <li><p>Click <code class="docutils literal notranslate"><span class="pre">Start</span></code></p></li>
 <li><p>If you need to manually stop the task, Click <code class="docutils literal notranslate"><span class="pre">Stop</span></code>. Otherwise, the task will stop automatically.</p></li>
-<li><p>To save data, click <code class="docutils literal notranslate"><span class="pre">Save</span> <span class="pre">Data</span></code>.</p>
-<ul>
+</ul>
+</section>
+<section id="on-the-dlclive-gui-window">
+<h2>On the DLCLive-GUI window<a class="headerlink" href="#on-the-dlclive-gui-window" title="Permalink to this heading">#</a></h2>
+<ul class="simple">
+<li><p>hit record <code class="docutils literal notranslate"><span class="pre">ON</span></code> - this will start recording the video and DLC data.</p></li>
+</ul>
+</section>
+<section id="saving-data">
+<h2>Saving data<a class="headerlink" href="#saving-data" title="Permalink to this heading">#</a></h2>
+<p>On the VR4mice window:</p>
+<ul class="simple">
+<li><p>To save data, click <code class="docutils literal notranslate"><span class="pre">Save</span> <span class="pre">Data</span></code>.</p></li>
 <li><p>Data will be saved to: <code class="docutils literal notranslate"><span class="pre">&lt;your</span> <span class="pre">save</span> <span class="pre">directory&gt;/&lt;subject&gt;_YYYY-MM-DD_&lt;attempt&gt;.pickle</span></code></p></li>
+</ul>
+<p>On the DLClive-gui window:</p>
+<ul class="simple">
+<li><p>hit the record <code class="docutils literal notranslate"><span class="pre">off</span></code> button followed by the <code class="docutils literal notranslate"><span class="pre">save</span> <span class="pre">video</span></code>button</p></li>
+<li><p>3 different data types will be saved in the directory specified in the DLCLive-Gui:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">.avi</span></code> = the raw video</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_TS.npy</span></code> = the time steps for each of the recorded frames</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.h5</span></code> = the recorded DLC key-points</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PROC</span></code> = the processed dlc key-points which get sent to the unity game</p></li>
 </ul>
 </li>
 </ul>
@@ -514,7 +560,12 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interactions-with-gui">Interactions with gui</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#in-the-vr4mice-gui">In the VR4mice GUI</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-up-a-session-in-the-vr4mice-gui">set up a session in the VR4mice GUI</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#open-dlclive-gui">Open DLCLive-GUI</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#on-the-v4mice-window">On the v4mice window</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#on-the-dlclive-gui-window">On the DLCLive-GUI window</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#saving-data">Saving data</a></li>
 </ul>
   </nav></div>
 
