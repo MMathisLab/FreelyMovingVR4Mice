@@ -13,8 +13,8 @@ from mlagents_envs.side_channel.environment_parameters_channel import (
 )
 
 # Define the path to the Unity environment binary
-# env_name = "/Users/thomassainsbury/Documents/Mathis_lab/Mathis_lab_code/FreelyMovingVR4Mice/mouse_task/mac_build/game.app"
-env_name = "/Users/subnaulitus/Documents/EPFL/GitHub_Repos/FreelyMovingVR4Mice/mouse_task/macOS_test_unity_build/vr4mice.app"
+env_name = "/Users/thomassainsbury/Documents/Mathis_lab/Mathis_lab_code/FreelyMovingVR4Mice/mouse_task/mac_build/game.app"
+#env_name = "/Users/subnaulitus/Documents/EPFL/GitHub_Repos/FreelyMovingVR4Mice/mouse_task/macOS_test_unity_build/vr4mice.app"
 train_mode = True  # Whether to run the environment in training or inference mode
 
 # Initialize DLCClient and Unity environment
