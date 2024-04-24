@@ -29,7 +29,7 @@ public class Target_spawner : MonoBehaviour
     public Vector3 Rwall_pos; 
     public float wall_height;
     bool mouse_can_report;
-    IFloatProperties resetParams;
+    //IFloatProperties resetParams;
     public Renderer rend;
     public GameObject[] targets;
     public float target_selection = 0f;
