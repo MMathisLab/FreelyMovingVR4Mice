@@ -1,13 +1,12 @@
-from PyQt5.QtWidgets import QLabel, QGridLayout, QTextEdit, QPushButton, QFileDialog
-
-from utils.helpers import get_max, get_pattern
-from modules.template import Template
-from utils.utils import check_files
-from config.config import config, logger
-
-from pathlib import Path
 import os
+from pathlib import Path
+
+from config.config import config, logger
+from modules.template import Template
 from moviepy.editor import VideoFileClip
+from PyQt5.QtWidgets import QFileDialog, QGridLayout, QLabel, QPushButton, QTextEdit
+from utils.helpers import get_max, get_pattern
+from utils.utils import check_files
 
 
 def get_type(filename):

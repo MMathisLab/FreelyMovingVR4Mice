@@ -1,10 +1,10 @@
 import os
+import pickle
 import re
 from datetime import datetime
-import numpy as np
-import pickle
 from pathlib import Path
 
+import numpy as np
 from vr4mice.utils.logger import Logger
 
 """

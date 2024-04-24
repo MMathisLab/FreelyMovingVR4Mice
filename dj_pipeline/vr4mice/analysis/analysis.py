@@ -1,16 +1,16 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 import os
 from pathlib import Path
-from scipy.interpolate import CubicSpline
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
 from scipy import stats
+from scipy.interpolate import CubicSpline
+from vr4mice.schema import base_analysis, vr4mice
 
 # from scipy.signal import savgol_filter, hilbert, find_peaks
 from vr4mice.utils.logger import Logger
-from vr4mice.schema import vr4mice
-from vr4mice.schema import base_analysis
 
 logger = Logger.get_logger()
 
