@@ -1,19 +1,13 @@
-# Teensy box design
-The teensy box consists of a teensy and a pre-made PCB board that can be quickly plugged into different hardware such as a lick port.
+# Teensy Setup
+The teensy controls the water delivery from the lick ports. Therefore two valves need to be soldered below is a diagram of the circuit:
 
-```{image} ../../docs/images/Teensy_box.jpeg
-:alt: TB
-:class: bg-primary mb-1
-:width: 200px
-:align: center
-```
-
-```{image} ../../docs/images/TeensySchema_PCB.png
-:alt: TB
+```{image} ../../docs/images/AR_rig_teensy_circuit.png
+:alt: AR
 :class: bg-primary mb-1
 :width: 400px
 :align: center
 ```
+
 
 
 

@@ -81,8 +81,6 @@ We will send across one of our custom PCB boards with these components attached 
 
 1x [light diffuser](https://www.thomannmusic.ch/lee_farbfolie_rolle_216_w_diffusi.htm) (The size of the sheet must be able to cover the floor plate ie. 520mm x 520mm)
 
-The reason for 2 floor plates is so that the light diffuser can be sandwiched between them so that the mouse can be illuminated from below.
-
 
 ## IR lights:
 4 x [lights](https://www.amazon.com/CMVision-IR30-WideAngle-IR-Illuminator/dp/B001P2E4U4)
