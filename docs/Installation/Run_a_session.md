@@ -24,7 +24,7 @@ Next:
   - Select the task and edit task parameters
 
 ## Open DLCLive-GUI
- - In your DLClive conda environment type in dlclivegui into the terminal to open the DLC GUI
+ - In your DLClive conda environment type in `dlclivegui` into the terminal to open the DLC GUI
  - Initialize the camera by clicking the `Init_Cam` button (a window should pop up with an a live video stream from the camera)
  - select the `processor`file and click `set proc`
  - Choose the dlc model that you are going to use from the dropdown list
