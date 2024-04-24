@@ -1,6 +1,6 @@
 # Perspex box for housing the mouse
 
-The mice are placed within a perspex box, which has transparent sides so that the mouse can view the computer monitors that surround it. The floor of this box consists of two layers of perspex with a sheet of light diffuser sandwiched between them. This allows for IR lights to be placed below the arena illuminating the floor. This provides strong illumination of the mouse for tracking with DLC.
+The mice are placed within a perspex box, which has transparent sides so that the mouse can view the computer monitors that surround it. The floor of this box consists of two layers of perspex with a sheet of light diffuser sandwiched between them. This provides strong illumination of the mouse for tracking with DLC.
 
 ## To build the box you will need:
 - 2x PMMA (transparent perspex) floor pieces (520 x 520 x 5 mm)
