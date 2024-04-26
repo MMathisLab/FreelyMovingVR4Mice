@@ -8,7 +8,7 @@
 ```
 
 This documentation provides a user guide for the installation and getting an augmented reality system up and running. 
-FreelyMovingVR4mice uses two GUIs (vr4mice and Deeplabcut-live-gui) that were both developed within the Mathis lab. These two packages communicate with each other through a socket and allow for dlc poses to be passed to a video game so that the video can be rendered dynamically in real time. 
+FreelyMovingVR4mice uses two GUIs (`vr4mice` and `Deeplabcut-live-gui`) that were both developed within the Mathis lab. These two packages communicate with each other through a socket and allow for dlc poses to be passed to a video game so that the video can be rendered dynamically in real time. 
 
 ## Hardware requirements
 - Teensy 3.x board
