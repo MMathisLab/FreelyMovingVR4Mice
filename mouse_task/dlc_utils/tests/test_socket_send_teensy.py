@@ -16,6 +16,7 @@ class MyProcessor_socket:
         self.listener = Listener(self.address, authkey=b"secret password")
         self.conn = self.listener.accept()
         self.teensy = Teensy(com, baudrate, inputs=inputs)
+        # add read from config for teensy - to make life simple
         print("connection accepted from", self.listener.last_accepted)
         self.time_stamp = deque()
         self.st = time.time()
@@ -63,6 +64,7 @@ class MyProcessor_socket:
         save_dict ["time_stamp"] = np.array(self.step)
         save_dict ["step"] = np.array(self.time_stamp)
         save_dict ["signal"] = np.array(self.signal)
+        save_dict ["input_data"] = Teensy.get_input_data()
         np.save(arr = save_dict, file=self.save_file_path + "dummy_teensy_dlc", allow_pickle=True)
 
 
