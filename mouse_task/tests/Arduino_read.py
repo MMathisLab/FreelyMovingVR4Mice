@@ -6,9 +6,9 @@ import numpy as np
 
 # Configure the serial port
 ser = serial.Serial(
-    "/dev/cu.usbmodem11302", 9600
+    "/dev/cu.usbmodem1202", 9600
 )  # Adjust 'COM1' to your serial port and 9600 to your baud rate
-
+print("connected")
 # Prepare to collect data
 data = []
 timestamps = []

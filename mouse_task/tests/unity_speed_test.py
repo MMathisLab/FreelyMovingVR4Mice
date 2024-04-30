@@ -115,6 +115,7 @@ while (time.time() - start_time) < 10:
     # print(f"Total rewards for episode {episode} is {episode_rewards}")
 
 env.close()
+dlcClient.close()
 # Sleep briefly to control loop rate (adjust as needed)
 
 
@@ -150,9 +151,9 @@ plt.show()
 
 # Plot data over time
 plt.figure()
-plt.scatter(filt_sent_times[valid_times], data[valid_times])
-plt.scatter(filt_read_times[valid_times], data[valid_times])
-plt.scatter(filt_loop_end_time[valid_times], data[valid_times])
+plt.scatter(filt_sent_times[valid_times], data[valid_times], alpha=0.5)
+plt.scatter(filt_read_times[valid_times], data[valid_times], alpha=0.5)
+plt.scatter(filt_loop_end_time[valid_times], data[valid_times], alpha=0.5)
 plt.xlabel("Time (s)")
 plt.ylabel("Data")
 plt.xlim(5.4, 6.2)
