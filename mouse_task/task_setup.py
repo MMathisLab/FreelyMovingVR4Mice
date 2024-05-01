@@ -120,8 +120,8 @@ def main():
     args = parse_arguments()
     create_conda_env(args["env_name"], args["verbose"])
 
-    # config_file_path = Path("task_config.json")
-    # save_to_config(config_file_path)
+    config_file_path = Path("task_config.json")
+    save_to_config(config_file_path)
 
 
 if __name__ == "__main__":
