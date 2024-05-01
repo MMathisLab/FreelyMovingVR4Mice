@@ -5,6 +5,7 @@ import numpy as np
 from multiprocessing.connection import Listener
 import pickle
 import time
+from collections import deque
 
 import numpy as np
 from dlclive import Processor

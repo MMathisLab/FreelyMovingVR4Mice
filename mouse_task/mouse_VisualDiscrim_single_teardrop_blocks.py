@@ -310,7 +310,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         self.channel.set_float_parameter("occlusion_type", this_occlusion_type)
         # self.channel.set_property("targetsZpos", this_target_distance)
         self.channel.set_float_parameter("targetsZpos", this_target_distance)
-        self.channel.set_property("target_rotation", this_target_rotation)
+        self.channel.set_float_parameter("target_rotation", this_target_rotation)
 
         # set properties for start box, left report box and right report box
         self.channel.set_float_parameter("L_box_x_min", self.L_report_box[0])
