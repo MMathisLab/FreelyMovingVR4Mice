@@ -1,6 +1,6 @@
 # Writing Teensy sketch for Vr4mice
 
-In Vr4mice, the microcontroller plays the role of reading and executing commands from the task (e.g. turn on the water valve), and writing data from sensors (e.g. encoders or IR beam breaks) back to the task. Please see the [template](../../mouse_task/teensy/teensy_AR.ino) for an example of what this should look like.
+In vr4mice, the microcontroller plays the role of reading and executing commands from the task (e.g. turn on the water valve), and writing data from sensors (e.g. encoders or IR beam breaks) back to the task. Please see the [template](../../mouse_task/teensy/dual_water_valve/dual_water_valve.ino) for an example of what this should look like.
 
 In general, the microcontroller will operate in one of two states: *task on* or *task off*. In the *task off* state, it will not write any data to the serial port, and it will wait for a *task on* command. In the *task_on* state, it will:
 - Write data as sequences of 16-bit integers to the serial port at the desired sampling frequency, set by a constant `SAMPLE_RATE`. At frequencies > 250 Hz, the vr4mice program will occasionally lag behind by a few milliseconds. But for sampling rates up to 1000 Hz, it can catch up and will not lose any samples). Samples are delineated by a two number sequence: `-32767, 32767`.

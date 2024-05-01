@@ -16,21 +16,22 @@ The FreelyMovingVR4Mice repository contains main **vr4mice** package (src code: 
 	```
 	cd ml-agents/
 	```
-	- Inside this main directory find the `ml-agents-envs/` sub-directory and open, with any text editor, the `setup.py` file found within it. Near the end of the file, find the list of required dependecies and modify the numpy version: change it from `"numpy==1.21.2"` to `"numpy==1.23.3"` then save. When that is done, run the following two commands in order:
+	- Inside this main directory, find the `ml-agents-envs/` sub-directory and open, with any text editor, the `setup.py` file found within it. Near the end of the file, find the list of required dependecies and modify the `numpy` version: change it from `"numpy==1.21.2"` to `"numpy==1.23.3"` then save. When that is done, run the following two commands in order:
 		```
 		python -m pip install ./ml-agents-envs
 		```
-		```
+		<!-- ```
 		python -m pip install ./ml-agents
-		```
+		``` -->
 		> ***Nota bene***: if you're on a Mac with Apple Silicon (i.e. M1 chip, M2, etc...) you might encounter an **error** when executing the second command of the above pair. This is because `mlagents` depends on the `onnx==1.12.0` package version. Apple Silicon support, though, has only been introduced starting with `onnx==1.13.0` which, itself, depends on a slightly newer version of `protobuf` than `mlagents`. So, if you see
 		> ```
+		>	...
 		>	note: This error originates from a subprocess, and is likely not a problem with pip.
 		>	ERROR: Failed building wheel for onnx
 		>	Running setup.py clean for onnx
 		>Failed to build onnx
 		>ERROR: Could not build wheels for onnx, which is required to install pyproject.toml-based projects
-		>```
+		> ```
 		> it likely means you may need to do the following to solve the problem:
 		> - in the `ml-agents/ml-agents/setup.py` file modify `"onnx==1.12.0"` to `"onnx==1.13.0"` and `"protobuf>=3.6,<3.20"` to `"protobuf>=3.6,<=3.20.2"`
 		> - in the `ml-agents/ml-agents-envs/setup.py` file modify `"protobuf>=3.6,<3.20"` to `"protobuf>=3.6,<=3.20.2"`
@@ -52,7 +53,7 @@ The FreelyMovingVR4Mice repository contains main **vr4mice** package (src code: 
 	```
 	cd FreelyMovingVR4Mice
 	```
-	Choose a specific **branch** if needed by running:
+	Choose a specific **branch**, if needed, by running:
 	```
 	git checkout branch_name
 	```
