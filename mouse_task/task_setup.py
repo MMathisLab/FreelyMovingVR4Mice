@@ -61,19 +61,30 @@ def get_path(purpose=""):
 
 # Function to save build path to config.json
 def save_to_config(file_path):
-    # Load the existing config data
-    with open(file_path, "r") as file:
-        config = json.load(file)
 
-    # Update the necessary key-value pairs
-    for config_path in config.keys():
-        if config_path.find("path"):
-            # print(config_path)
-            config[config_path] = str(get_path(config_path))
+    if file_path.exists():
+        # Load  config data
+        with open(file_path, "r") as file:
+            config = json.load(file)
 
-    # Save the updated config data
-    with open(file_path, "w") as file:
-        json.dump(config, file)
+        # Update the necessary key-value pairs
+        for config_path in config.keys():
+            if config_path.find("path"):
+                # print(config_path)
+                config[config_path] = str(get_path(config_path))
+
+        # Save the updated config data
+        with open(file_path, "w") as file:
+            json.dump(config, file)
+    else:
+        # Create a new config file
+        config = {
+            "ar_env_unity_absolute_path": str(get_path("ar_env_unity_absolute_path")),
+        }
+
+        # Save the config data
+        with open(file_path, "w") as file:
+            json.dump(config, file)
 
     print(f"Build path saved to {file_path}")
 
@@ -86,12 +97,15 @@ def parse_arguments():
     )
 
     # Add arguments
+    # env_name
     parser.add_argument(
         "--env_name",
         type=str,
         help="Name of conda environment",
         required=False,
     )
+
+    # verbose
     parser.add_argument(
         "-v",
         "--verbose",
@@ -100,9 +114,31 @@ def parse_arguments():
         required=False,
     )
 
+    # config_only
+    parser.add_argument(
+        "--config_only",
+        action="store_true",
+        help="Tells the script to only update the config file without creating a conda environment",
+        required=False,
+    )
+
+    # env_only
+    parser.add_argument(
+        "--env_only",
+        action="store_true",
+        help="Tells the script to only create a conda environment without updating the config file",
+        required=False,
+    )
+
     # Parse the arguments
     args = parser.parse_args()
-    arguments = {"env_name": "vr4mice", "verbose": False}
+    arguments = {
+        "env_name": "vr4mice",
+        "verbose": False,
+        "config_only": False,
+        "env_only": False,
+        "all": True,
+    }
 
     # Access the arguments
     if args.env_name:
@@ -111,6 +147,22 @@ def parse_arguments():
     if args.verbose:
         arguments["verbose"] = args.verbose
         # print("Verbose output enabled")
+    if args.config_only:
+        arguments["config_only"] = args.config_only
+        arguments["all"] = False
+        # print("Config file only")
+    if args.env_only:
+        arguments["env_only"] = args.env_only
+        arguments["all"] = False
+        # print("Environment only")
+
+    if args.config_only and args.env_only:
+        raise ValueError("Cannot have both config_only and env_only set to True")
+
+    if args.config_only and args.env_name:
+        raise UserWarning(
+            "Doesn't make sense to specify environment name when config_only is set to True."
+        )
 
     return arguments
 
@@ -118,10 +170,12 @@ def parse_arguments():
 # main
 def main():
     args = parse_arguments()
-    create_conda_env(args["env_name"], args["verbose"])
+    if args["env_only"] or args["all"]:
+        create_conda_env(args["env_name"], args["verbose"])
 
-    config_file_path = Path("task_config.json")
-    save_to_config(config_file_path)
+    if args["config_only"] or args["all"]:
+        config_file_path = Path("task_config.json")
+        save_to_config(config_file_path)
 
 
 if __name__ == "__main__":
