@@ -6,7 +6,7 @@ import numpy as np
 
 # Configure the serial port
 ser = serial.Serial(
-    "/dev/cu.usbmodem1202", 9600
+    "/dev/tty.usbmodem146854901", 9600
 )  # Adjust 'COM1' to your serial port and 9600 to your baud rate
 print("connected")
 # Prepare to collect data
@@ -15,7 +15,7 @@ timestamps = []
 start_time = time.time()
 
 # Record data for 10 seconds
-timeout = time.time() + 40  # 10 seconds from now
+timeout = time.time() + 10  # 10 seconds from now
 
 while True:
     # Read data from serial port

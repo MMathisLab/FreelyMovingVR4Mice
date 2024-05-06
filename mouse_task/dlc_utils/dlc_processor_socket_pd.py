@@ -6,15 +6,17 @@ from multiprocessing.connection import Listener
 import pickle
 import time
 from collections import deque
+from tests.Teensy_latency.TeensyLatency import TeensyLatency
 
 import numpy as np
 from dlclive import Processor
 from math import sqrt, acos, atan2, copysign, pi, degrees
 
 class MyProcessor_socket(Processor):
-    def __init__(self):
+    def __init__(self, com = "/dev/tty.usbmodem146854901", baudrate=9600):
         super().__init__()
        # self.queue = queue
+        self.teensy = TeensyLatency(com= com, baudrate=baudrate)
         self.address = ('localhost', 6000)     # family is deduced to be 'AF_INET'
         self.listener =  Listener(self.address, authkey=b'secret password')
         self.conn = self.listener.accept()
@@ -26,6 +28,8 @@ class MyProcessor_socket(Processor):
         self.time_stamp = deque()
         self.signal =  deque()
         self.step = deque()
+        self.frame_time = deque()
+        self.pose_time =  deque()
         self.curr_step = 0
         self.curr_signal = 0
         
@@ -72,16 +76,27 @@ class MyProcessor_socket(Processor):
         return pose
     
     def save(self, file=None):
-
-        ### save stim on and stim off times
         save_code = 0
         if file:
+            print(file)
             try:
+                dict = self.save_latency_data()
                 pickle.dump(
-                    {"time_stamp": self.time_stamp, "x_pos": self.center_x, "y_pos": self.center_y, "heading_direction": self.heading_direction, "head_angle": self.head_angle, "step": self.step, "signal": self.signal},
+                    {"time_stamp": self.time_stamp, "x_pos": self.center_x, "y_pos": self.center_y, "heading_direction": self.heading_direction, "head_angle": self.head_angle,
+                    },
                     open(file, "wb"),
                 )
                 save_code = 1
             except Exception:
                 save_code = -1
         return save_code
+    
+    def save_latency_data(self):
+        save_dict =  dict()
+        save_dict ["start_time"] = np.array(self.st)
+        save_dict ["time_stamp"] = np.array(self.time_stamp)
+        save_dict ["step"] =  np.array(self.step)
+        save_dict ["signal"] = np.array(self.signal)
+        save_dict ["photodiode_read"] = np.array(self.teensy.input_data)
+        save_dict ["photodiode_time"] = np.array(self.teensy.input_data_time)
+        return(save_dict)

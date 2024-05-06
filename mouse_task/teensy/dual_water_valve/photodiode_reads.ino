@@ -1,22 +1,22 @@
+***/
 
 // optimize interrupts and load encode library
 #define ENCODER_OPTIMIZE_INTERRUPTS
+#include <Encoder.h>
 
 // constants
 const long BAUD_RATE = 115200;
 const int SAMPLE_RATE = 500;
 
 // pins
-const int photodiode = 14;
-// Other cst variables
+
+const int photodiode
+int photodiode_state = 0;
 
 
 // public variables to control I/O devices
 bool task_on = false;
 int last_print = 0;
-bool water_on = false;
-int photodiode_read = 0;
-bool braking = false;
 
 
 // setup
@@ -24,7 +24,6 @@ void setup() {
 
   Serial.begin(BAUD_RATE);
   pinMode(photodiode, INPUT);
-
 }
 
 // Read & Write functions
@@ -55,7 +54,10 @@ void send_line(){
 }
 
 // read and write wheel velocities
-
+void write_photodiode() {
+  photodiode_state = Analog_read();
+  write16i(photodiode_state);
+}
 
 void loop() {
 
@@ -64,14 +66,10 @@ void loop() {
   // read commands
   while(Serial.available() > 0){
     unsigned int cmd = Serial.read();
-    photodiode_read = AnalogRead(photodiode);
-
-    write16i(photodiode);
-
     if (task_on){
       if(cmd == 'Z'){
         task_on = false;
-    }else{
+      }else{
       if (cmd == 'A'){
         task_on = true;
       }else if(cmd == 'Y'){
@@ -80,10 +78,14 @@ void loop() {
     }
   }
 
+  // check signals
+  
+
   if(task_on){
     if(curr_time >= last_print + 1000/SAMPLE_RATE){
       last_print = curr_time;
-   
+      write_wheel_velocity();
+      send_line();
     }
   }
 
