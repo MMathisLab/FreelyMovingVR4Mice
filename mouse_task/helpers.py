@@ -1,29 +1,31 @@
 """
  Helpers functions for mouse_ar_task.py
 """
+
 import json
 import logging
 from pathlib import Path
 
+
 def process_config(config_file_path: Path) -> dict:
     """
-        Function that processes the task_config file and verifies its content
+    Function that processes the task_config file and verifies its content
 
-        Example of json task_config file:
+    Example of json task_config file:
 
-        config.json
-        {
-            "model_absolute_path": "/home/user/Models/model_name,
-            "dlc_video_absolute_path": "/home/user/Videos/video.mp4",
-            "ar_env_unity_absolute_path": "unity_ar/Augmented_reality.exe"
-        }
+    config.json
+    {
+        "model_absolute_path": "/home/user/Models/model_name,
+        "dlc_video_absolute_path": "/home/user/Videos/video.mp4",
+        "ar_env_unity_absolute_path": "unity_ar/Augmented_reality.exe"
+    }
 
-        Args:
-            config_file_path(Path): path to config file
-        Returns:
-            dictionary with keys or None if error uncounted
+    Args:
+        config_file_path(Path): path to config file
+    Returns:
+        dictionary with keys or None if error uncounted
 
-        Notes: errors are reported via logger
+    Notes: errors are reported via logger
 
     """
 
@@ -42,10 +44,14 @@ def process_config(config_file_path: Path) -> dict:
         return None
 
     # Check if all necessary keys are present in the config file
-    keys = ["model_absolute_path", "dlc_video_absolute_path", "ar_env_unity_absolute_path"]
+    keys = [
+        # "model_absolute_path",
+        # "dlc_video_absolute_path",
+        "ar_env_unity_absolute_path",
+    ]
     for k in keys:
         if k not in config_dict:
-            logging.error(k + " not in " + config_file_path)
+            logging.error(k + " not in " + str(config_file_path))
 
     for paths in config_dict.values():
         if not Path(paths).exists():

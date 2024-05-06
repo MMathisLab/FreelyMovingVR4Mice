@@ -32,9 +32,9 @@ from teensyexp.tasks_abc.gui_task import GuiTask
 # from teensyexp.tasks_abc.dlc_socket import DLCClient
 from teensyexp.tasks_abc.dlc_deque_socket import DLCClient
 from mouse_task.kfilter import OneEuroFilter
-from teensyexp.tasks_abc.teensy_agent import (
+from teensyexp.agent import (
     Agent,
-)  # TODO: has module name teensy_agent changed to teensy?
+)
 
 
 # default class constructor input
@@ -111,7 +111,10 @@ class ARVisualdiscrim_socket_test(UnityTask):
         self.grey_screen_active = grey_screen_active
         self.connection = False
 
-        env_path = "/Users/thomassainsbury/Documents/Mathis_lab/Mathis_lab_code/FreelyMovingVR4Mice/mouse_task/mac_build/game.app"
+        # env_path = "/Users/thomassainsbury/Documents/Mathis_lab/Mathis_lab_code/FreelyMovingVR4Mice/mouse_task/mac_build/game.app"
+        env_path = process_config(Path("../task_config.json"))[
+            "ar_env_unity_absolute_path"
+        ]
 
         super().__init__(
             Agent(),
@@ -190,6 +193,7 @@ class ARVisualdiscrim_socket_test(UnityTask):
         self.dlc_x = []
         self.dlc_y = []
         self.dlc_heading = []
+        self.photodiode = []
         self.dlc_time_step = []
         self.trial_mouse_report_delay = []
         self.socket_send_time = []
@@ -211,7 +215,7 @@ class ARVisualdiscrim_socket_test(UnityTask):
 
         # run DLC on every frame to be given as input to the agent
         this_read = self.dlcClient.read()
-
+        # print(this_read)
         if this_read is None:
             # print(this_read)
             return None
@@ -231,9 +235,11 @@ class ARVisualdiscrim_socket_test(UnityTask):
         x = self.params[0]
         z = self.params[1]
         head_angle = self.params[2]
+        photodiode = self.params[3]
         self.dlc_x.append(x)
         self.dlc_y.append(z)
         self.dlc_heading.append(head_angle)
+        self.photodiode.append(photodiode)
         self.dlc_read_time.append(this_read["time"])
 
         # interp mouse pixel space into arena space
@@ -248,7 +254,7 @@ class ARVisualdiscrim_socket_test(UnityTask):
             [self.unity_arena_size[2], self.unity_arena_size[3]],
         )
         self.degrees = (head_angle - (self.rotate_camera)) % 360
-        output = np.array([x, z, self.degrees])
+        output = np.array([x, z, self.degrees, photodiode])
         # print(x, " ", z, " ")
         return output.reshape((1, -1))
 
@@ -262,7 +268,7 @@ class ARVisualdiscrim_socket_test(UnityTask):
         """
 
         this_Prob_obj_left = self.Prob_Obj_on_Left
-        print("prob left", this_Prob_obj_left)
+        # print("prob left", this_Prob_obj_left)
         this_slit_size = self.get_epoch_value("slit_size")
         this_slit_depth = self.get_epoch_value("slit_depth")
         this_target_spread = self.get_epoch_value("target_spread")
@@ -273,39 +279,41 @@ class ARVisualdiscrim_socket_test(UnityTask):
         this_occlusion_type = self.get_epoch_value("occlusion_type")
         this_target_distance = self.get_epoch_value("target_distance")
 
-        self.channel.set_property("cameraSelection", self.camera_type)
-        self.channel.set_property("target_selection", this_target_selection)
-        self.channel.set_property("distractor_selection", this_distractor_selection)
-        self.channel.set_property("Object_on_Left", self.Object_on_left)
-        self.channel.set_property("slitSize", this_slit_size)
-        self.channel.set_property("slit_depth", this_slit_depth)
-        self.channel.set_property("targetsFromMidline", this_target_spread)
-        self.channel.set_property("targetsheight", this_target_height)
-        self.channel.set_property("mouseReportDelay", this_mouse_report_delay)
-        self.channel.set_property("startBoxDelay", self.start_box_delay)
-        self.channel.set_property("velocityThreshold", self.velocity_threshold)
-        self.channel.set_property("occlusion_type", this_occlusion_type)
-        self.channel.set_property("targetsZpos", this_target_distance)
+        self.channel.set_float_parameter("cameraSelection", self.camera_type)
+        self.channel.set_float_parameter("target_selection", this_target_selection)
+        self.channel.set_float_parameter(
+            "distractor_selection", this_distractor_selection
+        )
+        self.channel.set_float_parameter("Object_on_Left", self.Object_on_left)
+        self.channel.set_float_parameter("slitSize", this_slit_size)
+        self.channel.set_float_parameter("slit_depth", this_slit_depth)
+        self.channel.set_float_parameter("targetsFromMidline", this_target_spread)
+        self.channel.set_float_parameter("targetsheight", this_target_height)
+        self.channel.set_float_parameter("mouseReportDelay", this_mouse_report_delay)
+        self.channel.set_float_parameter("startBoxDelay", self.start_box_delay)
+        self.channel.set_float_parameter("velocityThreshold", self.velocity_threshold)
+        self.channel.set_float_parameter("occlusion_type", this_occlusion_type)
+        self.channel.set_float_parameter("targetsZpos", this_target_distance)
 
         # set properties for start box, left report box and right report box
-        self.channel.set_property("L_box_x_min", self.L_report_box[0])
-        self.channel.set_property("L_box_x_max", self.L_report_box[1])
-        self.channel.set_property("L_box_z_min", self.L_report_box[2])
-        self.channel.set_property("L_box_z_max", self.L_report_box[3])
+        self.channel.set_float_parameter("L_box_x_min", self.L_report_box[0])
+        self.channel.set_float_parameter("L_box_x_max", self.L_report_box[1])
+        self.channel.set_float_parameter("L_box_z_min", self.L_report_box[2])
+        self.channel.set_float_parameter("L_box_z_max", self.L_report_box[3])
 
-        self.channel.set_property("R_box_x_min", self.R_report_box[0])
-        self.channel.set_property("R_box_x_max", self.R_report_box[1])
-        self.channel.set_property("R_box_z_min", self.R_report_box[2])
-        self.channel.set_property("R_box_z_max", self.R_report_box[3])
+        self.channel.set_float_parameter("R_box_x_min", self.R_report_box[0])
+        self.channel.set_float_parameter("R_box_x_max", self.R_report_box[1])
+        self.channel.set_float_parameter("R_box_z_min", self.R_report_box[2])
+        self.channel.set_float_parameter("R_box_z_max", self.R_report_box[3])
 
-        self.channel.set_property("TT_box_x_min", self.start_box[0])
-        self.channel.set_property("TT_box_x_max", self.start_box[1])
-        self.channel.set_property("TT_box_z_min", self.start_box[2])
-        self.channel.set_property("TT_box_z_max", self.start_box[3])
-        self.channel.set_property("TT_box_angle", self.start_box[4])
-        self.channel.set_property("distractor", self.distractor)
-        self.channel.set_property("targetSize", self.target_size)
-        self.channel.set_property("Grey_screen_active", self.grey_screen_active)
+        self.channel.set_float_parameter("TT_box_x_min", self.start_box[0])
+        self.channel.set_float_parameter("TT_box_x_max", self.start_box[1])
+        self.channel.set_float_parameter("TT_box_z_min", self.start_box[2])
+        self.channel.set_float_parameter("TT_box_z_max", self.start_box[3])
+        self.channel.set_float_parameter("TT_box_angle", self.start_box[4])
+        self.channel.set_float_parameter("distractor", self.distractor)
+        self.channel.set_float_parameter("targetSize", self.target_size)
+        self.channel.set_float_parameter("Grey_screen_active", self.grey_screen_active)
 
         # add trial parameters to trial vectors so that we can save them to the log file
         self.trial_epoch_labels.append(self.get_epoch_value("epoch_labels"))

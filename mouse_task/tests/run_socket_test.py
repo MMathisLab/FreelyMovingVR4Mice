@@ -15,49 +15,73 @@ Task = ARVisualdiscrim_socket_test()
 Task.start()
 Task.env.reset()
 
-while (time.time() - Task.start_time) < 60:
+while (time.time() - Task.start_time) < 5:
     Task.loop()
-    #Task.env.step()
-    #print(Task.state [-1])
+    # Task.env.step()
+    # print(Task.state[-1])
 
 data = Task.get_data()
+Task.stop()
 
-print(len(data ["thread_read_time"]) == len(data["step_time"]))
+print(len(data["thread_read_time"]) == len(data["step_time"]))
 
+print("- - - - - - - - - - - - - - -")
+print(len(data["socket_send_time"] - data["start_time"]))
+print(len(data["thread_read_time"] - data["start_time"]))
+print(len(data["step_time"]))
+print(np.array(Task.state_vec)[:, -1].shape)
+# print(np.array(Task.state_vec, dtype=object)[:, -1])
 
+print(len(data["episode"]))
+print(len(data["step"]))
+print(np.array(Task.state_vec)[:, 0].shape)
+# print(np.array(Task.state_vec, dtype=object)[:, 0])
 
-a = pd.DataFrame({"socket_send_time": data ["socket_send_time"] - data["start_time"],
-                "thread_read_time": data ["thread_read_time"]- data["start_time"], 
-                "step_time": data["step_time"], "diode_state": np.array(Task.state_vec) [:,-1], 
-                "episode": data ["episode"], "step": data ["step"], "vals": np.array(Task.state_vec) [:,0]})
-a = a [a.socket_send_time > 3]
-a ["time_across_socket"] = a["thread_read_time"] - a["socket_send_time"]
+a = pd.DataFrame(
+    {
+        # "socket_send_time": data["socket_send_time"] - data["start_time"],
+        # "thread_read_time": data["thread_read_time"] - data["start_time"],
+        "step_time": data["step_time"],
+        "diode_state": np.array(Task.state_vec)[:, -1],
+        "episode": data["episode"],
+        "step": data["step"],
+        "vals": np.array(Task.state_vec)[:, 0],
+    }
+)
 
-plt.scatter(a.socket_send_time, a.time_across_socket*1000)
+b = pd.DataFrame(
+    {
+        "socket_send_time": data["socket_send_time"] - data["start_time"],
+        "thread_read_time": data["thread_read_time"] - data["start_time"],
+    }
+)
+
+b = b[b.socket_send_time > 3]
+b["time_across_socket"] = b["thread_read_time"] - b["socket_send_time"]
+
+plt.scatter(b.socket_send_time, a.time_across_socket * 1000)
 plt.ylabel("ms")
 plt.title("Socket_transfer_speed")
 plt.show()
 
 
-
-
-a ["full_latency"] = a["step_time"] -  a["socket_send_time"]
-print("Full latency (ms): ", np.mean(a.full_latency)*1000)
-plt.scatter(a.socket_send_time, a.full_latency*1000)
+a["full_latency"] = a["step_time"] - b["socket_send_time"]
+print("Full latency (ms): ", np.mean(a.full_latency) * 1000)
+plt.scatter(a.socket_send_time, a.full_latency * 1000)
 plt.ylabel("ms")
 plt.title("latency (DLC to unity)")
 plt.show()
 
 
-plt.scatter(a["step_time"], np.gradient(a["step_time"])*1000)
+plt.scatter(a["step_time"], np.gradient(a["step_time"]) * 1000)
 plt.title("rate")
 plt.ylabel("ms")
 plt.show()
 
 
-plt.plot(a["step_time"], a ["diode_state"])
+plt.plot(a["step_time"], a["diode_state"])
 plt.show()
 
-plt.scatter(a["step_time"], a ["vals"])
-#plt.scatter(a["step_time"], a ["step"])
+plt.scatter(a["step_time"], a["vals"])
+# plt.scatter(a["step_time"], a ["step"])
 plt.show()

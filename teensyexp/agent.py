@@ -7,12 +7,12 @@ Fake Teensy (Agent) controller for experiments
 GK 05/07/2019
 """
 
-import os
-import numpy as np
-import serial
-import time
-import threading
-import struct
+# import os
+# import numpy as np
+# import serial
+# import time
+# import threading
+# import struct
 
 
 class Agent(object):

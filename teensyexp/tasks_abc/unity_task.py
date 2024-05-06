@@ -245,16 +245,16 @@ class UnityTask(Task):
         if self.agent_spec.action_spec.is_continuous():
             dtype = np.float32
             action_size = self.agent_spec.action_spec.continuous_size
-            # action = np.zeros(action_size, dtype=dtype)
-            action = np.array(
-                [
-                    np.sin(time.time()) * 9,
-                    -9.0,
-                    0.59740335,
-                    (np.sin(time.time() * 4) + 1) / 2,
-                ],
-                dtype=dtype,
-            )
+            action = np.zeros(action_size, dtype=dtype)
+            # action = np.array(
+            #     [
+            #         np.sin(time.time()) * 9,
+            #         -9.0,
+            #         0.59740335,
+            #         (np.sin(time.time() * 4) + 1) / 2,
+            #     ],
+            #     dtype=dtype,
+            # )
             # action = np.array(
             #     [
             #         0.0,
@@ -269,7 +269,6 @@ class UnityTask(Task):
             dtype = np.int32
             action_size = self.agent_spec.action_spec.discrete_size
             action = np.zeros(len(action_size), dtype=dtype)
-
         return action
 
     def check_reward(self):
@@ -305,17 +304,29 @@ class UnityTask(Task):
         self.episode_vec.append(self.episode)  # trial
         self.step_vec.append(self.step)  # frame
         self.time_vec.append(self.cur_time)  # time for each frame
-        self.state_vec.append(self.state)  # all info about the agent (ex. position)
+        print(self.state.shape)
+        if self.state is not None:
+            self.state_vec.append(
+                self.state.flatten()
+            )  # all info about the agent (ex. position)
+        else:
+            self.state_vec.append(np.full(12, np.nan))
 
         ### get action ###
         self.action = self.get_action()  # mouse's moves
-        self.action_vec.append(self.action)
 
-        ### take step in environment ###
-        action_tuple = ActionTuple()
-        action_tuple.add_continuous(self.action.reshape(1, -1))
-        self.env.set_actions(self.agent, action_tuple)
-        # print("Action: ", self.action)
+        if self.action is not None:
+            self.action_vec.append(self.action.flatten())
+        else:
+            self.action_vec.append(np.full(4, np.nan))
+
+        if self.action is not None:
+            ### take step in environment ###
+            action_tuple = ActionTuple()
+            action_tuple.add_continuous(self.action.reshape(1, -1))
+            # print("- - - - - - - -> Action: ", action_tuple.continuous)
+            self.env.set_actions(self.agent, action_tuple)
+            # print("Action: ", self.action)
 
         self.env.step()  # unity env++
 

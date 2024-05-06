@@ -2,65 +2,105 @@ import os
 import sys
 import json
 import argparse
+
+# import platform
 import subprocess
 import tkinter as tk
-from tkinter import Tk
-from tkinter import filedialog
+import tkinter as tk
+from tkinter import filedialog, simpledialog, messagebox
 from pathlib import Path
 
 
 # Function to create conda environment and install dependencies
-def create_conda_env(env_name="vr4mice", verbose=False):
+def create_env(env_name="vr4mice", verbose=False):
+    """Creates a conda environment for the vr4mice task and installs required dependencies.
 
+    Parameters
+    ----------
+    env_name : str, optional
+        name of the conda environment to be created, by default "vr4mice"
+    verbose : bool, optional
+        whether the output of this function should be verbose or not, by default False
+    """
     print(f"Creating conda environment: {env_name}") if verbose else None
+
     # Create the conda environment
-    subprocess.call(f"conda create --name {env_name} python=3.10.12", shell=True)
+    subprocess.run(f"conda create --name {env_name} python=3.10.12", shell=True)
     print("Environment created.") if verbose else None
 
     # Activate the conda environment
     activate_precommand = f"conda run -n {env_name} "
+    github_repo_link = "https://github.com/AdaptiveMotorControlLab/ml-agents.git"
 
-    # Install dependencies
     print("Installing dependencies...") if verbose else None
 
-    # Install the mlagents_envs package
-    subprocess.call(
-        activate_precommand + "pip install ./ext_modules/mlagents_envs-1.0.0.tar.gz",
+    # Install ml-agents dependencies
+    subprocess.run(
+        f"git clone --branch release_21_fix_macOS {github_repo_link} ../../ml-agents",
         shell=True,
     )
-
-    # Install the mlagents package
-    subprocess.call(
-        activate_precommand + "pip install ./ext_modules/mlagents-1.0.0.tar.gz",
+    subprocess.run(
+        activate_precommand + "pip install ../../ml-agents/ml-agents-envs",
+        shell=True,
+    )
+    subprocess.run(
+        activate_precommand + "pip install ../../ml-agents/ml-agents",
         shell=True,
     )
 
     # Install the vr4mice package
-    subprocess.call(activate_precommand + "pip install ../", shell=True)
+    subprocess.run(activate_precommand + "pip install ../", shell=True)
     print("Dependencies installed.") if verbose else None
 
 
 # Function to prompt user for build directory path
-def get_path(purpose=""):
+def get_path():
+    """Retrieve a directory path from the user.
+
+    Parameters
+    ----------
+    purpose : str, optional
+        information about what the directory should contain, by default ""
+
+    Returns
+    -------
+    str
+        the path selected by the user
+
+    Raises
+    ------
+    ValueError
+        raises error if the selected path is not a directory
+    """
     # Hide the main tkinter window
-    Tk().withdraw()
+    tk.Tk().withdraw()
 
     # Display a quick dialogue explaining the purpose of the selected directory
     tk.messagebox.showinfo(
-        "Select Directory",
-        f"Select directory for: {purpose}",
+        "Select Unity game",
+        f"Select the built unity game",
     )
 
     # Open a directory navigator and get the selected path
-    build_path = filedialog.askdirectory(title="Select Directory")
-    build_path = Path(build_path).absolute()  # get absolute path
-    if not os.path.isdir(build_path):
-        raise ValueError(f"Invalid directory: {build_path}")
-    return build_path
+    build_path = filedialog.askopenfilename(title="Select Unity Game")
+
+    if build_path:
+        return Path(build_path).absolute()
+    else:
+        raise ValueError("No build was selected. Try again.")
 
 
 # Function to save build path to config.json
-def save_to_config(file_path):
+def save_config(file_path):
+    """Prompts the user to select a directory and saves the path to the specified config file.
+
+    Parameters
+    ----------
+    file_path : str
+        path to config file
+    """
+
+    final_build_path = str(get_path())
 
     if file_path.exists():
         # Load  config data
@@ -69,28 +109,35 @@ def save_to_config(file_path):
 
         # Update the necessary key-value pairs
         for config_path in config.keys():
-            if config_path.find("path"):
-                # print(config_path)
-                config[config_path] = str(get_path(config_path))
-
-        # Save the updated config data
-        with open(file_path, "w") as file:
-            json.dump(config, file)
+            if config_path == "ar_env_unity_absolute_path":
+                config[config_path] = final_build_path
     else:
-        # Create a new config file
-        config = {
-            "ar_env_unity_absolute_path": str(get_path("ar_env_unity_absolute_path")),
-        }
+        # Create the config data
+        config = {"ar_env_unity_absolute_path": str(final_build_path)}
 
-        # Save the config data
-        with open(file_path, "w") as file:
-            json.dump(config, file)
+    # Save the config data
+    with open(file_path, "w") as file:
+        json.dump(config, file)
 
     print(f"Build path saved to {file_path}")
 
 
 # Function to parse command line arguments
 def parse_arguments():
+    """Parses the command-line arguments that are passed when running the script
+
+    Returns
+    -------
+    list
+        list containing the arguments passed to the script
+
+    Raises
+    ------
+    ValueError
+        if both config_only and env_only are set to True
+    UserWarning
+        if env_name is specified when config_only is set to True
+    """
     # Create the argument parser
     parser = argparse.ArgumentParser(
         description="--- HELP TO SETUP TASK ENVIRONMENT ---"
@@ -167,15 +214,45 @@ def parse_arguments():
     return arguments
 
 
+def preliminary_check():
+    """Asks the user if he/she already has already built the Unity game.
+    If yes, the script will proceed to the setup of the configuration .json file.
+    If no, the scrpit will stop and configuration will be set.
+
+    Returns
+    -------
+    bool
+        True if the user has already built the Unity game, False otherwise
+    """
+
+    question = "Have you already built the Unity game and have the executable stored in a directory on your machine?"
+
+    root = tk.Tk()
+    root.withdraw()
+    answer = messagebox.askquestion(title="Question", message=question, icon="warning")
+    root.destroy()
+    if answer == "yes":
+        return True
+    else:
+        return False
+
+
 # main
 def main():
     args = parse_arguments()
+
     if args["env_only"] or args["all"]:
-        create_conda_env(args["env_name"], args["verbose"])
+        # print("- - - - - - ENV - - - - - -")
+        create_env(args["env_name"], args["verbose"])
 
     if args["config_only"] or args["all"]:
-        config_file_path = Path("task_config.json")
-        save_to_config(config_file_path)
+        # print("- - - - - CONFIG - - - - -")
+        answer = preliminary_check()
+        if not answer:
+            raise RuntimeError(
+                "In order to save configuration paths, you need to already have the directory containing the built Unity game."
+            )
+        save_config(Path("./task_config.json"))
 
 
 if __name__ == "__main__":

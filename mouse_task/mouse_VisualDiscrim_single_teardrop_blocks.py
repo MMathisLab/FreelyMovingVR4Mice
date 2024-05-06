@@ -32,9 +32,9 @@ from teensyexp.tasks_abc.dlc_socket import DLCClient
 from mouse_task.kfilter import OneEuroFilter
 
 
-# config_name = Path("task_config.json")
-# current_dir = Path(__file__).parent
-# config_path = current_dir.joinpath(config_name)  # default class constructor input
+config_name = Path("task_config.json")
+current_dir = Path(__file__).parent
+config_path = current_dir.joinpath(config_name)  # default class constructor input
 
 
 class ARVisualDiscrim_single_teardrop(UnityTask):
@@ -52,8 +52,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         session_label=["AR_VD_single_teardrop_blocks"],
         epochs=[250],
         epoch_labels=["single_teardrop"],
-        # config_file_path=config_path,
-        config_file_path="",
+        config_file_path=config_path,
         reward_size=100,
         cropped_image=[0, 530, 0, 510],
         unity_arena_size=[-9, 9, -10, -2],
@@ -66,7 +65,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         slit_size=20.0,
         slit_depth=2.0,
         target_selection=7.0,
-        target_rotation = 0,
+        target_rotation=0,
         distractor_selection=4.0,
         occlusion_type=0.0,
         Camera_type=1.0,
@@ -111,19 +110,19 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         self.grey_screen_active = grey_screen_active
 
         # - - - - - - - .json config related code - - - - - - -#
-        # config_dict = process_config(config_file_path)
+        config_dict = process_config(config_file_path)
 
-        # if config_dict is None:
-        #     # err messages are showed on process_config() function level
-        #     return
+        if config_dict is None:
+            # err messages are showed on process_config() function level
+            return
 
         # model_path = config_dict["model_absolute_path"]
         # dlc_video_path = config_dict["dlc_video_absolute_path"]
-        # env_path = config_dict["ar_env_unity_absolute_path"]
+        env_path = config_dict["ar_env_unity_absolute_path"]
         # - - - - - - - .json config related code - - - - - - -#
 
         ## Path to Unity build (executable) ##
-        env_path = "/Users/subnaulitus/Documents/EPFL/GitHub_Repos/FreelyMovingVR4Mice/mouse_task/macOS_test_unity_build/vr4mice.app"
+        # env_path = "/Users/subnaulitus/Documents/EPFL/GitHub_Repos/FreelyMovingVR4Mice/mouse_task/macOS_test_unity_build/vr4mice.app"
 
         super().__init__(
             teensy,
@@ -154,7 +153,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         self.target_height = self.as_list(target_height)
         self.mouse_report_delay = self.as_list(mouse_report_delay)
         self.target_rotation = self.as_list(target_rotation)
-        
+
         self.Prob_Obj_on_Left = Prob_Obj_on_Left
 
         self.block_Left = np.random.choice([0.0, 1.0], p=[0.5, 0.5])
@@ -198,7 +197,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         self.trial_occlusion_type = []
         self.trial_target_distance = []
         self.trial_target_rotation = []
-        
+
         self.dlc_read_time = []
         self.dlc_x = []
         self.dlc_y = []
@@ -361,10 +360,6 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         self.trial_occlusion_type.append(this_occlusion_type)
         self.trial_target_distance.append(this_target_distance)
         self.trial_target_rotation.append(this_target_rotation)
-        
-
-
-
 
     def get_action(self):
         """
@@ -479,13 +474,13 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         data_dict["mouse_report_delay"] = np.array(self.trial_mouse_report_delay)
         data_dict["velocity_threshold"] = self.velocity_threshold
         data_dict["start_box_delay"] = self.start_box_delay
-        data_dict ["distractor"] = self.distractor
-        data_dict ["target_size"] = self.target_size
-        data_dict ["grey_screen_active"] = self.grey_screen_active
-        data_dict ["camera_type"] = self.camera_type
-        data_dict ["target_selection"] = np.array(self.trial_target_selection)
-        data_dict ["distractor_selection"] = np.array(self.trial_distractor_selection)
-        data_dict ["occlusion_type"] = np.array(self.trial_occlusion_type)
-        data_dict ["target_distance"] = np.array(self.trial_target_distance)
-        data_dict ["target_rotation"] = np.array(self.trial_target_rotation)
+        data_dict["distractor"] = self.distractor
+        data_dict["target_size"] = self.target_size
+        data_dict["grey_screen_active"] = self.grey_screen_active
+        data_dict["camera_type"] = self.camera_type
+        data_dict["target_selection"] = np.array(self.trial_target_selection)
+        data_dict["distractor_selection"] = np.array(self.trial_distractor_selection)
+        data_dict["occlusion_type"] = np.array(self.trial_occlusion_type)
+        data_dict["target_distance"] = np.array(self.trial_target_distance)
+        data_dict["target_rotation"] = np.array(self.trial_target_rotation)
         return data_dict
