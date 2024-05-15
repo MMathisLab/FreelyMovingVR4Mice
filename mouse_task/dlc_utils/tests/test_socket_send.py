@@ -55,7 +55,7 @@ class MyProcessor_socket:
             print("waiting")
             self.curr_signal = 0
         else:
-            self.curr_signal = (np.sin((self.curr_step) * .1) + 1) / 2
+            self.curr_signal = (np.sin((self.curr_step) * .2) + 1) / 2
         return(self.curr_signal)
     
     def save(self):

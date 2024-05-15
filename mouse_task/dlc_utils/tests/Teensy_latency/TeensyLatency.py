@@ -17,10 +17,11 @@ class TeensyLatency():
     def read_on_thread(self):
         while self.reading_teensy == True:
             line = self.ser.readline().decode("utf-8").rstrip()
-            print(line)
             now = time.time()  # Current time
             self.input_data.append(float(line))
             self.input_data_time.append(now)
+            
+            
 
     def start_read_buffer(self):
         """

@@ -14,7 +14,7 @@ from math import sqrt, acos, atan2, copysign, pi, degrees
 
 
 class MyProcessor_socket():
-    def __init__(self, com = "/dev/tty.usbmodem146854901", baudrate=9600,  save_file_path = "/Users/thomassainsbury/Documents/Mathis_lab/Mathis_lab_code/FreelyMovingVR4Mice/mouse_task/dlc_utils/tests/"):
+    def __init__(self, com = "/dev/tty.usbmodem146851301", baudrate=9600,  save_file_path = "/Users/thomassainsbury/Documents/Mathis_lab/Mathis_lab_code/FreelyMovingVR4Mice/mouse_task/dlc_utils/tests/"):
         super().__init__()
         self.teensy = TeensyLatency(com, baudrate=baudrate)
         self.address = ("localhost", 6000)  # family is deduced to be 'AF_INET'
@@ -41,7 +41,7 @@ class MyProcessor_socket():
         self.conn.send(
             [
                 self.curr_time,
-                np.sin(self.curr_step*0.1) * 9,
+                np.sin(self.curr_time*0.5)*9,
                 self.vals[1],
                 self.vals[2],
                 self.vals[3],
@@ -58,10 +58,11 @@ class MyProcessor_socket():
 
     def get_curr_signal(self):
         if (self.curr_time - self.st) < 3:
-          
             self.curr_signal = 0
         else:
-            self.curr_signal = (np.sin((self.curr_step) * .1) + 1) / 2
+            
+            self.curr_signal = (np.sign(np.sin(5*np.pi*time.time()))+1)/2
+            #self.curr_signal = (np.sin((self.curr_step) * .1) + 1) / 2
         return(self.curr_signal)
    
 
@@ -84,6 +85,7 @@ while True:
     try:
         socket.process()
     except:
+        print("exeption")
         socket.teensy.reading_teensy = False
         socket.conn.close()
         socket.save()
