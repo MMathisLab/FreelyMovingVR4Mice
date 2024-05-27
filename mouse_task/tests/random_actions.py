@@ -3,15 +3,23 @@ from mlagents_envs.side_channel.engine_configuration_channel import EngineConfig
 import time
 import numpy as np
 from mlagents_envs.environment import ActionTuple, BaseEnv
+from mouse_task.tests.Teensy_latency.TeensyLatency import TeensyLatency
+from collections import deque
+from mouse_task.helpers import process_config
+import json
 
 # Define your environment path
 #env_name = "/Users/thomassainsbury/Documents/Mathis_lab/Mathis_lab_code//roller_ball/roller_ball.app"
-env_name = "/Users/thomassainsbury/Documents/Mathis_lab/Mathis_lab_code/FreelyMovingVR4Mice/mouse_task/mac_build/game.app"
+config_file_path = "../task_config.json"
+with open(config_file_path) as task_config_file:
+            config_dict = json.load(task_config_file)
+env_name = config_dict ["ar_env_unity_absolute_path"]
 
 class send_random_actions():
-  def __init__(self, env_name = env_name, use_teensy = False, sleep_time =0, loop_time=20, signal_delay_time =3, signal_type="sin"):
+  def __init__(self, env_name = config_dict, use_teensy = False, sleep_time =0, loop_time=20, signal_delay_time =3, signal_type="sin", com="COM3", baudrate=9600):
     self.env = UnityEnvironment(file_name=env_name, seed=1, side_channels=[])
     self.channel = EngineConfigurationChannel()
+    self.use_teensy = use_teensy
     self.channel.set_configuration_parameters(time_scale = -1)
     # Reset the environment
     print("Resetting game...")
@@ -44,7 +52,16 @@ class send_random_actions():
     self.episode_rewards = 0 # For the tracked_agent
     self.signal_delay_time = signal_delay_time
     self.signal_type = signal_type
-    self.loop(loop_time=20, sleep_time=sleep_time)
+    if use_teensy == True:
+       self.teensy = TeensyLatency(com, baudrate=baudrate)
+
+    self.time_stamp = deque()
+    self.st = time.time()
+    self.curr_step = 0
+    self.signal = deque()
+    self.step = deque()
+    self.reading_teensy = True
+    self.loop(loop_time=loop_time, sleep_time=sleep_time)
 
 
   def get_nhz_pulse(self, curr_time, st, freq):
@@ -73,10 +90,7 @@ class send_random_actions():
         else:
            curr_signal = 0
     return(curr_signal)
-      
-       
-
-
+    
   def loop(self, loop_time = 20, sleep_time = 0):
       while (time.time() - self.st) < loop_time:
       #env.reset()
@@ -114,12 +128,30 @@ class send_random_actions():
             self.episode_rewards += self.terminal_steps[self.tracked_agent].reward
             done = True
       self.env.close()
+
+  def save_data(self):
+    save_dict =  dict()
+    save_dict ["start_time"] = np.array(self.st)
+    save_dict ["time_stamp"] = np.array(self.time_stamp)
+    save_dict ["step"] =  np.array(self.step)
+    save_dict ["signal"] = np.array(self.signal)
+    if self.use_teensy == True:
+      if len(self.teensy.input_data) != len(self.teensy.input_data):
+        input_time = np.array(self.teensy.input [:-1])
+      else:
+         input_time = np.array(self.teensy.input)
+      save_dict ["photodiode_read"] = np.array(self.teensy.input_data)
+      save_dict ["photodiode_time"] = np.array(input_time)
+    
+    np.save(arr=save_dict, file= "random_actions_" + self.signal_type, allow_pickle=True)
+     
       
       
     
 
 # Close the environment
-game = send_random_actions(env_name = env_name, signal_type="flip", sleep_time = 0.1)
+game = send_random_actions(env_name = env_name, signal_type="sin", sleep_time = 0.02)
+game.save_data()
 
 
     

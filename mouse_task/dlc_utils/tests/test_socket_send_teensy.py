@@ -16,7 +16,7 @@ from math import sqrt, acos, atan2, copysign, pi, degrees
 class MyProcessor_socket():
     def __init__(self, com = "/dev/tty.usbmodem146851301", baudrate=9600,  save_file_path = "/Users/thomassainsbury/Documents/Mathis_lab/Mathis_lab_code/FreelyMovingVR4Mice/mouse_task/dlc_utils/tests/"):
         super().__init__()
-        self.teensy = TeensyLatency(com, baudrate=baudrate)
+        
         self.address = ("localhost", 6000)  # family is deduced to be 'AF_INET'
         self.listener = Listener(self.address, authkey=b"secret password")
         self.conn = self.listener.accept()
@@ -27,7 +27,9 @@ class MyProcessor_socket():
         self.curr_step = 0
         self.signal = deque()
         self.step = deque()
+        self.teensy = TeensyLatency(com, baudrate=baudrate)
         self.reading_teensy = True
+
 
         self.vals = np.array([0.0, -9.0, 0.59740335, 3.0])
         
