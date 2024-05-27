@@ -8,7 +8,7 @@ from teensyexp.teensy import Teensy
 import numpy as np
 from collections import deque
 import serial
-from Teensy_latency.TeensyLatency import TeensyLatency
+from mouse_task.tests.Teensy_latency.TeensyLatency import TeensyLatency
 
 from math import sqrt, acos, atan2, copysign, pi, degrees
 
