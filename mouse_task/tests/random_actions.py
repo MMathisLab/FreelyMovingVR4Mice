@@ -20,7 +20,7 @@ class send_random_actions():
     self.env = UnityEnvironment(file_name=env_name, seed=1, side_channels=[])
     self.channel = EngineConfigurationChannel()
     self.use_teensy = use_teensy
-    self.channel.set_configuration_parameters(time_scale = -1)
+    self.channel.set_configuration_parameters(time_scale = 1)
     # Reset the environment
     print("Resetting game...")
     self.env.reset()
@@ -54,6 +54,7 @@ class send_random_actions():
     self.signal_type = signal_type
     if use_teensy == True:
        self.teensy = TeensyLatency(com, baudrate=baudrate)
+       print("using_teensy")
 
     self.time_stamp = deque()
     self.st = time.time()
@@ -77,7 +78,7 @@ class send_random_actions():
         curr_signal = 0
     else:
         #curr_signal = (np.sign(np.sin(5*np.pi*time.time()))+1)/2
-        curr_signal = np.round((np.sin((self.curr_time*5)) + 1)/ 2,4)
+        curr_signal = np.round((np.sin((self.curr_time*5)) + 1)/ 4,4)
         print(curr_signal)
     return(curr_signal)
   
@@ -115,6 +116,9 @@ class send_random_actions():
           action_tuple = ActionTuple()
           action_tuple.add_continuous(random_action)
           self.env.set_actions(self.behavior_name, action_tuple)
+          self.signal.append(self.curr_signal)
+          self.step.append(self.curr_step)
+          self.time_stamp.append(self.curr_time)
         
           # Move the simulation forward
           self.env.step()
@@ -136,10 +140,10 @@ class send_random_actions():
     save_dict ["step"] =  np.array(self.step)
     save_dict ["signal"] = np.array(self.signal)
     if self.use_teensy == True:
-      if len(self.teensy.input_data) != len(self.teensy.input_data):
-        input_time = np.array(self.teensy.input [:-1])
+      if len(self.teensy.input_data) != len(self.teensy.input_data_time):
+        input_time = np.array(self.teensy.input_data_time [:-1])
       else:
-         input_time = np.array(self.teensy.input)
+         input_time = np.array(self.teensy.input_data_time)
       save_dict ["photodiode_read"] = np.array(self.teensy.input_data)
       save_dict ["photodiode_time"] = np.array(input_time)
     
@@ -150,7 +154,7 @@ class send_random_actions():
     
 
 # Close the environment
-game = send_random_actions(env_name = env_name, signal_type="sin", sleep_time = 0.02)
+game = send_random_actions(env_name = env_name, signal_type="sin", use_teensy=True, loop_time=60, sleep_time = 0.02)
 game.save_data()
 
 

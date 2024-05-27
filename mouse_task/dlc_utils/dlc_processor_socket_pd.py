@@ -33,9 +33,6 @@ class MyProcessor_socket(Processor):
         self.curr_step = 0
         self.curr_signal = 0
         
-
-
-        
     def process(self, pose, **kwargs):
         xy = pose[:, :2]
         conf = pose[:, 2]
@@ -75,12 +72,42 @@ class MyProcessor_socket(Processor):
      
         return pose
     
+    
+    def get_nhz_pulse(self, curr_time, st, freq):
+        if (curr_time - st) < self.signal_delay_time:
+            self.curr_signal = 0
+        else:
+            self.curr_signal = (np.sign(np.sin(freq*np.pi*time.time()))+1)/2
+            #self.curr_signal = (np.sin((self.curr_step) * .1) + 1) / 2
+        return(self.curr_signal)      
+
+    def get_sin_wave(self, curr_time, st):
+        if (curr_time - st) < self.signal_delay_time:
+            curr_signal = 0
+        else:
+            #curr_signal = (np.sign(np.sin(5*np.pi*time.time()))+1)/2
+            curr_signal = np.round((np.sin((self.curr_time*5)) + 1)/ 4,4)
+            print(curr_signal)
+        return(curr_signal)
+    
+    def flip_every_frame(self, curr_time, st):
+        if (curr_time - st) < self.signal_delay_time:
+            curr_signal = 0
+        else:
+            if self.curr_signal == 0:
+            curr_signal = 1
+            else:
+            curr_signal = 0
+        return(curr_signal)
+        
+    
     def save(self, file=None):
         save_code = 0
         if file:
             print(file)
             try:
                 dict = self.save_latency_data()
+               
                 pickle.dump(
                     {"time_stamp": self.time_stamp, "x_pos": self.center_x, "y_pos": self.center_y, "heading_direction": self.heading_direction, "head_angle": self.head_angle,
                     },
