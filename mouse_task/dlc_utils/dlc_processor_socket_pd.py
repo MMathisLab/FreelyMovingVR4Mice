@@ -13,7 +13,7 @@ from dlclive import Processor
 from math import sqrt, acos, atan2, copysign, pi, degrees
 
 class MyProcessor_socket(Processor):
-    def __init__(self, com = "/dev/tty.usbmodem146854901", baudrate=9600, signal_delay = 3, signal_type ="sin"):
+    def __init__(self, com = "COM3", baudrate=9600, signal_delay = 3, signal_type ="sin"):
         super().__init__()
        # self.queue = queue
         self.teensy = TeensyLatency(com= com, baudrate=baudrate)
