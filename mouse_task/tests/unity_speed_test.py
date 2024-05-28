@@ -52,6 +52,15 @@ sent_times = deque()
 read_times = deque()
 data = deque()
 loop_end_time = deque()
+previous = np.array(
+            [
+                0,
+                0,
+                0,
+                0,
+            ],
+            dtype=np.float16,
+        ).reshape(1, -1)
 
 
 decision_steps, terminal_steps = env.get_steps(behavior_name)
@@ -69,6 +78,7 @@ while (time.time() - start_time) < 60:
     # 	 print(this_read)
     if this_read is None:
         time.sleep(0)
+        random_action = previous
         #pass
     if this_read is not None:
         # if this_read ["time"] - this_read ["vals"][0] < 0.01:
@@ -79,9 +89,10 @@ while (time.time() - start_time) < 60:
                 0.59740335,
                 this_read["vals"][-1],
             ],
-            dtype=np.float32,
+            dtype=np.float16,
         ).reshape(1, -1)
         #print(random_action)
+        previous = random_action
         action_tuple = ActionTuple()
         action_tuple.add_continuous(random_action)
         env.set_actions(behavior_name, action_tuple)

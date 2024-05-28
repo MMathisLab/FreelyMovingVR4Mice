@@ -14,7 +14,7 @@ from math import sqrt, acos, atan2, copysign, pi, degrees
 
 
 class MyProcessor_socket():
-    def __init__(self, com = "/dev/tty.usbmodem146851301", baudrate=9600,  save_file_path = "/Users/thomassainsbury/Documents/Mathis_lab/Mathis_lab_code/FreelyMovingVR4Mice/mouse_task/dlc_utils/tests/"):
+    def __init__(self, com = "COM3", baudrate=9600,  save_file_path = "../../tests/"):
         super().__init__()
         
         self.address = ("localhost", 6000)  # family is deduced to be 'AF_INET'
@@ -55,7 +55,7 @@ class MyProcessor_socket():
         self.step.append(self.curr_step)
         self.time_stamp.append(self.curr_time)
         self.curr_step = self.curr_step + 1
-        time.sleep(1 / 50)
+        time.sleep(1 / 100)
         # print(self.st - time.time())
 
     def get_curr_signal(self):
