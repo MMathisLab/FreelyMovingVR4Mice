@@ -13,7 +13,7 @@ from dlclive import Processor
 from math import sqrt, acos, atan2, copysign, pi, degrees
 
 class MyProcessor_socket(Processor):
-    def __init__(self, com = "COM3", baudrate=9600, signal_delay = 3, signal_type ="sin"):
+    def __init__(self, com = "COM3", baudrate=9600, signal_delay = 3, signal_type ="sin", freq =5, use_teensy = True):
         super().__init__()
        # self.queue = queue
         self.teensy = TeensyLatency(com= com, baudrate=baudrate)
@@ -34,7 +34,11 @@ class MyProcessor_socket(Processor):
         self.curr_signal = 0
         self.start_time = time.time()
         self.signal_type = signal_type
-        self.
+        self.signal_delay =  signal_delay
+        self.signal_freq = freq
+        if use_teensy == True:
+            self.teensy = TeensyLatency(com, baudrate=baudrate)
+            print("using_teensy")
         
     def process(self, pose, **kwargs):
         xy = pose[:, :2]
@@ -54,10 +58,7 @@ class MyProcessor_socket(Processor):
             head_angle = 0
             
         self.curr_time = time.time()
-        if self.curr_time - self.start_time < 3:
-            self.curr_signal = 0
-        else:
-            self.curr_signal = np.sin(self.curr_step)
+        self.curr_signal = self.get_signal(curr_time = self.curr_time, st=self.start_time, )
         
         self.curr_step + self.curr_step + 1
 
@@ -80,25 +81,36 @@ class MyProcessor_socket(Processor):
      
         return pose
     
-    def get_nhz_pulse(self, curr_time, st, freq):
-        if (curr_time - st) < self.signal_delay_time:
-            self.curr_signal = 0
-        else:
-            self.curr_signal = (np.sign(np.sin(freq*np.pi*time.time()))+1)/2
-            #self.curr_signal = (np.sin((self.curr_step) * .1) + 1) / 2
-        return(self.curr_signal)      
 
-    def get_sin_wave(self, curr_time, st):
-        if (curr_time - st) < self.signal_delay_time:
+    def get_signal(self, signal_type, curr_time, st, freq, delay):
+        if signal_type == "pulse":
+            curr_signal = self.get_nhz_pulse(curr_time=curr_time, st=st, freq=freq, delay=delay)
+        if signal_type == "sin":
+            curr_signal = self.get_sin_wave(curr_time=curr_time, st=st, freq=freq, delay=delay)
+        if signal_type == "flip":
+            curr_signal = self.flip_every_frame(curr_time=curr_time, st=st, delay=delay)
+        return(curr_signal)
+
+    
+    def get_nhz_pulse(self, curr_time, st, freq, delay):
+        if (curr_time - st) < delay:
+            curr_signal = 0
+        else:
+            curr_signal = (np.sign(np.sin(freq*np.pi*time.time()))+1)/2
+            #self.curr_signal = (np.sin((self.curr_step) * .1) + 1) / 2
+        return(curr_signal)      
+
+    def get_sin_wave(self, curr_time, st, delay):
+        if (curr_time - st) < delay:
             curr_signal = 0
         else:
             #curr_signal = (np.sign(np.sin(5*np.pi*time.time()))+1)/2
             curr_signal = np.round((np.sin((self.curr_time*5)) + 1)/ 4,4)
-            print(curr_signal)
+            #print(curr_signal)
         return(curr_signal)
     
-    def flip_every_frame(self, curr_time, st):
-        if (curr_time - st) < self.signal_delay_time:
+    def flip_every_frame(self, curr_time, st, delay):
+        if (curr_time - st) < delay:
             curr_signal = 0
         else:
             if self.curr_signal == 0:
@@ -113,11 +125,10 @@ class MyProcessor_socket(Processor):
         if file:
             print(file)
             try:
-                dict = self.save_latency_data()
+                save_dict = self.save_latency_data()
                
                 pickle.dump(
-                    {"time_stamp": self.time_stamp, "x_pos": self.center_x, "y_pos": self.center_y, "heading_direction": self.heading_direction, "head_angle": self.head_angle,
-                    },
+                    save_dict,
                     open(file, "wb"),
                 )
                 save_code = 1
@@ -126,8 +137,9 @@ class MyProcessor_socket(Processor):
         return save_code
     
     def save_latency_data(self):
+        self.teensy.close_serial()
         save_dict =  dict()
-        save_dict ["start_time"] = np.array(self.st)
+        save_dict ["start_time"] = np.array(self.start_time)
         save_dict ["frame_time"] = np.array(self.frame_time)
         save_dict ["pose_time"] = np.array(self.pose_time)
         save_dict ["time_stamp"] = np.array(self.time_stamp)
@@ -135,4 +147,9 @@ class MyProcessor_socket(Processor):
         save_dict ["signal"] = np.array(self.signal)
         save_dict ["photodiode_read"] = np.array(self.teensy.input_data)
         save_dict ["photodiode_time"] = np.array(self.teensy.input_data_time)
+        save_dict ["x_pos"] =np.array(self.center_x)
+        save_dict ["y_pos"] = np.array(self.center_y)
+        save_dict ["heading_direction"] = np.array(self.heading_direction)
+        save_dict ["head_angle"] = np.array(self.head_angle)
+        
         return(save_dict)
