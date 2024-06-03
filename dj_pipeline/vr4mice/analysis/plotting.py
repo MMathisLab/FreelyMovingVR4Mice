@@ -387,7 +387,7 @@ def _plot_bar_counts(
         ax.set_xlabel("")
         ax.set_xticklabels([])
 
-    sns.scatterplot(data=counts, x=label_x, y="count", alpha=1, hue="color")
+    sns.scatterplot(data=counts, x=label_x, y="count", alpha=1, hue=label_x, palette=color_map)
 
     plt.legend([], [], frameon=False)
 
