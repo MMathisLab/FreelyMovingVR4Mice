@@ -384,6 +384,33 @@ def get_mouse_list(list_name="tolias_two_widths"):
             {"mouse_name": "31050", "date": "2024-02-28", "attempt": "1"},
             {"mouse_name": "31050", "date": "2024-02-29", "attempt": "1"},
         ]
+    elif list_name == "tolias_training":
+        mouse_list = [
+            {"mouse_name": "31050", "date": "2024-02-08", "attempt": "1"},
+            {"mouse_name": "31050", "date": "2024-02-09", "attempt": "1"},
+            {"mouse_name": "31050", "date": "2024-02-12", "attempt": "1"},
+            {"mouse_name": "31050", "date": "2024-02-13", "attempt": "1"},
+            {"mouse_name": "31050", "date": "2024-02-14", "attempt": "1"},
+            {"mouse_name": "31050", "date": "2024-02-15", "attempt": "1"},
+            {"mouse_name": "31050", "date": "2024-02-16", "attempt": "1"},
+            {"mouse_name": "31050", "date": "2024-02-19", "attempt": "1"},
+            {"mouse_name": "31050", "date": "2024-02-20", "attempt": "1"},
+            {"mouse_name": "31050", "date": "2024-02-21", "attempt": "1"},
+            {"mouse_name": "31050", "date": "2024-02-22", "attempt": "1"},
+            {"mouse_name": "31050", "date": "2024-02-23", "attempt": "1"},
+            {"mouse_name": "31047", "date": "2024-02-08", "attempt": "1"},
+            {"mouse_name": "31047", "date": "2024-02-09", "attempt": "1"},
+            {"mouse_name": "31047", "date": "2024-02-12", "attempt": "1"},
+            {"mouse_name": "31047", "date": "2024-02-13", "attempt": "1"},
+            {"mouse_name": "31047", "date": "2024-02-14", "attempt": "1"},
+            {"mouse_name": "31047", "date": "2024-02-15", "attempt": "1"},
+            {"mouse_name": "31047", "date": "2024-02-16", "attempt": "1"},
+            {"mouse_name": "31047", "date": "2024-02-19", "attempt": "1"},
+            {"mouse_name": "31047", "date": "2024-02-20", "attempt": "1"},
+            {"mouse_name": "31047", "date": "2024-02-21", "attempt": "1"},
+            {"mouse_name": "31047", "date": "2024-02-22", "attempt": "1"},
+            {"mouse_name": "31047", "date": "2024-02-23", "attempt": "1"},
+        ]
     else:
         NotImplementedError(f"{list_name}")
     return mouse_list
