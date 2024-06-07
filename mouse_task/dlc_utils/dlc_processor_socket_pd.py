@@ -75,7 +75,7 @@ class MyProcessor_socket(Processor):
         self.step.append(self.curr_step)
         self.signal.append(self.curr_signal)
         self.frame_time.append(kwargs ["frame_time"])
-        self.pose_time.append(kwargs ["pose_time"])
+        #self.pose_time.append(kwargs ["pose_time"])
         
         self.conn.send([time.time(), vals [0], vals [1], vals [2], vals [3], vals [4]])
      
@@ -141,7 +141,7 @@ class MyProcessor_socket(Processor):
         save_dict =  dict()
         save_dict ["start_time"] = np.array(self.start_time)
         save_dict ["frame_time"] = np.array(self.frame_time)
-        save_dict ["pose_time"] = np.array(self.pose_time)
+        #save_dict ["pose_time"] = np.array(self.pose_time)
         save_dict ["time_stamp"] = np.array(self.time_stamp)
         save_dict ["step"] =  np.array(self.step)
         save_dict ["signal"] = np.array(self.signal)
