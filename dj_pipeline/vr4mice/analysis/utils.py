@@ -210,15 +210,30 @@ def compute_start_position(
     )
 
 def get_training_label(state_dict):
+    """gets the training phase label from the task parameters and returns the training phase. If the task is an occluder test day then it returns 
+    the number of slit sizes that were used.
+    Args:
+        state_dict (dict): the loaded ".pickle" file.
+        
+    Returns:
+        training phase label (str)
+    """
     slit_size_number = len(np.unique(state_dict ["slit_size"])) 
     if state_dict ["distractor"] == 0.0:
-        return("AR_VD_detection")
+        return("detection")
     if (state_dict ["distractor"] == 1.0) & (slit_size_number == 1):
-        return("AR_VD_discrimination")
+        return("discrimination")
     if (state_dict ["distractor"] == 1.0) & (slit_size_number > 1):
-        return("AR_VD_discrimination_" + str(slit_size_number) + "_slit_sizes")
+        return("discrimination_" + str(slit_size_number) + "_slit_sizes")
     
 def get_object_name(int: x):
+    """ returns the name of either the target or distractor object based on the index outputted from the Unity game
+    Args:
+        x (int): the target selection or distractor selection parameter should be passed as an int, 
+        these can be found the loaded .pickle file.
+    Returns:
+        Object identity (str)
+    """
     object_list = {"white_cube": 0, 
                   "black_cube": 1,
                   "grey_teardrop": 2,
