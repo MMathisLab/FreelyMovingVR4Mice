@@ -218,15 +218,21 @@ def get_training_label(state_dict):
     Returns:
         training phase label (str)
     """
-    slit_size_number = len(np.unique(state_dict ["slit_size"])) 
-    if state_dict ["distractor"] == 0.0:
-        return("detection")
-    if (state_dict ["distractor"] == 1.0) & (slit_size_number == 1):
-        return("discrimination")
-    if (state_dict ["distractor"] == 1.0) & (slit_size_number > 1):
-        return("discrimination_" + str(slit_size_number) + "_slit_sizes")
+    if "distractor" not in state_dict:
+        return("pilot")
     
-def get_object_name(int: x):
+    occlusion_type = state_dict ["occlusion_type"][0] 
+    distractor = state_dict ["distractor"]
+    slit_size_number = len(np.unique(state_dict ["slit_size"])) 
+    
+    if (distractor == 0.0) & (occlusion_type == 0.0):
+        return("detection")
+    if (distractor == 1.0) & (slit_size_number == 1) & (occlusion_type == 0.0):
+        return("discrimination")
+    if (distractor == 1.0) & (slit_size_number > 1) & (occlusion_type != 0.0):
+        return("test_discrimination_" + str(slit_size_number) + "_slit_sizes")
+    
+def get_object_name(x: int):
     """ returns the name of either the target or distractor object based on the index outputted from the Unity game
     Args:
         x (int): the target selection or distractor selection parameter should be passed as an int, 
