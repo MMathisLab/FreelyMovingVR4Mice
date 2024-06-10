@@ -1,6 +1,6 @@
 # Mouse training
 ## General mouse training
-This documents give a protocol for training mice in the AR setup. This protocol should be followed by all labs so that we can get consistent data. This is by no means the final protocol and will need to be adjusted as we perform the experiments but we should only deviate from it after we discussed a change in the monday meetings. This protocol should then be updated to reflect that.
+This documents give a protocol for training mice in the AR setup. This protocol should be followed by all labs so that we can get consistent data. This is by no means the final protocol and will need to be adjusted as we perform the experiments but we should only deviate from it after we discussed a change in the monday meetings. This protocol should then be updated to reflect that. A full description of the currently used protocol can be found in the Training tolias lab tab.
 
 ### Water restriction
 

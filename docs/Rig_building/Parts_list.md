@@ -81,8 +81,6 @@ The teesny circuit will need to be soldered to a perforated board:
 
 4x Sides: 525 x 360 x 5 mm (transparent plastic = PMMA).
 
-1x [light diffuser sheet](https://www.amazon.com/dp/B0BZ33NP92?ref_=cm_sw_r_cso_cp_apin_dp_MFR3FADA7P2NRNE6F3CY&starsLeft=1&language=en-US&th=1)
-
 
 ## IR lights:
 4 x [lights](https://www.amazon.com/CMVision-IR30-WideAngle-IR-Illuminator/dp/B001P2E4U4)

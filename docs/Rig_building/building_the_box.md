@@ -7,7 +7,7 @@ The mice are placed within a perspex box, which has transparent sides so that th
 
 - 4x PMMA (transparent perspex) side pieces (525 x 360 x 5 mm)
 
-- 1x light diffuser sheet
+- 1x anti-glare adhesive
 
 ## Assembly
 Once dry glue each of the side pieces pieces onto one of the floor pieces and onto each other.
