@@ -208,3 +208,29 @@ def compute_start_position(
     return pd.merge(
         df, starting_positions[["trial", "x_init_bin_center"]], on="trial", how="left"
     )
+
+def get_training_label(state_dict):
+    slit_size_number = len(np.unique(state_dict ["slit_size"])) 
+    if state_dict ["distractor"] == 0.0:
+        return("AR_VD_detection")
+    if (state_dict ["distractor"] == 1.0) & (slit_size_number == 1):
+        return("AR_VD_discrimination")
+    if (state_dict ["distractor"] == 1.0) & (slit_size_number > 1):
+        return("AR_VD_discrimination_" + str(slit_size_number) + "_slit_sizes")
+    
+def get_object_name(int: x):
+    object_list = {"white_cube": 0, 
+                  "black_cube": 1,
+                  "grey_teardrop": 2,
+                  "grey_pacman": 3,
+                  "black_teardrop": 4,
+                  "black_pacman": 5,
+                  "white_teardrop": 6,
+                  "white_pacman": 7,
+                  "zebra_teardrop": 8,
+                  "zebra_ball": 9,
+                  "white_ball": 10, 
+                  "light_grey_zebra_teardrop": 11,
+                  "dark_grey_zerba_teardrop": 12}
+    key = list(filter(lambda l: object_list[l] == x, object_list))[0]
+    return(key)
