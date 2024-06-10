@@ -7,12 +7,13 @@ The mice are placed within a perspex box, which has transparent sides so that th
 
 - 4x PMMA (transparent perspex) side pieces (525 x 360 x 5 mm)
 
-- 1x light diffuser sheet (520 x 520 mm)
+- 1x light diffuser sheet
 
 ## Assembly
-Place the light diffuser sheet between the 2 floor pieces and glue in place.
-Once dry glue each of the side pieces pieces onto this floor and onto each other.
+Once dry glue each of the side pieces pieces onto one of the floor pieces and onto each other.
 Wait till glue is dry and use heavy objects to ensure that the pieces are pushed against each other while the glue is drying.
+
+coat one of the floor pieces with the light diffuser sheet ensuring that there are no air bubbles. The diffuser sheet is slightly smaller than the floor plate so you will need to add on another small part of diffuser sheet near the back of the floor plate. Reports from the Tolias lab suggest that this seam does not impact the performance of the mice. Once fully coated you can place this floor plate inside the box. This floor plate can then be removed between sessions for cleaning.
 
 If you have a machine shop i recommend asking them to do this for you, so that this is done with the highest quality!
 
