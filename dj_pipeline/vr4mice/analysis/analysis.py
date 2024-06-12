@@ -158,19 +158,9 @@ def create_data_frame(
     df["trial_rewarded"] = df.groupby("trial", as_index=False)["reward"].transform(
         lambda x: x.max()
     )
-    # df[["trial_step", "trial_step_time"]] = df.groupby(
-    #    "trial", as_index=True, group_keys=False
-    # )[["step", "step_time"]].apply(lambda x: x.iloc[:] - x.iloc[0])
-
+    
     if no_iti:
         df = df[df.iti == 0.0]
-        # df["trial_step_fraction"] = df.groupby(
-        #    "trial", as_index=True, group_keys=False
-        # )["trial_step"].apply(lambda x: x.iloc[:] / x.iloc[-1])
-    # else:
-    # df["trial_step_fraction"] = df.groupby(
-    #    "trial", as_index=True, group_keys=False
-    # )["trial_step"].apply(lambda x: x.iloc[:] / x.iloc[-1])
 
     df["trial_R_choice"] = df.groupby("trial", as_index=False)["mouse_in_R"].transform(
         lambda x: x.iloc[-1]
@@ -254,8 +244,17 @@ def create_data_frame(
 
     df.trial = df.trial.astype(int)
     df.aperture = df.aperture.round(2)
+    
+    #TODO(celia): Mariia those needs to be saved in specific tables.
+    j_shaped, wandering = _get_jshaped_trials(df) 
 
-    return (df, box_df)
+    return (df, box_df, j_shaped, wandering)
+
+
+def _get_jshaped_trials(df):
+    j_shaped = df[(df.trial_duration <= 5) & (df.trial_tortuosity <= 5)]
+    wandering = df[~df.index.isin(j_shaped.index)]
+    return j_shaped, wandering
 
 
 def _get_box_df(dataset) -> pd.DataFrame:
