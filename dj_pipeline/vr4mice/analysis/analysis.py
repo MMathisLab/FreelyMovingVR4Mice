@@ -158,7 +158,7 @@ def create_data_frame(
     df["trial_rewarded"] = df.groupby("trial", as_index=False)["reward"].transform(
         lambda x: x.max()
     )
-    
+
     if no_iti:
         df = df[df.iti == 0.0]
 
@@ -244,15 +244,33 @@ def create_data_frame(
 
     df.trial = df.trial.astype(int)
     df.aperture = df.aperture.round(2)
-    
-    #TODO(celia): Mariia those needs to be saved in specific tables.
-    j_shaped, wandering = _get_jshaped_trials(df) 
+
+    # TODO(celia): Mariia those needs to be saved in specific tables.
+    j_shaped, wandering = _get_jshaped_trials(df)
 
     return (df, box_df, j_shaped, wandering)
 
 
-def _get_jshaped_trials(df):
-    j_shaped = df[(df.trial_duration <= 5) & (df.trial_tortuosity <= 5)]
+def _get_jshaped_trials(
+    df: pd.DataFrame, threshold_duration: int = 5, threshold_tortuosity: int = 5
+):
+    """
+    Separates the trials in the DataFrame into 'J-shaped' and 'wandering' based on the given thresholds.
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing trial data with columns 'trial_duration' and 'trial_tortuosity'.
+        threshold_duration (int): The maximum duration for a trial to be considered 'J-shaped'. Default is 5.
+        threshold_tortuosity (int): The maximum tortuosity for a trial to be considered 'J-shaped'. Default is 5.
+
+    Returns:
+        tuple: A tuple containing two DataFrames:
+            - j_shaped (pd.DataFrame): DataFrame containing trials that are classified as 'J-shaped'.
+            - wandering (pd.DataFrame): DataFrame containing trials that are classified as 'wandering'.
+    """
+    j_shaped = df[
+        (df.trial_duration <= threshold_duration)
+        & (df.trial_tortuosity <= threshold_tortuosity)
+    ]
     wandering = df[~df.index.isin(j_shaped.index)]
     return j_shaped, wandering
 
