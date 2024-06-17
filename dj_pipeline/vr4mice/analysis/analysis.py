@@ -1,4 +1,5 @@
 import os
+import warnings
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -8,13 +9,11 @@ import seaborn as sns
 from scipy import stats
 from scipy.interpolate import CubicSpline
 from vr4mice.schema import base_analysis, vr4mice
-
 # from scipy.signal import savgol_filter, hilbert, find_peaks
 from vr4mice.utils.logger import Logger
 
 logger = Logger.get_logger()
 
-import warnings
 
 # Filter out the UserWarning related to the deprecated features
 warnings.filterwarnings("ignore", category=UserWarning)

@@ -1,4 +1,4 @@
-git_repo :=auxPipelines-DataJoint_Mathis
+git_repo :=FreelyMovingVR4Mice/dj_pipeline
 mount :=/mnt/database
 base_schemas_path="$(mount)/$(git_repo)/base_schemas"
 base_actions_path="$(mount)/$(git_repo)/base_actions"

@@ -2,6 +2,7 @@ import logging
 from datetime import datetime as dt
 from pathlib import Path
 
+
 """
     Script that initialises logger system 
 """

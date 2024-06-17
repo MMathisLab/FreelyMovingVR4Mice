@@ -4,9 +4,10 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
+from PyQt5.QtWidgets import QComboBox, QLabel, QLineEdit, QPlainTextEdit
+
 import numpy as np
 from config.config import config
-from PyQt5.QtWidgets import QComboBox, QLabel, QLineEdit, QPlainTextEdit
 from utils.alert import AlertMsg
 from utils.logger import Logger
 
