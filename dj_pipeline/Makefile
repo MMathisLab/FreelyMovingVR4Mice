@@ -13,7 +13,7 @@ BUILD_ARGS := \
 	#--no-cache
 
 git_info:
-	git log -n 1 | grep commit > git_commit && git status --porcelain  >> git_commit
+	@git log -n 1 | grep commit > git_commit && git status --porcelain  >> git_commit
 
 build_all:
 	#@cp -r $(base_schemas_path) . && \
