@@ -4,14 +4,14 @@ import sys
 
 import datajoint as dj
 import numpy as np
+from base_schemas.schemas import exp, mice
+from vr4mice.utils.logger import Logger
+
 
 """
     Script that fetches the data from database 
     to create a dictionary that will be used in the GUI's dropdown menus 
 """
-
-from base_schemas.schemas import exp, mice
-from vr4mice.utils.logger import Logger
 
 
 def _create_mice_dict(all_mice: dict) -> dict:

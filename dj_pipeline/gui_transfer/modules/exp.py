@@ -1,6 +1,5 @@
 import logging
 
-from modules.template import Template
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QCheckBox,
@@ -11,8 +10,11 @@ from PyQt5.QtWidgets import (
     QPlainTextEdit,
     QVBoxLayout,
 )
+
+from modules.template import Template
 from utils.alert import AlertMsg
 from utils.helpers import get_idx, get_min_len
+
 
 """
     Script contains the experiment's session related GUI module 

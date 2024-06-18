@@ -1,4 +1,5 @@
-import sys, os
+import os
+import sys
 
 from base_actions.connect import connect
 from vr4mice.utils.logger import Logger, config_logger

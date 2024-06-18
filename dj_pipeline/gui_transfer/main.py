@@ -1,12 +1,13 @@
 import sys
 
+from PyQt5.QtWidgets import QApplication
+
 from config.config import config
 from gui import Gui
 from modules.exp import Exp
 from modules.mouse import Mouse
 from modules.opto import Opto
 from modules.transfer import Transfer
-from PyQt5.QtWidgets import QApplication
 from utils.utils import load_dj_input
 
 if __name__ == "__main__":
