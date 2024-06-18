@@ -1,8 +1,14 @@
 # for names that don't match the convention for x,y reason
-from vr4mice.actions.helpers_dj import (get_camera, get_camera_idx,
-                                        get_model_name, get_path,
-                                        get_remote_path, get_state,
-                                        get_video_meta, no_value)
+from vr4mice.actions.helpers_dj import (
+    get_camera,
+    get_camera_idx,
+    get_model_name,
+    get_path,
+    get_remote_path,
+    get_state,
+    get_video_meta,
+    no_value,
+)
 from vr4mice.schema import dlc, vr4mice
 
 # note: populates DLC too

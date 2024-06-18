@@ -93,6 +93,7 @@ class DataFrame(dj.Computed):
             return get_choices(df)
         return df
 
+
 @schema
 class GitCommit(dj.Computed):
 
@@ -119,20 +120,17 @@ def parse_git_commit_file(filename="git_commit"):
     modified_files = []
 
     try:
-        with open(filename, 'r') as file:
+        with open(filename, "r") as file:
             lines = file.readlines()
 
             for line in lines:
                 line = line.strip()
-                if line.startswith('commit '):
+                if line.startswith("commit "):
                     commit_hash = line.split()[1]
-                elif line.startswith('M '):
+                elif line.startswith("M "):
                     modified_files.append(line)
 
-        return {
-                "commit_hash": commit_hash,
-                "changed_files": modified_files
-                }
+        return {"commit_hash": commit_hash, "changed_files": modified_files}
 
     except FileNotFoundError:
         logger.warning(f"Error: File '{filename}' not found.")

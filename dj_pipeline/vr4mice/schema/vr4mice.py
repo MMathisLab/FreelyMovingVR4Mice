@@ -40,6 +40,7 @@ class Dataset(dj.Manual):
     exp_session_filepath: varchar(255)  # npy file
     """
 
+
 # TODO: This should be moved to its own schema.
 # @schema
 # class VR4Mice(dj.Manual):
@@ -217,6 +218,7 @@ class Metadata(dj.Manual):
     distractor_selection=NULL: longblob      # new
     """
 
+
 @schema
 class DatasetType(dj.Computed):
     definition = """
@@ -230,31 +232,37 @@ class DatasetType(dj.Computed):
             undefined = False
             distractor, slit_size = (Metadata & key).fetch1("distractor", "slit_size")
             slit_size_number = len(np.unique(slit_size))
-            
+
             if distractor is None:
-                training_phase = "pilot" # early trainings
+                training_phase = "pilot"  # early trainings
             else:
 
                 if not (State & key):
-                    logger.warning(f"No State found for {key}: can't determine occlusion_type.")
+                    logger.warning(
+                        f"No State found for {key}: can't determine occlusion_type."
+                    )
                     return
-                
+
                 occlusion_type = (State & key).fetch1("occlusion_type")[0]
                 if occlusion_type is None:
-                    logger.warning(f"Occlusion type is None for {key}: can't populate DatasetType.")
-                    return    
-                    
+                    logger.warning(
+                        f"Occlusion type is None for {key}: can't populate DatasetType."
+                    )
+                    return
+
                 if (distractor == 0.0) & (occlusion_type == 0.0):
                     training_phase = "detection"
-                
-                elif (distractor == 1.0):
-                    
+
+                elif distractor == 1.0:
+
                     if (slit_size_number == 1) & (occlusion_type == 0.0):
                         training_phase = "discrimination"
-    
+
                     elif (slit_size_number > 1) & (occlusion_type != 0.0):
-                        training_phase=f"test_discrimination_{slit_size_number}_slit_sizes"
-                    
+                        training_phase = (
+                            f"test_discrimination_{slit_size_number}_slit_sizes"
+                        )
+
                     else:
                         undefined = True
                 else:
@@ -264,12 +272,13 @@ class DatasetType(dj.Computed):
                 msg = f"Can't define training_phase for {key}: can't populate DatasetType."
                 logger.warning(msg)
                 return
-            
-            self.insert1({"dataset": key["dataset"], "training_phase": training_phase}) 
+
+            self.insert1({"dataset": key["dataset"], "training_phase": training_phase})
 
         except Exception as err:
             err = f"Error while populating the DatasetType table: key: {key}\n {err}"
             logger.warning(err)
+
 
 @schema
 class Box(dj.Manual):
@@ -297,6 +306,7 @@ class Box(dj.Manual):
     tt_box_angle: mediumblob
     """
 
+
 @schema
 class Object(dj.Lookup):
     definition = """
@@ -305,20 +315,20 @@ class Object(dj.Lookup):
     object: varchar(128)
     """
     contents = [
-            [0, "white_cube"],
-            [1, "black_cube"],
-            [2, "grey_teardrop"],
-            [3, "grey_pacman"],
-            [4, "black_teardrop"],
-            [5, "black_pacman"],
-            [6, "white_teardrop"],
-            [7, "white_pacman"],
-            [8, "zebra_teardrop"],
-            [9, "zebra_ball"],
-            [10, "white_ball"],
-            [11, "light_grey_zebra_teardrop"],
-            [12, "dark_grey_zerba_teardrop"]
-        ]
+        [0, "white_cube"],
+        [1, "black_cube"],
+        [2, "grey_teardrop"],
+        [3, "grey_pacman"],
+        [4, "black_teardrop"],
+        [5, "black_pacman"],
+        [6, "white_teardrop"],
+        [7, "white_pacman"],
+        [8, "zebra_teardrop"],
+        [9, "zebra_ball"],
+        [10, "white_ball"],
+        [11, "light_grey_zebra_teardrop"],
+        [12, "dark_grey_zerba_teardrop"],
+    ]
 
     def get_object_name(self, idx):
         key = f"idx='{idx}'"

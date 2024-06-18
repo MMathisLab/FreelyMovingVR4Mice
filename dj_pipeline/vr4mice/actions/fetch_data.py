@@ -14,7 +14,6 @@ from vr4mice.utils.logger import Logger
 """
 
 
-
 def _create_mice_dict(all_mice: dict) -> dict:
     """
     Create a dictionary of mice with their relevant information.

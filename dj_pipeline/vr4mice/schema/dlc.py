@@ -4,8 +4,7 @@ import datajoint as dj
 import numpy as np
 import pandas as pd
 from vr4mice.utils.logger import Logger
-from vr4mice.utils.schema_config import \
-    get_schema  # todo adjust paths (base/utils)
+from vr4mice.utils.schema_config import get_schema  # todo adjust paths (base/utils)
 
 schema_name = "dlc"
 schema = get_schema(schema_name, locals())

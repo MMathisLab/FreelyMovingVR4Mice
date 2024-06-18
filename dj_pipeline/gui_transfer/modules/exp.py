@@ -1,8 +1,15 @@
 import logging
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QCheckBox, QComboBox, QGridLayout, QLabel,
-                             QLineEdit, QPlainTextEdit, QVBoxLayout)
+from PyQt5.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QGridLayout,
+    QLabel,
+    QLineEdit,
+    QPlainTextEdit,
+    QVBoxLayout,
+)
 
 from modules.template import Template
 from utils.alert import AlertMsg

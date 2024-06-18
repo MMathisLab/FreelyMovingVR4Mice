@@ -1,8 +1,7 @@
 import os
 from pathlib import Path
 
-from PyQt5.QtWidgets import (QFileDialog, QGridLayout, QLabel, QPushButton,
-                             QTextEdit)
+from PyQt5.QtWidgets import QFileDialog, QGridLayout, QLabel, QPushButton, QTextEdit
 
 from config.config import config, logger
 from modules.template import Template
