@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import List
+import subprocess
 
 import datajoint as dj
 import pandas as pd
@@ -91,6 +92,47 @@ class DataFrame(dj.Computed):
         if df is not False:
             return get_choices(df)
         return df
+
+@schema
+class GitCommit(dj.Manual):
+
+    definition = """
+    -> DataFrame
+    ---
+    commit_hash: varchar(256)
+    changed_files: blob
+    """
+
+    def make(self, key):
+        try:
+            ret = get_git_status()
+            data = {**key, **ret}
+            print(data)
+            self.insert1(data)
+
+        except Exception as err:
+            err = f"Error while populating the GitCommit table: key {key}\n{err}"
+            logger.warning(err)
+
+
+#put to utils:
+def get_git_status():
+    try:
+        commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode('utf-8')
+
+        #untracked_files = subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard']).strip().decode('utf-8').split('\n')
+        #untracked_files = [file for file in untracked_files if file]
+
+        changed_files = subprocess.check_output(['git', 'status', '--porcelain']).strip().decode('utf-8').split('\n')
+        changed_files = [file for file in changed_files if file and not file.startswith('??')]
+
+        return {
+            'commit_hash': commit_hash,
+            #'untracked_files': untracked_files,
+            'changed_files': changed_files
+        }
+    except subprocess.CalledProcessError as e:
+        return str(e)
 
 
 @schema
@@ -240,7 +282,7 @@ def insert_send_mail(key, tuple_, table, filename, send=False):
             send_email.email(email, filename, error=False, message=None)
 
     except Exception as err:
-        err = "Error while populating the Summary table\n" + str(err)
+        err = f"Error while populating the Summary table: key {key}\n{err}"
         logger.warning(err)
         if send:
             send_email.email(email, None, error=True, message=err)
