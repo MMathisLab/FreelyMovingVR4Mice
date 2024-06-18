@@ -105,7 +105,7 @@ class GitCommit(dj.Computed):
 
     def make(self, key):
         try:
-            ret = get_git_status()
+            ret = parse_git_commit_file()
             data = {**key, **ret}
             print(data)
             #self.insert1(data)
@@ -115,24 +115,29 @@ class GitCommit(dj.Computed):
             logger.warning(err)
 
 
-#put to utils:
-def get_git_status():
+def parse_git_commit_file(filename="git_commit"):
+    commit_hash = None
+    modified_files = []
+
     try:
-        commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode('utf-8')
+        with open(filename, 'r') as file:
+            lines = file.readlines()
 
-        #untracked_files = subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard']).strip().decode('utf-8').split('\n')
-        #untracked_files = [file for file in untracked_files if file]
-
-        changed_files = subprocess.check_output(['git', 'status', '--porcelain']).strip().decode('utf-8').split('\n')
-        changed_files = [file for file in changed_files if file and not file.startswith('??')]
+            for line in lines:
+                line = line.strip()
+                if line.startswith('commit '):
+                    commit_hash = line.split()[1]
+                elif line.startswith('M '):
+                    modified_files.append(line)
 
         return {
-            'commit_hash': commit_hash,
-            #'untracked_files': untracked_files,
-            'changed_files': changed_files
-        }
-    except subprocess.CalledProcessError as e:
-        return str(e)
+                "commit_hash": commit_hash,
+                "changed_files": modified_files
+                }
+
+    except FileNotFoundError:
+        logger.warning(f"Error: File '{filename}' not found.")
+        return None, []
 
 
 @schema
