@@ -234,22 +234,16 @@ class DatasetType(dj.Computed):
             if distractor is None:
                 training_phase = "pilot" # early trainings
             else:
-                exit = False
 
-                if (State & key):
-                    occlusion_type = (State & key).fetch1("occlusion_type")[0]
+                if not (State & key):
+                    logger.warning(f"No State found for {key}: can't determine occlusion_type.")
+                    return
                 
-                    if occlusion_type is None:
-                        exit = True
-
-                else:
-                    exit = True
-
-                if exit: #TODO: exit func
-                    msg = f"Occlusion type is None for {key}: can't populate DatasetType."
-                    logger.warning(msg)
-                    return 
-
+                occlusion_type = (State & key).fetch1("occlusion_type")[0]
+                if occlusion_type is None:
+                    logger.warning(f"Occlusion type is None for {key}: can't populate DatasetType.")
+                    return    
+                    
                 if (distractor == 0.0) & (occlusion_type == 0.0):
                     training_phase = "detection"
                 
@@ -266,7 +260,7 @@ class DatasetType(dj.Computed):
                 else:
                     undefined = True
 
-            if undefined: #TODO exit func
+            if undefined:
                 msg = f"Can't define training_phase for {key}: can't populate DatasetType."
                 logger.warning(msg)
                 return
@@ -302,3 +296,30 @@ class Box(dj.Manual):
     tt_box_z_max: mediumblob
     tt_box_angle: mediumblob
     """
+
+@schema
+class Object(dj.Lookup):
+    definition = """
+    idx: int
+    ---
+    object: varchar(128)
+    """
+    contents = [
+            [0, "white_cube"],
+            [1, "black_cube"],
+            [2, "grey_teardrop"],
+            [3, "grey_pacman"],
+            [4, "black_teardrop"],
+            [5, "black_pacman"],
+            [6, "white_teardrop"],
+            [7, "white_pacman"],
+            [8, "zebra_teardrop"],
+            [9, "zebra_ball"],
+            [10, "white_ball"],
+            [11, "light_grey_zebra_teardrop"],
+            [12, "dark_grey_zerba_teardrop"]
+        ]
+
+    def get_object_name(self, idx):
+        key = f"idx='{idx}'"
+        return (self & key).fetch1("object")
