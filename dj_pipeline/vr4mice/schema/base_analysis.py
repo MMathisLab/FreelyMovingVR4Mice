@@ -107,8 +107,7 @@ class GitCommit(dj.Computed):
         try:
             ret = parse_git_commit_file()
             data = {**key, **ret}
-            print(data)
-            #self.insert1(data)
+            self.insert1(data)
 
         except Exception as err:
             err = f"Error while populating the GitCommit table: key {key}\n{err}"
