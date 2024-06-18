@@ -94,7 +94,7 @@ class DataFrame(dj.Computed):
         return df
 
 @schema
-class GitCommit(dj.Manual):
+class GitCommit(dj.Computed):
 
     definition = """
     -> DataFrame
@@ -108,7 +108,7 @@ class GitCommit(dj.Manual):
             ret = get_git_status()
             data = {**key, **ret}
             print(data)
-            self.insert1(data)
+            #self.insert1(data)
 
         except Exception as err:
             err = f"Error while populating the GitCommit table: key {key}\n{err}"
