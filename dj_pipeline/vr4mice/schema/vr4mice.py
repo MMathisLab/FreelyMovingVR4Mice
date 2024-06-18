@@ -3,9 +3,7 @@ from typing import List
 import datajoint as dj
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
-
-# from base_schemas.schemas import exp
-# from base_schemas.schemas import mice
+import numpy as np
 
 schema_name = "vr4mice"
 schema = get_schema(schema_name, locals())
@@ -41,7 +39,6 @@ class Dataset(dj.Manual):
     exp_teensy_filepath: varchar(255) # pickle file
     exp_session_filepath: varchar(255)  # npy file
     """
-
 
 # TODO: This should be moved to its own schema.
 # @schema
@@ -220,6 +217,65 @@ class Metadata(dj.Manual):
     distractor_selection=NULL: longblob      # new
     """
 
+@schema
+class DatasetType(dj.Computed):
+    definition = """
+    -> Metadata
+    ---
+    training_phase: varchar(128)
+    """
+
+    def make(self, key):
+        try:
+            undefined = False
+            distractor, slit_size = (Metadata & key).fetch1("distractor", "slit_size")
+            slit_size_number = len(np.unique(slit_size))
+            
+            if distractor is None:
+                training_phase = "pilot" # early trainings
+            else:
+                exit = False
+
+                if (State & key):
+                    occlusion_type = (State & key).fetch1("occlusion_type")[0]
+                
+                    if occlusion_type is None:
+                        exit = True
+
+                else:
+                    exit = True
+
+                if exit: #TODO: exit func
+                    msg = f"Occlusion type is None for {key}: can't populate DatasetType."
+                    logger.warning(msg)
+                    return 
+
+                if (distractor == 0.0) & (occlusion_type == 0.0):
+                    training_phase = "detection"
+                
+                elif (distractor == 1.0):
+                    
+                    if (slit_size_number == 1) & (occlusion_type == 0.0):
+                        training_phase = "discrimination"
+    
+                    elif (slit_size_number > 1) & (occlusion_type != 0.0):
+                        training_phase=f"test_discrimination_{slit_size_number}_slit_sizes"
+                    
+                    else:
+                        undefined = True
+                else:
+                    undefined = True
+
+            if undefined: #TODO exit func
+                msg = f"Can't define training_phase for {key}: can't populate DatasetType."
+                logger.warning(msg)
+                return
+            
+            self.insert1({"dataset": key["dataset"], "training_phase": training_phase}) 
+
+        except Exception as err:
+            err = f"Error while populating the DatasetType table: key: {key}\n {err}"
+            logger.warning(err)
 
 @schema
 class Box(dj.Manual):
