@@ -4,7 +4,7 @@ services:
     image: datajoint/mysql:5.7 
     container_name: vr4mice_db
     ports:
-            - "128.178.51.114:3309:3306"
+            - "127.0.0.1:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=simple
     volumes:
@@ -30,9 +30,9 @@ services:
 
     working_dir: /app
     environment:
-      - DJ_HOST="128.178.51.114:3309"
-      - DJ_USER=root
-      - DJ_PWD=simple
+      - DJ_HOST="127.0.0.1"
+      - DJ_USER="root"
+      - DJ_PWD="simple"
       - DJ_SUPPORT_FILEPATH_MANAGEMENT=TRUE
       - DJ_SUPPORT_ADAPTED_TYPES=TRUE
     stdin_open: true
