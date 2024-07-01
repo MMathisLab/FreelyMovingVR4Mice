@@ -40,19 +40,21 @@ Two cameras are necessary if you would like to use 3d reconstruction.
 
 
 ## Teensy components:
-We will send across one of our custom PCB boards with these components attached but this is the parts list for these just in case:
+The teesny circuit will need to be soldered to a perforated board:
 
-- Teensy 3.2
+- Teensy 4.0
 
 - [TIP120G, Darlington Transistor, TO-220, NPN, 60V, onsemi](https://www.distrelec.ch/en/darlington-transistor-npn-60v-to-220-onsemi-tip120g/p/30240404?no-cache=true&marketingPopup=false&track=true)
 
 - [1N4005-E3/54 - Standard Recovery Rectifier Diode 600V 1A DO-204AL, Vishay](https://www.distrelec.ch/en/standard-recovery-rectifier-diode-600v-1a-do-204al-vishay-1n4005-e3-54/p/30151890?marketingPopup=false&no-cache=true&track=true)
 
+- multicolored insulated wires
+
 
 ## Monitors:
-5x acer (SB241Y) + HDMI cables
+4x acer (SB241Y) + HDMI cables
 
-4 monitors for the mouse setup, 1 for launching the task.
+3 monitors for the mouse setup, 1 for launching the task.
 
 **Calibration:**
 - For all, brightness: 18.
@@ -78,8 +80,6 @@ We will send across one of our custom PCB boards with these components attached 
 2x Floor: 520 x 520 x 5 mm (transparent plastic = PMMA).
 
 4x Sides: 525 x 360 x 5 mm (transparent plastic = PMMA).
-
-1x [light diffuser](https://www.thomannmusic.ch/lee_farbfolie_rolle_216_w_diffusi.htm) (The size of the sheet must be able to cover the floor plate ie. 520mm x 520mm)
 
 
 ## IR lights:
