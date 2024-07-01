@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 from vr4mice.actions.populate_rig import get_filenames, get_new_file
 
+
 """
     Script that helps to synchronise the days of experiments if there is a mismatch.
 """

@@ -1,5 +1,6 @@
 from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout, QWidget
+
 from utils.alert import AlertMsg
 from utils.utils import (
     adjust_keys,
@@ -9,6 +10,7 @@ from utils.utils import (
     move_files,
     transfer_files,
 )
+
 
 """
     Script contains main GUI widget, and control buttons:
