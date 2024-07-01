@@ -11,7 +11,7 @@ RUN apt-get update -y && apt-get install -yy --no-install-recommends \
     vim \ 
     #&& pip3 install awscli \
     && pip install datajoint \
-    # Note: this version of seaborn, as othervise it installs 0.12.2 and updates numpy to 1.26,
+    # Note: this version of seaborn, as otherwise it installs 0.12.2 and updates numpy to 1.26,
     # and then Numby stops to work: err "Numba needs NumPy 1.24 or less" 
     && pip install seaborn==0.13.0 \
     && pip install pandas==1.4.3 \
