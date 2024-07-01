@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import List
-import subprocess
+import subprocess`
 
 import datajoint as dj
 import pandas as pd
@@ -60,8 +60,6 @@ class DataFrame(dj.Computed):
         from vr4mice.analysis.analysis import create_data_frame
 
         data, interp = create_data_frame(key)
-        # data["interpolation"] = interp
-        # logger.info("Details: " + str(data))
         data = data.to_dict(orient="list")
         data = {**key, **data, **{"interpolation": interp}}
         self.insert1(data)
@@ -115,7 +113,7 @@ class GitCommit(dj.Computed):
             logger.warning(err)
 
 
-def parse_git_commit_file(filename="git_commit"):
+def parse_git_commit_file(filename="git_commit"): #TODO(mary): move to helpers
     commit_hash = None
     modified_files = []
 

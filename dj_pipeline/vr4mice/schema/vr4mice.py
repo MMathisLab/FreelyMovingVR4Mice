@@ -218,23 +218,45 @@ class Metadata(dj.Manual):
     distractor_selection=NULL: longblob      # new
     """
 
+@schema
+class TrainingPhaseType(dj.Lookup):
+    definition = """
+    idx: int
+    ---
+    training_phase: varchar(128)
+    """
+
+    contents = [
+        [0, "pilot"],  # early trainings
+        [1, "detection"],
+        [2, "discrimination"],
+        [3, "test_discrimination_2_slit_sizes"],
+        [4, "test_discrimination_5_slit_sizes"],
+        # others with slit_size_number
+    ]
+
+    @classmethod
+    def get_next_index(cls):
+        current_max = cls.fetch('idx').max()
+        return current_max + 1 if current_max is not None else 0
+
 
 @schema
 class DatasetType(dj.Computed):
     definition = """
     -> Metadata
     ---
-    training_phase: varchar(128)
+    -> TrainingPhaseType
     """
 
-    def make(self, key):
+    def make(self, key): #TODO(mary): refactor to a separate compact function
         try:
             undefined = False
             distractor, slit_size = (Metadata & key).fetch1("distractor", "slit_size")
             slit_size_number = len(np.unique(slit_size))
-
             if distractor is None:
-                training_phase = "pilot"  # early trainings
+                #fetch pilot
+                training_phase_idx = (TrainingPhaseType() & "training_phase='pilot'").fetch1("idx")
             else:
 
                 if not (State & key):
@@ -242,7 +264,7 @@ class DatasetType(dj.Computed):
                         f"No State found for {key}: can't determine occlusion_type."
                     )
                     return
-
+                
                 occlusion_type = (State & key).fetch1("occlusion_type")[0]
                 if occlusion_type is None:
                     logger.warning(
@@ -250,19 +272,31 @@ class DatasetType(dj.Computed):
                     )
                     return
 
-                if (distractor == 0.0) & (occlusion_type == 0.0):
-                    training_phase = "detection"
+                if (distractor == 0.0) & (occlusion_type == 0.0): 
+                    #fetch detection
+                    training_phase_idx = (TrainingPhaseType() & "training_phase='detection'").fetch1("idx")
 
                 elif distractor == 1.0:
 
                     if (slit_size_number == 1) & (occlusion_type == 0.0):
-                        training_phase = "discrimination"
+                        #fetch discrimination
+                        training_phase_idx = (TrainingPhaseType() & "training_phase='discrimination'").fetch1("idx")
 
                     elif (slit_size_number > 1) & (occlusion_type != 0.0):
-                        training_phase = (
+                        phase_type = (
                             f"test_discrimination_{slit_size_number}_slit_sizes"
                         )
-
+                        var = f"training_phase='{phase_type}'"
+                        ret = (TrainingPhaseType() & var).fetch(as_dict=True)
+                        if not ret:
+                            idx = TrainingPhaseType.get_next_index()
+                            data = {"idx": idx, "training_phase": phase_type}
+                            TrainingPhaseType.insert1(data)
+                            msg = f"New entry {data} has been added to TrainingPhaseType lookup table!"
+                            logger.warning(msg)
+                            training_phase_idx = idx
+                        else:
+                            training_phase_idx = ret[0]["idx"]
                     else:
                         undefined = True
                 else:
@@ -273,12 +307,13 @@ class DatasetType(dj.Computed):
                 logger.warning(msg)
                 return
 
-            self.insert1({"dataset": key["dataset"], "training_phase": training_phase})
+            data = {"dataset": key["dataset"], "idx": training_phase_idx}
+            self.insert1(data)
 
         except Exception as err:
             err = f"Error while populating the DatasetType table: key: {key}\n {err}"
             logger.warning(err)
-
+    
 
 @schema
 class Box(dj.Manual):

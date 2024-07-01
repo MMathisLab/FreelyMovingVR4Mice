@@ -12,13 +12,7 @@ BUILD_ARGS := \
 	#--build-arg base_actions_path="." #\
 	#--no-cache
 
-git_info:
-	@git log -n 1 | grep commit > git_commit && git status --porcelain  >> git_commit
-
 build_all:
-	#@cp -r $(base_schemas_path) . && \
-	#cp -r $(base_actions_path) . && \
-
 	@docker-compose build $(BUILD_ARGS)
 	@docker-compose up -d
 
@@ -27,7 +21,11 @@ build_all:
 	#rm -r base_schemas && \
 	#rm -r base_actions
 
-up_all: git_info
+git_info:
+	@git log -n 1 | grep commit > git_commit && git status --porcelain  >> git_commit
+
+up_all: 
+	#git_info
 	@docker-compose up -d
 	@docker-compose exec client bash -c "pip install /base_schemas/ ; pip install /base_actions/" 1>/dev/null
 
@@ -75,7 +73,7 @@ ipython: git_info
 bash: git_info
 	@docker-compose exec client bash
 
-mysql:
+mysql: git_info
 	@mysql --defaults-group-suffix=-vr4mice -A
 
 
