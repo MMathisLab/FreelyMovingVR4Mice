@@ -6,7 +6,7 @@ This code was initially developed by Gary Kane, Michael Beauzile, and Mackenzie 
 
 ## Hardware requirements:
 - windows OS 10 or above
-- teensy 3.2 or above
+- teensy 4.0 or above
 
 ## Tasks supported:
 
