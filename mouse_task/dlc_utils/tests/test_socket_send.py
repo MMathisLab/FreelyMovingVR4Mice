@@ -34,7 +34,7 @@ class MyProcessor_socket:
             [
                 self.curr_time,
                 np.sin(self.curr_step*0.1) * 9,
-                self.vals[1],
+                np.sin(self.curr_step*0.1) * 9,
                 self.vals[2],
                 self.vals[3],
                 self.curr_signal]

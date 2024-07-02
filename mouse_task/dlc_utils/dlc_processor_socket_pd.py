@@ -12,15 +12,16 @@ import numpy as np
 from dlclive import Processor
 from math import sqrt, acos, atan2, copysign, pi, degrees
 
-class MyProcessor_socket(Processor):
-    def __init__(self, com = "COM3", baudrate=9600, signal_delay = 3, signal_type ="sin", freq =5, use_teensy = True):
+class dlc_inference_w_pd(Processor):
+    def __init__(self, com = "COM5", baudrate=9600, signal_delay = 10, signal_type ="pulse", freq =5, use_teensy = 1):
         super().__init__()
        # self.queue = queue
-        self.teensy = TeensyLatency(com= com, baudrate=baudrate)
+        
         self.address = ('localhost', 6000)     # family is deduced to be 'AF_INET'
         self.listener =  Listener(self.address, authkey=b'secret password')
         self.conn = self.listener.accept()
         print('connection accepted from', self.listener.last_accepted)
+        
         self.center_x = deque()
         self.center_y = deque()
         self.heading_direction = deque()
@@ -36,11 +37,12 @@ class MyProcessor_socket(Processor):
         self.signal_type = signal_type
         self.signal_delay =  signal_delay
         self.signal_freq = freq
-        if use_teensy == True:
+        if use_teensy == 1:
             self.teensy = TeensyLatency(com, baudrate=baudrate)
             print("using_teensy")
         
     def process(self, pose, **kwargs):
+        #print(pose.keys())
         xy = pose[:, :2]
         conf = pose[:, 2]
         head_xy = xy [[0, 1, 2, 3, 4, 5, 6, 26],:]
@@ -58,7 +60,10 @@ class MyProcessor_socket(Processor):
             head_angle = 0
             
         self.curr_time = time.time()
-        self.curr_signal = self.get_signal(curr_time = self.curr_time, st=self.start_time, )
+        self.curr_signal = self.get_signal(curr_time = self.curr_time, st=self.start_time,
+                                           freq = self.signal_freq, 
+                                           delay=self.signal_delay,  
+                                           signal_type=self.signal_type)
         
         self.curr_step + self.curr_step + 1
 
@@ -69,13 +74,14 @@ class MyProcessor_socket(Processor):
         
         self.center_x.append(vals [0])
         self.center_y.append(vals [1])
+        #print("center_y: ", vals [1], ", center_x: ", vals [0])
         self.heading_direction.append(vals [2])
         self.head_angle.append(vals [3])
         self.time_stamp.append(self.curr_time)
         self.step.append(self.curr_step)
         self.signal.append(self.curr_signal)
         self.frame_time.append(kwargs ["frame_time"])
-        self.pose_time.append(kwargs ["pose_time"])
+       # self.pose_time.append(kwargs ["pose_time"])
         
         self.conn.send([time.time(), vals [0], vals [1], vals [2], vals [3], vals [4]])
      
@@ -97,15 +103,16 @@ class MyProcessor_socket(Processor):
             curr_signal = 0
         else:
             curr_signal = (np.sign(np.sin(freq*np.pi*time.time()))+1)/2
+            #print(curr_signal)
             #self.curr_signal = (np.sin((self.curr_step) * .1) + 1) / 2
         return(curr_signal)      
 
-    def get_sin_wave(self, curr_time, st, delay):
+    def get_sin_wave(self, curr_time, st, delay, freq):
         if (curr_time - st) < delay:
             curr_signal = 0
         else:
             #curr_signal = (np.sign(np.sin(5*np.pi*time.time()))+1)/2
-            curr_signal = np.round((np.sin((self.curr_time*5)) + 1)/ 4,4)
+            curr_signal = np.round((np.sin((self.curr_time*freq)) + 1)/ 4,4)
             #print(curr_signal)
         return(curr_signal)
     
@@ -126,6 +133,7 @@ class MyProcessor_socket(Processor):
             print(file)
             try:
                 save_dict = self.save_latency_data()
+                print(save_dict)
                
                 pickle.dump(
                     save_dict,
@@ -141,7 +149,7 @@ class MyProcessor_socket(Processor):
         save_dict =  dict()
         save_dict ["start_time"] = np.array(self.start_time)
         save_dict ["frame_time"] = np.array(self.frame_time)
-        save_dict ["pose_time"] = np.array(self.pose_time)
+        #save_dict ["pose_time"] = np.array(self.pose_time)
         save_dict ["time_stamp"] = np.array(self.time_stamp)
         save_dict ["step"] =  np.array(self.step)
         save_dict ["signal"] = np.array(self.signal)

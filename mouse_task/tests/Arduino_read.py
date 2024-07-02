@@ -6,7 +6,7 @@ import numpy as np
 
 # Configure the serial port
 ser = serial.Serial(
-    "/dev/tty.usbmodem146851301", 9600
+    "COM3", 9600
 )  # Adjust 'COM1' to your serial port and 9600 to your baud rate
 print("connected")
 # Prepare to collect data

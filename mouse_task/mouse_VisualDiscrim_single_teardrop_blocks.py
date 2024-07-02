@@ -123,7 +123,16 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         # - - - - - - - .json config related code - - - - - - -#
 
         ## Path to Unity build (executable) ##
-        env_path = "/Users/subnaulitus/Documents/EPFL/GitHub_Repos/FreelyMovingVR4Mice/mouse_task/macOS_test_unity_build/vr4mice.app"
+        config_dict = process_config(config_file_path)
+
+        if config_dict is None:
+        # err messages are showed on process_config() function level
+            print("no config available")
+            return
+
+        
+        env_path = config_dict["ar_env_unity_absolute_path"]
+
 
         super().__init__(
             teensy,
@@ -287,9 +296,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         # self.channel.set_property("target_selection", this_target_selection)
         self.channel.set_float_parameter("target_selection", this_target_selection)
         # self.channel.set_property("distractor_selection", this_distractor_selection)
-        self.channel.set_float_parameter(
-            "distractor_selection", this_distractor_selection
-        )
+        self.channel.set_float_parameter("distractor_selection", this_distractor_selection)
         # self.channel.set_property("Object_on_Left", self.Object_on_left)
         self.channel.set_float_parameter("Object_on_Left", self.Object_on_left)
         # self.channel.set_property("slitSize", this_slit_size)

@@ -27,7 +27,7 @@ from mouse_task.helpers import process_config
 
 from teensyexp.tasks_abc.unity_task import UnityTask
 from teensyexp.tasks_abc.gui_task import GuiTask
-from teensyexp.tasks_abc.dlc_socket import DLCClient
+from teensyexp.tasks_abc.dlc_deque_socket import DLCClient
 from mouse_task.kfilter import OneEuroFilter
 
 
@@ -91,8 +91,7 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         # err messages are showed on process_config() function level
             return
 
-        model_path = config_dict["model_absolute_path"]
-        dlc_video_path = config_dict["dlc_video_absolute_path"]
+        
         env_path = config_dict["ar_env_unity_absolute_path"]
 
         super().__init__(teensy, env_path, monitor=monitor, write_video=write_video, fps=fps, epochs=epochs, epoch_trials=True)
@@ -107,6 +106,16 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
        
         self.start_box_delay = start_box_delay
         self.velocity_threshold = velocity_threshold
+        
+        self.previous = np.array(
+            [
+                0,
+                0,
+                0,
+                0,
+            ],
+            dtype=np.float16,
+        ).reshape(1, -1)
         
         # Game trial parameters - add to class and enforce list structure
         self.reward_size = self.as_list(reward_size)
@@ -182,9 +191,12 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         
         # run DLC on every frame to be given as input to the agent
         this_read = self.dlcClient.read()
+        
         #print(this_read)
         if this_read != None:
-            self.params = np.array(this_read ["vals"])
+            self.params = np.array(this_read ["vals"][1:])
+            
+            
             if self.t_count == 0:
                 self.filt = OneEuroFilter(t0 = self.t_count, x0 = np.array(self.params), beta=0.01, min_cutoff=0.01)
             else:
@@ -193,21 +205,25 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
             x = self.params [0]
             z = self.params [1]
             head_angle = self.params [2]
+            photodiode_intensity = np.array(this_read ["vals"])[-1]
             self.dlc_x.append(x)
             self.dlc_y.append(z)
             self.dlc_heading.append(head_angle)
             self.dlc_read_time.append(this_read ["time"])
             
+            print(x, z)
+            
             # interp mouse pixel space into arena space
             x = np.interp(x,[self.cropped_image[0],self.cropped_image[1]], [self.unity_arena_size [0],self.unity_arena_size [1]])
             z = np.interp(z,[self.cropped_image[2],self.cropped_image[3]], [self.unity_arena_size [2],self.unity_arena_size [3]])
             self.degrees = (head_angle - (self.rotate_camera)) % 360; 
-            output = np.array([x,z,self.degrees])
-            #print(x, " ", z, " ")
+            output = np.array([x,z, self.degrees, photodiode_intensity])
+            self.previous=output
+            print(x, " ", z, " ", photodiode_intensity)
         else:
-            output = np.array([0,0,0])
-    
-     
+            #print("missed dlc frame")
+            time.sleep(0)
+            output = self.previous
         return(output.reshape((1,-1)))
 
         

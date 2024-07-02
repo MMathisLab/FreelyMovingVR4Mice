@@ -30,8 +30,7 @@ class DLCClient(object):
 
     def read(self):
         if len(self.input_data) >= 1:
-           # print(len(self.input_data))
-            #print(np.diff(np.array(self.input_data)))
+       
             this_read = self.input_data.pop()
             rec_time = time.time()
             #self.input_data = deque()
