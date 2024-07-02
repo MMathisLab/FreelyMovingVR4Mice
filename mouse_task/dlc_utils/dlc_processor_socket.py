@@ -25,6 +25,7 @@ class MyProcessor_socket(Processor):
         self.time_stamp = []
         
     def process(self, pose, **kwargs):
+        
         xy = pose[:, :2]
         conf = pose[:, 2]
         head_xy = xy [[0, 1, 2, 3, 4, 5, 6, 26],:]
@@ -43,12 +44,12 @@ class MyProcessor_socket(Processor):
         heading = atan2(body_axis[1], body_axis[0])
         heading = degrees(heading)
         vals = *center, heading % (360), head_angle
-        
+        self.time_stamp.append(time.time())
         self.center_x.append(vals [0])
         self.center_y.append(vals [1])
         self.heading_direction.append(vals [2])
         self.head_angle.append(vals [3])
-        self.time_stamp.append(time.time())
+        
         
         self.conn.send([vals [0], vals [1], vals [2], vals [3]])
      

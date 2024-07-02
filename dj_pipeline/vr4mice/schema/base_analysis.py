@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import List
-import subprocess`
+import subprocess
 
 import datajoint as dj
 import pandas as pd
@@ -22,39 +22,72 @@ class DataFrame(dj.Computed):
 
     # TODO: This used to point to vr4mice.VR4Mice
     #       will probably point this to the next version when it's available
+    
+    #TODO: Alert! 
+    #"step", "reward", "step_time", "mouse_can_report", "head_dir" has to be deprecated: can be always fetched from Raw
+    
     definition = """
     -> vr4mice.Dataset
     ---
-    step: longblob
-    step_time: longblob
-    trial: longblob
-    reward: longblob
+    step: longblob                      # TO DEPRECATE
+    step_time: longblob                 # TO DEPRECATE 
+    trial: longblob 
+    reward: longblob                    # TO DEPRECATE
    
     x: longblob
     y: longblob
-    
-    mouse_can_report: longblob
+
+    bins_y=NULL: longblob               # NEW, do we need to 'store' too?
+    norm_y=NULL: longblob               # NEW, do we need to store 'trial' too?
+
+    mouse_can_report=NULL: longblob     # TO DEPRECATE
     iti: longblob
-    mouse_correct: longblob
+    mouse_correct: longblob             # TO DEPRECATE
     object_on_left: longblob
     mouse_in_left: longblob
     mouse_in_right: longblob
     
     velocity: longblob
-    head_dir: longblob
+    velocity_x=NULL: longblob           # NEW --> to think about separate table
+    velocity_y=NULL: longblob           # NEW
 
-    trial_rewarded: longblob
+    acceleration_x=NULL: longblob:      # NEW
+    acceleration_y=NULL: longblob:      # NEW
+
+    head_dir=NULL: longblob             # TO DEPRECATE
+
+    trial_duration=NULL: longblob:          # NEW
+    distance=NULL: longblob:                # NEW
+    trial_traj_path_length=NULL: longblob:  # NEW
+
+    trial_init_x=NULL: longblob             # NEW --> to method maybe
+    trial_init_y=NULL: longblob             # NEW
+    trial_end_x=NULL: longblob              # NEW
+    trial_end_y=NULL: longblob              # NEW
+
+    trial_rewarded=NULL: longblob           # OLD: TO DEPRECATE ?
+    
+    trial_direct_path=NULL: longblob        # NEW
+    trial_tortuosity=NULL: longblob         # NEW
     trial_step: longblob
-    trial_step_time: longblob
+
+    trial_step_time=NULL: longblob          # OLD TO DEPRECATE? (same as time?)
     trial_step_fraction: longblob
+    
+    choice=NULL: longblob                   # NEW --> to method?
+    flip_one_side=NULL: longblob            # NEW
     
     trial_right_choice: longblob
     trial_left_choice: longblob
-    trial_step_fraction: longblob
-    
+
+    trial_step_fraction=NULL: longblob      # OLD: TO DEPRECATE (same as trial_step?)
+   
+    aperture=NULL: longblob                 # NEW
+    time=NULL: longblob                     # NEW
+    time_elapsed=NULL: longblob             # NEW
+
     interpolation: longblob
     """
-    # box_df: blob
 
     def make(self, key):
         from vr4mice.analysis.analysis import create_data_frame
@@ -72,6 +105,7 @@ class DataFrame(dj.Computed):
             data.pop("interpolation")
             data = pd.DataFrame(data)
             return data, interp
+        # TODO: for deprecated attributes (in the future) include here or on call (to think)
         else:
             return False, None
 
@@ -83,7 +117,10 @@ class DataFrame(dj.Computed):
             return get_rewarded(df)
         return df
 
-    def get_choices(self, key):
+    def get_choices(self, key): #TODO: implement
+
+        pass
+
         from vr4mice.analysis.analysis import get_choices
 
         df, interp = self.get_data(key)
@@ -93,52 +130,7 @@ class DataFrame(dj.Computed):
 
 
 @schema
-class GitCommit(dj.Computed):
-
-    definition = """
-    -> DataFrame
-    ---
-    commit_hash: varchar(256)
-    changed_files: blob
-    """
-
-    def make(self, key):
-        try:
-            ret = parse_git_commit_file()
-            data = {**key, **ret}
-            self.insert1(data)
-
-        except Exception as err:
-            err = f"Error while populating the GitCommit table: key {key}\n{err}"
-            logger.warning(err)
-
-
-def parse_git_commit_file(filename="git_commit"): #TODO(mary): move to helpers
-    commit_hash = None
-    modified_files = []
-
-    try:
-        with open(filename, "r") as file:
-            lines = file.readlines()
-
-            for line in lines:
-                line = line.strip()
-                if line.startswith("commit "):
-                    commit_hash = line.split()[1]
-                elif line.startswith("M "):
-                    modified_files.append(line)
-
-        return {"commit_hash": commit_hash, "changed_files": modified_files}
-
-    except FileNotFoundError:
-        logger.warning(f"Error: File '{filename}' not found.")
-        return None, []
-
-
-@schema
 class BoxDataFrame(dj.Computed):
-    # TODO: This used to point to vr4mice.VR4Mice
-    #       will probably point this to the next version when it's available
     definition = """
     -> DataFrame
     ---
@@ -158,6 +150,12 @@ class BoxDataFrame(dj.Computed):
     tt_box_z_max: blob
 
     tt_box_angle: blob
+    
+    left_reward_x=NULL: blob    # NEW  
+    left_reward_z=NULL: blob    # NEW  
+    right_reward_x= NULL: blob  # NEW
+    rightreward_z=NULL: blob    # NEW  
+    
     """
 
     def make(self, key):
@@ -178,6 +176,56 @@ class BoxDataFrame(dj.Computed):
             return data
         else:
             return False
+
+    def get_dist2reward(self, key):
+        
+        from vr4mice.analysis.analysis import get_dist2reward
+
+        df, interp = DataFrame.get_data(key)
+        df_box = cls.get_data(key)
+
+        if df is not False and df_box is not False:
+            return get_dist2reward(df, box_df)
+        else:
+            return False
+
+
+@schema
+class JShapedW(dj.Computed):
+    definition = """
+    -> DataFrame
+    ---
+    j_shaped=NULL: longblob     # NEW
+    wandering=NULL: longblob    # NEW
+    """
+
+    def make(self, key):
+
+        from vr4mice.analysis.analysis import get_jshaped_trials
+
+        if DataFrame & key:
+            df, interp = DataFrame.get_data(key)
+            j, w = get_jshaped_trials(df)
+            data = {"j_shaped": j, "wandering": w}
+            data = key.update(data)
+            cls.insert1(data)
+
+
+@schema
+class SyncedDLCGame(dj.Computed):
+    definition = """
+    -> vr4mice.Dataset
+    ---    
+    head_angle_velocity: longblob
+    heading_dir_velocity: longblob
+    head_angle_acceleration: longblob
+    heading_dir_acceleration: longblob
+    """
+
+    def make(self):
+        pass
+        #TODO: see dlc helpers logic
+        # and load_and_sync_dlc_w_game
 
 
 @schema
@@ -204,7 +252,7 @@ class OutputPlots(dj.Computed):
             logger.warning(
                 "Populate first DataFrame and BoxDataFrame for "
                 + str(key)
-                + "; call DataFrame.populate() or BoxDataFrame.populate() or data_fetch(key, database=True)"
+                + "; call DataFrame.populate(); BoxDataFrame.populate(); (...) or data_fetch(key, database=True)"
             )
             return False
 
@@ -286,3 +334,46 @@ def insert_send_mail(key, tuple_, table, filename, send=False):
         logger.warning(err)
         if send:
             send_email.email(email, None, error=True, message=err)
+
+
+@schema
+class GitCommit(dj.Computed):
+
+    definition = """
+    -> DataFrame
+    ---
+    commit_hash: varchar(256)
+    changed_files: blob
+    """
+
+    def make(self, key):
+        try:
+            ret = parse_git_commit_file()
+            data = {**key, **ret}
+            self.insert1(data)
+
+        except Exception as err:
+            err = f"Error while populating the GitCommit table: key {key}\n{err}"
+            logger.warning(err)
+
+
+def parse_git_commit_file(filename="git_commit"): #TODO(mary): move to helpers
+    commit_hash = None
+    modified_files = []
+
+    try:
+        with open(filename, "r") as file:
+            lines = file.readlines()
+
+            for line in lines:
+                line = line.strip()
+                if line.startswith("commit "):
+                    commit_hash = line.split()[1]
+                elif line.startswith("M "):
+                    modified_files.append(line)
+
+        return {"commit_hash": commit_hash, "changed_files": modified_files}
+
+    except FileNotFoundError:
+        logger.warning(f"Error: File '{filename}' not found.")
+        return None, []
