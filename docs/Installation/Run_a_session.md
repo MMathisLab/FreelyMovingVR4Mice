@@ -32,8 +32,6 @@ Next:
  - click setup `session button`
  - Then click the `init dlc`, and wait to see the GPUs load once this has loaded (you can see this in the terminal. DLClive is now waiting for a socket with the vr4mice gui to be established
 
-
-
 ## On the v4mice window
 - Click `Ready` to initialize the task and complete the socket
 - Click `Start`
