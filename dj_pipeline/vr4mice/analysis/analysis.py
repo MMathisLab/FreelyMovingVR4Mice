@@ -9,6 +9,7 @@ import seaborn as sns
 from scipy import stats
 from scipy.interpolate import CubicSpline
 from vr4mice.schema import base_analysis, vr4mice
+
 # from scipy.signal import savgol_filter, hilbert, find_peaks
 from vr4mice.utils.logger import Logger
 
@@ -94,11 +95,11 @@ def get_rewarded(df):
 
     rewarded = df.groupby("trial", as_index=False)["reward"].transform(
         lambda x: x.max()
-        ) 
+    )
     return rewarded
 
 
-#def get_choices(df):
+# def get_choices(df):
 #    choices = df.groupby(["trial"], as_index=False).last()
 #    return choices
 
@@ -145,28 +146,40 @@ def create_data_frame(
     # but with fetch1 it looks faster and more control on keys
     # TODO:(mary) checks if exists, try-catch
 
-    slit_size = np.array((vr4mice.Metadata & key).fetch1("slit_size")) #TODO: check type-s
+    slit_size = np.array(
+        (vr4mice.Metadata & key).fetch1("slit_size")
+    )  # TODO: check type-s
     trial = (vr4mice.State & key).fetch("episode")  # attention change of name
     trial = np.array(np.array(trial)[0], dtype=np.int32)
 
-    aperture = slit_size[trial - 1]  #TODO check type-s
+    aperture = slit_size[trial - 1]  # TODO check type-s
     df = pd.DataFrame(
         {
-            "step": (vr4mice.State & key).fetch1("step"), # can be fetched from State any time: exclude from df to save
-            "step_time": (vr4mice.State & key).fetch1("step_time"), # used for time calcul, but hasn't be saved
+            "step": (vr4mice.State & key).fetch1(
+                "step"
+            ),  # can be fetched from State any time: exclude from df to save
+            "step_time": (vr4mice.State & key).fetch1(
+                "step_time"
+            ),  # used for time calcul, but hasn't be saved
             "trial": trial,
-            "reward": (vr4mice.State & key).fetch1("reward"), # no need to save
-            "x": (vr4mice.MouseState & key).fetch1("x_pos"), 
+            "reward": (vr4mice.State & key).fetch1("reward"),  # no need to save
+            "x": (vr4mice.MouseState & key).fetch1("x_pos"),
             "y": (vr4mice.MouseState & key).fetch1("z_pos"),
             "aperture": aperture,  # attention! new attribute!
-            "head_dir": (vr4mice.MouseState & key).fetch1("head_dir"), # no need to save: can be fetched if needed
-            "mouse_can_report": (vr4mice.MouseState & key).fetch1("mouse_can_report"), # same: don't dave
+            "head_dir": (vr4mice.MouseState & key).fetch1(
+                "head_dir"
+            ),  # no need to save: can be fetched if needed
+            "mouse_can_report": (vr4mice.MouseState & key).fetch1(
+                "mouse_can_report"
+            ),  # same: don't dave
             "iti": (vr4mice.MouseState & key).fetch1("iti"),
-            "mouse_correct": (vr4mice.MouseState & key).fetch1("mouse_report_correct"), # same
+            "mouse_correct": (vr4mice.MouseState & key).fetch1(
+                "mouse_report_correct"
+            ),  # same
             "object_on_left": (vr4mice.MouseState & key).fetch1("obj_left"),
             "mouse_in_left": (vr4mice.MouseState & key).fetch1("report_left"),
             "mouse_in_right": (vr4mice.MouseState & key).fetch1("report_right"),
-            #"start_time": (vr4mice.State & key).fetch1("start_time"), #we don't modidfy it, can be fetched from State any time
+            # "start_time": (vr4mice.State & key).fetch1("start_time"), #we don't modidfy it, can be fetched from State any time
         }
     )
 
@@ -176,17 +189,19 @@ def create_data_frame(
         df.trial != 1
     ]  # NOTE(celia): drop first trial which is DLC-live initialization trial
 
-     
     interp = dict(
         a=9,
         b=-10,
         c=-2,
         d=27,
     )
-    
-    df["x"] = np.interp(df.x, [-1 * interp['a'], interp['a']], [-1 * interp['d'], interp['d']])
-    df["y"] = np.interp(df.y, [interp['b'], interp['c']], [-1 * interp['d'], interp['d']])
-    
+
+    df["x"] = np.interp(
+        df.x, [-1 * interp["a"], interp["a"]], [-1 * interp["d"], interp["d"]]
+    )
+    df["y"] = np.interp(
+        df.y, [interp["b"], interp["c"]], [-1 * interp["d"], interp["d"]]
+    )
 
     # Normalized coordinates
     df["bins_y"] = pd.cut(
@@ -196,28 +211,27 @@ def create_data_frame(
         lambda x: x - np.mean(x.iloc[:first_n_samples])
     )
 
-
-    # TODO: to think: keep as method: don't save or save separately 
+    # TODO: to think: keep as method: don't save or save separately
     # df["rewarded"] = get_rewarded(df)
 
     if no_iti:
         df = df[df.iti == 0.0]
 
-    df["trial_right_choice"] = df.groupby("trial", as_index=False)["mouse_in_right"].transform(
-        lambda x: x.iloc[-1]
-    )
-    df["trial_left_choice"] = df.groupby("trial", as_index=False)["mouse_in_left"].transform(
-        lambda x: x.iloc[-1]
-    )
+    df["trial_right_choice"] = df.groupby("trial", as_index=False)[
+        "mouse_in_right"
+    ].transform(lambda x: x.iloc[-1])
+    df["trial_left_choice"] = df.groupby("trial", as_index=False)[
+        "mouse_in_left"
+    ].transform(lambda x: x.iloc[-1])
 
     df = _resample_data_frame(df)
 
-    # Velocity and acceleration computed from time_elapsed difference (fixed interval)   
+    # Velocity and acceleration computed from time_elapsed difference (fixed interval)
     df["velocity"] = np.sqrt(
         (np.gradient(df.x, df.time_elapsed) ** 2)
         + (np.gradient(df.y, df.time_elapsed) ** 2)
     )
-    
+
     # TODO: check all new parameters in df
 
     df["velocity_x"] = np.gradient(df.x, df.time_elapsed)
@@ -234,10 +248,12 @@ def create_data_frame(
     df["distance"] = np.sqrt(df.x.diff() ** 2 + df.y.diff() ** 2)
     df["trial_traj_path_length"] = df.groupby("trial", as_index=False)[
         "distance"
-        ].transform("sum") #TODO: to think: it can be a method too
+    ].transform(
+        "sum"
+    )  # TODO: to think: it can be a method too
 
     # Trial start and end position
-    #TODO: actually also can be the methods...
+    # TODO: actually also can be the methods...
     df["trial_init_x"] = df.groupby("trial", as_index=False)["x"].transform(
         lambda x: x.iloc[0]
     )
@@ -269,8 +285,8 @@ def create_data_frame(
 
     # Distance to reward
     df["flip_one_side"] = df["trial_left_choice"].replace([0, 1], [1, -1])
-    
-    #df["distance_to_reward"] --> to method
+
+    # df["distance_to_reward"] --> to method
 
     df.trial = df.trial.astype(int)
     df.aperture = df.aperture.round(2)
@@ -326,7 +342,7 @@ def get_box_df(key, interp):
     ].mean()
 
     box_df = box_df.iloc[1]
-    
+
     return box_df
 
 

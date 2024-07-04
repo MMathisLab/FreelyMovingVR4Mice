@@ -180,7 +180,7 @@ def populate(table_name, attributes, raw_data, schema) -> None:
                     data[a] = raw_data[label]
 
     logger.info("Populating: " + str(table_name))  # todo check return code
-    
+
     schema["dj_tables"][table_name].insert1(data, skip_duplicates=SKIP_DUPLICATES)
     logger.info("[POPULATED OK] " + str(table_name))  # todo check return code
 

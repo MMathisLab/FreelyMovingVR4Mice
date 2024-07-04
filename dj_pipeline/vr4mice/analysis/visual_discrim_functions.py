@@ -83,14 +83,14 @@ def load_data(
     df["norm_y"] = df.groupby("trial", as_index=False)["y"].transform(
         lambda x: x - np.mean(x.iloc[:first_n_samples])
     )
-    #df = df.drop(columns=["bins_x", "bins_y"])
+    # df = df.drop(columns=["bins_x", "bins_y"])
 
     df["trial_rewarded"] = df.groupby("trial", as_index=False)["reward"].transform(
         lambda x: x.max()
     )
-    #df[["trial_step", "trial_step_time"]] = df.groupby(
+    # df[["trial_step", "trial_step_time"]] = df.groupby(
     #    "trial", as_index=True, group_keys=False
-    #)[["step", "step_time"]].apply(lambda x: x.iloc[:] - x.iloc[0])
+    # )[["step", "step_time"]].apply(lambda x: x.iloc[:] - x.iloc[0])
 
     if no_iti == True:
         df = df[df.iti == 0.0]
@@ -102,13 +102,13 @@ def load_data(
     #         "trial", as_index=True, group_keys=False
     #     )["trial_step"].apply(lambda x: x.iloc[:] / x.iloc[-1])
 
-    df["trial_R_choice"] = df.groupby("trial", as_index=False)[
-            "mouse_in_R"
-        ].transform(lambda x: x.iloc[-1])
-    df["trial_L_choice"] = df.groupby("trial", as_index=False)[
-            "mouse_in_L"
-        ].transform(lambda x: x.iloc[-1])
-    
+    df["trial_R_choice"] = df.groupby("trial", as_index=False)["mouse_in_R"].transform(
+        lambda x: x.iloc[-1]
+    )
+    df["trial_L_choice"] = df.groupby("trial", as_index=False)["mouse_in_L"].transform(
+        lambda x: x.iloc[-1]
+    )
+
     # resampling to 50Hz
     categorical_columns = ["aperture"]
     binary_columns = ["reward", "mouse_in_R", "mouse_in_L", "iti"]
@@ -188,14 +188,14 @@ def load_data(
     )
     df["trial_tortuosity"] = df.trial_traj_path_length / df.trial_direct_path
     df["trial_step"] = df.groupby("trial").cumcount()
-    
+
     df["choice"] = df.trial_L_choice.replace([0, 1], ["right", "left"])
     df["flip_one_side"] = df["trial_L_choice"].replace([0, 1], [1, -1])
 
     df["mouse_name"] = mouse_name
     df["attempt"] = attempt
     df["date"] = date
-    #df["start_time"] = state_dict["start_time"]
+    # df["start_time"] = state_dict["start_time"]
     df["session"] = (
         df["mouse_name"].astype(str)
         + "_"
@@ -223,7 +223,7 @@ def load_data(
     ].mean()
 
     box_df = box_df.iloc[1]
-    
+
     df["distance_to_reward"] = np.sqrt(
         (box_df["right_box_x_center"] - (df["x"] * df["flip_one_side"])) ** 2
         + (box_df["right_box_z_center"] - df["y"]) ** 2
@@ -231,18 +231,18 @@ def load_data(
 
     df.trial = df.trial.astype(int)
     df.aperture = df.aperture.round(2)
-    
+
     # TODO(celia): check if replaced/useful?
-    #df["rewarded"] = df.groupby(["trial"], as_index=False).max()
-    #df["choices"] = df.groupby(["trial"], as_index=False).last()
-    #df["box_entries"] = _time_to_rewards(df)
+    # df["rewarded"] = df.groupby(["trial"], as_index=False).max()
+    # df["choices"] = df.groupby(["trial"], as_index=False).last()
+    # df["box_entries"] = _time_to_rewards(df)
 
     return (df, box_df)
 
 
 def _time_to_rewards(df):  # split
     """
-    Calculate the time it takes for the animal to enter the box for 
+    Calculate the time it takes for the animal to enter the box for
     rewarded vs unrewarded trials and Left and right choices.
     called in create_data_frame to initialize box_entries values
 
@@ -291,6 +291,7 @@ def load_and_sync_dlc_w_game(mouse_name, date, attempt, path, game_data):
     )  # df_out.heading_dir.diff()
 
     return df_out
+
 
 def _define_box(box_df: pd.DataFrame, state_dict: dict, which: str):
 
@@ -348,7 +349,7 @@ def get_rc_params():
 
 
 def get_mouse_list(list_name="tolias_two_widths"):
-    # NOTE(tom): This is a temporay function just to keep track of the tolias 
+    # NOTE(tom): This is a temporay function just to keep track of the tolias
     # lab data sets that we have and so that we can easily import into notebooks.
 
     if list_name == "tolias_two_widths":

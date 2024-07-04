@@ -21,7 +21,7 @@ from vr4mice.schema import dlc, vr4mice
 
 transformer = {  # todo add file preprocessing
     "prop_obj_on_left": "probGreenLeft",
-    #"slit_size": "slitSize",  # don't use
+    # "slit_size": "slitSize",  # don't use
     "target_from_midline": "targetsFromMidline",
     "targets_height": "targetsheight",
     #'report_delay': 'mouseReportDelay', mouse_report_delay -> use only

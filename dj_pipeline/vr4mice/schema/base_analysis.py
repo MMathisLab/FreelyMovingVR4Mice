@@ -22,10 +22,10 @@ class DataFrame(dj.Computed):
 
     # TODO: This used to point to vr4mice.VR4Mice
     #       will probably point this to the next version when it's available
-    
-    #TODO: Alert! 
-    #"step", "reward", "step_time", "mouse_can_report", "head_dir" has to be deprecated: can be always fetched from Raw
-    
+
+    # TODO: Alert!
+    # "step", "reward", "step_time", "mouse_can_report", "head_dir" has to be deprecated: can be always fetched from Raw
+
     definition = """
     -> vr4mice.Dataset
     ---
@@ -117,7 +117,7 @@ class DataFrame(dj.Computed):
             return get_rewarded(df)
         return df
 
-    def get_choices(self, key): #TODO: implement
+    def get_choices(self, key):  # TODO: implement
 
         pass
 
@@ -178,7 +178,7 @@ class BoxDataFrame(dj.Computed):
             return False
 
     def get_dist2reward(self, key):
-        
+
         from vr4mice.analysis.analysis import get_dist2reward
 
         df, interp = DataFrame.get_data(key)
@@ -224,7 +224,7 @@ class SyncedDLCGame(dj.Computed):
 
     def make(self):
         pass
-        #TODO: see dlc helpers logic
+        # TODO: see dlc helpers logic
         # and load_and_sync_dlc_w_game
 
 
@@ -357,7 +357,7 @@ class GitCommit(dj.Computed):
             logger.warning(err)
 
 
-def parse_git_commit_file(filename="git_commit"): #TODO(mary): move to helpers
+def parse_git_commit_file(filename="git_commit"):  # TODO(mary): move to helpers
     commit_hash = None
     modified_files = []
 

@@ -218,6 +218,7 @@ class Metadata(dj.Manual):
     distractor_selection=NULL: longblob      # new
     """
 
+
 @schema
 class TrainingPhaseType(dj.Lookup):
     definition = """
@@ -237,7 +238,7 @@ class TrainingPhaseType(dj.Lookup):
 
     @classmethod
     def get_next_index(cls):
-        current_max = cls.fetch('idx').max()
+        current_max = cls.fetch("idx").max()
         return current_max + 1 if current_max is not None else 0
 
 
@@ -249,14 +250,16 @@ class DatasetType(dj.Computed):
     -> TrainingPhaseType
     """
 
-    def make(self, key): #TODO(mary): refactor to a separate compact function
+    def make(self, key):  # TODO(mary): refactor to a separate compact function
         try:
             undefined = False
             distractor, slit_size = (Metadata & key).fetch1("distractor", "slit_size")
             slit_size_number = len(np.unique(slit_size))
             if distractor is None:
-                #fetch pilot
-                training_phase_idx = (TrainingPhaseType() & "training_phase='pilot'").fetch1("idx")
+                # fetch pilot
+                training_phase_idx = (
+                    TrainingPhaseType() & "training_phase='pilot'"
+                ).fetch1("idx")
             else:
 
                 if not (State & key):
@@ -264,7 +267,7 @@ class DatasetType(dj.Computed):
                         f"No State found for {key}: can't determine occlusion_type."
                     )
                     return
-                
+
                 occlusion_type = (State & key).fetch1("occlusion_type")[0]
                 if occlusion_type is None:
                     logger.warning(
@@ -272,15 +275,19 @@ class DatasetType(dj.Computed):
                     )
                     return
 
-                if (distractor == 0.0) & (occlusion_type == 0.0): 
-                    #fetch detection
-                    training_phase_idx = (TrainingPhaseType() & "training_phase='detection'").fetch1("idx")
+                if (distractor == 0.0) & (occlusion_type == 0.0):
+                    # fetch detection
+                    training_phase_idx = (
+                        TrainingPhaseType() & "training_phase='detection'"
+                    ).fetch1("idx")
 
                 elif distractor == 1.0:
 
                     if (slit_size_number == 1) & (occlusion_type == 0.0):
-                        #fetch discrimination
-                        training_phase_idx = (TrainingPhaseType() & "training_phase='discrimination'").fetch1("idx")
+                        # fetch discrimination
+                        training_phase_idx = (
+                            TrainingPhaseType() & "training_phase='discrimination'"
+                        ).fetch1("idx")
 
                     elif (slit_size_number > 1) & (occlusion_type != 0.0):
                         phase_type = (
@@ -313,7 +320,7 @@ class DatasetType(dj.Computed):
         except Exception as err:
             err = f"Error while populating the DatasetType table: key: {key}\n {err}"
             logger.warning(err)
-    
+
 
 @schema
 class Box(dj.Manual):
