@@ -3,7 +3,7 @@ import pickle
 import re
 from datetime import datetime
 from pathlib import Path
-
+import pandas as pd
 import numpy as np
 from vr4mice.actions.keys2tables_base import base
 from vr4mice.actions.keys2tables_vr4mice import vr4mice
@@ -61,9 +61,10 @@ def get_new_file(filename, path="/tmp"):
     if Path(filename).suffix == ".npy":
         data = np.load(str(Path(path).joinpath(filename)), allow_pickle=True)
         return data.item(), name
+
     if Path(filename).suffix == ".pickle":
-        with open(str(Path(path).joinpath(filename)), "rb") as fd:
-            return pickle.load(fd), name
+        data = pd.read_pickle(str(Path(path).joinpath(filename)))
+        return data, name
 
 
 def check_keys(value, raw_data, key, schema, none=True) -> bool:
@@ -179,7 +180,7 @@ def populate(table_name, attributes, raw_data, schema) -> None:
                     data[a] = raw_data[label]
 
     logger.info("Populating: " + str(table_name))  # todo check return code
-
+    
     schema["dj_tables"][table_name].insert1(data, skip_duplicates=SKIP_DUPLICATES)
     logger.info("[POPULATED OK] " + str(table_name))  # todo check return code
 

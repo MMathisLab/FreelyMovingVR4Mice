@@ -145,8 +145,9 @@ def create_data_frame(
     # but with fetch1 it looks faster and more control on keys
     # TODO:(mary) checks if exists, try-catch
 
-    slit_size = (vr4mice.Metadata & key).fetch1("slit_size") #TODO: check type-s
-    trial = (vr4mice.State & key).fetch1("episode")  # attention change of name
+    slit_size = np.array((vr4mice.Metadata & key).fetch1("slit_size")) #TODO: check type-s
+    trial = (vr4mice.State & key).fetch("episode")  # attention change of name
+    trial = np.array(np.array(trial)[0], dtype=np.int32)
 
     aperture = slit_size[trial - 1]  #TODO check type-s
     df = pd.DataFrame(
