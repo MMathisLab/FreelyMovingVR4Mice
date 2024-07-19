@@ -61,12 +61,11 @@ for episode in range(3):
             [-0.04102117, -9.93074882, 0.59740335], dtype=np.float32
         ).reshape(1, -1)
         print(random_action)
+
+        # Set the actions
         action_tuple = ActionTuple()
         action_tuple.add_continuous(random_action)
         env.set_actions(behavior_name, action_tuple)
-
-        # Set the actions
-        # env.set_actions(behavior_name, action)
 
         # Move the simulation forward
         env.step()
