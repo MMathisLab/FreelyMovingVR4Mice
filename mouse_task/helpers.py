@@ -8,6 +8,7 @@ from pathlib import Path
 
 
 def process_config(config_file_path: Path) -> dict:
+    breakpoint()
     """
     Function that processes the task_config file and verifies its content
 

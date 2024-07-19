@@ -3,59 +3,74 @@ import matplotlib.pyplot as plt
 import time
 import numpy as np
 
-# Configure the serial port
-ser = serial.Serial(
-    "/dev/cu.usbmodem146851301", 9600
-)  # Adjust 'COM1' to your serial port and 9600 to your baud rate
-print("connected")
-# Prepare to collect data
-data = []
-timestamps = []
-start_time = time.time()
 
-# Record data for 10 seconds
-timeout = start_time + 30  # 30 seconds from now
+def arduino_read(t=10):
+    # Configure the serial port
+    ser = serial.Serial(
+        "/dev/cu.usbmodem146855301", 9600
+    )  # Adjust 'COM1' to your serial port and 9600 to your baud rate
+    print("connected")
+    # Prepare to collect data
+    data = []
+    timestamps = []
+    start_time = time.time()
 
-while True:
-    # Read data from serial port
-    if time.time() > timeout:
-        break  # Timeout reached, stop reading
+    # Record data for 10 seconds
+    timeout = start_time + t
 
-    if ser.in_waiting > 0:
-        line = ser.readline().decode("utf-8").rstrip()
-        now = time.time() - start_time  # Current time
-        print(f"[{now}] Received: {line}")
+    while True:
+        # Read data from serial port
+        if time.time() > timeout:
+            break  # Timeout reached, stop reading
 
-        # Record data and timestamp
-        timestamps.append(now)
-        data.append(float(line))  # Assuming incoming data is a float
+        if ser.in_waiting > 0:
+            line = ser.readline().decode("utf-8").rstrip()
+            now = time.time() - start_time  # Current time
+            print(f"[{now}] Received: {line}")
 
-# Close the serial port
-ser.close()
+            # Record data and timestamp
+            timestamps.append(now)
+            data.append(float(line))  # Assuming incoming data is a float
 
-# Plot the data
-data = np.array(data)
+    # Close the serial port
+    ser.close()
+    return data, timestamps
 
-plt.plot(timestamps, data)
-# times = np.array(timestamps)[data > 0]
-# print(np.mean(np.diff(times)))
-plt.title("Serial Data")
-plt.xlabel("Time")
-plt.ylabel("Value")
-plt.grid(True)
-plt.xticks(rotation=45)
-plt.show()
 
-df = {"timestamps": timestamps, "data": data}
+if __name__ == "__main__":
+    data, timestamps = arduino_read(t=5)
 
-np.save(arr=df, file="photodidode", allow_pickle=True)
+    # Plot the data
+    data = np.array(data)
 
-"""
-plt.plot(np.diff(np.array(times).astype('float')))
-plt.title('Serial Data')
-plt.xlabel('Time')
-plt.ylabel('Value')
-plt.grid(True)
-plt.xticks(rotation=45)
-plt.show()
-"""
+    import scipy
+
+    N = 2
+    Wn = 0.1
+
+    b, a = scipy.signal.butter(N, Wn, "low")
+    output_signal = scipy.signal.filtfilt(b, a, data)
+
+    plt.plot(timestamps, data)
+    # times = np.array(timestamps)[data > 0]
+    # print(np.mean(np.diff(times)))
+    plt.title("Serial Data")
+    plt.xlabel("Time")
+    plt.ylabel("Value")
+    plt.grid(True)
+    plt.xticks(rotation=45)
+    plt.show()
+
+    df = {"timestamps": timestamps, "data": data}
+
+    np.save(arr=df, file="photodidode", allow_pickle=True)
+
+    """
+	plt.plot(np.diff(np.array(times).astype('float')))
+	plt.title('Serial Data')
+	plt.xlabel('Time')
+	plt.ylabel('Value')
+	plt.grid(True)
+	plt.xticks(rotation=45)
+	plt.show()
+	"""

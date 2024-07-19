@@ -26,7 +26,6 @@ env = UnityEnvironment(file_name=env_name, side_channels=[channel])
 # channel.set_configuration_parameters(capture_frame_rate=50)
 
 # Reset the environment
-# Reset the environment
 print("Resetting game...")
 env.reset()
 behavior_name = list(env.behavior_specs)[0]

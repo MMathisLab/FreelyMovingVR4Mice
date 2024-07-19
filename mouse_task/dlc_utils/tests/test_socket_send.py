@@ -55,7 +55,11 @@ class MyProcessor_socket:
             print("waiting")
             self.curr_signal = 0
         else:
+            # sine wave
             self.curr_signal = (np.sin((self.curr_step) * 0.1) + 1) / 2
+
+            # square wave
+            self.curr_signal = (np.sign(np.sin((self.curr_step) * 0.1)) + 1) / 2
         return self.curr_signal
 
     def save(self):

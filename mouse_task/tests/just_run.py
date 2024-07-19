@@ -6,11 +6,12 @@ import time
 import numpy as np
 from mlagents_envs.environment import ActionTuple, BaseEnv
 from mouse_task.helpers import process_config
+from pathlib import Path
 
 # Define your environment path
 # env_name = "/Users/thomassainsbury/Documents/Mathis_lab/Mathis_lab_code//roller_ball/roller_ball.app"
 # env_name = "/Users/thomassainsbury/Documents/Mathis_lab/Mathis_lab_code/FreelyMovingVR4Mice/mouse_task/mac_build/game.app"
-env_name = process_config("../task_config.json")["ar_env_unity_absolute_path"]
+env_name = process_config(Path("../task_config.json"))["ar_env_unity_absolute_path"]
 
 # Initialize the Unity environment
 env = UnityEnvironment(file_name=env_name, seed=1, side_channels=[])
