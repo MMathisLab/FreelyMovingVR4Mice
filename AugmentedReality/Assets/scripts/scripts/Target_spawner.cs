@@ -67,6 +67,7 @@ public class Target_spawner : MonoBehaviour
         Ri_wall.transform.localScale += new Vector3(slitDepth-1f, 0f, 0f);
     }
     public void walls_reset(){
+
         hslitSize =  slitSize/2;
         Destroy(Le_wall);
         Destroy(Ri_wall);

@@ -32,9 +32,9 @@ from teensyexp.tasks_abc.dlc_socket import DLCClient
 from mouse_task.kfilter import OneEuroFilter
 
 
-# config_name = Path("task_config.json")
-# current_dir = Path(__file__).parent
-# config_path = current_dir.joinpath(config_name)  # default class constructor input
+config_name = Path("task_config.json")
+current_dir = Path(__file__).parent
+config_path = current_dir.joinpath(config_name)  # default class constructor input
 
 
 class ARVisualDiscrim_single_teardrop(UnityTask):
@@ -52,8 +52,8 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
         session_label=["AR_VD_single_teardrop_blocks"],
         epochs=[250],
         epoch_labels=["single_teardrop"],
-        # config_file_path=config_path,
-        config_file_path="",
+        config_file_path=config_path,
+        #config_file_path="",
         reward_size=100,
         cropped_image=[0, 530, 0, 510],
         unity_arena_size=[-9, 9, -10, -2],
@@ -131,12 +131,12 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
             return
 
         
-        env_path = config_dict["ar_env_unity_absolute_path"]
+        self.env_path = config_dict["ar_env_unity_absolute_path"]
 
 
         super().__init__(
             teensy,
-            env_path,
+            self.env_path,
             monitor=monitor,
             write_video=write_video,
             fps=fps,
@@ -265,7 +265,7 @@ class ARVisualDiscrim_single_teardrop(UnityTask):
             # print(x, " ", z, " ")
         else:
             print("missed dlc frame")
-            output = np.array([0, 0, 0, photodiode_intensity])
+            output = np.array([9, -5, 0, 0])
 
         return output.reshape((1, -1))
 

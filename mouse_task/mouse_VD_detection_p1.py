@@ -36,7 +36,7 @@ config_name = Path("task_config.json")
 current_dir = Path(__file__).parent
 config_path = current_dir.joinpath(config_name) # default class constructor input
 
-class ARVisualDiscrim_randomoccluders(UnityTask):
+class Detection_p1(UnityTask):
     """
         Augmented Reality Visual discrimination
         Class that represents mouse task, inherits from UnityTask and GuiTask teensyexp module's classes
@@ -49,9 +49,9 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
                  R_report_box = [5, 10, -4, -2],
                  L_report_box = [-10, -5, -4, -2], Start_box =  [-4, 4, -9, -5, 90], 
                  rotate_camera = 90., Prob_Obj_on_Left = 0.5, mouse_report_delay = 0.0,
-                 slit_size = [4.,10.,5], slit_depth = 0.1, target_selection = 6., distractor_selection = 0., occlusion_type = 0.0, 
+                 slit_size = [4.,4.,1], slit_depth = 0.1, target_selection = 6., distractor_selection = 0., occlusion_type = 0., 
                  Camera_type = 1.0, target_spread = 4., target_rotation = 0, target_size = 2., target_height = 3., block_length = 20., start_box_delay = 0.1, 
-                 velocity_threshold=20., distractor = 0.0, grey_screen_active = 0.0, target_distance = 3):
+                 velocity_threshold=20., distractor = 0.0, grey_screen_active = 0.0, target_distance = 3, use_dlc=False):
 
         """
             Class constructor: initialises dlc processor, dlc live, video reader
@@ -76,8 +76,9 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         self.t_count = None
         self.filt = None
         self.params = None
-        self.address = ('localhost', 6000)
-        self.dlcClient = DLCClient(address=self.address)
+        if use_dlc == True:
+            self.address = ('localhost', 6000)
+            self.dlcClient = DLCClient(address=self.address)
         self.t_count = 0
         self.degrees = 0
         self.correct = 0
@@ -89,13 +90,13 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
 
         if config_dict is None:
         # err messages are showed on process_config() function level
+            print("config not found!")
             return
-
         
         env_path = config_dict["ar_env_unity_absolute_path"]
 
         super().__init__(teensy, env_path, monitor=monitor, write_video=write_video, fps=fps, epochs=epochs, epoch_trials=True)
-
+        
         # Game parameters
         self.cropped_image = cropped_image
         self.unity_arena_size = unity_arena_size
@@ -109,8 +110,8 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         
         self.previous = np.array(
             [
-                0,
-                0,
+                9,
+                -5,
                 0,
                 0,
             ],
@@ -154,7 +155,7 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         self.occlusion_type = self.as_list(occlusion_type)
         self.camera_type = Camera_type
         self.target_distance =self.as_list(target_distance)
-        
+        self.use_dlc = use_dlc
         
 
         self.n_rewards = 0
@@ -179,8 +180,10 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         self.dlc_heading = [] 
         self.dlc_time_step = []
         self.trial_mouse_report_delay = []
-
-
+        #self.set_channel()
+        
+        #self.reset_environment()
+        
 
     def _get_dlc_on_frame(self):
         """
@@ -192,11 +195,9 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         # run DLC on every frame to be given as input to the agent
         this_read = self.dlcClient.read()
         
-        #print(this_read)
+    
         if this_read != None:
             self.params = np.array(this_read ["vals"][1:])
-            
-            
             if self.t_count == 0:
                 self.filt = OneEuroFilter(t0 = self.t_count, x0 = np.array(self.params), beta=0.01, min_cutoff=0.01)
             else:
@@ -211,15 +212,12 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
             self.dlc_heading.append(head_angle)
             self.dlc_read_time.append(this_read ["time"])
             
-            print(x, z)
-            
             # interp mouse pixel space into arena space
             x = np.interp(x,[self.cropped_image[0],self.cropped_image[1]], [self.unity_arena_size [0],self.unity_arena_size [1]])
             z = np.interp(z,[self.cropped_image[2],self.cropped_image[3]], [self.unity_arena_size [2],self.unity_arena_size [3]])
             self.degrees = (head_angle - (self.rotate_camera)) % 360; 
             output = np.array([x,z, self.degrees, photodiode_intensity])
             self.previous=output
-            print(x, " ", z, " ", photodiode_intensity)
         else:
             #print("missed dlc frame")
             time.sleep(0)
@@ -237,6 +235,7 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
             method inherited from task parent class interface
             This function sends parameters to unity when the game is reset - ie at the beginning of each trial
         """
+        
 
         this_Prob_obj_left = self.Prob_Obj_on_Left
         print("prob left", this_Prob_obj_left)
@@ -248,7 +247,7 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         this_mouse_report_delay = self.get_epoch_value("mouse_report_delay")
         this_target_selection = self.get_epoch_value("target_selection")
         this_distractor_selection = self.get_epoch_value("distractor_selection")
-        this_occlusion_type = self.get_epoch_value("occlusion_type")
+        this_occlusion_type = 0.0 #self.get_epoch_value("occlusion_type")
         this_target_distance = self.get_epoch_value("target_distance")
         this_target_rotation = self.get_epoch_value("target_rotation")
 
@@ -267,6 +266,7 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         self.channel.set_float_parameter("occlusion_type", this_occlusion_type)
         self.channel.set_float_parameter("targetsZpos", this_target_distance)
         self.channel.set_float_parameter("target_rotation", this_target_rotation)
+        print("this occ_type: ", this_occlusion_type)
         
         # set properties for start box, left report box and right report box
         self.channel.set_float_parameter("L_box_x_min", self.L_report_box [0])
@@ -287,6 +287,7 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         self.channel.set_float_parameter("distractor", self.distractor)
         self.channel.set_float_parameter("targetSize", self.target_size)
         self.channel.set_float_parameter("Grey_screen_active", self.grey_screen_active)
+        
     
         
 
@@ -301,9 +302,10 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         self.trial_distractor_selection.append(this_distractor_selection)
         self.trial_target_selection.append(this_target_selection)
         self.trial_occlusion_type.append(this_occlusion_type)
+        print(self.trial_occlusion_type)
         self.trial_target_distance.append(this_target_distance)
         self.trial_target_rotation.append(this_target_rotation)
-        
+        #super().reset_environment()
 
 
 
@@ -313,7 +315,10 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
             method that get actions from DLC and parse them to unity
             called by teensyexp's module Agent, This function is called on every frame of the game.
         """
-        output = self._get_dlc_on_frame()
+        if self.use_dlc == False:
+            output = self.previous
+        else:   
+            output = self._get_dlc_on_frame()
        
         return output
 
@@ -354,12 +359,12 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
                     
                 
             
-
     def reset_environment(self):
         """
             method to reset environment, use parent method implementation call
         """
         super().reset_environment()
+    
         
     def get_info(self):
         """

@@ -36,14 +36,14 @@ config_name = Path("task_config.json")
 current_dir = Path(__file__).parent
 config_path = current_dir.joinpath(config_name) # default class constructor input
 
-class ARVisualDiscrim_randomoccluders(UnityTask):
+class Discrimination(UnityTask):
     """
         Augmented Reality Visual discrimination
         Class that represents mouse task, inherits from UnityTask and GuiTask teensyexp module's classes
     """
 
-    def __init__(self, teensy, monitor=None, write_video=False, fps=60.0, session_label = ["AR_VD_detection_p1"],
-                 epochs=[250], epoch_labels = ["single_teardrop"],
+    def __init__(self, teensy, monitor=None, write_video=False, fps=60.0, session_label = ["AR_VD_discrimination"],
+                 epochs=[250], epoch_labels = ["dual_teardrop"],
                  config_file_path = config_path,
                  reward_size = 100, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
                  R_report_box = [5, 10, -4, -2],
