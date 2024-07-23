@@ -331,9 +331,6 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
                 self.teensy.write('r_water', [self.reward_size[0]])
             self.n_rewards += 1
                     
-                
-            
-
     def reset_environment(self):
         """
             method to reset environment, use parent method implementation call
