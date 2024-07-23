@@ -51,7 +51,7 @@ class Detection_p1(UnityTask):
                  rotate_camera = 90., Prob_Obj_on_Left = 0.5, mouse_report_delay = 0.0,
                  slit_size = [4.,4.,1], slit_depth = 0.1, target_selection = 6., distractor_selection = 0., occlusion_type = 0., 
                  Camera_type = 1.0, target_spread = 4., target_rotation = 0, target_size = 2., target_height = 3., block_length = 1., start_box_delay = 0.1, 
-                 velocity_threshold=20., distractor = 0.0, grey_screen_active = 0.0, target_distance = 3, use_dlc=False):
+                 velocity_threshold=20., distractor = 0.0, grey_screen_active = 0.0, target_distance = 3, use_dlc=True):
 
         """
             Class constructor: initialises dlc processor, dlc live, video reader
