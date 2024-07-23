@@ -3,9 +3,9 @@ from .mouse_VisualDiscrim_socket_thread import ARVisualDiscrim
 from .mouse_VisualDiscrim_socket_thread_blocks import ARVisualDiscrim_blocks
 from .mouse_VisualDiscrim_single_teardrop_blocks import ARVisualDiscrim_single_teardrop
 from .mouse_VisualDiscrim_random_occluders import ARVisualDiscrim_randomoccluders
-from .mouse_VD_detection_p1 import Detection_p1
+from .mouse_detection_p1 import Detection_p1
 from .mouse_VD_detection_p2 import Detection_p2
-from .mouse_VD_discrimination import Discrimination
+from .mouse_discrimination import Discrimination
 from .mouse_VD_discrim_occluders import discrim_occluders
 
 

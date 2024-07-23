@@ -4,7 +4,7 @@ import time
 import numpy as np
 from pathlib import Path
 
-from mouse_task.mouse_VD_detection_p1 import Detection_p1
+from mouse_task.mouse_detection_p1 import Detection_p1
 from teensyexp.agent import Agent
 
 # from mlagents_envs.environment import ActionTuple
