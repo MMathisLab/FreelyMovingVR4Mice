@@ -122,7 +122,7 @@ Take the water bottle out of the cage in the evening the day before the first da
 
 **Removal from Study Criteria**
 
-- [Optional] Animal repeatedly attempts to escape from arena (ie jumps to
+- [Optional] Animal repeatedly attempts to escape from arena (i.e., jumps to
 rim of arena more than once)
 - [Optional] Animal chews through water tubing or destroys other components of the arena.
 
@@ -160,7 +160,7 @@ In the Tolias lab, the arena is on an air table and is enclosed on all sides but
 
 ```{note}
 
-It is important to monitor the mice while they are training. Sometimes the mice will not be in the mood to be trained. If they are pushed further they can get frustrated and will no longer do the task. It is important that if the mice do this they are taken out of the box 10 minutes, given snack and then put in the box again. If they do this again give them a break for the day.
+It is important to monitor the mice while they are training. If they stop doing the task for more than 2-3 min, please stop the task for the day. we find that if are pushed further they can get frustrated and will no longer do the task well on subsequent days. Sometimes you can try again on the same day after a short, ~10 min. break back in the homecage. We often give them a IACUC approved snack (goldfish cracker) in this 10 min break time, which also increases thirst and subsequent motivation. If they are put back in and still do not perform the task, abandon for the day.
 ```
 
 ## Training Stage 1: Detection task
