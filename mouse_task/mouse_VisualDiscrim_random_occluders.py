@@ -212,7 +212,10 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         return(output.reshape((1,-1)))
 
     def random_target_location(self):
-        self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])
+        # randomly sample whether the object is on the right (0.0) or left (1.0)
+        self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
+        # to ensure that the blocks follow which side the object is on
+        self.block_Left = self.Object_on_left
         print("object on left", self.Object_on_left)
     
     def block_sampler(self):
