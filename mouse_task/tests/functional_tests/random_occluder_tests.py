@@ -26,7 +26,7 @@ class TestARVisualDiscrim_randomoccluders(unittest.TestCase):
         #self.assertNotEqual(self.task.Object_on_left, initial_value)
         
     def test_random_target_locationL(self):
-        # test with probability giving a certian left choice
+        # test with probability giving a certain left choice
         self.task.Prob_Obj_on_Left = 1.0
         self.task.random_target_location()
         self.assertEqual(self.task.Object_on_left, 1.0)
