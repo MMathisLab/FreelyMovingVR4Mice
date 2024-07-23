@@ -120,6 +120,7 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         self.target_height = self.as_list(target_height)
         self.mouse_report_delay = self.as_list(mouse_report_delay)
         self.target_rotation = self.as_list(target_rotation)
+        self.slit_size_param =  slit_size
         
         self.Prob_Obj_on_Left = Prob_Obj_on_Left
         
@@ -210,10 +211,22 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
      
         return(output.reshape((1,-1)))
 
-        
-
-    # This gui function needs to be here - currently this is not used   
+    def random_target_location(self):
+        self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])
+        print("object on left", self.Object_on_left)
     
+    def block_sampler(self):
+        if self.correct == self.block_length:
+                if self.block_Left == 0.0:
+                     self.block_Left = 1.0
+                else:
+                    self.block_Left = 0.0
+                self.correct = 0
+        if self.block_Left == 0.0:  
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])   
+        else:
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
+        print("object on left", self.Object_on_left) 
 
     # can use this function to save data to the .pickle file and send parameters to unity
     def set_channel(self):
@@ -221,6 +234,10 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
             method inherited from task parent class interface
             This function sends parameters to unity when the game is reset - ie at the beginning of each trial
         """
+        if self.block_length == 1:
+            self.random_target_location()
+        if self.block_length > 1:
+            self.block_sampler()
 
         this_Prob_obj_left = self.Prob_Obj_on_Left
         print("prob left", this_Prob_obj_left)
@@ -288,10 +305,6 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         self.trial_target_distance.append(this_target_distance)
         self.trial_target_rotation.append(this_target_rotation)
         
-
-
-
-
     def get_action(self):
         """
             method that get actions from DLC and parse them to unity
@@ -317,24 +330,6 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
                 print(self.reward_size)
                 self.teensy.write('r_water', [self.reward_size[0]])
             self.n_rewards += 1
-           
-            if self.correct == self.block_length:
-                if self.block_Left == 0.0:
-                     self.block_Left = 1.0
-                else:
-                    self.block_Left = 0.0
-                self.correct = 0
-                
-            
-            if self.block_Left == 0.0:
-                   
-                self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])
-                
-                   
-            else:
-                self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
-            
-            print("object on left", self.Object_on_left) 
                     
                 
             
@@ -354,7 +349,7 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         """
         pos = None if self.state is None else "%0.3f, %0.3f" % (self.state[0], self.state[1])
         h_angle = None if self.state is None else "%0.2f" % (self.state[2])
-        velocity = None if self.state is None else "%0.2f" % (self.state[-1])
+        photodiode_state = None if self.state is None else "%0.2f" % (self.state[-1])
         in_left_box = None if self.state is None else "%0.2f" % (self.state[7])
         in_right_box = None if self.state is None else "%0.2f" % (self.state[8])
         
@@ -369,7 +364,7 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
                 'position' : pos,
                 'h_angle' : self.degrees,
                 'rewards' : self.n_rewards,
-                'velocity' : velocity,
+                'photodiode_state' : photodiode_state,
                 'in_left_box': in_left_box,
                 'in_right_box': in_right_box
             }
@@ -383,8 +378,8 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
                 dictionary with data
         """
         data_dict = super().get_data()
-        data_dict ["session_label"] = self.session_label
-        data_dict ["dlc_read_time"] = np.array(self.dlc_read_time)
+        data_dict["session_label"] = self.session_label
+        data_dict["dlc_read_time"] = np.array(self.dlc_read_time)
         data_dict['dlc_x'] = np.array(self.dlc_x)
         data_dict['dlc_y'] = np.array(self.dlc_y)
         data_dict['dlc_heading'] = np.array(self.dlc_heading)
@@ -400,13 +395,19 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         data_dict["mouse_report_delay"] = np.array(self.trial_mouse_report_delay)
         data_dict["velocity_threshold"] = self.velocity_threshold
         data_dict["start_box_delay"] = self.start_box_delay
-        data_dict ["distractor"] = self.distractor
-        data_dict ["target_size"] = self.target_size
-        data_dict ["grey_screen_active"] = self.grey_screen_active
-        data_dict ["camera_type"] = self.camera_type
-        data_dict ["target_selection"] = np.array(self.trial_target_selection)
-        data_dict ["distractor_selection"] = np.array(self.trial_distractor_selection)
-        data_dict ["occlusion_type"] = np.array(self.trial_occlusion_type)
-        data_dict ["target_distance"] = np.array(self.trial_target_distance)
-        data_dict ["target_rotation"] = np.array(self.trial_target_rotation)
+        data_dict["distractor"] = self.distractor
+        data_dict["target_size"] = self.target_size
+        data_dict["grey_screen_active"] = self.grey_screen_active
+        data_dict["camera_type"] = self.camera_type
+        data_dict["target_selection"] = np.array(self.trial_target_selection)
+        data_dict["distractor_selection"] = np.array(self.trial_distractor_selection)
+        data_dict["occlusion_type"] = np.array(self.trial_occlusion_type)
+        data_dict["target_distance"] = np.array(self.trial_target_distance)
+        data_dict["target_rotation"] = np.array(self.trial_target_rotation)
+        data_dict["reward_size"] = np.array(self.trial_reward_size)
+        data_dict["Prob_Obj_on_Left"] = self.Prob_Obj_on_Left
+        data_dict["slit_size_param"] = np.array(self.slit_size_param)
+        data_dict["block_length_param"] = np.array(self.block_length)
+        data_dict["target_spread_param"] = np.array(self.target_spread)
+        data_dict["target_height_param"] = np.array(self.target_height)
         return data_dict
