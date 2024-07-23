@@ -175,7 +175,7 @@ To select the target type you can change the target selection parameter in the G
 **Steps:**
 
 - *Step1: Detection task training - permissive trial initiation parameters.*
-    - **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least one session.
+    - **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 2 sessions.
     - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation (see {ref}`sec:gui`).
     - Use the parameters in {ref}`Table 1 <fig:tab1>`, replacing config file path with valid local path.
     - To encourage mice to form connection between position and visual stimuli, longer initial session (ex 75 minutes) may be necessary to allow enough serendipitous trial initiations to occur.
@@ -190,7 +190,7 @@ To select the target type you can change the target selection parameter in the G
 ```
 
 - *Step2: Detection task training - restricted trial initiation parameters.*
-    - **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least one session.
+    - **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 2 sessions.
     - Same as Step 1, but with the parameters in {ref}`Table 2 <fig:tab2>`. In the restricted parameters, start box delay is increased and velocity threshold is decreased, to encourage more deliberate trial initiation.
 
 ```{image} ../../docs/images/tab2-restricted_detection_params.png
@@ -205,7 +205,7 @@ To select the target type you can change the target selection parameter in the G
 
 Add in the distractor. You can do this by setting `distractor=1.0`. Make sure that  `distraction_selection=4.0`. This selects the black single teardrop object as the distractor.
 
-**Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least one session.
+**Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 2 sessions.
 
 - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation
 (see {ref}`sec:gui`).
@@ -221,7 +221,7 @@ Add in the distractor. You can do this by setting `distractor=1.0`. Make sure th
 
 ## Training Stage 3: Discrimination with occlusion
 
-**Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least one session.
+**Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 2 sessions.
 
 - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation
 (see {ref}`sec:gui`).
