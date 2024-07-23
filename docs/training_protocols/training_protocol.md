@@ -1,6 +1,13 @@
-# Mouse training from Tolias lab
+# Mouse training
+
+## General mouse training
+This documents give a protocol for training mice in the AR setup. This protocol should be followed by all labs so that we can get consistent data. Note that this will need to be adjusted as we perform the experiments but we should only deviate from it after we discussed a change in the monday meetings. This protocol should then be updated to reflect that by opening a pull request on the [GitHub repository](https://github.com/MMathisLab/FreelyMovingVR4Mice).
+
+
 
 ## Handling habituation and baseline weight
+
+With behavioral training it is very important that stress on the mouse is kept to a minimum. Therefore mice should never be picked up by the tail. This has been shown to reduce the behavioral performance of mice and increase anxiety associated behaviors. Instead, pick up the mice using a plastic tube and if possible allow the mouse to voluntarily enter the tube. Do not force the mouse to go into the tube by boxing it into a corner, just try to be patient and at some point the mouse will enter the tube and you can gently pick the tube up and transfer it into the box. After a couple of days mice will be very happy entering the tube because they know that they will get water.
 
 ```{admonition} Materials
 :class: tip
@@ -14,7 +21,6 @@ Siblings may be housed together, as appropriate.
 ```{admonition} Duration
 ~5-7 days.
 ```
-
 
 ### Step 1: Habituation to experimenter presence.
 
@@ -32,7 +38,8 @@ Siblings may be housed together, as appropriate.
 
 **Steps:**
 
-- Put gloved hand in mouse home cage. To encourage animals to explore your hand, may add a treat between fingers.
+- Put gloved hand in mouse home cage so that they can get used to your scent. Initially, they can be skittish but after a while they will get more confident. They may also bite/nibble on your finger, if they do, try not to make sudden movements because this will scare them, instead just lightly move them away with your finger. 
+- To encourage animals to explore your hand, may add a treat between fingers.
 - Don’t move your hand, try to keep it still so you won’t scare the mice.
 - When the session is done, remove the hand slowly and calmly.
 
@@ -47,9 +54,10 @@ Siblings may be housed together, as appropriate.
 **Steps:**
 
 - Put handling tunnel (see image {ref}`below <tunnel>`) in mouse home cage for at least 7 hours (maybe overnight, may require coordination with mouse colony staff). Let them sniff it, climb it and cross it by themselves. This can start the same day as the familiarization with the experimenter phase (*Step 1*).
-- Once they have graduated from *Step 1*, they can be lifted with the tunnel.
-- When the mouse is inside the tunnel, lift the tunnel to the height of the rim of the cage for 10 seconds.
-- Gently put the mouse back to home cage, and wait them cross the tunnel again (to demonstrate comfort).
+- Once they have graduated from *Step 1*, they can be lifted with the tunnel. Wait for the mouse to enter the tube. and very gently lift the tube up off the ground and then place it back down.  
+- When the mouse is inside the tunnel, lift the tunnel to the height of the rim of the cage for 10 seconds and place it back down. Each time, increase the length of time that they are in tube so that they get used to being picked up.
+- Gently put the mouse back to home cage, and wait that they cross the tunnel again (to demonstrate comfort).
+- Repeat multiple times.
 
 
 ```{image} ../../docs/images/tunnel.png
@@ -82,6 +90,10 @@ The first day of this step, to help the mouse enter the tunnel, it will be reaso
 
 ## Water restriction
 
+For the duration of the experiment mice will be placed on water restriction so that we can give the mice water rewards as a reinforcer to learn the task. To check that the mice are healthy you will need to weigh them each day. We allow for mice to loose up to 10% of their body weight. Daily water amount provided should be **50 ml/kg** based on mice baseline weight. Each mouse is required to drink a minimum of 25 ml/kg every day. Animals not meeting minimum daily water intake or minimum body weight are removed from water restriction and receive home cage water access ad libitum.
+
+This means that it is important to know the water droplet size coming from the spouts on the rig. This water droplet size should be kept at approximately 5$\mu$l. Then depending on the number of successful trials, one can subtract this amount from the minimum amount of water per day for a given mouse to get the remaining amount to give them. Water can be given to the mice after each session using a small tub (or lens cap) where the measured amount of water can be placed. Typically the mice will drink this very quickly.
+
 
 ```{admonition} Materials
 :class: tip
@@ -91,9 +103,6 @@ Empty mouse cage, 0.1 gram balance, weighing container, 1 mL syringe, small plas
 ```{warning}
 Under BCM Tolias Lab IACUC protocol, water restriction can continue for 90 consecutive days.
 ```
-
-
-Daily water amount provided should be **50 ml/kg** based on mice baseline weight. Each mouse is required to drink a minimum of 25 ml/kg every day. Animals not meeting minimum daily water intake are removed from water restriction and receive home cage water access ad libitum.
 
 Take the water bottle out of the cage in the evening the day before the first day of water restriction.
 
@@ -111,7 +120,6 @@ Take the water bottle out of the cage in the evening the day before the first da
 (sec:arena-habituation)=
 ## Arena and Reward Port Habituation
 
-
 **Removal from Study Criteria**
 
 - [Optional] Animal repeatedly attempts to escape from arena (ie jumps to
@@ -122,7 +130,12 @@ rim of arena more than once)
 
 - *Step 1: Arena preparation:*
     - Flush bubbles from the water tubing with 5000ms manual water at least twice.
-    - Refill syringe reservoirs for both water ports up to 20 mL to attain consistent water pressure across ports and sessions. Water is acquired from same source used to fill water bottles in colony housing, and replaced weekly.
+        - Place paper towels below each lick port to soak up water. 
+        - Insert a syringe plunger into each tube of the syringe casings which are acting as reservoirs for the lick ports. 
+        - Select the manual water task in the `VR4mice` GUI. 
+        - Set the water duration to 5000ms and start the pulse. Water should come out of each port along with any trapped air.
+    - Refill syringe reservoirs for both water ports up to the 20 mL notch to attain consistent water pressure across ports and sessions and clean up any residual water in the box well. Water is acquired from same source used to fill water bottles in colony housing, and replaced weekly.
+    - Ensure that the tip of the tube that the mouse drinks from is poking out of the water port. Mice tend to chew on these and sometimes they are not poking out enough to be easily accessible. 
     - The arena is in a quiet, dark room with minimal red lights. 
     
 ```{note}
@@ -145,12 +158,19 @@ In the Tolias lab, the arena is on an air table and is enclosed on all sides but
     - Calculate the water received by the animal during trials by number of rewards displayed in vr4mice GUI multiplied by 5uL.
     - For any animals that did not receive their target daily water allocation in the arena tasks, transit to the empty cage for additional water as described above.
 
-## Detection task
+```{note}
+
+It is important to monitor the mice while they are training. Sometimes the mice will not be in the mood to be trained. If they are pushed further they can get frustrated and will no longer do the task. It is important that if the mice do this they are taken out of the box 10 minutes, given snack and then put in the box again. If they do this again give them a break for the day.
+```
+
+## Training Stage 1: Detection task
 
 ```{note}
 
 May be combined in single arena session with {ref}`sec:arena-habituation` (above).
 ```
+
+To select the target type you can change the target selection parameter in the GUI, by changing the number so that it is the white single teardrop object (`target_selection = 6.0`). 
 
 **Steps:**
 
@@ -181,8 +201,9 @@ May be combined in single arena session with {ref}`sec:arena-habituation` (above
 :align: center
 ```
 
+## Training Stage 2: Discrimination without occlusion
 
-## Discrimination without occlusion
+Add in the distractor. You can do this by setting `distractor=1.0`. Make sure that  `distraction_selection=4.0`. This selects the black single teardrop object as the distractor.
 
 **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least one session.
 
@@ -198,7 +219,7 @@ May be combined in single arena session with {ref}`sec:arena-habituation` (above
 :align: center
 ```
 
-## Discrimination with occlusion
+## Training Stage 3: Discrimination with occlusion
 
 **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least one session.
 
@@ -243,6 +264,7 @@ May be combined in single arena session with {ref}`sec:arena-habituation` (above
 - Hover over stimulus to view if desired.
 - Note start time.
 
+Note that you can mix and match different targets and distators by changing the `target_selection` and `distractor_selection` parameters. {ref}`Here <fig:tab5>` is a list of the floats used and the respective targets that are spawned.
 
 ```{image} ../../docs/images/tab5-list_objects.png
 :name: fig:tab5
