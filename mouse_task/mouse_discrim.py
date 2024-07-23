@@ -1,5 +1,5 @@
 """
-Discrimination task with occluders on.
+Discrimination task (without occluders).
 """
 
 import os
@@ -18,9 +18,9 @@ current_dir = pathlib.Path(__file__).parent
 config_path = current_dir.joinpath(config_name)  # default class constructor input
 
 
-class DiscriminationWithOccludersTask(ActiveSensingTask):
+class DiscriminationTask(ActiveSensingTask):
     """
-    Discrimination task with occluders on.
+    Discrimination task (without occluders).
     """
 
     def __init__(
@@ -29,7 +29,7 @@ class DiscriminationWithOccludersTask(ActiveSensingTask):
         monitor=None,
         write_video=False,
         fps=60.0,
-        session_label=["ar_discrim_occluders"],
+        session_label=["ar_discrim"],
         epochs=[250],
         epoch_labels=["dual_teardrop"],
         config_file_path=config_path,
@@ -42,11 +42,11 @@ class DiscriminationWithOccludersTask(ActiveSensingTask):
         rotate_camera=90.0,
         Prob_Obj_on_Left=0.5,
         mouse_report_delay=0.0,
-        slit_size=[4.3, 12.0],
-        slit_depth=0.2,
+        slit_size=[4.0, 10.0, 5],
+        slit_depth=0.1,
         target_selection=6.0,
         distractor_selection=0.0,
-        occlusion_type=1.0,
+        occlusion_type=0.0,
         Camera_type=1.0,
         target_spread=4.0,
         target_rotation=0,
