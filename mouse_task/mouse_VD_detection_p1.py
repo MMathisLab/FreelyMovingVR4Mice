@@ -50,7 +50,7 @@ class Detection_p1(UnityTask):
                  L_report_box = [-10, -5, -4, -2], Start_box =  [-4, 4, -9, -5, 90], 
                  rotate_camera = 90., Prob_Obj_on_Left = 0.5, mouse_report_delay = 0.0,
                  slit_size = [4.,4.,1], slit_depth = 0.1, target_selection = 6., distractor_selection = 0., occlusion_type = 0., 
-                 Camera_type = 1.0, target_spread = 4., target_rotation = 0, target_size = 2., target_height = 3., block_length = 20., start_box_delay = 0.1, 
+                 Camera_type = 1.0, target_spread = 4., target_rotation = 0, target_size = 2., target_height = 3., block_length = 1., start_box_delay = 0.1, 
                  velocity_threshold=20., distractor = 0.0, grey_screen_active = 0.0, target_distance = 3, use_dlc=False):
 
         """
@@ -120,6 +120,7 @@ class Detection_p1(UnityTask):
         
         # Game trial parameters - add to class and enforce list structure
         self.reward_size = self.as_list(reward_size)
+        self.slit_size = slit_size
         slit_sizes_list = self.as_list(slit_size)
         self.slit_sizes =  np.linspace(slit_sizes_list[0], slit_sizes_list [1], int(slit_sizes_list [2]))
 
@@ -236,7 +237,12 @@ class Detection_p1(UnityTask):
             This function sends parameters to unity when the game is reset - ie at the beginning of each trial
         """
         
-
+        if self.block_length == 1:
+            self.random_target_location()
+        if self.block_length > 1:
+            self.block_sampler()
+            
+        
         this_Prob_obj_left = self.Prob_Obj_on_Left
         print("prob left", this_Prob_obj_left)
         this_slit_size = np.random.choice(self.slit_sizes)
@@ -339,24 +345,22 @@ class Detection_p1(UnityTask):
                 self.teensy.write('r_water', [self.reward_size[0]])
             self.n_rewards += 1
            
-            if self.correct == self.block_length:
+    def random_target_location(self):
+        self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])
+        print("object on left", self.Object_on_left)
+    
+    def block_sampler(self):
+        if self.correct == self.block_length:
                 if self.block_Left == 0.0:
                      self.block_Left = 1.0
                 else:
                     self.block_Left = 0.0
                 self.correct = 0
-                
-            
-            if self.block_Left == 0.0:
-                   
-                self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])
-                
-                   
-            else:
-                self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
-            
-            print("object on left", self.Object_on_left) 
-                    
+        if self.block_Left == 0.0:  
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])   
+        else:
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
+        print("object on left", self.Object_on_left) 
                 
             
     def reset_environment(self):
@@ -430,4 +434,9 @@ class Detection_p1(UnityTask):
         data_dict ["occlusion_type"] = np.array(self.trial_occlusion_type)
         data_dict ["target_distance"] = np.array(self.trial_target_distance)
         data_dict ["target_rotation"] = np.array(self.trial_target_rotation)
+        data_dict ["reward_size"] = np.array(self.trial_reward_size)
+        data_dict ["Prob_Obj_on_Left"] = self.Prob_Obj_on_Left
+        data_dict ["slit_size_param"] = np.array(self.slit_size)
+        data_dict ["block_length_param"] = np.array(self.block_length)
+        
         return data_dict
