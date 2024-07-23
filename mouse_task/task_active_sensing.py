@@ -34,36 +34,43 @@ class ActiveSensingTask(UnityTask):
 
     Attributes:
         teensy (Teensy): Instance of Teensy class to control the microcontroller.
-        monitor (bool): Monitor parameter (not used).
-        write_video (bool): Flag to indicate if video should be written.
-        fps (float): Frames per second.
+        monitor (bool): Monitor on which to display the game. Set to `None`.
+        write_video (bool): Flag to indicate if video of visual observations should be written.
+            Caution: if possible, games should not include visual observations, as this really
+            slows down the speed of the game.
+        fps (float): Frames per second at which to write the video of visual observations.
         session_label (List[str]): Label for the session.
-        epochs (int): Number of epochs.
-        epoch_labels (List[str]): List of epoch labels.
+        epochs (int): Number of trials before parameters should be changed.
+            The task will end at the end of the last epoch is the game trial based (1) or
+            time based (0).
+        epoch_labels (List[str]): Indicates of the game is trial-based ([1]), or time-based ([0]).
         config_file_path (pathlib.Path): Path to the configuration JSON file.
         reward_size (int): Size of the reward.
         cropped_image (List[int]): Dimensions of the cropped image.
         unity_arena_size (List[int]): Dimensions of the Unity arena.
-        R_report_box (List[int]): Dimensions of the right report box.
-        L_report_box (List[int]): Dimensions of the left report box.
+        R_report_box (List[int]): Dimensions of the right water report box.
+        L_report_box (List[int]): Dimensions of the left water report box.
         Start_box (List[int]): Dimensions of the start box.
         rotate_camera (float): Camera rotation angle.
         Prob_Obj_on_Left (float): Probability of the object appearing on the left.
         mouse_report_delay (float): Delay for the mouse report.
-        slit_size (List[int]): Size of the slit.
-        slit_depth (float): Depth of the slit.
-        target_selection (float): Target selection parameter.
-        distractor_selection (float): Distractor selection parameter.
-        occlusion_type (float): Type of occlusion.
+        slit_size (List[int]): Size of the slit between occluders.
+        slit_depth (float): Depth of the slit based on depth of the occluders.
+        target_selection (float): Target selection parameter. Defines the identity
+            of the target object displayed.
+        distractor_selection (float): Distractor selection parameter. Defines the identity
+            of the distractor object displayed.
+        occlusion_type (float): Type of occlusion. Set to 0 in the init.
         Camera_type (float): Type of camera.
-        target_spread (float): Spread of the target.
-        target_rotation (float): Rotation of the target.
-        target_size (float): Size of the target.
-        target_height (float): Height of the target.
-        block_length (float): Length of the trials block.
-        start_box_delay (float): Delay for the start box.
-        velocity_threshold (float): Threshold for velocity.
-        distractor (float): Distractor parameter.
+        target_spread (float): Spread of the target object.
+        target_rotation (float): Rotation of the target object.
+        target_size (float): Size of the target object.
+        target_height (float): Height of the target object.
+        block_length (float): Length of the trials block if utilized for the training.
+        start_box_delay (float): Time that the mouse needs to stay in the start box to launch
+            the trial.
+        velocity_threshold (float): Threshold for velocity for to launch the trial.
+        distractor (float): Indicate if the distractor should be display (1) or not (0).
         grey_screen_active (float): Flag to indicate if grey screen is active.
         target_distance (float): Distance of the target.
         use_dlc (bool): Flag to indicate if DLC is used.
