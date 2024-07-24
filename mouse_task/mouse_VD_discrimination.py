@@ -316,7 +316,7 @@ class Discrimination(UnityTask):
             called by teensyexp's module Agent, This function is called on every frame of the game.
         """
      
-            output = self._get_dlc_on_frame()
+        output = self._get_dlc_on_frame()
        
         return output
 
