@@ -48,7 +48,7 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
                  reward_size = 53, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
                  R_report_box = [5, 10, -4, -2],
                  L_report_box = [-10, -5, -4, -2], Start_box =  [-4, 4, -9, -5, 90], 
-                 rotate_camera = 90., Prob_Obj_on_Left = 0.5, mouse_report_delay = 0.0,
+                 rotate_camera = 90., Prob_Obj_on_Left = 0.5, prob_block_coherence = 0.5, mouse_report_delay = 0.0,
                  slit_size = [4.,10.,5], slit_depth = 0.1, target_selection = 7., distractor_selection = 4., occlusion_type = 1.0, 
                  Camera_type = 1.0, target_spread = 4., target_rotation = 0, target_size = 2., target_height = 3., block_length = 20., start_box_delay = 0.25, 
                  velocity_threshold=10., distractor = 1.0, grey_screen_active = 0.0, target_distance = 4):
@@ -107,6 +107,7 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
        
         self.start_box_delay = start_box_delay
         self.velocity_threshold = velocity_threshold
+        self.prob_block_coherence = prob_block_coherence
         
         # Game trial parameters - add to class and enforce list structure
         self.reward_size = self.as_list(reward_size)
@@ -130,11 +131,11 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         
         if self.block_Left == 0.0:    
             print("Right block")
-            self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])  
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[self.prob_block_coherence,1 - self.prob_block_coherence])  
             
         else:
             print("Left block")
-            self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.prob_block_coherence, self.prob_block_coherence])
         
         print("Object_on_left: ", self.Object_on_left)          
                     
@@ -226,9 +227,9 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
                     self.block_Left = 0.0
                 self.correct = 0
         if self.block_Left == 0.0:  
-            self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])   
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[self.prob_block_coherence,1 - self.prob_block_coherence])   
         else:
-            self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.prob_block_coherence, self.prob_block_coherence])
         print("object on left", self.Object_on_left) 
 
     # can use this function to save data to the .pickle file and send parameters to unity
@@ -410,4 +411,5 @@ class ARVisualDiscrim_randomoccluders(UnityTask):
         data_dict["block_length_param"] = np.array(self.block_length)
         data_dict["target_spread_param"] = np.array(self.target_spread)
         data_dict["target_height_param"] = np.array(self.target_height)
+        data_dict["prob_block_coherence"] = np.array(self.prob_block_coherence)
         return data_dict
