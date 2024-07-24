@@ -1,1 +1,67 @@
-{"count":1,"self":6.9828192,"total":7.053852,"children":{"InitializeActuators":{"count":1,"self":0.001261,"total":0.001261,"children":null},"InitializeSensors":{"count":1,"self":0.001215,"total":0.001215,"children":null},"AgentSendState":{"count":2255,"self":0.015247,"total":0.037073,"children":{"CollectObservations":{"count":2255,"self":0.014331,"total":0.014331,"children":null},"WriteActionMask":{"count":2255,"self":0.00224,"total":0.00224,"children":null},"RequestDecision":{"count":2255,"self":0.005255,"total":0.005255,"children":null}}},"DecideAction":{"count":2255,"self":0.011599,"total":0.011599,"children":null},"AgentAct":{"count":2255,"self":0.019481,"total":0.019481,"children":null}},"gauges":{},"metadata":{"timer_format_version":"0.1.0","start_time_seconds":"1714552464","unity_version":"2022.3.15f1","command_line_arguments":"\/Applications\/Unity\/Hub\/Editor\/2022.3.15f1\/Unity.app\/Contents\/MacOS\/Unity -projectpath \/Users\/subnaulitus\/Documents\/EPFL\/GitHub_Repos\/FreelyMovingVR4Mice\/AugmentedReality -useHub -hubIPC -cloudEnvironment production -licensingIpc LicenseClient-subnaulitus -hubSessionId 5cb2b249-a6c0-498e-9cc8-b1a327535c04 -accessToken EeXW3QQqoHqLpi3hPsFoTonkIk954ZeGAqJVD2xcIrY008f","communication_protocol_version":"1.5.0","com.unity.ml-agents_version":"2.0.1","scene_name":"Augmented_reality_box","end_time_seconds":"1714552471"}}
+{
+	"count": 1,
+	"self": 25.2761744,
+	"total": 25.486341,
+	"children": {
+		"InitializeActuators": {
+			"count": 1,
+			"self": 0.0020556999999999997,
+			"total": 0.0020556999999999997,
+			"children": null
+		},
+		"InitializeSensors": {
+			"count": 1,
+			"self": 0.0019817999999999997,
+			"total": 0.0019817999999999997,
+			"children": null
+		},
+		"AgentSendState": {
+			"count": 5470,
+			"self": 0.0480294,
+			"total": 0.1332943,
+			"children": {
+				"CollectObservations": {
+					"count": 5470,
+					"self": 0.0562376,
+					"total": 0.0562376,
+					"children": null
+				},
+				"WriteActionMask": {
+					"count": 5470,
+					"self": 0.0110133,
+					"total": 0.0110133,
+					"children": null
+				},
+				"RequestDecision": {
+					"count": 5470,
+					"self": 0.018014,
+					"total": 0.018014,
+					"children": null
+				}
+			}
+		},
+		"DecideAction": {
+			"count": 5470,
+			"self": 0.0338797,
+			"total": 0.0338797,
+			"children": null
+		},
+		"AgentAct": {
+			"count": 5470,
+			"self": 0.0379552,
+			"total": 0.0379552,
+			"children": null
+		}
+	},
+	"gauges": {},
+	"metadata": {
+		"timer_format_version": "0.1.0",
+		"start_time_seconds": "1721395989",
+		"unity_version": "2022.3.25f1",
+		"command_line_arguments": "C:\\Program Files\\Unity\\Hub\\Editor\\2022.3.25f1\\Editor\\Unity.exe -projectpath C:\\Users\\Windows\\Documents\\Mathis_lab_code\\FreelyMovingVR4Mice_2022\\FreelyMovingVR4Mice\\AugmentedReality -useHub -hubIPC -cloudEnvironment production -licensingIpc LicenseClient-Windows -hubSessionId 3d67c660-45d0-11ef-8886-09df128c1345",
+		"communication_protocol_version": "1.5.0",
+		"com.unity.ml-agents_version": "2.0.1",
+		"scene_name": "Augmented_reality_box",
+		"end_time_seconds": "1721396014"
+	}
+}

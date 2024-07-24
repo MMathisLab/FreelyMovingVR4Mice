@@ -1,107 +1,126 @@
 """
-    These module contain Augmented Reality Visual discrimination class,
-    used to generate AR task with DLClive position tracking and unity-based visual flow,
-    It corresponds to the teensyexp module's protocol, and inherits UnityTask and GuiTask classes,
-    that make it possible to be charged via teensyexp gui dynamic module load
+This module contains the `ActiveSensingTask` class for Augmented Reality Visual discrimination tasks.
+It uses DLClive for position tracking and Unity for visual flow. This class is designed to be integrated
+with the teensyexp module, inheriting from `UnityTask` and `GuiTask` classes for dynamic task loading via GUI.
 
-    Note: the model path should be defined in the local task_config.json file
+Note: Ensure the model path is defined in the local `task_config.json` file.
 """
 
-from tkinter import Tk, Toplevel, Button
 import os
 
-# os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 
-from pathlib import Path
+import pathlib
 import numpy as np
 import time
-
-
-import numpy as np
-
-import time as time
-from multiprocessing.connection import Client
 
 from mouse_task.helpers import process_config
 
 from teensyexp.tasks_abc.unity_task import UnityTask
-from teensyexp.tasks_abc.gui_task import GuiTask
-from teensyexp.tasks_abc.dlc_socket import DLCClient
+from teensyexp.tasks_abc.dlc_deque_socket import DLCClient
+from teensyexp.teensy import Teensy
 from mouse_task.kfilter import OneEuroFilter
 
-
-config_name = Path("task_config.json")
-current_dir = Path(__file__).parent
-config_path = current_dir.joinpath(config_name)  # default class constructor input
+from typing import List, Optional
 
 
-class ARVisualDiscrim_blocks(UnityTask):
+class ActiveSensingTask(UnityTask):
     """
-    Augmented Reality Visual discrimination
-    Class that represents mouse task, inherits from UnityTask and GuiTask teensyexp module's classes
+    Active Sensing Task Class
+
+    This class represents a visual discrimination task for mice using augmented reality.
+    It inherits from UnityTask and GuiTask from the `teensyexp` module.
+
+    Attributes:
+        teensy (Teensy): Instance of Teensy class to control the microcontroller.
+        monitor (bool): Monitor on which to display the game. Set to `None`.
+        write_video (bool): Flag to indicate if video of visual observations should be written.
+            Caution: if possible, games should not include visual observations, as this really
+            slows down the speed of the game.
+        fps (float): Frames per second at which to write the video of visual observations.
+        session_label (List[str]): Label for the session.
+        epochs (int): Number of trials before parameters should be changed.
+            The task will end at the end of the last epoch is the game trial based (1) or
+            time based (0).
+        epoch_labels (List[str]): Indicates of the game is trial-based ([1]), or time-based ([0]).
+        config_file_path (pathlib.Path): Path to the configuration JSON file.
+        reward_size (int): Size of the reward.
+        cropped_image (List[int]): Dimensions of the cropped image.
+        unity_arena_size (List[int]): Dimensions of the Unity arena.
+        R_report_box (List[int]): Dimensions of the right water report box.
+        L_report_box (List[int]): Dimensions of the left water report box.
+        Start_box (List[int]): Dimensions of the start box.
+        rotate_camera (float): Camera rotation angle.
+        Prob_Obj_on_Left (float): Probability of the object appearing on the left.
+        mouse_report_delay (float): Delay for the mouse report.
+        slit_size (List[int]): Size of the slit between occluders.
+        slit_depth (float): Depth of the slit based on depth of the occluders.
+        target_selection (float): Target selection parameter. Defines the identity
+            of the target object displayed.
+        distractor_selection (float): Distractor selection parameter. Defines the identity
+            of the distractor object displayed.
+        occlusion_type (float): Type of occlusion. Set to 0 in the init.
+        Camera_type (float): Type of camera.
+        target_spread (float): Spread of the target object.
+        target_rotation (float): Rotation of the target object.
+        target_size (float): Size of the target object.
+        target_height (float): Height of the target object.
+        block_length (float): Length of the trials block if utilized for the training.
+        start_box_delay (float): Time that the mouse needs to stay in the start box to launch
+            the trial.
+        velocity_threshold (float): Threshold for velocity for to launch the trial.
+        distractor (float): Indicate if the distractor should be display (1) or not (0).
+        grey_screen_active (float): Flag to indicate if grey screen is active.
+        target_distance (float): Distance of the target.
+        use_dlc (bool): Flag to indicate if DLC is used.
     """
 
     def __init__(
         self,
-        teensy,
-        monitor=None,
-        write_video=False,
-        fps=60.0,
-        session_label=["AR_VD_blocks_training"],
-        epochs=[250],
-        epoch_labels=["baseline"],
-        config_file_path=config_path,
-        reward_size=25,
-        cropped_image=[0, 530, 0, 510],
-        unity_arena_size=[-9, 9, -10, -2],
-        R_report_box=[4, 10, -10, -8],
-        L_report_box=[-10, -4, -10, -8],
-        Start_box=[-4, 4, -7, -3, 80],
-        rotate_camera=90,
-        Prop_Obj_on_Left=0.5,
-        mouse_report_delay=0.0,
-        slit_size=20,
-        slit_depth=2,
-        target_selection=0,
-        distractor_selection=1,
-        occlusion_type=0,
-        Camera_type=0,
-        target_spread=8,
-        target_size=3,
-        target_height=1,
-        block_length=20,
-        start_box_delay=0.25,
-        velocity_threshold=8,
-        distractor=0.0,
-        grey_screen_active=0.0,
-        target_distance=3,
+        teensy: Teensy,
+        session_label: List[str],
+        config_file_path: pathlib.Path,
+        monitor: Optional[bool],
+        write_video: bool,
+        fps: float,
+        epochs: int,
+        epoch_labels: List[str],
+        reward_size: int,
+        cropped_image: List[int],
+        unity_arena_size: List[int],
+        R_report_box: List[int],
+        L_report_box: List[int],
+        Start_box: List[int],
+        rotate_camera: float,
+        Prob_Obj_on_Left: float,
+        mouse_report_delay: float,
+        slit_size: List[int],
+        slit_depth: float,
+        target_selection: float,
+        distractor_selection: float,
+        occlusion_type: float,
+        Camera_type: float,
+        target_spread: float,
+        target_rotation: float,
+        target_size: float,
+        target_height: float,
+        block_length: float,
+        start_box_delay: float,
+        velocity_threshold: float,
+        distractor: float,
+        grey_screen_active: float,
+        target_distance: float,
+        use_dlc: bool,
     ):
-        """
-        Class constructor: initialises dlc processor, dlc live, video reader
-        Uses the constructor from parent UnityTask class that creates unity env
 
-        Args:
-            teensy(Teensy object): instance of teensy class that controls teensy microcontroller
-            monitor: not used
-            write_video(boolean): False
-            fps: frames per second
-            epochs: default 250
-            config_file_path(Path object): path to config .json file (more in helpers.py)
-            reward size(int):
-
-        Returns:
-            instance of ARVisualDiscrim class
-
-        """
-
-        # initialised in init_DLC_live()
+        # Initialized in init_DLC_live()
         self.t_count = None
         self.filt = None
         self.params = None
-        self.address = ("localhost", 6000)
-        self.dlcClient = DLCClient(address=self.address)
+        if use_dlc == True:
+            self.address = ("localhost", 6000)
+            self.dlcClient = DLCClient(address=self.address)
         self.t_count = 0
         self.degrees = 0
         self.correct = 0
@@ -111,16 +130,15 @@ class ARVisualDiscrim_blocks(UnityTask):
         config_dict = process_config(config_file_path)
 
         if config_dict is None:
-            # err messages are showed on process_config() function level
+            # Error messages are showed on process_config() function level
+            print("config not found!")
             return
 
-        model_path = config_dict["model_absolute_path"]
-        dlc_video_path = config_dict["dlc_video_absolute_path"]
         env_path = config_dict["ar_env_unity_absolute_path"]
 
         super().__init__(
-            teensy,
-            env_path,
+            teensy=teensy,
+            env=env_path,
             monitor=monitor,
             write_video=write_video,
             fps=fps,
@@ -135,21 +153,55 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.R_report_box = R_report_box
         self.L_report_box = L_report_box
         self.start_box = Start_box
+
         self.start_box_delay = start_box_delay
         self.velocity_threshold = velocity_threshold
 
-        # Game trial parameters - add to class and enforce list structure
+        self.previous = np.array(
+            [
+                9,
+                -5,
+                0,
+                0,
+            ],
+            dtype=np.float16,
+        ).reshape(1, -1)
+
+        # Game trial parameters
+        # add to class and enforce list structure
         self.reward_size = self.as_list(reward_size)
-        self.slit_size = self.as_list(slit_size)
+        self.slit_size = slit_size
+        slit_sizes_list = self.as_list(slit_size)
+        self.slit_sizes = np.linspace(
+            slit_sizes_list[0], slit_sizes_list[1], int(slit_sizes_list[2])
+        )
+
         self.slit_depth = self.as_list(slit_depth)
         self.epoch_labels = self.as_list(epoch_labels)
         self.target_spread = self.as_list(target_spread)
         self.target_height = self.as_list(target_height)
         self.mouse_report_delay = self.as_list(mouse_report_delay)
-        self.Prob_Obj_on_Left = Prop_Obj_on_Left
-        self.Prob_L = Prop_Obj_on_Left
-        self.Prob_R = 1 - Prop_Obj_on_Left
-        self.object_L = 0.0
+        self.target_rotation = self.as_list(target_rotation)
+
+        self.Prob_Obj_on_Left = Prob_Obj_on_Left
+
+        self.block_Left = np.random.choice([0.0, 1.0], p=[0.5, 0.5])
+        print("block_left", self.block_Left)
+
+        if self.block_Left == 0.0:
+            print("Right block")
+            self.Object_on_left = np.random.choice(
+                [0.0, 1.0], p=[self.Prob_Obj_on_Left, 1 - self.Prob_Obj_on_Left]
+            )
+
+        else:
+            print("Left block")
+            self.Object_on_left = np.random.choice(
+                [0.0, 1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left]
+            )
+
+        print("Object_on_left: ", self.Object_on_left)
+
         self.block_length = block_length
         self.distractor = distractor
         self.target_size = target_size
@@ -158,10 +210,11 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.occlusion_type = self.as_list(occlusion_type)
         self.camera_type = Camera_type
         self.target_distance = self.as_list(target_distance)
+        self.use_dlc = use_dlc
 
         self.n_rewards = 0
 
-        # create empty vectors to keep track of game parameters per trial
+        # Create empty vectors to keep track of game parameters per trial
         self.trial_epoch_labels = []
         self.trial_reward_size = []
         self.trial_Prob_Obj_on_Left = []
@@ -173,6 +226,7 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.trial_distractor_selection = []
         self.trial_occlusion_type = []
         self.trial_target_distance = []
+        self.trial_target_rotation = []
 
         self.dlc_read_time = []
         self.dlc_x = []
@@ -181,18 +235,22 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.dlc_time_step = []
         self.trial_mouse_report_delay = []
 
+        # self.set_channel()
+        # self.reset_environment()
+
     def _get_dlc_on_frame(self):
         """
-        inner method that runS DLC on every frame
-        used in get_action(), called by teensyexp's module Agent
-        This is run on every frame after the dlc processor is initialised
+        Runs DLC on every frame.
+
+        It is used in ``get_action()``, called by teensyexp's module Agent.
+        This is run on every frame after the dlc processor is initialized.
         """
 
         # run DLC on every frame to be given as input to the agent
         this_read = self.dlcClient.read()
-        # print(this_read)
+
         if this_read != None:
-            self.params = np.array(this_read["vals"])
+            self.params = np.array(this_read["vals"][1:])
             if self.t_count == 0:
                 self.filt = OneEuroFilter(
                     t0=self.t_count,
@@ -206,6 +264,7 @@ class ARVisualDiscrim_blocks(UnityTask):
             x = self.params[0]
             z = self.params[1]
             head_angle = self.params[2]
+            photodiode_intensity = np.array(this_read["vals"])[-1]
             self.dlc_x.append(x)
             self.dlc_y.append(z)
             self.dlc_heading.append(head_angle)
@@ -223,40 +282,48 @@ class ARVisualDiscrim_blocks(UnityTask):
                 [self.unity_arena_size[2], self.unity_arena_size[3]],
             )
             self.degrees = (head_angle - (self.rotate_camera)) % 360
-            output = np.array([x, z, self.degrees])
-            # print(x, " ", z, " ")
+            output = np.array([x, z, self.degrees, photodiode_intensity])
+            self.previous = output
         else:
-            output = np.array([0, 0, 0])
-
+            # print("missed dlc frame")
+            time.sleep(0)
+            output = self.previous
         return output.reshape((1, -1))
 
-    # This gui function needs to be here - currently this is not used
-
-    # can use this function to save data to the .pickle file and send parameters to unity
     def set_channel(self):
         """
-        method inherited from task parent class interface
-        This function sends parameters to unity when the game is reset - ie at the beginning of each trial
+        Send parameters to unity when the game is reset i.e. at the beginning of each trial
+
+        Method inherited from task parent class interface.
+
+        Note: can use this function to save data to the .pickle file and send parameters to unity
         """
+
+        if self.block_length == 1:
+            self.random_target_location()
+        if self.block_length > 1:
+            self.block_sampler()
 
         this_Prob_obj_left = self.Prob_Obj_on_Left
         print("prob left", this_Prob_obj_left)
-        this_slit_size = self.get_epoch_value("slit_size")
+        this_slit_size = np.random.choice(self.slit_sizes)
+        print("slit_size", this_slit_size)
         this_slit_depth = self.get_epoch_value("slit_depth")
         this_target_spread = self.get_epoch_value("target_spread")
         this_target_height = self.get_epoch_value("target_height")
         this_mouse_report_delay = self.get_epoch_value("mouse_report_delay")
         this_target_selection = self.get_epoch_value("target_selection")
         this_distractor_selection = self.get_epoch_value("distractor_selection")
-        this_occlusion_type = self.get_epoch_value("occlusion_type")
+        this_occlusion_type = 0.0  # self.get_epoch_value("occlusion_type")
         this_target_distance = self.get_epoch_value("target_distance")
+        this_target_rotation = self.get_epoch_value("target_rotation")
 
         self.channel.set_float_parameter("cameraSelection", self.camera_type)
         self.channel.set_float_parameter("target_selection", this_target_selection)
         self.channel.set_float_parameter(
             "distractor_selection", this_distractor_selection
         )
-        self.channel.set_float_parameter("probGreenLeft", this_Prob_obj_left)
+        self.channel.set_float_parameter("Object_on_Left", self.Object_on_left)
         self.channel.set_float_parameter("slitSize", this_slit_size)
         self.channel.set_float_parameter("slit_depth", this_slit_depth)
         self.channel.set_float_parameter("targetsFromMidline", this_target_spread)
@@ -266,6 +333,8 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.channel.set_float_parameter("velocityThreshold", self.velocity_threshold)
         self.channel.set_float_parameter("occlusion_type", this_occlusion_type)
         self.channel.set_float_parameter("targetsZpos", this_target_distance)
+        self.channel.set_float_parameter("target_rotation", this_target_rotation)
+        print("this occ_type: ", this_occlusion_type)
 
         # set properties for start box, left report box and right report box
         self.channel.set_float_parameter("L_box_x_min", self.L_report_box[0])
@@ -298,20 +367,28 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.trial_distractor_selection.append(this_distractor_selection)
         self.trial_target_selection.append(this_target_selection)
         self.trial_occlusion_type.append(this_occlusion_type)
+        print(self.trial_occlusion_type)
         self.trial_target_distance.append(this_target_distance)
+        self.trial_target_rotation.append(this_target_rotation)
+        # super().reset_environment()
 
     def get_action(self):
         """
-        method that get actions from DLC and parse them to unity
-        called by teensyexp's module Agent, This function is called on every frame of the game.
+        Get actions from DLC and parse them to unity.
+
+        Called by teensyexp's module Agent.
+        This function is called on every frame of the game.
         """
-        output = self._get_dlc_on_frame()
+        if self.use_dlc == False:
+            output = self.previous
+        else:
+            output = self._get_dlc_on_frame()
 
         return output
 
     def check_reward(self):
         """
-        method to set up the reward
+        Set up the reward.
         """
         if self.reward > 0:
             self.correct += 1
@@ -326,27 +403,43 @@ class ARVisualDiscrim_blocks(UnityTask):
                 self.teensy.write("r_water", [self.reward_size[0]])
             self.n_rewards += 1
 
-            if self.correct == self.block_length:
-                if self.object_L == 0.0:
-                    self.Prob_Obj_on_Left = self.Prob_L
-                    self.object_L = 1.0
-                else:
-                    self.object_L = 0.0
-                    self.Prob_Obj_on_Left = self.Prob_R
-                self.correct = 0
+    def random_target_location(self):
+        self.Object_on_left = np.random.choice(
+            [0.0, 1.0], p=[self.Prob_Obj_on_Left, 1 - self.Prob_Obj_on_Left]
+        )
+        print("object on left", self.Object_on_left)
+
+    def block_sampler(self):
+        if self.correct == self.block_length:
+            if self.block_Left == 0.0:
+                self.block_Left = 1.0
+            else:
+                self.block_Left = 0.0
+            self.correct = 0
+        if self.block_Left == 0.0:
+            self.Object_on_left = np.random.choice(
+                [0.0, 1.0], p=[self.Prob_Obj_on_Left, 1 - self.Prob_Obj_on_Left]
+            )
+        else:
+            self.Object_on_left = np.random.choice(
+                [0.0, 1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left]
+            )
+        print("object on left", self.Object_on_left)
 
     def reset_environment(self):
         """
-        method to reset environment, use parent method implementation call
+        Reset environment.
+
+        Use parent method implementation call.
         """
         super().reset_environment()
 
     def get_info(self):
         """
-        method to get information about position and angle on the GUI
+        Get information about position and angle on the GUI
 
         Returns:
-            dictionary with 'position' and 'h_angle' keys
+            Dictionnary with 'position' and 'h_angle' keys.
         """
         pos = (
             None
@@ -372,10 +465,10 @@ class ARVisualDiscrim_blocks(UnityTask):
 
     def get_data(self):
         """
-        method to get data, parent method implementation call
+        Get data, parent method implementation call
 
         Returns:
-            dictionary with data
+            Dictionary with data
         """
         data_dict = super().get_data()
         data_dict["session_label"] = self.session_label
@@ -403,4 +496,10 @@ class ARVisualDiscrim_blocks(UnityTask):
         data_dict["distractor_selection"] = np.array(self.trial_distractor_selection)
         data_dict["occlusion_type"] = np.array(self.trial_occlusion_type)
         data_dict["target_distance"] = np.array(self.trial_target_distance)
+        data_dict["target_rotation"] = np.array(self.trial_target_rotation)
+        data_dict["reward_size"] = np.array(self.trial_reward_size)
+        data_dict["Prob_Obj_on_Left"] = self.Prob_Obj_on_Left
+        data_dict["slit_size_param"] = np.array(self.slit_size)
+        data_dict["block_length_param"] = np.array(self.block_length)
+
         return data_dict

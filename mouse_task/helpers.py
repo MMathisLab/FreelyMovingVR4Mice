@@ -45,11 +45,7 @@ def process_config(config_file_path: Path) -> dict:
         return None
 
     # Check if all necessary keys are present in the config file
-    keys = [
-        # "model_absolute_path",
-        # "dlc_video_absolute_path",
-        "ar_env_unity_absolute_path",
-    ]
+    keys = ["ar_env_unity_absolute_path"]
     for k in keys:
         if k not in config_dict:
             logging.error(k + " not in " + str(config_file_path))

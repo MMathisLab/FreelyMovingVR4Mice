@@ -67,6 +67,7 @@ public class Target_spawner : MonoBehaviour
         Ri_wall.transform.localScale += new Vector3(slitDepth-1f, 0f, 0f);
     }
     public void walls_reset(){
+
         hslitSize =  slitSize/2;
         Destroy(Le_wall);
         Destroy(Ri_wall);
@@ -191,16 +192,16 @@ public class Target_spawner : MonoBehaviour
 
 		var environmentParameters = Academy.Instance.EnvironmentParameters;
 
-		targetsheight = environmentParameters.GetWithDefault("targetsHeight", 2);
-		targetsZpos = environmentParameters.GetWithDefault("targetDistance", 4);
-		target_size = environmentParameters.GetWithDefault("targetSize", 1);
-		targetsFromMidline = environmentParameters.GetWithDefault("targetsFromMidline", 2f);
-		slitSize = environmentParameters.GetWithDefault("slitSize", 2f);
+		targetsheight = environmentParameters.GetWithDefault("targetsHeight", 3);
+		targetsZpos = environmentParameters.GetWithDefault("targetDistance", 3);
+		target_size = environmentParameters.GetWithDefault("targetSize", 2);
+		targetsFromMidline = environmentParameters.GetWithDefault("targetsFromMidline", 4f);
+		slitSize = environmentParameters.GetWithDefault("slitSize", 4.9f);
 		slitDepth = environmentParameters.GetWithDefault("slit_depth", 0.01f);
 		object_on_left = environmentParameters.GetWithDefault("Object_on_Left", 0.0f);
 		wall_height = environmentParameters.GetWithDefault("wall_height", 2f);
-		target_selection = environmentParameters.GetWithDefault("target_selection", 7f);
-		distractor_selection = environmentParameters.GetWithDefault("distractor_selection", 6f);
+		target_selection = environmentParameters.GetWithDefault("target_selection", 6f);
+		distractor_selection = environmentParameters.GetWithDefault("distractor_selection", 4f);
 		occlusion_type = environmentParameters.GetWithDefault("occlusion_type", 1f);
 		targetsZpos = environmentParameters.GetWithDefault("targetsZpos", 3f);
 

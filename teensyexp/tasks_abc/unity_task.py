@@ -88,14 +88,15 @@ class UnityTask(Task):
 
         ### start unity game ###
         self.set_channel()
+
         self.env = UnityEnvironment(
             file_name=self.env_path,
             base_port=5004,
             additional_args=self.display_args,
             side_channels=[self.channel],
         )
-        self.env.reset()
 
+        self.env.reset()
         self.agent = list(self.env.behavior_specs)[0]
         self.agent_spec = self.env.behavior_specs[self.agent]
         # print("-----> Agent: ", self.agent)
@@ -117,8 +118,32 @@ class UnityTask(Task):
         self.state = decision_steps.obs[self.vec_obs_ind]
         self.episode = 1
 
+        # - - - - - - - - - - - PREVIOUS VERSION - - - - - - - - - - - #
+        # self.agent = self.env.get_agent_groups()[self.agent_group]
+        # self.agent_spec = self.env.get_agent_group_spec(self.agent)
+
+        # obs_dim = [len(shape) for shape in self.agent_spec.observation_shapes]
+        # self.vec_obs_ind = np.where([d == 1 for d in obs_dim])[0][0]
+        # self.vis_obs_ind = np.where([d == 3 for d in obs_dim])[0]
+        # self.vis_obs_ind = self.vis_obs_ind[0] if len(self.vis_obs_ind) > 0 else None
+        # if self.vis_obs_ind:
+        #     vis_obs_shape = np.array(self.agent_spec.observation_shapes)[
+        #         self.vis_obs_ind
+        #     ]
+        #     # self.vid_writer = self.create_vid_writer(vis_obs_shape, fps) if write_video and vis_obs_shape else None
+
+        # step_result = self.get_step_result()
+        # self.state = step_result.obs[self.vec_obs_ind]
+        # self.episode = 1
+        # - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - #
+
         ### start teensy ###
         super().start()
+        # self.set_channel()
+        # self.log_channel()
+        # self.env.reset()
+        # self.set_channel()
+        # self.reset_environment()
 
     def as_list(self, val):
         """
