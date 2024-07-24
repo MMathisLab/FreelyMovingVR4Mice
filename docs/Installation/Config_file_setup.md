@@ -11,11 +11,11 @@ The local `vr4mice/cfg` is the default "config folder" (in case of absence of _c
 
 ## Task config file 
 This config file specifies the paths to dlc models and the unity game
-Adjust absolute paths in [mouse_task/task_config.json](../../mouse_task/task_config.json)
+Adjust absolute paths in [mouse_task/task_config.json](../../mouse_task/task_config.json):
 
-"model_absolute_path": path to model to apply</br>
-"dlc_video_absolute_path": path to video file to process</br>
-"ar_env_unity_absolute_path": path to unity binary environment</br>
+- `model_absolute_path`: path to model to apply
+- `dlc_video_absolute_path`: path to video file to process
+- `ar_env_unity_absolute_path`: path to unity binary environment
 
 ***Note: don't modify config file location and key-words in .json***
 
@@ -34,10 +34,10 @@ When you come to use the GUI for the first time you will have to setup the rig c
 - First connect the teensy to the computer using the USB cable
 - Then launch the GUI 
 - Open the dropdown menu under config and click on add new config, then specify: 
-    - The ***serial port*** of the specific microcontroller (e.g. on windows, COM1)
+    - The ***serial port*** of the specific microcontroller (e.g. on Windows, COM1)
     - The ***baud rate***, specified in the arduino sketch
     - List the ***inputs*** that are read from the microcontroller, separated by commas. For example, this could be lever presses.
-    - For each different command you would like to write to the microcontroller, click Add Output, and provide:
+    - For each different command you would like to write to the microcontroller, click "**Add Output**", and provide:
     - Name for the command (e.g. water). The string character associated with the command (that you have coded into the arduino sketch; e.g. W). Parameters for the command, separated by commas (e.g. duration)
     - Add subjects as desired
     - Select a directory to save your data (select Browse from the dropdown menu to add a new directory)

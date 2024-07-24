@@ -17,16 +17,16 @@ In this task, a mouse the mouse looks through a slit in the wall and has to repo
 
 
 ## Python "Task" script - Outline
-The python [task](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/mary/demo/mouse_task/mouse_ar_task.py) acts as an interface between DLClive and the unity [build](https://github.com/MMathisLab/FreelyMovingVR4Mice/tree/mary/demo/mouse_task/unity_ar) and the teensy. It can be selected from within the teensy experiments GUI by clicking on the "edit" button one the task have been selected from the dropdown menu. Here parameters such as reward size and the probability that the OOI will appear on the left can be set. This python script then logs all the data about the experiment such as the mouses position in the arena, when water was given and which side the mouse reported that the target was on. 
+The python [task](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/mary/demo/mouse_task/mouse_ar_task.py) acts as an interface between DLClive and the Unity [build](https://github.com/MMathisLab/FreelyMovingVR4Mice/tree/mary/demo/mouse_task/unity_ar) and the teensy. It can be selected from within the **Teensy Experiment** GUI by clicking on the "**Edit Task**" button once the task has been selected from the dropdown menu. Here parameters such as reward size and the probability that the OOI will appear on the left can be set. This python script then logs all the data about the experiment such as the mouses position in the arena, when water was given and which side the mouse reported that the target was on. 
 
-In takes the form of a parent class over a base class (called `unity_task`) and receives inputs within the `__init__()` function. These inputs can easily be modified from within the teensy experiments GUI by first loading the task and clicking on the edit button. This will present you with a window where these inputs can be modified. When the task is run (by clicking ready, followed by start) these inputs are assigned to class variables so that they can be made available to all the methods of the class.
+In takes the form of a parent class over a base class (called `unity_task`) and receives inputs within the `__init__()` function. These inputs can easily be modified from within the teensy experiments GUI by first loading the task and clicking on the edit button. This will present you with a window where these inputs can be modified. When the task is run (by clicking "**Ready**", followed by "**Start**") these inputs are assigned to class variables so that they can be made available to all the methods of the class.
 
 There are four main functions within the script that control different aspects of the game:
 
 1. `set_channel()` - this is called at the beginning of each trail and can be used to send parameters to the unity game.
-2. `get_action()` - this function is called on every frame and its output is sent as "actions" to the unity game. In our case of wanting to use a freely moving animal to control the game this function calls another function that reads the DLC data from a socket which the DLCliveGUI is sending data to. Currently, this data is the animals x,y positions and its heading angle. These coordinates from the images are then mapped to game coordinates and sent to the unity game to control the game cameras, changing how the environment is rendered on the screens.
+2. `get_action()` - this function is called on every frame and its output is sent as "actions" to the unity game. In our case of wanting to use a freely moving animal to control the game this function calls another function that reads the DLC data from a socket which the DLCliveGUI is sending data to. Currently, this data is the animals (x,y) positions and its heading angle. These coordinates from the images are then mapped to game coordinates and sent to the unity game to control the game cameras, changing how the environment is rendered on the screens.
 3. `check_reward()` - this function is called on every frame and checks if a reward has been given within the unity game. If it has the function sends a command to the teensy to deliver a water reward.
-4. `get_data()` - this function is called when the "save task data" button within the GUI is pressed at the end of an experiment. This saves the data into a pickle file with the mouse_name that is defined in the GUI, followed by the data and the attempt (**Dodo_170722_1.pkl**)
+4. `get_data()` - this function is called when the "**Save Task Data**" button within the GUI is pressed at the end of an experiment. This saves the data into a pickle file with the mouse_name that is defined in the GUI, followed by the data and the attempt (**Dodo_170722_1.pkl**)
 If you want to modify the task handling you can edit the code within these functions to change how the task runs.
 
 
@@ -232,7 +232,7 @@ Finally, this function gets called by the `get_action()`function. This function 
 ```
 
 ### Data saving functionality
-At the end of the experiment, we want to save various forms of data such as trial by trial parameters and frame by frame actions that the animal took. This can be done by creating lists that can be appended with these parameters either when a trial begins or on each frame of the game. These can then all be saved into a **.pkl** file by the `get_data()` function in the python task file. Data gets saved by then clicking the save data button within the **vr4mice GUI**.
+At the end of the experiment, we want to save various forms of data such as trial by trial parameters and frame by frame actions that the animal took. This can be done by creating lists that can be appended with these parameters either when a trial begins or on each frame of the game. These can then all be saved into a **.pkl** file by the `get_data()` function in the python task file. Data gets saved by then clicking the "**Save Data**" button within the **vr4mice GUI**.
 
 
 

@@ -7,7 +7,7 @@ Operating system: Windows 10 Pro: Includes TensorFlow, PyTorch, CUDA, cuDNN, and
 
 CPU Cooler: Air cooling
 
-GPUs: 2x RTX 3080 
+GPUs: 2 x RTX 3080 
 
 Memory: 128 GB
 
@@ -15,7 +15,7 @@ Operating system drive: 1 TB SSD (NVMe)
 
 Data drive: 2 TB SSD (SATA)
 
-Network: 2x 1 gigabit LAN (RJ45)
+Network: 2 x 1 gigabit LAN (RJ45)
 
 Case: Lambda Vector case
 
@@ -34,9 +34,9 @@ Two cameras are necessary if you would like to use 3d reconstruction.
 
 15 x [Right-Angle Bracket for 25 mm Rails](https://www.thorlabs.com/thorproduct.cfm?partnumber=XE25A90)
 
-2x [Drop-In T-Nut, 1/4\"-20 Tapped Hole, 10 Pack](http://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=4101)
+2 x [Drop-In T-Nut, 1/4\"-20 Tapped Hole, 10 Pack](http://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=4101)
 
-1x [1/4\"-20 Low-Profile Channel Screw, 5/8\" Long, 50 Pack](http://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=4101)
+1 x [1/4\"-20 Low-Profile Channel Screw, 5/8\" Long, 50 Pack](http://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=4101)
 
 
 ## Teensy components:
@@ -50,7 +50,7 @@ We will send across one of our custom PCB boards with these components attached 
 
 
 ## Monitors:
-5x acer (SB241Y) + HDMI cables
+5 x acer (SB241Y) + HDMI cables
 
 4 monitors for the mouse setup, 1 for launching the task.
 
@@ -68,16 +68,16 @@ We will send across one of our custom PCB boards with these components attached 
 
 ## Anti-reflection material: 
 
-4x [0.9 neutral density filters](https://www.amazon.com/Filters-Neutral-Density-Compact-Roll/dp/B0C5KT8H5P/ref=sr_1_3?crid=LZW094XXVJMZ&keywords=LEE+Filters+211+0.9+Neutral+Density+Filter&qid=1698694952&sprefix=lee+filters+211+0.9+neutral+density+filter%2Caps%2C412&sr=8-3). For all screens, to decrease the monitor luminance into the 10 cd/m2 range.
+4 x [0.9 neutral density filters](https://www.amazon.com/Filters-Neutral-Density-Compact-Roll/dp/B0C5KT8H5P/ref=sr_1_3?crid=LZW094XXVJMZ&keywords=LEE+Filters+211+0.9+Neutral+Density+Filter&qid=1698694952&sprefix=lee+filters+211+0.9+neutral+density+filter%2Caps%2C412&sr=8-3). For all screens, to decrease the monitor luminance into the 10 cd/m2 range.
 
-1x [Anti-glare adhesive](https://www.amazon.com/dp/B0BZ33NP92?ref_=cm_sw_r_cso_cp_apin_dp_MFR3FADA7P2NRNE6F3CY&starsLeft=1&language=en-US&th=1). For the floor. The size is not exactly the same as the setup floor. The seam needs to be at the back of the box (close to the back monitor). Mice do not seem to show interest in it (or very briefly at the beginning).
+1 x [Anti-glare adhesive](https://www.amazon.com/dp/B0BZ33NP92?ref_=cm_sw_r_cso_cp_apin_dp_MFR3FADA7P2NRNE6F3CY&starsLeft=1&language=en-US&th=1). For the floor. The size is not exactly the same as the setup floor. The seam needs to be at the back of the box (close to the back monitor). Mice do not seem to show interest in it (or very briefly at the beginning).
 
 
 ## Transparent Perspex box:
 
-2x Floor: 520 x 520 x 5 mm (transparent plastic = PMMA).
+2 x Floor: 520 x 520 x 5 mm (transparent plastic = PMMA).
 
-4x Sides: 525 x 360 x 5 mm (transparent plastic = PMMA).
+4 x Sides: 525 x 360 x 5 mm (transparent plastic = PMMA).
 
 1x [light diffuser](https://www.thomannmusic.ch/lee_farbfolie_rolle_216_w_diffusi.htm) (The size of the sheet must be able to cover the floor plate ie. 520mm x 520mm)
 

@@ -1,13 +1,14 @@
 # Cage for mounting monitors and cameras
-The cage design can be found [here](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/stl_files/ARrig_cage.stl) Note: two of the monitors have been removed so that you can see the transparent box in the middle of the cage.
+The cage design can be found [here](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/stl_files/ARrig_cage.stl).
+> _**Note**: two of the monitors have been removed so that you can see the transparent box in the middle of the cage._
 
 To build the cage you will want to cut the thor labs [optical rails](https://www.thorlabs.com/thorproduct.cfm?partnumber=XE25RL2) down to size and then thread them with an imperial thread drill.
 
 Here are the sizes that you will need to cut:
 
-- 4 x 540mm Cage floor pieces
-- 4 x 540mm Cage top pieces
-- 4 x 550mm Cage vertical pieces
+- 4 x 540mm cage floor pieces
+- 4 x 540mm cage top pieces
+- 4 x 550mm cage vertical pieces
 - 1 x 540mm cross bar for camera mounting
 - 2 x 200mm pieces which which will go either side of the cross bar
 
@@ -33,7 +34,7 @@ Attach the 4 x Cage floor pieces together in a square using the corner cubes and
 
 Once this structure is made you can then attach the monitor mounts to the cage by placing a [Drop-In T-Nut](http://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=4101) and screw through the monitor mounts. These can then be slotted into the vertical optical rail pieces. Each monitor should have 1 bottom monitor + box holder (ie the ones with the big pieces of plastic as wings), 1 bottom monitor holder and 2x top monitor holders.
 
-I find it helps to place the transparent plastic box inside this cage now and then you can build the top of the cage using the top cage rails and corner cubes - screw these all into place. 
+We recommend placing the transparent plastic box inside this cage now, then you can start building the top of the cage using the top cage rails and corner cubes - screw these all into place. 
 
 The cross bar for mounting can then be added by fixing the two pieces to hold the cross beam using two right angled brackets. The cross beam can then be mounted between these pieces with an additional two right angled brackets. The imaging source camera can then be mounted in the middle of this beam using a right angled bracket and drop in T-nut.
 
