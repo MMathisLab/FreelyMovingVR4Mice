@@ -1,18 +1,18 @@
 import logging
-from PyQt5.QtWidgets import (
-    QLabel,
-    QGridLayout,
-    QComboBox,
-    QVBoxLayout,
-    QCheckBox,
-    QPlainTextEdit,
-    QLineEdit,
-)
-from PyQt5.QtCore import Qt
 
-from utils.helpers import get_idx, get_min_len
-from utils.alert import AlertMsg
 from modules.template import Template
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QGridLayout,
+    QLabel,
+    QLineEdit,
+    QPlainTextEdit,
+    QVBoxLayout,
+)
+from utils.alert import AlertMsg
+from utils.helpers import get_idx, get_min_len
 
 """
     Script contains the experiment's session related GUI module 

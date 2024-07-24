@@ -2,8 +2,8 @@
     Minimal Schema version for experimental information
 """
 
-import pathlib
 import os
+import pathlib
 
 import datajoint as dj
 import PIL.Image

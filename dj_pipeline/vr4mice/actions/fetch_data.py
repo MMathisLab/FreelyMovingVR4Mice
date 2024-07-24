@@ -1,18 +1,17 @@
-import numpy as np
-import datajoint as dj
+import datetime
 import os
 import sys
-import datetime
+
+import datajoint as dj
+import numpy as np
 
 """
     Script that fetches the data from database 
     to create a dictionary that will be used in the GUI's dropdown menus 
 """
 
+from base_schemas.schemas import exp, mice
 from vr4mice.utils.logger import Logger
-
-from base_schemas.schemas import exp
-from base_schemas.schemas import mice
 
 
 def _create_mice_dict(all_mice: dict) -> dict:

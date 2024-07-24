@@ -1,9 +1,10 @@
 import logging
-from PyQt5.QtWidgets import QLabel, QGridLayout, QComboBox, QVBoxLayout
+
+from modules.template import Template
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QComboBox, QGridLayout, QLabel, QVBoxLayout
 from utils.alert import AlertMsg
 from utils.helpers import get_idx, get_size, get_step
-from modules.template import Template
 
 """
     Script contains the mouse related GUI module 

@@ -1,7 +1,8 @@
-import datajoint as dj
 import logging
 from datetime import datetime as dt
 from pathlib import Path
+
+import datajoint as dj
 
 """
     Logger initialisation script

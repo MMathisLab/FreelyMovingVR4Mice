@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from PyQt5.QtWidgets import QLabel, QComboBox, QLineEdit
+
 from PyQt5.QtCore import Qt
-from utils.helpers import get_size, get_min_len
+from PyQt5.QtWidgets import QComboBox, QLabel, QLineEdit
+from utils.helpers import get_min_len, get_size
 from utils.utils import get_options
 
 """

@@ -13,10 +13,6 @@ This code was initially developed by **Gary Kane**, **Michael Beauzile**, and **
 ### VR system:
 - VR freely moving system (DLC + Unity)
 
-#### Specific VR tasks:
-
-- WIP
-
 ### DLC-Live! + Unity3D:
 
 - VR controlled via real-time pose estimation

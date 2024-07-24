@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-import os, shutil
+import os
+import shutil
+from pathlib import Path
+
 from base_schemas.schemas import mice
 from vr4mice.utils.logger import Logger
-from pathlib import Path
 
 """
     Ensemble of functions referenced in the "local definition" dictionary 

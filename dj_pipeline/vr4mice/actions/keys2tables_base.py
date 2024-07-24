@@ -1,5 +1,5 @@
-from base_schemas.schemas import mice, exp
-from vr4mice.actions.helpers_dj import get_session_incr, no_value, default
+from base_schemas.schemas import exp, mice
+from vr4mice.actions.helpers_dj import default, get_session_incr, no_value
 
 """
     Skeleton of base_schemas (mice, exp) datajoint tables definitions used for the population:
