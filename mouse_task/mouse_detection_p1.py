@@ -48,7 +48,7 @@ class DetectionNoVelocityThreshold(UnityTask):
                  reward_size = 100, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
                  R_report_box = [5, 10, -4, -2],
                  L_report_box = [-10, -5, -4, -2], Start_box =  [-4, 4, -9, -5, 90], 
-                 rotate_camera = 90., Prob_Obj_on_Left = 0.5, mouse_report_delay = 0.0,
+                 rotate_camera = 90., Prob_Obj_on_Left = 0.5, prob_block_coherence = 0.5, mouse_report_delay = 0.0,
                  slit_size = [4.,4.,1], slit_depth = 0.1, target_selection = 6., distractor_selection = 0., occlusion_type = 0., 
                  Camera_type = 1.0, target_spread = 4., target_rotation = 0, target_size = 2., target_height = 3., block_length = 1., start_box_delay = 0.1, 
                  velocity_threshold=20., distractor = 0.0, grey_screen_active = 0.0, target_distance = 3, use_dlc=True):
@@ -133,6 +133,7 @@ class DetectionNoVelocityThreshold(UnityTask):
         self.target_rotation = self.as_list(target_rotation)
         
         self.Prob_Obj_on_Left = Prob_Obj_on_Left
+        self.prob_block_coherence = prob_block_coherence
         
         self.block_Left = np.random.choice([0.0,1.0], p=[0.5,0.5])
         print("block_left", self.block_Left)
@@ -140,11 +141,11 @@ class DetectionNoVelocityThreshold(UnityTask):
         
         if self.block_Left == 0.0:    
             print("Right block")
-            self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])  
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[self.prob_block_coherence,1 - self.prob_block_coherence])  
             
         else:
             print("Left block")
-            self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.prob_block_coherence, self.prob_block_coherence])
         
         print("Object_on_left: ", self.Object_on_left)          
                     
@@ -242,7 +243,6 @@ class DetectionNoVelocityThreshold(UnityTask):
         if self.block_length > 1:
             self.block_sampler()
             
-        
         this_Prob_obj_left = self.Prob_Obj_on_Left
         print("prob left", this_Prob_obj_left)
         this_slit_size = np.random.choice(self.slit_sizes)
@@ -346,7 +346,7 @@ class DetectionNoVelocityThreshold(UnityTask):
             self.n_rewards += 1
            
     def random_target_location(self):
-        self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])
+        self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
         print("object on left", self.Object_on_left)
     
     def block_sampler(self):
@@ -357,9 +357,9 @@ class DetectionNoVelocityThreshold(UnityTask):
                     self.block_Left = 0.0
                 self.correct = 0
         if self.block_Left == 0.0:  
-            self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])   
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[self.prob_block_coherence,1 - self.prob_block_coherence])   
         else:
-            self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.prob_block_coherence, self.prob_block_coherence])
         print("object on left", self.Object_on_left) 
                 
             
@@ -382,9 +382,6 @@ class DetectionNoVelocityThreshold(UnityTask):
         velocity = None if self.state is None else "%0.2f" % (self.state[-1])
         in_left_box = None if self.state is None else "%0.2f" % (self.state[7])
         in_right_box = None if self.state is None else "%0.2f" % (self.state[8])
-        
-        
-        
         
 
         return {
@@ -438,5 +435,5 @@ class DetectionNoVelocityThreshold(UnityTask):
         data_dict ["Prob_Obj_on_Left"] = self.Prob_Obj_on_Left
         data_dict ["slit_size_param"] = np.array(self.slit_size)
         data_dict ["block_length_param"] = np.array(self.block_length)
-        
+        data_dict ["prob_block_coherence"] = np.array(self.prob_block_coherence)
         return data_dict
