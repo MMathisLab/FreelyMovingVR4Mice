@@ -18,7 +18,9 @@ current_dir = pathlib.Path(__file__).parent
 config_path = current_dir.joinpath(config_name)  # default class constructor input
 
 
+
 class DiscriminationWithOccludersTask(ActiveSensingTask):
+
     """
     Discrimination task with occluders on.
     """
