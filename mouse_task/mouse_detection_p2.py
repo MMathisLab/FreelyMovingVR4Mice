@@ -10,7 +10,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 import pathlib
 import time as time
 
-from FreelyMovingVR4Mice.mouse_task.task_active_sensing import ActiveSensingTask
+from mouse_task.task_active_sensing import ActiveSensingTask
 
 
 config_name = pathlib.Path("task_config.json")
