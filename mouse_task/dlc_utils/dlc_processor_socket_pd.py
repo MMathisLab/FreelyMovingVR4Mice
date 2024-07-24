@@ -13,7 +13,7 @@ from dlclive import Processor
 from math import sqrt, acos, atan2, copysign, pi, degrees
 
 class dlc_inference_w_pd(Processor):
-    def __init__(self, com = "COM5", baudrate=9600, signal_delay = 10, signal_type ="pulse", freq =5, use_teensy = 1):
+    def __init__(self, com = "COM3", baudrate=9600, signal_delay = 10, signal_type ="pulse", freq =5, use_teensy = 1):
         super().__init__()
        # self.queue = queue
         

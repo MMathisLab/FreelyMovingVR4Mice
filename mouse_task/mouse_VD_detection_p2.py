@@ -315,10 +315,9 @@ class Detection_p2(UnityTask):
             method that get actions from DLC and parse them to unity
             called by teensyexp's module Agent, This function is called on every frame of the game.
         """
-        if self.use_dlc == False:
-            output = self.previous
-        else:   
-            output = self._get_dlc_on_frame()
+      
+          
+        output = self._get_dlc_on_frame()
        
         return output
 
