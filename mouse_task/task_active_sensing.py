@@ -48,9 +48,9 @@ class ActiveSensingTask(UnityTask):
         reward_size (int): Size of the reward.
         cropped_image (List[int]): Dimensions of the cropped image.
         unity_arena_size (List[int]): Dimensions of the Unity arena.
-        R_report_box (List[int]): Dimensions of the right water report box.
-        L_report_box (List[int]): Dimensions of the left water report box.
-        Start_box (List[int]): Dimensions of the start box.
+        r_report_box (List[int]): Dimensions of the right water report box.
+        l_report_box (List[int]): Dimensions of the left water report box.
+        start_box (List[int]): Dimensions of the start box.
         rotate_camera (float): Camera rotation angle.
         prob_obj_on_left (float): Probability of the object appearing on the left.
         mouse_report_delay (float): Delay for the mouse report.
@@ -61,7 +61,7 @@ class ActiveSensingTask(UnityTask):
         distractor_selection (float): Distractor selection parameter. Defines the identity
             of the distractor object displayed.
         occlusion_type (float): Type of occlusion. Set to 0 in the init.
-        Camera_type (float): Type of camera.
+        camera_type (float): Type of camera.
         target_spread (float): Spread of the target object.
         target_rotation (float): Rotation of the target object.
         target_size (float): Size of the target object.
@@ -89,9 +89,9 @@ class ActiveSensingTask(UnityTask):
         reward_size: int,
         cropped_image: List[int],
         unity_arena_size: List[int],
-        R_report_box: List[int],
-        L_report_box: List[int],
-        Start_box: List[int],
+        r_report_box: List[int],
+        l_report_box: List[int],
+        start_box: List[int],
         rotate_camera: float,
         prob_obj_on_left: float,
         prob_block_coherence: float,
@@ -101,7 +101,7 @@ class ActiveSensingTask(UnityTask):
         target_selection: float,
         distractor_selection: float,
         occlusion_type: float,
-        Camera_type: float,
+        camera_type: float,
         target_spread: float,
         target_rotation: float,
         target_size: float,
@@ -151,9 +151,9 @@ class ActiveSensingTask(UnityTask):
         self.cropped_image = cropped_image
         self.unity_arena_size = unity_arena_size
         self.rotate_camera = rotate_camera
-        self.R_report_box = R_report_box
-        self.L_report_box = L_report_box
-        self.start_box = Start_box
+        self.r_report_box = r_report_box
+        self.l_report_box = l_report_box
+        self.start_box = start_box
 
         self.start_box_delay = start_box_delay
         self.velocity_threshold = velocity_threshold
@@ -210,7 +210,7 @@ class ActiveSensingTask(UnityTask):
         self.target_selection = self.as_list(target_selection)
         self.distractor_selection = self.as_list(distractor_selection)
         self.occlusion_type = self.as_list(occlusion_type)
-        self.camera_type = Camera_type
+        self.camera_type = camera_type
         self.target_distance = self.as_list(target_distance)
         self.use_dlc = use_dlc
 
@@ -339,15 +339,15 @@ class ActiveSensingTask(UnityTask):
         print("this occ_type: ", this_occlusion_type)
 
         # set properties for start box, left report box and right report box
-        self.channel.set_float_parameter("L_box_x_min", self.L_report_box[0])
-        self.channel.set_float_parameter("L_box_x_max", self.L_report_box[1])
-        self.channel.set_float_parameter("L_box_z_min", self.L_report_box[2])
-        self.channel.set_float_parameter("L_box_z_max", self.L_report_box[3])
+        self.channel.set_float_parameter("L_box_x_min", self.l_report_box[0])
+        self.channel.set_float_parameter("L_box_x_max", self.l_report_box[1])
+        self.channel.set_float_parameter("L_box_z_min", self.l_report_box[2])
+        self.channel.set_float_parameter("L_box_z_max", self.l_report_box[3])
 
-        self.channel.set_float_parameter("R_box_x_min", self.R_report_box[0])
-        self.channel.set_float_parameter("R_box_x_max", self.R_report_box[1])
-        self.channel.set_float_parameter("R_box_z_min", self.R_report_box[2])
-        self.channel.set_float_parameter("R_box_z_max", self.R_report_box[3])
+        self.channel.set_float_parameter("R_box_x_min", self.r_report_box[0])
+        self.channel.set_float_parameter("R_box_x_max", self.r_report_box[1])
+        self.channel.set_float_parameter("R_box_z_min", self.r_report_box[2])
+        self.channel.set_float_parameter("R_box_z_max", self.r_report_box[3])
 
         self.channel.set_float_parameter("TT_box_x_min", self.start_box[0])
         self.channel.set_float_parameter("TT_box_x_max", self.start_box[1])
@@ -481,8 +481,8 @@ class ActiveSensingTask(UnityTask):
         data_dict["block_labels"] = np.array(self.trial_epoch_labels)
         data_dict["slit_size"] = np.array(self.trial_slit_size)
         data_dict["trial_slit_depth"] = np.array(self.trial_slit_depth)
-        data_dict["r_report_box"] = np.array(self.R_report_box)
-        data_dict["l_report_box"] = np.array(self.L_report_box)
+        data_dict["r_report_box"] = np.array(self.r_report_box)
+        data_dict["l_report_box"] = np.array(self.l_report_box)
         data_dict["start_box"] = np.array(self.start_box)
         data_dict["cropped_image"] = np.array(self.cropped_image)
         data_dict["unity_arena_size"] = np.array(self.unity_arena_size)
