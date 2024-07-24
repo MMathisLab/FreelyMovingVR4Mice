@@ -27,7 +27,7 @@ from mouse_task.helpers import process_config
 
 from teensyexp.tasks_abc.unity_task import UnityTask
 from teensyexp.tasks_abc.gui_task import GuiTask
-from teensyexp.tasks_abc.dlc_socket import DLCClient
+from teensyexp.tasks_abc.dlc_deque_socket import DLCClient
 from mouse_task.kfilter import OneEuroFilter
 
 
@@ -36,22 +36,22 @@ config_name = Path("task_config.json")
 current_dir = Path(__file__).parent
 config_path = current_dir.joinpath(config_name) # default class constructor input
 
-class ARVisualDiscrim_blocks(UnityTask):
+class DetectionVelocityThreshold(UnityTask):
     """
         Augmented Reality Visual discrimination
         Class that represents mouse task, inherits from UnityTask and GuiTask teensyexp module's classes
     """
 
-    def __init__(self, teensy, monitor=None, write_video=False, fps=60.0, session_label = ["AR_VD_blocks_training"],
-                 epochs=[250], epoch_labels = ["baseline"],
+    def __init__(self, teensy, monitor=None, write_video=False, fps=60.0, session_label = ["AR_VD_detection_p1"],
+                 epochs=[250], epoch_labels = ["single_teardrop"],
                  config_file_path = config_path,
-                 reward_size = 25, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
-                 R_report_box = [4, 10, -10, -8],
-                 L_report_box = [-10, -4, -10, -8], Start_box =  [-4, 4, -7, -3, 80], 
-                 rotate_camera = 90, Prop_Obj_on_Left = 0.5, mouse_report_delay = 0.0,
-                 slit_size = 20, slit_depth = 2, target_selection = 0, distractor_selection = 1, occlusion_type = 0, 
-                 Camera_type = 0, target_spread = 8, target_size = 3, target_height = 1, block_length = 20, start_box_delay = 0.25, 
-                 velocity_threshold=8, distractor = 0.0, grey_screen_active = 0.0, target_distance = 3):
+                 reward_size = 100, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
+                 R_report_box = [5, 10, -4, -2],
+                 L_report_box = [-10, -5, -4, -2], Start_box =  [-4, 4, -9, -5, 90], 
+                 rotate_camera = 90., Prob_Obj_on_Left = 0.5, mouse_report_delay = 0.0,
+                 slit_size = [4.,10.,5], slit_depth = 0.1, target_selection = 6., distractor_selection = 0., occlusion_type = 0.0, 
+                 Camera_type = 1.0, target_spread = 4., target_rotation = 0, target_size = 2., target_height = 3., block_length = 20., start_box_delay = 0.25, 
+                 velocity_threshold=10., distractor = 0.0, grey_screen_active = 0.0, target_distance = 3):
 
         """
             Class constructor: initialises dlc processor, dlc live, video reader
@@ -76,6 +76,7 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.t_count = None
         self.filt = None
         self.params = None
+        
         self.address = ('localhost', 6000)
         self.dlcClient = DLCClient(address=self.address)
         self.t_count = 0
@@ -89,14 +90,13 @@ class ARVisualDiscrim_blocks(UnityTask):
 
         if config_dict is None:
         # err messages are showed on process_config() function level
+            print("config not found!")
             return
-
-        model_path = config_dict["model_absolute_path"]
-        dlc_video_path = config_dict["dlc_video_absolute_path"]
+        
         env_path = config_dict["ar_env_unity_absolute_path"]
 
         super().__init__(teensy, env_path, monitor=monitor, write_video=write_video, fps=fps, epochs=epochs, epoch_trials=True)
-
+        
         # Game parameters
         self.cropped_image = cropped_image
         self.unity_arena_size = unity_arena_size
@@ -104,21 +104,49 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.R_report_box = R_report_box
         self.L_report_box = L_report_box
         self.start_box = Start_box
+       
         self.start_box_delay = start_box_delay
         self.velocity_threshold = velocity_threshold
         
+        self.previous = np.array(
+            [
+                9,
+                -5,
+                0,
+                0,
+            ],
+            dtype=np.float16,
+        ).reshape(1, -1)
+        
         # Game trial parameters - add to class and enforce list structure
         self.reward_size = self.as_list(reward_size)
-        self.slit_size = self.as_list(slit_size)
+        slit_sizes_list = self.as_list(slit_size)
+        self.slit_sizes =  np.linspace(slit_sizes_list[0], slit_sizes_list [1], int(slit_sizes_list [2]))
+
+        
         self.slit_depth = self.as_list(slit_depth)
         self.epoch_labels = self.as_list(epoch_labels)
         self.target_spread = self.as_list(target_spread)
         self.target_height = self.as_list(target_height)
         self.mouse_report_delay = self.as_list(mouse_report_delay)
-        self.Prob_Obj_on_Left = Prop_Obj_on_Left
-        self.Prob_L = Prop_Obj_on_Left
-        self.Prob_R = 1 - Prop_Obj_on_Left
-        self.object_L = 0.0
+        self.target_rotation = self.as_list(target_rotation)
+        
+        self.Prob_Obj_on_Left = Prob_Obj_on_Left
+        
+        self.block_Left = np.random.choice([0.0,1.0], p=[0.5,0.5])
+        print("block_left", self.block_Left)
+        
+        
+        if self.block_Left == 0.0:    
+            print("Right block")
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])  
+            
+        else:
+            print("Left block")
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
+        
+        print("Object_on_left: ", self.Object_on_left)          
+                    
         self.block_length = block_length
         self.distractor = distractor
         self.target_size = target_size
@@ -127,7 +155,7 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.occlusion_type = self.as_list(occlusion_type)
         self.camera_type = Camera_type
         self.target_distance =self.as_list(target_distance)
-        
+       
         
 
         self.n_rewards = 0
@@ -144,6 +172,7 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.trial_distractor_selection = []
         self.trial_occlusion_type = []
         self.trial_target_distance = []
+        self.trial_target_rotation = []
         
         self.dlc_read_time = []
         self.dlc_x = []
@@ -151,8 +180,10 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.dlc_heading = [] 
         self.dlc_time_step = []
         self.trial_mouse_report_delay = []
-
-
+        #self.set_channel()
+        
+        #self.reset_environment()
+        
 
     def _get_dlc_on_frame(self):
         """
@@ -163,9 +194,10 @@ class ARVisualDiscrim_blocks(UnityTask):
         
         # run DLC on every frame to be given as input to the agent
         this_read = self.dlcClient.read()
-        #print(this_read)
+        
+    
         if this_read != None:
-            self.params = np.array(this_read ["vals"])
+            self.params = np.array(this_read ["vals"][1:])
             if self.t_count == 0:
                 self.filt = OneEuroFilter(t0 = self.t_count, x0 = np.array(self.params), beta=0.01, min_cutoff=0.01)
             else:
@@ -174,6 +206,7 @@ class ARVisualDiscrim_blocks(UnityTask):
             x = self.params [0]
             z = self.params [1]
             head_angle = self.params [2]
+            photodiode_intensity = np.array(this_read ["vals"])[-1]
             self.dlc_x.append(x)
             self.dlc_y.append(z)
             self.dlc_heading.append(head_angle)
@@ -183,12 +216,12 @@ class ARVisualDiscrim_blocks(UnityTask):
             x = np.interp(x,[self.cropped_image[0],self.cropped_image[1]], [self.unity_arena_size [0],self.unity_arena_size [1]])
             z = np.interp(z,[self.cropped_image[2],self.cropped_image[3]], [self.unity_arena_size [2],self.unity_arena_size [3]])
             self.degrees = (head_angle - (self.rotate_camera)) % 360; 
-            output = np.array([x,z,self.degrees])
-            #print(x, " ", z, " ")
+            output = np.array([x,z, self.degrees, photodiode_intensity])
+            self.previous=output
         else:
-            output = np.array([0,0,0])
-    
-     
+            #print("missed dlc frame")
+            time.sleep(0)
+            output = self.previous
         return(output.reshape((1,-1)))
 
         
@@ -202,53 +235,59 @@ class ARVisualDiscrim_blocks(UnityTask):
             method inherited from task parent class interface
             This function sends parameters to unity when the game is reset - ie at the beginning of each trial
         """
+        
 
         this_Prob_obj_left = self.Prob_Obj_on_Left
         print("prob left", this_Prob_obj_left)
-        this_slit_size = self.get_epoch_value("slit_size")
+        this_slit_size = np.random.choice(self.slit_sizes)
+        print("slit_size", this_slit_size)
         this_slit_depth = self.get_epoch_value("slit_depth")
         this_target_spread = self.get_epoch_value("target_spread")
         this_target_height = self.get_epoch_value("target_height")
         this_mouse_report_delay = self.get_epoch_value("mouse_report_delay")
         this_target_selection = self.get_epoch_value("target_selection")
         this_distractor_selection = self.get_epoch_value("distractor_selection")
-        this_occlusion_type = self.get_epoch_value("occlusion_type")
+        this_occlusion_type = 0.0 #self.get_epoch_value("occlusion_type")
         this_target_distance = self.get_epoch_value("target_distance")
+        this_target_rotation = self.get_epoch_value("target_rotation")
 
 
-        self.channel.set_property("cameraSelection", self.camera_type)
-        self.channel.set_property("target_selection", this_target_selection)
-        self.channel.set_property("distractor_selection", this_distractor_selection)
-        self.channel.set_property("probGreenLeft", this_Prob_obj_left)
-        self.channel.set_property("slitSize", this_slit_size)
-        self.channel.set_property("slit_depth", this_slit_depth)
-        self.channel.set_property("targetsFromMidline", this_target_spread)
-        self.channel.set_property("targetsheight", this_target_height)
-        self.channel.set_property("mouseReportDelay", this_mouse_report_delay)
-        self.channel.set_property("startBoxDelay", self.start_box_delay)
-        self.channel.set_property("velocityThreshold", self.velocity_threshold)
-        self.channel.set_property("occlusion_type", this_occlusion_type)
-        self.channel.set_property("targetsZpos", this_target_distance)
+        self.channel.set_float_parameter("cameraSelection", self.camera_type)
+        self.channel.set_float_parameter("target_selection", this_target_selection)
+        self.channel.set_float_parameter("distractor_selection", this_distractor_selection)
+        self.channel.set_float_parameter("Object_on_Left", self.Object_on_left)
+        self.channel.set_float_parameter("slitSize", this_slit_size)
+        self.channel.set_float_parameter("slit_depth", this_slit_depth)
+        self.channel.set_float_parameter("targetsFromMidline", this_target_spread)
+        self.channel.set_float_parameter("targetsheight", this_target_height)
+        self.channel.set_float_parameter("mouseReportDelay", this_mouse_report_delay)
+        self.channel.set_float_parameter("startBoxDelay", self.start_box_delay)
+        self.channel.set_float_parameter("velocityThreshold", self.velocity_threshold)
+        self.channel.set_float_parameter("occlusion_type", this_occlusion_type)
+        self.channel.set_float_parameter("targetsZpos", this_target_distance)
+        self.channel.set_float_parameter("target_rotation", this_target_rotation)
+        print("this occ_type: ", this_occlusion_type)
         
         # set properties for start box, left report box and right report box
-        self.channel.set_property("L_box_x_min", self.L_report_box [0])
-        self.channel.set_property("L_box_x_max", self.L_report_box [1])
-        self.channel.set_property("L_box_z_min", self.L_report_box [2])
-        self.channel.set_property("L_box_z_max", self.L_report_box [3])
+        self.channel.set_float_parameter("L_box_x_min", self.L_report_box [0])
+        self.channel.set_float_parameter("L_box_x_max", self.L_report_box [1])
+        self.channel.set_float_parameter("L_box_z_min", self.L_report_box [2])
+        self.channel.set_float_parameter("L_box_z_max", self.L_report_box [3])
         
-        self.channel.set_property("R_box_x_min", self.R_report_box [0])
-        self.channel.set_property("R_box_x_max", self.R_report_box [1])
-        self.channel.set_property("R_box_z_min", self.R_report_box [2])
-        self.channel.set_property("R_box_z_max", self.R_report_box [3])
+        self.channel.set_float_parameter("R_box_x_min", self.R_report_box [0])
+        self.channel.set_float_parameter("R_box_x_max", self.R_report_box [1])
+        self.channel.set_float_parameter("R_box_z_min", self.R_report_box [2])
+        self.channel.set_float_parameter("R_box_z_max", self.R_report_box [3])
         
-        self.channel.set_property("TT_box_x_min", self.start_box [0])
-        self.channel.set_property("TT_box_x_max", self.start_box [1])
-        self.channel.set_property("TT_box_z_min", self.start_box [2])
-        self.channel.set_property("TT_box_z_max", self.start_box [3])
-        self.channel.set_property("TT_box_angle", self.start_box [4])
-        self.channel.set_property("distractor", self.distractor)
-        self.channel.set_property("targetSize", self.target_size)
-        self.channel.set_property("Grey_screen_active", self.grey_screen_active)
+        self.channel.set_float_parameter("TT_box_x_min", self.start_box [0])
+        self.channel.set_float_parameter("TT_box_x_max", self.start_box [1])
+        self.channel.set_float_parameter("TT_box_z_min", self.start_box [2])
+        self.channel.set_float_parameter("TT_box_z_max", self.start_box [3])
+        self.channel.set_float_parameter("TT_box_angle", self.start_box [4])
+        self.channel.set_float_parameter("distractor", self.distractor)
+        self.channel.set_float_parameter("targetSize", self.target_size)
+        self.channel.set_float_parameter("Grey_screen_active", self.grey_screen_active)
+        
     
         
 
@@ -263,8 +302,10 @@ class ARVisualDiscrim_blocks(UnityTask):
         self.trial_distractor_selection.append(this_distractor_selection)
         self.trial_target_selection.append(this_target_selection)
         self.trial_occlusion_type.append(this_occlusion_type)
+        print(self.trial_occlusion_type)
         self.trial_target_distance.append(this_target_distance)
-        
+        self.trial_target_rotation.append(this_target_rotation)
+        #super().reset_environment()
 
 
 
@@ -274,6 +315,8 @@ class ARVisualDiscrim_blocks(UnityTask):
             method that get actions from DLC and parse them to unity
             called by teensyexp's module Agent, This function is called on every frame of the game.
         """
+      
+          
         output = self._get_dlc_on_frame()
        
         return output
@@ -294,21 +337,33 @@ class ARVisualDiscrim_blocks(UnityTask):
                 print(self.reward_size)
                 self.teensy.write('r_water', [self.reward_size[0]])
             self.n_rewards += 1
-            
+           
             if self.correct == self.block_length:
-                if self.object_L == 0.0:
-                    self.Prob_Obj_on_Left = self.Prob_L
-                    self.object_L = 1.0
+                if self.block_Left == 0.0:
+                     self.block_Left = 1.0
                 else:
-                    self.object_L = 0.0
-                    self.Prob_Obj_on_Left = self.Prob_R
+                    self.block_Left = 0.0
                 self.correct = 0
-
+                
+            
+            if self.block_Left == 0.0:
+                   
+                self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])
+                
+                   
+            else:
+                self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
+            
+            print("object on left", self.Object_on_left) 
+                    
+                
+            
     def reset_environment(self):
         """
             method to reset environment, use parent method implementation call
         """
         super().reset_environment()
+    
         
     def get_info(self):
         """
@@ -322,6 +377,7 @@ class ARVisualDiscrim_blocks(UnityTask):
         velocity = None if self.state is None else "%0.2f" % (self.state[-1])
         in_left_box = None if self.state is None else "%0.2f" % (self.state[7])
         in_right_box = None if self.state is None else "%0.2f" % (self.state[8])
+        
         
         
         
@@ -372,4 +428,5 @@ class ARVisualDiscrim_blocks(UnityTask):
         data_dict ["distractor_selection"] = np.array(self.trial_distractor_selection)
         data_dict ["occlusion_type"] = np.array(self.trial_occlusion_type)
         data_dict ["target_distance"] = np.array(self.trial_target_distance)
+        data_dict ["target_rotation"] = np.array(self.trial_target_rotation)
         return data_dict

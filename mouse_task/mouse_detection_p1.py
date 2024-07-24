@@ -36,22 +36,22 @@ config_name = Path("task_config.json")
 current_dir = Path(__file__).parent
 config_path = current_dir.joinpath(config_name) # default class constructor input
 
-class discrim_occluders(UnityTask):
+class DetectionNoVelocityThreshold(UnityTask):
     """
         Augmented Reality Visual discrimination
         Class that represents mouse task, inherits from UnityTask and GuiTask teensyexp module's classes
     """
 
-    def __init__(self, teensy, monitor=None, write_video=False, fps=60.0, session_label = ["AR_VD_discrim_occluders"],
-                 epochs=[250], epoch_labels = ["dual_teardrop"],
+    def __init__(self, teensy, monitor=None, write_video=False, fps=60.0, session_label = ["AR_VD_detection_p1"],
+                 epochs=[250], epoch_labels = ["single_teardrop"],
                  config_file_path = config_path,
                  reward_size = 100, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
                  R_report_box = [5, 10, -4, -2],
                  L_report_box = [-10, -5, -4, -2], Start_box =  [-4, 4, -9, -5, 90], 
                  rotate_camera = 90., Prob_Obj_on_Left = 0.5, mouse_report_delay = 0.0,
-                 slit_size = [4.3,12.], slit_depth = 0.2, target_selection = 6., distractor_selection = 0., occlusion_type = 1.0, 
-                 Camera_type = 1.0, target_spread = 4., target_rotation = 0, target_size = 2., target_height = 3., block_length = 20., start_box_delay = 0.25, 
-                 velocity_threshold=10., distractor = 1.0, grey_screen_active = 0.0, target_distance = 3):
+                 slit_size = [4.,4.,1], slit_depth = 0.1, target_selection = 6., distractor_selection = 0., occlusion_type = 0., 
+                 Camera_type = 1.0, target_spread = 4., target_rotation = 0, target_size = 2., target_height = 3., block_length = 1., start_box_delay = 0.1, 
+                 velocity_threshold=20., distractor = 0.0, grey_screen_active = 0.0, target_distance = 3, use_dlc=True):
 
         """
             Class constructor: initialises dlc processor, dlc live, video reader
@@ -76,9 +76,9 @@ class discrim_occluders(UnityTask):
         self.t_count = None
         self.filt = None
         self.params = None
-        
-        self.address = ('localhost', 6000)
-        self.dlcClient = DLCClient(address=self.address)
+        if use_dlc == True:
+            self.address = ('localhost', 6000)
+            self.dlcClient = DLCClient(address=self.address)
         self.t_count = 0
         self.degrees = 0
         self.correct = 0
@@ -120,6 +120,7 @@ class discrim_occluders(UnityTask):
         
         # Game trial parameters - add to class and enforce list structure
         self.reward_size = self.as_list(reward_size)
+        self.slit_size = slit_size
         slit_sizes_list = self.as_list(slit_size)
         self.slit_sizes =  np.linspace(slit_sizes_list[0], slit_sizes_list [1], int(slit_sizes_list [2]))
 
@@ -155,7 +156,7 @@ class discrim_occluders(UnityTask):
         self.occlusion_type = self.as_list(occlusion_type)
         self.camera_type = Camera_type
         self.target_distance =self.as_list(target_distance)
-       
+        self.use_dlc = use_dlc
         
 
         self.n_rewards = 0
@@ -236,7 +237,12 @@ class discrim_occluders(UnityTask):
             This function sends parameters to unity when the game is reset - ie at the beginning of each trial
         """
         
-
+        if self.block_length == 1:
+            self.random_target_location()
+        if self.block_length > 1:
+            self.block_sampler()
+            
+        
         this_Prob_obj_left = self.Prob_Obj_on_Left
         print("prob left", this_Prob_obj_left)
         this_slit_size = np.random.choice(self.slit_sizes)
@@ -315,8 +321,10 @@ class discrim_occluders(UnityTask):
             method that get actions from DLC and parse them to unity
             called by teensyexp's module Agent, This function is called on every frame of the game.
         """
-      
-        output = self._get_dlc_on_frame()
+        if self.use_dlc == False:
+            output = self.previous
+        else:   
+            output = self._get_dlc_on_frame()
        
         return output
 
@@ -337,24 +345,22 @@ class discrim_occluders(UnityTask):
                 self.teensy.write('r_water', [self.reward_size[0]])
             self.n_rewards += 1
            
-            if self.correct == self.block_length:
+    def random_target_location(self):
+        self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])
+        print("object on left", self.Object_on_left)
+    
+    def block_sampler(self):
+        if self.correct == self.block_length:
                 if self.block_Left == 0.0:
                      self.block_Left = 1.0
                 else:
                     self.block_Left = 0.0
                 self.correct = 0
-                
-            
-            if self.block_Left == 0.0:
-                   
-                self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])
-                
-                   
-            else:
-                self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
-            
-            print("object on left", self.Object_on_left) 
-                    
+        if self.block_Left == 0.0:  
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[self.Prob_Obj_on_Left,1 - self.Prob_Obj_on_Left])   
+        else:
+            self.Object_on_left = np.random.choice([0.0,1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left])
+        print("object on left", self.Object_on_left) 
                 
             
     def reset_environment(self):
@@ -428,4 +434,9 @@ class discrim_occluders(UnityTask):
         data_dict ["occlusion_type"] = np.array(self.trial_occlusion_type)
         data_dict ["target_distance"] = np.array(self.trial_target_distance)
         data_dict ["target_rotation"] = np.array(self.trial_target_rotation)
+        data_dict ["reward_size"] = np.array(self.trial_reward_size)
+        data_dict ["Prob_Obj_on_Left"] = self.Prob_Obj_on_Left
+        data_dict ["slit_size_param"] = np.array(self.slit_size)
+        data_dict ["block_length_param"] = np.array(self.block_length)
+        
         return data_dict

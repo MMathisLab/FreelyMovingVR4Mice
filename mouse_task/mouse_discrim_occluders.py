@@ -36,22 +36,22 @@ config_name = Path("task_config.json")
 current_dir = Path(__file__).parent
 config_path = current_dir.joinpath(config_name) # default class constructor input
 
-class Detection_p2(UnityTask):
+class DiscrimOccluders(UnityTask):
     """
         Augmented Reality Visual discrimination
         Class that represents mouse task, inherits from UnityTask and GuiTask teensyexp module's classes
     """
 
-    def __init__(self, teensy, monitor=None, write_video=False, fps=60.0, session_label = ["AR_VD_detection_p1"],
-                 epochs=[250], epoch_labels = ["single_teardrop"],
+    def __init__(self, teensy, monitor=None, write_video=False, fps=60.0, session_label = ["AR_VD_discrim_occluders"],
+                 epochs=[250], epoch_labels = ["dual_teardrop"],
                  config_file_path = config_path,
                  reward_size = 100, cropped_image = [0,530,0,510], unity_arena_size = [-9, 9, -10, -2],
                  R_report_box = [5, 10, -4, -2],
                  L_report_box = [-10, -5, -4, -2], Start_box =  [-4, 4, -9, -5, 90], 
                  rotate_camera = 90., Prob_Obj_on_Left = 0.5, mouse_report_delay = 0.0,
-                 slit_size = [4.,10.,5], slit_depth = 0.1, target_selection = 6., distractor_selection = 0., occlusion_type = 0.0, 
+                 slit_size = [4.3,12.], slit_depth = 0.2, target_selection = 6., distractor_selection = 0., occlusion_type = 1.0, 
                  Camera_type = 1.0, target_spread = 4., target_rotation = 0, target_size = 2., target_height = 3., block_length = 20., start_box_delay = 0.25, 
-                 velocity_threshold=10., distractor = 0.0, grey_screen_active = 0.0, target_distance = 3):
+                 velocity_threshold=10., distractor = 1.0, grey_screen_active = 0.0, target_distance = 3):
 
         """
             Class constructor: initialises dlc processor, dlc live, video reader
@@ -316,7 +316,6 @@ class Detection_p2(UnityTask):
             called by teensyexp's module Agent, This function is called on every frame of the game.
         """
       
-          
         output = self._get_dlc_on_frame()
        
         return output
