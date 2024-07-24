@@ -95,6 +95,10 @@ Under BCM Tolias Lab IACUC protocol, water restriction can continue for 90 conse
 
 Daily water amount provided should be **50 ml/kg** based on mice baseline weight. Each mouse is required to drink a minimum of 25 ml/kg every day. Animals not meeting minimum daily water intake are removed from water restriction and receive home cage water access ad libitum.
 
+```{note}
+If mice are removed from water restriction and granted water access ad libitum, the experimenter should wait **at least 2 days** of renewed water restriction before allowing them to resume training on the task.
+```
+
 Take the water bottle out of the cage in the evening the day before the first day of water restriction.
 
 **Continuation Criteria:** Mice drink all the water in their dish within 2 minutes. Mouse weight has stabilized (+/- 0.1g on 3 consecutive days), after approximately 5-7 days.
@@ -106,7 +110,7 @@ Take the water bottle out of the cage in the evening the day before the first da
 - Record the amount of water given to the mouse and the amount of water actually drank, as measured by volume drawn up in syringe. Transfer the mouse from the empty cage back to the home cage via the tunnel. 
 - Clean the weighing container, empty cage, small plastic dish, and tunnel with 70% isopropyl alcohol between each mouse.
 
-**During Arena Task Training:** Once the mice are training in the arena, the timing of water allocation is important. Wait one hour after the arena session and then give the daily water. This delay was chosen to avoid association of water reward with poor arena performance, while allowing enough time to pass before the next session so the animal will be water motivated the next day.
+**During Arena Task Training:** Once the mice are training in the arena, the timing of water allocation is important. Wait 10 to 60 minutes after the arena session and then give the daily water. This delay was chosen to avoid association of water reward with poor arena performance, while allowing enough time to pass before the next session so the animal will be water motivated the next day.
 
 (sec:arena-habituation)=
 ## Arena and Reward Port Habituation

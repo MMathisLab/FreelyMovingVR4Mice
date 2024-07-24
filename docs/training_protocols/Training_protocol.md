@@ -6,7 +6,11 @@ This documents give a protocol for training mice in the AR setup. This protocol 
 
 For the duration of the experiment mice will be placed on water restriction so that we can give the mice water rewards as a reinforcer to learn the task. To check that the mice are healthy you will need to weigh them each day. We allow for mice to loose up to ***10%*** of their body weight, if a mouse looses more than this we put them back on water to recover.
 
-Each day the mice will be given ***1.5ml*** per day in total, as a minimum. This means that it is important to know the water droplet size coming from the spouts on the rig. You should aim to keep this water droplet size at approximately ***5µl***. Then depending on the number of successful trials you can subtract this amount from the ***1.5µl*** so that you know how much to give them. Water can be given to the mice after each session using a small tub (or lens cap) where the measured amount of water can be placed. Typically the mice will drink this very quickly.
+```{note}
+If mice are removed from water restriction and granted water access ad libitum, the experimenter should wait **at least 2 days** of renewed water restriction before allowing them to resume training on the task.
+```
+
+Each day the mice will be given ***1.5ml*** per day in total, as a minimum. This means that it is important to know the water droplet size coming from the spouts on the rig. You should aim to keep this water droplet size at approximately ***5µl***. Then depending on the number of successful trials you can subtract this amount from the ***1.5µl*** so that you know how much to give them. Water can be given to the mice after each session using a small tub (or lens cap) where the measured amount of water can be placed. Typically the mice will drink this very quickly. Wait 10 to 60 minutes after the arena session and then give the daily water. This delay was chosen to avoid association of water reward with poor arena performance, while allowing enough time to pass before the next session so the animal will be water motivated the next day.
 
 
 ### Mouse handling
