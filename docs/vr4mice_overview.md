@@ -12,7 +12,7 @@ FreelyMovingVR4mice uses two GUIs (vr4mice and Deeplabcut-live-gui) that were bo
 
 ## Hardware requirements
 - Teensy 3.x board
-- windows OS 10 or above
+- Windows OS 10 or above
 - GPU for DeepLabCut, with at least 8 GB of memory
 
 ## Software requirements

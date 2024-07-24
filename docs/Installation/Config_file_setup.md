@@ -1,7 +1,7 @@
 # Config files  
 As all systems are different, certain aspects of the code including some paths and ports for the arduino may need to be changed between systems. Therefore we have included a couple of config files to handle this:
 
-## Config_path.json 
+## config_path.json 
 _**config_path.json**_ should to be placed in the working directory</br>
 _**config_path.json**_ contains the absolute or relative path to the "config folder" where all experiment-related config files are placed
 </br>_Default:_ </br>
@@ -24,7 +24,7 @@ Adjust absolute paths in [mouse_task/task_config.json](../../mouse_task/task_con
 This Config file specifies a few important things that control the setup of the rig: 
 
 1. The path to the python task files. As default this should be ```mouse_task/```
-2. The arduino Port, Baudrate 
+2. The arduino Port and Baudrate 
 3. Inputs and outputs to the arduino
 4. Specifies the path where the logged data should be saved
 

@@ -7,7 +7,10 @@ import numpy as np
 def arduino_read(t=10):
     # Configure the serial port
     ser = serial.Serial(
-        "/dev/cu.usbmodem146855301", 9600
+        "/dev/cu.usbmodem146851301",
+        9600,
+        # "/dev/cu.usbmodem146854901",
+        # 9600,
     )  # Adjust 'COM1' to your serial port and 9600 to your baud rate
     print("connected")
     # Prepare to collect data
@@ -38,7 +41,7 @@ def arduino_read(t=10):
 
 
 if __name__ == "__main__":
-    data, timestamps = arduino_read(t=5)
+    data, timestamps = arduino_read(t=10)
 
     # Plot the data
     data = np.array(data)
