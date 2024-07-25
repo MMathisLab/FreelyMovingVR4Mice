@@ -6,7 +6,7 @@ from multiprocessing.connection import Listener
 import pickle
 import time
 from collections import deque
-from tests.Teensy_latency.TeensyLatency import TeensyLatency
+from latency_tests.Teensy_latency.TeensyLatency import TeensyLatency
 
 import numpy as np
 from dlclive import Processor
