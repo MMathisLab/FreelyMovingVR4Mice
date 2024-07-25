@@ -192,17 +192,17 @@ class ActiveSensingTask(UnityTask):
 
         if self.block_Left == 0.0:
             print("Right block")
-            self.Object_on_left = np.random.choice(
+            self.object_on_left = np.random.choice(
                 [0.0, 1.0], p=[self.prob_block_coherence, 1 - self.prob_block_coherence]
             )
 
         else:
             print("Left block")
-            self.Object_on_left = np.random.choice(
+            self.object_on_left = np.random.choice(
                 [0.0, 1.0], p=[1 - self.prob_block_coherence, self.prob_block_coherence]
             )
 
-        print("Object_on_left: ", self.Object_on_left)
+        print("object_on_left: ", self.object_on_left)
 
         self.block_length = block_length
         self.distractor = distractor
@@ -306,8 +306,8 @@ class ActiveSensingTask(UnityTask):
         if self.block_length > 1:
             self.block_sampler()
 
-        this_Prob_obj_left = self.prob_obj_on_left
-        print("prob left", this_Prob_obj_left)
+        this_prob_obj_left = self.prob_obj_on_left
+        print("prob left", this_prob_obj_left)
         this_slit_size = np.random.choice(self.slit_sizes)
         print("slit_size", this_slit_size)
         this_slit_depth = self.get_epoch_value("slit_depth")
@@ -325,7 +325,7 @@ class ActiveSensingTask(UnityTask):
         self.channel.set_float_parameter(
             "distractor_selection", this_distractor_selection
         )
-        self.channel.set_float_parameter("Object_on_Left", self.Object_on_left)
+        self.channel.set_float_parameter("object_on_left", self.object_on_left)
         self.channel.set_float_parameter("slitSize", this_slit_size)
         self.channel.set_float_parameter("slit_depth", this_slit_depth)
         self.channel.set_float_parameter("targetsFromMidline", this_target_spread)
@@ -406,10 +406,10 @@ class ActiveSensingTask(UnityTask):
             self.n_rewards += 1
 
     def random_target_location(self):
-        self.Object_on_left = np.random.choice(
+        self.object_on_left = np.random.choice(
             [0.0, 1.0], p=[1 - self.prob_obj_on_left, self.prob_obj_on_left]
         )
-        print("object on left", self.Object_on_left)
+        print("object on left", self.object_on_left)
 
     def block_sampler(self):
         if self.correct == self.block_length:
@@ -419,14 +419,14 @@ class ActiveSensingTask(UnityTask):
                 self.block_Left = 0.0
             self.correct = 0
         if self.block_Left == 0.0:
-            self.Object_on_left = np.random.choice(
+            self.object_on_left = np.random.choice(
                 [0.0, 1.0], p=[self.prob_block_coherence, 1 - self.prob_block_coherence]
             )
         else:
-            self.Object_on_left = np.random.choice(
+            self.object_on_left = np.random.choice(
                 [0.0, 1.0], p=[1 - self.prob_block_coherence, self.prob_block_coherence]
             )
-        print("object on left", self.Object_on_left)
+        print("object on left", self.object_on_left)
 
     def reset_environment(self):
         """
