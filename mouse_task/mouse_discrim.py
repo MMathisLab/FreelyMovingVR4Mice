@@ -1,5 +1,5 @@
 """
-Detection task with velocity threshold to initiate the trials.
+Discrimination task (without occluders).
 """
 
 import os
@@ -18,11 +18,9 @@ current_dir = pathlib.Path(__file__).parent
 config_path = current_dir.joinpath(config_name)  # default class constructor input
 
 
-
-class DetectionWithVelocityThresholdTask(ActiveSensingTask):
-
+class DiscriminationTask(ActiveSensingTask):
     """
-    Detection task with velocity threshold to initiate the trials.
+    Discrimination task (without occluders).
     """
 
     def __init__(
@@ -31,9 +29,9 @@ class DetectionWithVelocityThresholdTask(ActiveSensingTask):
         monitor=None,
         write_video=False,
         fps=60.0,
-        session_label=["ar_detection_velthr"],
+        session_label=["ar_discrim"],
         epochs=[250],
-        epoch_labels=["single_teardrop"],
+        epoch_labels=["dual_teardrop"],
         config_file_path=config_path,
         reward_size=100,
         cropped_image=[0, 530, 0, 510],
@@ -57,7 +55,7 @@ class DetectionWithVelocityThresholdTask(ActiveSensingTask):
         block_length=20.0,
         start_box_delay=0.25,
         velocity_threshold=10.0,
-        distractor=0.0,
+        distractor=1.0,
         grey_screen_active=0.0,
         target_distance=3,
         use_dlc=True,
