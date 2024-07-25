@@ -48,11 +48,11 @@ class ActiveSensingTask(UnityTask):
         reward_size (int): Size of the reward.
         cropped_image (List[int]): Dimensions of the cropped image.
         unity_arena_size (List[int]): Dimensions of the Unity arena.
-        R_report_box (List[int]): Dimensions of the right water report box.
-        L_report_box (List[int]): Dimensions of the left water report box.
-        Start_box (List[int]): Dimensions of the start box.
+        r_report_box (List[int]): Dimensions of the right water report box.
+        l_report_box (List[int]): Dimensions of the left water report box.
+        start_box (List[int]): Dimensions of the start box.
         rotate_camera (float): Camera rotation angle.
-        Prob_Obj_on_Left (float): Probability of the object appearing on the left.
+        prob_obj_on_left (float): Probability of the object appearing on the left.
         mouse_report_delay (float): Delay for the mouse report.
         slit_size (List[int]): Size of the slit between occluders.
         slit_depth (float): Depth of the slit based on depth of the occluders.
@@ -61,7 +61,7 @@ class ActiveSensingTask(UnityTask):
         distractor_selection (float): Distractor selection parameter. Defines the identity
             of the distractor object displayed.
         occlusion_type (float): Type of occlusion. Set to 0 in the init.
-        Camera_type (float): Type of camera.
+        camera_type (float): Type of camera.
         target_spread (float): Spread of the target object.
         target_rotation (float): Rotation of the target object.
         target_size (float): Size of the target object.
@@ -89,18 +89,19 @@ class ActiveSensingTask(UnityTask):
         reward_size: int,
         cropped_image: List[int],
         unity_arena_size: List[int],
-        R_report_box: List[int],
-        L_report_box: List[int],
-        Start_box: List[int],
+        r_report_box: List[int],
+        l_report_box: List[int],
+        start_box: List[int],
         rotate_camera: float,
-        Prob_Obj_on_Left: float,
+        prob_obj_on_left: float,
+        prob_block_coherence: float,
         mouse_report_delay: float,
         slit_size: List[int],
         slit_depth: float,
         target_selection: float,
         distractor_selection: float,
         occlusion_type: float,
-        Camera_type: float,
+        camera_type: float,
         target_spread: float,
         target_rotation: float,
         target_size: float,
@@ -150,9 +151,9 @@ class ActiveSensingTask(UnityTask):
         self.cropped_image = cropped_image
         self.unity_arena_size = unity_arena_size
         self.rotate_camera = rotate_camera
-        self.R_report_box = R_report_box
-        self.L_report_box = L_report_box
-        self.start_box = Start_box
+        self.r_report_box = r_report_box
+        self.l_report_box = l_report_box
+        self.start_box = start_box
 
         self.start_box_delay = start_box_delay
         self.velocity_threshold = velocity_threshold
@@ -183,24 +184,25 @@ class ActiveSensingTask(UnityTask):
         self.mouse_report_delay = self.as_list(mouse_report_delay)
         self.target_rotation = self.as_list(target_rotation)
 
-        self.Prob_Obj_on_Left = Prob_Obj_on_Left
+        self.prob_obj_on_left = prob_obj_on_left
+        self.prob_block_coherence = prob_block_coherence
 
         self.block_Left = np.random.choice([0.0, 1.0], p=[0.5, 0.5])
         print("block_left", self.block_Left)
 
         if self.block_Left == 0.0:
             print("Right block")
-            self.Object_on_left = np.random.choice(
-                [0.0, 1.0], p=[self.Prob_Obj_on_Left, 1 - self.Prob_Obj_on_Left]
+            self.object_on_left = np.random.choice(
+                [0.0, 1.0], p=[self.prob_block_coherence, 1 - self.prob_block_coherence]
             )
 
         else:
             print("Left block")
-            self.Object_on_left = np.random.choice(
-                [0.0, 1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left]
+            self.object_on_left = np.random.choice(
+                [0.0, 1.0], p=[1 - self.prob_block_coherence, self.prob_block_coherence]
             )
 
-        print("Object_on_left: ", self.Object_on_left)
+        print("object_on_left: ", self.object_on_left)
 
         self.block_length = block_length
         self.distractor = distractor
@@ -208,7 +210,7 @@ class ActiveSensingTask(UnityTask):
         self.target_selection = self.as_list(target_selection)
         self.distractor_selection = self.as_list(distractor_selection)
         self.occlusion_type = self.as_list(occlusion_type)
-        self.camera_type = Camera_type
+        self.camera_type = camera_type
         self.target_distance = self.as_list(target_distance)
         self.use_dlc = use_dlc
 
@@ -217,7 +219,7 @@ class ActiveSensingTask(UnityTask):
         # Create empty vectors to keep track of game parameters per trial
         self.trial_epoch_labels = []
         self.trial_reward_size = []
-        self.trial_Prob_Obj_on_Left = []
+        self.trial_prob_obj_on_left = []
         self.trial_slit_size = []
         self.trial_slit_depth = []
         self.trial_target_spread = []
@@ -304,8 +306,8 @@ class ActiveSensingTask(UnityTask):
         if self.block_length > 1:
             self.block_sampler()
 
-        this_Prob_obj_left = self.Prob_Obj_on_Left
-        print("prob left", this_Prob_obj_left)
+        this_prob_obj_left = self.prob_obj_on_left
+        print("prob left", this_prob_obj_left)
         this_slit_size = np.random.choice(self.slit_sizes)
         print("slit_size", this_slit_size)
         this_slit_depth = self.get_epoch_value("slit_depth")
@@ -323,7 +325,7 @@ class ActiveSensingTask(UnityTask):
         self.channel.set_float_parameter(
             "distractor_selection", this_distractor_selection
         )
-        self.channel.set_float_parameter("Object_on_Left", self.Object_on_left)
+        self.channel.set_float_parameter("object_on_left", self.object_on_left)
         self.channel.set_float_parameter("slitSize", this_slit_size)
         self.channel.set_float_parameter("slit_depth", this_slit_depth)
         self.channel.set_float_parameter("targetsFromMidline", this_target_spread)
@@ -337,15 +339,15 @@ class ActiveSensingTask(UnityTask):
         print("this occ_type: ", this_occlusion_type)
 
         # set properties for start box, left report box and right report box
-        self.channel.set_float_parameter("L_box_x_min", self.L_report_box[0])
-        self.channel.set_float_parameter("L_box_x_max", self.L_report_box[1])
-        self.channel.set_float_parameter("L_box_z_min", self.L_report_box[2])
-        self.channel.set_float_parameter("L_box_z_max", self.L_report_box[3])
+        self.channel.set_float_parameter("L_box_x_min", self.l_report_box[0])
+        self.channel.set_float_parameter("L_box_x_max", self.l_report_box[1])
+        self.channel.set_float_parameter("L_box_z_min", self.l_report_box[2])
+        self.channel.set_float_parameter("L_box_z_max", self.l_report_box[3])
 
-        self.channel.set_float_parameter("R_box_x_min", self.R_report_box[0])
-        self.channel.set_float_parameter("R_box_x_max", self.R_report_box[1])
-        self.channel.set_float_parameter("R_box_z_min", self.R_report_box[2])
-        self.channel.set_float_parameter("R_box_z_max", self.R_report_box[3])
+        self.channel.set_float_parameter("R_box_x_min", self.r_report_box[0])
+        self.channel.set_float_parameter("R_box_x_max", self.r_report_box[1])
+        self.channel.set_float_parameter("R_box_z_min", self.r_report_box[2])
+        self.channel.set_float_parameter("R_box_z_max", self.r_report_box[3])
 
         self.channel.set_float_parameter("TT_box_x_min", self.start_box[0])
         self.channel.set_float_parameter("TT_box_x_max", self.start_box[1])
@@ -404,10 +406,10 @@ class ActiveSensingTask(UnityTask):
             self.n_rewards += 1
 
     def random_target_location(self):
-        self.Object_on_left = np.random.choice(
-            [0.0, 1.0], p=[self.Prob_Obj_on_Left, 1 - self.Prob_Obj_on_Left]
+        self.object_on_left = np.random.choice(
+            [0.0, 1.0], p=[1 - self.prob_obj_on_left, self.prob_obj_on_left]
         )
-        print("object on left", self.Object_on_left)
+        print("object on left", self.object_on_left)
 
     def block_sampler(self):
         if self.correct == self.block_length:
@@ -417,14 +419,14 @@ class ActiveSensingTask(UnityTask):
                 self.block_Left = 0.0
             self.correct = 0
         if self.block_Left == 0.0:
-            self.Object_on_left = np.random.choice(
-                [0.0, 1.0], p=[self.Prob_Obj_on_Left, 1 - self.Prob_Obj_on_Left]
+            self.object_on_left = np.random.choice(
+                [0.0, 1.0], p=[self.prob_block_coherence, 1 - self.prob_block_coherence]
             )
         else:
-            self.Object_on_left = np.random.choice(
-                [0.0, 1.0], p=[1 - self.Prob_Obj_on_Left, self.Prob_Obj_on_Left]
+            self.object_on_left = np.random.choice(
+                [0.0, 1.0], p=[1 - self.prob_block_coherence, self.prob_block_coherence]
             )
-        print("object on left", self.Object_on_left)
+        print("object on left", self.object_on_left)
 
     def reset_environment(self):
         """
@@ -479,12 +481,12 @@ class ActiveSensingTask(UnityTask):
         data_dict["block_labels"] = np.array(self.trial_epoch_labels)
         data_dict["slit_size"] = np.array(self.trial_slit_size)
         data_dict["trial_slit_depth"] = np.array(self.trial_slit_depth)
-        data_dict["R_report_box"] = np.array(self.R_report_box)
-        data_dict["L_report_box"] = np.array(self.L_report_box)
+        data_dict["r_report_box"] = np.array(self.r_report_box)
+        data_dict["l_report_box"] = np.array(self.l_report_box)
         data_dict["start_box"] = np.array(self.start_box)
         data_dict["cropped_image"] = np.array(self.cropped_image)
         data_dict["unity_arena_size"] = np.array(self.unity_arena_size)
-        data_dict["camera_roation"] = np.array(self.rotate_camera)
+        data_dict["camera_rotation"] = np.array(self.rotate_camera)
         data_dict["mouse_report_delay"] = np.array(self.trial_mouse_report_delay)
         data_dict["velocity_threshold"] = self.velocity_threshold
         data_dict["start_box_delay"] = self.start_box_delay
@@ -498,8 +500,8 @@ class ActiveSensingTask(UnityTask):
         data_dict["target_distance"] = np.array(self.trial_target_distance)
         data_dict["target_rotation"] = np.array(self.trial_target_rotation)
         data_dict["reward_size"] = np.array(self.trial_reward_size)
-        data_dict["Prob_Obj_on_Left"] = self.Prob_Obj_on_Left
+        data_dict["prob_obj_on_left"] = self.prob_obj_on_left
         data_dict["slit_size_param"] = np.array(self.slit_size)
         data_dict["block_length_param"] = np.array(self.block_length)
-
+        data_dict["prob_block_coherence"] = np.array(self.prob_block_coherence)
         return data_dict
