@@ -92,6 +92,10 @@ The first day of this step, to help the mouse enter the tunnel, it will be reaso
 
 For the duration of the experiment mice will be placed on water restriction so that we can give the mice water rewards as a reinforcer to learn the task. To check that the mice are healthy you will need to weigh them each day. We allow for mice to loose up to 10% of their body weight. Daily water amount provided should be **50 ml/kg** based on mice baseline weight. Each mouse is required to drink a minimum of 25 ml/kg every day. Animals not meeting minimum daily water intake or minimum body weight are removed from water restriction and receive home cage water access ad libitum.
 
+```{note}
+If mice are removed from water restriction and granted water access ad libitum, the experimenter should wait **at least 2 days** of renewed water restriction before allowing them to resume training on the task.
+```
+
 This means that it is important to know the water droplet size coming from the spouts on the rig. This water droplet size should be kept at 4 - 5$\mu$l. Then depending on the number of successful trials, one can subtract this amount from the minimum amount of water per day for a given mouse to get the remaining amount to give them. Water can be given to the mice after each session using a small tub (or lens cap) where the measured amount of water can be placed. Typically the mice will drink this very quickly.
 
 
@@ -115,7 +119,7 @@ Take the water bottle out of the cage in the evening the day before the first da
 - Record the amount of water given to the mouse and the amount of water actually drank, as measured by volume drawn up in syringe. Transfer the mouse from the empty cage back to the home cage via the tunnel. 
 - Clean the weighing container, empty cage, small plastic dish, and tunnel with 70% isopropyl alcohol between each mouse.
 
-**During Arena Task Training:** Once the mice are training in the arena, the timing of water allocation is important. Wait one hour after the arena session and then give the daily water. This delay was chosen to avoid association of water reward with poor arena performance, while allowing enough time to pass before the next session so the animal will be water motivated the next day.
+**During Arena Task Training:** Once the mice are training in the arena, the timing of water allocation is important. Wait between 10 and 60 minutes after the arena session and then give the daily water. This delay was chosen to avoid association of water reward with poor arena performance, while allowing enough time to pass before the next session so the animal will be water motivated the next day.
 
 (sec:arena-habituation)=
 ## Arena and Reward Port Habituation
