@@ -168,6 +168,10 @@ It is important to monitor the mice while they are training. If they stop doing 
 ```
 
 ## Training Stage 1: Detection task
+```{admonition} Important
+The following should be applied for **all** training stages.
+On each training day, between sessions with different mice, make sure to clean the arena with water and 70% isopropyl alcohol. First, wipe the floor with paper towels and some water, then take some new paper towels and wipe both floor and walls with 70% isopropyl alcohol to make sure no odors from the previous mouse remain. This is necessary to reduce stress in the animals.
+```
 
 ```{note}
 
