@@ -10,3 +10,5 @@ Here is a schematic of the circuit:
 :width: 400px
 :align: center
 ```
+
+Once the cicuit is built upload this [script](../../mouse_task/teensy/dual_water_valve/photodiode_reads.ino) onto it and update the `COM` port and `baudrate` in the `dlc_inference_w_pd` class in the `dlc_processor_socket_pd.py`.
