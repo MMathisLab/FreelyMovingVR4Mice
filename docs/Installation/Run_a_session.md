@@ -13,7 +13,7 @@ Finally, the GUI that controls the experiment logic should appear!
 Alternatively, you can add these commands to a .bat script so that all you need to do it click on an icon on your [desktop](./create_desktop_icon.md).
 
 </br>_**Note:**_ close the program via gui via stop-close, and not via crtl-C/crtl-Z 
-### In the VR4mice GUI
+In the VR4mice GUI
 
 ## set up a session in the VR4mice GUI
 First:
