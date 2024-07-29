@@ -55,7 +55,7 @@ class DetectionWithoutVelocityThresholdTask(ActiveSensingTask):
         target_height=3.0,
         block_length=1.0,
         start_box_delay=0.1,
-        velocity_threshold=20.0,
+        velocity_threshold=100.0,
         distractor=0.0,
         grey_screen_active=0.0,
         target_distance=3,

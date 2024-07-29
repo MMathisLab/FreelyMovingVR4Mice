@@ -195,18 +195,19 @@ public class Mouse_move : Agent
 	public override void CollectObservations(VectorSensor sensor)
 	{
 		// log agent position and heading direction
-		sensor.AddObservation(this.transform.position.x);
-		sensor.AddObservation(this.transform.position.z);
-		sensor.AddObservation(this.transform.eulerAngles.y);
-		sensor.AddObservation(mouse_can_report);
-		sensor.AddObservation(ITI);
-		sensor.AddObservation(plane.GetComponent<Target_spawner>().green_on_left);
-		sensor.AddObservation(mouse_report_correct);
-		sensor.AddObservation(mouseInLeft_box);
-		sensor.AddObservation(mouseInRight_box);
-		sensor.AddObservation(speed);
-		sensor.AddObservation(sync.GetComponent<PhotodiodeChange>().sync_state);
-		sensor.AddObservation(photodiode_change_value);
+		sensor.AddObservation(this.transform.position.x);  // 0
+		sensor.AddObservation(this.transform.position.z); // 1
+		sensor.AddObservation(this.transform.eulerAngles.y); // 2
+		sensor.AddObservation(mouse_can_report); // 3
+		sensor.AddObservation(ITI); // 4
+		sensor.AddObservation(plane.GetComponent<Target_spawner>().green_on_left); // 5
+		sensor.AddObservation(mouse_report_correct); // 6
+		sensor.AddObservation(mouseInLeft_box); // 7
+		sensor.AddObservation(mouseInRight_box); // 8
+		sensor.AddObservation(speed); // 9
+		sensor.AddObservation(sync.GetComponent<PhotodiodeChange>().sync_state);// 10
+		sensor.AddObservation(photodiode_change_value); //11
+		sensor.AddObservation(start_box_delay);
 	}
 
 	public override void Heuristic(in ActionBuffers actionsOut)
@@ -374,7 +375,7 @@ public class Mouse_move : Agent
 		var environmentParameters = Academy.Instance.EnvironmentParameters;
 
 		mouseReportDelay = environmentParameters.GetWithDefault("mouseReportDelay", 5f);
-		start_box_delay = environmentParameters.GetWithDefault("startBoxDelay", 0.25f);
+		box_delay = environmentParameters.GetWithDefault("startBoxDelay", 0.25f);
 		velocity_threshold = environmentParameters.GetWithDefault("velocityThreshold", 0.5f);
 		report_box_delay = environmentParameters.GetWithDefault("reportBoxDelay", 0.1f);
 		distractor = environmentParameters.GetWithDefault("distractor", 1.0f);
