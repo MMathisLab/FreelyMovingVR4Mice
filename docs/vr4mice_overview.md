@@ -1,6 +1,6 @@
 # FreelyMovingVR4mice overview
 
-```{image} ../docs/images/VR4mice_schematic.png
+```{image} ../docs/images/Rig_Figure.jpg
 :alt: AR
 :class: bg-primary mb-1
 :width: 400px
