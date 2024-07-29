@@ -39,14 +39,22 @@ Two cameras are necessary if you would like to use 3d reconstruction.
 1x [1/4\"-20 Low-Profile Channel Screw, 5/8\" Long, 50 Pack](http://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=4101)
 
 
-## Teensy components:
+## Water delivery teensy components:
 We will send across one of our custom PCB boards with these components attached but this is the parts list for these just in case:
 
-- Teensy 3.2
+- Teensy 4.0
 
 - [TIP120G, Darlington Transistor, TO-220, NPN, 60V, onsemi](https://www.distrelec.ch/en/darlington-transistor-npn-60v-to-220-onsemi-tip120g/p/30240404?no-cache=true&marketingPopup=false&track=true)
 
 - [1N4005-E3/54 - Standard Recovery Rectifier Diode 600V 1A DO-204AL, Vishay](https://www.distrelec.ch/en/standard-recovery-rectifier-diode-600v-1a-do-204al-vishay-1n4005-e3-54/p/30151890?marketingPopup=false&no-cache=true&track=true)
+
+## photodiode teensy components (optional):
+
+- Teensy 4.0
+- 1.2 pF capacitor
+- 330 kOhms resistor
+- Photodiode - TEFD4300
+- OpAmp - MCP6002-I/P
 
 
 ## Monitors:
