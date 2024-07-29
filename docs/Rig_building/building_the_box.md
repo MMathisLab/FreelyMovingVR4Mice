@@ -24,3 +24,5 @@ Image of the box:
 Image of the light diffuser sandwiched between the two floor plates:
 
 <img src="https://user-images.githubusercontent.com/9136089/210345652-e1dde5a4-3057-4db5-baa6-1a5663d10f9f.jpeg" width="400">
+
+
