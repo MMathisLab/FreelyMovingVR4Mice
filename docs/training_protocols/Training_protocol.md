@@ -182,47 +182,24 @@ To select the target type you can change the target selection parameter in the G
 - *Step1: Detection task training - permissive trial initiation parameters.*
     - **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 2 sessions.
     - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation (see {ref}`sec:gui`).
-    - Use the parameters in {ref}`Table 1 <fig:tab1>`, replacing config file path with valid local path.
+    - For this first stage of training you want to load the [DetectionWithoutVelocityThresholdTask] (../../mouse_task/mouse_detection_p1.py), by loading this script all the parameters required for this task will be loaded as default. In this task there is no velocity threshold applied in the start box.
     - To encourage mice to form connection between position and visual stimuli, longer initial session (ex 75 minutes) may be necessary to allow enough serendipitous trial initiations to occur.
     - If mice are allowed to overtrain on this step their performance can reach up to 100%.
 
-```{image} ../../docs/images/tab1-permissive_detection_params.png
-:name: fig:tab1
-:alt: tab1
-:class: bg-primary mb-1
-:width: 700px
-:align: center
-```
 
 - *Step2: Detection task training - restricted trial initiation parameters.*
     - **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 2 sessions.
-    - Same as Step 1, but with the parameters in {ref}`Table 2 <fig:tab2>`. In the restricted parameters, start box delay is increased and velocity threshold is decreased, to encourage more deliberate trial initiation.
+    - Same as Step 1, but this time a velocity threshold is applied. To do this you need to select the [DetectionWithVelocityThresholdTask](../../mouse_task/mouse_detection_p2.py)
 
-```{image} ../../docs/images/tab2-restricted_detection_params.png
-:name: fig:tab2
-:alt: tab2
-:class: bg-primary mb-1
-:width: 700px
-:align: center
-```
 
 ## Training Stage 2: Discrimination without occlusion
 
-Add in the distractor. You can do this by setting `distractor=1.0`. Make sure that  `distraction_selection=4.0`. This selects the black single teardrop object as the distractor.
+Add in the distractor. You can do this by loading the [DiscriminationTask](../../mouse_task/mouse_discrim.py)
 
 **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 2 sessions.
 
 - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation
 (see {ref}`sec:gui`).
-- Use the parameters in {ref}`Table 3 <fig:tab3>`.
-
-```{image} ../../docs/images/tab3-unoccluded_params.png
-:name: fig:tab3
-:alt: tab3
-:class: bg-primary mb-1
-:width: 700px
-:align: center
-```
 
 ## Training Stage 3: Discrimination with occlusion
 
@@ -230,17 +207,9 @@ Add in the distractor. You can do this by setting `distractor=1.0`. Make sure th
 
 - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation
 (see {ref}`sec:gui`).
-- Use the parameters in {ref}`Table 4 <fig:tab4>`.
+- To run this task you need to select the [DiscriminationWithOccludersTask](../../mouse_task/mouse_discrim_occluders.py)
 
-```{image} ../../docs/images/tab4-occluded_params.png
-:name: fig:tab4
-:alt: tab4
-:class: bg-primary mb-1
-:width: 700px
-:align: center
-```
 
-(sec:gui)=
 ## Using GUIs to run software
 
 ### Setting up sessions:
@@ -248,7 +217,7 @@ Add in the distractor. You can do this by setting `distractor=1.0`. Make sure th
 - Open anaconda prompt and type `conda activate dlclivegui` then enter and type `dlclivegui` and enter again.
 - Open `vr4mice` icon on desktop.
 - Select and initialize camera in DLC.
-- Select and set processor `MyPocessorSocket` in DLC.
+- Select and set processor `dlc_inference_w_pd` in DLC. If you do not have the photodiode teensy connected make sure you set the use_teensy parameter to `False`.
 - Connect to rig teensy2v in vr4mice gui.
 - Select subject and task in teensy (vr4mice) gui.
 - Edit task parameters in teensy gui (except for manual water task) and submit.
@@ -264,7 +233,6 @@ Add in the distractor. You can do this by setting `distractor=1.0`. Make sure th
 - Press `On` in DLC gui.
 - Press start in teensy gui.
 - Hold down `alt` key and tap tab to select camera, teensy gui, and DLC gui.
-- Click blue icon at bottom of screen and select all 3 windows one time, in order. **NEVER CLOSE THESE WINDOWS.** It is 3 opened `153.png` files of a solid color to prevent reflection on arena screens.
 - Start stimulus screen recording on laptop.
 - Hover over stimulus to view if desired.
 - Note start time.
