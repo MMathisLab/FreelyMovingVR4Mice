@@ -33,47 +33,42 @@ class ActiveSensingTask(UnityTask):
     It inherits from UnityTask and GuiTask from the `teensyexp` module.
 
     Attributes:
-        teensy (Teensy): Instance of Teensy class to control the microcontroller.
-        monitor (bool): Monitor on which to display the game. Set to `None`.
-        write_video (bool): Flag to indicate if video of visual observations should be written.
-            Caution: if possible, games should not include visual observations, as this really
-            slows down the speed of the game.
-        fps (float): Frames per second at which to write the video of visual observations.
-        session_label (List[str]): Label for the session.
-        epochs (int): Number of trials before parameters should be changed.
-            The task will end at the end of the last epoch is the game trial based (1) or
-            time based (0).
-        epoch_labels (List[str]): Indicates of the game is trial-based ([1]), or time-based ([0]).
-        config_file_path (pathlib.Path): Path to the configuration JSON file.
-        reward_size (int): Size of the reward.
-        cropped_image (List[int]): Dimensions of the cropped image.
-        unity_arena_size (List[int]): Dimensions of the Unity arena.
-        r_report_box (List[int]): Dimensions of the right water report box.
-        l_report_box (List[int]): Dimensions of the left water report box.
-        start_box (List[int]): Dimensions of the start box.
-        rotate_camera (float): Camera rotation angle.
-        prob_obj_on_left (float): Probability of the object appearing on the left.
-        mouse_report_delay (float): Delay for the mouse report.
-        slit_size (List[int]): Size of the slit between occluders.
-        slit_depth (float): Depth of the slit based on depth of the occluders.
-        target_selection (float): Target selection parameter. Defines the identity
-            of the target object displayed.
-        distractor_selection (float): Distractor selection parameter. Defines the identity
-            of the distractor object displayed.
-        occlusion_type (float): Type of occlusion. Set to 0 in the init.
-        camera_type (float): Type of camera.
-        target_spread (float): Spread of the target object.
-        target_rotation (float): Rotation of the target object.
-        target_size (float): Size of the target object.
-        target_height (float): Height of the target object.
-        block_length (float): Length of the trials block if utilized for the training.
-        start_box_delay (float): Time that the mouse needs to stay in the start box to launch
-            the trial.
-        velocity_threshold (float): Threshold for velocity for to launch the trial.
-        distractor (float): Indicate if the distractor should be display (1) or not (0).
-        grey_screen_active (float): Flag to indicate if grey screen is active.
-        target_distance (float): Distance of the target.
-        use_dlc (bool): Flag to indicate if DLC is used.
+        
+    teensy: Teensy object, instance of teensy class that controls the teensy microcontroller.
+    monitor: Not used.
+    write_video: Boolean, default is `False`. If `True`, video output will be recorded.
+    fps: Float, frames per second for recorded video (default is `60.0`, **currently not used**).
+    session_label: List, contains the name of the task type (This will change depending on which training tak is imported`).
+    epochs: List, contains the number of epochs (or trials) (default is `[250]`).
+    epoch_labels: List, contains epoch labels or names of the blocks, Single teardrop is default and highlights that only one tear drop is shown to the animal.
+    config_file_path: Path object, path to the configuration **.json** file (see `helpers.py` for more information).
+    reward_size: Integer, This specifies how may ms the water valve should be open for. This should be adjusted such that the reward given is approximately **3µL** (default is `100`).
+    cropped_image: List, contains the dimensions of the cropped image (default is `[0, 530, 0, 510]` - [left, right, top, bottom]).
+    unity_arena_size: List, contains the dimensions of the Unity arena (default is `[-9, 9, -10, -2]` - [left, right, top, bottom]).
+    r_report_box: List, contains the dimensions of the right report box (default is `[5, 10, -4, -2]` - [left, right, top, bottom]).
+    l_report_box: List, contains the dimensions of the left report box (default is `[-10, -5, -4, -2]` - [left, right, top, bottom]).
+    start_box: List, contains the dimensions of the start box and its angle (default is `[-4, 4, -7, -3, 80]` - [left, right, top, bottom]).
+    rotate_camera: Integer, rotation angle of the camera (default is `90`). This needs to be adjusted to your rig and then not changed.
+    prop_obj_on_Left: Float, probability of the OOI being on the left side (default is `0.5`). This parameter is used if the block length is set to 1, if the block length is > 1 then prob block coherence is used.
+    prob_block_coherence: Float, this is the probability that the OOI will appear on the same side as the block. ie if the block was a left block and the prob_block_coherence was 1 then it would appear on the left (default is 0.5). This parameter is only used if the block length is greater that 1.
+    mouse_report_delay: Float, mouse report delay default is `0`.
+    slit_size: List, this is a list of numbers [min_slit_size, max_slit_size, number_of_slit_sizes] ie. [10,20,5] would give a range of 5 slit sizes with 10 being the minimum and 20 being the max.
+    slit_depth: Float, this parameter controls the depth or thickness of the walls (default = 0.2)
+    target_selection: Integer, this parameter selects what object for the OOI (`0.` = white cube, `1.` = black cube, `2.` = teardrop grey, `3.` = pacman grey, `4.` = teardrop black, `5.` = pacman black, `6.` = teardrop white, `7.` = pacman white,`8.`= zebra teardrop, `9.`= zebra ball, `10.`=white ball, `11.`=light gray zebra teardrop, `12.` = dark gray zebra teardrop )
+    distractor_selection: Integer, this parameter selects what object for the distractor (`0.` = white cube, `1.` = black cube, `2.` = teardrop grey, `3.` = pacman grey, `4.` = teardrop black, `5.` = pacman black, `6.` = teardrop white, `7.` = pacman white,`8.`= zebra teardrop, `9.`= zebra ball, `10.`=white ball, `11.`=light gray zebra teardrop, `12.` = dark gray zebra teardrop )
+    occlusion_type: Integer, allows the user to select the type of occlusion that they want to use. (`0` = no occlusion, `1` = slit occlusion, `2` = central wall), default is no occlusion.
+    camera_type: Integer, allows the user to select between on (Camera_type = `0`) and off axis camera (Camera_type = `1`) modes.
+    target_spread: Float, specifies the distance between the targets.
+    target_rotation: Float, altering this parameter causes the tips of the targets to be rotated inward making them easier for the animal to see. 
+    target_size: Integer, specifies the size of the targets i recommend using size `1` for the teardrop and double teardrop.
+    target_height: Float, specifies the height at which the targets are spawned.
+    block_length: Float, specifies how many rewards the mouse has to get correct before the OOI switches sides. To enforce this make sure that you have the prop_object_on left parameter set to `1.0`. If prob_object_on_left is set to `.5` then this block length parameter has no effect as there is a 50% chance of the object appearing on the each side.
+    start_box_delay: Float, specifies the time that the animal needs to spend in the start box under the velocity threshold.
+    velocity_threshold: Float, the animal must be below this value in the start box for a trial to be initiated.
+    distractor: Integer, specifies whether the distractor is present or not. (`0` = no distractor, `1` = distractor)
+    grey_screen_active: Integer, specifies whether to show the grey ITI screen or not (`0` = no grey screen, `1` = grey screen)
+    target_distance: Integer, specifies the distance of the targets in y.
+    use_dlc: Bool, specifies whether to use the dlc socket or not, this is mainly used for debugging, it should be set to true for the task to run.
     """
 
     def __init__(
