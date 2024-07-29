@@ -37,7 +37,8 @@ class dlc_inference_w_pd(Processor):
         self.signal_type = signal_type
         self.signal_delay =  signal_delay
         self.signal_freq = freq
-        if use_teensy == 1:
+        self.use_teensy = use_teensy
+        if self.use_teensy == 1:
             self.teensy = TeensyLatency(com, baudrate=baudrate)
             print("using_teensy")
         
@@ -81,7 +82,6 @@ class dlc_inference_w_pd(Processor):
         self.step.append(self.curr_step)
         self.signal.append(self.curr_signal)
         self.frame_time.append(kwargs ["frame_time"])
-       # self.pose_time.append(kwargs ["pose_time"])
         
         self.conn.send([time.time(), vals [0], vals [1], vals [2], vals [3], vals [4]])
      
@@ -149,15 +149,14 @@ class dlc_inference_w_pd(Processor):
         save_dict =  dict()
         save_dict ["start_time"] = np.array(self.start_time)
         save_dict ["frame_time"] = np.array(self.frame_time)
-        #save_dict ["pose_time"] = np.array(self.pose_time)
         save_dict ["time_stamp"] = np.array(self.time_stamp)
         save_dict ["step"] =  np.array(self.step)
         save_dict ["signal"] = np.array(self.signal)
-        save_dict ["photodiode_read"] = np.array(self.teensy.input_data)
-        save_dict ["photodiode_time"] = np.array(self.teensy.input_data_time)
+        if self.use_teensy == 1:
+            save_dict ["photodiode_read"] = np.array(self.teensy.input_data)
+            save_dict ["photodiode_time"] = np.array(self.teensy.input_data_time)
         save_dict ["x_pos"] =np.array(self.center_x)
         save_dict ["y_pos"] = np.array(self.center_y)
         save_dict ["heading_direction"] = np.array(self.heading_direction)
         save_dict ["head_angle"] = np.array(self.head_angle)
-        
         return(save_dict)
