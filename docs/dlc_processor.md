@@ -30,7 +30,7 @@ class dlc_inference_w_pd(Processor):
 6. `use_teensy`: Bool: If the photodiode teensy is connected this should be set to `True` for recording the photodiode singal. If the photodiode teensy is not connected you can set this to `False`. If set to `False` the dlc processor will still send a signal but this will not be recorded using the photodiode. 
 
 ## Photodiode teensy
-when the script is initialized and the use_teensy parameter is set to true the script starts reading from the teensy on a separate thread:
+when the script is initialized and the `use_teensy` parameter is set to `True`, the script starts reading from the teensy on a separate thread:
 
 
 ```{code-cell} ipython3
