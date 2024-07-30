@@ -141,7 +141,7 @@ At the end of the experiment when the experimenter stops the recording and hits 
         return(save_dict)
 ```
 
-This data gets saved into *_PROC file which can be loaded as a pickle.
+This data gets saved into `*_PROC` file which can be loaded as a pickle.
 
 parameters:
 1. `start_time`: Float, the time that the script was started
