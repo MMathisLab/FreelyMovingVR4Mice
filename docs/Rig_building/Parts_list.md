@@ -48,7 +48,7 @@ We will send across one of our custom PCB boards with these components attached 
 
 - [1N4005-E3/54 - Standard Recovery Rectifier Diode 600V 1A DO-204AL, Vishay](https://www.distrelec.ch/en/standard-recovery-rectifier-diode-600v-1a-do-204al-vishay-1n4005-e3-54/p/30151890?marketingPopup=false&no-cache=true&track=true)
 
-## photodiode teensy components (optional):
+## Photodiode teensy components (optional):
 
 - Teensy 4.0
 - 1.2 pF capacitor
