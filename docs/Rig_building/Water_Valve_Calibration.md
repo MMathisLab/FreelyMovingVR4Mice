@@ -6,7 +6,7 @@
 
 #### Removing Air Bubbles
 1. 
-   - Select the manual water task in vr4mice.
+   - Select the manual water task in `vr4mice`.
    - Set the water valve opening time to 5000 ms.
    - Flush the tubes repeatedly to remove air bubbles.
 2. 
