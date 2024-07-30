@@ -204,11 +204,11 @@ class UnityTask(Task):
         if self.agent_num in terminal_steps.agent_id:
             # Return TerminalSteps which contains the last observation, reward, etc., for the agent
             step_result = terminal_steps[self.agent_num]
-            self.done = True
+            # done = True
         else:
             # Return DecisionSteps which contains the current observation, reward, etc., for the agent
             step_result = decision_steps[self.agent_num]
-            self.done = False
+            # done = False
 
         return step_result
 
@@ -293,12 +293,10 @@ class UnityTask(Task):
         method to reset environment
         increments agent's number
         """
-        print('environment reset')
-        print('set channel called')
         self.set_channel()
         # self.log_channel()
         self.env.reset()
-        #self.agent_num += 1
+        self.agent_num += 1
         step_result = self.get_step_result()
         self.state = step_result.obs[self.vec_obs_ind]
         # self.state = self.get_state()
@@ -335,45 +333,35 @@ class UnityTask(Task):
 
         ### get observations ###
         step_result = self.get_step_result()
-        
-    
         if hasattr(self, "vid_writer"):
             self.vid_writer.write(step_result.obs[self.vis_obs_ind])
 
-        self.reward = step_result.reward
-        
         ### Get the new simulation results ###
-        #decision_steps, terminal_steps = self.env.get_steps(self.agent)
-        
+        decision_steps, terminal_steps = self.env.get_steps(self.agent)
+
         # Check if the agent is done (terminated)
-        #if self.agent_num in terminal_steps.agent_id:
-        #    self.reward = terminal_steps[self.agent_num].reward
-        #    self.done = True
-        #     print("done1", self.done)
-        # elif self.agent_num in decision_steps.agent_id:
-        #     self.reward = decision_steps[self.agent_num].reward
-        #     self.done = False
-        
+        if self.agent_num in terminal_steps.agent_id:
+            self.reward = terminal_steps[self.agent_num].reward
+            done = True
+        if self.agent_num in decision_steps.agent_id:
+            self.reward = decision_steps[self.agent_num].reward
+            done = False
+
         self.reward_vec.append(self.reward)
         self.ep_reward += self.reward
 
-        self.terminal = self.done  # last frame --> next trial
+        self.terminal = done  # last frame --> next trial
         self.terminal_vec.append(self.terminal)
         self.check_reward()
-        #print("done2", self.done)
 
         ### get info ###
         self.state = step_result.obs[self.vec_obs_ind]
         # self.state = self.get_state()
         info = self.get_info()
 
-        if self.done:
-            print("self.terminal", self.terminal)
         ### check reset, epochs, and condition to end session; update state ###
         if self.terminal:
-            print("terminal_step")
             self.episode += 1
-            print(self.episode)
             if (self.epoch_trials) & (self.episode > self.epochs[self.epoch]):
                 self.epoch += 1
                 if self.epoch > len(self.epochs) - 1:
@@ -411,7 +399,7 @@ class UnityTask(Task):
             "episode": np.array(self.episode_vec),
             "step": np.array(self.step_vec),
             "step_time": np.array(self.time_vec),
-            "state": np.array(self.state_vec, dtype=object),
+            "state": np.vstack(np.array(self.state_vec, dtype=object)),
             "action": np.array(self.action_vec),
             "reward": np.array(self.reward_vec),
             "terminal": np.array(self.terminal_vec),
