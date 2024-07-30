@@ -13,8 +13,6 @@ The local `vr4mice/cfg` is the default "config folder" (in case of absence of _c
 This config file specifies the paths to dlc models and the unity game
 Adjust absolute paths in [mouse_task/task_config.json](mouse_task/task_config.json)
 
-"model_absolute_path": path to model to apply</br>
-"dlc_video_absolute_path": path to video file to process</br>
 "ar_env_unity_absolute_path": path to unity binary environment</br>
 
 ***Note: don't modify config file location and key-words in .json***
@@ -38,7 +36,7 @@ When you come to use the GUI for the first time you will have to setup the rig c
     - The ***baud rate***, specified in the arduino sketch
     - List the ***inputs*** that are read from the microcontroller, separated by commas. For example, this could be lever presses.
     - For each different command you would like to write to the microcontroller, click Add Output, and provide:
-    - Name for the command (e.g. water). The string character associated with the command (that you have coded into the arduino sketch; e.g. W). Parameters for the command, separated by commas (e.g. duration)
+    - Name for the command (e.g. water). The string character associated with the command (that you have coded into the arduino sketch; e.g. W). Parameters for the command, separated by commas (e.g. duration). For the dual_valve system you want to add "l_water" and "r_water with the commands being "L" and "R". 
     - Add subjects as desired
     - Select a directory to save your data (select Browse from the dropdown menu to add a new directory)
     - Select your task directory 
