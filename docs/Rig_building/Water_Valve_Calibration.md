@@ -15,7 +15,7 @@
    - After removing the air bubbles, refill the syringe to the 20 ml mark.
 
 #### Measurement
-1. In vr4mice, select the manual water task and set the water valve opening times to:
+1. In `vr4mice`, select the manual water task and set the water valve opening times to:
    - 100 ms, 200 ms, 300 ms, 400 ms, 500 ms, 600 ms, 700 ms, 800 ms, 900 ms, 1000 ms.
 2. 
    - Place the weigh boat under the lick port.
