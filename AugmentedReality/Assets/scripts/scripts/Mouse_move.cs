@@ -207,7 +207,7 @@ public class Mouse_move : Agent
 		sensor.AddObservation(speed); // 9
 		sensor.AddObservation(sync.GetComponent<PhotodiodeChange>().sync_state);// 10
 		sensor.AddObservation(photodiode_change_value); //11
-		sensor.AddObservation(start_box_delay);
+		sensor.AddObservation(start_box_delay); // 12
 	}
 
 	public override void Heuristic(in ActionBuffers actionsOut)
