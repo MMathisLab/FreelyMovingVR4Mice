@@ -24,6 +24,7 @@ parts:
   - file: docs/Rig_building/Teensy_box_design
   - file: docs/Rig_building/teensy_config
   - file: docs/Rig_building/writing_a_teensy_sketch
+  - file: docs/Rig_building/Water_Valve_Calibration
 - caption: Dev, Software package Documentation
   chapters:
   - file: docs/VisualDiscrim
