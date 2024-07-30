@@ -38,7 +38,7 @@ class ActiveSensingTask(UnityTask):
     monitor: Not used.
     write_video: Boolean, default is `False`. If `True`, video output will be recorded.
     fps: Float, frames per second for recorded video (default is `60.0`, **currently not used**).
-    session_label: List, contains the name of the task type (This will change depending on which training tak is imported`).
+    session_label: List, contains the name of the task type (This will change depending on which training task is imported`).
     epochs: List, contains the number of epochs (or trials) (default is `[250]`).
     epoch_labels: List, contains epoch labels or names of the blocks, Single teardrop is default and highlights that only one tear drop is shown to the animal.
     config_file_path: Path object, path to the configuration **.json** file (see `helpers.py` for more information).
