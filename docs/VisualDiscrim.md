@@ -82,7 +82,7 @@ Here is an explanation of the parameters that can be set in the GUI. Such parame
 2. `monitor`: Not used.
 3. `write_video`: Boolean, default is `False`. If `True`, video output will be recorded.
 4. `fps`: Float, frames per second for recorded video (default is `60.0`, **currently not used**).
-5. `session_label`: List, contains the name of the task type (This will change depending on which training tak is imported`).
+5. `session_label`: List, contains the name of the task type (This will change depending on which training task is imported`).
 6. `epochs`: List, contains the number of epochs (or trials) (default is `[250]`).
 7. `epoch_labels`: List, contains epoch labels or names of the blocks, Single teardrop is default and highlights that only one tear drop is shown to the animal.
 8. `config_file_path`: Path object, path to the configuration **.json** file (see `helpers.py` for more information).
