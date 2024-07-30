@@ -40,7 +40,6 @@ if use_teensy == 1:
     print("using_teensy")
 ```
 
-
 ## The process function
 The process function takes the dlc pose and computes the head x,y positions, head_angle and heading direction of the body and then send these via a socket to the vr4mice software.
 
