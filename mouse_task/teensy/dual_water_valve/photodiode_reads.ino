@@ -1,5 +1,3 @@
-***/
-
 // optimize interrupts and load encode library
 #define ENCODER_OPTIMIZE_INTERRUPTS
 #include <Encoder.h>
