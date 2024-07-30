@@ -11,7 +11,7 @@ kernelspec:
 ---
 
 
-# Active sensing task
+# Active Sensing Task
 
 In this task, a mouse the mouse looks through a slit in the wall and has to report which side an object of interest is on. This object of interest (OOI) randomly appears on the left or right side of the arena and is occluded by the slit. On the other side a distractor appears. The idea is that you have one script like this for each task type that you want to run. These task files are designed to control augmented reality games that have either trial like structure or trial-and-block structure (such as baseline, perturbation and washout trials). This current script can therefore be thought of as a template for future tasks that you want to employ. This document describes how the task is run and how to modify these scripts to build new tasks.
 
