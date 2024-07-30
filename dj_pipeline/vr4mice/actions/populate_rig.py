@@ -5,6 +5,8 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
+from vr4mice.actions.keys2tables_base import base
+from vr4mice.actions.keys2tables_vr4mice import vr4mice
 from vr4mice.utils.logger import Logger
 
 """
@@ -12,8 +14,6 @@ from vr4mice.utils.logger import Logger
 """
 logger = Logger.get_logger()
 
-from vr4mice.actions.keys2tables_base import base
-from vr4mice.actions.keys2tables_vr4mice import vr4mice
 
 SKIP_DUPLICATES = True
 

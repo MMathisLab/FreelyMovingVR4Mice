@@ -7,7 +7,7 @@ This repository is the code base for VR4Mice pipeline.
   `actions` that describes interactions with the database. It's the core of pipeline: main development of pipeline happens here. 
   `utils` contains all dev-related functions to assume the functionality of pipeline.
 
-`prototype` folder contains system-related files, for example Dockefile for the client (term "client" applies to any process that addresses to the database and used to keep visible the database-server client-app architecture)
+`prototype` folder contains system-related files, for example Dockerfile for the client (term "client" applies to any process that addresses to the database and used to keep visible the database-server client-app architecture)
 
 `scripts` folder contains python scripts that execute the sequence of actions to communicate with database (ex. setup-connect-populate). The input can be made via .json config file. Scripts are considered as ephemera scenarios, it's flexible part of the codebase and not the core datajoint pipeline's code.
 
