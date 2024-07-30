@@ -28,7 +28,7 @@
 5. Adjust the monitor brightness and apply filters to ensure that the light intensity at maximum brightness is approximately 10 cd/m². This corresponds to the mesopic light intensity regime, where both rods and cones are active.
 
 
-Here are the monitor luminance measurement results from Tolias Lab. You can use the provided code to calculate the gamma value of the monitor after adding the ND filter.
+Here are the monitor luminance measurement results from Tolias Lab. You can use the provided code to calculate the gamma value of the monitor after adding the neural density filter.
 
 ```python
 import numpy as np
@@ -47,11 +47,11 @@ print('gamma value = ' + str(gamma))
 
 plt.plot(image_pixels, func(image_pixels,*popt),color = 'black',marker='8' ,alpha=1, label = 'func luminace')
 plt.plot(image_pixels, luminance,color = 'red',marker='8', alpha=0.5, label = 'measured luminance')
-plt.title('with nd filter -- luminance value across image pixels value')
+plt.title('with filter -- luminance value across image pixels value')
 plt.xlabel('pixel')
 plt.ylabel('luminance cd/m2')
 plt.legend()
-#plt.savefig("with nd filter -- luminance value across image pixels value.jpg")
+#plt.savefig("with filter -- luminance value across image pixels value.jpg")
 ```
 
 **Generate the images for measurement.**
