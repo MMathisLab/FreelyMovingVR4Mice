@@ -39,6 +39,7 @@ This should open up the DLCLive GUI on your screen!
 
 ## Open the DeepLabCut-live GUI
 
+
 ```{image} ../../docs/images/run_session_steps_5-9.png
 :alt: Steps 5 to 9
 :width: 55%
