@@ -61,11 +61,13 @@ This should open up the DLCLive GUI on your screen!
 :align: center
 ```
 
+Now, before initializing DLC, it would be a great time to take the selected mouse and put it gently (with tube handling) in the arena. Avoid forcing the mouse onto the platform, slowly approach with the tube and let the mouse naturally come out and into the arena.
+
 10) Hit "**Init DLC**" and wait until the GPUs are loaded (look at the **terminal window**). DLCLive is now waiting for a socket with **vr4mice** GUI to be established.
 
 ## Launch OBS screen recording
 
-Open **OBS** and start recording the screen (the screen where you are displaying the game on the rig). If you don't have **OBS** yet, check out [this link](https://obsproject.com/download) to download it.
+Open **OBS** and start recording the screen (the screen where you are displaying the game on the rig). If you don't have **OBS** yet, check out [this link](https://obsproject.com/download) to download it. Make sure to set the recording **FPS** (frame rate per second) to **120**.
 
 ## On the VR4mice window
 
@@ -92,21 +94,13 @@ Open **OBS** and start recording the screen (the screen where you are displaying
 
 ## Saving data
 
-### On the VR4mice window:
-
-```{image} ../../docs/images/run_session_step_14a.png
-:alt: Step 14a
-:width: 55%
-:align: center
-```
-
-14) To save the data, hit "**Stop**" followed by "**Save Task Data**".
-> _Data will be saved to: `<your save directory>/<subject>_YYYY-MM-DD_<attempt>.pkl` (pickle file)_
+The following steps have to be performed once the experimenter wants to end the session and save the recorded data (_they are the same steps even if the session was started by mistake or with the wrong configuration parameters and has to be stopped, the only difference will be in wether the data should be saved or not_).
+Here the order is important, make sure to start with the **DeepLabCut-live** GUI followed by the **VR4mice** GUI and **OBS**.
 
 ### On the DeepLabCut-live window:
 
-```{image} ../../docs/images/run_session_step_14b.png
-:alt: Step 14b
+```{image} ../../docs/images/run_session_step_14.png
+:alt: Step 14
 :width: 95%
 :align: center
 ```
@@ -118,8 +112,20 @@ Open **OBS** and start recording the screen (the screen where you are displaying
 	>	- `.h5` = the recorded DLC key-points
 	>	- `PROC` = the processed dlc key-points which get sent to the unity game
 
+### On the VR4mice window:
+
+```{image} ../../docs/images/run_session_step_15.png
+:alt: Step 15
+:width: 55%
+:align: center
+```
+
+15) To save the data, hit "**Stop**" followed by "**Save Task Data**".
+	> _Data will be saved to: `<your save directory>/<subject>_YYYY-MM-DD_<attempt>.pkl` (pickle file)_
+
 ### Stop OBS screen recording
 
-15) Last but not least, go back to **OBS** and stop the screen recording you started earlier. This will automatically save the video to a default path. Normally it should be in the current user's `Videos` folder.
+16) Last but not least, go back to **OBS** and stop the screen recording you started earlier. This will automatically save the video to a default path. Normally it should be in the current user's `Videos` folder. Make sure, after each session, to go to aforementioned folder and rename the recorded video by inserting the name of the subject (i.e. mouse's name) at the beginning. The naming convention used is `Name_Date-Time.*`. The **Date-Time** part should already be present since its automatically used as a file name by the **OBS** software.
 
 To run another session, repeat the above steps. Data from the previous session is still loaded (and can be saved again with a different file name by changing the subject or attempt) until a new task is initialized (i.e. until you click "**Ready**").
+Usually you'll need to run another mouse, thus meaning that **Subject Name** should be changed accordingly as well as the **Attempt**, which should be set back to 1 if not already. The task may also need to be changed since different mice may be at different training stages depending on the **continuation criteria** present in the [protocol](../training_protocols/training_protocol_tolias.md). After the new session parameters have been set, go back to **step 9** [here](#open-the-deeplabcut-live-gui) and repeat the steps from there.
