@@ -6,6 +6,7 @@ parts:
   - file: docs/Rig_building/Parts_list
   - file: docs/Rig_building/building_the_box
   - file: docs/Rig_building/Building_the_cage
+  - file: docs/Rig_building/Monitor_Luminance_Measurement
 - caption: Software, Installation of vr4mice and config file setup
   chapters:
   - file: docs/Installation/installSumUp
