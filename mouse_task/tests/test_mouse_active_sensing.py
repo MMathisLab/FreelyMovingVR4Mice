@@ -92,7 +92,7 @@ class TestDetectionP1Randomization(unittest.TestCase):
         self.assertEqual(self.task.object_on_left, 1.0)
     
     def test_target_on_right(self):
-        # test that target appears on the righ
+        # test that target appears on the right
         self.task.prob_obj_on_left = 0.0
         self.task.random_target_location()
         self.assertEqual(self.task.object_on_left, 0.0)
