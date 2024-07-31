@@ -72,7 +72,7 @@ address = ("localhost", 6000)
 dlcClient = DLCClient(address=address)
 
 
-while (time.time() - start_time) < 600:
+while (time.time() - start_time) < 50:
     this_read = dlcClient.read()
     # if this_read is None:
     # 	 print(this_read)

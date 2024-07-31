@@ -12,7 +12,7 @@ You can install Anaconda from the [Anaconda website](https://www.anaconda.com/pr
 
 Install both in the same order: 
 - Download [UnityHub](https://unity3d.com/fr/get-unity/download).
-- Download the right version (2022.3.15f1) of [Unity Editor](https://unity3d.com/fr/unity/whats-new/2019).
+- Download the *approved* version (2022.3.15f1) of [Unity Editor](https://unity3d.com).
 
 #### Install the MLagents package:
 

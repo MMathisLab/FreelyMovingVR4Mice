@@ -6,7 +6,7 @@ import numpy as np
 
 # Configure the serial port
 ser = serial.Serial(
-    "COM3", 9600
+    "COM5", 9600
 )  # Adjust 'COM1' to your serial port and 9600 to your baud rate
 print("connected")
 # Prepare to collect data
