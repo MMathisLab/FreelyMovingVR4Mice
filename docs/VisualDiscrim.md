@@ -255,7 +255,7 @@ We can then read from this thread periodically and send the data to unity by the
         # run DLC on every frame to be given as input to the agent
         this_read = self.dlcClient.read()
 
-        # check whether there is incomming data in the read
+        # check whether there is incoming data in the read
         if this_read != None:
             self.params = np.array(this_read["vals"][1:])
             # filter the data points
@@ -321,7 +321,7 @@ Finally, this function gets called by the `get_action()`function. This function 
         return output
 
 ```
-This takes the incomming data stream from dlclivegui and sends the processed data to the unity game
+This takes the incoming data stream from dlclivegui and sends the processed data to the unity game
 
 
 

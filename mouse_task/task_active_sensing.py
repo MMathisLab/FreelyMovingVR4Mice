@@ -428,7 +428,7 @@ class ActiveSensingTask(UnityTask):
         Get information about position and angle on the GUI
 
         Returns:
-            Dictionnary with 'position' and 'h_angle' keys.
+            Dictionary with 'position' and 'h_angle' keys.
         """
         pos = (
             None

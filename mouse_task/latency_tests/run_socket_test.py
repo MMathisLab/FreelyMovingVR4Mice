@@ -11,7 +11,7 @@ Task = ARVisualdiscrim_socket_test()
 
 # Now task has all the functions that a MouseTrack_RLsim class has, that inherits from Unity Tasks
 # Meaning that from here, you can start the game and loop through the loop function
-# Which handles the frames/time in the environement!
+# Which handles the frames/time in the environment!
 Task.start()
 Task.env.reset()
 
