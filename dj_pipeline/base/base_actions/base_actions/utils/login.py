@@ -1,5 +1,6 @@
 import os
 
+
 """
      The LoginUser class represents a user who is authorized to log into a database.
 """

@@ -1,7 +1,8 @@
-import sys, os
+import os
+import sys
 
-from vr4mice.utils.logger import Logger, config_logger
 from base_actions.connect import connect
+from vr4mice.utils.logger import Logger, config_logger
 
 """
     The main script that is entry point for all interactions with database:

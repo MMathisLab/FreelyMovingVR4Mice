@@ -1,12 +1,12 @@
+from pathlib import Path
 from typing import List
+import subprocess
 
 import datajoint as dj
-from pathlib import Path
+import pandas as pd
+from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
-
-from vr4mice.schema import vr4mice
-import pandas as pd
 
 schema_name = "base_analysis"
 schema = get_schema(schema_name, locals())
@@ -92,6 +92,49 @@ class DataFrame(dj.Computed):
         if df is not False:
             return get_choices(df)
         return df
+
+
+@schema
+class GitCommit(dj.Computed):
+
+    definition = """
+    -> DataFrame
+    ---
+    commit_hash: varchar(256)
+    changed_files: blob
+    """
+
+    def make(self, key):
+        try:
+            ret = parse_git_commit_file()
+            data = {**key, **ret}
+            self.insert1(data)
+
+        except Exception as err:
+            err = f"Error while populating the GitCommit table: key {key}\n{err}"
+            logger.warning(err)
+
+
+def parse_git_commit_file(filename="git_commit"):
+    commit_hash = None
+    modified_files = []
+
+    try:
+        with open(filename, "r") as file:
+            lines = file.readlines()
+
+            for line in lines:
+                line = line.strip()
+                if line.startswith("commit "):
+                    commit_hash = line.split()[1]
+                elif line.startswith("M "):
+                    modified_files.append(line)
+
+        return {"commit_hash": commit_hash, "changed_files": modified_files}
+
+    except FileNotFoundError:
+        logger.warning(f"Error: File '{filename}' not found.")
+        return None, []
 
 
 @schema
@@ -241,7 +284,7 @@ def insert_send_mail(key, tuple_, table, filename, send=False):
             send_email.email(email, filename, error=False, message=None)
 
     except Exception as err:
-        err = "Error while populating the Summary table\n" + str(err)
+        err = f"Error while populating the Summary table: key {key}\n{err}"
         logger.warning(err)
         if send:
             send_email.email(email, None, error=True, message=err)
