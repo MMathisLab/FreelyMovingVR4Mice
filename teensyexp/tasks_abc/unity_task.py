@@ -59,7 +59,6 @@ class UnityTask(Task):
         self.agent_group = agent_group
         self.agent_num = 0
         self.channel = EnvironmentParametersChannel()
-        
 
         self.epochs = np.cumsum(self.as_list(epochs))
         self.epoch_trials = epoch_trials
@@ -87,16 +86,14 @@ class UnityTask(Task):
         """
         ### start unity game ###
         self.set_channel()
-        
+
         self.env = UnityEnvironment(
             file_name=self.env_path,
             base_port=5004,
             additional_args=self.display_args,
             side_channels=[self.channel],
         )
-        
-        
-       
+
         self.env.reset()
         self.agent = list(self.env.behavior_specs)[0]
         self.agent_spec = self.env.behavior_specs[self.agent]
@@ -136,10 +133,9 @@ class UnityTask(Task):
         # self.state = step_result.obs[self.vec_obs_ind]
         # self.episode = 1
         # - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - #
-        
+
         ### start teensy ###
         super().start()
-        
 
     def as_list(self, val):
         """
@@ -281,8 +277,6 @@ class UnityTask(Task):
         self.state = step_result.obs[self.vec_obs_ind]
         self.ep_reward = 0
         self.episode_start_time = self.cur_time
-        
-    
 
     def loop(self):
         """

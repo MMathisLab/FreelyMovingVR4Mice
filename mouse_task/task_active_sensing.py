@@ -153,15 +153,7 @@ class ActiveSensingTask(UnityTask):
         self.start_box_delay = start_box_delay
         self.velocity_threshold = velocity_threshold
 
-        self.previous = np.array(
-            [
-                9,
-                -5,
-                0,
-                0,
-            ],
-            dtype=np.float16,
-        ).reshape(1, -1)
+        self.previous = np.array([9, -5, 0, 0,], dtype=np.float16,).reshape(1, -1)
 
         # Game trial parameters
         # add to class and enforce list structure
@@ -462,7 +454,7 @@ class ActiveSensingTask(UnityTask):
             "in_left_box": in_left_box,
             "in_right_box": in_right_box,
             "photodiode": photodiode_state,
-            "start_box_delay": start_box_delay
+            "start_box_delay": start_box_delay,
         }
 
     def get_data(self):
