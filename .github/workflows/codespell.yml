@@ -18,5 +18,5 @@ jobs:
       - name: Codespell
         uses: codespell-project/actions-codespell@v1
         with:
-          ignore_words_list: ignore_words.txt
+          ignore_words_list: ./ignore_words.txt
           skip: './mouse_task/visual_discrim_unity_build/*,./teensyexp/teensy.py,./mouse_task/unity_ar/MonoBleedingEdge/etc/mono/browscap.ini,./mouse_task/latency_tests/*'
