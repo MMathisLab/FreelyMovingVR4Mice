@@ -27,7 +27,7 @@ class dlc_inference_w_pd(Processor):
 3. `signal_delay`: Int, the delay between starting the game and the oscillating signal starting in seconds. This allows for the game to start before the signal starts being generated. 
 4. `signal_type`: Str, options: `pulse` = a square wave pulse that changes in time (best to use), `flip`= a black and white signal that flips every time dlc sends a frame (caution: this can miss frames!!!), `sin` = a sine wave. default is `pulse`.
 5. `freq`: Int, the frequency of the square pulse or sine wave. default is `5`
-6. `use_teensy`: Bool: If the photodiode teensy is connected this should be set to `True` for recording the photodiode singal. If the photodiode teensy is not connected you can set this to `False`. If set to `False` the dlc processor will still send a signal but this will not be recorded using the photodiode. 
+6. `use_teensy`: Bool: If the photodiode teensy is connected this should be set to `True` for recording the photodiode signal. If the photodiode teensy is not connected you can set this to `False`. If set to `False` the dlc processor will still send a signal but this will not be recorded using the photodiode. 
 
 ## Photodiode teensy
 when the script is initialized and the `use_teensy` parameter is set to `True`, the script starts reading from the teensy on a separate thread:

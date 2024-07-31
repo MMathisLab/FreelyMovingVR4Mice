@@ -19,7 +19,7 @@ _**Note:**_ _The following installation assumes you have already installed on yo
 	```
 	cd ml-agents/
 	```
-	- Inside this main directory, find the `ml-agents-envs/` sub-directory and open, with any text editor, the `setup.py` file found within it. Near the end of the file, find the list of required dependecies and modify the `numpy` version: change it from `"numpy==1.21.2"` to `"numpy==1.23.3"` then save. When that is done, run the following two commands in order:
+	- Inside this main directory, find the `ml-agents-envs/` sub-directory and open, with any text editor, the `setup.py` file found within it. Near the end of the file, find the list of required dependencies and modify the `numpy` version: change it from `"numpy==1.21.2"` to `"numpy==1.23.3"` then save. When that is done, run the following two commands in order:
 		```
 		python -m pip install ./ml-agents-envs
 		python -m pip install ./ml-agents

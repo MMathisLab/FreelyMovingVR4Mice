@@ -1,8 +1,10 @@
 import os
 import sys
-from base_actions.utils.login import LoginUser
+
 from base_actions.utils.logger import Logger, config_logger
+from base_actions.utils.login import LoginUser
 from base_actions.utils.schema_config import connect_to_database
+
 
 """
     Script with different connection modes based on the number of input arguments:

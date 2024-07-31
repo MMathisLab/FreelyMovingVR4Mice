@@ -1,5 +1,5 @@
 # Cage for mounting monitors and cameras
-The cage design can be found [here](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/stl_files/ARrig_cage.stl) Note: two of the monitors have been removed so that you can see the transparent box in the middle of the cage.
+The outside cage design can be found [here](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/stl_files/ARrig_cage.stl) Note: two of the monitors have been removed so that you can see the transparent box in the middle of the cage.
 
 To build the cage you will want to cut the thor labs [optical rails](https://www.thorlabs.com/thorproduct.cfm?partnumber=XE25RL2) down to size and then thread them with an imperial thread drill.
 

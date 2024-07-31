@@ -38,7 +38,7 @@ class DLCClient(object):
             self.previous = this_read
 
             # print(this_read)
-            # print("read from incomming:", rec_time, this_read)
+            # print("read from incoming:", rec_time, this_read)
             return {"time": rec_time, "vals": this_read, "previous": 0}
 
         # elif self.previous:

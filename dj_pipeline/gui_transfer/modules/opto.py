@@ -1,16 +1,18 @@
-from PyQt5.QtWidgets import (
-    QLabel,
-    QGridLayout,
-    QComboBox,
-    QVBoxLayout,
-    QCheckBox,
-    QPlainTextEdit,
-    QLineEdit,
-    QPushButton,
-)
 from PyQt5.QtCore import Qt
-from utils.helpers import get_idx
+from PyQt5.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QGridLayout,
+    QLabel,
+    QLineEdit,
+    QPlainTextEdit,
+    QPushButton,
+    QVBoxLayout,
+)
+
 from modules.template import Template
+from utils.helpers import get_idx
+
 
 """
     Script contains the optogenetics related GUI module 

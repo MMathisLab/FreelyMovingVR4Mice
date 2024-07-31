@@ -87,7 +87,7 @@ while True:
     try:
         socket.process()
     except:
-        print("exeption")
+        print("exception")
         socket.teensy.reading_teensy = False
         socket.conn.close()
         socket.save()

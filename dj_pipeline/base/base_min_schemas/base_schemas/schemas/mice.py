@@ -2,11 +2,12 @@
     Minimal Schema version for experimental information
 """
 
-import pathlib
 import os
+import pathlib
+
+import PIL.Image
 
 import datajoint as dj
-import PIL.Image
 from base_schemas.utils import datastore
 
 schema = dj.schema("mice", locals(), create_tables=True)

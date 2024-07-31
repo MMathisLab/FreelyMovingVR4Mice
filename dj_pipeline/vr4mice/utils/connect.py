@@ -1,8 +1,10 @@
 import os
 import sys
+
 from vr4mice.actions.base_actions.login import LoginUser
 from vr4mice.utils.logger import Logger, config_logger
 from vr4mice.utils.schema_config import connect_to_database
+
 
 """
     Script with different connection modes based on the number of input arguments:

@@ -40,7 +40,7 @@ Two cameras are necessary if you would like to use 3d reconstruction.
 
 
 ## Water delivery teensy components:
-We will send across one of our custom PCB boards with these components attached but this is the parts list for these just in case:
+The teesny circuit will need to be soldered to a perforated board:
 
 - Teensy 4.0
 
@@ -58,9 +58,9 @@ We will send across one of our custom PCB boards with these components attached 
 
 
 ## Monitors:
-5x acer (SB241Y) + HDMI cables
+4x acer (SB241Y) + HDMI cables
 
-4 monitors for the mouse setup, 1 for launching the task.
+3 monitors for the mouse setup, 1 for launching the task.
 
 **Calibration:**
 - For all, brightness: 18.
@@ -86,8 +86,6 @@ We will send across one of our custom PCB boards with these components attached 
 2x Floor: 520 x 520 x 5 mm (transparent plastic = PMMA).
 
 4x Sides: 525 x 360 x 5 mm (transparent plastic = PMMA).
-
-1x [light diffuser](https://www.thomannmusic.ch/lee_farbfolie_rolle_216_w_diffusi.htm) (The size of the sheet must be able to cover the floor plate ie. 520mm x 520mm)
 
 
 ## IR lights:

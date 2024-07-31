@@ -6,16 +6,12 @@ This code was initially developed by Gary Kane, Michael Beauzile, and Mackenzie 
 
 ## Hardware requirements:
 - windows OS 10 or above
-- teensy 3.2 or above
+- teensy 4.0 or above
 
 ## Tasks supported:
 
 ### VR system:
 - VR freely moving system (DLC + Unity)
-
-#### Specific VR tasks:
-
-- WIP
 
 ### DLC-Live! + Unity3D:
 

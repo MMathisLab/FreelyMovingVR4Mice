@@ -14,7 +14,7 @@ vals = deque()
 previous_used = deque()
 start_time = time.time()
 
-def save_data(path="/Users/thomassainsbury/Documents/Mathis_lab/socket_test_2/recieved.pickle"):
+def save_data(path="/Users/thomassainsbury/Documents/Mathis_lab/socket_test_2/received.pickle"):
     #print(dlcClient.input_save_data)
     
     print()
