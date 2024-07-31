@@ -1,19 +1,16 @@
 import unittest
 from unittest.mock import MagicMock, patch
-import numpy as np
 from pathlib import Path
-from mouse_task.mouse_detection_p1 import (
-    Detection_p1,
-)  # Assuming your script is named detection_p1.py
-
+from mouse_task.task_active_sensing import ActiveSensingTask  # Ensure this path is correct
 
 class TestDetectionP1Randomization(unittest.TestCase):
     def setUp(self):
+        """Setup the initial conditions for each test."""
         self.teensy = MagicMock()
         self.monitor = None
         self.write_video = False
         self.fps = 60.0
-        self.session_label = ["AR_VD_detection_p1"]
+        self.session_label = ["test"]
         self.epochs = [250]
         self.epoch_labels = ["single_teardrop"]
         self.config_file_path = Path("../task_config.json")
@@ -24,7 +21,7 @@ class TestDetectionP1Randomization(unittest.TestCase):
         self.L_report_box = [-10, -5, -4, -2]
         self.Start_box = [-4, 4, -9, -5, 90]
         self.rotate_camera = 90.0
-        self.Prob_Obj_on_Left = 0.5
+        self.prob_obj_on_left = 0.5
         self.mouse_report_delay = 0.0
         self.slit_size = [4.0, 4.0, 1]
         self.slit_depth = 0.1
@@ -43,69 +40,74 @@ class TestDetectionP1Randomization(unittest.TestCase):
         self.grey_screen_active = 0.0
         self.target_distance = 3.0
         self.use_dlc = False
+        self.prob_block_coherence =1.0
 
-        self.detection_p1 = Detection_p1(
-            self.teensy,
-            self.monitor,
-            self.write_video,
-            self.fps,
-            self.session_label,
-            self.epochs,
-            self.epoch_labels,
-            self.config_file_path,
-            self.reward_size,
-            self.cropped_image,
-            self.unity_arena_size,
-            self.R_report_box,
-            self.L_report_box,
-            self.Start_box,
-            self.rotate_camera,
-            self.Prob_Obj_on_Left,
-            self.mouse_report_delay,
-            self.slit_size,
-            self.slit_depth,
-            self.target_selection,
-            self.distractor_selection,
-            self.occlusion_type,
-            self.Camera_type,
-            self.target_spread,
-            self.target_rotation,
-            self.target_size,
-            self.target_height,
-            self.block_length,
-            self.start_box_delay,
-            self.velocity_threshold,
-            self.distractor,
-            self.grey_screen_active,
-            self.target_distance,
-            self.use_dlc,
+        self.task = ActiveSensingTask(
+            teensy=self.teensy,
+            monitor= self.monitor,
+            write_video=self.write_video,
+            fps=self.fps,
+            session_label=self.session_label,
+            epochs=self.epochs,
+            epoch_labels=self.epoch_labels,
+            config_file_path=self.config_file_path,
+            reward_size=self.reward_size,
+            cropped_image=self.cropped_image,
+            unity_arena_size=self.unity_arena_size,
+            r_report_box=self.R_report_box,
+            l_report_box=self.L_report_box,
+            start_box=self.Start_box,
+            rotate_camera=self.rotate_camera,
+            prob_obj_on_left=self.prob_obj_on_left,
+            prob_block_coherence=self.prob_block_coherence,
+            mouse_report_delay=self.mouse_report_delay,
+            slit_size=self.slit_size,
+            slit_depth=self.slit_depth,
+            target_selection=self.target_selection,
+            distractor_selection=self.distractor_selection,
+            occlusion_type=self.occlusion_type,
+            camera_type=self.Camera_type,
+            target_spread=self.target_spread,
+            target_rotation=self.target_rotation,
+            target_size=self.target_size,
+            target_height=self.target_height,
+            block_length=self.block_length,
+            start_box_delay=self.start_box_delay,
+            velocity_threshold=self.velocity_threshold,
+            distractor=self.distractor,
+            grey_screen_active=self.grey_screen_active,
+            target_distance=self.target_distance,
+            use_dlc=self.use_dlc,
         )
 
     def test_random_target_location(self):
-        # Mock the np.random.choice to ensure repeatability
+        """Test the random target location method."""
         with patch("numpy.random.choice", return_value=0.0):
-            self.detection_p1.random_target_location()
+            self.task.random_target_location()
             self.assertEqual(self.detection_p1.Object_on_left, 0.0)
 
         with patch("numpy.random.choice", return_value=1.0):
-            self.detection_p1.random_target_location()
-            self.assertEqual(self.detection_p1.Object_on_left, 1.0)
+            self.task.random_target_location()
+            self.assertEqual(self.task.Object_on_left, 1.0)
 
     def test_block_sampler(self):
-        # Test block sampler functionality
-        self.detection_p1.block_length = 2  # Ensure block length is greater than 1
-        self.detection_p1.correct = 1
-        self.detection_p1.block_Left = 0.0
+        """Test the block sampler method."""
+        self.task.block_length = 2  # Ensure block length is greater than 1
+        self.task.correct = 1
+        self.task.block_Left = 0.0
 
         with patch("numpy.random.choice", return_value=1.0):
-            self.detection_p1.block_sampler()
-            self.assertEqual(self.detection_p1.Object_on_left, 1.0)
+            self.task.block_sampler()
+            self.assertEqual(self.task.Object_on_left, 1.0)
 
-        self.detection_p1.correct = 2  # Simulate correct trials reaching block length
-        self.detection_p1.block_sampler()
-        self.assertEqual(self.detection_p1.correct, 0)
-        self.assertEqual(self.detection_p1.block_Left, 1.0)
+        self.task.correct = 2  # Simulate correct trials reaching block length
+        self.task.block_sampler()
+        self.assertEqual(self.task.correct, 0)
+        self.assertEqual(self.task.block_Left, 1.0)
 
         with patch("numpy.random.choice", return_value=0.0):
-            self.detection_p1.block_sampler()
-            self.assertEqual(self.detection_p1.Object_on_left, 0.0)
+            self.task.block_sampler()
+            self.assertEqual(self.task.Object_on_left, 0.0)
+
+if __name__ == '__main__':
+    unittest.main()
