@@ -153,15 +153,7 @@ class ActiveSensingTask(UnityTask):
         self.start_box_delay = start_box_delay
         self.velocity_threshold = velocity_threshold
 
-        self.previous = np.array(
-            [
-                9,
-                -5,
-                0,
-                0,
-            ],
-            dtype=np.float16,
-        ).reshape(1, -1)
+        self.previous = np.array([9, -5, 0, 0,], dtype=np.float16,).reshape(1, -1)
 
         # Game trial parameters
         # add to class and enforce list structure
@@ -444,20 +436,25 @@ class ActiveSensingTask(UnityTask):
             else "%0.3f, %0.3f" % (self.state[0], self.state[1])
         )
         h_angle = None if self.state is None else "%0.2f" % (self.state[2])
-        velocity = None if self.state is None else "%0.2f" % (self.state[-1])
+        velocity = None if self.state is None else "%0.2f" % (self.state[9])
         in_left_box = None if self.state is None else "%0.2f" % (self.state[7])
         in_right_box = None if self.state is None else "%0.2f" % (self.state[8])
+        start_box_delay = None if self.state is None else "%0.2f" % (self.state[12])
+        photodiode_state = None if self.state is None else "%0.2f" % (self.state[11])
 
         return {
             "session time": round(self.cur_time, 1),
             "epoch": self.epoch_labels[self.epoch],
             "episode": self.episode,
             "position": pos,
-            "h_angle": self.degrees,
+            "h_angle": h_angle,
+            "degrees": self.degrees,
             "rewards": self.n_rewards,
             "velocity": velocity,
             "in_left_box": in_left_box,
             "in_right_box": in_right_box,
+            "photodiode": photodiode_state,
+            "start_box_delay": start_box_delay,
         }
 
     def get_data(self):

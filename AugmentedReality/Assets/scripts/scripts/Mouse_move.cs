@@ -6,6 +6,7 @@ using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
 //using UnityEngine.UIElements;
 using UnityEngine.UI;
+using System.Diagnostics;
 
 
 public class Mouse_move : Agent
@@ -57,6 +58,8 @@ public class Mouse_move : Agent
 
 	public float photodiode_change_value;
 	public Image sync;
+	Stopwatch stopwatch;
+    float lastFrameTime;
 
 
 	// Start is called before the first frame update
@@ -66,6 +69,9 @@ public class Mouse_move : Agent
 		plane.GetComponent<Target_spawner>().DestroyTargets();
 		rBody = GetComponent<Rigidbody>();
 		ITIScreenOff();
+		stopwatch = new Stopwatch();
+        stopwatch.Start();
+        lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
 	}
 
 	public override void OnEpisodeBegin()
@@ -79,13 +85,13 @@ public class Mouse_move : Agent
 
 		if (distractor == 0.0f)
 		{
-			Debug.Log("no distractor");
+			UnityEngine.Debug.Log("no distractor");
 			plane.GetComponent<Target_spawner>().Spawn();
 			spawned = 1f;
 		}
 		if (distractor == 1.0f)
 		{
-			Debug.Log("distractor");
+			UnityEngine.Debug.Log("distractor");
 			plane.GetComponent<Target_spawner>().Spawn_distractor();
 			spawned = 1f;
 		}
@@ -105,15 +111,25 @@ public class Mouse_move : Agent
       		plane.GetComponent<Target_spawner>().walls_reset();
 	  }
 
+		stopwatch.Restart();
+        lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
 
 		//this.transform.position = new Vector3(0, 0.5f, -6);
 	}
+
+	float GetDeltaTime()
+    {
+        float currentTime = (float)stopwatch.Elapsed.TotalSeconds;
+        float deltaTime = currentTime - lastFrameTime;
+        lastFrameTime = currentTime;
+        return deltaTime;
+    }
 
 	private void ITIScreenOff()
 	{
 		foreach (GameObject can in ITI_screen)
 		{
-			// Debug.Log(can);
+			// UnityEngine.Debug.Log(can);
 			can.SetActive(false);
 
 		}
@@ -121,7 +137,7 @@ public class Mouse_move : Agent
 
 	private void ITIScreenOn()
 	{
-		//Debug.Log("turn on");
+		//UnityEngine.Debug.Log("turn on");
 		foreach (GameObject can in ITI_screen)
 		{
 			can.SetActive(true);
@@ -133,7 +149,8 @@ public class Mouse_move : Agent
 	public override void OnActionReceived(ActionBuffers actions)
 	{
 		float thisReward = 0;
-		totalEpisodeTime += Time.deltaTime;
+		float deltaTime = GetDeltaTime();
+		totalEpisodeTime += deltaTime;
 
 		//move the Mouse, to x y and head angle of actual mouse 
 		if (targets_visable == false)
@@ -150,10 +167,10 @@ public class Mouse_move : Agent
 
 		this.transform.position = new Vector3(x, 0.5f, z);
 		this.transform.eulerAngles = new Vector3(0.0f, head_angle, 0.0f);
-		Vector3 currVel = (this.transform.position - prevPos) / Time.deltaTime;
+		Vector3 currVel = (this.transform.position - prevPos) / deltaTime;
 		speed = currVel.magnitude;
 		prevPos = this.transform.position;
-		//Debug.Log(speed);
+		//UnityEngine.Debug.Log(speed);
 
 		mouseInRight_box = agentInBox(R_box_x_min, R_box_x_max, R_box_z_min, R_box_z_max, false);
 
@@ -161,16 +178,16 @@ public class Mouse_move : Agent
 
 		if (mouse_can_report)
 		{
-			//Debug.Log("mouse can report");
-			MouseReported();
+			//UnityEngine.Debug.Log("mouse can report");
+			MouseReported(deltaTime);
 			if (mouse_report_correct == true)
 			{
-				//Debug.Log("mouse report correct");
+				//UnityEngine.Debug.Log("mouse report correct");
 
 				thisReward = 1f;
 				mouse_report_correct = false;
 				mouse_can_report = false;
-				Debug.Log("rewarded");
+				UnityEngine.Debug.Log("rewarded");
 
 
 			}
@@ -182,12 +199,12 @@ public class Mouse_move : Agent
 
 		// Trigger ITI either - ITI can be timed or next episode can start when the agent looks back at the screen in a frontal box
 
-		triggerGreyScreen_agentTriggerd();
+		triggerGreyScreen_agentTriggerd(deltaTime);
 
 
 
 		SetReward(thisReward);
-		//Debug.Log(thisReward);
+		//UnityEngine.Debug.Log(thisReward);
 
 	}
 
@@ -195,18 +212,19 @@ public class Mouse_move : Agent
 	public override void CollectObservations(VectorSensor sensor)
 	{
 		// log agent position and heading direction
-		sensor.AddObservation(this.transform.position.x);
-		sensor.AddObservation(this.transform.position.z);
-		sensor.AddObservation(this.transform.eulerAngles.y);
-		sensor.AddObservation(mouse_can_report);
-		sensor.AddObservation(ITI);
-		sensor.AddObservation(plane.GetComponent<Target_spawner>().green_on_left);
-		sensor.AddObservation(mouse_report_correct);
-		sensor.AddObservation(mouseInLeft_box);
-		sensor.AddObservation(mouseInRight_box);
-		sensor.AddObservation(speed);
-		sensor.AddObservation(sync.GetComponent<PhotodiodeChange>().sync_state);
-		sensor.AddObservation(photodiode_change_value);
+		sensor.AddObservation(this.transform.position.x);  // 0
+		sensor.AddObservation(this.transform.position.z); // 1
+		sensor.AddObservation(this.transform.eulerAngles.y); // 2
+		sensor.AddObservation(mouse_can_report); // 3
+		sensor.AddObservation(ITI); // 4
+		sensor.AddObservation(plane.GetComponent<Target_spawner>().green_on_left); // 5
+		sensor.AddObservation(mouse_report_correct); // 6
+		sensor.AddObservation(mouseInLeft_box); // 7
+		sensor.AddObservation(mouseInRight_box); // 8
+		sensor.AddObservation(speed); // 9
+		sensor.AddObservation(sync.GetComponent<PhotodiodeChange>().sync_state);// 10
+		sensor.AddObservation(photodiode_change_value); //11
+		sensor.AddObservation(start_box_delay); // 12
 	}
 
 	public override void Heuristic(in ActionBuffers actionsOut)
@@ -243,16 +261,16 @@ public class Mouse_move : Agent
       
     } */
 
-	void triggerGreyScreen_agentTriggerd()
+	void triggerGreyScreen_agentTriggerd(float deltaTime)
 	{
 		if (ITI == true)
 		{
-			//Debug.Log("ITI_triggered");
-			//Debug.Log("ITI_triggered by agent triggered function");
-			inITItimer += Time.deltaTime;
+			//UnityEngine.Debug.Log("ITI_triggered");
+			//UnityEngine.Debug.Log("ITI_triggered by agent triggered function");
+			inITItimer += deltaTime;
 			if (ITIGreyScreen == 1f)
 			{
-				Debug.Log("grey screen");
+				UnityEngine.Debug.Log("grey screen");
 				ITIScreenOn();
 			}
 
@@ -261,8 +279,11 @@ public class Mouse_move : Agent
 			{
 				if (speed < velocity_threshold)
 				{
-					//Debug.Log(speed);
-					start_box_delay += Time.deltaTime;
+					//UnityEngine.Debug.Log(speed);
+					start_box_delay += deltaTime;
+					//UnityEngine.Debug.Log(deltaTime);
+					//UnityEngine.Debug.Log("delta_time");
+					//UnityEngine.Debug.Log(Time.deltaTime);
 					if (start_box_delay > box_delay)
 					{
 						EndEpisode();
@@ -286,7 +307,7 @@ public class Mouse_move : Agent
 		{
 			if (atScreen)
 			{
-				if ((transform.eulerAngles.z >= 0 && this.transform.eulerAngles.y <= TT_box_angle) || (this.transform.eulerAngles.y >= (360 - TT_box_angle) && this.transform.eulerAngles.y <= 360f))
+				if ((transform.eulerAngles.y >= 0 && this.transform.eulerAngles.y <= TT_box_angle) || (this.transform.eulerAngles.y >= (360 - TT_box_angle) && this.transform.eulerAngles.y <= 360f))
 				{
 					return true;
 				}
@@ -321,12 +342,12 @@ public class Mouse_move : Agent
 
 	}
 
-	void MouseReported()
+	void MouseReported(float deltaTime)
 	{
 		if (mouseInLeft_box)
 		{
-			//Debug.Log("mouse in left box");
-			L_box_delay += Time.deltaTime;
+			//UnityEngine.Debug.Log("mouse in left box");
+			L_box_delay += deltaTime;
 		}
 		else
 		{
@@ -335,8 +356,8 @@ public class Mouse_move : Agent
 
 		if (mouseInRight_box)
 		{
-			//Debug.Log("mouse in right box");
-			R_box_delay += Time.deltaTime;
+			//UnityEngine.Debug.Log("mouse in right box");
+			R_box_delay += deltaTime;
 		}
 		else
 		{
@@ -374,7 +395,7 @@ public class Mouse_move : Agent
 		var environmentParameters = Academy.Instance.EnvironmentParameters;
 
 		mouseReportDelay = environmentParameters.GetWithDefault("mouseReportDelay", 5f);
-		start_box_delay = environmentParameters.GetWithDefault("startBoxDelay", 0.25f);
+		box_delay = environmentParameters.GetWithDefault("startBoxDelay", 0.25f);
 		velocity_threshold = environmentParameters.GetWithDefault("velocityThreshold", 0.5f);
 		report_box_delay = environmentParameters.GetWithDefault("reportBoxDelay", 0.1f);
 		distractor = environmentParameters.GetWithDefault("distractor", 1.0f);
