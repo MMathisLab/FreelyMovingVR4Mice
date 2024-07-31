@@ -307,7 +307,7 @@ public class Mouse_move : Agent
 		{
 			if (atScreen)
 			{
-				if ((transform.eulerAngles.z >= 0 && this.transform.eulerAngles.y <= TT_box_angle) || (this.transform.eulerAngles.y >= (360 - TT_box_angle) && this.transform.eulerAngles.y <= 360f))
+				if ((transform.eulerAngles.y >= 0 && this.transform.eulerAngles.y <= TT_box_angle) || (this.transform.eulerAngles.y >= (360 - TT_box_angle) && this.transform.eulerAngles.y <= 360f))
 				{
 					return true;
 				}
