@@ -23,7 +23,7 @@
 ### Procedure
 1. Temporarily turn off the four infrared supplementary lights and cover any excess indicator lights with black electrical tape. Ensure there are no other light sources in the room except for the four screens.
 2. Position the photometer aiming at the center of the screen, 21 cm away, with the top of the photometer flat on the arena floor. You can use tape to mark the position of the photometer to ensure it is placed in the same spot each time.
-3. Sequentially display images with brightness levels ranging from 0 to the maximum (0-255 pixels, with one image every 17 pixels) in full screen mode.
+3. Sequentially display images with brightness levels ranging from 0 to the maximum (0-255 pixels, with one image every 17 pixels) in full screen mode. You can find all the required images [here](https://github.com/MMathisLab/FreelyMovingVR4Mice/tree/main/docs/images/Intensity_calibration_images/)!
 4. Measure the luminance multiple times to ensure stable results.
 5. Adjust the monitor brightness and apply filters to ensure that the light intensity at maximum brightness is approximately 10 cd/m². This corresponds to the mesopic light intensity regime, where both rods and cones are active.
 
