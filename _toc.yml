@@ -32,7 +32,7 @@ parts:
   - file: docs/dlc_processor
 - caption: Experiments, Training protocol
   chapters:
-  - file: docs/training_protocols/training_protocol_2022
+  - file: docs/training_protocols/training_protocol
 
 
 
