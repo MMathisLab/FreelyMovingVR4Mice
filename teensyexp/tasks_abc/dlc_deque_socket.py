@@ -33,7 +33,7 @@ class DLCClient(object):
        
             this_read = self.input_data.pop()
             rec_time = time.time()
-            #self.input_data = deque()
+            self.input_data = deque()
             self.previous = this_read
             
             #print(this_read)

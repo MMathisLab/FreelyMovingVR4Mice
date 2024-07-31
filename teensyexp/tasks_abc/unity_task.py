@@ -59,7 +59,6 @@ class UnityTask(Task):
         self.agent_group = agent_group
         self.agent_num = 0
         self.channel = EnvironmentParametersChannel()
-        #self.channel = FloatPropertiesChannel()
         
 
         self.epochs = np.cumsum(self.as_list(epochs))
@@ -101,8 +100,6 @@ class UnityTask(Task):
         self.env.reset()
         self.agent = list(self.env.behavior_specs)[0]
         self.agent_spec = self.env.behavior_specs[self.agent]
-        # print("-----> Agent: ", self.agent)
-        # print("-----> Agent specs: ", self.agent_spec.observation_specs[0].shape)
 
         ### set up state observations and video (if necessary) ###
 
@@ -142,11 +139,6 @@ class UnityTask(Task):
         
         ### start teensy ###
         super().start()
-        #self.set_channel()
-        # self.log_channel()
-        #self.env.reset()
-        #self.set_channel()
-        #self.reset_environment()
         
 
     def as_list(self, val):
@@ -204,11 +196,11 @@ class UnityTask(Task):
         if self.agent_num in terminal_steps.agent_id:
             # Return TerminalSteps which contains the last observation, reward, etc., for the agent
             step_result = terminal_steps[self.agent_num]
-            # done = True
+            self.done = True
         else:
             # Return DecisionSteps which contains the current observation, reward, etc., for the agent
             step_result = decision_steps[self.agent_num]
-            # done = False
+            self.done = False
 
         return step_result
 
@@ -255,7 +247,6 @@ class UnityTask(Task):
         if self.agent_spec.action_spec.is_continuous():
             dtype = np.float32
             action_size = self.agent_spec.action_spec.continuous_size
-            # action = np.zeros(action_size, dtype=dtype)
             action = np.array(
                 [
                     np.sin(time.time()) * 9,
@@ -265,15 +256,6 @@ class UnityTask(Task):
                 ],
                 dtype=dtype,
             )
-            # action = np.array(
-            #     [
-            #         0.0,
-            #         -9.0,
-            #         0.59740335,
-            #         np.abs(np.sin(time.time() * 4)),
-            #     ],
-            #     dtype=dtype,
-            # )
 
         if self.agent_spec.action_spec.is_discrete():
             dtype = np.int32
@@ -294,12 +276,9 @@ class UnityTask(Task):
         increments agent's number
         """
         self.set_channel()
-        # self.log_channel()
         self.env.reset()
-        self.agent_num += 1
         step_result = self.get_step_result()
         self.state = step_result.obs[self.vec_obs_ind]
-        # self.state = self.get_state()
         self.ep_reward = 0
         self.episode_start_time = self.cur_time
         
@@ -327,7 +306,6 @@ class UnityTask(Task):
         action_tuple = ActionTuple()
         action_tuple.add_continuous(self.action.reshape(1, -1))
         self.env.set_actions(self.agent, action_tuple)
-        # print("Action: ", self.action)
 
         self.env.step()  # unity env++
 
@@ -336,27 +314,16 @@ class UnityTask(Task):
         if hasattr(self, "vid_writer"):
             self.vid_writer.write(step_result.obs[self.vis_obs_ind])
 
-        ### Get the new simulation results ###
-        decision_steps, terminal_steps = self.env.get_steps(self.agent)
-
-        # Check if the agent is done (terminated)
-        if self.agent_num in terminal_steps.agent_id:
-            self.reward = terminal_steps[self.agent_num].reward
-            done = True
-        if self.agent_num in decision_steps.agent_id:
-            self.reward = decision_steps[self.agent_num].reward
-            done = False
-
+        self.reward = step_result.reward
         self.reward_vec.append(self.reward)
         self.ep_reward += self.reward
 
-        self.terminal = done  # last frame --> next trial
+        self.terminal = self.done  # last frame --> next trial
         self.terminal_vec.append(self.terminal)
         self.check_reward()
 
         ### get info ###
         self.state = step_result.obs[self.vec_obs_ind]
-        # self.state = self.get_state()
         info = self.get_info()
 
         ### check reset, epochs, and condition to end session; update state ###
