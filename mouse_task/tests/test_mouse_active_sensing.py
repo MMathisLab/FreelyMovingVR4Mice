@@ -86,45 +86,50 @@ class TestDetectionP1Randomization(unittest.TestCase):
             )
     
     def test_target_on_left(self):
+        # test that target appears on the left
         self.task.prob_obj_on_left = 1.0
         self.task.random_target_location()
         self.assertEqual(self.task.object_on_left, 1.0)
     
     def test_target_on_right(self):
+        # test that target appears on the righ
         self.task.prob_obj_on_left = 0.0
         self.task.random_target_location()
         self.assertEqual(self.task.object_on_left, 0.0)
         
     def test_target_on_lr(self):
+        # test that target appears on either the left or the right
         self.task.prob_obj_on_left = 0.5
         self.task.random_target_location()
         self.assertIn(self.task.object_on_left, [0.0,1.0])
         
     def test_block_sampler_stay(self):
-         self.task.block_length = 2
-         self.task.correct = 1
-         self.task.block_Left = 0.0
-         self.task.prob_block_coherence = 1.0
-         self.task.block_sampler()
-         self.assertEqual(self.task.object_on_left, 0.0)
+        # test that if number correct is less than the block length we stay within the same block
+        self.task.block_length = 2
+        self.task.correct = 1
+        self.task.block_Left = 0.0
+        self.task.prob_block_coherence = 1.0
+        self.task.block_sampler()
+        self.assertEqual(self.task.object_on_left, 0.0)
          
-         self.task.block_length = 2
-         self.task.correct = 1
-         self.task.block_Left = 1.0
-         self.task.prob_block_coherence = 1.0
-         self.task.block_sampler()
-         self.assertEqual(self.task.object_on_left, 1.0)
+        self.task.block_length = 2
+        self.task.correct = 1
+        self.task.block_Left = 1.0
+        self.task.prob_block_coherence = 1.0
+        self.task.block_sampler()
+        self.assertEqual(self.task.object_on_left, 1.0)
          
-         self.task.block_length = 2
-         self.task.correct = 1
-         self.task.block_Left = 1.0
-         self.task.prob_block_coherence = 0.0
-         self.task.block_sampler()
-         self.assertEqual(self.task.object_on_left, 0.0)
+        self.task.block_length = 2
+        self.task.correct = 1
+        self.task.block_Left = 1.0
+        self.task.prob_block_coherence = 0.0
+        self.task.block_sampler()
+        self.assertEqual(self.task.object_on_left, 0.0)
          
          
     def test_block_switch(self):
-        # correct = block length
+        # if the block length and the number correct is the same if it is we should switch side
+        # if block coherence if one and we are in a left block then we should switch to the right side
         self.task.block_length = 2
         self.task.correct = 2
         self.task.block_Left = 1.0
@@ -132,12 +137,15 @@ class TestDetectionP1Randomization(unittest.TestCase):
         self.task.block_sampler()
         self.assertEqual(self.task.object_on_left, 0.0)
         
+        # if block coherence is 0 and we are in a left block 
+        # the next block should left but the target should be on the right
         self.task.block_length = 2
         self.task.correct = 2
         self.task.block_Left = 1.0
         self.task.prob_block_coherence = 0.0
         self.task.block_sampler()
         self.assertEqual(self.task.object_on_left, 1.0)
+        self.assertEqual(self.task.block_Left, 0.0)
 
 
  
