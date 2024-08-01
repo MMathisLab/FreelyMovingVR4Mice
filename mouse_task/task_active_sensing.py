@@ -165,11 +165,16 @@ class ActiveSensingTask(UnityTask):
         )
 
         self.slit_depth = self.as_list(slit_depth)
+        self.slit_depth_param = slit_depth
         self.epoch_labels = self.as_list(epoch_labels)
         self.target_spread = self.as_list(target_spread)
+        self.target_spread_param = target_spread
         self.target_height = self.as_list(target_height)
+        self.target_height_param = target_height
         self.mouse_report_delay = self.as_list(mouse_report_delay)
         self.target_rotation = self.as_list(target_rotation)
+        self.target_rotation_param =target_rotation
+        self.mouse_report_delay_param = mouse_report_delay
 
         self.prob_obj_on_left = prob_obj_on_left
         self.prob_block_coherence = prob_block_coherence
@@ -195,11 +200,16 @@ class ActiveSensingTask(UnityTask):
         self.distractor = distractor
         self.target_size = target_size
         self.target_selection = self.as_list(target_selection)
+        self.target_selection_param = target_selection
         self.distractor_selection = self.as_list(distractor_selection)
+        self.distractor_selection_param = distractor_selection
         self.occlusion_type = self.as_list(occlusion_type)
+        self.occlusion_type_param = occlusion_type 
         self.camera_type = camera_type
         self.target_distance = self.as_list(target_distance)
+        self.target_distance_param = target_distance
         self.use_dlc = use_dlc
+        self.epoch_param = epochs
 
         self.n_rewards = 0
 
@@ -350,7 +360,6 @@ class ActiveSensingTask(UnityTask):
         self.trial_slit_size.append(this_slit_size)
         self.trial_slit_depth.append(this_slit_depth)
         self.trial_target_spread.append(this_target_spread)
-        self.trial_slit_depth.append(this_slit_depth)
         self.trial_target_height.append(this_target_height)
         self.trial_mouse_report_delay.append(this_mouse_report_delay)
         self.trial_distractor_selection.append(this_distractor_selection)
@@ -359,6 +368,8 @@ class ActiveSensingTask(UnityTask):
         print(self.trial_occlusion_type)
         self.trial_target_distance.append(this_target_distance)
         self.trial_target_rotation.append(this_target_rotation)
+        self.trial_reward_size.append(self.trial_reward_size)
+        self.trial_prob_obj_on_left.append(self.trial_prob_obj_on_left)
         # super().reset_environment()
 
     def get_action(self):
@@ -495,5 +506,19 @@ class ActiveSensingTask(UnityTask):
         data_dict["prob_obj_on_left"] = self.prob_obj_on_left
         data_dict["slit_size_param"] = np.array(self.slit_size)
         data_dict["block_length_param"] = np.array(self.block_length)
+        data_dict["rotate_camera_param"] = self.rotate_camera
+        data_dict["epoch_param"] =self.epoch_param
+        data_dict["mouse_report_delay_param"] =self.mouse_report_delay_param
         data_dict["prob_block_coherence"] = np.array(self.prob_block_coherence)
+        data_dict["slit_depth_param"] =self.slit_depth_param
+        data_dict["target_selection_param"] = self.target_selection_param
+        data_dict["distractor_selection_param"] =self.distractor_selection_param
+        data_dict["occlusion_type_param"] = self.occlusion_type_param
+        data_dict["target_spread_param"] = self.target_spread_param
+        data_dict["target_rotation_param"] =self.target_rotation_param
+        data_dict["target_height_param"] =self.target_height_param
+        data_dict["target_distance_param"]=self.target_distance_param
+        data_dict["trial_prob_object_left"] = np.array(self.trial_prob_obj_on_left)
+        data_dict["trial_target_spread"] = np.array(self.trial_target_spread)
+        data_dict["trial_target_height"] =np.array(self.trial_target_height)
         return data_dict
