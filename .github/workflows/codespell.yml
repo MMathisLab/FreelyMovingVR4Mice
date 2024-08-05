@@ -20,4 +20,4 @@ jobs:
         with:
           args: --ignore-words=AssetIn
           ignore_words_list: ./ignore_list.txt
-          skip: './mouse_task/visual_discrim_unity_build/*,./teensyexp/teensy.py,./mouse_task/unity_ar/MonoBleedingEdge/etc/mono/browscap.ini,./mouse_task/latency_tests/*, ./ignore_list.txt'
+          skip: './mouse_task/visual_discrim_unity_build/*,./mouse_task/unity_ar/MonoBleedingEdge/etc/mono/browscap.ini,./ignore_list.txt'
