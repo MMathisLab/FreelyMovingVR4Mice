@@ -1,6 +1,6 @@
 # FreelyMovingVR4mice overview
 
-```{image} ../docs/images/VR4mice_schematic.png
+```{image} ../docs/images/Rig_Figure.jpg
 :alt: AR
 :class: bg-primary mb-1
 :width: 400px
@@ -16,12 +16,19 @@ FreelyMovingVR4mice uses two GUIs (`vr4mice` and `Deeplabcut-live-gui`) that wer
 - GPU for DeepLabCut, with at least 8 GB of memory
 
 ## Software requirements
+<!-- Old requirements: -->
+<!-- 
 - Python3+ (tested on: 3.7)
 - Unity3D (versions tested: 2019.3.2.f1)
+- see `setup.py` for additional requirements 
+-->
+
+<!-- New requirements: -->
+- Python ***v3.10.12*** or above
+- Unity3D (Version tested: ***2022.3.15f1***)
 - see `setup.py` for additional requirements
 
-
-The augmented reality system runs on a python framework, vr4mice, this code was initially developed by Gary Kane, Michael Beauzile, and Mackenzie Mathis as a simple and scalable control suite for a host of systems neuroscience tasks. This was expanded with Thomas Sainsbury, Sebastien Hausmann, Mariia Popova and Jessy Lauer. This framework handles input and output to a teensy, parses actions to the Unity video game and handles all data logging for the experiments. In addition, it provides a simple GUI for the user to run the experiments and manually change parameters which control the experiments trial-like structure.
+The augmented reality system runs on a python framework, **vr4mice**, this code was initially developed by ***Gary Kane***, ***Michael Beauzile***, and ***Mackenzie Mathis*** as a simple and scalable control suite for a host of systems neuroscience tasks. This was expanded with ***Thomas Sainsbury***, ***Sebastien Hausmann***, ***Mariia Popova*** and ***Jessy Lauer***. This framework handles input and output to a teensy, parses actions to the Unity video game and handles all data logging for the experiments. In addition, it provides a simple GUI for the user to run the experiments and manually change parameters which control the experiments trial-like structure.
 
 
 
