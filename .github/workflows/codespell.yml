@@ -21,5 +21,4 @@ jobs:
           args: --ignore-words-list=./ignore_list.txt
           skip: | 
             './mouse_task/visual_discrim_unity_build/*,
-            ./mouse_task/unity_ar/MonoBleedingEdge/etc/mono/browscap.ini,
-            ./ignore_list.txt'
+            ./mouse_task/unity_ar/MonoBleedingEdge/etc/mono/browscap.ini'
