@@ -33,7 +33,7 @@ class ActiveSensingTask(UnityTask):
     It inherits from UnityTask and GuiTask from the `teensyexp` module.
 
     Attributes:
-        
+
     teensy: Teensy object, instance of teensy class that controls the teensy microcontroller.
     monitor: Not used.
     write_video: Boolean, default is `False`. If `True`, video output will be recorded.
@@ -59,7 +59,7 @@ class ActiveSensingTask(UnityTask):
     occlusion_type: Integer, allows the user to select the type of occlusion that they want to use. (`0` = no occlusion, `1` = slit occlusion, `2` = central wall), default is no occlusion.
     camera_type: Integer, allows the user to select between on (Camera_type = `0`) and off axis camera (Camera_type = `1`) modes.
     target_spread: Float, specifies the distance between the targets.
-    target_rotation: Float, altering this parameter causes the tips of the targets to be rotated inward making them easier for the animal to see. 
+    target_rotation: Float, altering this parameter causes the tips of the targets to be rotated inward making them easier for the animal to see.
     target_size: Integer, specifies the size of the targets i recommend using size `1` for the teardrop and double teardrop.
     target_height: Float, specifies the height at which the targets are spawned.
     block_length: Float, specifies how many rewards the mouse has to get correct before the OOI switches sides. To enforce this make sure that you have the prop_object_on left parameter set to `1.0`. If prob_object_on_left is set to `.5` then this block length parameter has no effect as there is a 50% chance of the object appearing on the each side.
@@ -153,7 +153,15 @@ class ActiveSensingTask(UnityTask):
         self.start_box_delay = start_box_delay
         self.velocity_threshold = velocity_threshold
 
-        self.previous = np.array([9, -5, 0, 0,], dtype=np.float16,).reshape(1, -1)
+        self.previous = np.array(
+            [
+                9,
+                -5,
+                0,
+                0,
+            ],
+            dtype=np.float16,
+        ).reshape(1, -1)
 
         # Game trial parameters
         # add to class and enforce list structure
@@ -173,7 +181,7 @@ class ActiveSensingTask(UnityTask):
         self.target_height_param = target_height
         self.mouse_report_delay = self.as_list(mouse_report_delay)
         self.target_rotation = self.as_list(target_rotation)
-        self.target_rotation_param =target_rotation
+        self.target_rotation_param = target_rotation
         self.mouse_report_delay_param = mouse_report_delay
 
         self.prob_obj_on_left = prob_obj_on_left
@@ -204,7 +212,7 @@ class ActiveSensingTask(UnityTask):
         self.distractor_selection = self.as_list(distractor_selection)
         self.distractor_selection_param = distractor_selection
         self.occlusion_type = self.as_list(occlusion_type)
-        self.occlusion_type_param = occlusion_type 
+        self.occlusion_type_param = occlusion_type
         self.camera_type = camera_type
         self.target_distance = self.as_list(target_distance)
         self.target_distance_param = target_distance
@@ -461,6 +469,7 @@ class ActiveSensingTask(UnityTask):
             "h_angle": h_angle,
             "degrees": self.degrees,
             "rewards": self.n_rewards,
+            "accuracy": float(self.n_rewards) / self.episode,
             "velocity": velocity,
             "in_left_box": in_left_box,
             "in_right_box": in_right_box,
@@ -507,18 +516,18 @@ class ActiveSensingTask(UnityTask):
         data_dict["slit_size_param"] = np.array(self.slit_size)
         data_dict["block_length_param"] = np.array(self.block_length)
         data_dict["rotate_camera_param"] = self.rotate_camera
-        data_dict["epoch_param"] =self.epoch_param
-        data_dict["mouse_report_delay_param"] =self.mouse_report_delay_param
+        data_dict["epoch_param"] = self.epoch_param
+        data_dict["mouse_report_delay_param"] = self.mouse_report_delay_param
         data_dict["prob_block_coherence"] = np.array(self.prob_block_coherence)
-        data_dict["slit_depth_param"] =self.slit_depth_param
+        data_dict["slit_depth_param"] = self.slit_depth_param
         data_dict["target_selection_param"] = self.target_selection_param
-        data_dict["distractor_selection_param"] =self.distractor_selection_param
+        data_dict["distractor_selection_param"] = self.distractor_selection_param
         data_dict["occlusion_type_param"] = self.occlusion_type_param
         data_dict["target_spread_param"] = self.target_spread_param
-        data_dict["target_rotation_param"] =self.target_rotation_param
-        data_dict["target_height_param"] =self.target_height_param
-        data_dict["target_distance_param"]=self.target_distance_param
+        data_dict["target_rotation_param"] = self.target_rotation_param
+        data_dict["target_height_param"] = self.target_height_param
+        data_dict["target_distance_param"] = self.target_distance_param
         data_dict["trial_prob_object_left"] = np.array(self.trial_prob_obj_on_left)
         data_dict["trial_target_spread"] = np.array(self.trial_target_spread)
-        data_dict["trial_target_height"] =np.array(self.trial_target_height)
+        data_dict["trial_target_height"] = np.array(self.trial_target_height)
         return data_dict
