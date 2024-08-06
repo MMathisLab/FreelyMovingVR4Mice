@@ -56,6 +56,14 @@ transformer = {  # todo add file preprocessing
     # Grey_screen_active : #skip (@tom) => use the grey_screen_active value only
     "r_report_box": "R_report_box",
     "l_report_box": "L_report_box:",
+    "right_box_x_min": "r_box_x_min",
+    "right_box_x_max": "r_box_x_max",
+    "right_box_z_min": "r_box_z_min",
+    "right_box_z_max": "r_box_z_max",
+    "left_box_x_min": "l_box_x_min",
+    "left_box_x_max": "l_box_x_max",
+    "left_box_z_min": "l_box_z_min",
+    "left_box_z_max": "l_box_z_max",
 }
 
 # todo: optimize this part of parcing (auto)
