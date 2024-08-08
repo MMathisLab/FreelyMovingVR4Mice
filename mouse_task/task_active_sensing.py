@@ -376,8 +376,8 @@ class ActiveSensingTask(UnityTask):
         print(self.trial_occlusion_type)
         self.trial_target_distance.append(this_target_distance)
         self.trial_target_rotation.append(this_target_rotation)
-        self.trial_reward_size.append(self.trial_reward_size)
-        self.trial_prob_obj_on_left.append(self.trial_prob_obj_on_left)
+        self.trial_reward_size.append(self.reward_size)
+        self.trial_prob_obj_on_left.append(self.prob_obj_on_left)
         # super().reset_environment()
 
     def get_action(self):
@@ -460,6 +460,7 @@ class ActiveSensingTask(UnityTask):
         in_right_box = None if self.state is None else "%0.2f" % (self.state[8])
         start_box_delay = None if self.state is None else "%0.2f" % (self.state[12])
         photodiode_state = None if self.state is None else "%0.2f" % (self.state[11])
+        accuracy = 0.0 if self.episode == 0 else "%0.2f" % (float(self.n_rewards) / self.episode)
 
         return {
             "session time": round(self.cur_time, 1),
@@ -469,7 +470,7 @@ class ActiveSensingTask(UnityTask):
             "h_angle": h_angle,
             "degrees": self.degrees,
             "rewards": self.n_rewards,
-            "accuracy": float(self.n_rewards) / self.episode,
+            "accuracy": accuracy,
             "velocity": velocity,
             "in_left_box": in_left_box,
             "in_right_box": in_right_box,
