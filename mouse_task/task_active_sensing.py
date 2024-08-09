@@ -321,7 +321,7 @@ class ActiveSensingTask(UnityTask):
         this_mouse_report_delay = self.get_epoch_value("mouse_report_delay")
         this_target_selection = self.get_epoch_value("target_selection")
         this_distractor_selection = self.get_epoch_value("distractor_selection")
-        this_occlusion_type = 0.0  # self.get_epoch_value("occlusion_type")
+        this_occlusion_type =  self.get_epoch_value("occlusion_type")
         this_target_distance = self.get_epoch_value("target_distance")
         this_target_rotation = self.get_epoch_value("target_rotation")
 
