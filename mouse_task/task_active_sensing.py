@@ -153,15 +153,7 @@ class ActiveSensingTask(UnityTask):
         self.start_box_delay = start_box_delay
         self.velocity_threshold = velocity_threshold
 
-        self.previous = np.array(
-            [
-                9,
-                -5,
-                0,
-                0,
-            ],
-            dtype=np.float16,
-        ).reshape(1, -1)
+        self.previous = np.array([9, -5, 0, 0,], dtype=np.float16,).reshape(1, -1)
 
         # Game trial parameters
         # add to class and enforce list structure
@@ -321,7 +313,7 @@ class ActiveSensingTask(UnityTask):
         this_mouse_report_delay = self.get_epoch_value("mouse_report_delay")
         this_target_selection = self.get_epoch_value("target_selection")
         this_distractor_selection = self.get_epoch_value("distractor_selection")
-        this_occlusion_type =  self.get_epoch_value("occlusion_type")
+        this_occlusion_type = self.get_epoch_value("occlusion_type")
         this_target_distance = self.get_epoch_value("target_distance")
         this_target_rotation = self.get_epoch_value("target_rotation")
 
@@ -460,7 +452,11 @@ class ActiveSensingTask(UnityTask):
         in_right_box = None if self.state is None else "%0.2f" % (self.state[8])
         start_box_delay = None if self.state is None else "%0.2f" % (self.state[12])
         photodiode_state = None if self.state is None else "%0.2f" % (self.state[11])
-        accuracy = 0.0 if self.episode == 0 else "%0.2f" % (float(self.n_rewards) / self.episode)
+        accuracy = (
+            0.0
+            if self.episode == 0
+            else "%0.2f" % (float(self.n_rewards) / self.episode)
+        )
 
         return {
             "session time": round(self.cur_time, 1),
