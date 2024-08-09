@@ -46,6 +46,7 @@ class dlc_inference_w_pd(Processor):
         self.signal_delay = signal_delay
         self.signal_freq = freq
         self.use_teensy = use_teensy
+        self.previous = np.array([0,0])
         if self.use_teensy == 1:
             self.teensy = TeensyLatency(com, baudrate=baudrate)
             print("using_teensy")
@@ -56,7 +57,11 @@ class dlc_inference_w_pd(Processor):
         conf = pose[:, 2]
         head_xy = xy[[0, 1, 2, 3, 4, 5, 6, 26], :]
         head_conf = conf[[0, 1, 2, 3, 4, 5, 6, 26]]
-        center = np.average(head_xy, axis=0, weights=head_conf)
+        
+        if np.mean(head_conf) < 0.6:
+            center = self.previous
+        else:
+            center = np.average(head_xy, axis=0, weights=head_conf)
         body_axis = xy[7] - xy[13]  # tail_base -> neck
         body_axis /= sqrt(np.sum(body_axis ** 2))
         head_axis = xy[0] - xy[7]  # neck -> nose
@@ -85,6 +90,7 @@ class dlc_inference_w_pd(Processor):
 
         self.center_x.append(vals[0])
         self.center_y.append(vals[1])
+        self.previous = center
         # print("center_y: ", vals [1], ", center_x: ", vals [0])
         self.heading_direction.append(vals[2])
         self.head_angle.append(vals[3])
@@ -94,7 +100,7 @@ class dlc_inference_w_pd(Processor):
         self.frame_time.append(kwargs["frame_time"])
 
         self.conn.send([time.time(), vals[0], vals[1], vals[2], vals[3], vals[4]])
-
+        self.previous = center
         return pose
 
     def get_signal(self, signal_type, curr_time, st, freq, delay):
