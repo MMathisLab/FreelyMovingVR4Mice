@@ -90,7 +90,7 @@ class dlc_inference_w_pd(Processor):
 
         self.center_x.append(vals[0])
         self.center_y.append(vals[1])
-        self.previous = center
+        
         # print("center_y: ", vals [1], ", center_x: ", vals [0])
         self.heading_direction.append(vals[2])
         self.head_angle.append(vals[3])
