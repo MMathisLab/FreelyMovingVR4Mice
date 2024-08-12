@@ -442,13 +442,14 @@ class ActiveSensingTask(UnityTask):
      
         for x in slit_sizes_list:
             if not isinstance(x, (int, float)):
-                raise TypeError(f"Element {x} in slit_sizes_list is not numeric.")
+                raise TypeError(f"All elements in slit_sizes_list must be numeric, got {x} which is a {type(x)}.")
         
         if len(slit_sizes_list) == 3:
             data = np.linspace(slit_sizes_list[0], slit_sizes_list[1], int(slit_sizes_list[2]))
+            print(f"3 elements found in slit size list: using linspace function, here are your occluder sizes: {data}")
         else:
             data = np.array(slit_sizes_list)
-        
+            print(f"{len(slit_sizes_list)} elements found, using the slit size list explicitly, here are you occluder sizes: {data}")
         return data
             
 
