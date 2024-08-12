@@ -129,8 +129,10 @@ class TestDetectionP1Randomization(unittest.TestCase):
          
          
     def test_block_switch(self):
-        """ if the block length and the number correct is the same if it is we should switch side
-        if block coherence if one and we are in a left block then we should switch to the right side"""
+        """ Tests that the block switches at the correct time.
+        """
+        # if block coherence is 1 and we are in a left block 
+        # the next block should right and the target should appear on the right
         self.task.block_length = 2
         self.task.correct = 2
         self.task.block_Left = 1.0
