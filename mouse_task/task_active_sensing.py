@@ -424,14 +424,17 @@ class ActiveSensingTask(UnityTask):
             )
         print("object on left", self.object_on_left)
         
-    def get_slit_sizes(self, slit_sizes_list):
-        """
-        A function that creates a vector of slit sizes which can be passed the the uniform random sampler in the set.channel() function
+    def get_slit_sizes(self, slit_sizes_list: list):
+        """ Create a vector of slit sizes which can be passed to the uniform random sampler in the set.channel() function.
         
-        input:  this is a list of numbers [min_slit_size, max_slit_size, number_of_slit_sizes] ie. [10,20,5] would give a range of 5 slit sizes with 10 being the minimum and 20 being the max.
-        If you want to pass a custom number on multiple slit sizes you can pass this in as a list of numbers ie [12,8,6,5,3] as long as the len of that list if > 3.
+        Args: 
+            slit_sizes_list: List, of numbers [min_slit_size, max_slit_size, number_of_slit_sizes] ie. [10,20,5] would give
+            a range of 5 slit sizes with 10 being the minimum and 20 being the max.
+            If you want to pass a custom number on multiple slit sizes you can pass this in as a 
+            list of numbers ie [12,8,6,5,3] as long as the len of that list if > 3.
         
-        Output: np.array, of slit sizes to be sampled from.
+        Returns: 
+            np.array, of slit sizes to be sampled from.
         """
  
         if len(slit_sizes_list) == 0:
