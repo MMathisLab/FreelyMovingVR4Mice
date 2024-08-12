@@ -52,8 +52,8 @@ class ActiveSensingTask(UnityTask):
     prop_obj_on_Left: Float, probability of the OOI being on the left side (default is `0.5`). This parameter is used if the block length is set to 1, if the block length is > 1 then prob block coherence is used.
     prob_block_coherence: Float, this is the probability that the OOI will appear on the same side as the block. ie if the block was a left block and the prob_block_coherence was 1 then it would appear on the left (default is 0.5). This parameter is only used if the block length is greater that 1.
     mouse_report_delay: Float, mouse report delay default is `0`.
-    slit_size: List, this is a list of numbers [min_slit_size, max_slit_size, number_of_slit_sizes] ie. [10,20,5] would give a range of 5 slit sizes with 10 being the minimum and 20 being the max.
-    slit_depth: Float, this parameter controls the depth or thickness of the walls (default = 0.2). If you want to pass a custom number on multiple slit sizes you can pass this in as a list of numbers ie [12,8,6,5,3] as long as the len of that list if > 3
+    slit_size: List, this is a list of numbers [min_slit_size, max_slit_size, number_of_slit_sizes] ie. [10,20,5] would give a range of 5 slit sizes with 10 being the minimum and 20 being the max. If you want to pass a custom number on multiple slit sizes you can pass this in as a list of numbers ie [12,8,6,5,3] as long as the len of that list if > 3
+    slit_depth: Float, this parameter controls the depth or thickness of the walls (default = 0.2). 
     target_selection: Integer, this parameter selects what object for the OOI (`0.` = white cube, `1.` = black cube, `2.` = teardrop grey, `3.` = pacman grey, `4.` = teardrop black, `5.` = pacman black, `6.` = teardrop white, `7.` = pacman white,`8.`= zebra teardrop, `9.`= zebra ball, `10.`=white ball, `11.`=light gray zebra teardrop, `12.` = dark gray zebra teardrop )
     distractor_selection: Integer, this parameter selects what object for the distractor (`0.` = white cube, `1.` = black cube, `2.` = teardrop grey, `3.` = pacman grey, `4.` = teardrop black, `5.` = pacman black, `6.` = teardrop white, `7.` = pacman white,`8.`= zebra teardrop, `9.`= zebra ball, `10.`=white ball, `11.`=light gray zebra teardrop, `12.` = dark gray zebra teardrop )
     occlusion_type: Integer, allows the user to select the type of occlusion that they want to use. (`0` = no occlusion, `1` = slit occlusion, `2` = central wall), default is no occlusion.
@@ -425,17 +425,24 @@ class ActiveSensingTask(UnityTask):
         print("object on left", self.object_on_left)
         
     def get_slit_sizes(self, slit_sizes_list):
-    # Check if the list is empty
+        """
+        A function that creates a vector of slit sizes which can be passed the the uniform random sampler in the set.channel() function
+        
+        input:  this is a list of numbers [min_slit_size, max_slit_size, number_of_slit_sizes] ie. [10,20,5] would give a range of 5 slit sizes with 10 being the minimum and 20 being the max.
+        If you want to pass a custom number on multiple slit sizes you can pass this in as a list of numbers ie [12,8,6,5,3] as long as the len of that list if > 3.
+        
+        Output: np.array, of slit sizes to be sampled from.
+        """
+ 
         if len(slit_sizes_list) == 0:
             raise ValueError("slit_sizes_list cannot be empty.")
-        
-        # Check if the list has fewer than 3 elements
+    
         if len(slit_sizes_list) < 3:
             raise ValueError("slit_sizes_list must have at least 3 elements.")
-        
-        # Ensure all elements in slit_sizes_list are numeric
-        if not all(isinstance(x, (int, float)) for x in slit_sizes_list):
-            raise TypeError("All elements in slit_sizes_list must be numeric.")
+     
+        for x in slit_sizes_list:
+            if not isinstance(x, (int, float)):
+                raise TypeError(f"Element {x} in slit_sizes_list is not numeric.")
         
         if len(slit_sizes_list) == 3:
             data = np.linspace(slit_sizes_list[0], slit_sizes_list[1], int(slit_sizes_list[2]))
