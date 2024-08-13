@@ -6,95 +6,21 @@ import pandas as pd
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema  # todo adjust paths (base/utils)
 
+from vr4mice.schema import vr4mice
+
 schema_name = "dlc"
 schema = get_schema(schema_name, locals())
 
 logger = Logger.get_logger()
 
-
-# to do add dataset in key, as now it's by filepath and that's sad
-
-
-@schema
-class VideoToAnalyze(dj.Manual):
-    """
-    path should be added from main Video pipelines table
-    """
-
-    definition = """
-    camera_idx : int 
-    video_filepath: varchar(255)
-    ---
-    """
-
-    def get_dataset(self, key):
-        key2 = {"video_filepath": key["video_filepath"]}
-        dataset = (vr4mice.Video & key2).fetch1("dataset")
-        return dataset
-
-
-@schema
-class ModelName(dj.Lookup):  # add adapter : separate table
-    """
-    ModelName definition table:
-    stores the names of the DLC models applied to the video analysis;
-    can be extended in case of the new model type;
-    currently associated with model name used in the dlc gui output
-
-    model_name is not PK, to make it possible to rename,
-    but still keeping all data coherent
-    """
-
-    definition = """
-    model_name: varchar(255)
-    """
-    contents = [["DLC"]]
-
-    def add(self, model_name):
-        self.insert1({"model_name": model_name})
-
-
-@schema
-class DLC(dj.Imported):  # params?
-    """
-    DLC definition table:
-    stores local paths to keypoints and processed keypoints files
-    """
-
-    definition = """
-    -> VideoToAnalyze
-    -> ModelName
-    ---
-    keypoints_filepath: varchar(255)  # keypoints hdf5
-    proc_filepath: varchar(255)  # computed dlc metrics
-    """
-
-    @property
-    def key_source(self):
-        return VideoToAnalyze
-
-    def make(self, key):
-        from vr4mice.schema import vr4mice
-
-        key2 = {"video_filepath": key["video_filepath"]}
-        data = ((vr4mice.Video * vr4mice.DLC) & key2).fetch(
-            "model_name",
-            "video_filepath",
-            "keypoints_filepath",
-            "proc_filepath",
-            as_dict=True,
-        )[0]
-        data = {**key, **data}
-        self.insert1(data)
-        logger.info(f"{self.__class__.__name__} populated for {key}.")
-
+#TODO: link with dlc base schemas!!
 
 @schema
 class DLCProcessor(dj.Imported):
     """ """
 
     definition = """
-    -> DLC
+    -> vr4mice.DLC
     ---
     time_stamp: longblob
     x_pos: longblob
@@ -104,7 +30,10 @@ class DLCProcessor(dj.Imported):
     """
 
     def make(self, key):
-        fpath = (DLC & key).fetch1("proc_filepath")
+        fpath = ((vr4mice.Video * vr4mice.DLC) & key).fetch(
+            "proc_filepath",
+        )[0]
+
         data = np.load(fpath, allow_pickle=True)
         data = {**key, **data}
         self.insert1(data)
@@ -116,7 +45,7 @@ class DLCKeypoints(dj.Imported):
     """ """
 
     definition = """
-    -> DLC 
+    -> vr4mice.DLC
     version               : varchar(8) # keeps the deeplabcut version
     joint_name            : varchar(512) # Name of the joints
     ---
@@ -130,11 +59,15 @@ class DLCKeypoints(dj.Imported):
 
     def make(self, key):
 
-        from vr4mice.schema import vr4mice
+        data = ((vr4mice.Video * vr4mice.DLC) & key).fetch(
+            "keypoints_filepath",
+            "timestamp_filepath",
+            as_dict=True,
+        )[0]
 
-        h5fpath = (DLC & key).fetch1("keypoints_filepath")
-        key2 = {"video_filepath": key["video_filepath"]}
-        tsfpath = (vr4mice.Video & key2).fetch1("timestamp_filepath")
+        h5fpath = data["keypoints_filepath"]
+        tsfpath = data["timestamp_filepath"]
+        
         try:
             df = pd.read_hdf(h5fpath, "df_with_missing")
         except Exception as e:
@@ -144,14 +77,14 @@ class DLCKeypoints(dj.Imported):
         except Exception as e:
             logger.info("Error occurred while loading NPY file:", e)
 
-        logger.info("Populating for: " + str(h5fpath) + " and " + str(tsfpath))
+        logger.info(f"Populating for: {h5fpath} and {tsfpath})")
 
         body_parts = df.columns.get_level_values(0)  # 0 as no scorer
         _, idx = np.unique(body_parts, return_index=True)
         body_parts = body_parts[np.sort(idx)]
 
         data = {}
-        data["version"] = "live"  # todo: adjust: conda install?
+        data["version"] = "live"  # TODO: ?
         data["time"] = frame_times
 
         data["frame_time"] = df["frame_time"].values
@@ -179,7 +112,3 @@ class DLCKeypoints(dj.Imported):
                     e,
                 )
 
-        def get_dataset(self, key):
-            key2 = {"video_filepath": key["video_filepath"]}
-            dataset = (vr4mice.Video & key2).fetch1("dataset")
-            return dataset

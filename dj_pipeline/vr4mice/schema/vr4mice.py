@@ -40,6 +40,9 @@ class Dataset(dj.Manual):
     exp_session_filepath: varchar(255)  # npy file
     """
 
+    # TODO:
+    # add make call to populate raw files paths here automatically
+
 
 # TODO: This should be moved to its own schema.
 # @schema
@@ -81,7 +84,7 @@ class Video(dj.Manual):
     """
     # idx to reference the video in analysis table
 
-
+    
 @schema
 class ModelName(dj.Lookup):
     """
@@ -97,6 +100,8 @@ class ModelName(dj.Lookup):
     """
     contents = [["DLC"]]
 
+    def add(self, model_name):
+        self.insert1({"model_name": model_name})
 
 @schema
 class DLC(dj.Manual):
@@ -137,9 +142,11 @@ class MouseState(dj.Manual):  # variable State
     report_right: longblob  # mouse_reports right
     velocity=NULL: longblob # new
     """
-    # frame_flip: longblob    # new
+    # frame_flip=NULL: longblob    # new to check?
 
+    #TODO: make populate from file...
 
+    
 @schema
 class State(dj.Manual):
     """
