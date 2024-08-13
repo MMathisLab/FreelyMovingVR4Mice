@@ -179,7 +179,7 @@ def create_data_frame(
             "object_on_left": (vr4mice.MouseState & key).fetch1("obj_left"),
             "mouse_in_left": (vr4mice.MouseState & key).fetch1("report_left"),
             "mouse_in_right": (vr4mice.MouseState & key).fetch1("report_right"),
-            # "start_time": (vr4mice.State & key).fetch1("start_time"), #we don't modidfy it, can be fetched from State any time
+            # "start_time": (vr4mice.State & key).fetch1("start_time"), #we don't modify it, can be fetched from State any time
         }
     )
 
