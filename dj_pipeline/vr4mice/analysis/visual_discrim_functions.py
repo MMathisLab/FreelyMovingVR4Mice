@@ -117,10 +117,13 @@ def load_data(
     ]
 
     df["time"] = pd.to_datetime(df["step_time"], unit="s")
+    
+    t = "20ms" #old: 0.02s: ValueError: invalid literal for int() with base 10: '0.02'
+
     categorical_resampled = (
         df.set_index("time")
         .groupby("trial", as_index=False)[categorical_columns]
-        .resample("0.02s")
+        .resample(t)
         .first()
         .ffill()
     )
@@ -128,7 +131,7 @@ def load_data(
     binary_resampled = (
         df.set_index("time")
         .groupby("trial", as_index=False)[binary_columns]
-        .resample("0.02s")
+        .resample(t)
         .max()
         .ffill()
     )
@@ -136,7 +139,7 @@ def load_data(
     continuous_resampled = (
         df.set_index("time")
         .groupby("trial", as_index=False)[continuous_columns]
-        .resample("0.02s")
+        .resample(t)
         .mean()
         .interpolate()
     )

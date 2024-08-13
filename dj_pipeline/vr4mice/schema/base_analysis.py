@@ -51,14 +51,14 @@ class DataFrame(dj.Computed):
     velocity_x=NULL: longblob           # NEW --> to think about separate table
     velocity_y=NULL: longblob           # NEW
 
-    acceleration_x=NULL: longblob:      # NEW
-    acceleration_y=NULL: longblob:      # NEW
+    acceleration_x=NULL: longblob      # NEW
+    acceleration_y=NULL: longblob      # NEW
 
     head_dir=NULL: longblob             # TO DEPRECATE
 
-    trial_duration=NULL: longblob:          # NEW
-    distance=NULL: longblob:                # NEW
-    trial_traj_path_length=NULL: longblob:  # NEW
+    trial_duration=NULL: longblob          # NEW
+    distance=NULL: longblob                # NEW
+    trial_traj_path_length=NULL: longblob  # NEW
 
     trial_init_x=NULL: longblob             # NEW --> to method maybe
     trial_init_y=NULL: longblob             # NEW
@@ -72,7 +72,7 @@ class DataFrame(dj.Computed):
     trial_step: longblob
 
     trial_step_time=NULL: longblob          # OLD TO DEPRECATE? (same as time?)
-    trial_step_fraction: longblob
+    trial_step_fraction=NULL: longblob
     
     choice=NULL: longblob                   # NEW --> to method?
     flip_one_side=NULL: longblob            # NEW
@@ -93,8 +93,13 @@ class DataFrame(dj.Computed):
         from vr4mice.analysis.analysis import create_data_frame
 
         data, interp = create_data_frame(key)
+        data.pop("level_0") # artefact, TODO: add test + better way
         data = data.to_dict(orient="list")
         data = {**key, **data, **{"interpolation": interp}}
+        
+        # TODO: add test that data keys are the same with columns names
+        # if not in... alert
+
         self.insert1(data)
         logger.info(f"{self.__class__.__name__} populated for {key}.")
 
@@ -154,7 +159,7 @@ class BoxDataFrame(dj.Computed):
     left_reward_x=NULL: blob    # NEW  
     left_reward_z=NULL: blob    # NEW  
     right_reward_x= NULL: blob  # NEW
-    rightreward_z=NULL: blob    # NEW  
+    right_reward_z=NULL: blob    # NEW  
     
     """
 
@@ -162,8 +167,9 @@ class BoxDataFrame(dj.Computed):
         from vr4mice.analysis.analysis import get_box_df
 
         if DataFrame & key:
-            interp = (DataFrame & key).fetch1("interpolation")
-            box_df = get_box_df(key, interp=interp)
+            #interp = (DataFrame & key).fetch1("interpolation")
+            df, interp = DataFrame().get_data(key)
+            box_df = get_box_df(key, df, interp=interp)
             # data = box_df.to_dict(orient='list')
             data = {**key, **box_df}  # **data}
             self.insert1(data)
@@ -181,8 +187,8 @@ class BoxDataFrame(dj.Computed):
 
         from vr4mice.analysis.analysis import get_dist2reward
 
-        df, interp = DataFrame.get_data(key)
-        df_box = cls.get_data(key)
+        df, interp = DataFrame().get_data(key)
+        df_box = self.get_data(key)
 
         if df is not False and df_box is not False:
             return get_dist2reward(df, box_df)
@@ -197,19 +203,35 @@ class JShapedW(dj.Computed):
     ---
     j_shaped=NULL: longblob     # NEW
     wandering=NULL: longblob    # NEW
+    headers=NULL: longblob      # NEW
     """
+    #TODO: store headers once, or separately, since always the same
 
     def make(self, key):
 
         from vr4mice.analysis.analysis import get_jshaped_trials
 
         if DataFrame & key:
-            df, interp = DataFrame.get_data(key)
+            df, interp = DataFrame().get_data(key)
             j, w = get_jshaped_trials(df)
-            data = {"j_shaped": j, "wandering": w}
-            data = key.update(data)
-            cls.insert1(data)
+            j_np = j.to_numpy()
+            w_np = w.to_numpy()
+            headers = j.columns.to_numpy()
 
+            data = {"j_shaped": j_np, "wandering": w_np, "headers": headers}
+
+            data = {**data, **key}
+            self.insert1(data)
+    
+
+    def get_j_shaped_w(self, key): #TODO: fetch_all
+
+        data = (self & key).fetch1()
+        headers = data["headers"]
+        j = pd.DataFrame(data["j_shaped"], columns=headers)
+        w = pd.DataFrame(data["wandering"], columns=headers)
+
+        return (j, w) #TODO: maybe as dict
 
 @schema
 class SyncedDLCGame(dj.Computed):

@@ -50,26 +50,28 @@ def style():
     plt.rc("axes", edgecolor=font_color)
 
 
-def _resample_data_frame(df, resampling_period=0.02) -> pd.DataFrame:
+def _resample_data_frame(df, resampling_period_ms=20) -> pd.DataFrame: #in ms
     categorical_columns = ["aperture"]
     binary_columns = ["reward", "mouse_in_right", "mouse_in_left", "iti"]
     continuous_columns = df.columns[
         (~df.columns.isin(categorical_columns)) & (~df.columns.isin(binary_columns))
     ]
 
+    t = f"{resampling_period_ms}ms" #old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
+    
     df["time"] = pd.to_datetime(df["step_time"], unit="s")
     categorical_resampled = (
         df.set_index("time")
         .groupby("trial", as_index=False)[categorical_columns]
-        .resample(f"{resampling_period}s")  # resample to 50Hz
+        .resample(t)  # resample to 50Hz
         .first()
         .ffill()
     )
-
+    
     binary_resampled = (
         df.set_index("time")
         .groupby("trial", as_index=False)[binary_columns]
-        .resample("0.02s")
+        .resample(t)
         .max()
         .ffill()
     )
@@ -77,7 +79,7 @@ def _resample_data_frame(df, resampling_period=0.02) -> pd.DataFrame:
     continuous_resampled = (
         df.set_index("time")
         .groupby("trial", as_index=False)[continuous_columns]
-        .resample("0.02s")
+        .resample(t)
         .mean()
         .interpolate()
     )
@@ -183,7 +185,7 @@ def create_data_frame(
         }
     )
 
-    logger.info("All dataframe fetched for: {key}")
+    logger.info(f"All dataframe fetched for: {key}")
 
     df = df[
         df.trial != 1
@@ -294,7 +296,7 @@ def create_data_frame(
     return df, interp
 
 
-def get_box_df(key, interp):
+def get_box_df(key, df, interp):
 
     """Define the box dimensions.
 
