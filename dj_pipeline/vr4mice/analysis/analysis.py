@@ -50,15 +50,15 @@ def style():
     plt.rc("axes", edgecolor=font_color)
 
 
-def _resample_data_frame(df, resampling_period_ms=20) -> pd.DataFrame: #in ms
+def _resample_data_frame(df, resampling_period_ms=20) -> pd.DataFrame:  # in ms
     categorical_columns = ["aperture"]
     binary_columns = ["reward", "mouse_in_right", "mouse_in_left", "iti"]
     continuous_columns = df.columns[
         (~df.columns.isin(categorical_columns)) & (~df.columns.isin(binary_columns))
     ]
 
-    t = f"{resampling_period_ms}ms" #old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
-    
+    t = f"{resampling_period_ms}ms"  # old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
+
     df["time"] = pd.to_datetime(df["step_time"], unit="s")
     categorical_resampled = (
         df.set_index("time")
@@ -67,7 +67,7 @@ def _resample_data_frame(df, resampling_period_ms=20) -> pd.DataFrame: #in ms
         .first()
         .ffill()
     )
-    
+
     binary_resampled = (
         df.set_index("time")
         .groupby("trial", as_index=False)[binary_columns]

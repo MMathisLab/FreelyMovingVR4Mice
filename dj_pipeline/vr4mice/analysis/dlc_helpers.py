@@ -38,7 +38,9 @@ def get_dlc_steps_in_VR_game(step_time, dlc_times):
     return dlc_steps
 
 
-def load_dlc_proc(
+# TODO: proper loader for all types all files
+# NOTE: since the database is in use, we are not supposed to use this "raw" loader anymore!
+def _load_dlc_proc_files(
     camera_name="Imagingsource",
     mouse_name="30559",
     date="2024-02-14",
@@ -55,7 +57,32 @@ def load_dlc_proc(
     return dlc_dict
 
 
-def sync_dlc_w_game(game_data, dlc):
+def load_dlc(mouse_name, date, attempt, path, db_mode=True):
+
+    if db_mode:
+        from vr4mice.schema import vr4mice, dlc
+
+        # NOTE: a little bit dirty way since we are searching via kpts filepath and not PK
+        # TODO: pass by PK
+        key = f"keypoints_filepath='{path}'"
+        data = (vr4mice.DLC() & key).fetch1()
+        pk_def = vr4mice.DLC().primary_key
+        pk = (vr4mice.DLC() & key).fetch(*pk_def, as_dict=True)[0]
+        dlc_dict = dlc.DLCKptsDf().get_data(pk)
+    else:
+        dlc_dict = _load_dlc_proc_file(
+            mouse_name=mouse_name, date=date, attempt=attempt, path=path
+        )
+    return dlc_dict
+
+
+def load_dlc_key(key):
+    from vr4mice.schema import dlc
+
+    return dlc.DLCKptsDf().get_data(key)
+
+
+def _sync_dlc_w_game(game_data, dlc):
     pose_time = np.array(dlc["pose_time"] - game_data["start_time"][0])
     step_time = np.array(game_data["step_time"])
     dlc[("index", "pose_time")] = pose_time
@@ -66,6 +93,33 @@ def sync_dlc_w_game(game_data, dlc):
     dlc[("index", "step")] = game_data["step"]
     dlc[("index", "step_time")] = game_data["step_time"]
     return dlc
+
+
+def sync_dlc_w_game(dlc_dict, game_data):
+
+    """Add the filtered head angle and head direction and compute derivatives."""
+
+    filt_dlc = filter_dlc(dlc_dict.copy())
+    dlc_s = _sync_dlc_w_game(game_data, filt_dlc.copy())
+    dlc_var = compute_dlc_variables(dlc_s.iloc[:, :-3].copy())
+
+    df_out = pd.concat([game_data, dlc_var], axis=1)
+
+    df_out["head_angle_velocity"] = np.gradient(
+        df_out.head_angle, df_out.time_elapsed
+    )  # df_out.head_angle.diff()
+    df_out["heading_dir_velocity"] = np.gradient(
+        df_out.heading_dir, df_out.time_elapsed
+    )  # df_out.heading_dir.diff()
+
+    df_out["head_angle_acceleration"] = np.gradient(
+        df_out.head_angle_velocity, df_out.time_elapsed
+    )  # df_out.head_angle.diff()
+    df_out["heading_dir_acceleration"] = np.gradient(
+        df_out.heading_dir_velocity, df_out.time_elapsed
+    )  # df_out.heading_dir.diff()
+
+    return df_out
 
 
 def dlc_interpolate(trace, likelyhood, cutoff=0.6):
@@ -271,3 +325,34 @@ def find_closest_indices(pose_time, step_time):
             after = pose_time[idx]
             closest_indices.append(idx if step - before > after - step else idx - 1)
     return closest_indices
+
+
+def df2dj(df) -> dict:
+    #data: pandas.core.frame.DataFrame
+    dj_col = dict()
+    dj_col["data"] = df.to_numpy()
+    headers = df.columns
+    dj_col["headers"] = list(headers)
+
+    if df.columns.nlevels > 2:
+        dj_col["scorer"] = headers.get_level_values("scorer").unique()[0]
+
+    return dj_col
+
+
+def h52dj(h5path: str) -> dict:
+    df = pd.read_hdf(h5path)
+    return df2dj(df)
+
+
+def dj2h5(data, headers, scorer) -> pd.DataFrame:
+
+    data = pd.DataFrame(data=data, columns=headers)
+    if scorer:
+        levels = ["scorer", "bodyparts", "coords"]
+    else:
+        levels = ["bodyparts", "coords"]
+    return pd.DataFrame(
+        data,
+        columns=pd.MultiIndex.from_tuples(headers, names=levels),
+    )

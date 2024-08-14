@@ -80,11 +80,10 @@ class Video(dj.Manual):
     video_filepath="": varchar(255)
     timestamp_filepath="": varchar(255)
     
-    camera_type=NULL: float 
     """
     # idx to reference the video in analysis table
 
-    
+
 @schema
 class ModelName(dj.Lookup):
     """
@@ -102,6 +101,7 @@ class ModelName(dj.Lookup):
 
     def add(self, model_name):
         self.insert1({"model_name": model_name})
+
 
 @schema
 class DLC(dj.Manual):
@@ -140,13 +140,12 @@ class MouseState(dj.Manual):  # variable State
     mouse_report_correct: longblob  # mouse_report_correct
     report_left: longblob   # mouse_reports_left
     report_right: longblob  # mouse_reports right
-    velocity=NULL: longblob # new
+    velocity=NULL: longblob      # new
+    frame_flip=NULL: longblob    # new to check?
     """
-    # frame_flip=NULL: longblob    # new to check?
+    # TODO: make populate from file...
 
-    #TODO: make populate from file...
 
-    
 @schema
 class State(dj.Manual):
     """
@@ -164,15 +163,10 @@ class State(dj.Manual):
     step_time: longblob   
     action: longblob   
     reward: longblob   
-    terminal: longblob
-    
+    terminal: longblob    
     mouse_report_delay=NULL: longblob
-    
-    start_box_delay=NULL: longblob       # new
-    velocity_threshold=NULL: longblob    # new
     occlusion_type=NULL: longblob        # new
     dlc_read_time=NULL: longblob         # new
-        
     dlc_x: longblob             # pos in dlc coords 
     dlc_y: longblob             # pos in dlc coords 
     dlc_heading: longblob       # pos in dlc coords 
@@ -192,39 +186,58 @@ class Metadata(dj.Manual):
     definition = """
     -> Dataset
     ---    
-    cropped_image: longblob           # the pixels that we want to crop from the camera image (4*int)
-    unity_arena_size: longblob        # the size of the unity arena
-    right_report_box: longblob        # right report box coordinates
-    left_report_box: longblob         # Left report box coordinates
-    
-    start_box:  longblob               # the coordinates of the box that the mouse has to enter to start a trial
-    camera_rotation: longblob          # the camera rotation, to make sure the right camera angle is displayed in the game
-    prop_obj_on_left=NULL: longblob         # the probability that the object of interest is one the left
-    
-    obj_on_left=NULL: longblob              # the object of interest is one the left
-    
+    obj_on_left=NULL: longblob         # the object of interest is one the left
     slit_size: longblob                # The size of the slit that the mouse has to look through
-    slit_depth: longblob               # the depth of the slit 
+    slit_depth=NULL: longblob          # the depth of the slit # TO DEPRECATE ?
     trial_slit_depth: longblob         # 
     block_labels: longblob
-    
-    targets_height: longblob            # the distance between the targets
-    target_from_midline: longblob       # the distance between the targets and the ground   (500*floats)
-
+    targets_height=NULL: longblob            # the distance between the targets # TO DEPRECTAE
+    target_from_midline=NULL: longblob       # the distance between the targets and the ground   (500*floats) # TO DEPRECATE ?
     targets_z_pos=NULL: longblob             # new
     target_rotation=NULL: longblob           # new
     target_distance=NULL: longblob           # new
-
-    distractor=NULL: longblob                # new
-    target_size=NULL: longblob               # new
-    grey_screen_active=NULL: longblob        # new
     session_label=NULL: longblob             # new
-    
     camera_selection=NULL: longblob          # new
     target_selection=NULL: longblob          # new
     distractor_selection=NULL: longblob      # new
     """
 
+@schema
+class GuiParams(dj.Manual):
+
+    definition = """
+    -> Dataset
+    ---    
+
+    r_report_box: blob          # right report box coordinates
+    l_report_box: blob          # Left report box coordinates
+    start_box:  blob            # the coordinates of the box that the mouse has to enter to start a trial
+    cropped_image: blob         # the pixels that we want to crop from the camera image (4*int)
+    unity_arena_size: blob      # the size of the unity arena
+    camera_rotation: blob       # the camera rotation, to make sure the right camera angle is displayed in the game
+    velocity_threshold=NULL: blob           # new 
+    start_box_delay=NULL: blob              # new
+    distractor=NULL: blob                   # new
+    target_size=NULL: blob                  # new
+    grey_screen_active=NULL: blob           # new
+    camera_type=NULL: float                 # new
+    prop_obj_on_left=NULL: blob         # the probability that the object of interest is one the left
+    slit_size_param=NULL: blob              # new 
+    block_length_param=NULL: blob           # new 
+    rotate_camera_param=NULL: blob          # new 
+    epoch_param=NULL: blob                  # new 
+    mouse_report_delay_param=NULL: blob     # new 
+    prob_block_coherence=NULL: blob         # new 
+    slit_depth_param: blob                  # new 
+    target_selection_param=NULL: blob       # new
+    distractor_selection_param=NULL: blob   # new
+    occlusion_type_param=NULL: blob         # new
+    target_spread_param=NULL: blob          # new
+    target_rotation_param=NULL: blob        # new
+    target_height_param=NULL: blob          # new 
+    target_distance_param=NULL: blob        # new
+
+    """
 
 @schema
 class TrainingPhaseType(dj.Lookup):
@@ -340,14 +353,14 @@ class Box(dj.Manual):
     definition = """
     -> Metadata
     ---    
-    left_box_x_min: mediumblob
-    left_box_x_max: mediumblob
-    left_box_z_min: mediumblob
-    left_box_z_max: mediumblob
-    right_box_x_min: mediumblob
-    right_box_x_max: mediumblob
-    right_box_z_min: mediumblob
-    right_box_z_max: mediumblob
+    l_box_x_min: mediumblob
+    l_box_x_max: mediumblob
+    l_box_z_min: mediumblob
+    l_box_z_max: mediumblob
+    r_box_x_min: mediumblob
+    r_box_x_max: mediumblob
+    r_box_z_min: mediumblob
+    r_box_z_max: mediumblob
     tt_box_x_min: mediumblob
     tt_box_x_max: mediumblob
     tt_box_z_min: mediumblob

@@ -27,4 +27,4 @@ class VR4Mice(dj.Manual):
     -> exp.Session
     """
 
-    #TODO: make call to populate mice and exp, based on gui output (if exists) from path from Dataset
+    # TODO: make call to populate mice and exp, based on gui output (if exists) from path from Dataset

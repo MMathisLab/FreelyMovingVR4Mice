@@ -93,10 +93,10 @@ class DataFrame(dj.Computed):
         from vr4mice.analysis.analysis import create_data_frame
 
         data, interp = create_data_frame(key)
-        data.pop("level_0") # artefact, TODO: add test + better way
+        data.pop("level_0")  # artefact, TODO: add test + better way
         data = data.to_dict(orient="list")
         data = {**key, **data, **{"interpolation": interp}}
-        
+
         # TODO: add test that data keys are the same with columns names
         # if not in... alert
 
@@ -167,7 +167,7 @@ class BoxDataFrame(dj.Computed):
         from vr4mice.analysis.analysis import get_box_df
 
         if DataFrame & key:
-            #interp = (DataFrame & key).fetch1("interpolation")
+            # interp = (DataFrame & key).fetch1("interpolation")
             df, interp = DataFrame().get_data(key)
             box_df = get_box_df(key, df, interp=interp)
             # data = box_df.to_dict(orient='list')
@@ -205,7 +205,7 @@ class JShapedW(dj.Computed):
     wandering=NULL: longblob    # NEW
     headers=NULL: longblob      # NEW
     """
-    #TODO: store headers once, or separately, since always the same
+    # TODO: store headers once, or separately, since always the same
 
     def make(self, key):
 
@@ -222,16 +222,16 @@ class JShapedW(dj.Computed):
 
             data = {**data, **key}
             self.insert1(data)
-    
 
-    def get_j_shaped_w(self, key): #TODO: fetch_all
+    def get_j_shaped_w(self, key):  # TODO: fetch_all
 
         data = (self & key).fetch1()
         headers = data["headers"]
         j = pd.DataFrame(data["j_shaped"], columns=headers)
         w = pd.DataFrame(data["wandering"], columns=headers)
 
-        return (j, w) #TODO: maybe as dict
+        return (j, w)  # TODO: maybe as dict
+
 
 @schema
 class SyncedDLCGame(dj.Computed):

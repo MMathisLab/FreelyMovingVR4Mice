@@ -1,6 +1,6 @@
 from typing import List
 
-import dlc_helpers as dlc_helpers
+from vr4mice.analysis.dlc_helpers import sync_dlc_w_game, load_dlc
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -117,8 +117,8 @@ def load_data(
     ]
 
     df["time"] = pd.to_datetime(df["step_time"], unit="s")
-    
-    t = "20ms" #old: 0.02s: ValueError: invalid literal for int() with base 10: '0.02'
+
+    t = "20ms"  # old: 0.02s: ValueError: invalid literal for int() with base 10: '0.02'
 
     categorical_resampled = (
         df.set_index("time")
@@ -267,35 +267,6 @@ def _time_to_rewards(df):  # split
     return box_entries
 
 
-def load_and_sync_dlc_w_game(mouse_name, date, attempt, path, game_data):
-    """Add the filtered head angle and head direction and compute derivatives."""
-
-    dlc_dict = dlc_helpers.load_dlc_proc(
-        mouse_name=mouse_name, date=date, attempt=attempt, path=path
-    )
-    filt_dlc = dlc_helpers.filter_dlc(dlc_dict.copy())
-    dlc_s = dlc_helpers.sync_dlc_w_game(game_data, filt_dlc.copy())
-    dlc_var = dlc_helpers.compute_dlc_variables(dlc_s.iloc[:, :-3].copy())
-
-    df_out = pd.concat([game_data, dlc_var], axis=1)
-
-    df_out["head_angle_velocity"] = np.gradient(
-        df_out.head_angle, df_out.time_elapsed
-    )  # df_out.head_angle.diff()
-    df_out["heading_dir_velocity"] = np.gradient(
-        df_out.heading_dir, df_out.time_elapsed
-    )  # df_out.heading_dir.diff()
-
-    df_out["head_angle_acceleration"] = np.gradient(
-        df_out.head_angle_velocity, df_out.time_elapsed
-    )  # df_out.head_angle.diff()
-    df_out["heading_dir_acceleration"] = np.gradient(
-        df_out.heading_dir_velocity, df_out.time_elapsed
-    )  # df_out.heading_dir.diff()
-
-    return df_out
-
-
 def _define_box(box_df: pd.DataFrame, state_dict: dict, which: str):
 
     if which == "left":
@@ -351,6 +322,7 @@ def get_rc_params():
     plt.rc("axes", edgecolor=font_color)
 
 
+# TODO(mary): add labels... (if hasn't been done)
 def get_mouse_list(list_name="tolias_two_widths"):
     # NOTE(tom): This is a temporay function just to keep track of the tolias
     # lab data sets that we have and so that we can easily import into notebooks.
@@ -421,6 +393,8 @@ def get_mouse_list(list_name="tolias_two_widths"):
     return mouse_list
 
 
+# TODO: generalize
+# Pass by database: do we really need bug df, or can be fetched?
 def get_all_tolias_mice(mouse_list, path, load_dlc=True):
     """Grab tolias lab mice and make a big dataframe out of them."""
     big_df = []
@@ -429,12 +403,13 @@ def get_all_tolias_mice(mouse_list, path, load_dlc=True):
             path=path, mouse_name=m["mouse_name"], date=m["date"], attempt=m["attempt"]
         )
         if load_dlc == True:
-            df = load_and_sync_dlc_w_game(
+            dlc_dict = load_dlc(
                 path=path,
                 mouse_name=m["mouse_name"],
                 date=m["date"],
                 attempt=m["attempt"],
-                game_data=df,
             )
+            df = sync_dlc_w_game(dlc_dict, game_data=df)
+
         big_df.append(df)
     return pd.concat(big_df).reset_index(), box_df

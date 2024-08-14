@@ -5,19 +5,17 @@ import numpy as np
 import pandas as pd
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema  # todo adjust paths (base/utils)
-
-from vr4mice.schema import vr4mice
+from vr4mice.analysis.dlc_helpers import h52dj, df2dj, dj2h5, sync_dlc_w_game
+from vr4mice.schema import vr4mice, base_analysis
 
 schema_name = "dlc"
 schema = get_schema(schema_name, locals())
 
 logger = Logger.get_logger()
 
-#TODO: link with dlc base schemas!!
 
 @schema
 class DLCProcessor(dj.Imported):
-    """ """
 
     definition = """
     -> vr4mice.DLC
@@ -30,19 +28,84 @@ class DLCProcessor(dj.Imported):
     """
 
     def make(self, key):
-        fpath = ((vr4mice.Video * vr4mice.DLC) & key).fetch(
-            "proc_filepath",
-        )[0]
+        try:
+            fpath = (vr4mice.DLC & key).fetch1("proc_filepath")
+            data = np.load(fpath, allow_pickle=True)
+            data = {**key, **data}
+            self.insert1(data)
+            logger.info(f"{self.__class__.__name__} populated for {key}.")
 
-        data = np.load(fpath, allow_pickle=True)
-        data = {**key, **data}
-        self.insert1(data)
-        logger.info(f"{self.__class__.__name__} populated for {key}.")
-
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
 
 @schema
-class DLCKeypoints(dj.Imported):
-    """ """
+class DLCKptsDf(dj.Imported):
+    definition = """
+    -> vr4mice.DLC
+    ---
+    data: longblob
+    headers : blob
+    scorer=NULL: varchar(256)
+    """
+    
+    def make(self, key):
+
+        logger.info(f"Populating {self.__class__.__name__} for {key}.")
+        try:
+            h5path = (vr4mice.DLC & key).fetch1("keypoints_filepath")
+            data = h52dj(h5path) 
+            data = {**key, **data}
+            self.insert1(data)
+            logger.info(f"{self.__class__.__name__} populated for {key}.")
+
+        except Exception as err:
+            logger.warning(
+                    f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            )
+            return None
+
+    def get_data(self, key): 
+        try:
+            data = (self & key).fetch1()
+            return dj2h5(data["data"], data["headers"], data["scorer"])
+
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
+
+@schema
+class SyncDLCWGame(dj.Imported):
+    definition = """
+    -> DLCKptsDf
+    ---
+    data: longblob
+    headers : blob
+    scorer=NULL: varchar(256)
+    """
+
+    def make(self, key):
+
+        logger.info(f"Populating {self.__class__.__name__} for {key}.")
+        try:
+            dlc_dict = DLCKptsDf().get_data(key)
+            df, interp = base_analysis.DataFrame().get_data(key)
+            df["start_time"] = (vr4mice.State() & key).fetch1("start_time")
+            data = sync_dlc_w_game(dlc_dict, game_data=df)
+            data = df2dj(data)
+            data = {**key, **data}
+            self.insert1(data)
+            logger.info(f"{self.__class__.__name__} populated for {key}.")
+
+        except Exception as err:
+            logger.warning(
+                    f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            )
+            return None
+
+#TODO: probably will be deprecated: (by bodyparts storage)
+@schema
+class DLCKptsBodyparts(dj.Imported):
 
     definition = """
     -> vr4mice.DLC
