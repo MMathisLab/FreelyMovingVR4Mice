@@ -3,3 +3,4 @@ from .mouse_detection_p1 import DetectionWithoutVelocityThresholdTask
 from .mouse_detection_p2 import DetectionWithVelocityThresholdTask
 from .mouse_discrim import DiscriminationTask
 from .mouse_discrim_occluders import DiscriminationWithOccludersTask
+from .mouse_discrim_multioccluders import DiscriminationWithMutliOccludersTask
