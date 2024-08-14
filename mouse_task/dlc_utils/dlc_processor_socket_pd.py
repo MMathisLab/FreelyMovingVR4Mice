@@ -3,7 +3,7 @@ import numpy as np
 
 from multiprocessing.connection import Listener
 import pickle
-import timexs
+import time
 from collections import deque
 from latency_tests.Teensy_latency.TeensyLatency import TeensyLatency
 
