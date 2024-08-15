@@ -20,7 +20,13 @@ class DLCProcessor(dj.Imported):
     definition = """
     -> vr4mice.DLC
     ---
+    start_time: longblob
+    frame_time: longblob
     time_stamp: longblob
+    step: longblob
+    signal: longblob
+    photodiode_read: longblob
+    photodiode_time: longblob
     x_pos: longblob
     y_pos: longblob
     heading_direction: longblob
@@ -78,6 +84,7 @@ class DLCKptsDf(dj.Imported):
 class SyncDLCWGame(dj.Imported):
     definition = """
     -> DLCKptsDf
+    -> base_analysis.DataFrame
     ---
     data: longblob
     headers : blob
