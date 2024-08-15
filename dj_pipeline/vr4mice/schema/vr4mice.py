@@ -209,26 +209,26 @@ class GuiParams(dj.Manual):
     -> Dataset
     ---    
 
-    r_report_box: blob          # right report box coordinates
-    l_report_box: blob          # Left report box coordinates
-    start_box:  blob            # the coordinates of the box that the mouse has to enter to start a trial
-    cropped_image: blob         # the pixels that we want to crop from the camera image (4*int)
-    unity_arena_size: blob      # the size of the unity arena
-    camera_rotation: blob       # the camera rotation, to make sure the right camera angle is displayed in the game
+    r_report_box=NULL: blob          # right report box coordinates
+    l_report_box=NULL: blob          # Left report box coordinates
+    start_box=NULL:  blob            # the coordinates of the box that the mouse has to enter to start a trial
+    cropped_image=NULL: blob         # the pixels that we want to crop from the camera image (4*int)
+    unity_arena_size=NULL: blob      # the size of the unity arena
+    camera_rotation=NULL: blob       # the camera rotation, to make sure the right camera angle is displayed in the game
     velocity_threshold=NULL: blob           # new 
     start_box_delay=NULL: blob              # new
     distractor=NULL: blob                   # new
     target_size=NULL: blob                  # new
     grey_screen_active=NULL: blob           # new
     camera_type=NULL: float                 # new
-    prop_obj_on_left=NULL: blob         # the probability that the object of interest is one the left
+    prob_obj_on_left=NULL: blob             # the probability that the object of interest is one the left
     slit_size_param=NULL: blob              # new 
     block_length_param=NULL: blob           # new 
     rotate_camera_param=NULL: blob          # new 
     epoch_param=NULL: blob                  # new 
     mouse_report_delay_param=NULL: blob     # new 
     prob_block_coherence=NULL: blob         # new 
-    slit_depth_param: blob                  # new 
+    slit_depth_param=NULL: blob                  # new 
     target_selection_param=NULL: blob       # new
     distractor_selection_param=NULL: blob   # new
     occlusion_type_param=NULL: blob         # new
