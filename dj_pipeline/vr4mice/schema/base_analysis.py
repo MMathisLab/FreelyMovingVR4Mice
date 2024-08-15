@@ -92,17 +92,24 @@ class DataFrame(dj.Computed):
     def make(self, key):
         from vr4mice.analysis.analysis import create_data_frame
 
-        data, interp = create_data_frame(key)
-        data.pop("level_0")  # artefact, TODO: add test + better way
-        data = data.to_dict(orient="list")
-        data = {**key, **data, **{"interpolation": interp}}
+        try:
+            data, interp = create_data_frame(key)
+            data.pop("level_0")  # artefact, TODO: add test + better way
+            data = data.to_dict(orient="list")
+            data = {**key, **data, **{"interpolation": interp}}
 
-        # TODO: add test that data keys are the same with columns names
-        # if not in... alert
+            # TODO: add test that data keys are the same with columns names
+            # if not in... alert
 
-        self.insert1(data)
-        logger.info(f"{self.__class__.__name__} populated for {key}.")
+            self.insert1(data)
+            logger.info(f"{self.__class__.__name__} populated for {key}.")
 
+        except Exception as err:
+            logger.warning(
+                    f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            )
+            return None
+    
     def get_data(self, key):
         if self & key:
             data = (self & key).fetch1()
@@ -166,14 +173,21 @@ class BoxDataFrame(dj.Computed):
     def make(self, key):
         from vr4mice.analysis.analysis import get_box_df
 
-        if DataFrame & key:
-            # interp = (DataFrame & key).fetch1("interpolation")
-            df, interp = DataFrame().get_data(key)
-            box_df = get_box_df(key, df, interp=interp)
-            # data = box_df.to_dict(orient='list')
-            data = {**key, **box_df}  # **data}
-            self.insert1(data)
-            logger.info(f"{self.__class__.__name__} populated for {key}.")
+        try:
+            if DataFrame & key:
+                # interp = (DataFrame & key).fetch1("interpolation")
+                df, interp = DataFrame().get_data(key)
+                box_df = get_box_df(key, df, interp=interp)
+                # data = box_df.to_dict(orient='list')
+                data = {**key, **box_df}  # **data}
+                self.insert1(data)
+                logger.info(f"{self.__class__.__name__} populated for {key}.")
+
+        except Exception as err:
+            logger.warning(
+                    f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            )
+            return None
 
     def get_data(self, key):
         if self & key:
@@ -192,8 +206,8 @@ class BoxDataFrame(dj.Computed):
 
         if df is not False and df_box is not False:
             return get_dist2reward(df, box_df)
-        else:
-            return False
+        
+        return False
 
 
 @schema
@@ -210,18 +224,24 @@ class JShapedW(dj.Computed):
     def make(self, key):
 
         from vr4mice.analysis.analysis import get_jshaped_trials
+        
+        try: 
+            if DataFrame & key:
+                df, interp = DataFrame().get_data(key)
+                j, w = get_jshaped_trials(df)
+                j_np = j.to_numpy()
+                w_np = w.to_numpy()
+                headers = j.columns.to_numpy()
+                data = {"j_shaped": j_np, "wandering": w_np, "headers": headers}
+                data = {**data, **key}
+                self.insert1(data)
+                logger.info(f"{self.__class__.__name__} populated for {key}.")
 
-        if DataFrame & key:
-            df, interp = DataFrame().get_data(key)
-            j, w = get_jshaped_trials(df)
-            j_np = j.to_numpy()
-            w_np = w.to_numpy()
-            headers = j.columns.to_numpy()
-
-            data = {"j_shaped": j_np, "wandering": w_np, "headers": headers}
-
-            data = {**data, **key}
-            self.insert1(data)
+        except Exception as err:
+            logger.warning(
+                    f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            )
+            return None
 
     def get_j_shaped_w(self, key):  # TODO: fetch_all
 

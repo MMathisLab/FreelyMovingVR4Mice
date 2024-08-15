@@ -110,6 +110,16 @@ class SyncDLCWGame(dj.Imported):
             )
             return None
 
+    def get_data(self, key): 
+        try:
+            data = (self & key).fetch1()
+            return dj2h5(data["data"], data["headers"], data["scorer"])
+
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
+
+
 #TODO: probably will be deprecated: (by bodyparts storage)
 @schema
 class DLCKptsBodyparts(dj.Imported):
