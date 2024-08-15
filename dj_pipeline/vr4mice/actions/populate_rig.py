@@ -159,15 +159,18 @@ def populate(table_name, attributes, raw_data, schema) -> None:
             )
         else:  # dj_def-orientated
             label = a
+            change = False
             transformers = ["transformer"]
             for t in transformers:
                 if t in schema.keys():
                     if a in schema[t].keys():
                         label = schema[t][a]
-                        logger.info(f"Note: {label} variable name changed to {a}")
+                        change = True
 
                 if label in raw_data.keys():
                     data[a] = raw_data[label]
+                    if change:
+                        logger.info(f"Note: {label} variable name changed to {a}")
 
     logger.info(f"Populating: {table_name}")  # todo check return code
 
