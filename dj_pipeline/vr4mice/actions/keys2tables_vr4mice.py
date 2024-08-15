@@ -8,6 +8,7 @@ from vr4mice.actions.helpers_dj import (
     get_state,
     get_video_meta,
     no_value,
+    get_box,
 )
 from vr4mice.schema import vr4mice
 
@@ -54,15 +55,13 @@ transformer = {  # todo add file preprocessing
     "targets_z_pos": "targetsZpos",
     # targetSize : #skip (@tom) => use the target_size value only
     # Grey_screen_active : #skip (@tom) => use the grey_screen_active value only
-    "r_report_box": "R_report_box",
-    "l_report_box": "L_report_box:",
 }
 
 # todo: optimize this part of parcing (auto)
 # todo: add check about rows in database in .pickle file
 
-local_def = {
-    "state": no_value,  # no
+local_def = {   
+    "state": no_value,  # empty value
     "x_pos": get_state,
     "z_pos": get_state,
     "head_dir": get_state,
@@ -87,6 +86,19 @@ local_def = {
     "width": get_video_meta,
     "height": get_video_meta,
     "camera_idx": get_camera_idx,
+    "l_box_x_min": get_box, #TODO: maybe organize better, as 
+    "l_box_x_max": get_box,
+    "l_box_z_min": get_box,
+    "l_box_z_max": get_box,
+    "r_box_x_min": get_box,
+    "r_box_x_max": get_box,
+    "r_box_z_min": get_box,
+    "r_box_z_max": get_box,
+    "tt_box_x_min": get_box,
+    "tt_box_x_max": get_box,
+    "tt_box_z_min": get_box,
+    "tt_box_z_max": get_box,
+    "tt_box_angle": get_box,
 }
 
 # KEYS #
