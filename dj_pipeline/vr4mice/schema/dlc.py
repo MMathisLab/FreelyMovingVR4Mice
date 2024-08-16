@@ -113,7 +113,7 @@ class SyncDLCWGame(dj.Imported):
     def get_data(self, key): 
         try:
             data = (self & key).fetch1()
-            return dj2h5(data["data"], data["headers"], data["scorer"])
+            return pd.DataFrame(data["data"], columns=data["headers"])
 
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
