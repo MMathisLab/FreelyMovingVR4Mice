@@ -197,6 +197,11 @@ def create_data_frame(
         c=-2,
         d=27,
     )
+    #TODO:
+    #unity_arena_size_x_min
+    #x_max
+    #z_min
+    #z_max
 
     df["x"] = np.interp(
         df.x, [-1 * interp["a"], interp["a"]], [-1 * interp["d"], interp["d"]]
@@ -305,7 +310,7 @@ def get_box_df(key, df, interp):
     Returns:
         A dataFrame containing the dimensions.
     """
-    box_df = pd.DataFrame((vr4mice.Box & key).fetch(as_dict=True)[0])
+    box_df = pd.DataFrame((vr4mice.Box & key).fetch())
 
     a = interp["a"]
     b = interp["b"]
@@ -313,15 +318,15 @@ def get_box_df(key, df, interp):
     d = interp["d"]
 
     # same indexes among blocks
-    box_df.left_box_x_min = np.interp(box_df.left_box_x_min, [-1 * a, a], [-1 * d, d])
-    box_df.left_box_x_max = np.interp(box_df.left_box_x_max, [-1 * a, a], [-1 * d, d])
-    box_df.left_box_z_min = np.interp(box_df.left_box_z_min, [b, c], [-1 * d, d])
-    box_df.left_box_z_max = np.interp(box_df.left_box_z_max, [b, c], [-1 * d, d])
+    box_df.l_box_x_min = np.interp(box_df.l_box_x_min, [-1 * a, a], [-1 * d, d])
+    box_df.l_box_x_max = np.interp(box_df.l_box_x_max, [-1 * a, a], [-1 * d, d])
+    box_df.l_box_z_min = np.interp(box_df.l_box_z_min, [b, c], [-1 * d, d])
+    box_df.l_box_z_max = np.interp(box_df.l_box_z_max, [b, c], [-1 * d, d])
 
-    box_df.right_box_x_min = np.interp(box_df.right_box_x_min, [-1 * a, a], [-1 * d, d])
-    box_df.right_box_x_max = np.interp(box_df.right_box_x_max, [-1 * a, a], [-1 * d, d])
-    box_df.right_box_z_min = np.interp(box_df.right_box_z_min, [b, c], [-1 * d, d])
-    box_df.right_box_z_max = np.interp(box_df.right_box_z_max, [b, c], [-1 * d, d])
+    box_df.r_box_x_min = np.interp(box_df.r_box_x_min, [-1 * a, a], [-1 * d, d])
+    box_df.r_box_x_max = np.interp(box_df.r_box_x_max, [-1 * a, a], [-1 * d, d])
+    box_df.r_box_z_min = np.interp(box_df.r_box_z_min, [b, c], [-1 * d, d])
+    box_df.r_box_z_max = np.interp(box_df.r_box_z_max, [b, c], [-1 * d, d])
 
     box_df.tt_box_x_min = np.interp(box_df.tt_box_x_min, [-1 * a, a], [-1 * d, d])
     box_df.tt_box_x_max = np.interp(box_df.tt_box_x_max, [-1 * a, a], [-1 * d, d])
@@ -370,3 +375,49 @@ def get_jshaped_trials(
     ]
     wandering = df[~df.index.isin(j_shaped.index)]
     return j_shaped, wandering
+
+def get_all_datasets(mouse_list=None, load_dlc=True):
+    """Fetch all mice and make a big dataframe out of them."""
+    # mouse list can be list of keys: [{key1}, {key2}]
+    
+    big_df = []
+    
+    dfs = []
+
+    #TODO: make the getter for df_box in a propper way
+
+    if load_dlc:
+        if mouse_list:
+            for key in mouse_list:
+                df = dlc.SyncDLCWGame().get_data(key)
+                dfs.append(df)
+        else:
+            dfs = dlc.SyncDLCWGame().get_all_data()
+        
+        return dfs
+
+    #load_dlc False case
+    if mouse_list:
+        for key in mouse_list:
+            df = dlc.DataFrame().get_data(key)
+            dfs.append(df)
+    else:
+        dfs = dlc.SyncDLCWGame().get_all_data()
+             #= (base_analysis.DataFrame().get_data()
+        
+        #& keys).fetch(as_dict=True)[0] # or keep .npy?
+    #else:
+    #    df, box_df = (base_analysis.DataFrame()).fetch(as_dict=True)[0] # or keep .npy?
+    
+        if load_dlc == True:
+            dlc_dict = load_dlc(
+                path=path,
+                mouse_name=m["mouse_name"],
+                date=m["date"],
+                attempt=m["attempt"],
+            )
+            df = sync_dlc_w_game(dlc_dict, game_data=df)
+
+        big_df.append(df)
+    return pd.concat(big_df).reset_index(), box_df
+

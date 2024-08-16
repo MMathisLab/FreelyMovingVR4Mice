@@ -111,15 +111,33 @@ class DataFrame(dj.Computed):
             return None
     
     def get_data(self, key):
-        if self & key:
-            data = (self & key).fetch1()
-            interp = data["interpolation"]
-            data.pop("interpolation")
-            data = pd.DataFrame(data)
-            return data, interp
-        # TODO: for deprecated attributes (in the future) include here or on call (to think)
-        else:
-            return False, None
+        try:
+            if self & key:
+                data = (self & key).fetch1()
+                interp = data["interpolation"]
+                data.pop("interpolation")
+                data = pd.DataFrame(data)
+                return data, interp
+            else:
+                return False, None
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
+    
+    def get_all_data(self):
+        try:
+            dfs = []
+            data = self.fetch()
+            for d in data:
+                interp = d["interpolation"]
+                d.pop("interpolation")
+                df = pd.DataFrame(d)
+                dfs.append((df, interp))
+            return dfs
+
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
 
     def get_rewarded(self, key):
         from vr4mice.analysis.analysis import get_rewarded
@@ -189,13 +207,34 @@ class BoxDataFrame(dj.Computed):
             )
             return None
 
+
     def get_data(self, key):
-        if self & key:
-            data = (self & key).fetch1()
-            data = pd.Series(data)
-            return data
-        else:
+        try:
+            if self & key:
+                data = (self & key).fetch1()
+                data = pd.Series(data)
+                return data
             return False
+
+        except Exception as err:
+            logger.warning(
+                    f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            )
+            return None
+    
+    def get_all_data(self):
+        try:
+            dfs = []
+            data = self.fetch()
+            for d in data:
+                df = pd.Series(d)
+                dfs.append(df)
+            return dfs
+
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
+
 
     def get_dist2reward(self, key):
 

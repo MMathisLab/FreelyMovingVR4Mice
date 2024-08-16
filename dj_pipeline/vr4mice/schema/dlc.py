@@ -80,6 +80,21 @@ class DLCKptsDf(dj.Imported):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
+
+    def get_all_data(self):     
+        dfs = []
+        try:
+            data = self.fetch()
+            for d in data:
+                df = dj2h5(d["data"], d["headers"], d["scorer"])
+                dfs.append(df)
+            return dfs
+
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
+
+
 @schema
 class SyncDLCWGame(dj.Imported):
     definition = """
@@ -119,6 +134,18 @@ class SyncDLCWGame(dj.Imported):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
+    def get_all_data(self): 
+        dfs = []
+        try:
+            data = self.fetch()
+            for d in data:
+                df = pd.DataFrame(d["data"], columns=d["headers"])
+                dfs.append(df)
+            return dfs
+
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
 
 #TODO: probably will be deprecated: (by bodyparts storage)
 @schema
