@@ -152,19 +152,19 @@ class dlc_inference_w_pd(Processor):
                 print(save_dict)
 
                 pickle.dump(
-                    save_dict, open(file, "wb"),
-                )
+                        save_dict, open(file, "wb"),
+                    )
                 save_code = 1
             except Exception:
                 print("proc file was not saved")
                 save_code = -1
         return save_code
 
-def save_latency_data(self):
+    def save_latency_data(self):
         if self.use_teensy == 1:
             print("closing serial connection to teensy")
             self.teensy.close_serial()
-       
+        print("getting proc_dict")
         save_dict = dict()
         save_dict["start_time"] = np.array(self.start_time)
         save_dict["frame_time"] = np.array(self.frame_time)
