@@ -155,8 +155,8 @@ class dlc_inference_w_pd(Processor):
                         save_dict, open(file, "wb"),
                     )
                 save_code = 1
-            except Exception as error:
-                warnings.warn("Proc file was not saved")
+            except Exception as e:
+                warnings.warn(f"Proc file was not saved, an exception occurred: {e}")
                 print(error)
 
                 save_code = -1
