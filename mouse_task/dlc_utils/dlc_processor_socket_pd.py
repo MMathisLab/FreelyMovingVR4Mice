@@ -146,18 +146,19 @@ class dlc_inference_w_pd(Processor):
     def save(self, file=None):
         save_code = 0
         if file:
-            print(file)
+            
             try:
                 save_dict = self.save_latency_data()
-                print(save_dict)
+                
 
                 pickle.dump(
                         save_dict, open(file, "wb"),
                     )
                 save_code = 1
             except Exception as error:
-                warnings.warn("proc file was not saved")
-                
+                warnings.warn("Proc file was not saved")
+                print(error)
+
                 save_code = -1
         return save_code
 
