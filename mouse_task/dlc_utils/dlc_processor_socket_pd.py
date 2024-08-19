@@ -156,14 +156,15 @@ class dlc_inference_w_pd(Processor):
                 )
                 save_code = 1
             except Exception:
+                print("proc file was not saved")
                 save_code = -1
         return save_code
 
 def save_latency_data(self):
         if self.use_teensy == 1:
-            print("teensy_close")
+            print("closing serial connection to teensy")
             self.teensy.close_serial()
-        print("saving data")
+       
         save_dict = dict()
         save_dict["start_time"] = np.array(self.start_time)
         save_dict["frame_time"] = np.array(self.frame_time)
