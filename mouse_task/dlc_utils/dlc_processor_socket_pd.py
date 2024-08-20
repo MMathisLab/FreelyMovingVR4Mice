@@ -6,7 +6,7 @@ import pickle
 import time
 from collections import deque
 from latency_tests.Teensy_latency.TeensyLatency import TeensyLatency
-
+import warnings
 import numpy as np
 from dlclive import Processor
 from math import sqrt, acos, atan2, copysign, pi, degrees
@@ -146,21 +146,26 @@ class dlc_inference_w_pd(Processor):
     def save(self, file=None):
         save_code = 0
         if file:
-            print(file)
+            
             try:
                 save_dict = self.save_latency_data()
-                print(save_dict)
+                
 
                 pickle.dump(
-                    save_dict, open(file, "wb"),
-                )
+                        save_dict, open(file, "wb"),
+                    )
                 save_code = 1
-            except Exception:
+            except Exception as e:
+                warnings.warn(f"Proc file was not saved, an exception occurred: {e}")
+
                 save_code = -1
         return save_code
 
     def save_latency_data(self):
-        self.teensy.close_serial()
+        if self.use_teensy == 1:
+            print("closing serial connection to teensy")
+            self.teensy.close_serial()
+  
         save_dict = dict()
         save_dict["start_time"] = np.array(self.start_time)
         save_dict["frame_time"] = np.array(self.frame_time)
