@@ -1,11 +1,12 @@
 import numpy as np
 from dlclive.processor.processor import Processor
 from math import sqrt, acos, atan2, copysign, degrees
+import pickle
 
-class MyProcessor2(Processor):
-    def __init__(self,  con = 50):
+class dlc_only(Processor):
+    def __init__(self,  con = 50, com=2):
         super().__init__()
-   
+        self.x = []
 
     def process(self, pose, **kwargs):
         xy = pose[:, :2]
@@ -27,16 +28,24 @@ class MyProcessor2(Processor):
         heading = atan2(body_axis[1], body_axis[0])
         heading = degrees(heading)
         vals = *center, heading % (360), head_angle
-        print(vals)
-       # if self.queue is not None:
-       #     self.queue.write(vals)
+        self.x.append(center)
         return pose
     
-    def save(self, file=None):
+    def save(self, filename):
 
         ### save stim on and stim off times
-        save_code = 0
+    
+        filename += ".npy"
+        try:
+            np.savez(
+                filename, out_time=self.x)
+            save_code = True
+        except Exception:
+            print("not saved")
+            save_code = False
+
         return save_code
+        
     
     
    

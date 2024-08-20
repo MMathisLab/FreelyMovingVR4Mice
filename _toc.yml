@@ -25,10 +25,14 @@ parts:
   - file: docs/Rig_building/teensy_config
   - file: docs/Rig_building/writing_a_teensy_sketch
   - file: docs/Rig_building/Water_Valve_Calibration
+  - file: docs/Rig_building/Photodiode_circuit
 - caption: Dev, Software package Documentation
   chapters:
   - file: docs/VisualDiscrim
+  - file: docs/dlc_processor
 - caption: Experiments, Training protocol
   chapters:
   - file: docs/training_protocols/training_protocol
-  - file: docs/Unity_games/random_occluders
+
+
+
