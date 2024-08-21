@@ -216,9 +216,8 @@ Add in the distractor. You can do this by loading the [DiscriminationTask](../..
 (see {ref}`sec:gui`).
 - To run this task you need to select the [DiscriminationWithOccludersTask](../../mouse_task/mouse_discrim_occluders.py)
 
-This is currently the **test stage**. Mice that have reached it should do **>= 4 full sessions** (i.e. should do the full 250 trials each day).
+This is currently the **test stage**. Mice that have reached it should do **>= 4 full sessions** (i.e. should do the full 250 trials during each session).
 
-(sec:gui)=
 (reference-timeline)=
 
 ## Reference timeline
@@ -242,14 +241,12 @@ This is currently the **test stage**. Mice that have reached it should do **>= 4
   - 2-3 days
 * - 3
   - Discrimination task WITH occluders
-  - 5 test days
+  - 5 **test** days
 ```
 
 (sec:gui)=
 
 ## Using GUIs to run software
-
-### Setting up sessions
 
 ### Setting up sessions
 
