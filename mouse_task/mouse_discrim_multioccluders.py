@@ -19,7 +19,7 @@ config_path = current_dir.joinpath(config_name)  # default class constructor inp
 
 
 
-class DiscriminationWithMutliOccludersTask(ActiveSensingTask):
+class DiscriminationWithMultiOccludersTask(ActiveSensingTask):
 
     """
     Discrimination task with multiple occluders, sampled from a log space these are [12.0, 8.48, 6.0, 4.24, 3].
