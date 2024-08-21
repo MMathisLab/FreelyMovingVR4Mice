@@ -98,6 +98,7 @@ This means that it is important to know the water droplet size coming from the s
 
 ```{admonition} Materials
 :class: tip
+
 Empty mouse cage, 0.1 gram balance, weighing container, 1 mL syringe, small plastic dish, mouse water bottle, gloves, paper towel, 70% isopropyl alcohol.
 ```
 
@@ -173,9 +174,10 @@ On each training day, between sessions with different mice, make sure to clean t
 ```
 
 ```{note}
-May be combined in single arena session with {ref}`sec:arena-habituation` (above).
+May be combined in single arena session with {ref}`sec:arena-habituation`.
 ```
 
+To select the target type you can change the target selection parameter in the GUI, by changing the number so that it is the white single teardrop object (`target_selection = 6.0`).
 To select the target type you can change the target selection parameter in the GUI, by changing the number so that it is the white single teardrop object (`target_selection = 6.0`).
 
 **Steps:**
@@ -214,7 +216,33 @@ Add in the distractor. You can do this by loading the [DiscriminationTask](../..
 (see {ref}`sec:gui`).
 - To run this task you need to select the [DiscriminationWithOccludersTask](../../mouse_task/mouse_discrim_occluders.py)
 
-This is currently the **test stage**. Mice that have reached it should do **>= 4 full sessions** (i.e. should do the full 250 trials each day).
+This is currently the **test stage**. Mice that have reached it should do **>= 4 full sessions** (i.e. should do the full 250 trials during each session).
+
+(reference-timeline)=
+
+## Reference timeline
+
+```{list-table} **Reference timeline**
+:name: targets-distractors
+:align: center
+:header-rows: 1
+
+* - Stage
+  - Name
+  - Duration estimate
+* - 1.1
+  - Detection task WITHOUT velocity threshold
+  - 4-5 days
+* - 1.2
+  - Detection task WITH velocity threshold
+  - 1-2 days
+* - 2
+  - Discrimination task WITHOUT occluders
+  - 2-3 days
+* - 3
+  - Discrimination task WITH occluders
+  - 5 **test** days
+```
 
 (sec:gui)=
 
@@ -239,35 +267,48 @@ This is currently the **test stage**. Mice that have reached it should do **>= 4
 
 - Press `On` in DLC gui.
 - Press start in teensy gui.
-- Hold down `alt` key and tap tab to select camera, teensy gui, and DLC gui.
+- Hold down `alt` key and hit `tab` to select camera, teensy gui, and DLC gui.
 - Start stimulus screen recording on laptop.
 - Hover over stimulus to view if desired.
 - Note start time.
 
-Note that you can mix and match different targets and distators by changing the `target_selection` and `distractor_selection` parameters. {ref}`Here <fig:tab5>` is a list of the floats used and the respective targets that are spawned.
+Note that you can mix and match different targets and distators by changing the `target_selection` and `distractor_selection` parameters. See {ref}`sec:target-distractor-list` for a list of the floats used and their corresponding targets/distractors that can be spawned.
 
-<!-- |Targe ID   |Name                     |
-|-----------|-------------------------|
-|0          |white cube               |
-|1          |black cube               |
-|2          |grey teardrop            |
-|3          |grey pacman              |
-|4          |black teardrop           |
-|5          |black pacman             |
-|6          |white teardrop           |
-|7          |white pacman             |
-|8          |zebra teardrop           |
-|9          |zebra ball               |
-|10         |white ball               |
-|11         |light grey zebra teardrop|
-|12         |dark grey zebra teardrop | -->
+(sec:target-distractor-list)=
 
-```{image} ../../docs/images/tab5-list_objects.png
-:name: fig:tab5
-:alt: tab5
-:class: bg-primary mb-1
-:width: 300px
+```{list-table} **List of available targets/distractors**
 :align: center
+:width: 300px
+:header-rows: 1
+
+* - ID
+  - Name
+* - `0.`
+  - white cube
+* - `1.`
+  - black cube
+* - `2.`
+  - grey teardrop
+* - `3.`
+  - grey pacman
+* - `4.`
+  - black teardrop
+* - `5.`
+  - black pacman
+* - `6.`
+  - white teardrop
+* - `7.`
+  - white pacman
+* - `8.`
+  - zebra teardrop
+* - `9.`
+  - zebra ball
+* - `10.`
+  - white ball
+* - `11.`
+  - light gray zebra teardrop
+* - `12.`
+  - dark gray zebra teardrop
 ```
 
 ## Materials

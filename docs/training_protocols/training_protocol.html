@@ -428,6 +428,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-1-detection-task">Training Stage 1: Detection task</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-2-discrimination-without-occlusion">Training Stage 2: Discrimination without occlusion</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-3-discrimination-with-occlusion">Training Stage 3: Discrimination with occlusion</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-timeline">Reference timeline</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-guis-to-run-software">Using GUIs to run software</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-up-sessions">Setting up sessions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#starting-session">Starting session</a></li>
@@ -621,9 +622,10 @@ On each training day, between sessions with different mice, make sure to clean t
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>May be combined in single arena session with <a class="reference internal" href="#sec-arena-habituation"><span class="std std-ref">Arena and Reward Port Habituation</span></a> (above).</p>
+<p>May be combined in single arena session with <a class="reference internal" href="#sec-arena-habituation"><span class="std std-ref">Arena and Reward Port Habituation</span></a>.</p>
 </div>
-<p>To select the target type you can change the target selection parameter in the GUI, by changing the number so that it is the white single teardrop object (<code class="docutils literal notranslate"><span class="pre">target_selection</span> <span class="pre">=</span> <span class="pre">6.0</span></code>).</p>
+<p>To select the target type you can change the target selection parameter in the GUI, by changing the number so that it is the white single teardrop object (<code class="docutils literal notranslate"><span class="pre">target_selection</span> <span class="pre">=</span> <span class="pre">6.0</span></code>).
+To select the target type you can change the target selection parameter in the GUI, by changing the number so that it is the white single teardrop object (<code class="docutils literal notranslate"><span class="pre">target_selection</span> <span class="pre">=</span> <span class="pre">6.0</span></code>).</p>
 <p><strong>Steps:</strong></p>
 <ul class="simple">
 <li><p><strong>Step 1: Detection task training - permissive trial initiation parameters.</strong></p>
@@ -664,7 +666,38 @@ On each training day, between sessions with different mice, make sure to clean t
 (see <a class="reference internal" href="#sec-gui"><span class="std std-ref">Using GUIs to run software</span></a>).</p></li>
 <li><p>To run this task you need to select the <a class="reference download internal" download="" href="../../_downloads/9dcaa03ca8266c94a6bcbffd6a0dca32/mouse_discrim_occluders.py"><span class="xref download myst">DiscriminationWithOccludersTask</span></a></p></li>
 </ul>
-<p>This is currently the <strong>test stage</strong>. Mice that have reached it should do <strong>&gt;= 4 full sessions</strong> (i.e. should do the full 250 trials each day).</p>
+<p>This is currently the <strong>test stage</strong>. Mice that have reached it should do <strong>&gt;= 4 full sessions</strong> (i.e. should do the full 250 trials during each session).</p>
+</section>
+<section id="reference-timeline">
+<span id="id1"></span><h2>Reference timeline<a class="headerlink" href="#reference-timeline" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table table-center" id="targets-distractors">
+<caption><span class="caption-number">Table 1 </span><span class="caption-text"><strong>Reference timeline</strong></span><a class="headerlink" href="#targets-distractors" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Stage</p></th>
+<th class="head"><p>Name</p></th>
+<th class="head"><p>Duration estimate</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1.1</p></td>
+<td><p>Detection task WITHOUT velocity threshold</p></td>
+<td><p>4-5 days</p></td>
+</tr>
+<tr class="row-odd"><td><p>1.2</p></td>
+<td><p>Detection task WITH velocity threshold</p></td>
+<td><p>1-2 days</p></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p>Discrimination task WITHOUT occluders</p></td>
+<td><p>2-3 days</p></td>
+</tr>
+<tr class="row-odd"><td><p>3</p></td>
+<td><p>Discrimination task WITH occluders</p></td>
+<td><p>5 <strong>test</strong> days</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </section>
 <section id="using-guis-to-run-software">
 <span id="sec-gui"></span><h2>Using GUIs to run software<a class="headerlink" href="#using-guis-to-run-software" title="Link to this heading">#</a></h2>
@@ -690,28 +723,62 @@ On each training day, between sessions with different mice, make sure to clean t
 <ul class="simple">
 <li><p>Press <code class="docutils literal notranslate"><span class="pre">On</span></code> in DLC gui.</p></li>
 <li><p>Press start in teensy gui.</p></li>
-<li><p>Hold down <code class="docutils literal notranslate"><span class="pre">alt</span></code> key and tap tab to select camera, teensy gui, and DLC gui.</p></li>
+<li><p>Hold down <code class="docutils literal notranslate"><span class="pre">alt</span></code> key and hit <code class="docutils literal notranslate"><span class="pre">tab</span></code> to select camera, teensy gui, and DLC gui.</p></li>
 <li><p>Start stimulus screen recording on laptop.</p></li>
 <li><p>Hover over stimulus to view if desired.</p></li>
 <li><p>Note start time.</p></li>
 </ul>
-<p>Note that you can mix and match different targets and distators by changing the <code class="docutils literal notranslate"><span class="pre">target_selection</span></code> and <code class="docutils literal notranslate"><span class="pre">distractor_selection</span></code> parameters. <a class="reference internal" href="#fig-tab5"><span class="std std-ref">Here</span></a> is a list of the floats used and the respective targets that are spawned.</p>
-<!-- |Targe ID   |Name                     |
-|-----------|-------------------------|
-|0          |white cube               |
-|1          |black cube               |
-|2          |grey teardrop            |
-|3          |grey pacman              |
-|4          |black teardrop           |
-|5          |black pacman             |
-|6          |white teardrop           |
-|7          |white pacman             |
-|8          |zebra teardrop           |
-|9          |zebra ball               |
-|10         |white ball               |
-|11         |light grey zebra teardrop|
-|12         |dark grey zebra teardrop | -->
-<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/tab5-list_objects.png" id="fig-tab5"><img alt="tab5" class="bg-primary mb-1 align-center" id="fig-tab5" src="../../_images/tab5-list_objects.png" style="width: 300px;" /></a>
+<p>Note that you can mix and match different targets and distators by changing the <code class="docutils literal notranslate"><span class="pre">target_selection</span></code> and <code class="docutils literal notranslate"><span class="pre">distractor_selection</span></code> parameters. See <a class="reference internal" href="#sec-target-distractor-list"><span class="std std-ref">List of available targets/distractors</span></a> for a list of the floats used and their corresponding targets/distractors that can be spawned.</p>
+<div class="pst-scrollable-table-container"><span id="sec-target-distractor-list"></span><table class="table table-center" id="id2" style="width: 300px">
+<caption><span class="caption-number">Table 2 </span><span class="caption-text"><strong>List of available targets/distractors</strong></span><a class="headerlink" href="#id2" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>ID</p></th>
+<th class="head"><p>Name</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">0.</span></code></p></td>
+<td><p>white cube</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">1.</span></code></p></td>
+<td><p>black cube</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">2.</span></code></p></td>
+<td><p>grey teardrop</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">3.</span></code></p></td>
+<td><p>grey pacman</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">4.</span></code></p></td>
+<td><p>black teardrop</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">5.</span></code></p></td>
+<td><p>black pacman</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">6.</span></code></p></td>
+<td><p>white teardrop</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">7.</span></code></p></td>
+<td><p>white pacman</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">8.</span></code></p></td>
+<td><p>zebra teardrop</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">9.</span></code></p></td>
+<td><p>zebra ball</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">10.</span></code></p></td>
+<td><p>white ball</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">11.</span></code></p></td>
+<td><p>light gray zebra teardrop</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">12.</span></code></p></td>
+<td><p>dark gray zebra teardrop</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </section>
 </section>
 <section id="materials">
@@ -800,6 +867,7 @@ On each training day, between sessions with different mice, make sure to clean t
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-1-detection-task">Training Stage 1: Detection task</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-2-discrimination-without-occlusion">Training Stage 2: Discrimination without occlusion</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-3-discrimination-with-occlusion">Training Stage 3: Discrimination with occlusion</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-timeline">Reference timeline</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-guis-to-run-software">Using GUIs to run software</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-up-sessions">Setting up sessions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#starting-session">Starting session</a></li>
