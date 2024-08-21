@@ -124,7 +124,7 @@ Take the water bottle out of the cage in the evening the day before the first da
 
 ## Arena and Reward Port Habituation
 
-**Removal from Study Criteria**
+**Removal from Study Criteria:**
 
 - [Optional] Animal repeatedly attempts to escape from arena (i.e., jumps to
 rim of arena more than once)
@@ -163,20 +163,14 @@ In the Tolias lab, the arena is on an air table and is enclosed on all sides but
   - For any animals that did not receive their target daily water allocation in the arena tasks, transit to the empty cage for additional water as described above.
 
 ```{note}
-
 It is important to monitor the mice while they are training. If they stop doing the task for more than 2-3 min, please stop the task for the day. we find that if are pushed further they can get frustrated and will no longer do the task well on subsequent days. Sometimes you can try again on the same day after a short, ~10 min. break back in the homecage. We often give them a IACUC approved snack (goldfish cracker) in this 10 min break time, which also increases thirst and subsequent motivation. If they are put back in and still do not perform the task, abandon for the day.
 ```
 
 ## Training Stage 1: Detection task
 
-```{admonition} Reference timeline
-:class: seealso
-Have a look at the [reference timeline](#reference-timeline) with rough duration estimates for each training stage.
-```
-
 ```{admonition} Important
 The following should be applied for **all** training stages.
-On each training day, between sessions with different mice, make sure to clean the arena with water and 70% isopropyl alcohol. First, wipe the floor with paper towels and some water, then take some new paper towels and wipe both floor and walls with 70% isopropyl alcohol to make sure no odors from the previous mouse remain. This is necessary to reduce stress in the animals.
+On each training day, between sessions with different mice, make sure to clean the arena. First, wipe the floor with paper towels and some water, then take some new paper towels and wipe both floor and walls with either 70% isopropyl alcohol or 70% ethanol. This is to make sure no odors from the previous mouse remain and is necessary to reduce stress in the animals.
 ```
 
 ```{note}
@@ -184,21 +178,26 @@ May be combined in single arena session with {ref}`sec:arena-habituation`.
 ```
 
 To select the target type you can change the target selection parameter in the GUI, by changing the number so that it is the white single teardrop object (`target_selection = 6.0`).
+To select the target type you can change the target selection parameter in the GUI, by changing the number so that it is the white single teardrop object (`target_selection = 6.0`).
 
 **Steps:**
 
-- *Step1: Detection task training - permissive trial initiation parameters.*
-  - **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 2 sessions.
+- **Step 1: Detection task training - permissive trial initiation parameters.**
+  - [Full parameter list](./training_protocol_stage_parameters.md#step-1-permissive-trial-initiation-parameters)
+  - **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 1 session.
   - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation (see {ref}`sec:gui`).
-  - For this first stage of training you want to load the [DetectionWithoutVelocityThresholdTask] (../../mouse_task/mouse_detection_p1.py), by loading this script all the parameters required for this task will be loaded as default. In this task there is no velocity threshold applied in the start box.
+  - For this first stage of training you want to load the [DetectionWithoutVelocityThresholdTask](../../mouse_task/mouse_detection_p1.py), by loading this script all the parameters required for this task will be loaded as default. In this task there is no velocity threshold applied in the start box.
   - To encourage mice to form connection between position and visual stimuli, longer initial session (ex 75 minutes) may be necessary to allow enough serendipitous trial initiations to occur.
   - If mice are allowed to overtrain on this step their performance can reach up to 100%.
 
-- *Step2: Detection task training - restricted trial initiation parameters.*
-  - **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 2 sessions.
+- **Step 2: Detection task training - restricted trial initiation parameters.**
+  - [Full parameter list](./training_protocol_stage_parameters.md#step-2-restricted-trial-initiation-parameters)
+  - **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 1 session.
   - Same as Step 1, but this time a velocity threshold is applied. To do this you need to select the [DetectionWithVelocityThresholdTask](../../mouse_task/mouse_detection_p2.py)
 
 ## Training Stage 2: Discrimination without occlusion
+
+[Full parameter list](./training_protocol_stage_parameters.md#training-stage-2-discrimination-without-occlusion-parameters)
 
 Add in the distractor. You can do this by loading the [DiscriminationTask](../../mouse_task/mouse_discrim.py)
 
@@ -209,12 +208,17 @@ Add in the distractor. You can do this by loading the [DiscriminationTask](../..
 
 ## Training Stage 3: Discrimination with occlusion
 
+[Full parameter list](./training_protocol_stage_parameters.md#training-stage-3-discrimination-with-occlusion-parameters)
+
 **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 2 sessions.
 
 - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation
 (see {ref}`sec:gui`).
 - To run this task you need to select the [DiscriminationWithOccludersTask](../../mouse_task/mouse_discrim_occluders.py)
 
+This is currently the **test stage**. Mice that have reached it should do **>= 4 full sessions** (i.e. should do the full 250 trials each day).
+
+(sec:gui)=
 (reference-timeline)=
 
 ## Reference timeline
@@ -244,6 +248,8 @@ Add in the distractor. You can do this by loading the [DiscriminationTask](../..
 (sec:gui)=
 
 ## Using GUIs to run software
+
+### Setting up sessions
 
 ### Setting up sessions
 

@@ -6,7 +6,7 @@ import pickle
 import time
 from collections import deque
 from latency_tests.Teensy_latency.TeensyLatency import TeensyLatency
-
+import warnings
 import numpy as np
 from dlclive import Processor
 from math import sqrt, acos, atan2, copysign, pi, degrees
@@ -46,6 +46,7 @@ class dlc_inference_w_pd(Processor):
         self.signal_delay = signal_delay
         self.signal_freq = freq
         self.use_teensy = use_teensy
+        self.previous = np.array([0,0])
         if self.use_teensy == 1:
             self.teensy = TeensyLatency(com, baudrate=baudrate)
             print("using_teensy")
@@ -56,7 +57,11 @@ class dlc_inference_w_pd(Processor):
         conf = pose[:, 2]
         head_xy = xy[[0, 1, 2, 3, 4, 5, 6, 26], :]
         head_conf = conf[[0, 1, 2, 3, 4, 5, 6, 26]]
-        center = np.average(head_xy, axis=0, weights=head_conf)
+        
+        if np.mean(head_conf) < 0.6:
+            center = self.previous
+        else:
+            center = np.average(head_xy, axis=0, weights=head_conf)
         body_axis = xy[7] - xy[13]  # tail_base -> neck
         body_axis /= sqrt(np.sum(body_axis ** 2))
         head_axis = xy[0] - xy[7]  # neck -> nose
@@ -94,7 +99,7 @@ class dlc_inference_w_pd(Processor):
         self.frame_time.append(kwargs["frame_time"])
 
         self.conn.send([time.time(), vals[0], vals[1], vals[2], vals[3], vals[4]])
-
+        self.previous = center
         return pose
 
     def get_signal(self, signal_type, curr_time, st, freq, delay):
@@ -141,21 +146,26 @@ class dlc_inference_w_pd(Processor):
     def save(self, file=None):
         save_code = 0
         if file:
-            print(file)
+            
             try:
                 save_dict = self.save_latency_data()
-                print(save_dict)
+                
 
                 pickle.dump(
-                    save_dict, open(file, "wb"),
-                )
+                        save_dict, open(file, "wb"),
+                    )
                 save_code = 1
-            except Exception:
+            except Exception as e:
+                warnings.warn(f"Proc file was not saved, an exception occurred: {e}")
+
                 save_code = -1
         return save_code
 
     def save_latency_data(self):
-        self.teensy.close_serial()
+        if self.use_teensy == 1:
+            print("closing serial connection to teensy")
+            self.teensy.close_serial()
+  
         save_dict = dict()
         save_dict["start_time"] = np.array(self.start_time)
         save_dict["frame_time"] = np.array(self.frame_time)

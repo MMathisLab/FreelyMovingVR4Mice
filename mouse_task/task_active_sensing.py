@@ -33,7 +33,7 @@ class ActiveSensingTask(UnityTask):
     It inherits from UnityTask and GuiTask from the `teensyexp` module.
 
     Attributes:
-        
+
     teensy: Teensy object, instance of teensy class that controls the teensy microcontroller.
     monitor: Not used.
     write_video: Boolean, default is `False`. If `True`, video output will be recorded.
@@ -52,14 +52,14 @@ class ActiveSensingTask(UnityTask):
     prop_obj_on_Left: Float, probability of the OOI being on the left side (default is `0.5`). This parameter is used if the block length is set to 1, if the block length is > 1 then prob block coherence is used.
     prob_block_coherence: Float, this is the probability that the OOI will appear on the same side as the block. ie if the block was a left block and the prob_block_coherence was 1 then it would appear on the left (default is 0.5). This parameter is only used if the block length is greater that 1.
     mouse_report_delay: Float, mouse report delay default is `0`.
-    slit_size: List, this is a list of numbers [min_slit_size, max_slit_size, number_of_slit_sizes] ie. [10,20,5] would give a range of 5 slit sizes with 10 being the minimum and 20 being the max.
-    slit_depth: Float, this parameter controls the depth or thickness of the walls (default = 0.2)
+    slit_size: List, this is a list of numbers [min_slit_size, max_slit_size, number_of_slit_sizes] ie. [10,20,5] would give a range of 5 slit sizes with 10 being the minimum and 20 being the max. If you want to pass a custom number on multiple slit sizes you can pass this in as a list of numbers ie [12,8,6,5,3] as long as the len of that list if > 3
+    slit_depth: Float, this parameter controls the depth or thickness of the walls (default = 0.2). 
     target_selection: Integer, this parameter selects what object for the OOI (`0.` = white cube, `1.` = black cube, `2.` = teardrop grey, `3.` = pacman grey, `4.` = teardrop black, `5.` = pacman black, `6.` = teardrop white, `7.` = pacman white,`8.`= zebra teardrop, `9.`= zebra ball, `10.`=white ball, `11.`=light gray zebra teardrop, `12.` = dark gray zebra teardrop )
     distractor_selection: Integer, this parameter selects what object for the distractor (`0.` = white cube, `1.` = black cube, `2.` = teardrop grey, `3.` = pacman grey, `4.` = teardrop black, `5.` = pacman black, `6.` = teardrop white, `7.` = pacman white,`8.`= zebra teardrop, `9.`= zebra ball, `10.`=white ball, `11.`=light gray zebra teardrop, `12.` = dark gray zebra teardrop )
     occlusion_type: Integer, allows the user to select the type of occlusion that they want to use. (`0` = no occlusion, `1` = slit occlusion, `2` = central wall), default is no occlusion.
     camera_type: Integer, allows the user to select between on (Camera_type = `0`) and off axis camera (Camera_type = `1`) modes.
     target_spread: Float, specifies the distance between the targets.
-    target_rotation: Float, altering this parameter causes the tips of the targets to be rotated inward making them easier for the animal to see. 
+    target_rotation: Float, altering this parameter causes the tips of the targets to be rotated inward making them easier for the animal to see.
     target_size: Integer, specifies the size of the targets i recommend using size `1` for the teardrop and double teardrop.
     target_height: Float, specifies the height at which the targets are spawned.
     block_length: Float, specifies how many rewards the mouse has to get correct before the OOI switches sides. To enforce this make sure that you have the prop_object_on left parameter set to `1.0`. If prob_object_on_left is set to `.5` then this block length parameter has no effect as there is a 50% chance of the object appearing on the each side.
@@ -160,9 +160,7 @@ class ActiveSensingTask(UnityTask):
         self.reward_size = self.as_list(reward_size)
         self.slit_size = slit_size
         slit_sizes_list = self.as_list(slit_size)
-        self.slit_sizes = np.linspace(
-            slit_sizes_list[0], slit_sizes_list[1], int(slit_sizes_list[2])
-        )
+        self.slit_sizes = self.get_slit_sizes(slit_sizes_list)
 
         self.slit_depth = self.as_list(slit_depth)
         self.slit_depth_param = slit_depth
@@ -173,7 +171,7 @@ class ActiveSensingTask(UnityTask):
         self.target_height_param = target_height
         self.mouse_report_delay = self.as_list(mouse_report_delay)
         self.target_rotation = self.as_list(target_rotation)
-        self.target_rotation_param =target_rotation
+        self.target_rotation_param = target_rotation
         self.mouse_report_delay_param = mouse_report_delay
 
         self.prob_obj_on_left = prob_obj_on_left
@@ -204,7 +202,7 @@ class ActiveSensingTask(UnityTask):
         self.distractor_selection = self.as_list(distractor_selection)
         self.distractor_selection_param = distractor_selection
         self.occlusion_type = self.as_list(occlusion_type)
-        self.occlusion_type_param = occlusion_type 
+        self.occlusion_type_param = occlusion_type
         self.camera_type = camera_type
         self.target_distance = self.as_list(target_distance)
         self.target_distance_param = target_distance
@@ -313,7 +311,7 @@ class ActiveSensingTask(UnityTask):
         this_mouse_report_delay = self.get_epoch_value("mouse_report_delay")
         this_target_selection = self.get_epoch_value("target_selection")
         this_distractor_selection = self.get_epoch_value("distractor_selection")
-        this_occlusion_type = 0.0  # self.get_epoch_value("occlusion_type")
+        this_occlusion_type = self.get_epoch_value("occlusion_type")
         this_target_distance = self.get_epoch_value("target_distance")
         this_target_rotation = self.get_epoch_value("target_rotation")
 
@@ -368,8 +366,8 @@ class ActiveSensingTask(UnityTask):
         print(self.trial_occlusion_type)
         self.trial_target_distance.append(this_target_distance)
         self.trial_target_rotation.append(this_target_rotation)
-        self.trial_reward_size.append(self.trial_reward_size)
-        self.trial_prob_obj_on_left.append(self.trial_prob_obj_on_left)
+        self.trial_reward_size.append(self.reward_size)
+        self.trial_prob_obj_on_left.append(self.prob_obj_on_left)
         # super().reset_environment()
 
     def get_action(self):
@@ -425,6 +423,38 @@ class ActiveSensingTask(UnityTask):
                 [0.0, 1.0], p=[1 - self.prob_block_coherence, self.prob_block_coherence]
             )
         print("object on left", self.object_on_left)
+        
+    def get_slit_sizes(self, slit_sizes_list: list):
+        """ Create a vector of slit sizes which can be passed to the uniform random sampler in the set.channel() function.
+        
+        Args: 
+            slit_sizes_list: List, of numbers [min_slit_size, max_slit_size, number_of_slit_sizes] ie. [10,20,5] would give
+            a range of 5 slit sizes with 10 being the minimum and 20 being the max.
+            If you want to pass a custom number on multiple slit sizes you can pass this in as a 
+            list of numbers ie [12,8,6,5,3] as long as the len of that list if > 3.
+        
+        Returns: 
+            np.array, of slit sizes to be sampled from.
+        """
+ 
+        if len(slit_sizes_list) == 0:
+            raise ValueError("slit_sizes_list cannot be empty.")
+    
+        if len(slit_sizes_list) < 3:
+            raise ValueError("slit_sizes_list must have at least 3 elements.")
+     
+        for x in slit_sizes_list:
+            if not isinstance(x, (int, float)):
+                raise TypeError(f"All elements in slit_sizes_list must be numeric, got {x} which is a {type(x)}.")
+        
+        if len(slit_sizes_list) == 3:
+            data = np.linspace(slit_sizes_list[0], slit_sizes_list[1], int(slit_sizes_list[2]))
+            print(f"3 elements found in slit size list: using linspace function, here are your occluder sizes: {data}")
+        else:
+            data = np.array(slit_sizes_list)
+            print(f"{len(slit_sizes_list)} elements found, using the slit size list explicitly, here are you occluder sizes: {data}")
+        return data
+            
 
     def reset_environment(self):
         """
@@ -452,6 +482,11 @@ class ActiveSensingTask(UnityTask):
         in_right_box = None if self.state is None else "%0.2f" % (self.state[8])
         start_box_delay = None if self.state is None else "%0.2f" % (self.state[12])
         photodiode_state = None if self.state is None else "%0.2f" % (self.state[11])
+        accuracy = (
+            0.0
+            if self.episode == 0
+            else "%0.2f" % (float(self.n_rewards) / self.episode)
+        )
 
         return {
             "session time": round(self.cur_time, 1),
@@ -461,6 +496,7 @@ class ActiveSensingTask(UnityTask):
             "h_angle": h_angle,
             "degrees": self.degrees,
             "rewards": self.n_rewards,
+            "accuracy": accuracy,
             "velocity": velocity,
             "in_left_box": in_left_box,
             "in_right_box": in_right_box,
@@ -507,18 +543,18 @@ class ActiveSensingTask(UnityTask):
         data_dict["slit_size_param"] = np.array(self.slit_size)
         data_dict["block_length_param"] = np.array(self.block_length)
         data_dict["rotate_camera_param"] = self.rotate_camera
-        data_dict["epoch_param"] =self.epoch_param
-        data_dict["mouse_report_delay_param"] =self.mouse_report_delay_param
+        data_dict["epoch_param"] = self.epoch_param
+        data_dict["mouse_report_delay_param"] = self.mouse_report_delay_param
         data_dict["prob_block_coherence"] = np.array(self.prob_block_coherence)
-        data_dict["slit_depth_param"] =self.slit_depth_param
+        data_dict["slit_depth_param"] = self.slit_depth_param
         data_dict["target_selection_param"] = self.target_selection_param
-        data_dict["distractor_selection_param"] =self.distractor_selection_param
+        data_dict["distractor_selection_param"] = self.distractor_selection_param
         data_dict["occlusion_type_param"] = self.occlusion_type_param
         data_dict["target_spread_param"] = self.target_spread_param
-        data_dict["target_rotation_param"] =self.target_rotation_param
-        data_dict["target_height_param"] =self.target_height_param
-        data_dict["target_distance_param"]=self.target_distance_param
+        data_dict["target_rotation_param"] = self.target_rotation_param
+        data_dict["target_height_param"] = self.target_height_param
+        data_dict["target_distance_param"] = self.target_distance_param
         data_dict["trial_prob_object_left"] = np.array(self.trial_prob_obj_on_left)
         data_dict["trial_target_spread"] = np.array(self.trial_target_spread)
-        data_dict["trial_target_height"] =np.array(self.trial_target_height)
+        data_dict["trial_target_height"] = np.array(self.trial_target_height)
         return data_dict

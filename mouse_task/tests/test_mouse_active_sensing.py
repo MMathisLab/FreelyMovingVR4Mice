@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 from pathlib import Path
 from mouse_task.task_active_sensing import ActiveSensingTask  # Ensure this path is correct
+import numpy as np
 
 class TestDetectionP1Randomization(unittest.TestCase):
     def setUp(self):
@@ -86,25 +87,25 @@ class TestDetectionP1Randomization(unittest.TestCase):
             )
     
     def test_target_on_left(self):
-        # test that target appears on the left
+        """test that target appears on the left"""
         self.task.prob_obj_on_left = 1.0
         self.task.random_target_location()
         self.assertEqual(self.task.object_on_left, 1.0)
     
     def test_target_on_right(self):
-        # test that target appears on the right
+        """test that target appears on the right"""
         self.task.prob_obj_on_left = 0.0
         self.task.random_target_location()
         self.assertEqual(self.task.object_on_left, 0.0)
         
     def test_target_on_lr(self):
-        # test that target appears on either the left or the right
+        """ test that target appears on either the left or the right"""
         self.task.prob_obj_on_left = 0.5
         self.task.random_target_location()
         self.assertIn(self.task.object_on_left, [0.0,1.0])
         
     def test_block_sampler_stay(self):
-        # test that if number correct is less than the block length we stay within the same block
+        """ test that if number correct is less than the block length we stay within the same block"""
         self.task.block_length = 2
         self.task.correct = 1
         self.task.block_Left = 0.0
@@ -128,8 +129,10 @@ class TestDetectionP1Randomization(unittest.TestCase):
          
          
     def test_block_switch(self):
-        # if the block length and the number correct is the same if it is we should switch side
-        # if block coherence if one and we are in a left block then we should switch to the right side
+        """ Tests that the block switches at the correct time.
+        """
+        # if block coherence is 1 and we are in a left block 
+        # the next block should right and the target should appear on the right
         self.task.block_length = 2
         self.task.correct = 2
         self.task.block_Left = 1.0
@@ -146,6 +149,52 @@ class TestDetectionP1Randomization(unittest.TestCase):
         self.task.block_sampler()
         self.assertEqual(self.task.object_on_left, 1.0)
         self.assertEqual(self.task.block_Left, 0.0)
+        
+    def test_slit_size_linspace(self):
+        """ Test when slit_sizes_list has exactly 3 elements"""
+        slit_sizes_list = [1.0, 10.0, 5]
+        expected_result = np.linspace(1.0, 10.0, 5)
+        result = self.task.get_slit_sizes(slit_sizes_list)
+        np.testing.assert_array_equal(result, expected_result, 
+                                      err_msg="Failed to generate linspace with exactly 3 elements.")
+        
+    def test_slit_size_custom(self):
+        """ Test when slit_sizes_list has more than 3 elements """
+        slit_sizes_list = [1.0, 2.0, 3.0, 4.0]
+        expected_result = np.array(slit_sizes_list)
+        result = self.task.get_slit_sizes(slit_sizes_list)
+        np.testing.assert_array_equal(result, expected_result, 
+                                      err_msg="Failed to return array when slit_sizes_list has more than 3 elements.")
+        
+    def test_slit_sizes_1_element(self):
+        """Test when slit_sizes_list has 3 elements and check the array size"""
+        slit_sizes_list = [0, 10, 1]
+        expected_result = np.linspace(0, 10, 1)
+        result = self.task.get_slit_sizes(slit_sizes_list)
+        np.testing.assert_array_equal(result, expected_result, 
+                                      err_msg="Failed to handle edge case with 3 elements but minimal linspace generation.")
+        
+        
+    def test_slit_size_empty_list(self):
+        """Test when slit_sizes_list is empty"""
+        slit_sizes_list = []
+        with self.assertRaises(ValueError):
+            self.task.get_slit_sizes(slit_sizes_list)
+
+    def test_slit_size_invalid_length(self):
+        """Test when slit_sizes_list has less than 3 elements"""
+        slit_sizes_list = [1.0, 2.0]
+        with self.assertRaises(ValueError):
+            self.task.get_slit_sizes(slit_sizes_list)
+
+    def test_slit_size_invalid_type(self):
+        """ Test when slit_sizes_list contains non-numeric types"""
+        slit_sizes_list = [1.0, 2.0, 'a']
+        with self.assertRaises(TypeError):
+            self.task.get_slit_sizes(slit_sizes_list)
+
+
+
 
 
  
