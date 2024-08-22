@@ -314,7 +314,7 @@ def get_rc_params():
             "xtick.labelsize": font_size,
             "ytick.labelcolor": font_color,
             "ytick.labelsize": font_size,
-            "font.weight": "bold",
+            "font.weight": "normal",
         }
     )
 

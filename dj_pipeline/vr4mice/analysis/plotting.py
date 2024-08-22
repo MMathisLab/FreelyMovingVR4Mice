@@ -1156,7 +1156,7 @@ def _plot_all_trajectories(
     Returns:
         None
     """
-    for i in range(1, np.max(df.trial)):
+    for i in range(1, np.int(np.max(df.trial))):
         # PLOT
         ax.plot(
             df.x[(df.trial == i)],
