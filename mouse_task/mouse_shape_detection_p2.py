@@ -18,7 +18,7 @@ current_dir = pathlib.Path(__file__).parent
 config_path = current_dir.joinpath(config_name)  # default class constructor input
 
 
-class ShapeDetectionWithoutVelocityThresholdTask(ActiveSensingTask):
+class ShapeDetectionWithVelocityThresholdTask(ActiveSensingTask):
     """
     Detection of shape task with a lower velocity threshold to initiate the trials.
     """
