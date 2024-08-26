@@ -44,8 +44,8 @@ class ShapeDetectionWithoutVelocityThresholdTask(ActiveSensingTask):
         prob_block_coherence = 0.5,
         mouse_report_delay=0.0,
         slit_size=[4.0, 4.0, 1],
-        slit_depth=0.2,
-        target_selection=14.0,
+        slit_depth=0.02,
+        target_selection=13.0,
         distractor_selection=6.0,
         occlusion_type=0.0,
         camera_type=1.0,
@@ -58,7 +58,7 @@ class ShapeDetectionWithoutVelocityThresholdTask(ActiveSensingTask):
         velocity_threshold=10.0,
         distractor=0.0,
         grey_screen_active=0.0,
-        target_distance=3.5,
+        target_distance=4.0,
         use_dlc=True,
     ):
         super().__init__(
