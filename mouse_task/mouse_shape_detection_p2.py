@@ -20,7 +20,7 @@ config_path = current_dir.joinpath(config_name)  # default class constructor inp
 
 class ShapeDetectionWithoutVelocityThresholdTask(ActiveSensingTask):
     """
-    Detection task without velocity threshold to initiate the trials.
+    Detection of shape task with a lower velocity threshold to initiate the trials.
     """
 
     def __init__(

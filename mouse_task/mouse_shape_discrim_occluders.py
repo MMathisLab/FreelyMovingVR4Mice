@@ -20,7 +20,7 @@ config_path = current_dir.joinpath(config_name)  # default class constructor inp
 
 class ShapeDiscriminationOccluders(ActiveSensingTask):
     """
-    Detection task without velocity threshold to initiate the trials.
+    Shape discrimination task, mouse must report the white pacman location and ignore the teardrop with random occluders
     """
 
     def __init__(
@@ -29,9 +29,9 @@ class ShapeDiscriminationOccluders(ActiveSensingTask):
         monitor=None,
         write_video=False,
         fps=60.0,
-        session_label=["ar_shape_detection_no_velthr"],
+        session_label=["ar_shape_discrim_occluders"],
         epochs=[250],
-        epoch_labels=["single_wide_pacman"],
+        epoch_labels=["pacman_vs_teardrop"],
         config_file_path=config_path,
         reward_size=100,
         cropped_image=[0, 530, 0, 510],
