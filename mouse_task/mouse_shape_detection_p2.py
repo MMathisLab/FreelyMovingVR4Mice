@@ -18,7 +18,7 @@ current_dir = pathlib.Path(__file__).parent
 config_path = current_dir.joinpath(config_name)  # default class constructor input
 
 
-class ShapeDetectionWithoutVelocityThresholdTask(ActiveSensingTask):
+class ShapeDetectionWithVelocityThresholdTask(ActiveSensingTask):
     """
     Detection of shape task with a lower velocity threshold to initiate the trials.
     """
@@ -44,8 +44,8 @@ class ShapeDetectionWithoutVelocityThresholdTask(ActiveSensingTask):
         prob_block_coherence = 0.5,
         mouse_report_delay=0.0,
         slit_size=[4.0, 4.0, 1],
-        slit_depth=0.2,
-        target_selection=14.0,
+        slit_depth=0.02,
+        target_selection=13.0,
         distractor_selection=6.0,
         occlusion_type=0.0,
         camera_type=1.0,
@@ -55,10 +55,10 @@ class ShapeDetectionWithoutVelocityThresholdTask(ActiveSensingTask):
         target_height=3.0,
         block_length=1.0,
         start_box_delay=0.25,
-        velocity_threshold=6.0,
+        velocity_threshold=5.0,
         distractor=0.0,
         grey_screen_active=0.0,
-        target_distance=3.5,
+        target_distance=4.0,
         use_dlc=True,
     ):
         super().__init__(
