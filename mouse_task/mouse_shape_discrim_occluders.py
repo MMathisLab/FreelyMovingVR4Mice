@@ -20,7 +20,8 @@ config_path = current_dir.joinpath(config_name)  # default class constructor inp
 
 class ShapeDiscriminationOccluders(ActiveSensingTask):
     """
-    Shape discrimination task, mouse must report the white pacman location and ignore the teardrop with random occluders
+    Shape discrimination task, with velocity threshold for trial initiation
+    Mouse must report the white pacman location and ignore the teardrop with random occluders.
     """
 
     def __init__(
