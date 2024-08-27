@@ -105,12 +105,8 @@ def sync_dlc_w_game(dlc_dict, game_data):
 
     df_out = pd.concat([game_data, dlc_var], axis=1)
 
-    df_out["head_angle_velocity"] = np.gradient(
-        df_out.head_angle, df_out.time_elapsed
-    )  # df_out.head_angle.diff()
-    df_out["heading_dir_velocity"] = np.gradient(
-        df_out.heading_dir, df_out.time_elapsed
-    )  # df_out.heading_dir.diff()
+    df_out["head_angle_velocity"] = compute_circular_angular_velocity(df_out.head_angle, time_intervals=df_out.time_elapsed)  # df_out.head_angle.diff()
+    df_out["heading_dir_velocity"] = compute_circular_angular_velocity(df_out.heading_dir, time_intervals=df_out.time_elapsed) # df_out.heading_dir.diff()
 
     df_out["head_angle_acceleration"] = np.gradient(
         df_out.head_angle_velocity, df_out.time_elapsed
@@ -356,3 +352,34 @@ def dj2h5(data, headers, scorer) -> pd.DataFrame:
         data,
         columns=pd.MultiIndex.from_tuples(headers, names=levels),
     )
+    
+def compute_circular_angular_velocity(angles, time_intervals):
+    """
+    Computes the circular angular velocity of an angle changing over time.
+
+    Parameters:
+    angles (array-like): Array of angles in radians.
+    time_intervals (array-like): Array of time intervals corresponding to the angles.
+
+    Returns:
+    numpy array: Array of circular angular velocities.
+    """
+    
+    # Convert inputs to numpy arrays
+    angles = np.asarray(angles,dtype=np.float64)
+    time_intervals = np.asarray(time_intervals,dtype=np.float64)
+    angles = np.deg2rad(angles)
+    # Ensure angles are wrapped between -pi and pi for circular continuity
+    # Compute the sine and cosine of the angles
+    angles_wrapped = np.unwrap(angles)
+    sin_angles = np.sin(angles_wrapped)
+    cos_angles = np.cos(angles_wrapped)
+    
+    # Compute the derivatives of sine and cosine with respect to time
+    d_sin = np.diff(sin_angles) / np.diff(time_intervals)
+    d_cos = np.diff(cos_angles) / np.diff(time_intervals)
+    
+    # Calculate the angular velocity using the formula
+    angular_velocity = (cos_angles[:-1] * d_sin - sin_angles[:-1] * d_cos)
+    
+    return np.insert(angular_velocity,0,0)
