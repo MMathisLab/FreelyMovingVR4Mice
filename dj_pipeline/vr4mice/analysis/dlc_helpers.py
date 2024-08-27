@@ -105,8 +105,12 @@ def sync_dlc_w_game(dlc_dict, game_data):
 
     df_out = pd.concat([game_data, dlc_var], axis=1)
 
-    df_out["head_angle_velocity"] = compute_circular_angular_velocity(df_out.head_angle, time_intervals=df_out.time_elapsed)  # df_out.head_angle.diff()
-    df_out["heading_dir_velocity"] = compute_circular_angular_velocity(df_out.heading_dir, time_intervals=df_out.time_elapsed) # df_out.heading_dir.diff()
+    df_out["head_angle_velocity"] = compute_circular_angular_velocity(
+        df_out.head_angle, time_intervals=df_out.time_elapsed
+    )  # df_out.head_angle.diff()
+    df_out["heading_dir_velocity"] = compute_circular_angular_velocity(
+        df_out.heading_dir, time_intervals=df_out.time_elapsed
+    )  # df_out.heading_dir.diff()
 
     df_out["head_angle_acceleration"] = np.gradient(
         df_out.head_angle_velocity, df_out.time_elapsed
@@ -183,10 +187,10 @@ def compute_dlc_heading_angles(filt_dlc_row):
     head_conf = conf[[0, 1, 2, 3, 4, 5, 6, 26]]
     center = np.average(head_xy, axis=0, weights=head_conf)
     body_axis = xy[7] - xy[13]  # tail_base -> neck
-    body_axis /= sqrt(np.sum(body_axis**2))
+    body_axis /= sqrt(np.sum(body_axis ** 2))
     head_axis = xy[0] - xy[7]  # neck -> nose
     head_length = xy[0] - xy[7]
-    head_axis /= sqrt(np.sum(head_axis**2))
+    head_axis /= sqrt(np.sum(head_axis ** 2))
     cross = body_axis[0] * head_axis[1] - head_axis[0] * body_axis[1]
     sign = copysign(1, cross)  # Positive when looking left
     try:
@@ -324,7 +328,7 @@ def find_closest_indices(pose_time, step_time):
 
 
 def df2dj(df) -> dict:
-    #data: pandas.core.frame.DataFrame
+    # data: pandas.core.frame.DataFrame
     dj_col = dict()
     dj_col["data"] = df.to_numpy()
     headers = df.columns
@@ -348,11 +352,9 @@ def dj2h5(data, headers, scorer) -> pd.DataFrame:
         levels = ["scorer", "bodyparts", "coords"]
     else:
         levels = ["bodyparts", "coords"]
-    return pd.DataFrame(
-        data,
-        columns=pd.MultiIndex.from_tuples(headers, names=levels),
-    )
-    
+    return pd.DataFrame(data, columns=pd.MultiIndex.from_tuples(headers, names=levels),)
+
+
 def compute_circular_angular_velocity(angles, time_intervals):
     """
     Computes the circular angular velocity of an angle changing over time.
@@ -364,22 +366,22 @@ def compute_circular_angular_velocity(angles, time_intervals):
     Returns:
     numpy array: Array of circular angular velocities.
     """
-    
+
     # Convert inputs to numpy arrays
-    angles = np.asarray(angles,dtype=np.float64)
-    time_intervals = np.asarray(time_intervals,dtype=np.float64)
+    angles = np.asarray(angles, dtype=np.float64)
+    time_intervals = np.asarray(time_intervals, dtype=np.float64)
     angles = np.deg2rad(angles)
     # Ensure angles are wrapped between -pi and pi for circular continuity
     # Compute the sine and cosine of the angles
     angles_wrapped = np.unwrap(angles)
     sin_angles = np.sin(angles_wrapped)
     cos_angles = np.cos(angles_wrapped)
-    
+
     # Compute the derivatives of sine and cosine with respect to time
     d_sin = np.diff(sin_angles) / np.diff(time_intervals)
     d_cos = np.diff(cos_angles) / np.diff(time_intervals)
-    
+
     # Calculate the angular velocity using the formula
-    angular_velocity = (cos_angles[:-1] * d_sin - sin_angles[:-1] * d_cos)
-    
-    return np.insert(angular_velocity,0,0)
+    angular_velocity = cos_angles[:-1] * d_sin - sin_angles[:-1] * d_cos
+
+    return np.insert(angular_velocity, 0, 0)
