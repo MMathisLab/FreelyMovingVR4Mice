@@ -106,10 +106,10 @@ class DataFrame(dj.Computed):
 
         except Exception as err:
             logger.warning(
-                    f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+                f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             )
             return None
-    
+
     def get_data(self, key):
         try:
             if self & key:
@@ -123,7 +123,7 @@ class DataFrame(dj.Computed):
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
-    
+
     def get_all_data(self):
         try:
             dfs = []
@@ -203,10 +203,9 @@ class BoxDataFrame(dj.Computed):
 
         except Exception as err:
             logger.warning(
-                    f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+                f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             )
             return None
-
 
     def get_data(self, key):
         try:
@@ -218,10 +217,10 @@ class BoxDataFrame(dj.Computed):
 
         except Exception as err:
             logger.warning(
-                    f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+                f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             )
             return None
-    
+
     def get_all_data(self):
         try:
             dfs = []
@@ -235,7 +234,6 @@ class BoxDataFrame(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-
     def get_dist2reward(self, key):
 
         from vr4mice.analysis.analysis import get_dist2reward
@@ -245,7 +243,7 @@ class BoxDataFrame(dj.Computed):
 
         if df is not False and df_box is not False:
             return get_dist2reward(df, box_df)
-        
+
         return False
 
 
@@ -263,8 +261,8 @@ class JShapedW(dj.Computed):
     def make(self, key):
 
         from vr4mice.analysis.analysis import get_jshaped_trials
-        
-        try: 
+
+        try:
             if DataFrame & key:
                 df, interp = DataFrame().get_data(key)
                 j, w = get_jshaped_trials(df)
@@ -278,7 +276,7 @@ class JShapedW(dj.Computed):
 
         except Exception as err:
             logger.warning(
-                    f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+                f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             )
             return None
 

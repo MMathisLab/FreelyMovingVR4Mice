@@ -28,9 +28,9 @@ transformer = {  # todo add file preprocessing
     "targets_height": "targetsheight",
     #'report_delay': 'mouseReportDelay', mouse_report_delay -> use only
     "r_report_box": "R_report_box",  # to support old versions
-    "l_report_box": "L_report_box", 
+    "l_report_box": "L_report_box",
     "camera_rotation": "camera_roation",
-    "l_box_x_min": "L_box_x_min", # to support old versions
+    "l_box_x_min": "L_box_x_min",  # to support old versions
     "l_box_x_max": "L_box_x_max",
     "l_box_z_min": "L_box_z_min",
     "l_box_z_max": "L_box_z_max",
@@ -61,7 +61,7 @@ transformer = {  # todo add file preprocessing
 # todo: optimize this part of parcing (auto)
 # todo: add check about rows in database in .pickle file
 
-local_def = {   
+local_def = {
     "state": no_value,  # empty value
     "x_pos": get_state,
     "z_pos": get_state,
@@ -87,7 +87,7 @@ local_def = {
     "width": get_video_meta,
     "height": get_video_meta,
     "camera_idx": get_camera_idx,
-    "l_box_x_min": get_box, #TODO: maybe organize better, as 
+    "l_box_x_min": get_box,  # TODO: maybe organize better, as
     "l_box_x_max": get_box,
     "l_box_z_min": get_box,
     "l_box_z_max": get_box,

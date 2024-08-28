@@ -45,6 +45,7 @@ class DLCProcessor(dj.Imported):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
+
 @schema
 class DLCKptsDf(dj.Imported):
     definition = """
@@ -54,24 +55,24 @@ class DLCKptsDf(dj.Imported):
     headers : blob
     scorer=NULL: varchar(256)
     """
-    
+
     def make(self, key):
 
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
         try:
             h5path = (vr4mice.DLC & key).fetch1("keypoints_filepath")
-            data = h52dj(h5path) 
+            data = h52dj(h5path)
             data = {**key, **data}
             self.insert1(data)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
             logger.warning(
-                    f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+                f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             )
             return None
 
-    def get_data(self, key): 
+    def get_data(self, key):
         try:
             data = (self & key).fetch1()
             return dj2h5(data["data"], data["headers"], data["scorer"])
@@ -80,8 +81,7 @@ class DLCKptsDf(dj.Imported):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-
-    def get_all_data(self):     
+    def get_all_data(self):
         dfs = []
         try:
             data = self.fetch()
@@ -121,11 +121,11 @@ class SyncDLCWGame(dj.Imported):
 
         except Exception as err:
             logger.warning(
-                    f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+                f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             )
             return None
 
-    def get_data(self, key): 
+    def get_data(self, key):
         try:
             data = (self & key).fetch1()
             return pd.DataFrame(data["data"], columns=data["headers"])
@@ -134,7 +134,7 @@ class SyncDLCWGame(dj.Imported):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_all_data(self): 
+    def get_all_data(self):
         dfs = []
         try:
             data = self.fetch()
@@ -147,7 +147,8 @@ class SyncDLCWGame(dj.Imported):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-#TODO: probably will be deprecated: (by bodyparts storage)
+
+# TODO: probably will be deprecated: (by bodyparts storage)
 @schema
 class DLCKptsBodyparts(dj.Imported):
 
@@ -174,7 +175,7 @@ class DLCKptsBodyparts(dj.Imported):
 
         h5fpath = data["keypoints_filepath"]
         tsfpath = data["timestamp_filepath"]
-        
+
         try:
             df = pd.read_hdf(h5fpath, "df_with_missing")
         except Exception as e:
@@ -218,4 +219,3 @@ class DLCKptsBodyparts(dj.Imported):
                         populated for {key} and {bp}:",
                     e,
                 )
-

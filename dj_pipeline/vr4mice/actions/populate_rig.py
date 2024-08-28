@@ -115,10 +115,14 @@ def check_keys(value, raw_data, key, schema, none=True) -> bool:
                     ):
                         # todo: add check exceptions
                         if none:
-                            logger.warning(f"{v} not found; {v} will be presented as None.")
+                            logger.warning(
+                                f"{v} not found; {v} will be presented as None."
+                            )
                             none_vals[v] = None
                         else:
-                            logger.warning(f"{v} not found; can't insert data for {key}. Aborted.")
+                            logger.warning(
+                                f"{v} not found; can't insert data for {key}. Aborted."
+                            )
                             return False, None
 
                     elif (
@@ -275,7 +279,7 @@ def populate_rig(path="/data/data", gui=False) -> None:
 
     dataset = name of file : mouse_name_doe_attempt
     """
-    
+
     if gui:
         ext = [".npy", ".pickle"]
     else:

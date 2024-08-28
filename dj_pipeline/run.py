@@ -15,6 +15,7 @@ logger = Logger.get_logger()
         "fetch": to create .npy file for dropdown menu
 """
 
+
 def create_folder_if_not_exist(folder_path):
     if not os.path.exists(folder_path):
         try:
@@ -38,20 +39,21 @@ def check_folder_existence(folder_path):
 if __name__ == "__main__":
     config_logger(level="INFO", debug=False)
 
-    mode = sys.argv[1] #TODO: connect arg deprecate
+    mode = sys.argv[1]  # TODO: connect arg deprecate
 
     connect(tag="")
 
-    #if mode == "set_mouse":
+    # if mode == "set_mouse":
     #    from test.generators.fake_mice import insert_fake_mouse
     #
     #    insert_fake_mouse(name="Barracuda")
 
     if mode == "connect":
         from vr4mice.schema import vr4mice, base_analysis, dlc
+
         pass
 
-    elif mode == "populate": #TODO: gemeral populate and split in func
+    elif mode == "populate":  # TODO: gemeral populate and split in func
         from vr4mice.actions.populate_rig import populate_rig
 
         path = "/data/data"
@@ -60,7 +62,8 @@ if __name__ == "__main__":
 
     elif mode == "analysis":
         from vr4mice.schema import base_analysis, federated_db
-        #NOTE: populate has to be run before
+
+        # NOTE: populate has to be run before
 
         create_folder_if_not_exist("/data/summary_plots")
         base_analysis.DataFrame.populate()
@@ -68,19 +71,19 @@ if __name__ == "__main__":
         base_analysis.JShapedW().populate()
         base_analysis.GitCommit().populate()
 
-        #base_analysis.OutputPlots.populate()
+        # base_analysis.OutputPlots.populate()
 
     elif mode == "dlc":
-        #NOTE: populate and analysis have to be run before
+        # NOTE: populate and analysis have to be run before
         from vr4mice.schema import dlc
 
         create_folder_if_not_exist("/data/summary_plots")
         dlc.DLCProcessor().populate()
         dlc.DLCKptsDf().populate()
         dlc.SyncDLCWGame().populate()
-        #dlc.DLCKptsBodyparts().populate() #TODO: optional
+        # dlc.DLCKptsBodyparts().populate() #TODO: optional
 
-    elif mode == "fetch": #TODO: adjust path
+    elif mode == "fetch":  # TODO: adjust path
         from vr4mice.actions.fetch_data import fetch_data
 
         path = "/shared"

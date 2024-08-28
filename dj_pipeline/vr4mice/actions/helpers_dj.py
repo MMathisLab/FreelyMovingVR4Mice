@@ -169,7 +169,7 @@ def get_path(
             if not os.path.exists(processed):
                 os.makedirs(processed)
             processed = processed.joinpath(filename)
-            shutil.move(path, processed) #TODO: change
+            shutil.move(path, processed)  # TODO: change
 
             logger.info("Moving: " + str(path) + " --> " + str(processed))
 
@@ -223,8 +223,8 @@ def get_video_meta(raw_data=None, key=None, **kwargs):
 
 
 def get_box(raw_data=None, key=None, transformer=None, **kwargs):
-    
-    l_report_box = { 
+
+    l_report_box = {
         "l_box_x_min": 0,
         "l_box_x_max": 1,
         "l_box_z_min": 2,
@@ -250,7 +250,7 @@ def get_box(raw_data=None, key=None, transformer=None, **kwargs):
         "r_report_box": r_report_box,
         "start_box": start_box,
     }
-    
+
     # cover old style
     if transformer[key] in raw_data.keys():
         raw_key = transformer[key]

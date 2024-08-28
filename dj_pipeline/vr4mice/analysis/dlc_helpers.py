@@ -187,10 +187,10 @@ def compute_dlc_heading_angles(filt_dlc_row):
     head_conf = conf[[0, 1, 2, 3, 4, 5, 6, 26]]
     center = np.average(head_xy, axis=0, weights=head_conf)
     body_axis = xy[7] - xy[13]  # tail_base -> neck
-    body_axis /= sqrt(np.sum(body_axis ** 2))
+    body_axis /= sqrt(np.sum(body_axis**2))
     head_axis = xy[0] - xy[7]  # neck -> nose
     head_length = xy[0] - xy[7]
-    head_axis /= sqrt(np.sum(head_axis ** 2))
+    head_axis /= sqrt(np.sum(head_axis**2))
     cross = body_axis[0] * head_axis[1] - head_axis[0] * body_axis[1]
     sign = copysign(1, cross)  # Positive when looking left
     try:
@@ -352,7 +352,10 @@ def dj2h5(data, headers, scorer) -> pd.DataFrame:
         levels = ["scorer", "bodyparts", "coords"]
     else:
         levels = ["bodyparts", "coords"]
-    return pd.DataFrame(data, columns=pd.MultiIndex.from_tuples(headers, names=levels),)
+    return pd.DataFrame(
+        data,
+        columns=pd.MultiIndex.from_tuples(headers, names=levels),
+    )
 
 
 def compute_circular_angular_velocity(angles, time_intervals):
