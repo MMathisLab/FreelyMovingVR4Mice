@@ -39,7 +39,7 @@ Two cameras are necessary if you would like to use 3d reconstruction.
 1x [1/4\"-20 Low-Profile Channel Screw, 5/8\" Long, 50 Pack](http://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=4101)
 
 
-## Teensy components:
+## Water delivery teensy components:
 The teesny circuit will need to be soldered to a perforated board:
 
 - Teensy 4.0
@@ -48,7 +48,13 @@ The teesny circuit will need to be soldered to a perforated board:
 
 - [1N4005-E3/54 - Standard Recovery Rectifier Diode 600V 1A DO-204AL, Vishay](https://www.distrelec.ch/en/standard-recovery-rectifier-diode-600v-1a-do-204al-vishay-1n4005-e3-54/p/30151890?marketingPopup=false&no-cache=true&track=true)
 
-- multicolored insulated wires
+## Photodiode teensy components (optional):
+
+- Teensy 4.0
+- 1.2 pF capacitor
+- 330 kOhms resistor
+- Photodiode - TEFD4300
+- OpAmp - MCP6002-I/P
 
 
 ## Monitors:
