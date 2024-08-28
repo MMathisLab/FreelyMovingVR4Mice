@@ -2,41 +2,37 @@
 
 This page outlines the steps required to install the Unity Augmented Reality game(s).
 
-### Install Unity
+### Install Unity:
 
-#### Download and install Anaconda.
+#### Download and install Anaconda:
 
 You can install Anaconda from the [Anaconda website](https://www.anaconda.com/products/individual) directly.
 
-#### Download and install unity (version 2019.3.2).
+#### Download and install unity (version 2022.3.15f1).
 
 Install both in the same order: 
 - Download [UnityHub](https://unity3d.com/fr/get-unity/download).
-- Download the right version (2019.3.2) of [Unity Editor](https://unity3d.com/fr/unity/whats-new/2019).
+- Download the *approved* version (2022.3.15f1) of [Unity Editor](https://unity3d.com).
 
-#### Install the MLagents package.
+#### Install the MLagents package:
 
-- Clone the `ml-agents` [github repo](https://github.com/Unity-Technologies/ml-agents).
+***Nota bene***: _you can skip this part if you already cloned the repository while following the {doc}`../../docs/Installation/installSumUp`_
 
-```
-git clone git@github.com:Unity-Technologies/ml-agents.git
-```
+- Clone the `ml-agents` [github repo](https://github.com/Unity-Technologies/ml-agents):
 
-- Reset the version back to the one that we are using:
+	```
+	git clone --branch release_21 https://github.com/Unity-Technologies/ml-agents.git
+	```
+	(_the `--branch release_21` option will switch to the tag of the latest stable release, which currently is **21** and is the one we use. Omitting that will get the main branch which is potentially unstable_)
 
-```
-cd ml_agent
-git reset --hard 803e62ff32f731995c11254a06c9ae15fe0a7567
-```
-
-### Add the `AugmentedReality` project to Unity.
+### Add and Open the `AugmentedReality` project to Unity.
 
 - Open the Unity-Hub app.
 - Go to `Add` >> ``Add from disk`` and add the `FreelyMovingVR4Mice/AugmentedReality` folder as a project (you should have the repo cloned on your computer for that step -- see {doc}`../../docs/Installation/installSumUp` if that's not the case).
-- Open the project. 🚨 You should get a `Unity Package Manager Error` pop-up message saying that Unity cannot find the `mlagents` package. Click `Continue` so the project opens anyway.
+- Open the project.
 
 (unity:mlagents)=
-### Add the `mlagents` package to your project.
+<!-- ### Add the `mlagents` package to your project:
 
 - Go to `Window` >> `Package manager` >> click on the `+` icon.
 
@@ -60,6 +56,6 @@ git reset --hard 803e62ff32f731995c11254a06c9ae15fe0a7567
 - Go to the `ml-agents` folder you cloned previously and select `com.unity.ml-agents/package.json`. This should import the `ml-agents` package.
 
 - If you now click on the ▶️ play icon, the game should start to run with no compile errors.
-
+ -->
 
 ℹ️ If you encounter any problems, let the Mathis lab (as of now - 07.12.23 - contact Célia Benquet) know so that they can update this document with solutions!
