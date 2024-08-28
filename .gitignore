@@ -1,6 +1,8 @@
 # Prerequisites
 *.d
 
+dj_pipeline/env_tom.py
+
 # Compiled Object files
 *.slo
 *.lo
