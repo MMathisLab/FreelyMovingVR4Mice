@@ -9,6 +9,7 @@ from vr4mice.actions.helpers_dj import (
     get_video_meta,
     no_value,
     get_box,
+    get_name,
 )
 from vr4mice.schema import vr4mice
 
@@ -99,10 +100,11 @@ local_def = {
     "tt_box_z_min": get_box,
     "tt_box_z_max": get_box,
     "tt_box_angle": get_box,
+    "session_label": get_name,
 }
 
 # KEYS #
-dataset = ["dataset", "exp_teensy_filepath", "exp_session_filepath"]
+dataset = ["dataset", "exp_teensy_filepath", "exp_session_filepath", "session_label"]
 
 vr4mice_table = [
     "dataset",  #

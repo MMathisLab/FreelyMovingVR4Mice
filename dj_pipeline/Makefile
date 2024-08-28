@@ -76,6 +76,9 @@ bash: git_info
 mysql: git_info
 	@mysql --defaults-group-suffix=-vr4mice -A
 
+notebook:
+	@docker-compose exec client bash -c "jupyter notebook --ip 0.0.0.0 "
+
 
 
 

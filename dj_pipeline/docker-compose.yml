@@ -18,7 +18,7 @@ services:
       args:
         - user
         - usern
-    network_mode: host
+    #network_mode: host
     volumes:
         - "./:/app"
         - "/shared:/shared"
@@ -27,6 +27,8 @@ services:
 
         - "./base/base_min_schemas:/base_schemas"
         - "./base/base_actions:/base_actions"
+    ports: 
+        - 8887:8888
 
     working_dir: /app
     env_file:

@@ -266,3 +266,11 @@ def get_box(raw_data=None, key=None, transformer=None, **kwargs):
             data = raw_data[name][idx]
             logger.info(f"New/ Key: {key}, idx: {idx}, name: {name}, data: {data}")
             return data
+
+
+def get_name(raw_data=None, key=None, **kwargs):
+    val = raw_data[key]
+    logger.info(f"Session label: {key}: {val}")
+    if isinstance(val, list):
+        return val[0]
+    return None

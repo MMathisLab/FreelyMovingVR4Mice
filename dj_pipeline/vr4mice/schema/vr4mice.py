@@ -38,6 +38,7 @@ class Dataset(dj.Manual):
     ---
     exp_teensy_filepath: varchar(255) # pickle file
     exp_session_filepath: varchar(255)  # npy file
+    session_label: varchar(255)
     """
 
     # TODO:
@@ -273,7 +274,8 @@ class DatasetType(dj.Computed):
     def make(self, key):  # TODO(mary): refactor to a separate compact function
         try:
             undefined = False
-            distractor, slit_size = (Metadata & key).fetch1("distractor", "slit_size")
+            distractor = (GuiParams & key).fetch1("distractor")
+            slit_size = (Metadata & key).fetch1("slit_size")
             slit_size_number = len(np.unique(slit_size))
             if distractor is None:
                 # fetch pilot
