@@ -90,7 +90,7 @@ class Groups(dj.Manual):
     def add(self, dataset, label):
         try:
             key = f"dataset='{dataset}'"
-            a = (Dataset & key).fetch():
+            a = (Dataset & key).fetch()
             if a.size == 0:
                 logger.warning(
                     f"No Dataset entry found for {dataset}: can't populate Groups table."

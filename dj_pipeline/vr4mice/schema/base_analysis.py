@@ -117,17 +117,28 @@ class DataFrame(dj.Computed):
                 interp = data["interpolation"]
                 data.pop("interpolation")
                 data = pd.DataFrame(data)
-                return data, interp
+                return data, interp #TODO: externalize interpolation maybe
             else:
                 return False, None
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_all_data(self):
+    def get_all_data(self, columns=None):
+        """
+            columns: list containing the names of required columns
+            return pd.Dataframe
+        """
+        
         try:
             dfs = []
-            data = self.fetch()
+            if columns:
+                data = self.fetch(columns)
+                logging.info("Fetching [{columns}] from {self.__class__.__name__}. \
+                        It may take some time.")
+            else:
+                data = self.fetch() #rare case: heavy: to deprecate maybe
+                logging.info(f"Attention: you are fetching ALL data from {self.__class__.__name__}. It will take some time.")
             for d in data:
                 interp = d["interpolation"]
                 d.pop("interpolation")
@@ -192,7 +203,7 @@ class BoxDataFrame(dj.Computed):
         from vr4mice.analysis.analysis import get_box_df
 
         try:
-            if DataFrame & key:
+            if len(DataFrame & key) > 0:
                 # interp = (DataFrame & key).fetch1("interpolation")
                 df, interp = DataFrame().get_data(key)
                 box_df = get_box_df(key, df, interp=interp)
@@ -221,17 +232,29 @@ class BoxDataFrame(dj.Computed):
             )
             return None
 
-    def get_all_data(self):
+    def get_all_data(self, columns):
         try:
             dfs = []
-            data = self.fetch()
+            if columns:
+                logger.info(f"Fetching [{columns}] from {self.__class__.__name__}. \
+                        It may take some time.")
+                data = self.fetch(*columns)
+                print(data)
+
+            else:
+                logger.info(f"Attention: you are fetching ALL data from {self.__class__.__name__}. \
+                        It will take some time.")
+                data = self.fetch() #rare case: heavy: to deprecate maybe
+
             for d in data:
+                print(d)
                 df = pd.Series(d)
                 dfs.append(df)
+                #print(dfs)
             return dfs
 
         except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            logger.warning(f"Error {self.__class__.__name__}: {err}")
             return None
 
     def get_dist2reward(self, key):
