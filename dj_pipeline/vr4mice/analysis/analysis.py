@@ -312,6 +312,11 @@ def get_box_df(key, df, interp):
     """
     box_df = pd.DataFrame((vr4mice.Box & key).fetch())
 
+    for col in box_df.columns:
+        for index, value in box_df[col].items():
+            if isinstance(value, list):
+                box_df.loc[index, col] = value[0]
+    
     a = interp["a"]
     b = interp["b"]
     c = interp["c"]
@@ -335,20 +340,20 @@ def get_box_df(key, df, interp):
 
     # Mean reward position in the reward boxes
     # Note: attention new attributes (version 2)
-    box_df["left_reward_x"] = df[(df.reward > 0.5) & (df.trial_left_choice > 0.5)][
+    box_df["l_reward_x"] = df[(df.reward > 0.5) & (df.trial_left_choice > 0.5)][
         "x"
     ].mean()
-    box_df["left_reward_z"] = df[(df.reward > 0.5) & (df.trial_left_choice > 0.5)][
+    box_df["l_reward_z"] = df[(df.reward > 0.5) & (df.trial_left_choice > 0.5)][
         "y"
     ].mean()
-    box_df["right_reward_x"] = df[(df.reward > 0.5) & (df.trial_right_choice > 0.5)][
+    box_df["r_reward_x"] = df[(df.reward > 0.5) & (df.trial_right_choice > 0.5)][
         "x"
     ].mean()
-    box_df["right_reward_z"] = df[(df.reward > 0.5) & (df.trial_right_choice > 0.5)][
+    box_df["r_reward_z"] = df[(df.reward > 0.5) & (df.trial_right_choice > 0.5)][
         "y"
     ].mean()
 
-    box_df = box_df.iloc[1]
+    #box_df = box_df.iloc[1]
 
     return box_df
 

@@ -175,15 +175,15 @@ class BoxDataFrame(dj.Computed):
     definition = """
     -> DataFrame
     ---
-    left_box_x_min: blob
-    left_box_x_max: blob
-    left_box_z_min: blob
-    left_box_z_max: blob
+    l_box_x_min: blob
+    l_box_x_max: blob
+    l_box_z_min: blob
+    l_box_z_max: blob
     
-    right_box_x_min: blob
-    right_box_x_max: blob
-    right_box_z_min: blob
-    right_box_z_max: blob
+    r_box_x_min: blob
+    r_box_x_max: blob
+    r_box_z_min: blob
+    r_box_z_max: blob
 
     tt_box_x_min: blob
     tt_box_x_max: blob
@@ -192,10 +192,10 @@ class BoxDataFrame(dj.Computed):
 
     tt_box_angle: blob
     
-    left_reward_x=NULL: blob    # NEW  
-    left_reward_z=NULL: blob    # NEW  
-    right_reward_x= NULL: blob  # NEW
-    right_reward_z=NULL: blob    # NEW  
+    l_reward_x=NULL: blob    # NEW  
+    l_reward_z=NULL: blob    # NEW  
+    r_reward_x= NULL: blob  # NEW
+    r_reward_z=NULL: blob    # NEW  
     
     """
 
@@ -207,7 +207,7 @@ class BoxDataFrame(dj.Computed):
                 # interp = (DataFrame & key).fetch1("interpolation")
                 df, interp = DataFrame().get_data(key)
                 box_df = get_box_df(key, df, interp=interp)
-                # data = box_df.to_dict(orient='list')
+                box_df = box_df.to_dict(orient='records')
                 data = {**key, **box_df}  # **data}
                 self.insert1(data)
                 logger.info(f"{self.__class__.__name__} populated for {key}.")
