@@ -154,7 +154,7 @@ def plot_trajectories(
         df (pandas.DataFrame): DataFrame containing the data to plot.
         ax (matplotlib.axes.Axes): Axes object to plot the data onto.
         per_side (bool, optional): If True, plot trajectories separately based on
-            'trial_L_choice'. Default is False.
+            'trial_left_choice'. Default is False.
         label_x (str, optional): Column name for the x-axis data. Default is "x".
         label_y (str, optional): Column name for the y-axis data. Default is "y".
         scatter_reward (bool, optional): If True, scatter plot the reward points. Default is True.
@@ -163,15 +163,15 @@ def plot_trajectories(
     for i in range(1, np.max(df.trial)):
         if per_side:
             ax.plot(
-                df[label_x][((df.trial == i) & (df.trial_L_choice == 1))],
-                df[label_y][((df.trial == i) & (df.trial_L_choice == 1))],
+                df[label_x][((df.trial == i) & (df.trial_left_choice == 1))],
+                df[label_y][((df.trial == i) & (df.trial_left_choice == 1))],
                 c="#5C0A72",
                 alpha=0.2,
                 linewidth=2,
             )
             ax.plot(
-                df[label_x][((df.trial == i) & (df.trial_L_choice == 0))],
-                df[label_y][((df.trial == i) & (df.trial_L_choice == 0))],
+                df[label_x][((df.trial == i) & (df.trial_left_choice == 0))],
+                df[label_y][((df.trial == i) & (df.trial_left_choice == 0))],
                 c="#FD672C",
                 alpha=0.2,
                 linewidth=2,
@@ -221,7 +221,7 @@ def _plot_session_in_arena(
         df_box (pandas.DataFrame): DataFrame containing the box data to plot.
         ax (matplotlib.axes.Axes): Axes object to plot the data onto.
         per_side (bool, optional): If True, plot trajectories separately based on
-            'trial_L_choice'. Default is False.
+            'trial_left_choice'. Default is False.
         label_x (str, optional): Column name for the x-axis data. Default is "x".
         label_y (str, optional): Column name for the y-axis data. Default is "y".
         scatter_reward (bool, optional): If True, scatter plot the reward points. Default is True.
@@ -365,6 +365,7 @@ def _plot_bar_counts(
             errorbar="se",
             err_style="bars",
             linewidth=2,
+            zorder=100
         )
 
         sns.lineplot(
@@ -849,7 +850,7 @@ def plot_clustering(
     embedding: npt.NDArray,
     colors=["Set1", "cool", "cool", "viridis", "Set1"],
     axes_labels=[
-        "trial_L_choice",
+        "trial_left_choice",
         "trial_init_x",
         "trial_init_y",
         "trial_tortuosity",
@@ -887,7 +888,7 @@ def plot_clustering(
         axes[i].set_ylabel(f"{method_name}2")
 
         # Add a colorbar
-        if not axes_labels[i] in ["trial_L_choice", "aperture"]:
+        if not axes_labels[i] in ["trial_left_choice", "aperture"]:
             cbar = plt.colorbar(scatter, ax=axes[i])
             # cbar.set_label(axes_labels[i])
 

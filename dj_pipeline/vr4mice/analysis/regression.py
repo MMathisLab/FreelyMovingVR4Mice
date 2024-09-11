@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-import plotting
+import vr4mice.analysis.plotting
 import sklearn
 from matplotlib.collections import LineCollection
 from sklearn.model_selection import LeaveOneGroupOut
@@ -47,7 +47,7 @@ def predict_decision(
     """
 
     data = df[label].values
-    labels = df.trial_L_choice.values
+    labels = df.trial_left_choice.values
 
     if not isinstance(label, list):
         data = data.reshape(-1, 1)
@@ -100,19 +100,19 @@ def find_decision_point_per_trial(
     threshold_left = threshold_uncertainty
 
     # Filter values above the threshold
-    if all(trial_data["trial_L_choice"] > 0.5):
+    if all(trial_data["trial_left_choice"] > 0.5):
         above_threshold = trial_data[trial_data["proba_left"] > threshold_right]
     else:
         above_threshold = trial_data[trial_data["proba_left"] < threshold_left]
 
     for index in above_threshold.index:
         subsequent_values = trial_data.loc[index:]["proba_left"]
-        if all(trial_data["trial_L_choice"] > 0.5) and all(
+        if all(trial_data["trial_left_choice"] > 0.5) and all(
             subsequent_values >= above_threshold.loc[index, "proba_left"]
         ):
             # Returning the step of the decision point
             return trial_data.loc[index]
-        elif all(trial_data["trial_L_choice"] < 0.5) and all(
+        elif all(trial_data["trial_left_choice"] < 0.5) and all(
             subsequent_values <= above_threshold.loc[index, "proba_left"]
         ):
             return trial_data.loc[index]
@@ -221,7 +221,7 @@ def plot_decision_points_on_trajectory(
 
 def find_decision_point_from_distance(trial_data: pd.DataFrame, df_box: pd.DataFrame):
     # NOTE(celia): not used for now.
-    if all(trial_data["trial_L_choice"] > 0.5):
+    if all(trial_data["trial_left_choice"] > 0.5):
         trial_data = trial_data[trial_data["mouse_in_R"] < 1]
         trial_data["dist"] = np.sqrt(
             (df_box["right_reward_x"] - trial_data["x"]) ** 2
@@ -248,7 +248,7 @@ def find_decision_point_from_value(
     trial_data: pd.DataFrame, df_box: pd.DataFrame, label: str = "heading_dir_velocity"
 ):
     # NOTE(celia): not used for now.
-    if all(trial_data["trial_L_choice"] > 0.5):
+    if all(trial_data["trial_left_choice"] > 0.5):
         trial_data = trial_data[trial_data["mouse_in_R"] < 1]
         trial_data["dist"] = abs(df_box["right_reward_x"] - trial_data["x"])
     else:
@@ -260,7 +260,7 @@ def find_decision_point_from_value(
     trial_data["next"] = trial_data.loc[::-1, "difference"].cummax()[::-1] <= 0
     good_dir = trial_data
 
-    if all(trial_data["trial_L_choice"] > 0.5):
+    if all(trial_data["trial_left_choice"] > 0.5):
         test = (good_dir["y"] > df_box["right_reward_z"]) & (good_dir["dist"] < 2)
         good_dir = good_dir[~test]
         if "dir" in label:
