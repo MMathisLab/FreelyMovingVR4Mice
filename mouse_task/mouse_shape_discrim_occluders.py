@@ -18,9 +18,10 @@ current_dir = pathlib.Path(__file__).parent
 config_path = current_dir.joinpath(config_name)  # default class constructor input
 
 
-class ShapeDetectionWithoutVelocityThresholdTask(ActiveSensingTask):
+class ShapeDiscriminationOccluders(ActiveSensingTask):
     """
-    Detection of shape task without velocity threshold to initiate the trials.
+    Shape discrimination task,  with occluders of different sizes
+    Mouse must report the white pacman location and ignore the teardrop.
     """
 
     def __init__(
@@ -29,9 +30,9 @@ class ShapeDetectionWithoutVelocityThresholdTask(ActiveSensingTask):
         monitor=None,
         write_video=False,
         fps=60.0,
-        session_label=["ar_shape_detection_no_velthr"],
+        session_label=["ar_shape_discrim_occluders"],
         epochs=[250],
-        epoch_labels=["single_wide_pacman"],
+        epoch_labels=["pacman_vs_teardrop"],
         config_file_path=config_path,
         reward_size=100,
         cropped_image=[0, 530, 0, 510],
@@ -43,20 +44,20 @@ class ShapeDetectionWithoutVelocityThresholdTask(ActiveSensingTask):
         prob_obj_on_left=0.5,
         prob_block_coherence = 0.5,
         mouse_report_delay=0.0,
-        slit_size=[4.0, 4.0, 1],
+        slit_size=[5.0, 12.0, 2],
         slit_depth=0.02,
         target_selection=13.0,
         distractor_selection=6.0,
-        occlusion_type=0.0,
+        occlusion_type=1.0,
         camera_type=1.0,
-        target_spread=3.0,
+        target_spread=4.0,
         target_rotation=15.0,
         target_size=2.0,
         target_height=3.0,
         block_length=1.0,
-        start_box_delay=0.1,
-        velocity_threshold=10.0,
-        distractor=0.0,
+        start_box_delay=0.25,
+        velocity_threshold=5.0,
+        distractor=1.0,
         grey_screen_active=0.0,
         target_distance=4.0,
         use_dlc=True,
