@@ -229,7 +229,7 @@ class ActiveSensingTask(UnityTask):
         self.dlc_x = []
         self.dlc_y = []
         self.dlc_heading = []
-        self.dlc_time_step = []
+        self.dlc_time_stamp = []
         self.trial_mouse_report_delay = []
 
         # self.set_channel()
@@ -266,6 +266,7 @@ class ActiveSensingTask(UnityTask):
             self.dlc_y.append(z)
             self.dlc_heading.append(head_angle)
             self.dlc_read_time.append(this_read["time"])
+            self.dlc_time_stamp.append(time.time())
 
             # interp mouse pixel space into arena space
             x = np.interp(
@@ -517,6 +518,7 @@ class ActiveSensingTask(UnityTask):
         data_dict["dlc_x"] = np.array(self.dlc_x)
         data_dict["dlc_y"] = np.array(self.dlc_y)
         data_dict["dlc_heading"] = np.array(self.dlc_heading)
+        data_dict["dlc_time_stamp"] = np.array(self.dlc_time_stamp)
         data_dict["block_labels"] = np.array(self.trial_epoch_labels)
         data_dict["slit_size"] = np.array(self.trial_slit_size)
         data_dict["trial_slit_depth"] = np.array(self.trial_slit_depth)

@@ -15,7 +15,7 @@ from math import sqrt, acos, atan2, copysign, pi, degrees
 class dlc_inference_w_pd(Processor):
     def __init__(
         self,
-        com="COM3",
+        com="COM5",
         baudrate=9600,
         signal_delay=10,
         signal_type="pulse",
@@ -47,6 +47,8 @@ class dlc_inference_w_pd(Processor):
         self.signal_freq = freq
         self.use_teensy = use_teensy
         self.previous = np.array([0,0])
+        self.before_send =  deque() 
+        self.after_send = deque()
         if self.use_teensy == 1:
             self.teensy = TeensyLatency(com, baudrate=baudrate)
             print("using_teensy")
@@ -97,8 +99,9 @@ class dlc_inference_w_pd(Processor):
         self.step.append(self.curr_step)
         self.signal.append(self.curr_signal)
         self.frame_time.append(kwargs["frame_time"])
-
+        self.before_send.append(time.time())
         self.conn.send([time.time(), vals[0], vals[1], vals[2], vals[3], vals[4]])
+        self.after_send.append(time.time())
         self.previous = center
         return pose
 
@@ -179,4 +182,6 @@ class dlc_inference_w_pd(Processor):
         save_dict["y_pos"] = np.array(self.center_y)
         save_dict["heading_direction"] = np.array(self.heading_direction)
         save_dict["head_angle"] = np.array(self.head_angle)
+        save_dict["before_send"] = np.array(self.before_send)
+        save_dict["after_send"] = np.array(self.after_send)
         return save_dict

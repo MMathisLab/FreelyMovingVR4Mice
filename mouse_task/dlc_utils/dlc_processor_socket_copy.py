@@ -11,15 +11,15 @@ import numpy as np
 from dlclive import Processor
 from math import sqrt, acos, atan2, copysign, pi, degrees
 
-class MyProcessor_socket(Processor):
+class MyProcessor_socket_copy(Processor):
     def __init__(self, signal_delay = 10, signal_type ="pulse", freq =5):
         super().__init__()
        # self.queue = queue
         
         self.address = ('localhost', 6000)     # family is deduced to be 'AF_INET'
         self.listener =  Listener(self.address, authkey=b'secret password')
-        self.conn = self.listener.accept()
-        print('connection accepted from', self.listener.last_accepted)
+        # self.conn = self.listener.accept()
+        # print('connection accepted from', self.listener.last_accepted)
         
         self.center_x = deque()
         self.center_y = deque()
@@ -80,7 +80,7 @@ class MyProcessor_socket(Processor):
         self.frame_time.append(kwargs ["frame_time"])
        # self.pose_time.append(kwargs ["pose_time"])
         
-        self.conn.send([time.time(), vals [0], vals [1], vals [2], vals [3], vals [4]])
+        # self.conn.send([time.time(), vals [0], vals [1], vals [2], vals [3], vals [4]])
      
         return pose
     
