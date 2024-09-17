@@ -204,10 +204,9 @@ class BoxDataFrame(dj.Computed):
 
         try:
             if len(DataFrame & key) > 0:
-                # interp = (DataFrame & key).fetch1("interpolation")
                 df, interp = DataFrame().get_data(key)
                 box_df = get_box_df(key, df, interp=interp)
-                box_df = box_df.to_dict(orient='records')
+                box_df = {k: v[0] if isinstance(v, list) and len(v) == 1 else v for k, v in box_df.to_dict(orient='list').items()}
                 data = {**key, **box_df}  # **data}
                 self.insert1(data)
                 logger.info(f"{self.__class__.__name__} populated for {key}.")
