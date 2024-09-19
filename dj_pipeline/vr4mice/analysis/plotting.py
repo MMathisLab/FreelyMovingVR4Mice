@@ -365,7 +365,7 @@ def _plot_bar_counts(
             errorbar="se",
             err_style="bars",
             linewidth=2,
-            zorder=100
+             zorder=100
         )
 
         sns.lineplot(
@@ -378,6 +378,7 @@ def _plot_bar_counts(
             color="black",
             palette=["grey"] * counts["session"].nunique(),
             markers="o",
+            zorder = 101,
         )
     else:
         sns.barplot(
@@ -425,6 +426,7 @@ def plot_trial_count(
         counts = df.groupby(["session"]).trial.nunique()
         counts = pd.DataFrame(counts.reset_index())
         counts = counts.rename(columns={"trial": "count"})
+      
 
     _plot_bar_counts(
         counts=counts,
@@ -432,7 +434,7 @@ def plot_trial_count(
         per_day=per_day,
         alpha=alpha,
         ax=ax,
-        cmap=cmap,
+        cmap=cmap, 
     )
 
     plt.ylabel("#Trials / session")
@@ -589,7 +591,7 @@ def plot_time_to_reward(
     plt.xticks([0, 1], ["Uncorrect", "Correct"])
 
 
-def plot_decision_point(df, label_parameter, ax: Optional[matplotlib.axes.Axes] = None):
+def plot_decision_point(df, label_parameter, ax: Optional[matplotlib.axes.Axes] = None, cmap: str ="Set1"):
     """Plot the decision point based on a specified label parameter.
 
     Args:
@@ -611,7 +613,7 @@ def plot_decision_point(df, label_parameter, ax: Optional[matplotlib.axes.Axes] 
         per_day=False,
         alpha=0.2,
         ax=ax,
-        cmap="Set1",
+        cmap=cmap,
     )
 
     ax.set_ylim(0, 25)

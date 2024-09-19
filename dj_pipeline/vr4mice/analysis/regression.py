@@ -8,6 +8,7 @@ import numpy.typing as npt
 import pandas as pd
 import vr4mice.analysis.plotting
 import sklearn
+from sklearn.preprocessing import StandardScaler
 from matplotlib.collections import LineCollection
 from sklearn.model_selection import LeaveOneGroupOut
 
@@ -17,7 +18,7 @@ colors_aperture_pale = ["#EC8788", "#96B9D6"]
 
 
 def predict_decision(
-    df, label: str = "norm_x", n_splits: int = 10, per_mouse: bool = False
+    df, label: str = "norm_x", n_splits: int = 10, per_mouse: bool = False, max_iter: int = 100, scale_data: bool =True,
 ) -> Tuple[pd.DataFrame, npt.NDArray]:
     """Predict the decision of the animal based on the `label` data, through a logistic regression.
 
@@ -47,13 +48,17 @@ def predict_decision(
     """
 
     data = df[label].values
+    
     labels = df.trial_left_choice.values
 
     if not isinstance(label, list):
         data = data.reshape(-1, 1)
     pred = np.empty((data.shape[0], 2))
     scores = np.empty((data.shape[0]))
-    model = sklearn.linear_model.LogisticRegression()
+    model = sklearn.linear_model.LogisticRegression(max_iter = max_iter)
+    
+    if scale_data:
+        data = StandardScaler().fit_transform(data)
 
     if per_mouse:
         sessions = df.session.values
