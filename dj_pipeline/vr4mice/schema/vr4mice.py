@@ -60,7 +60,8 @@ class Dataset(dj.Manual):
 #    -> exp.Session
 #    """
 
-@schema 
+
+@schema
 class Labels(dj.Lookup):
     definition = """
     idx: int
@@ -69,7 +70,7 @@ class Labels(dj.Lookup):
     """
 
     contents = [
-        #[0, "example_label"],  #
+        # [0, "example_label"],  #
     ]
 
     @classmethod
@@ -80,7 +81,7 @@ class Labels(dj.Lookup):
         return current_max + 1 if current_max is not None else 0
 
 
-@schema 
+@schema
 class Groups(dj.Manual):
     definition = """
     -> Dataset
@@ -104,7 +105,7 @@ class Groups(dj.Manual):
                 Labels.insert1({"idx": label_idx, "label": label})
 
             self.insert1({"dataset": dataset, "idx": label_idx})
-        
+
         except Exception as err:
             err = f"Error while populating the Groups table: key: {dataset} {label_idx}\n {err}"
             logger.warning(err)
@@ -252,6 +253,7 @@ class Metadata(dj.Manual):
     distractor_selection=NULL: longblob      # new
     """
 
+
 @schema
 class GuiParams(dj.Manual):
 
@@ -288,6 +290,7 @@ class GuiParams(dj.Manual):
     target_distance_param=NULL: blob        # new
 
     """
+
 
 @schema
 class TrainingPhaseType(dj.Lookup):

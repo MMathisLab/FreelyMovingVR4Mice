@@ -110,14 +110,17 @@ class DataFrame(dj.Computed):
             )
             return None
 
-    def get_data(self, key):
+    def get_data(self, key, columns=None):
         try:
             if self & key:
-                data = (self & key).fetch1()
-                interp = data["interpolation"]
-                data.pop("interpolation")
-                data = pd.DataFrame(data)
-                return data, interp #TODO: externalize interpolation maybe
+                if columns:
+                    data = (self & key).fetch(*columns, as_dict=True)[0]
+                else:
+                    data = (self & key).fetch(as_dict=True)[0]
+                    #interp = data["interpolation"]
+                    data.pop("interpolation")
+                df = pd.DataFrame(data)
+                return df  # , interp  # TODO: externalize interpolation maybe
             else:
                 return False, None
         except Exception as err:
@@ -126,38 +129,56 @@ class DataFrame(dj.Computed):
 
     def get_all_data(self, columns=None):
         """
-            columns: list containing the names of required columns
-            return pd.Dataframe
+        columns: list containing the names of required columns
+        return pd.Dataframe
         """
-        
+
         try:
             dfs = []
             if columns:
-                data = self.fetch(columns)
-                logging.info("Fetching [{columns}] from {self.__class__.__name__}. \
-                        It may take some time.")
+                logger.info(f"Fetching [{columns}] from {self.__class__.__name__}. \
+                        It may take some time."
+                )
+                data = self.fetch(*columns, as_dict=True)[0]
             else:
-                data = self.fetch() #rare case: heavy: to deprecate maybe
-                logging.info(f"Attention: you are fetching ALL data from {self.__class__.__name__}. It will take some time.")
-            for d in data:
-                interp = d["interpolation"]
-                d.pop("interpolation")
-                df = pd.DataFrame(d)
-                dfs.append((df, interp))
-            return dfs
+                logger.info(
+                    f"Attention: you are fetching ALL data from {self.__class__.__name__}. It will take some time."
+                )
+                data = self.fetch(as_dict=True)[0]
+                # rare case: heavy: to deprecate maybe
+                #interp = data["interpolation"]
+                data.pop("interpolation")
+            
+            if not data:
+                logger.warning("No data fetched.")
+                return False
+            
+            df = pd.DataFrame(data)
+
+            return df
 
         except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            logger.warning(f"Error {self.__class__.__name__}: {err}")
             return None
 
     def get_rewarded(self, key):
         from vr4mice.analysis.analysis import get_rewarded
 
-        df, interp = self.get_data(key)
-        if df is not False:
-            return get_rewarded(df)
-        return df
+        df = self.get_data(key, ["dataset", "trial", "reward", "aperture"])
+        if df is not False and df is not None:
+            df["trial_rewarded"] = get_rewarded(df)
+            return df
+        return False
 
+    def get_all_rewarded(self):
+        from vr4mice.analysis.analysis import get_rewarded
+
+        df = self.get_all_data(["dataset", "trial", "reward", "aperture"])
+        if df is not False and df is not None:
+            df["trial_rewarded"] = get_rewarded(df)
+            return df
+        return False
+    
     def get_choices(self, key):  # TODO: implement
 
         pass
@@ -206,7 +227,10 @@ class BoxDataFrame(dj.Computed):
             if len(DataFrame & key) > 0:
                 df, interp = DataFrame().get_data(key)
                 box_df = get_box_df(key, df, interp=interp)
-                box_df = {k: v[0] if isinstance(v, list) and len(v) == 1 else v for k, v in box_df.to_dict(orient='list').items()}
+                box_df = {
+                    k: v[0] if isinstance(v, list) and len(v) == 1 else v
+                    for k, v in box_df.to_dict(orient="list").items()
+                }
                 data = {**key, **box_df}  # **data}
                 self.insert1(data)
                 logger.info(f"{self.__class__.__name__} populated for {key}.")
@@ -217,17 +241,20 @@ class BoxDataFrame(dj.Computed):
             )
             return None
 
-    def get_data(self, key):
+    def get_data(self, key, columns=None):
         try:
             if self & key:
-                data = (self & key).fetch1()
-                data = pd.Series(data)
-                return data
+                if columns:
+                    data = (self & key).fetch(*columns, as_dict=True)
+                else:
+                    data = (self & key).fetch(as_dict=True)
+                df = pd.DataFrame(data)
+                return df
             return False
 
         except Exception as err:
             logger.warning(
-                f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+                f"Can't fetch {self.__class__.__name__}, key: {key}. Error: {err}."
             )
             return None
 
@@ -235,22 +262,22 @@ class BoxDataFrame(dj.Computed):
         try:
             dfs = []
             if columns:
-                logger.info(f"Fetching [{columns}] from {self.__class__.__name__}. \
-                        It may take some time.")
-                data = self.fetch(*columns)
-                print(data)
-
+                logger.info(
+                    f"Fetching [{columns}] from {self.__class__.__name__}. \
+                        It may take some time."
+                )
+                data = self.fetch(*columns, as_dict=True)[0]
             else:
-                logger.info(f"Attention: you are fetching ALL data from {self.__class__.__name__}. \
-                        It will take some time.")
-                data = self.fetch() #rare case: heavy: to deprecate maybe
-
-            for d in data:
-                print(d)
-                df = pd.Series(d)
-                dfs.append(df)
-                #print(dfs)
-            return dfs
+                logger.info(
+                    f"Attention: you are fetching ALL data from {self.__class__.__name__}. \
+                        It will take some time."
+                )
+                data = self.fetch(as_dict=True)[
+                    0
+                ]  # rare case: heavy: to deprecate maybe
+            df = pd.DataFrame(data)
+            logger.info("All fetched!")
+            return df
 
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}: {err}")

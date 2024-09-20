@@ -92,6 +92,7 @@ def plot_box_rectangle(
     fill: bool = False,
     alpha: float = 0.6,
     linewidth: int = 4,
+    coords: bool = False,
 ):
     """Create a matplotlib Rectangle patch for a specified box.
 
@@ -107,15 +108,25 @@ def plot_box_rectangle(
         matplotlib.patches.Rectangle: The rectangle patch representing the box.
 
     """
+
+    box_x_min = df_box[f"{box_label}_box_x_min"].iloc[0]
+    box_z_min = df_box[f"{box_label}_box_z_min"].iloc[0]
+    box_x_max = df_box[f"{box_label}_box_x_max"].iloc[0]
+    box_z_max = df_box[f"{box_label}_box_z_max"].iloc[0]
+
+    start_box_coords = ((box_x_min, box_z_min), abs(box_x_min - box_x_max), abs(box_z_min - box_z_max))
+
+    if coords:
+        return start_box_coords
+    
     return plt.Rectangle(
-        (df_box[f"{box_label}_box_x_min"], df_box[f"{box_label}_box_z_min"]),
-        abs(df_box[f"{box_label}_box_x_min"] - df_box[f"{box_label}_box_x_max"]),
-        abs(df_box[f"{box_label}_box_z_min"] - df_box[f"{box_label}_box_z_max"]),
-        fill=fill,
-        linewidth=linewidth,
-        edgecolor=edgecolor,
-        alpha=alpha,
-    )
+            *start_box_coords,
+            fill=fill,
+            linewidth=linewidth,
+            edgecolor=edgecolor,
+            alpha=alpha,
+        )
+
 
 
 def plot_all_boxes(ax, df_box: pd.DataFrame):
@@ -163,15 +174,15 @@ def plot_trajectories(
     for i in range(1, np.max(df.trial)):
         if per_side:
             ax.plot(
-                df[label_x][((df.trial == i) & (df.trial_L_choice == 1))],
-                df[label_y][((df.trial == i) & (df.trial_L_choice == 1))],
+                df[label_x][((df.trial == i) & (df.trial_left_choice == 1))],
+                df[label_y][((df.trial == i) & (df.trial_left_choice == 1))],
                 c="#5C0A72",
                 alpha=0.2,
                 linewidth=2,
             )
             ax.plot(
-                df[label_x][((df.trial == i) & (df.trial_L_choice == 0))],
-                df[label_y][((df.trial == i) & (df.trial_L_choice == 0))],
+                df[label_x][((df.trial == i) & (df.trial_left_choice == 0))],
+                df[label_y][((df.trial == i) & (df.trial_left_choice == 0))],
                 c="#FD672C",
                 alpha=0.2,
                 linewidth=2,
@@ -371,11 +382,11 @@ def _plot_bar_counts(
             data=counts,
             x=label_x,
             y="count",
-            hue="session",
+            hue="dataset",
             errorbar=None,
             alpha=alpha,
             color="black",
-            palette=["grey"] * counts["session"].nunique(),
+            palette=["grey"] * counts["dataset"].nunique(),
             markers="o",
         )
     else:
@@ -386,8 +397,7 @@ def _plot_bar_counts(
         ax.set_xticklabels([])
 
     sns.scatterplot(
-        data=counts, x=label_x, y="count", alpha=1, hue=label_x, palette=color_map
-    )
+        data=counts, x=label_x, y="count", alpha=1, hue=label_x) #, palette=color_map)
 
     plt.legend([], [], frameon=False)
 
@@ -412,16 +422,16 @@ def plot_trial_count(
     """
     if per_aperture:
         counts = (
-            df.groupby(["session", "trial"])
+            df.groupby(["dataset", "trial"])
             .aperture.first()
-            .groupby(level="session")
+            .groupby(level="dataset")
             .value_counts()
             .sort_values()
         )
         counts = pd.DataFrame(counts.reset_index())
         counts.aperture = counts.aperture.round(2).astype(str)
     else:
-        counts = df.groupby(["session"]).trial.nunique()
+        counts = df.groupby(["dataset"]).trial.nunique()
         counts = pd.DataFrame(counts.reset_index())
         counts = counts.rename(columns={"trial": "count"})
 
@@ -439,17 +449,17 @@ def plot_trial_count(
     if per_aperture:
         stats = pd.DataFrame(
             zip(
-                df.groupby(["session", "aperture"])
+                df.groupby(["dataset", "aperture"])
                 .trial.nunique()
                 .groupby("aperture")
                 .mean(),
-                df.groupby(["session", "aperture"])
+                df.groupby(["dataset", "aperture"])
                 .trial.nunique()
                 .groupby("aperture")
                 .sem(),
             ),
             columns=["mean", "sem"],
-            index=df.groupby(["session", "aperture"])
+            index=df.groupby(["dataset", "aperture"])
             .trial.nunique()
             .groupby("aperture")
             .mean()
@@ -458,12 +468,13 @@ def plot_trial_count(
 
     else:
         stats = (
-            df.groupby(["session"]).trial.nunique().mean(),
-            df.groupby(["session"]).trial.nunique().sem(),
+            df.groupby(["dataset"]).trial.nunique().mean(),
+            df.groupby(["dataset"]).trial.nunique().sem(),
         )
     print(stats)
 
 
+#NOTE(mary): we have dataset as PK, no 'session'
 def plot_rewards(
     df,  # TODO(celia): provide correct columns directly?
     per_aperture: bool = False,
@@ -484,15 +495,15 @@ def plot_rewards(
     """
     if per_aperture:
         counts = (
-            df[df.trial_rewarded == 1].groupby(["session", "aperture"]).trial.nunique()
-            / df.groupby(["session", "aperture"]).trial.nunique()
+            df[df.trial_rewarded == 1].groupby(["dataset", "aperture"]).trial.nunique()
+            / df.groupby(["dataset", "aperture"]).trial.nunique()
         )
         counts = pd.DataFrame(counts.reset_index())
         counts.aperture = counts.aperture.round(2).astype(str)
     else:
         counts = (
-            df[df.trial_rewarded == 1].groupby(["session"]).trial.nunique()
-            / df.groupby(["session"]).trial.nunique()
+            df[df.trial_rewarded == 1].groupby(["dataset"]).trial.nunique()
+            / df.groupby(["dataset"]).trial.nunique()
         )
         counts = pd.DataFrame(counts.reset_index())
     counts = counts.rename(columns={"trial": "count"})
@@ -529,7 +540,6 @@ def plot_rewards(
         )
         plt.hlines(xmin=-0.5, xmax=0.5, y=0.7, color="purple", linestyles="dashed")
 
-    plt.ylabel("Success rate / session")
     print(stats)
 
 
@@ -550,7 +560,7 @@ def plot_time_to_reward(
 
     def _time_to_reward_box(group):
         first_event_index = group[
-            (group["mouse_in_L"] == 1) | (group["mouse_in_R"] == 1)
+            (group["mouse_in_left"] == 1) | (group["mouse_in_right"] == 1)
         ].index
         if len(first_event_index) > 0:
             return group.loc[first_event_index[0], "trial_step"]
@@ -558,19 +568,19 @@ def plot_time_to_reward(
             return None
 
     counts = (
-        df.groupby(["session", "trial"])
+        df.groupby(["dataset", "trial"])
         .apply(_time_to_reward_box)
         .reset_index(name="step_to_reward")
     )
     counts = counts.merge(
-        df[["session", "trial", "trial_rewarded"]].drop_duplicates(),
-        on=["session", "trial"],
+        df[["dataset", "trial", "trial_rewarded"]].drop_duplicates(),
+        on=["dataset", "trial"],
     )
     counts = counts.dropna()
 
     counts["count"] = counts["step_to_reward"] * 0.02
     counts["trial_rewarded"] = counts["trial_rewarded"].astype(str)
-    counts = counts.groupby(["session", "trial_rewarded"], as_index=False)[
+    counts = counts.groupby(["dataset", "trial_rewarded"], as_index=False)[
         "count"
     ].mean()
 
