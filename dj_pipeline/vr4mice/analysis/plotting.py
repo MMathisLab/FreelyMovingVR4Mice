@@ -619,7 +619,7 @@ def plot_decision_point(df, label_parameter, ax: Optional[matplotlib.axes.Axes] 
     ax.set_ylim(0, 25)
     ax.invert_xaxis()
     ax.set_ylabel("Distance to screen (cm)")
-
+    p_values = []
     for i in counts.aperture.unique():
         for j in counts.aperture.unique():
             if i < j:
@@ -628,6 +628,8 @@ def plot_decision_point(df, label_parameter, ax: Optional[matplotlib.axes.Axes] 
                     counts[counts["aperture"] == j][label_parameter],
                 )
                 print(f"{i}-{j}: {stat}")
+                p_values.append(stat)
+    return(p_values)
 
 
 ### TORTUOSITY / DURATION
