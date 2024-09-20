@@ -316,7 +316,7 @@ def get_box_df(key, df, interp):
         for index, value in box_df[col].items():
             if isinstance(value, list):
                 box_df.loc[index, col] = value[0]
-
+    print(interp)
     a = interp["a"]
     b = interp["b"]
     c = interp["c"]
@@ -377,9 +377,10 @@ def get_jshaped_trials(
     j_shaped = df[
         (df.trial_duration <= threshold_duration)
         & (df.trial_tortuosity <= threshold_tortuosity)
-        ] #NOTE: add reward param?
-    wandering = df[~df.index.isin(j_shaped.index)]
-    return j_shaped, wandering
+    ]
+    # NOTE: add reward param?
+    # wandering = df[~df.index.isin(j_shaped.index)]
+    return j_shaped  # , wandering
 
 
 def get_all_datasets(mouse_list=None, load_dlc=True):

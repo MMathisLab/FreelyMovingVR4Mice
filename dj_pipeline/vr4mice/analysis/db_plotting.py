@@ -72,9 +72,7 @@ def plot_box_rectangle(
         )
         return False
 
-    return plotting.plot_box_rectangle(
-        df, box_label, edgecolor, fill, alpha, linewidth
-    )
+    return plotting.plot_box_rectangle(df, box_label, edgecolor, fill, alpha, linewidth)
 
 
 def plot_all_boxes(ax, datasets_keys: List = []):
@@ -150,7 +148,7 @@ def _plot_session_in_arena(
     )
 
 
-#TODO: sync with a function from DJ
+# TODO: sync with a function from DJ
 def plot_session(
     dataset_key: str,  # NOTE: since 1 session only
     ax: Optional[mpl.axes.Axes] = None,
@@ -203,7 +201,6 @@ def plot_session(
     fig.tight_layout(pad=0.1)
 
 
-
 def plot_rewards(
     datasets_keys: List = [],
     per_aperture: bool = False,
@@ -213,7 +210,7 @@ def plot_rewards(
     cmap: str = "Set1",
 ):
 
-    #columns = ["dataset", "trial_rewarded", "aperture", "trial"]
+    # columns = ["dataset", "trial_rewarded", "aperture", "trial"]
 
     if len(datasets_keys) == 0:
         df = base_analysis.DataFrame().get_all_rewarded()
@@ -234,6 +231,7 @@ def plot_rewards(
 
     return plotting.plot_rewards(df, per_aperture, per_day, alpha, ax, cmap)
 
+
 def plot_time_to_reward(
     datasets_keys: List = [],
     ax: Optional[matplotlib.axes.Axes] = None,
@@ -245,14 +243,24 @@ def plot_time_to_reward(
     if len(datasets_keys) == 0:
         df_rew = base_analysis.DataFrame().get_all_rewarded()
         df_data = base_analysis.DataFrame().get_all_data(columns)
-        df = pd.concat([df_rew, df_data[df_data.columns.difference(['dataset'])]], axis=1, join='inner')
+        df = pd.concat(
+            [df_rew, df_data[df_data.columns.difference(["dataset"])]],
+            axis=1,
+            join="inner",
+        )
     else:
         df = []
         for key in datasets_keys:
             key = {"dataset": key}
             df_rew = base_analysis.DataFrame().get_rewarded(key=key)
             df_data = base_analysis.DataFrame().get_data(key, columns)
-            df.append(pd.concat([df_rew, df_data[df_data.columns.difference(['dataset'])]], axis=1, join='inner'))
+            df.append(
+                pd.concat(
+                    [df_rew, df_data[df_data.columns.difference(["dataset"])]],
+                    axis=1,
+                    join="inner",
+                )
+            )
 
         df = pd.concat(df, ignore_index=True)
 
@@ -264,7 +272,8 @@ def plot_time_to_reward(
         return False
     return plotting.plot_time_to_reward(df, ax, alpha, cmap)
 
-def plot_init_position_histogram( 
+
+def plot_init_position_histogram(
     datasets_keys: List = [],
     ax: Optional[matplotlib.axes.Axes] = None,
     bins=3,
@@ -274,21 +283,39 @@ def plot_init_position_histogram(
     is_density: bool = False,
 ):
 
+    current_function = inspect.currentframe().f_code.co_name
     columns_df = ["dataset", "trial", "trial_init_x", "trial_init_y"]
     columns_bx = ["tt_box_x_min", "tt_box_x_max", "tt_box_z_min", "tt_box_z_max"]
 
     if len(datasets_keys) == 0:
-        df = base_analysis.DataFrame().get_all_data(columns_df) 
+        df = base_analysis.DataFrame().get_all_data(columns_df)
         df_box = base_analysis.BoxDataFrame().get_all_data(columns_bx)
     else:
         df_data = []
         df_box = []
         for key in datasets_keys:
             key = {"dataset": key}
-            df_data.append(base_analysis.DataFrame().get_data(key, columns_df))
-            df_box.append(base_analysis.BoxDataFrame().get_data(key=key, columns=columns_bx))
-        print(df_box)
-        print(df_data)
+            df_data_tmp = base_analysis.DataFrame().get_data(key, columns_df)
+            if df_data_tmp is False or df_data_tmp is None:
+                logger.warning(
+                    f"Warning in function: {current_function}: {key} is missing in DataFrame table."
+                )
+                return False
+
+            df_data.append(df_data_tmp)
+
+            df_box_tmp = base_analysis.BoxDataFrame().get_data(
+                key=key, columns=columns_bx
+            )
+
+            if df_box_tmp is False or df_box_tmp is None:
+                logger.warning(
+                    f"Warning in function: {current_function}: {key} is missing in BoxDataFrame table."
+                )
+                return False
+
+            df_box.append(df_box_tmp)
+
         df = pd.concat(df_data, ignore_index=True)
         df_box = pd.concat(df_box, ignore_index=True)
 
@@ -299,7 +326,9 @@ def plot_init_position_histogram(
         )
         return False
 
-    return plotting.plot_init_position_histogram(df, df_box, ax, bins, cmap, vmax, is_colorbar, is_density)
+    return plotting.plot_init_position_histogram(
+        df, df_box, ax, bins, cmap, vmax, is_colorbar, is_density
+    )
 
 
 def plot_trial_count(
@@ -331,4 +360,3 @@ def plot_trial_count(
         return False
 
     plotting.plot_trial_count(df, per_aperture, per_day, alpha, ax, cmap)
-

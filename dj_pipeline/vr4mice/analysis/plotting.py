@@ -114,19 +114,22 @@ def plot_box_rectangle(
     box_x_max = df_box[f"{box_label}_box_x_max"].iloc[0]
     box_z_max = df_box[f"{box_label}_box_z_max"].iloc[0]
 
-    start_box_coords = ((box_x_min, box_z_min), abs(box_x_min - box_x_max), abs(box_z_min - box_z_max))
+    start_box_coords = (
+        (box_x_min, box_z_min),
+        abs(box_x_min - box_x_max),
+        abs(box_z_min - box_z_max),
+    )
 
     if coords:
         return start_box_coords
-    
-    return plt.Rectangle(
-            *start_box_coords,
-            fill=fill,
-            linewidth=linewidth,
-            edgecolor=edgecolor,
-            alpha=alpha,
-        )
 
+    return plt.Rectangle(
+        *start_box_coords,
+        fill=fill,
+        linewidth=linewidth,
+        edgecolor=edgecolor,
+        alpha=alpha,
+    )
 
 
 def plot_all_boxes(ax, df_box: pd.DataFrame):
@@ -397,7 +400,8 @@ def _plot_bar_counts(
         ax.set_xticklabels([])
 
     sns.scatterplot(
-        data=counts, x=label_x, y="count", alpha=1, hue=label_x) #, palette=color_map)
+        data=counts, x=label_x, y="count", alpha=1, hue=label_x
+    )  # , palette=color_map)
 
     plt.legend([], [], frameon=False)
 
@@ -474,7 +478,7 @@ def plot_trial_count(
     print(stats)
 
 
-#NOTE(mary): we have dataset as PK, no 'session'
+# NOTE(mary): we have dataset as PK, no 'session'
 def plot_rewards(
     df,  # TODO(celia): provide correct columns directly?
     per_aperture: bool = False,
@@ -826,7 +830,7 @@ def plot_init_position_histogram(
             The maximum value for the color scale. Values above this will be clipped to vmax (default is 10).
 
     """
-    if len(df.session.unique()) > 1:
+    if len(df.dataset.unique()) > 1:
         raise ValueError(
             f"Only one session should be provided, {len(df.session.unique())} were provided."
         )
@@ -840,8 +844,8 @@ def plot_init_position_histogram(
         bins=bins,
         cmap=cmap,
         range=[
-            (df_box["tt_box_x_min"], df_box["tt_box_x_max"]),
-            (df_box["tt_box_z_min"], df_box["tt_box_z_max"]),
+            (df_box["tt_box_x_min"].iloc[0], df_box["tt_box_x_max"].iloc[0]),
+            (df_box["tt_box_z_min"].iloc[0], df_box["tt_box_z_max"].iloc[0]),
         ],  # range of the box
         vmax=vmax,
         density=is_density,

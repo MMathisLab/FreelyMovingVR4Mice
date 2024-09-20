@@ -117,12 +117,24 @@ class DataFrame(dj.Computed):
                     data = (self & key).fetch(*columns, as_dict=True)[0]
                 else:
                     data = (self & key).fetch(as_dict=True)[0]
-                    #interp = data["interpolation"]
+                    # interp = data["interpolation"]
                     data.pop("interpolation")
                 df = pd.DataFrame(data)
                 return df  # , interp  # TODO: externalize interpolation maybe
             else:
-                return False, None
+                return False
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
+
+    def get_interp(self, key):
+        try:
+            if self & key:
+                interp = (self & key).fetch("interpolation")[0]
+                # df = pd.DataFrame(interp)
+                return interp
+            else:
+                return False
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
@@ -136,7 +148,8 @@ class DataFrame(dj.Computed):
         try:
             dfs = []
             if columns:
-                logger.info(f"Fetching [{columns}] from {self.__class__.__name__}. \
+                logger.info(
+                    f"Fetching [{columns}] from {self.__class__.__name__}. \
                         It may take some time."
                 )
                 data = self.fetch(*columns, as_dict=True)[0]
@@ -146,13 +159,13 @@ class DataFrame(dj.Computed):
                 )
                 data = self.fetch(as_dict=True)[0]
                 # rare case: heavy: to deprecate maybe
-                #interp = data["interpolation"]
+                # interp = data["interpolation"]
                 data.pop("interpolation")
-            
+
             if not data:
                 logger.warning("No data fetched.")
                 return False
-            
+
             df = pd.DataFrame(data)
 
             return df
@@ -178,7 +191,7 @@ class DataFrame(dj.Computed):
             df["trial_rewarded"] = get_rewarded(df)
             return df
         return False
-    
+
     def get_choices(self, key):  # TODO: implement
 
         pass
@@ -225,7 +238,8 @@ class BoxDataFrame(dj.Computed):
 
         try:
             if len(DataFrame & key) > 0:
-                df, interp = DataFrame().get_data(key)
+                df = DataFrame().get_data(key)
+                interp = DataFrame().get_interp(key)
                 box_df = get_box_df(key, df, interp=interp)
                 box_df = {
                     k: v[0] if isinstance(v, list) and len(v) == 1 else v
@@ -297,12 +311,11 @@ class BoxDataFrame(dj.Computed):
 
 
 @schema
-class JShapedW(dj.Computed):
+class JShaped(dj.Computed):
     definition = """
     -> DataFrame
     ---
     j_shaped=NULL: longblob     # NEW
-    wandering=NULL: longblob    # NEW
     headers=NULL: longblob      # NEW
     """
     # TODO: store headers once, or separately, since always the same
@@ -313,12 +326,11 @@ class JShapedW(dj.Computed):
 
         try:
             if DataFrame & key:
-                df, interp = DataFrame().get_data(key)
-                j, w = get_jshaped_trials(df)
+                df = DataFrame().get_data(key, ["trial_duration", "trial_tortuosity"])
+                j = get_jshaped_trials(df)
                 j_np = j.to_numpy()
-                w_np = w.to_numpy()
                 headers = j.columns.to_numpy()
-                data = {"j_shaped": j_np, "wandering": w_np, "headers": headers}
+                data = {"j_shaped": j_np, "headers": headers}
                 data = {**data, **key}
                 self.insert1(data)
                 logger.info(f"{self.__class__.__name__} populated for {key}.")
@@ -329,14 +341,27 @@ class JShapedW(dj.Computed):
             )
             return None
 
-    def get_j_shaped_w(self, key):  # TODO: fetch_all
+    def get_jshaped(self, key):  # TODO: fetch_all
 
         data = (self & key).fetch1()
         headers = data["headers"]
         j = pd.DataFrame(data["j_shaped"], columns=headers)
-        w = pd.DataFrame(data["wandering"], columns=headers)
+        return j
 
-        return (j, w)  # TODO: maybe as dict
+    def get_jshaped_all(self):
+        data = self.fetch()
+        datasets = data["dataset"]
+        headers = data["headers"]
+        j_shaped = data["j_shaped"]
+        dfs = []
+
+        for header, j, dataset in zip(headers, j_shaped, datasets):
+            df = pd.DataFrame(j, columns=header)
+            df["dataset"] = dataset
+            dfs.append(df)
+
+        final_df = pd.concat(dfs, ignore_index=True)
+        return final_df
 
 
 @schema
