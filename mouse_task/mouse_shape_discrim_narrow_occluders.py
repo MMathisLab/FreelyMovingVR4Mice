@@ -59,7 +59,7 @@ class ShapeDiscrimNarrowOccluders(ActiveSensingTask):
         velocity_threshold=5.0,
         distractor=1.0,
         grey_screen_active=0.0,
-        target_distance=3.5,
+        target_distance=4,
         use_dlc=True,
     ):
         super().__init__(
