@@ -6,5 +6,6 @@ from .mouse_discrim_occluders import DiscriminationWithOccludersTask
 from .mouse_discrim_multioccluders import DiscriminationWithMultiOccludersTask
 from .mouse_shape_detection_p1 import ShapeDetectionWithoutVelocityThresholdTask
 from .mouse_shape_detection_p2 import ShapeDetectionWithVelocityThresholdTask
-from .mouse_shape_discrim import ShapeDiscrimination
-from .mouse_shape_discrim_occluders import ShapeDiscriminationOccluders
+from .mouse_shape_discrim import ShapeDiscrim
+from .mouse_shape_discrim_occluders import ShapeDiscrimOccluders
+from .mouse_shape_discrim_narrow_occluders import ShapeDiscrimNarrowOccluders
