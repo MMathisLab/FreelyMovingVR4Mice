@@ -359,6 +359,7 @@ def _plot_bar_counts(
         label_x = [str(1) for i in range(len(counts))]
         figsize = (2, 5)
         counts["color"] = "grey"
+        color_map = cmap
     else:
         unique_labels = counts[label_x].unique()
         figsize = (int(2 * len(unique_labels)), 5)
@@ -400,8 +401,7 @@ def _plot_bar_counts(
         ax.set_xticklabels([])
 
     sns.scatterplot(
-        data=counts, x=label_x, y="count", alpha=1, hue=label_x
-    )  # , palette=color_map)
+        data=counts, x=label_x, y="count", alpha=1, hue=label_x, palette=color_map)
 
     plt.legend([], [], frameon=False)
 

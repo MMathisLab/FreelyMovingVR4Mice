@@ -147,27 +147,13 @@ class DataFrame(dj.Computed):
 
         try:
             dfs = []
-            if columns:
-                logger.info(
-                    f"Fetching [{columns}] from {self.__class__.__name__}. \
-                        It may take some time."
-                )
-                data = self.fetch(*columns, as_dict=True)[0]
-            else:
-                logger.info(
-                    f"Attention: you are fetching ALL data from {self.__class__.__name__}. It will take some time."
-                )
-                data = self.fetch(as_dict=True)[0]
-                # rare case: heavy: to deprecate maybe
-                # interp = data["interpolation"]
-                data.pop("interpolation")
+            keys = self.fetch("dataset")
+            for key in keys:
+                key = f"dataset='{key}'"
+                data = self.get_data(key, columns)
+                dfs.append(data)
 
-            if not data:
-                logger.warning("No data fetched.")
-                return False
-
-            df = pd.DataFrame(data)
-
+            df = pd.concat(dfs).reset_index(drop=True)
             return df
 
         except Exception as err:
@@ -274,23 +260,15 @@ class BoxDataFrame(dj.Computed):
 
     def get_all_data(self, columns):
         try:
+
             dfs = []
-            if columns:
-                logger.info(
-                    f"Fetching [{columns}] from {self.__class__.__name__}. \
-                        It may take some time."
-                )
-                data = self.fetch(*columns, as_dict=True)[0]
-            else:
-                logger.info(
-                    f"Attention: you are fetching ALL data from {self.__class__.__name__}. \
-                        It will take some time."
-                )
-                data = self.fetch(as_dict=True)[
-                    0
-                ]  # rare case: heavy: to deprecate maybe
-            df = pd.DataFrame(data)
-            logger.info("All fetched!")
+            keys = self.fetch("dataset")
+            for key in keys:
+                key = f"dataset='{key}'"
+                data = self.get_data(key, columns)
+                dfs.append(data)
+
+            df = pd.concat(dfs).reset_index(drop=True)
             return df
 
         except Exception as err:
