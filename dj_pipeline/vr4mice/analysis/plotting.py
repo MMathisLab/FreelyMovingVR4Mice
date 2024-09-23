@@ -534,6 +534,7 @@ def plot_rewards(
 
     plt.ylabel("Success rate / session")
     print(stats)
+    return(counts)
 
 
 def plot_time_to_reward(
