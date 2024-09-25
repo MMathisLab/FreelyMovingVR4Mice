@@ -116,7 +116,7 @@ def get_dist2reward(df, box_df):
 
 def create_data_frame(
     key: dict,
-    no_iti: bool = True,
+    iti: bool = True,
     first_n_samples: int = 3,
     spatial_ybins: List[int] = [-27, 27, 75],
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -127,7 +127,7 @@ def create_data_frame(
 
     Args:
         key (dict): Dictionary containing keys for VR4Mice database. (VR4Mice)
-        no_iti (bool): If True, it removes rows where iti=0.0 from dataframe (default=True).
+        iti (bool): If False, it removes rows where iti=0.0 from dataframe (default=True).
         first_n_sample (int): The first n samples to average to normalize trajectories, not that sampling rate is 0.2
             3 first samples (default value) corresponds to 0.6sec.
         spacial_ybins (List[int]): range to bin the y coordinates for
@@ -221,7 +221,7 @@ def create_data_frame(
     # TODO: to think: keep as method: don't save or save separately
     # df["rewarded"] = get_rewarded(df)
 
-    if no_iti:
+    if not iti:
         df = df[df.iti == 0.0]
 
     df["trial_right_choice"] = df.groupby("trial", as_index=False)[
