@@ -192,22 +192,19 @@ def create_data_frame(
     ]  # NOTE(celia): drop first trial which is DLC-live initialization trial
 
     interp = dict(
-        a=9,
-        b=-10,
-        c=-2,
-        d=27,
+       unity_arena_size_x_min=9,
+       unity_arena_size_x_max=-10,
+       unity_arena_size_z_min=-2,
+       unity_arena_size_z_max=27,
     )
-    # TODO:
-    # unity_arena_size_x_min
-    # x_max
-    # z_min
-    # z_max
 
     df["x"] = np.interp(
-        df.x, [-1 * interp["a"], interp["a"]], [-1 * interp["d"], interp["d"]]
+        df.x, [-1 * interp["unity_arena_size_x_min"], interp["unity_arena_size_x_min"]],
+        [-1 * interp["unity_arena_size_z_max"], interp["unity_arena_size_z_max"]]
     )
     df["y"] = np.interp(
-        df.y, [interp["b"], interp["c"]], [-1 * interp["d"], interp["d"]]
+        df.y, [interp["unity_arena_size_x_max"], interp["unity_arena_size_z_min"]],
+        [-1 * interp["unity_arena_size_z_max"], interp["unity_arena_size_z_max"]]
     )
 
     # Normalized coordinates
