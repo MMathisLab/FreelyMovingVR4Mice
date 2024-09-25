@@ -65,8 +65,6 @@ class DataFrame(dj.Computed):
     trial_end_x=NULL: longblob              # NEW
     trial_end_y=NULL: longblob              # NEW
 
-    trial_rewarded=NULL: longblob           # OLD: TO DEPRECATE ?
-    
     trial_direct_path=NULL: longblob        # NEW
     trial_tortuosity=NULL: longblob         # NEW
     trial_step: longblob
@@ -340,23 +338,6 @@ class JShaped(dj.Computed):
 
         final_df = pd.concat(dfs, ignore_index=True)
         return final_df
-
-
-@schema
-class SyncedDLCGame(dj.Computed):
-    definition = """
-    -> vr4mice.Dataset
-    ---    
-    head_angle_velocity: longblob
-    heading_dir_velocity: longblob
-    head_angle_acceleration: longblob
-    heading_dir_acceleration: longblob
-    """
-
-    def make(self):
-        pass
-        # TODO: see dlc helpers logic
-        # and load_and_sync_dlc_w_game
 
 
 @schema
