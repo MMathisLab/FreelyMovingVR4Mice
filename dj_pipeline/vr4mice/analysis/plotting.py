@@ -424,6 +424,7 @@ def plot_trial_count(
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
         cmap (str, optional): Color map for the plot. Default is "Set1".
     """
+    print(df)
     if per_aperture:
         counts = (
             df.groupby(["dataset", "trial"])
@@ -432,8 +433,10 @@ def plot_trial_count(
             .value_counts()
             .sort_values()
         )
-        counts = pd.DataFrame(counts.reset_index())
-        counts.aperture = counts.aperture.round(2).astype(str)
+        print(counts)
+        counts = pd.DataFrame(counts) #.reset_index())
+        print(counts)
+        counts['aperture'] = counts.aperture.round(2).astype(str)
     else:
         counts = df.groupby(["dataset"]).trial.nunique()
         counts = pd.DataFrame(counts.reset_index())

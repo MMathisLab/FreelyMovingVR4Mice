@@ -165,19 +165,26 @@ def plot_session(
         )
         return False
 
-    aperture = (base_analysis.DataFrame() & key).fetch("aperture", as_dict=True)[0]
-    df = pd.DataFrame(aperture)
-    num_aperture = len(df.aperture.unique())
+    aperture = base_analysis.DataFrame().get_data(key, ["aperture"])
+    if aperture is False or aperture is None:
+        logger.warning(
+            f"'aperture' entry for {dataset_key} hasn't been found in base_analysis.DataFrame() table."
+        )
+        return False
+    num_aperture = len(aperture.aperture.unique())
 
     if ax is None:
         if per_aperture:
             fig, ax = plt.subplots(1, num_aperture, figsize=(int(num_aperture * 5), 5))
         else:
             fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+        
+        if per_aperture and num_aperture == 1:
+            ax = [ax]
 
         if per_aperture:
             # TODO(celia): add tests on axes.
-            for j, aperture in enumerate(np.sort(df.aperture.unique())):
+            for j, aperture in enumerate(np.sort(aperture.aperture.unique())): 
                 _plot_session_in_arena(
                     ax=ax[j],
                     datasets_keys=[dataset_key],
@@ -358,5 +365,4 @@ def plot_trial_count(
         current_function = inspect.currentframe().f_code.co_name
         logger.warning(f"Warning in function: {current_function}: DataFrame is empty.")
         return False
-
     plotting.plot_trial_count(df, per_aperture, per_day, alpha, ax, cmap)
