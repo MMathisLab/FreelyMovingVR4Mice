@@ -313,11 +313,11 @@ def get_box_df(key, df, interp):
         for index, value in box_df[col].items():
             if isinstance(value, list):
                 box_df.loc[index, col] = value[0]
-    print(interp)
-    a = interp["a"]
-    b = interp["b"]
-    c = interp["c"]
-    d = interp["d"]
+    
+    a = interp["unity_arena_size_x_min"]
+    b = interp["unity_arena_size_x_max"]
+    c = interp["unity_arena_size_z_min"]
+    d = interp["unity_arena_size_z_max"]
 
     # same indexes among blocks
     box_df.l_box_x_min = np.interp(box_df.l_box_x_min, [-1 * a, a], [-1 * d, d])
