@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
         create_folder_if_not_exist("/data/summary_plots")
         #base_analysis.DataFrame.populate()
-        base_analysis.BoxDataFrame().populate()
+        #base_analysis.BoxDataFrame().populate()
         base_analysis.JShaped().populate()
         base_analysis.GitCommit().populate()
 

@@ -111,7 +111,7 @@ class SyncDLCWGame(dj.Imported):
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
         try:
             dlc_dict = DLCKptsDf().get_data(key)
-            df, interp = base_analysis.DataFrame().get_data(key)
+            df = base_analysis.DataFrame().get_data(key)
             df["start_time"] = (vr4mice.State() & key).fetch1("start_time")
             data = sync_dlc_w_game(dlc_dict, game_data=df)
             data = df2dj(data)
