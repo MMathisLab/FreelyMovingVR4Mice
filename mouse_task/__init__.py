@@ -9,3 +9,4 @@ from .mouse_shape_detection_p2 import ShapeDetectionWithVelocityThresholdTask
 from .mouse_shape_discrim import ShapeDiscrim
 from .mouse_shape_discrim_occluders import ShapeDiscrimOccluders
 from .mouse_shape_discrim_narrow_occluders import ShapeDiscrimNarrowOccluders
+from .mouse_shape_discrim_multioccluders import ShapeDiscrimMultiOccluders
