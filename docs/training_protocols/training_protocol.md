@@ -166,63 +166,95 @@ In the Tolias lab, the arena is on an air table and is enclosed on all sides but
 It is important to monitor the mice while they are training. If they stop doing the task for more than 2-3 min, please stop the task for the day. we find that if are pushed further they can get frustrated and will no longer do the task well on subsequent days. Sometimes you can try again on the same day after a short, ~10 min. break back in the homecage. We often give them a IACUC approved snack (goldfish cracker) in this 10 min break time, which also increases thirst and subsequent motivation. If they are put back in and still do not perform the task, abandon for the day.
 ```
 
-## Training Stage 1: Detection task
+## Training stages
 
-```{admonition} Important
-The following should be applied for **all** training stages.
+At this point in time, two training paths are available to train mice. The first one leads to a contrast discrimination task where mice are trained to distinguish between a black and a white object with identical shapes. The second path leads to a shape discrimination task where mice are trained to distinguish between the `white teardrop` and the `white pacman`. At the end of both training paths, the last stage consists of adding occluders that partially hide the objects thus encouraging mice to find a way to gather more information in order to make the correct choice and get a reward. Hereafter, the different stage are outlined in more detail. For each one there will be references to the game parameters and the python task script used for both the first and the second path which we'll be calling, for sake of simplicity, **Contrast** and **Shape** respectively.
+
+In both cases, it is possible to choose different object for the tasks. For example, to select the target type, you can change the `target_selection` parameter in the GUI, by changing the number so that it is, for example, the white single teardrop object (`target_selection = 6.0`). To change the distractor type, just change the value of the `distractor_type` parameter. For a comprehensive list of available object to choose from, have a look at the {ref}`sec:target-distractor-list`.
+
+```{admonition} Important (applies to **ALL** training stages)
 On each training day, between sessions with different mice, make sure to clean the arena. First, wipe the floor with paper towels and some water, then take some new paper towels and wipe both floor and walls with either 70% isopropyl alcohol or 70% ethanol. This is to make sure no odors from the previous mouse remain and is necessary to reduce stress in the animals.
 ```
+
+### Training Stage 1: Detection task
 
 ```{note}
 May be combined in single arena session with {ref}`sec:arena-habituation`.
 ```
 
-To select the target type you can change the target selection parameter in the GUI, by changing the number so that it is the white single teardrop object (`target_selection = 6.0`).
-To select the target type you can change the target selection parameter in the GUI, by changing the number so that it is the white single teardrop object (`target_selection = 6.0`).
-
-**Steps:**
-
-- **Step 1: Detection task training - permissive trial initiation parameters.**
-  - [Full parameter list](./training_protocol_stage_parameters.md#step-1-permissive-trial-initiation-parameters)
+- **P1: Detection task training - permissive trial initiation parameters.**
   - **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 1 session.
   - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation (see {ref}`sec:gui`).
-  - For this first stage of training you want to load the [DetectionWithoutVelocityThresholdTask](../../mouse_task/mouse_detection_p1.py), by loading this script all the parameters required for this task will be loaded as default. In this task there is no velocity threshold applied in the start box.
+  - In this first stage, the trial initiation is less contstrained to allow mice to understand more quickly that by behaving in a certain way they are able to start a trial and to, possibly, get a reward.
   - To encourage mice to form connection between position and visual stimuli, longer initial session (ex 75 minutes) may be necessary to allow enough serendipitous trial initiations to occur.
   - If mice are allowed to overtrain on this step their performance can reach up to 100%.
+  - **Python Task** to be loaded in the GUI:
+    - [DetectionWithoutVelocityThresholdTask](../../mouse_task/mouse_detection_p1.py)
+    - [ShapeDetectionWithoutVelocityThresholdTask](../../mouse_task/mouse_shape_detection_p1.py)
+  - **Parameters**:
+    - [**Contrast**](./contrast_discrimination_training_parameters.md#stage-1-p1)
+    - [**Shape**](./shape_discrimination_training_parameters.md#stage-1-p1)
 
-- **Step 2: Detection task training - restricted trial initiation parameters.**
-  - [Full parameter list](./training_protocol_stage_parameters.md#step-2-restricted-trial-initiation-parameters)
+- **P2: Detection task training - restricted trial initiation parameters.**
   - **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 1 session.
-  - Same as Step 1, but this time a velocity threshold is applied. To do this you need to select the [DetectionWithVelocityThresholdTask](../../mouse_task/mouse_detection_p2.py)
+  - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation (see {ref}`sec:gui`).
+  - Everything is the same as in **P1** with the only difference that we constrain the trial initiation dynamics by lowering `velocity_threshold` and increasing `start_box_delay` from the task parameters.
+  - **Python Task** to be loaded in the GUI:
+    - [DetectionWithVelocityThresholdTask](../../mouse_task/mouse_detection_p2.py)
+    - [ShapeDetectionWithVelocityThresholdTask](../../mouse_task/mouse_shape_detection_p2.py)
+  - **Parameters**:
+    - [**Contrast**](./contrast_discrimination_training_parameters.md#stage-1-p2)
+    - [**Shape**](./shape_discrimination_training_parameters.md#stage-1-p2)
 
-## Training Stage 2: Discrimination without occlusion
-
-[Full parameter list](./training_protocol_stage_parameters.md#training-stage-2-discrimination-without-occlusion-parameters)
-
-Add in the distractor. You can do this by loading the [DiscriminationTask](../../mouse_task/mouse_discrim.py)
-
-**Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 2 sessions.
-
-- Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation
-(see {ref}`sec:gui`).
-
-## Training Stage 3: Discrimination with occlusion
-
-[Full parameter list](./training_protocol_stage_parameters.md#training-stage-3-discrimination-with-occlusion-parameters)
+### Training Stage 2: Discrimination without occlusion
 
 **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 2 sessions.
 
 - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation
 (see {ref}`sec:gui`).
-- To run this task you need to select the [DiscriminationWithOccludersTask](../../mouse_task/mouse_discrim_occluders.py)
+- At this stage a distractor object is introduced to increase the difficulty of the task and force mice to choose between the target and the new object. Of course, choosing the new object doesn't lead to any reward. The disctractor object can be selected modifying the value of the `distractor_selection` parameter and its presence (or absence) is controlled by the `distractor` parameter which can be either `1` (presence) or `0` (absence).
+- **Python Task** to be loaded in the GUI:
+  - [DiscriminationTask](../../mouse_task/mouse_discrim.py)
+  - [ShapeDiscrimination](../../mouse_task/mouse_shape_discrim.py)
+- **Parameters**:
+  - [**Contrast**](./contrast_discrimination_training_parameters.md#stage-2)
+  - [**Shape**](./shape_discrimination_training_parameters.md#stage-2)
 
-This is currently the **test stage**. Mice that have reached it should do **>= 4 full sessions** (i.e. should do the full 250 trials during each session).
+### Training Stage 3: Discrimination with occlusion
+
+**Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 2 sessions.
+
+- Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation
+(see {ref}`sec:gui`).
+- Here occluder walls are introduced to partially hide both the target and the distractor to encourage mice to adopt a behavior that allows them to gather more information about both objects in order to choose correctly.
+- **Python Task** to be loaded in the GUI:
+  - [DiscriminationWithOccludersTask](../../mouse_task/mouse_discrim_occluders.py)
+  - [ShapeDiscriminationOccluders](../../mouse_task/mouse_shape_discrim_occluders.py)
+- **Parameters**:
+  - [**Contrast**](./contrast_discrimination_training_parameters.md#stage-3)
+  - [**Shape**](./shape_discrimination_training_parameters.md#stage-3)
+
+This is currently the **test stage**. Mice that have reached it should do **>= 4 full sessions** (i.e. should do the full 250 trials **within 1 hour**).
+
+<!-- ### Training Stage 4: Discrimination with multiple occlusion sizes
+
+**Continuation Criteria:** This is currently the last training stage, thus no criteria apply.
+
+- Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation
+(see {ref}`sec:gui`).
+- **Python Task** to be selected in the GUI:
+  - [DiscriminationWithMultiOccludersTask](../../mouse_task/mouse_discrim_multioccluders.py)
+- **Parameters**:
+  - [**Contrast**](./contrast_discrimination_training_parameters.md#stage-4)
+  - [**Shape**](./shape_discrimination_training_parameters.md#stage-4)
+
+This is currently the **test stage**. Mice that have reached it should do **>= 4 full sessions** (i.e. should do the full 250 trials during each session). -->
 
 (reference-timeline)=
 
 ## Reference timeline
 
-```{list-table} **Reference timeline**
+```{list-table} <!-- **Reference timeline** -->
 :name: targets-distractors
 :align: center
 :header-rows: 1

@@ -6,25 +6,28 @@ The FreelyMovingVR4Mice repository contains main **vr4mice** package (src code: 
 _**Note:**_ _The following installation assumes you have already installed on your system the `conda` package manager. If you haven't, please follow the official installation process for Windows [here](https://docs.conda.io/projects/conda/en/stable/) (check [this](https://docs.anaconda.com/miniconda/) for more details)._
 
 1. Create a new conda environment with local pip:
- ```
+
+ ```{code}
  conda create --name name_of_env python=3.10.12 pip
  ```
 
-	```
+ ```{code}
  conda activate name_of_env
  ```
 
 2. Download the [ml-agents repository](https://github.com/Unity-Technologies/ml-agents/tree/release_21) from Unity (_the `--branch release_21` option will switch to the tag of the latest stable release, which currently is **21** and is the one we use. Omitting that will get the main branch which is potentially unstable_):
- ```
+
+ ```{code}
  git clone --branch release_21_fix https://github.com/AdaptiveMotorControlLab/ml-agents.git
  ```
 
-	```
+ ```{code}
  cd ml-agents/
  ```
 
-	- Inside this main directory, find the `ml-agents-envs/` sub-directory and open, with any text editor, the `setup.py` file found within it. Near the end of the file, find the list of required dependencies and modify the `numpy` version: change it from `"numpy==1.21.2"` to `"numpy==1.23.3"` then save. When that is done, run the following two commands in order:
-  ```
+- Inside this main directory, find the `ml-agents-envs/` sub-directory and open, with any text editor, the `setup.py` file found within it. Near the end of the file, find the list of required dependencies and modify the `numpy` version: change it from `"numpy==1.21.2"` to `"numpy==1.23.3"` then save. When that is done, run the following two commands in order:
+
+  ```{code}
   python -m pip install ./ml-agents-envs
   python -m pip install ./ml-agents
   ```
@@ -45,37 +48,45 @@ _**Note:**_ _The following installation assumes you have already installed on yo
 		>	python -m pip install ./ml-agents
 		>	```
 		> 	Make sure everything goes smoothly. -->
- - To check the installation was successful, run the following command:
-  ```
+- To check the installation was successful, run the following command:
+
+  ```{code}
   mlagents-learn -h
   ```
-  This should print-out the **help** manual on how to use the `mlagents-learn` command.\
+
+  This should print-out the **help** manual on how to use the `mlagents-learn` command.
   >_Note: you can ignore WARNINGS related to PyTorch_
 
 3. Finally go "up" one level (back to the location where you cloned the previous repository) and download the **vr4mice** source code:
- ```
+
+ ```{code}
  git clone https://github.com/MMathisLab/FreelyMovingVR4Mice.git
  ```
 
-	```
+ ```{code}
  cd FreelyMovingVR4Mice
  ```
 
-	Choose a specific **branch**, if needed, by running:
- ```
+ Choose a specific **branch**, if needed, by running:
+
+ ```{code}
  git checkout branch_name
  ```
 
-	By default, the `main` branch  will be used.
- - install the **vr4mice** package  (_use `pip install -e .` if package is under development_):
-  ```
-  pip install .
-  ```
+ By default, the `main` branch  will be used.
 
-	- To check everything installed successfully (assuming no **ERRORS** were displayed in the process), try to run the following in your conda environment:
-  ```
-  vr4mice
-  ```
+- install the **vr4mice** package  (_use `pip install -e .` if package is under development_):
+
+ ```{code}
+ pip install .
+ ```
+
+- To check everything installed successfully (assuming no **ERRORS** were displayed in the process), try to run the following in your conda environment:
+
+ ```{code}
+ vr4mice
+ ```
+
   The GUI should appear on your screen!
 
 ## Install DLCliveGUI
