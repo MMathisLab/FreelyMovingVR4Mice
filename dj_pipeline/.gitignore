@@ -1,4 +1,4 @@
-*.ipynb
+
 data/
 s3/
 tmp/
@@ -23,7 +23,7 @@ logs/
 
 # cached files
 __pycache__/
-.ipynb_checkpoints/
+*.ipynb_checkpoints/
 
 # files for testing
 
