@@ -169,7 +169,7 @@ def get_path(
             if not os.path.exists(processed):
                 os.makedirs(processed)
             processed = processed.joinpath(filename)
-            shutil.move(path, processed)
+            shutil.move(path, processed)  # TODO: change
 
             logger.info("Moving: " + str(path) + " --> " + str(processed))
 
@@ -220,3 +220,57 @@ def get_video_meta(raw_data=None, key=None, **kwargs):
     Extracts video's metadata
     """
     return raw_data["video_meta"][key]
+
+
+def get_box(raw_data=None, key=None, transformer=None, **kwargs):
+
+    l_report_box = {
+        "l_box_x_min": 0,
+        "l_box_x_max": 1,
+        "l_box_z_min": 2,
+        "l_box_z_max": 3,
+    }
+
+    r_report_box = {
+        "r_box_x_min": 0,
+        "r_box_x_max": 1,
+        "r_box_z_min": 2,
+        "r_box_z_max": 3,
+    }
+    start_box = {
+        "tt_box_x_min": 0,
+        "tt_box_x_max": 1,
+        "tt_box_z_min": 2,
+        "tt_box_z_max": 3,
+        "tt_box_angle": 4,
+    }
+
+    box = {
+        "l_report_box": l_report_box,
+        "r_report_box": r_report_box,
+        "start_box": start_box,
+    }
+
+    # cover old style
+    if transformer[key] in raw_data.keys():
+        raw_key = transformer[key]
+        data = raw_data[raw_key]
+        logger.info(f"Old/ Key: {key} Raw key: {raw_key}, data: {data}")
+        return data
+
+    # new style
+    for n, b in box.items():
+        if key in b.keys():
+            idx = b[key]
+            name = n
+            data = raw_data[name][idx]
+            logger.info(f"New/ Key: {key}, idx: {idx}, name: {name}, data: {data}")
+            return data
+
+
+def get_name(raw_data=None, key=None, **kwargs):
+    val = raw_data[key]
+    logger.info(f"Session label: {key}: {val}")
+    if isinstance(val, list):
+        return val[0]
+    return None

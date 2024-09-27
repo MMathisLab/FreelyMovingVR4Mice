@@ -8,8 +8,10 @@ from vr4mice.actions.helpers_dj import (
     get_state,
     get_video_meta,
     no_value,
+    get_box,
+    get_name,
 )
-from vr4mice.schema import dlc, vr4mice
+from vr4mice.schema import vr4mice
 
 # note: populates DLC too
 
@@ -21,21 +23,21 @@ from vr4mice.schema import dlc, vr4mice
 
 transformer = {  # todo add file preprocessing
     "prop_obj_on_left": "probGreenLeft",
-    "slit_size": "slitSize",  # meta
+    # "slit_size": "slitSize",  # don't use
     "target_from_midline": "targetsFromMidline",
     "targets_height": "targetsheight",
     #'report_delay': 'mouseReportDelay', mouse_report_delay -> use only
-    "right_report_box": "R_report_box",  # meta
-    "left_report_box": "L_report_box",  # meta
+    "r_report_box": "R_report_box",  # to support old versions
+    "l_report_box": "L_report_box",
     "camera_rotation": "camera_roation",
-    "left_box_x_min": "L_box_x_min",
-    "left_box_x_max": "L_box_x_max",
-    "left_box_z_min": "L_box_z_min",
-    "left_box_z_max": "L_box_z_max",
-    "right_box_x_min": "R_box_x_min",
-    "right_box_x_max": "R_box_x_max",
-    "right_box_z_min": "R_box_z_min",
-    "right_box_z_max": "R_box_z_max",
+    "l_box_x_min": "L_box_x_min",  # to support old versions
+    "l_box_x_max": "L_box_x_max",
+    "l_box_z_min": "L_box_z_min",
+    "l_box_z_max": "L_box_z_max",
+    "r_box_x_min": "R_box_x_min",
+    "r_box_x_max": "R_box_x_max",
+    "r_box_z_min": "R_box_z_min",
+    "r_box_z_max": "R_box_z_max",
     "tt_box_x_min": "TT_box_x_min",
     "tt_box_x_max": "TT_box_x_max",
     "tt_box_z_min": "TT_box_z_min",
@@ -54,15 +56,13 @@ transformer = {  # todo add file preprocessing
     "targets_z_pos": "targetsZpos",
     # targetSize : #skip (@tom) => use the target_size value only
     # Grey_screen_active : #skip (@tom) => use the grey_screen_active value only
-    "r_report_box": "R_report_box",
-    "l_report_box": "L_report_box:",
 }
 
 # todo: optimize this part of parcing (auto)
 # todo: add check about rows in database in .pickle file
 
 local_def = {
-    "state": no_value,  # no
+    "state": no_value,  # empty value
     "x_pos": get_state,
     "z_pos": get_state,
     "head_dir": get_state,
@@ -87,10 +87,24 @@ local_def = {
     "width": get_video_meta,
     "height": get_video_meta,
     "camera_idx": get_camera_idx,
+    "l_box_x_min": get_box,  # TODO: maybe organize better, as
+    "l_box_x_max": get_box,
+    "l_box_z_min": get_box,
+    "l_box_z_max": get_box,
+    "r_box_x_min": get_box,
+    "r_box_x_max": get_box,
+    "r_box_z_min": get_box,
+    "r_box_z_max": get_box,
+    "tt_box_x_min": get_box,
+    "tt_box_x_max": get_box,
+    "tt_box_z_min": get_box,
+    "tt_box_z_max": get_box,
+    "tt_box_angle": get_box,
+    "session_label": get_name,
 }
 
 # KEYS #
-dataset = ["dataset", "exp_teensy_filepath", "exp_session_filepath"]
+dataset = ["dataset", "exp_teensy_filepath", "exp_session_filepath", "session_label"]
 
 vr4mice_table = [
     "dataset",  #
@@ -109,15 +123,8 @@ video = [
     "height",
     "video_filepath",
     "timestamp_filepath",
-    # new:
-    "camera_type",
 ]
 
-# TODO: check
-dlc_video = [
-    "camera_idx",
-    "video_filepath",
-]
 # TODO: check
 keypoints = [
     "dataset",  #
@@ -130,14 +137,14 @@ keypoints = [
 
 box = [
     "dataset",
-    "left_box_x_min",
-    "left_box_x_max",
-    "left_box_z_min",
-    "left_box_z_max",
-    "right_box_x_min",
-    "right_box_x_max",
-    "right_box_z_min",
-    "right_box_z_max",
+    "l_box_x_min",
+    "l_box_x_max",
+    "l_box_z_min",
+    "l_box_z_max",
+    "r_box_x_min",
+    "r_box_x_max",
+    "r_box_z_min",
+    "r_box_z_max",
     "tt_box_x_min",
     "tt_box_x_max",
     "tt_box_z_min",
@@ -147,13 +154,6 @@ box = [
 
 metadata = [
     "dataset",
-    "cropped_image",
-    "unity_arena_size",
-    "right_report_box",
-    "left_report_box",
-    "start_box",
-    "camera_rotation",
-    "prop_obj_on_left",
     "obj_on_left",
     "slit_size",
     "slit_depth",
@@ -161,13 +161,9 @@ metadata = [
     "block_labels",
     "targets_height",
     "target_from_midline",
-    # new
     "targets_z_pos",
     "target_rotation",
     "target_distance",
-    "distractor",
-    "target_size",
-    "grey_screen_active",
     "session_label",
     "camera_selection",
     "target_selection",
@@ -187,7 +183,7 @@ mouse_state = [  # corresponds to variable state
     "report_right",
     # new
     "velocity",
-    # "frame_flip",
+    "frame_flip",
 ]
 
 state = [
@@ -200,14 +196,42 @@ state = [
     "reward",
     "terminal",
     "mouse_report_delay",
-    # new
-    "start_box_delay",
-    "velocity_threshold",
     "occlusion_type",
     "dlc_read_time",
     "dlc_x",
     "dlc_y",
     "dlc_heading",
+]
+
+gui = [
+    "dataset",
+    "r_report_box",
+    "l_report_box",
+    "start_box",
+    "cropped_image",
+    "unity_arena_size",
+    "camera_rotation",
+    "velocity_threshold",
+    "start_box_delay",
+    "distractor",
+    "target_size",
+    "grey_screen_active",
+    "camera_type",
+    "prob_obj_on_left",
+    "slit_size_param",
+    "block_length_param",
+    "rotate_camera_param",
+    "epoch_param",
+    "mouse_report_delay_param",
+    "prob_block_coherence",
+    "slit_depth_param",
+    "target_selection_param",
+    "distractor_selection_param",
+    "occlusion_type_param",
+    "target_spread_param",
+    "target_rotation_param",
+    "target_height_param",
+    "target_distance_param",
 ]
 
 tables = {  # order matters (dependencies))
@@ -218,8 +242,8 @@ tables = {  # order matters (dependencies))
     "Box": box,
     "Video": video,
     # TODO: check
-    "VideoToAnalyze": dlc_video,
     "DLC": keypoints,
+    "GuiParams": gui,
     # "VR4Mice": vr4mice_table, # note: old version artefact
 }
 
@@ -229,10 +253,9 @@ dj_tables = {  # in order
     "State": vr4mice.State(),
     "Metadata": vr4mice.Metadata(),
     "Box": vr4mice.Box(),
-    "VideoToAnalyze": dlc.VideoToAnalyze(),
-    # "DLC": dlc.DLC(),  # .npy
     "DLC": vr4mice.DLC(),  # .npy #TODO check
     "Video": vr4mice.Video(),  # .npy
+    "GuiParams": vr4mice.GuiParams(),
     # "VR4Mice": vr4mice.VR4Mice(),  # old version artefact
 }
 
