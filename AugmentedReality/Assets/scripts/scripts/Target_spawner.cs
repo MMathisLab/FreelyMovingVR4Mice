@@ -195,7 +195,7 @@ public class Target_spawner : MonoBehaviour
 		targetsZpos = environmentParameters.GetWithDefault("targetDistance", 3);
 		target_size = environmentParameters.GetWithDefault("targetSize", 2);
 		targetsFromMidline = environmentParameters.GetWithDefault("targetsFromMidline", 4f);
-		slitSize = environmentParameters.GetWithDefault("slitSize", 4.9f);
+		slitSize = environmentParameters.GetWithDefault("slitSize", 12f);
 		slitDepth = environmentParameters.GetWithDefault("slit_depth", 0.01f);
 		object_on_left = environmentParameters.GetWithDefault("object_on_left", 0.0f);
 		wall_height = environmentParameters.GetWithDefault("wall_height", 2f);
