@@ -7,7 +7,8 @@ base_actions_path="$(mount)/$(git_repo)/base_actions"
 BUILD_ARGS := \
 	--build-arg uid=$(shell id -u) \
 	--build-arg gid=$(shell id -g) \
-       	--build-arg user_name=$(shell id -un) #\
+       	--build-arg user_name=$(shell id -un) \
+	--build-arg mysql_config=.my.cnf_vr4mice
 	#--build-arg base_schemas_path="." \
 	#--build-arg base_actions_path="." #\
 	#--no-cache
@@ -79,6 +80,10 @@ mysql: git_info
 notebook:
 	@docker-compose exec client bash -c "jupyter notebook --ip 0.0.0.0 "
 
+sync_build:
+	cp ~/.my.cnf_vr4mice ./.my.cnf_vr4mice
+	docker-compose build $(BUILD_ARGS) aws_sync
 
-
+sync_up:
+	docker-compose up -d aws_sync
 
