@@ -134,6 +134,40 @@ class Video(dj.Manual):
     """
     # idx to reference the video in analysis table
 
+    def get_keys(self):
+        keys = []
+        dataset_keys = Dataset().fetch("dataset", as_dict=True)
+        camera_keys = Camera().fetch("camera", as_dict=True)
+        for dk in dataset_keys:
+            for ck in camera_keys:
+                keys.append({**dk, **ck})
+        return keys
+
+    def populate(self):
+        keys = self.get_keys()
+        for key in keys:
+            self.make(key)
+
+    def make(self, key):
+        from vr4mice.actions.populate_rig import get_files_paths
+
+        logger.info(f"{key['dataset']}")
+        paths = get_files_paths(key["dataset"])
+        video_filepath = (
+            f"{paths['video_path']['dst']}/{paths['video_path']['filename']}"
+        )
+        timestamp_filepath = (
+            f"{paths['camera_path']['dst']}/{paths['camera_path']['filename']}"
+        )
+        video_meta = paths["video_meta"]
+        data = {
+            "doe": paths["doe"],
+            "video_filepath": video_filepath,
+            "timestamp_filepath": timestamp_filepath,
+        }
+        data = {**key, **data, **video_meta}
+        Video().insert1(data, skip_duplicates=True)
+
 
 @schema
 class ModelName(dj.Lookup):
@@ -168,6 +202,36 @@ class DLC(dj.Manual):
     keypoints_filepath: varchar(255) # keypoints hdf5
     proc_filepath: varchar(255)  # computed dlc metrics
     """
+
+    def get_keys(self):
+        keys = []
+        video_keys = Video().fetch("dataset", "camera", "doe", as_dict=True)
+        model_name = ModelName().fetch("model_name", as_dict=True)
+        for vk in video_keys:
+            for mn in model_name:
+                keys.append({**vk, **mn})
+        return keys
+
+    def populate(self):
+        keys = self.get_keys()
+        for key in keys:
+            self.make(key)
+
+    def make(self, key):
+        from vr4mice.actions.populate_rig import get_files_paths
+
+        logger.info(f"{key['dataset']}")
+        paths = get_files_paths(key["dataset"])
+        keypoints_filepath = (
+            f"{paths['dlc_path']['dst']}/{paths['dlc_path']['filename']}"
+        )
+        proc_filepath = f"{paths['proc_path']['dst']}/{paths['proc_path']['filename']}"
+        data = {
+            "keypoints_filepath": keypoints_filepath,
+            "proc_filepath": proc_filepath,
+        }
+        data = {**key, **data}
+        DLC().insert1(data, skip_duplicates=True)
 
 
 @schema

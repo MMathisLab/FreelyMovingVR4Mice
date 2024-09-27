@@ -192,19 +192,21 @@ def create_data_frame(
     ]  # NOTE(celia): drop first trial which is DLC-live initialization trial
 
     interp = dict(
-       unity_arena_size_x_min=9,
-       unity_arena_size_x_max=-10,
-       unity_arena_size_z_min=-2,
-       unity_arena_size_z_max=27,
+        unity_arena_size_x_min=9,
+        unity_arena_size_x_max=-10,
+        unity_arena_size_z_min=-2,
+        unity_arena_size_z_max=27,
     )
 
     df["x"] = np.interp(
-        df.x, [-1 * interp["unity_arena_size_x_min"], interp["unity_arena_size_x_min"]],
-        [-1 * interp["unity_arena_size_z_max"], interp["unity_arena_size_z_max"]]
+        df.x,
+        [-1 * interp["unity_arena_size_x_min"], interp["unity_arena_size_x_min"]],
+        [-1 * interp["unity_arena_size_z_max"], interp["unity_arena_size_z_max"]],
     )
     df["y"] = np.interp(
-        df.y, [interp["unity_arena_size_x_max"], interp["unity_arena_size_z_min"]],
-        [-1 * interp["unity_arena_size_z_max"], interp["unity_arena_size_z_max"]]
+        df.y,
+        [interp["unity_arena_size_x_max"], interp["unity_arena_size_z_min"]],
+        [-1 * interp["unity_arena_size_z_max"], interp["unity_arena_size_z_max"]],
     )
 
     # Normalized coordinates
@@ -313,7 +315,7 @@ def get_box_df(key, df, interp):
         for index, value in box_df[col].items():
             if isinstance(value, list):
                 box_df.loc[index, col] = value[0]
-    
+
     a = interp["unity_arena_size_x_min"]
     b = interp["unity_arena_size_x_max"]
     c = interp["unity_arena_size_z_min"]

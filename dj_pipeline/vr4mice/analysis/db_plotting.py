@@ -178,13 +178,13 @@ def plot_session(
             fig, ax = plt.subplots(1, num_aperture, figsize=(int(num_aperture * 5), 5))
         else:
             fig, ax = plt.subplots(1, 1, figsize=(5, 5))
-        
+
         if per_aperture and num_aperture == 1:
             ax = [ax]
 
         if per_aperture:
             # TODO(celia): add tests on axes.
-            for j, aperture in enumerate(np.sort(aperture.aperture.unique())): 
+            for j, aperture in enumerate(np.sort(aperture.aperture.unique())):
                 _plot_session_in_arena(
                     ax=ax[j],
                     datasets_keys=[dataset_key],

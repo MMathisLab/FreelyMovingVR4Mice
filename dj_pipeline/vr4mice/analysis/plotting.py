@@ -401,7 +401,8 @@ def _plot_bar_counts(
         ax.set_xticklabels([])
 
     sns.scatterplot(
-        data=counts, x=label_x, y="count", alpha=1, hue=label_x, palette=color_map)
+        data=counts, x=label_x, y="count", alpha=1, hue=label_x, palette=color_map
+    )
 
     plt.legend([], [], frameon=False)
 
@@ -434,9 +435,9 @@ def plot_trial_count(
             .sort_values()
         )
         print(counts)
-        counts = pd.DataFrame(counts) #.reset_index())
+        counts = pd.DataFrame(counts)  # .reset_index())
         print(counts)
-        counts['aperture'] = counts.aperture.round(2).astype(str)
+        counts["aperture"] = counts.aperture.round(2).astype(str)
     else:
         counts = df.groupby(["dataset"]).trial.nunique()
         counts = pd.DataFrame(counts.reset_index())
