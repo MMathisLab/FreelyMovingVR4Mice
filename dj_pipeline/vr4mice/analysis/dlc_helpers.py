@@ -121,6 +121,32 @@ def sync_dlc_w_game(dlc_dict, game_data):
 
     return df_out
 
+def sync_keypoint_table(d, keypoint_cuttoff = 0.6, filter_window_length =10):
+    """ Returns filtered keypoints from the DLCKptsDF table synchronized with game data.
+    
+        This function loads the DLCKptsDF keypoint table for  dataset d it then removes low confidence frames and sets them to nan. it then
+        linearly interpolates between them and then filters with a Savgol filter.
+        
+        Args:
+            d (str):  the data set key formatted as "mouseName_date_attempt".
+            keypoint_cuttoff (float): All keypoints below this confidence threshold will be removed and interpolated.
+            filter_window_length (int): The window in frames for the filter window size.
+            
+        Returns:
+            pd.Dataframe: filtered and synchronized keypoints with game indexes - step and step_time
+    
+    """
+    # get time indexs from the game dataframe and the start time for session
+    from vr4mice.schema import base_analysis, dlc, vr4mice
+    game_step_times = pd.DataFrame((base_analysis.DataFrame() & d).fetch("step_time", "step", "time_elapsed", "trial",as_dict=True)[0])
+    start_time = (vr4mice.State() & d).fetch("start_time")[0]
+    game_step_times ["start_time"]= start_time
+    
+    # Fetch the keypoint table and then sychronise with the game timesteps
+    keypoint_df = (dlc.DLCKptsDf() & d).get_all_data()[0]
+    filt_dlc_df = filter_dlc(keypoint_df,cutoff=keypoint_cuttoff,window_length=filter_window_length)
+    return(_sync_dlc_w_game(game_data=game_step_times,dlc=filt_dlc_df))
+
 
 def dlc_interpolate(trace, likelyhood, cutoff=0.6):
     trace = np.array(trace)
