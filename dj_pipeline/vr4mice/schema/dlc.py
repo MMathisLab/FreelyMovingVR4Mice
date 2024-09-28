@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema  # todo adjust paths (base/utils)
-from vr4mice.analysis.dlc_helpers import h52dj, df2dj, dj2h5, sync_dlc_w_game
+from vr4mice.analysis.dlc_helpers import h52dj, df2dj, dj2h5, sync_dlc_w_game, sync_keypoint_table
 from vr4mice.schema import vr4mice, base_analysis
 
 schema_name = "dlc"
@@ -93,8 +93,59 @@ class DLCKptsDf(dj.Imported):
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
+        
+              
+@schema
+class SyncDLCKptsDf(dj.Imported):
+    definition = """
+    -> vr4mice.DLC
+    -> base_analysis.DataFrame
+    ---
+    data: longblob
+    headers : blob
+    scorer=NULL: varchar(256)
+    """
+    def make(self, key):
+        logger.info(f"Populating {self.__class__.__name__} for {key}.")
+        try:
+            # I believe the key returned here is just the actual data set name aka mouseName_date_attempt so i need to add in the "dataset" key for this function?
+            sync_kpts = sync_keypoint_table(d={"dataset": key},  keypoint_cuttoff=0.6, filter_window_length=10)
+            data = df2dj(sync_kpts)
+            data = {**key, **data}
+            self.insert1(data)
+            logger.info(f"{self.__class__.__name__} populated for {key}.")
+        
+        except Exception as err:
+            logger.warning(
+                    f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            )
+            return None
+        
+    def get_data(self, key): 
+        # TODO Mary_app -is there a way here that we can speficy which headers to return?
+        # i think this would solve many of both your and mine worries about fetch speed
+        try:
+            data = (self & key).fetch1()
+            return pd.DataFrame(data["data"], columns=data["headers"])
 
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
+        
+    def get_all_data(self, key): 
+        dfs = []
+        try:
+            data = self.fetch()
+            for d in data:
+                df = pd.DataFrame(d["data"], columns=d["headers"])
+                dfs.append(df)
+            return dfs
 
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
+  
+#TODO we should deprecate this table in favour of the OffLn_kineimatics table that way we have a nice feedforward pipline
 @schema
 class SyncDLCWGame(dj.Imported):
     definition = """
