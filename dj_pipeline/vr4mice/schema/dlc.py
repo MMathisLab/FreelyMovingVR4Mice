@@ -157,7 +157,6 @@ class OffLnKinematics(dj.Imported):
     """
 
     def make(self, key):
-
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
         try:
             sync_keypoints = SyncDLCKptsDf().get_data(key)
