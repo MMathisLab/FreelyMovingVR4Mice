@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema  # todo adjust paths (base/utils)
-from vr4mice.analysis.dlc_helpers import h52dj, df2dj, dj2h5, sync_dlc_w_game, sync_keypoint_table
+from vr4mice.analysis.dlc_helpers import h52dj, df2dj, dj2h5, sync_dlc_w_game, sync_keypoint_table, getall_dlc_heading_angles
 from vr4mice.schema import vr4mice, base_analysis
 
 schema_name = "dlc"
@@ -144,7 +144,58 @@ class SyncDLCKptsDf(dj.Imported):
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
-  
+
+@schema
+class OffLnKinematics(dj.Imported):
+    definition = """
+    -> syncDLCKptsDf
+    -> base_analysis.DataFrame
+    ---
+    data: longblob
+    headers : blob
+    scorer=NULL: varchar(256)
+    """
+
+    def make(self, key):
+
+        logger.info(f"Populating {self.__class__.__name__} for {key}.")
+        try:
+            sync_keypoints = SyncDLCKptsDf().get_data(key)
+            offline_dlc_variables = getall_dlc_heading_angles(sync_keypoints.iloc[:,:-3]) # Compute all the kinematic variables
+            offline_dlc_variables [["pose_time", "step_time", "step"]] = sync_keypoints.iloc[:,-3:] # add back in the time index
+            data = df2dj(offline_dlc_variables)
+            data = {**key, **data}
+            self.insert1(data)
+            logger.info(f"{self.__class__.__name__} populated for {key}.")
+
+        except Exception as err:
+            logger.warning(
+                f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            )
+            return None
+
+    def get_data(self, key):
+        try:
+            data = (self & key).fetch1()
+            return pd.DataFrame(data["data"], columns=data["headers"])
+
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
+
+    def get_all_data(self, key):
+        dfs = []
+        try:
+            data = self.fetch()
+            for d in data:
+                df = pd.DataFrame(d["data"], columns=d["headers"])
+                dfs.append(df)
+            return dfs
+
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
+
 #TODO we should deprecate this table in favour of the OffLn_kineimatics table that way we have a nice feedforward pipline
 @schema
 class SyncDLCWGame(dj.Imported):
