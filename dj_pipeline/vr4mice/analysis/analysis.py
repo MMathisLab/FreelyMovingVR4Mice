@@ -263,7 +263,7 @@ def create_data_frame(
         .reset_index()
     )
     trial_duration["trial_duration"] = trial_duration["last"] - trial_duration["first"]
-    df = df.merge(trial_duration, on="trial")
+    df = df.merge(trial_duration[["session", "trial", "trial_duration"]], on="trial")
 
     if iti:
         iti_duration = (
