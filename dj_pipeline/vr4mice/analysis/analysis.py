@@ -271,10 +271,12 @@ def create_data_frame(
 
     # Distance between sample points and length of the trajectory
     df["distance"] = np.sqrt(df.x.diff() ** 2 + df.y.diff() ** 2)
+
+    # Trial trajectory length only on the non-ITI part
     df["trial_traj_path_length"] = df.groupby("trial", as_index=False)[
         "distance"
     ].transform(
-        "sum"
+        lambda x: x[df.loc[x.index, "iti"] == 0].sum()
     )  # TODO: to think: it can be a method too
 
     # Trial start and end position
