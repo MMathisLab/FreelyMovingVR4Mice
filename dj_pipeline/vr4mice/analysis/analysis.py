@@ -223,12 +223,16 @@ def create_data_frame(
     if not iti:
         df = df[df.iti == 0.0]
 
-    df["trial_right_choice"] = df.groupby("trial", as_index=False)[
-        "mouse_in_right"
-    ].transform(lambda x: x.iloc[-1])
-    df["trial_left_choice"] = df.groupby("trial", as_index=False)[
-        "mouse_in_left"
-    ].transform(lambda x: x.iloc[-1])
+    df["trial_right_choice"] = (
+        df.groupby("trial", as_index=False)
+        .apply(lambda group: group.loc[group["iti"] == 0, "mouse_in_right"].iloc[-1])
+        .reset_index(drop=True)
+    )
+    df["trial_left_choice"] = (
+        df.groupby("trial", as_index=False)
+        .apply(lambda group: group.loc[group["iti"] == 0, "mouse_in_left"].iloc[-1])
+        .reset_index(drop=True)
+    )
 
     df = _resample_data_frame(df)
 
@@ -246,9 +250,24 @@ def create_data_frame(
     df["velocity_y"] = np.gradient(df.y, df.time_elapsed)
     df["acceleration_y"] = np.gradient(df["velocity_y"], df.time_elapsed)
 
-    df["trial_duration"] = df.groupby("trial", as_index=False)[
-        "time_elapsed"
-    ].transform(lambda x: x.iloc[-1] - x.iloc[0])
+    df["trial_duration"] = (
+        df.groupby("trial", as_index=False)
+        .apply(
+            lambda group: group.loc[group["iti"] == 0, "time_elapsed"].iloc[-1]
+            - group.loc[group["iti"] == 0, "time_elapsed"].iloc[0]
+        )
+        .reset_index(drop=True)
+    )
+
+    if iti:
+        df["iti_duration"] = (
+            df.groupby("trial", as_index=False)
+            .apply(
+                lambda group: group.loc[group["iti"] == 1, "time_elapsed"].iloc[-1]
+                - group.loc[group["iti"] == 1, "time_elapsed"].iloc[0]
+            )
+            .reset_index(drop=True)
+        )
 
     # Distance between sample points and length of the trajectory
     df["distance"] = np.sqrt(df.x.diff() ** 2 + df.y.diff() ** 2)
@@ -266,11 +285,11 @@ def create_data_frame(
     df["trial_init_y"] = df.groupby("trial", as_index=False)["y"].transform(
         lambda y: y.iloc[0]
     )
-    df["trial_end_x"] = df.groupby("trial", as_index=False)["x"].transform(
-        lambda x: x.iloc[-1]
+    df["trial_end_x"] = df.groupby("trial", as_index=False).apply(
+        lambda group: group.loc[group["iti"] == 0, "x"].iloc[-1]
     )
-    df["trial_end_y"] = df.groupby("trial", as_index=False)["y"].transform(
-        lambda y: y.iloc[-1]
+    df["trial_end_y"] = df.groupby("trial", as_index=False).apply(
+        lambda group: group.loc[group["iti"] == 0, "y"].iloc[-1]
     )
 
     # Direct path from start to end position
@@ -301,7 +320,6 @@ def create_data_frame(
 
 
 def get_box_df(key, df, interp):
-
     """Define the box dimensions.
 
     Define the arena, start area and reward areas dimensions.
