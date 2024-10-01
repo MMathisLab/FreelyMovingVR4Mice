@@ -74,24 +74,6 @@ class Dataset(dj.Manual):
         }
         data = {**key, **data, **video_meta}
         Video().insert1(data, skip_duplicates=True)
-    # TODO:
-    # add make call to populate raw files paths here automatically
-
-
-# TODO: This should be moved to its own schema.
-# @schema
-# class VR4Mice(dj.Manual):
-#     """
-#         VR4Mice definition table:
-#         links together Dataset with base Mouse, Exp schemas
-#     """
-#
-#     definition = """
-#    -> Dataset
-#    ---
-#    -> mice.Mouse
-#    -> exp.Session
-#    """
 
 
 @schema

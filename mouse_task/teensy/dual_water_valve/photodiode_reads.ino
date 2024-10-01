@@ -8,7 +8,7 @@ const int SAMPLE_RATE = 500;
 
 // pins
 
-const int photodiode
+const int photodiode;
 int photodiode_state = 0;
 
 

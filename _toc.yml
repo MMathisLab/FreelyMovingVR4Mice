@@ -30,9 +30,10 @@ parts:
   chapters:
   - file: docs/VisualDiscrim
   - file: docs/dlc_processor
-- caption: Experiments, Training protocol
+- caption: Experiments, Training protocol and parameters
   chapters:
   - file: docs/training_protocols/training_protocol
+  - file: docs/training_protocols/training_protocol_stage_parameters
 
 
 
