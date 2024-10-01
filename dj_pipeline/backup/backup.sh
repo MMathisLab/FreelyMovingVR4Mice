@@ -24,25 +24,17 @@ for db in "${databases[@]}"; do
 	fi
 
 	msg="Dumping and importing database: $db"
-        cmd="mysqldump $group$s1_prefix $ssl --ignore-table='vr4mice'.'~log' \
-             	--single-transaction --max-allowed-packet=512M --quick --skip-add-drop-table --insert-ignore "$db" \
+        cmd="mysqldump $group$s1_prefix $ssl --ignore-table='vr4mice'.'~log' --ignore-table='dlc'.'~log'
+             	--max-allowed-packet=512M  --skip-add-drop-table --insert-ignore "$db" \
                 | sed 's/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g' \
- 		| sed 's/INSERT INTO/INSERT IGNORE INTO/g' \
-		| mysql  $group$aws_prefix $db"
-       	execute_command "$cmd" "$msg"
+ 		| sed 's/INSERT INTO/INSERT IGNORE INTO/g'> $db.sql
+	#\
+	#	| mysql  $group$aws_prefix $db"
+       	
+	cmd="mysql $group$aws_prefix $db < $db.sql"
+	execute_command "$cmd" "$msg"
 	
 	#execute_command "mysqldump $group$s1_prefix $ssl --single-transaction --quick --max-allowed-packet=1024M --column-statistics=0 $db \
 	#	| mysql $group$aws_prefix $db" "Dumping and importing database: $db"
 done
 
-# Flush binary logs on the source host
-execute_command "mysql $group$s1_prefix $ssl -e 'FLUSH BINARY LOGS;'" "Flushing binary logs on the source host"
-
-current_binlog=$(mysql $group$s1_prefix $ssl -e "SHOW MASTER STATUS" | awk 'NR==2 {print $1}')
-if ! mysql $group$s1_prefix $ssl -e "PURGE BINARY LOGS TO '$current_binlog';"; then
-	error_exit "Can't remove binary logs from source $s1_prefix database host. $err"
-fi
-log "$mysql_log_dir$binlog_file was removed from $db_container_name docker container."
-log "Backup completed. Logs: $LOG_FILE"
-#todo add errors check
-exit 0
