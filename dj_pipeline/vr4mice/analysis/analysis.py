@@ -105,8 +105,9 @@ def get_rewarded(df):
 #    choices = df.groupby(["trial"], as_index=False).last()
 #    return choices
 
+
 def set_first_xy_to_nan(group):
-    ''' Returns the  x, y position with the first frame set to np.nan.
+    """ Returns the  x, y position with the first frame set to np.nan.
         
         This function handles the spawning error that happens in the game so that we can interpolate this point from 
         neighboring points
@@ -115,12 +116,12 @@ def set_first_xy_to_nan(group):
             pd.group: from the groupby function usually by trial
             
         Returns:
-            pd.Dataframe:  with the first x and y set to np.nan'''
-    
-    group.loc[group.index[0], ['x', 'y']] = np.nan
+            pd.Dataframe:  with the first x and y set to np.nan"""
+
+    group.loc[group.index[0], ["x", "y"]] = np.nan
     return group
-        
-    
+
+
 def get_dist2reward(df, box_df):
     dist2reward = np.sqrt(
         (box_df["right_box_x_center"] - (df["x"] * df["flip_one_side"])) ** 2
@@ -224,11 +225,14 @@ def create_data_frame(
         [-1 * interp["unity_arena_size_z_max"], interp["unity_arena_size_z_max"]],
     )
     # Handling for first frame in trial - the first frame results in the default x and y position for virtual mouse
-    df = df.groupby('trial',as_index=False).apply(set_first_xy_to_nan).reset_index(drop=True)
-    df[['x', 'y']] = df[['x', 'y']].interpolate()
+    df = (
+        df.groupby("trial", as_index=False)
+        .apply(set_first_xy_to_nan)
+        .reset_index(drop=True)
+    )
+    df[["x", "y"]] = df[["x", "y"]].interpolate()
     # First trial cannot be interpolated so bfill this with the next value
-    df[['x', 'y']] = df[['x', 'y']].bfill()
-    
+    df[["x", "y"]] = df[["x", "y"]].bfill()
 
     # Normalized coordinates
     df["bins_y"] = pd.cut(
