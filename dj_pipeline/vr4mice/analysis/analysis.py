@@ -105,7 +105,7 @@ def get_rewarded(df):
 #    choices = df.groupby(["trial"], as_index=False).last()
 #    return choices
 
-def set_first_to_nan(group):
+def set_first_xy_to_nan(group):
     ''' Returns the  x, y position with the first frame set to np.nan.
         
         This function handles the spawning error that happens in the game so that we can interpolate this point from 
@@ -224,9 +224,9 @@ def create_data_frame(
         [-1 * interp["unity_arena_size_z_max"], interp["unity_arena_size_z_max"]],
     )
     # Handling for first frame in trial - the first frame results in the default x and y position for virtual mouse
-    df = df.groupby('trial',as_index=False).apply(set_first_to_nan).reset_index(drop=True)
+    df = df.groupby('trial',as_index=False).apply(set_first_xy_to_nan).reset_index(drop=True)
     df[['x', 'y']] = df[['x', 'y']].interpolate()
-    # first trial cannot be interpolated so bfill this with the next value
+    # First trial cannot be interpolated so bfill this with the next value
     df[['x', 'y']] = df[['x', 'y']].bfill()
     
 
