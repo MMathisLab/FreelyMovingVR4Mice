@@ -36,8 +36,8 @@ try:
     # base_analysis.OutputPlots.populate()
     dlc.DLCProcessor().populate()
     dlc.DLCKptsDf().populate()
-    #dlc.SyncDLCWGame().populate()
-    #dlc.DLCKptsBodyparts().populate()  # TODO: optional
+    # dlc.SyncDLCWGame().populate()
+    # dlc.DLCKptsBodyparts().populate()  # TODO: optional
 
 except Exception as e:
     logger.error(f"An error occurred in populate_decision_making.populate: {e}")
