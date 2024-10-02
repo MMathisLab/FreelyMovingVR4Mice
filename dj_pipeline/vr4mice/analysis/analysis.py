@@ -1,6 +1,7 @@
 import os
 import warnings
 from pathlib import Path
+from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,11 +10,8 @@ import seaborn as sns
 from scipy import stats
 from scipy.interpolate import CubicSpline
 from vr4mice.schema import base_analysis, vr4mice
-
 # from scipy.signal import savgol_filter, hilbert, find_peaks
 from vr4mice.utils.logger import Logger
-
-from typing import List, Tuple
 
 logger = Logger.get_logger()
 
@@ -110,8 +108,9 @@ def set_first_xy_to_nan(group):
     """
     Returns the x, y position with the first frame set to np.nan.
 
-    This function handles the spawning error in the Unity game at the beginning of each trial where the virtual 
-    mouse is spawned. This function removes these points so that they can be estimated from neighboring points.
+    This function handles the spawning error in the Unity game at the beginning of each 
+    trial where the virtual mouse is spawned. This function removes these points so that
+    they can be estimated from neighboring points.
 
     Args:
         group (pd.DataFrame): DataFrame from the groupby function, usually grouped by trial.
