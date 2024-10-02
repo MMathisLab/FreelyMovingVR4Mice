@@ -227,8 +227,8 @@ def create_data_frame(
         [interp["unity_arena_size_x_max"], interp["unity_arena_size_z_min"]],
         [-1 * interp["unity_arena_size_z_max"], interp["unity_arena_size_z_max"]],
     )
-    # Handling for first frame in trial - the first frame results in the default x and y position for virtual mouse
-
+    # Handling for first frame in trial - the first frame results in the default x and y position for virtual mouse 
+    # it therefore needs to be removed and then interpolated from neighbouring points
     df = (
         df.groupby("trial", as_index=False)
         .apply(set_first_xy_to_nan)
