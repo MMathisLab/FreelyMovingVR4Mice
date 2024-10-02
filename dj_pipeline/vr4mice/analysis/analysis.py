@@ -233,7 +233,7 @@ def create_data_frame(
         .reset_index(drop=True)
     )
     df[["x", "y"]] = df[["x", "y"]].interpolate()
-    # First trial cannot be interpolated so bfill this with the next value
+    # First trial cannot be interpolated so back fill this point this with the next value
     df[["x", "y"]] = df[["x", "y"]].bfill()
 
     # Normalized coordinates
