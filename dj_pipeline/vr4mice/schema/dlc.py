@@ -178,7 +178,9 @@ class OffLnKinematics(dj.Imported):
                 ["pose_time", "step_time", "step"]
             ] = sync_keypoints.iloc[
                 :, -3:
-            ]  # add back in the time index
+            ]  # Add back in the time index
+            # Shift angles so that 0 is aligned with the main screen
+            offline_dlc_variables ["heading_dir"] = ((offline_dlc_variables.heading_dir - 90) + 180) % 360 - 180
             data = df2dj(offline_dlc_variables)
             data = {**key, **data}
             self.insert1(data)
