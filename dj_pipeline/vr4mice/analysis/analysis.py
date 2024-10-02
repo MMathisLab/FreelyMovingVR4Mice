@@ -107,22 +107,21 @@ def get_rewarded(df):
 
 
 def set_first_xy_to_nan(group):
-    """ 
-    Returns the  x, y position with the first frame set to np.nan.
-        
-    This function handles the spawning error that happens in the unity game where at the begging of each trial 
-    where the virtual mouse is spawned. This function removes these points so that they can be estimated from 
-    neighboring points.
-        
-    Args:
-        pd.group: from the groupby function usually by trial
-            
-    Returns:
-        pd.Dataframe:  with the first x and y set to np.nan
     """
+    Returns the x, y position with the first frame set to np.nan.
 
+    This function handles the spawning error in the Unity game at the beginning of each trial where the virtual 
+    mouse is spawned. This function removes these points so that they can be estimated from neighboring points.
+
+    Args:
+        group (pd.DataFrame): DataFrame from the groupby function, usually grouped by trial.
+
+    Returns:
+        pd.DataFrame: DataFrame with the first x and y set to np.nan.
+    """
     group.loc[group.index[0], ["x", "y"]] = np.nan
     return group
+
 
 
 def get_dist2reward(df, box_df):
