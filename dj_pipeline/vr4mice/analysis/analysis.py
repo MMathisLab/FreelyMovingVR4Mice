@@ -117,7 +117,7 @@ def set_first_xy_to_nan(group):
     Args:
         pd.group: from the groupby function usually by trial
             
-        Returns:
+    Returns:
         pd.Dataframe:  with the first x and y set to np.nan
     """
 
