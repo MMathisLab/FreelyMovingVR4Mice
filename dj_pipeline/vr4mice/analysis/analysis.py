@@ -86,6 +86,8 @@ def _resample_data_frame(df, resampling_period_ms=20) -> pd.DataFrame:  # in ms
     df = pd.concat(
         [continuous_resampled, categorical_resampled, binary_resampled], axis=1
     ).reset_index()
+    
+    df = df.drop(columns="level_0")
 
     reference_datetime = df["time"].iloc[0]
     df["time_elapsed"] = (df["time"] - reference_datetime).dt.total_seconds()
