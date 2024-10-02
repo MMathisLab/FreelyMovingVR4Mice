@@ -218,7 +218,7 @@ def create_data_frame(
     )
 
     # TODO: to think: keep as method: don't save or save separately
-    # df["rewarded"] = get_rewarded(df)
+    # df["trial_rewarded"] = get_rewarded(df)
 
     if not iti:
         df = df[df.iti == 0.0]
@@ -263,7 +263,7 @@ def create_data_frame(
         .reset_index()
     )
     trial_duration["trial_duration"] = trial_duration["last"] - trial_duration["first"]
-    df = df.merge(trial_duration[["session", "trial", "trial_duration"]], on="trial")
+    df = df.merge(trial_duration[["trial", "trial_duration"]], on="trial")
 
     if iti:
         iti_duration = (
@@ -286,7 +286,8 @@ def create_data_frame(
         trial_traj_path_length, on="trial", suffixes=("", "_trial_traj_path_length")
     )
     df.rename(
-        columns={"distance_traj_path_length": "trial_traj_path_length"}, inplace=True
+        columns={"distance_trial_traj_path_length": "trial_traj_path_length"},
+        inplace=True,
     )
 
     # Trial start and end position
@@ -323,8 +324,6 @@ def create_data_frame(
 
     # Distance to reward
     df["flip_one_side"] = df["trial_left_choice"].replace([0, 1], [1, -1])
-
-    # df["distance_to_reward"] --> to method
 
     df.trial = df.trial.astype(int)
     df.aperture = df.aperture.round(2)
