@@ -109,7 +109,7 @@ def set_first_xy_to_nan(group):
     """
     Returns the x, y position with the first frame set to np.nan.
 
-    This function handles the spawning error in the Unity game at the beginning of each 
+    This function handles the spawning error in the Unity game at the beginning of each
     trial where the virtual mouse is spawned. This function removes these points so that
     they can be estimated from neighboring points.
 
@@ -328,7 +328,6 @@ def create_data_frame(
 
 
 def get_box_df(key, df, interp):
-
     """Define the box dimensions.
 
     Define the arena, start area and reward areas dimensions.
