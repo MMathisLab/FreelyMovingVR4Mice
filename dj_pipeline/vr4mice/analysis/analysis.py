@@ -89,12 +89,10 @@ def _resample_data_frame(df, resampling_period_ms=20) -> pd.DataFrame:  # in ms
 
     reference_datetime = df["time"].iloc[0]
     df["time_elapsed"] = (df["time"] - reference_datetime).dt.total_seconds()
-
     return df
 
 
 def get_rewarded(df):
-
     rewarded = df.groupby("trial", as_index=False)["reward"].transform(
         lambda x: x.max()
     )
@@ -223,12 +221,22 @@ def create_data_frame(
     if not iti:
         df = df[df.iti == 0.0]
 
-    df["trial_right_choice"] = df.groupby("trial", as_index=False)[
-        "mouse_in_right"
-    ].transform(lambda x: x.iloc[-1])
-    df["trial_left_choice"] = df.groupby("trial", as_index=False)[
-        "mouse_in_left"
-    ].transform(lambda x: x.iloc[-1])
+    trial_right_choice = (
+        df[df["iti"] == 0].groupby("trial")["mouse_in_right"].last().reset_index()
+    )
+    df = df.merge(trial_right_choice, on="trial", suffixes=("", "_trial_right_choice"))
+    df.rename(
+        columns={"mouse_in_right_trial_right_choice": "trial_right_choice"},
+        inplace=True,
+    )
+
+    trial_left_choice = (
+        df[df["iti"] == 0].groupby("trial")["mouse_in_left"].last().reset_index()
+    )
+    df = df.merge(trial_left_choice, on="trial", suffixes=("", "_trial_left_choice"))
+    df.rename(
+        columns={"mouse_in_left_trial_left_choice": "trial_left_choice"}, inplace=True
+    )
 
     df = _resample_data_frame(df)
 
@@ -246,17 +254,38 @@ def create_data_frame(
     df["velocity_y"] = np.gradient(df.y, df.time_elapsed)
     df["acceleration_y"] = np.gradient(df["velocity_y"], df.time_elapsed)
 
-    df["trial_duration"] = df.groupby("trial", as_index=False)[
-        "time_elapsed"
-    ].transform(lambda x: x.iloc[-1] - x.iloc[0])
+    trial_duration = (
+        df[df["iti"] == 0]
+        .groupby("trial")["time_elapsed"]
+        .agg(["first", "last"])
+        .reset_index()
+    )
+    trial_duration["trial_duration"] = trial_duration["last"] - trial_duration["first"]
+    df = df.merge(trial_duration[["session", "trial", "trial_duration"]], on="trial")
+
+    if iti:
+        iti_duration = (
+            df[df["iti"] == 1]
+            .groupby("trial")["time_elapsed"]
+            .agg(["first", "last"])
+            .reset_index()
+        )
+        iti_duration["iti_duration"] = iti_duration["last"] - iti_duration["first"]
+        df = df.merge(iti_duration, on="trial")
 
     # Distance between sample points and length of the trajectory
     df["distance"] = np.sqrt(df.x.diff() ** 2 + df.y.diff() ** 2)
-    df["trial_traj_path_length"] = df.groupby("trial", as_index=False)[
-        "distance"
-    ].transform(
-        "sum"
-    )  # TODO: to think: it can be a method too
+
+    # Trial trajectory length only on the non-ITI part
+    trial_traj_path_length = (
+        df[df["iti"] == 0].groupby("trial")["distance"].sum().reset_index()
+    )
+    df = df.merge(
+        trial_traj_path_length, on="trial", suffixes=("", "_trial_traj_path_length")
+    )
+    df.rename(
+        columns={"distance_traj_path_length": "trial_traj_path_length"}, inplace=True
+    )
 
     # Trial start and end position
     # TODO: actually also can be the methods...
@@ -266,12 +295,13 @@ def create_data_frame(
     df["trial_init_y"] = df.groupby("trial", as_index=False)["y"].transform(
         lambda y: y.iloc[0]
     )
-    df["trial_end_x"] = df.groupby("trial", as_index=False)["x"].transform(
-        lambda x: x.iloc[-1]
-    )
-    df["trial_end_y"] = df.groupby("trial", as_index=False)["y"].transform(
-        lambda y: y.iloc[-1]
-    )
+    trial_end_x = df[df["iti"] == 0].groupby("trial")["x"].last().reset_index()
+    df = df.merge(trial_end_x, on="trial", suffixes=("", "_trial_end_x"))
+    df.rename(columns={"x_trial_end_x": "trial_end_x"}, inplace=True)
+
+    trial_end_y = df[df["iti"] == 0].groupby("trial")["y"].last().reset_index()
+    df = df.merge(trial_end_y, on="trial", suffixes=("", "_trial_end_y"))
+    df.rename(columns={"y_trial_end_y": "trial_end_y"}, inplace=True)
 
     # Direct path from start to end position
     df["trial_direct_path"] = np.sqrt(
@@ -301,7 +331,6 @@ def create_data_frame(
 
 
 def get_box_df(key, df, interp):
-
     """Define the box dimensions.
 
     Define the arena, start area and reward areas dimensions.
