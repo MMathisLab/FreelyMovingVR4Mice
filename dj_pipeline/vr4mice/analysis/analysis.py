@@ -105,19 +105,20 @@ def get_rewarded(df):
 #    return choices
 
 
-def set_first_xy_to_nan(group):
+def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
     """
-    Returns the x, y position with the first frame set to np.nan.
+    Sets the first x and y positions of the given DataFrame to np.nan.
 
-    This function handles the spawning error in the Unity game at the beginning of each
-    trial where the virtual mouse is spawned. This function removes these points so that
-    they can be estimated from neighboring points.
-    
+    This function is designed to be used with groups from a pandas `DataFrameGroupBy` object,
+    typically resulting from a groupby operation. It addresses the spawning error in the Unity
+    game at the start of each trial, where the virtual mouse is spawned at incorrect coordinates.
+    It removes these initial points so they can be interpolated or estimated from neighboring values.
+
     Args:
-        group (pd.DataFrame): DataFrame from the groupby function, usually grouped by trial.
-        
+        group (pd.DataFrame): A subset DataFrame from a pandas groupby operation, usually grouped by trial.
+
     Returns:
-        group (pd.Dataframe): DataFrame with the first x and y set to np.nan.
+        pd.DataFrame: The modified DataFrame with the first x and y values set to np.nan.
     """
     group.loc[group.index[0], ["x", "y"]] = np.nan
     return group
