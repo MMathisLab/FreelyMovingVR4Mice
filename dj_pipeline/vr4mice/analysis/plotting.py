@@ -598,7 +598,7 @@ def plot_rewards(
             df[df.trial_rewarded == 1].groupby(["dataset"]).trial.nunique()
             / df.groupby(["dataset"]).trial.nunique()
         )
-        counts = pd.DataFrame(counts.reset_index().sort_values(by="trial_rewarded"))
+        counts = pd.DataFrame(counts.reset_index())
     counts = counts.rename(columns={"trial": "count"})
 
     _plot_bar_counts(
