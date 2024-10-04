@@ -214,7 +214,6 @@ def create_data_frame(
         lambda x: x - np.mean(x.iloc[:first_n_samples])
     )
 
-    # TODO: to think: keep as method: don't save or save separately
     df["trial_rewarded"] = get_rewarded(df)
 
     if not iti:

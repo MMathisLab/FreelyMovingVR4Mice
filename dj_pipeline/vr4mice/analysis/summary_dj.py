@@ -17,7 +17,7 @@ logger = Logger.get_logger()
 warnings.filterwarnings("ignore", category=UserWarning)
 
 
-def fetch_data(key: Dict[str], database: bool):
+def fetch_data(key: Dict, database: bool):
     """Fetch the data to compute the summary plot on.
 
     Args:
@@ -73,7 +73,7 @@ def fetch_data(key: Dict[str], database: bool):
     return df, box_df_output
 
 
-def get_path(key: Dict[str], base: str, ext: str = ".png") -> pathlib.Path:
+def get_path(key: Dict, base: str, ext: str = ".png") -> pathlib.Path:
     """Create the name of the summary plot file.
 
     Format is {dataset_name}_summary_plot.{ext}
@@ -92,7 +92,7 @@ def get_path(key: Dict[str], base: str, ext: str = ".png") -> pathlib.Path:
     return pathlib.Path(base) / name
 
 
-def get_subtitle(key: Dict[str], task_name: str = "AR Task"):
+def get_subtitle(key: Dict, task_name: str = "AR Task"):
     """Create the title of the summary plot.
 
     Args:
@@ -107,7 +107,7 @@ def get_subtitle(key: Dict[str], task_name: str = "AR Task"):
 
 
 def vr4mice_summary_plots(
-    key: Dict[str], save_path: str = "/data/summary_plots", database: bool = True
+    key: Dict, save_path: str = "/data/summary_plots", database: bool = True
 ):
     """
     Generate a summary plot for a given dataset.
@@ -130,6 +130,8 @@ def vr4mice_summary_plots(
     df, box_df_output = fetch_data(key, database)
     df["dataset"] = key["dataset"]
     df = df[df.iti == 0]
+
+    print(df.columns)
 
     # NOTE: so that the head_dir is align to the screen
     df["head_dir"] = ((df.head_dir) + 180) % 360 - 180
