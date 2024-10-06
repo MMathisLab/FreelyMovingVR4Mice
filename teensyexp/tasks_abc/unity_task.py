@@ -278,7 +278,7 @@ class UnityTask(Task):
         self.ep_reward = 0
         self.episode_start_time = self.cur_time
 
-    def loop(self):
+    def loop(self, override_action=False, action=None):
         """
         method that holds the task logic: corresponds to the task execution, supports the data exchange with unity
         updates all the attributes every frame
@@ -293,8 +293,11 @@ class UnityTask(Task):
         self.state_vec.append(self.state)  # all info about the agent (ex. position)
 
         ### get action ###
-        self.action = self.get_action()  # mouse's moves
-        self.action_vec.append(self.action)
+        if override_action:
+            self.action = action
+        else:
+            self.action = self.get_action()  # mouse's moves
+            self.action_vec.append(self.action)
 
         ### take step in environment ###
         action_tuple = ActionTuple()
