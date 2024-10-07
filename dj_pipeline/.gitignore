@@ -35,4 +35,3 @@ __pycache__/
 *.npy
 *.env
 *git_commit
-*user_*
