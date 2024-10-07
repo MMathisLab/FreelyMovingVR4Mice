@@ -118,9 +118,9 @@ def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
         group (pd.DataFrame): A subset DataFrame from a pandas groupby operation, usually grouped by trial.
 
     Returns:
-        pd.DataFrame: The modified DataFrame with the first x and y values set to np.nan.
+        pd.DataFrame: The modified DataFrame with the first x- y- and head_dir values set to np.nan.
     """
-    group.loc[group.index[0], ["x", "y"]] = np.nan
+    group.loc[group.index[0], ["x", "y", "head_dir"]] = np.nan
     return group
 
 
@@ -226,16 +226,16 @@ def create_data_frame(
         [interp["unity_arena_size_x_max"], interp["unity_arena_size_z_min"]],
         [-1 * interp["unity_arena_size_z_max"], interp["unity_arena_size_z_max"]],
     )
-    # Handling for first frame in trial - the first frame results in the default x and y position for virtual mouse.
+    # Handling for first frame in trial - the first frame results in the default x,y position and head_dir for virtual mouse.
     # They therefore needs to be set to a nan and then interpolated from neighboring points.
     df = (
         df.groupby("trial", as_index=False)
         .apply(set_first_xy_to_nan)
         .reset_index(drop=True)
     )
-    df[["x", "y"]] = df[["x", "y"]].interpolate()
+    df[["x", "y", "head_dir"]] = df[["x", "y", "head_dir"]].interpolate()
     # First trial cannot be interpolated so back fill this point this with the next value
-    df[["x", "y"]] = df[["x", "y"]].bfill()
+    df[["x", "y", "head_dir"]] = df[["x", "y", "head_dir"]].bfill()
 
     # Normalized coordinates
     df["bins_y"] = pd.cut(
