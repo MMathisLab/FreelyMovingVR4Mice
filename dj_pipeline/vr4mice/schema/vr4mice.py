@@ -41,24 +41,39 @@ class Dataset(dj.Manual):
     session_label: varchar(255)
     """
 
-    # TODO:
-    # add make call to populate raw files paths here automatically
+    def get_keys(self, folder="/data/processed"):
+        keys = []
+        dataset_keys = Dataset().fetch("dataset", as_dict=True)
+        camera_keys = Camera().fetch("camera", as_dict=True)
+        for dk in dataset_keys:
+            for ck in camera_keys:
+                keys.append({**dk, **ck})
+        return keys
 
+    def populate(self):
+        keys = self.get_keys()
+        for key in keys:
+            self.make(key)
 
-# TODO: This should be moved to its own schema.
-# @schema
-# class VR4Mice(dj.Manual):
-#     """
-#         VR4Mice definition table:
-#         links together Dataset with base Mouse, Exp schemas
-#     """
-#
-#     definition = """
-#    -> Dataset
-#    ---
-#    -> mice.Mouse
-#    -> exp.Session
-#    """
+    def make(self, key):
+        from vr4mice.actions.populate_rig import get_files_paths
+
+        logger.info(f"{key['dataset']}")
+        paths = get_files_paths(key["dataset"])
+        video_filepath = (
+            f"{paths['video_path']['dst']}/{paths['video_path']['filename']}"
+        )
+        timestamp_filepath = (
+            f"{paths['camera_path']['dst']}/{paths['camera_path']['filename']}"
+        )
+        video_meta = paths["video_meta"]
+        data = {
+            "doe": paths["doe"],
+            "video_filepath": video_filepath,
+            "timestamp_filepath": timestamp_filepath,
+        }
+        data = {**key, **data, **video_meta}
+        Video().insert1(data, skip_duplicates=True)
 
 
 @schema
