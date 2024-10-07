@@ -159,7 +159,7 @@ class SyncDLCKptsDf(dj.Imported):
 @schema
 class OffLnKinematics(dj.Imported):
     definition = """
-    -> syncDLCKptsDf
+    -> SyncDLCKptsDf
     -> base_analysis.DataFrame
     ---
     data: longblob
@@ -186,6 +186,10 @@ class OffLnKinematics(dj.Imported):
             self.insert1(data)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
+    
     def get_data(self, key):
         try:
             data = (self & key).fetch1()

@@ -156,7 +156,7 @@ def sync_keypoint_table(d, keypoint_cuttoff=0.6, filter_window_length=10):
     return _sync_dlc_w_game(game_data=game_step_times, dlc=filt_dlc_df)
 
 
-  def dlc_interpolate(trace, likelyhood, cutoff=0.6):
+def dlc_interpolate(trace, likelyhood, cutoff=0.6):
     trace = np.array(trace)
     low_conf = np.where(np.array(likelyhood) < cutoff)
     trace[low_conf] = np.nan
