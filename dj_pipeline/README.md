@@ -20,7 +20,9 @@
 
 
 ### Datajoint ERD of vr4mice pipeline:
-![vr4mice](https://user-images.githubusercontent.com/43879378/234043578-22b7c8d7-acc9-4f44-9b80-9ec7d25f13f2.png)
+
+![vr4mice-erd](https://github.com/user-attachments/assets/6c72f012-0dc6-4346-a3d7-963f0106fa8c)
+
 
 ### Instructions for Installing and Running the vr4mice pipeline:
 #### Rig's GUI installation and run:
