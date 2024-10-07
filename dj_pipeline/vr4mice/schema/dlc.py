@@ -212,4 +212,3 @@ class OfflineKinematics(dj.Imported):
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
-

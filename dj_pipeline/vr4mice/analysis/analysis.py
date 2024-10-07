@@ -88,7 +88,7 @@ def _resample_data_frame(df, resampling_period_ms=20) -> pd.DataFrame:  # in ms
         [continuous_resampled, categorical_resampled, binary_resampled], axis=1
     ).reset_index()
 
-    df = df.drop(columns="level_0", errors='ignore')
+    df = df.drop(columns="level_0", errors="ignore")
 
     reference_datetime = df["time"].iloc[0]
     df["time_elapsed"] = (df["time"] - reference_datetime).dt.total_seconds()
@@ -362,9 +362,9 @@ def create_data_frame(
 
     df.trial = df.trial.astype(int)
     df.aperture = df.aperture.round(2)
-    
+
     df = df.drop(columns=["first", "last"])
-    
+
     return df, interp
 
 
