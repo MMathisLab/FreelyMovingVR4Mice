@@ -3,7 +3,7 @@ import pickle
 import re
 from datetime import datetime
 from pathlib import Path
-
+import pandas as pd
 import numpy as np
 from vr4mice.actions.keys2tables_base import base
 from vr4mice.actions.keys2tables_vr4mice import vr4mice
@@ -61,9 +61,10 @@ def get_new_file(filename, path="/tmp"):
     if Path(filename).suffix == ".npy":
         data = np.load(str(Path(path).joinpath(filename)), allow_pickle=True)
         return data.item(), name
+
     if Path(filename).suffix == ".pickle":
-        with open(str(Path(path).joinpath(filename)), "rb") as fd:
-            return pickle.load(fd), name
+        data = pd.read_pickle(str(Path(path).joinpath(filename)))
+        return data, name
 
 
 def check_keys(value, raw_data, key, schema, none=True) -> bool:
@@ -115,18 +116,12 @@ def check_keys(value, raw_data, key, schema, none=True) -> bool:
                         # todo: add check exceptions
                         if none:
                             logger.warning(
-                                str(v)
-                                + " not found; "
-                                + str(v)
-                                + " will be presented as None."
+                                f"{v} not found; {v} will be presented as None."
                             )
                             none_vals[v] = None
                         else:
                             logger.warning(
-                                str(v)
-                                + " not found; can't insert data for "
-                                + str(key)
-                                + " Aborted."
+                                f"{v} not found; can't insert data for {key}. Aborted."
                             )
                             return False, None
 
@@ -135,7 +130,7 @@ def check_keys(value, raw_data, key, schema, none=True) -> bool:
                         and transformers_schema[v] in raw_data.keys()
                     ):
                         if v in none_vals.keys():
-                            logger.warning(str(v) + " found.")
+                            logger.warning(f"{v} found.")
                             del none_vals[v]
     return True, none_vals
 
@@ -168,20 +163,23 @@ def populate(table_name, attributes, raw_data, schema) -> None:
             )
         else:  # dj_def-orientated
             label = a
+            change = False
             transformers = ["transformer"]
             for t in transformers:
                 if t in schema.keys():
                     if a in schema[t].keys():
                         label = schema[t][a]
-                        logger.info("Note: " + label + " variable name changed to " + a)
+                        change = True
 
                 if label in raw_data.keys():
                     data[a] = raw_data[label]
+                    if change:
+                        logger.info(f"Note: {label} variable name changed to {a}")
 
-    logger.info("Populating: " + str(table_name))  # todo check return code
+    logger.info(f"Populating: {table_name}")  # todo check return code
 
     schema["dj_tables"][table_name].insert1(data, skip_duplicates=SKIP_DUPLICATES)
-    logger.info("[POPULATED OK] " + str(table_name))  # todo check return code
+    logger.info(f"[POPULATED OK] {table_name}")  # todo check return code
 
 
 def parse_date(filename):
@@ -282,11 +280,14 @@ def populate_rig(path="/data/data", gui=False) -> None:
     dataset = name of file : mouse_name_doe_attempt
     """
 
-    ext = [".npy", ".pickle"]  # format: pickle/npy
+    if gui:
+        ext = [".npy", ".pickle"]
+    else:
+        ext = [".pickle"]
 
     dir_list = get_filenames(ext, path)
 
-    # Case: if .pickl is here and .npy (as optional)
+    # Case: if .pickle is here and .npy (as optional)
     # TODO: make it independent by dataset
     if ".pickle" in dir_list.keys():
 
@@ -304,7 +305,7 @@ def populate_rig(path="/data/data", gui=False) -> None:
                     # Note: algo should be modified if names of files for same dataset are not similar
                     # (if GUI is not used f.ex.)
                     if Path(npy_file).stem == dataset:
-                        logger.info("Processing file: " + str(npy_file))
+                        logger.info(f"Processing file: {npy_file}")
                         raw_data_npy, dataset = get_new_file(npy_file, path)
                         break
 

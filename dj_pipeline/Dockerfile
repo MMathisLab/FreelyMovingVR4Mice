@@ -16,6 +16,9 @@ RUN apt-get update -y && apt-get install -yy --no-install-recommends \
     && pip install seaborn==0.13.0 \
     && pip install pandas==1.4.3 \
     && pip install numpy==1.22.4 \
+    && pip install jupyter \
+    && pip install umap \ 
+    # TODO: make pip via req
     # with newer 2.0.3, tom's code fails 
     && apt-get -y autoclean \
     && apt-get -y autoremove \

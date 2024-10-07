@@ -14,7 +14,6 @@ from math import sqrt, acos, atan2, copysign, pi, degrees
 class MyProcessor_socket(Processor):
     def __init__(self, signal_delay = 10, signal_type ="pulse", freq =5):
         super().__init__()
-       # self.queue = queue
         
         self.address = ('localhost', 6000)     # family is deduced to be 'AF_INET'
         self.listener =  Listener(self.address, authkey=b'secret password')
@@ -39,7 +38,6 @@ class MyProcessor_socket(Processor):
        
         
     def process(self, pose, **kwargs):
-        #print(pose.keys())
         xy = pose[:, :2]
         conf = pose[:, 2]
         head_xy = xy [[0, 1, 2, 3, 4, 5, 6, 26],:]
@@ -66,14 +64,15 @@ class MyProcessor_socket(Processor):
 
         heading = atan2(body_axis[1], body_axis[0])
         heading = degrees(heading)
+
         vals = *center, heading % (360), head_angle, self.curr_signal
-        
         
         self.center_x.append(vals [0])
         self.center_y.append(vals [1])
         #print("center_y: ", vals [1], ", center_x: ", vals [0])
         self.heading_direction.append(vals [2])
         self.head_angle.append(vals [3])
+
         self.time_stamp.append(self.curr_time)
         self.step.append(self.curr_step)
         self.signal.append(self.curr_signal)
