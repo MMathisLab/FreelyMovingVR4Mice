@@ -106,7 +106,7 @@ class DLCKptsDf(dj.Imported):
 @schema
 class SyncDLCKptsDf(dj.Imported):
     definition = """
-    -> vr4mice.DLC
+    -> DLCKptsDf
     ---
     data: longblob
     headers : blob
@@ -157,7 +157,7 @@ class SyncDLCKptsDf(dj.Imported):
 
 
 @schema
-class OffLnKinematics(dj.Imported):
+class OfflineKinematics(dj.Imported):
     definition = """
     -> SyncDLCKptsDf
     ---
@@ -213,127 +213,3 @@ class OffLnKinematics(dj.Imported):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-
-# TODO we should deprecate this table in favour of the OffLn_kineimatics table that way we have a nice feedforward pipline
-@schema
-class SyncDLCWGame(dj.Imported):
-    definition = """
-    -> DLCKptsDf
-    ---
-    data: longblob
-    headers : blob
-    scorer=NULL: varchar(256)
-    """
-
-    def make(self, key):
-        logger.info(f"Populating {self.__class__.__name__} for {key}.")
-        try:
-            dlc_dict = DLCKptsDf().get_data(key)
-            df = base_analysis.DataFrame().get_data(key)
-            df["start_time"] = (vr4mice.State() & key).fetch1("start_time")
-            data = sync_dlc_w_game(dlc_dict, game_data=df)
-            data = df2dj(data)
-            data = {**key, **data}
-            self.insert1(data)
-            logger.info(f"{self.__class__.__name__} populated for {key}.")
-
-        except Exception as err:
-            logger.warning(
-                f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
-            )
-            return None
-
-    def get_data(self, key):
-        try:
-            data = (self & key).fetch1()
-            return pd.DataFrame(data["data"], columns=data["headers"])
-
-        except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
-            return None
-
-    def get_all_data(self):
-        dfs = []
-        try:
-            data = self.fetch()
-            for d in data:
-                df = pd.DataFrame(d["data"], columns=d["headers"])
-                dfs.append(df)
-            return dfs
-
-        except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
-            return None
-
-
-# TODO: probably will be deprecated: (by bodyparts storage)
-@schema
-class DLCKptsBodyparts(dj.Imported):
-
-    definition = """
-    -> vr4mice.DLC
-    version               : varchar(8) # keeps the deeplabcut version
-    joint_name            : varchar(512) # Name of the joints
-    ---
-    x_pos: longblob
-    y_pos: longblob
-    likelihood: longblob
-    time: longblob
-    frame_time: longblob
-    pose_time: longblob
-    """
-
-    def make(self, key):
-
-        data = ((vr4mice.Video * vr4mice.DLC) & key).fetch(
-            "keypoints_filepath",
-            "timestamp_filepath",
-            as_dict=True,
-        )[0]
-
-        h5fpath = data["keypoints_filepath"]
-        tsfpath = data["timestamp_filepath"]
-
-        try:
-            df = pd.read_hdf(h5fpath, "df_with_missing")
-        except Exception as e:
-            logger.warning("Error occurred while reading HDF file:", e)
-        try:
-            frame_times = np.load(tsfpath)
-        except Exception as e:
-            logger.info("Error occurred while loading NPY file:", e)
-
-        logger.info(f"Populating for: {h5fpath} and {tsfpath})")
-
-        body_parts = df.columns.get_level_values(0)  # 0 as no scorer
-        _, idx = np.unique(body_parts, return_index=True)
-        body_parts = body_parts[np.sort(idx)]
-
-        data = {}
-        data["version"] = "live"  # TODO: ?
-        data["time"] = frame_times
-
-        data["frame_time"] = df["frame_time"].values
-        data["pose_time"] = df["pose_time"].values
-
-        for bp in body_parts:
-            data["joint_name"] = bp
-            # if model in df:
-            if "x" in df[bp]:
-                data["x_pos"] = df[bp]["x"].values
-            if "y" in df[bp]:
-                data["y_pos"] = df[bp]["y"].values
-            if "likelihood" in df[bp]:
-                data["likelihood"] = df[bp]["likelihood"].values
-            data = {**key, **data}
-
-            try:
-                self.insert1(data)
-                logger.info(f"{self.__class__.__name__} populated for {key} and {bp}.")
-
-            except Exception as e:
-                logger.info(
-                    "Error occurred while populating {self.__class__.__name__} \
-                        populated for {key} and {bp}:",
-                    e,
-                )
