@@ -1622,6 +1622,7 @@ MonoBehaviour:
   - {fileID: 2405952501624695108, guid: 94b6699c308574e4ab08cd641309c49c, type: 3}
   - {fileID: 926688499320207335, guid: b7e01d49585db0343881b5243b58033b, type: 3}
   - {fileID: 2447646095060785184, guid: eab12aeb86710ba4983caf5a835b0b13, type: 3}
+  - {fileID: 5011118802017693571, guid: 8dd4c3ffc0cce42cd9dc709666a21ecd, type: 3}
   target_selection: 2
   distractor_selection: 3
   occlusion_type: 1

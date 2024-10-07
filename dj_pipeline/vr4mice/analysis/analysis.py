@@ -1,6 +1,7 @@
 import os
 import warnings
 from pathlib import Path
+from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -57,6 +58,7 @@ def _resample_data_frame(df, resampling_period_ms=20) -> pd.DataFrame:  # in ms
         (~df.columns.isin(categorical_columns)) & (~df.columns.isin(binary_columns))
     ]
 
+
     t = f"{resampling_period_ms}ms"  # old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
 
     df["time"] = pd.to_datetime(df["step_time"], unit="s")
@@ -86,13 +88,18 @@ def _resample_data_frame(df, resampling_period_ms=20) -> pd.DataFrame:  # in ms
     df = pd.concat(
         [continuous_resampled, categorical_resampled, binary_resampled], axis=1
     ).reset_index()
+    
+    df = df.drop(columns="level_0")
+
 
     reference_datetime = df["time"].iloc[0]
     df["time_elapsed"] = (df["time"] - reference_datetime).dt.total_seconds()
+
     return df
 
 
 def get_rewarded(df):
+
     rewarded = df.groupby("trial", as_index=False)["reward"].transform(
         lambda x: x.max()
     )
@@ -102,6 +109,25 @@ def get_rewarded(df):
 # def get_choices(df):
 #    choices = df.groupby(["trial"], as_index=False).last()
 #    return choices
+
+
+def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
+    """
+    Sets the first x and y positions of the given DataFrame to np.nan.
+
+    This function is designed to be used with groups from a pandas `DataFrameGroupBy` object,
+    typically resulting from a groupby operation. It addresses the spawning error in the Unity
+    game at the start of each trial, where the virtual mouse is spawned at incorrect coordinates.
+    It removes these initial points so they can be interpolated or estimated from neighboring values.
+
+    Args:
+        group (pd.DataFrame): A subset DataFrame from a pandas groupby operation, usually grouped by trial.
+
+    Returns:
+        pd.DataFrame: The modified DataFrame with the first x- y- and head_dir values set to np.nan.
+    """
+    group.loc[group.index[0], ["x", "y", "head_dir"]] = np.nan
+    return group
 
 
 def get_dist2reward(df, box_df):
@@ -207,6 +233,17 @@ def create_data_frame(
         [-1 * interp["unity_arena_size_z_max"], interp["unity_arena_size_z_max"]],
     )
 
+    # Handling for first frame in trial - the first frame results in the default x,y position and head_dir for virtual mouse.
+    # They therefore needs to be set to a nan and then interpolated from neighboring points.
+    df = (
+        df.groupby("trial", as_index=False)
+        .apply(set_first_xy_to_nan)
+        .reset_index(drop=True)
+    )
+    df[["x", "y", "head_dir"]] = df[["x", "y", "head_dir"]].interpolate()
+    # First trial cannot be interpolated so back fill this point this with the next value
+    df[["x", "y", "head_dir"]] = df[["x", "y", "head_dir"]].bfill()
+
     # Normalized coordinates
     df["bins_y"] = pd.cut(
         df["y"], bins=np.linspace(spatial_ybins[0], spatial_ybins[1], spatial_ybins[2])
@@ -216,6 +253,8 @@ def create_data_frame(
     )
 
     # TODO: to think: keep as method: don't save or save separately
+
+    # df["trial_rewarded"] = get_rewarded(df)
     # df["rewarded"] = get_rewarded(df)
 
     if not iti:
@@ -229,7 +268,6 @@ def create_data_frame(
         columns={"mouse_in_right_trial_right_choice": "trial_right_choice"},
         inplace=True,
     )
-
     trial_left_choice = (
         df[df["iti"] == 0].groupby("trial")["mouse_in_left"].last().reset_index()
     )
@@ -261,7 +299,8 @@ def create_data_frame(
         .reset_index()
     )
     trial_duration["trial_duration"] = trial_duration["last"] - trial_duration["first"]
-    df = df.merge(trial_duration[["session", "trial", "trial_duration"]], on="trial")
+
+    df = df.merge(trial_duration[["trial", "trial_duration"]], on="trial")
 
     if iti:
         iti_duration = (
@@ -284,7 +323,8 @@ def create_data_frame(
         trial_traj_path_length, on="trial", suffixes=("", "_trial_traj_path_length")
     )
     df.rename(
-        columns={"distance_traj_path_length": "trial_traj_path_length"}, inplace=True
+        columns={"distance_trial_traj_path_length": "trial_traj_path_length"},
+        inplace=True,
     )
 
     # Trial start and end position
@@ -321,8 +361,6 @@ def create_data_frame(
 
     # Distance to reward
     df["flip_one_side"] = df["trial_left_choice"].replace([0, 1], [1, -1])
-
-    # df["distance_to_reward"] --> to method
 
     df.trial = df.trial.astype(int)
     df.aperture = df.aperture.round(2)
@@ -409,7 +447,6 @@ def get_jshaped_trials(
     # NOTE: add reward param?
     # wandering = df[~df.index.isin(j_shaped.index)]
     return j_shaped  # , wandering
-
 
 def get_all_datasets(mouse_list=None, load_dlc=True):
     """Fetch all mice and make a big dataframe out of them."""

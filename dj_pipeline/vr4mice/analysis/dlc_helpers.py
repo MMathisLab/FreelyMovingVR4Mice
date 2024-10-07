@@ -121,7 +121,7 @@ def sync_dlc_w_game(dlc_dict, game_data):
 
     return df_out
 
-
+  
 def sync_keypoint_table(d, keypoint_cuttoff=0.6, filter_window_length=10):
     """ Returns filtered keypoints from the DLCKptsDF table synchronized with game data.
     
@@ -156,7 +156,7 @@ def sync_keypoint_table(d, keypoint_cuttoff=0.6, filter_window_length=10):
     return _sync_dlc_w_game(game_data=game_step_times, dlc=filt_dlc_df)
 
 
-def dlc_interpolate(trace, likelyhood, cutoff=0.6):
+  def dlc_interpolate(trace, likelyhood, cutoff=0.6):
     trace = np.array(trace)
     low_conf = np.where(np.array(likelyhood) < cutoff)
     trace[low_conf] = np.nan
@@ -221,10 +221,12 @@ def compute_dlc_heading_angles(filt_dlc_row):
     head_conf = conf[[0, 1, 2, 3, 4, 5, 6, 26]]
     center = np.average(head_xy, axis=0, weights=head_conf)
     body_axis = xy[7] - xy[13]  # tail_base -> neck
+
     body_axis /= sqrt(np.sum(body_axis ** 2))
     head_axis = xy[0] - xy[7]  # neck -> nose
     head_length = xy[0] - xy[7]
     head_axis /= sqrt(np.sum(head_axis ** 2))
+
     cross = body_axis[0] * head_axis[1] - head_axis[0] * body_axis[1]
     sign = copysign(1, cross)  # Positive when looking left
     try:

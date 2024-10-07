@@ -13,6 +13,7 @@ from vr4mice.analysis.dlc_helpers import (
     sync_keypoint_table,
     getall_dlc_heading_angles,
 )
+
 from vr4mice.schema import vr4mice, base_analysis
 
 schema_name = "dlc"
@@ -51,7 +52,6 @@ class DLCProcessor(dj.Imported):
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
-
 
 @schema
 class DLCKptsDf(dj.Imported):
@@ -186,12 +186,6 @@ class OffLnKinematics(dj.Imported):
             self.insert1(data)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
-        except Exception as err:
-            logger.warning(
-                f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
-            )
-            return None
-
     def get_data(self, key):
         try:
             data = (self & key).fetch1()
@@ -228,7 +222,6 @@ class SyncDLCWGame(dj.Imported):
     """
 
     def make(self, key):
-
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
         try:
             dlc_dict = DLCKptsDf().get_data(key)
@@ -268,7 +261,7 @@ class SyncDLCWGame(dj.Imported):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-
+ 
 # TODO: probably will be deprecated: (by bodyparts storage)
 @schema
 class DLCKptsBodyparts(dj.Imported):

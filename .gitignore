@@ -71,4 +71,5 @@ mouse_task/task_config.json
 config_path.json
 .config_path.json
 vr4mice/cfg/*
-*git_commit
+*git_commit*
+*dj_pipline/user_*
