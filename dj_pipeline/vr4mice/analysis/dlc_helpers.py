@@ -121,21 +121,21 @@ def sync_dlc_w_game(dlc_dict, game_data):
 
     return df_out
 
-  
+
 def sync_keypoint_table(d, keypoint_cuttoff=0.6, filter_window_length=10):
-    """ Returns filtered keypoints from the DLCKptsDF table synchronized with game data.
-    
-        This function loads the DLCKptsDF keypoint table for  dataset d it then removes low confidence frames and sets them to nan. it then
-        linearly interpolates between them and then filters with a Savgol filter.
-        
-        Args:
-            d (str):  the data set key formatted as "mouseName_date_attempt".
-            keypoint_cuttoff (float): All keypoints below this confidence threshold will be removed and interpolated.
-            filter_window_length (int): The window in frames for the filter window size.
-            
-        Returns:
-            pd.Dataframe: filtered and synchronized keypoints with game indexes - step and step_time
-    
+    """Returns filtered keypoints from the DLCKptsDF table synchronized with game data.
+
+    This function loads the DLCKptsDF keypoint table for  dataset d it then removes low confidence frames and sets them to nan. it then
+    linearly interpolates between them and then filters with a Savgol filter.
+
+    Args:
+        d (str):  the data set key formatted as "mouseName_date_attempt".
+        keypoint_cuttoff (float): All keypoints below this confidence threshold will be removed and interpolated.
+        filter_window_length (int): The window in frames for the filter window size.
+
+    Returns:
+        pd.Dataframe: filtered and synchronized keypoints with game indexes - step and step_time
+
     """
     # get time indexs from the game dataframe and the start time for session
     from vr4mice.schema import base_analysis, dlc, vr4mice
@@ -222,10 +222,10 @@ def compute_dlc_heading_angles(filt_dlc_row):
     center = np.average(head_xy, axis=0, weights=head_conf)
     body_axis = xy[7] - xy[13]  # tail_base -> neck
 
-    body_axis /= sqrt(np.sum(body_axis ** 2))
+    body_axis /= sqrt(np.sum(body_axis**2))
     head_axis = xy[0] - xy[7]  # neck -> nose
     head_length = xy[0] - xy[7]
-    head_axis /= sqrt(np.sum(head_axis ** 2))
+    head_axis /= sqrt(np.sum(head_axis**2))
 
     cross = body_axis[0] * head_axis[1] - head_axis[0] * body_axis[1]
     sign = copysign(1, cross)  # Positive when looking left
@@ -388,7 +388,10 @@ def dj2h5(data, headers, scorer) -> pd.DataFrame:
         levels = ["scorer", "bodyparts", "coords"]
     else:
         levels = ["bodyparts", "coords"]
-    return pd.DataFrame(data, columns=pd.MultiIndex.from_tuples(headers, names=levels),)
+    return pd.DataFrame(
+        data,
+        columns=pd.MultiIndex.from_tuples(headers, names=levels),
+    )
 
 
 def compute_circular_angular_velocity(angles, time_intervals):
