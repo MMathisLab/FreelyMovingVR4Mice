@@ -34,5 +34,3 @@ for db in $databases; do
     
  execute_command "$cmd" "$msg"
 done
-
-

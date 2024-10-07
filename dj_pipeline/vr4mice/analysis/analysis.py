@@ -14,6 +14,8 @@ from vr4mice.schema import base_analysis, vr4mice
 # from scipy.signal import savgol_filter, hilbert, find_peaks
 from vr4mice.utils.logger import Logger
 
+from typing import List, Tuple
+
 logger = Logger.get_logger()
 
 
@@ -55,6 +57,7 @@ def _resample_data_frame(df, resampling_period_ms=20) -> pd.DataFrame:  # in ms
     continuous_columns = df.columns[
         (~df.columns.isin(categorical_columns)) & (~df.columns.isin(binary_columns))
     ]
+
 
     t = f"{resampling_period_ms}ms"  # old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
 
@@ -229,6 +232,7 @@ def create_data_frame(
         [interp["unity_arena_size_x_max"], interp["unity_arena_size_z_min"]],
         [-1 * interp["unity_arena_size_z_max"], interp["unity_arena_size_z_max"]],
     )
+
     # Handling for first frame in trial - the first frame results in the default x,y position and head_dir for virtual mouse.
     # They therefore needs to be set to a nan and then interpolated from neighboring points.
     df = (
@@ -249,6 +253,7 @@ def create_data_frame(
     )
 
     # TODO: to think: keep as method: don't save or save separately
+
     # df["trial_rewarded"] = get_rewarded(df)
     # df["rewarded"] = get_rewarded(df)
 
@@ -263,7 +268,6 @@ def create_data_frame(
         columns={"mouse_in_right_trial_right_choice": "trial_right_choice"},
         inplace=True,
     )
-
     trial_left_choice = (
         df[df["iti"] == 0].groupby("trial")["mouse_in_left"].last().reset_index()
     )
@@ -295,6 +299,7 @@ def create_data_frame(
         .reset_index()
     )
     trial_duration["trial_duration"] = trial_duration["last"] - trial_duration["first"]
+
     df = df.merge(trial_duration[["trial", "trial_duration"]], on="trial")
 
     if iti:
@@ -442,7 +447,6 @@ def get_jshaped_trials(
     # NOTE: add reward param?
     # wandering = df[~df.index.isin(j_shaped.index)]
     return j_shaped  # , wandering
-
 
 def get_all_datasets(mouse_list=None, load_dlc=True):
     """Fetch all mice and make a big dataframe out of them."""

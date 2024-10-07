@@ -82,7 +82,6 @@ if __name__ == "__main__":
         dlc.DLCKptsDf().populate()
 
         # dlc.SyncDLCWGame().populate()
-
         # dlc.DLCKptsBodyparts().populate() #TODO: optional
 
     elif mode == "fetch":  # TODO: adjust path
