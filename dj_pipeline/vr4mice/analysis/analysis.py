@@ -89,6 +89,7 @@ def _resample_data_frame(df, resampling_period_ms=20) -> pd.DataFrame:  # in ms
     
     df = df.drop(columns="level_0")
 
+
     reference_datetime = df["time"].iloc[0]
     df["time_elapsed"] = (df["time"] - reference_datetime).dt.total_seconds()
 
@@ -221,6 +222,7 @@ def create_data_frame(
 
     # TODO: to think: keep as method: don't save or save separately
     # df["trial_rewarded"] = get_rewarded(df)
+    # df["rewarded"] = get_rewarded(df)
 
     if not iti:
         df = df[df.iti == 0.0]

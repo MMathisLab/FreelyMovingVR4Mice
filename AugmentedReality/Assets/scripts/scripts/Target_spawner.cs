@@ -191,19 +191,19 @@ public class Target_spawner : MonoBehaviour
 	{
 
 		var environmentParameters = Academy.Instance.EnvironmentParameters;
-		targetsheight = environmentParameters.GetWithDefault("targetsHeight", 3);
-		targetsZpos = environmentParameters.GetWithDefault("targetDistance", 3);
-		target_size = environmentParameters.GetWithDefault("targetSize", 2);
-		targetsFromMidline = environmentParameters.GetWithDefault("targetsFromMidline", 4f);
-		slitSize = environmentParameters.GetWithDefault("slitSize", 4.9f);
-		slitDepth = environmentParameters.GetWithDefault("slit_depth", 0.01f);
+		targetsheight = environmentParameters.GetWithDefault("targetsHeight", 3.5f);
+		targetsZpos = environmentParameters.GetWithDefault("targetDistance", 3.5f);
+		target_size = environmentParameters.GetWithDefault("targetSize", 2.0f);
+		targetsFromMidline = environmentParameters.GetWithDefault("targetsFromMidline", 3.0f);
+		slitSize = environmentParameters.GetWithDefault("slitSize", 4.3f);
+		slitDepth = environmentParameters.GetWithDefault("slit_depth", 0.2f);
 		object_on_left = environmentParameters.GetWithDefault("object_on_left", 0.0f);
 		wall_height = environmentParameters.GetWithDefault("wall_height", 2f);
-		target_selection = environmentParameters.GetWithDefault("target_selection", 6f);
-		distractor_selection = environmentParameters.GetWithDefault("distractor_selection", 4f);
+		target_selection = environmentParameters.GetWithDefault("target_selection", 13f);
+		distractor_selection = environmentParameters.GetWithDefault("distractor_selection", 6f);
 		occlusion_type = environmentParameters.GetWithDefault("occlusion_type", 1f);
 		targetsZpos = environmentParameters.GetWithDefault("targetsZpos", 3f);
-
+        target_rotation =environmentParameters.GetWithDefault("target_rotation", 15f);
 	}
 
 }

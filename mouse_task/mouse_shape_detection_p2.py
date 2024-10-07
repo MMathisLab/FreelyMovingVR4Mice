@@ -1,5 +1,5 @@
 """
-Discrimination task with occluders on.
+Detection task without velocity threshold to initiate the trials.
 """
 
 import os
@@ -18,11 +18,9 @@ current_dir = pathlib.Path(__file__).parent
 config_path = current_dir.joinpath(config_name)  # default class constructor input
 
 
-
-class DiscriminationWithMultiOccludersTask(ActiveSensingTask):
-
+class ShapeDetectionWithVelocityThresholdTask(ActiveSensingTask):
     """
-    Discrimination task with multiple occluders, sampled from a log space these are [12.0, 8.48, 6.0, 4.24, 3].
+    Detection of shape task with a lower velocity threshold to initiate the trials.
     """
 
     def __init__(
@@ -31,9 +29,9 @@ class DiscriminationWithMultiOccludersTask(ActiveSensingTask):
         monitor=None,
         write_video=False,
         fps=60.0,
-        session_label=["ar_discrim_5_occluders"],
+        session_label=["ar_shape_detection_velthr"],
         epochs=[250],
-        epoch_labels=["dual_teardrop"],
+        epoch_labels=["single_wide_pacman"],
         config_file_path=config_path,
         reward_size=100,
         cropped_image=[0, 530, 0, 510],
@@ -43,24 +41,24 @@ class DiscriminationWithMultiOccludersTask(ActiveSensingTask):
         start_box=[-4, 4, -9, -5, 90],
         rotate_camera=90.0,
         prob_obj_on_left=0.5,
-        prob_block_coherence =0.5,
+        prob_block_coherence = 0.5,
         mouse_report_delay=0.0,
-        slit_size=[12.0, 8.48, 6., 4.2, 3],
-        slit_depth=0.2,
-        target_selection=6.0,
-        distractor_selection=4.0,
-        occlusion_type=1.0,
+        slit_size=[4.0, 4.0, 1],
+        slit_depth=0.02,
+        target_selection=13.0,
+        distractor_selection=6.0,
+        occlusion_type=0.0,
         camera_type=1.0,
-        target_spread=4.0,
-        target_rotation=0,
+        target_spread=3.0,
+        target_rotation=15.0,
         target_size=2.0,
         target_height=3.0,
         block_length=1.0,
         start_box_delay=0.25,
-        velocity_threshold=10.0,
-        distractor=1.0,
+        velocity_threshold=5.0,
+        distractor=0.0,
         grey_screen_active=0.0,
-        target_distance=3,
+        target_distance=4.0,
         use_dlc=True,
     ):
         super().__init__(

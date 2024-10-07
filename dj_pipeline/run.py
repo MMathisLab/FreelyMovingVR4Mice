@@ -80,7 +80,9 @@ if __name__ == "__main__":
         create_folder_if_not_exist("/data/summary_plots")
         dlc.DLCProcessor().populate()
         dlc.DLCKptsDf().populate()
-        #dlc.SyncDLCWGame().populate()
+
+        # dlc.SyncDLCWGame().populate()
+
         # dlc.DLCKptsBodyparts().populate() #TODO: optional
 
     elif mode == "fetch":  # TODO: adjust path

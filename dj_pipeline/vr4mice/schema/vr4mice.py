@@ -74,6 +74,7 @@ class Dataset(dj.Manual):
         }
         data = {**key, **data, **video_meta}
         Video().insert1(data, skip_duplicates=True)
+
     # TODO:
     # add make call to populate raw files paths here automatically
 
