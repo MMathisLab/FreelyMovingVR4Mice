@@ -6,6 +6,9 @@ from vr4mice.utils.logger import Logger, config_logger
 
 logger = Logger.get_logger()
 
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 """
     Pool of commands
 
@@ -83,7 +86,7 @@ if __name__ == "__main__":
 
         # dlc.SyncDLCWGame().populate()
         # dlc.DLCKptsBodyparts().populate() #TODO: optional
-
+    
     elif mode == "fetch":  # TODO: adjust path
         from vr4mice.actions.fetch_data import fetch_data
 
