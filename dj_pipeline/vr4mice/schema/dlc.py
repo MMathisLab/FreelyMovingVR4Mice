@@ -53,6 +53,7 @@ class DLCProcessor(dj.Imported):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
+
 @schema
 class DLCKptsDf(dj.Imported):
     definition = """
@@ -106,7 +107,6 @@ class DLCKptsDf(dj.Imported):
 class SyncDLCKptsDf(dj.Imported):
     definition = """
     -> vr4mice.DLC
-    -> base_analysis.DataFrame
     ---
     data: longblob
     headers : blob
@@ -160,7 +160,6 @@ class SyncDLCKptsDf(dj.Imported):
 class OffLnKinematics(dj.Imported):
     definition = """
     -> SyncDLCKptsDf
-    -> base_analysis.DataFrame
     ---
     data: longblob
     headers : blob
@@ -180,7 +179,9 @@ class OffLnKinematics(dj.Imported):
                 :, -3:
             ]  # Add back in the time index
             # Shift angles so that 0 is aligned with the main screen
-            offline_dlc_variables ["heading_dir"] = ((offline_dlc_variables.heading_dir - 90) + 180) % 360 - 180
+            offline_dlc_variables["heading_dir"] = (
+                (offline_dlc_variables.heading_dir - 90) + 180
+            ) % 360 - 180
             data = df2dj(offline_dlc_variables)
             data = {**key, **data}
             self.insert1(data)
@@ -189,7 +190,7 @@ class OffLnKinematics(dj.Imported):
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
-    
+
     def get_data(self, key):
         try:
             data = (self & key).fetch1()
@@ -218,7 +219,6 @@ class OffLnKinematics(dj.Imported):
 class SyncDLCWGame(dj.Imported):
     definition = """
     -> DLCKptsDf
-    -> base_analysis.DataFrame
     ---
     data: longblob
     headers : blob
@@ -265,7 +265,7 @@ class SyncDLCWGame(dj.Imported):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
- 
+
 # TODO: probably will be deprecated: (by bodyparts storage)
 @schema
 class DLCKptsBodyparts(dj.Imported):
@@ -286,7 +286,9 @@ class DLCKptsBodyparts(dj.Imported):
     def make(self, key):
 
         data = ((vr4mice.Video * vr4mice.DLC) & key).fetch(
-            "keypoints_filepath", "timestamp_filepath", as_dict=True,
+            "keypoints_filepath",
+            "timestamp_filepath",
+            as_dict=True,
         )[0]
 
         h5fpath = data["keypoints_filepath"]
