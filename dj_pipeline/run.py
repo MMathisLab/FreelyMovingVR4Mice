@@ -6,6 +6,10 @@ from vr4mice.utils.logger import Logger, config_logger
 
 logger = Logger.get_logger()
 
+import warnings
+
+warnings.simplefilter(action="ignore", category=FutureWarning)
+
 """
     Pool of commands
 

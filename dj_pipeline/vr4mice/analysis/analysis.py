@@ -58,7 +58,6 @@ def _resample_data_frame(df, resampling_period_ms=20) -> pd.DataFrame:  # in ms
         (~df.columns.isin(categorical_columns)) & (~df.columns.isin(binary_columns))
     ]
 
-
     t = f"{resampling_period_ms}ms"  # old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
 
     df["time"] = pd.to_datetime(df["step_time"], unit="s")
@@ -88,9 +87,8 @@ def _resample_data_frame(df, resampling_period_ms=20) -> pd.DataFrame:  # in ms
     df = pd.concat(
         [continuous_resampled, categorical_resampled, binary_resampled], axis=1
     ).reset_index()
-    
-    df = df.drop(columns="level_0")
 
+    df = df.drop(columns="level_0", errors="ignore")
 
     reference_datetime = df["time"].iloc[0]
     df["time_elapsed"] = (df["time"] - reference_datetime).dt.total_seconds()
@@ -365,6 +363,8 @@ def create_data_frame(
     df.trial = df.trial.astype(int)
     df.aperture = df.aperture.round(2)
 
+    df = df.drop(columns=["first", "last"])
+
     return df, interp
 
 
@@ -447,6 +447,7 @@ def get_jshaped_trials(
     # NOTE: add reward param?
     # wandering = df[~df.index.isin(j_shaped.index)]
     return j_shaped  # , wandering
+
 
 def get_all_datasets(mouse_list=None, load_dlc=True):
     """Fetch all mice and make a big dataframe out of them."""

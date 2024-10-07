@@ -42,6 +42,7 @@ class DataFrame(dj.Computed):
 
     mouse_can_report=NULL: longblob     # TO DEPRECATE
     iti: longblob
+    iti_duration=NULL: longblob
     mouse_correct: longblob             # TO DEPRECATE
     object_on_left: longblob
     mouse_in_left: longblob
@@ -99,7 +100,7 @@ class DataFrame(dj.Computed):
             # TODO: add test that data keys are the same with columns names
             # if not in... alert
 
-            self.insert1(data)
+            self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
@@ -230,7 +231,7 @@ class BoxDataFrame(dj.Computed):
                     for k, v in box_df.to_dict(orient="list").items()
                 }
                 data = {**key, **box_df}  # **data}
-                self.insert1(data)
+                self.insert1(data, allow_direct_insert=True)
                 logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
@@ -308,7 +309,7 @@ class JShaped(dj.Computed):
                 headers = j.columns.to_numpy()
                 data = {"j_shaped": j_np, "headers": headers}
                 data = {**data, **key}
-                self.insert1(data)
+                self.insert1(data, allow_direct_insert=True)
                 logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
@@ -369,7 +370,7 @@ class OutputPlots(dj.Computed):
             return False
 
         data = {**key, **{"filename": full_path}}
-        self.insert1(data)
+        self.insert1(data, allow_direct_insert=True)
 
         logger.info(f"{self.__class__.__name__} populated for {key}.")
 
@@ -462,7 +463,7 @@ class GitCommit(dj.Computed):
         try:
             ret = parse_git_commit_file()
             data = {**key, **ret}
-            self.insert1(data)
+            self.insert1(data, allow_direct_insert=True)
 
         except Exception as err:
             err = f"Error while populating the GitCommit table: key {key}\n{err}"
