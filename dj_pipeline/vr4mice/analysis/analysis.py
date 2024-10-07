@@ -1,6 +1,7 @@
 import os
 import warnings
 from pathlib import Path
+from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,8 +13,6 @@ from vr4mice.schema import base_analysis, vr4mice
 
 # from scipy.signal import savgol_filter, hilbert, find_peaks
 from vr4mice.utils.logger import Logger
-
-from typing import List, Tuple
 
 logger = Logger.get_logger()
 
@@ -107,6 +106,25 @@ def get_rewarded(df):
 # def get_choices(df):
 #    choices = df.groupby(["trial"], as_index=False).last()
 #    return choices
+
+
+def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
+    """
+    Sets the first x and y positions of the given DataFrame to np.nan.
+
+    This function is designed to be used with groups from a pandas `DataFrameGroupBy` object,
+    typically resulting from a groupby operation. It addresses the spawning error in the Unity
+    game at the start of each trial, where the virtual mouse is spawned at incorrect coordinates.
+    It removes these initial points so they can be interpolated or estimated from neighboring values.
+
+    Args:
+        group (pd.DataFrame): A subset DataFrame from a pandas groupby operation, usually grouped by trial.
+
+    Returns:
+        pd.DataFrame: The modified DataFrame with the first x- y- and head_dir values set to np.nan.
+    """
+    group.loc[group.index[0], ["x", "y", "head_dir"]] = np.nan
+    return group
 
 
 def get_dist2reward(df, box_df):
@@ -211,6 +229,16 @@ def create_data_frame(
         [interp["unity_arena_size_x_max"], interp["unity_arena_size_z_min"]],
         [-1 * interp["unity_arena_size_z_max"], interp["unity_arena_size_z_max"]],
     )
+    # Handling for first frame in trial - the first frame results in the default x,y position and head_dir for virtual mouse.
+    # They therefore needs to be set to a nan and then interpolated from neighboring points.
+    df = (
+        df.groupby("trial", as_index=False)
+        .apply(set_first_xy_to_nan)
+        .reset_index(drop=True)
+    )
+    df[["x", "y", "head_dir"]] = df[["x", "y", "head_dir"]].interpolate()
+    # First trial cannot be interpolated so back fill this point this with the next value
+    df[["x", "y", "head_dir"]] = df[["x", "y", "head_dir"]].bfill()
 
     # Normalized coordinates
     df["bins_y"] = pd.cut(
