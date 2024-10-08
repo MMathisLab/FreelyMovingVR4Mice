@@ -37,6 +37,7 @@ def fetch_data(key: Dict, database: bool):
 
         try:
             df = base_analysis.DataFrame().get_data(key)
+            
             flag = df is False
             if not flag:
                 logger.info("Data fetched for " + str(key))
@@ -126,10 +127,15 @@ def vr4mice_summary_plots(
     Returns:
         str: The full path of the saved summary plot.
     """
-
+    from plotting import get_rc_params
+    get_rc_params()
     df, box_df_output = fetch_data(key, database)
+    
+    df = df.infer_objects()
     df["dataset"] = key["dataset"]
-    df = df[df.iti == 0]
+    df ["trial_rewarded"] = analysis.get_rewarded(df)
+    
+    df = df[df.iti == 0].copy()
 
     print(df.columns)
 
@@ -192,7 +198,7 @@ def vr4mice_summary_plots(
     )
 
     ## Display mean trajectory for the j-shaped trials
-    j_shaped_df = analysis.get_jshaped_trials(df)
+    j_shaped_df = analysis.get_jshaped_trials(df).copy()
     j_shaped_df = utils.create_bins(
         data=j_shaped_df, spatial_ybins=[6.75, 20, 25], label="y"
     )
