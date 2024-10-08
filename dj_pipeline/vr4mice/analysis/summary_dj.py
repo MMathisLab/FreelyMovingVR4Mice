@@ -127,8 +127,8 @@ def vr4mice_summary_plots(
     Returns:
         str: The full path of the saved summary plot.
     """
-    from plotting import get_rc_params
-    get_rc_params()
+    
+    plotting.get_rc_params()
     df, box_df_output = fetch_data(key, database)
     
     df = df.infer_objects()
