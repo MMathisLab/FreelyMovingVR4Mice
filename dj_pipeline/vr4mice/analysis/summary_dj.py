@@ -120,9 +120,9 @@ def vr4mice_summary_plots(
         key (dict): A dictionary that specifies which dataset to generate a
             summary plot for.
         save_path (str, optional): The directory path where the summary plot
-            should be saved. Defaults to "/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/".
+            should be saved. Defaults to "/data/summary_plots".
         database (bool): If True, fetches and populates the data, else gets
-            the corresponding table direcly. Defaults to True.
+            the corresponding table directly. Defaults to True.
 
     Returns:
         str: The full path of the saved summary plot.
