@@ -295,8 +295,6 @@ def vr4mice_summary_plots(
     interpolated_df["trial_length"] = interpolated_df["trial_step"] / 200
 
     ## Display the speed
-    # Commenting this out because we don't want the mean for an idividual we want the mean and variance plotted
-
     sns.lineplot(
         data=interpolated_df,
         x="trial_length",
