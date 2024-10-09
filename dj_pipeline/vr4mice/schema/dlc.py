@@ -42,11 +42,17 @@ class DLCProcessor(dj.Imported):
     """
 
     def make(self, key):
+        
+        if self & key:
+            logger.info(
+                f"'To ignore duplicate entries in insert, set skip_duplicates=True'."
+            )
+            return
         try:
             fpath = (vr4mice.DLC & key).fetch1("proc_filepath")
             data = np.load(fpath, allow_pickle=True)
             data = {**key, **data}
-            self.insert1(data)
+            self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
@@ -65,13 +71,19 @@ class DLCKptsDf(dj.Imported):
     """
 
     def make(self, key):
+        
+        if self & key:
+            logger.info(
+                f"'To ignore duplicate entries in insert, set skip_duplicates=True'."
+            )
+            return
 
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
         try:
             h5path = (vr4mice.DLC & key).fetch1("keypoints_filepath")
             data = h52dj(h5path)
             data = {**key, **data}
-            self.insert1(data)
+            self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
@@ -114,6 +126,12 @@ class SyncDLCKptsDf(dj.Imported):
     """
 
     def make(self, key):
+        
+        if self & key:
+            logger.info(
+                f"'To ignore duplicate entries in insert, set skip_duplicates=True'."
+            )
+            return
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
         try:
             # I believe the key returned here is just the actual data set name aka mouseName_date_attempt so i need to add in the "dataset" key for this function?
@@ -122,7 +140,7 @@ class SyncDLCKptsDf(dj.Imported):
             )
             data = df2dj(sync_kpts)
             data = {**key, **data}
-            self.insert1(data)
+            self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
@@ -167,6 +185,12 @@ class OfflineKinematics(dj.Imported):
     """
 
     def make(self, key):
+        
+        if self & key:
+            logger.info(
+                f"'To ignore duplicate entries in insert, set skip_duplicates=True'."
+            )
+            return
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
         try:
             sync_keypoints = SyncDLCKptsDf().get_data(key)
@@ -184,7 +208,7 @@ class OfflineKinematics(dj.Imported):
             ) % 360 - 180
             data = df2dj(offline_dlc_variables)
             data = {**key, **data}
-            self.insert1(data)
+            self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
