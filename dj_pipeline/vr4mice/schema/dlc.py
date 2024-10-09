@@ -42,10 +42,10 @@ class DLCProcessor(dj.Imported):
     """
 
     def make(self, key):
-        
+
         if self & key:
             logger.info(
-                f"'To ignore duplicate entries in insert, set skip_duplicates=True'."
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
         try:
@@ -71,10 +71,10 @@ class DLCKptsDf(dj.Imported):
     """
 
     def make(self, key):
-        
+
         if self & key:
             logger.info(
-                f"'To ignore duplicate entries in insert, set skip_duplicates=True'."
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
 
@@ -126,10 +126,10 @@ class SyncDLCKptsDf(dj.Imported):
     """
 
     def make(self, key):
-        
+
         if self & key:
             logger.info(
-                f"'To ignore duplicate entries in insert, set skip_duplicates=True'."
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
@@ -185,10 +185,10 @@ class OfflineKinematics(dj.Imported):
     """
 
     def make(self, key):
-        
+
         if self & key:
             logger.info(
-                f"'To ignore duplicate entries in insert, set skip_duplicates=True'."
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
         logger.info(f"Populating {self.__class__.__name__} for {key}.")

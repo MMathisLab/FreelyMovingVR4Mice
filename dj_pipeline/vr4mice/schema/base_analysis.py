@@ -93,7 +93,7 @@ class DataFrame(dj.Computed):
 
         if self & key:
             logger.info(
-                f"'To ignore duplicate entries in insert, set skip_duplicates=True'."
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
 
@@ -228,7 +228,7 @@ class BoxDataFrame(dj.Computed):
 
         if self & key:
             logger.info(
-                f"'To ignore duplicate entries in insert, set skip_duplicates=True'."
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
         try:
@@ -313,7 +313,7 @@ class JShaped(dj.Computed):
 
         if self & key:
             logger.info(
-                f"'To ignore duplicate entries in insert, set skip_duplicates=True'."
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
         try:
@@ -374,7 +374,7 @@ class OutputPlots(dj.Computed):
 
         if self & key:
             logger.info(
-                f"'To ignore duplicate entries in insert, set skip_duplicates=True'."
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
 
@@ -484,7 +484,7 @@ class GitCommit(dj.Computed):
 
         if self & key:
             logger.info(
-                f"'To ignore duplicate entries in insert, set skip_duplicates=True'."
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
         try:
