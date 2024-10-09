@@ -100,7 +100,7 @@ def get_state(raw_data=None, key=None, **kwargs):
         "mouse_can_report": 3,
         "iti": 4,
         "obj_left": 5,
-        "mouse_report_correct": 6,  
+        "mouse_report_correct": 6, 
         "report_left": 7,
         "report_right": 8,
         "velocity": 9,
