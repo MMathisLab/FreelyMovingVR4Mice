@@ -52,3 +52,5 @@ if __name__ == "__main__":
         for t in test_datasets:
             dlc.DLCProcessor().make(key=t)
             dlc.DLCKptsDf().make(key=t)
+            dlc.SyncDLCKptsDf().make(key=t)
+            dlc.OfflineKinematics().make(key=t)
