@@ -14,7 +14,7 @@ class Logger:
     __logger = None
 
     @classmethod
-    def get_logger(cls):
+    def get_logger(cls, write_stdout = True):
         if cls.__logger:
             return cls.__logger
 
@@ -22,7 +22,6 @@ class Logger:
         logs_folder = Path(__name__).parent / "logs"
         logs_folder.mkdir(parents=True, exist_ok=True)
 
-        write_stdout = True
         log_filepath = logs_folder / log_filename
         logging_level = logging.INFO  # lowest level, tracks everything
 
@@ -33,7 +32,7 @@ class Logger:
         logger.setLevel(logging_level)
 
         file_formatter = logging.Formatter(
-            "%(asctime)s::%(levelname)s::%(filename)s::%(funcName)s::%(lineno)d::%(message)s"
+            ":%(asctime)s::%(levelname)s::%(filename)s::%(funcName)s::%(lineno)d::%(message)s"
         )
         file_handler = logging.FileHandler(log_filepath, mode="a+")
         file_handler.setFormatter(file_formatter)
@@ -41,7 +40,6 @@ class Logger:
 
         if write_stdout:
             stream_handler = logging.StreamHandler()
-            # different formatter, more readable in console
             stream_formatter = formatter = logging.Formatter(
                 "%(asctime)-s::%(levelname)s::%(filename)s::%(message)s"
             )

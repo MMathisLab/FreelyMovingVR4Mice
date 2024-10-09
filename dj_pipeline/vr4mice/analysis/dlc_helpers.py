@@ -122,7 +122,7 @@ def sync_dlc_w_game(dlc_dict, game_data):
     return df_out
 
 
-def sync_keypoint_table(d, keypoint_cuttoff=0.6, filter_window_length=10):
+def sync_keypoint_table(dataset_key, keypoint_cuttoff=0.6, filter_window_length=10):
     """Returns filtered keypoints from the DLCKptsDF table synchronized with game data.
 
     This function loads the DLCKptsDF keypoint table for  dataset d it then removes low confidence frames and sets them to nan. it then
@@ -141,15 +141,15 @@ def sync_keypoint_table(d, keypoint_cuttoff=0.6, filter_window_length=10):
     from vr4mice.schema import base_analysis, dlc, vr4mice
 
     game_step_times = pd.DataFrame(
-        (base_analysis.DataFrame() & d).fetch(
+        (base_analysis.DataFrame() & dataset_key).fetch(
             "step_time", "step", "time_elapsed", "trial", as_dict=True
         )[0]
     )
-    start_time = (vr4mice.State() & d).fetch("start_time")[0]
+    start_time = (vr4mice.State() & dataset_key).fetch("start_time")[0]
     game_step_times["start_time"] = start_time
 
     # Fetch the keypoint table and then sychronise with the game timesteps
-    keypoint_df = (dlc.DLCKptsDf() & d).get_all_data()[0]
+    keypoint_df = dlc.DLCKptsDf().get_data(dataset_key)
     filt_dlc_df = filter_dlc(
         keypoint_df, cutoff=keypoint_cuttoff, window_length=filter_window_length
     )
@@ -388,10 +388,12 @@ def dj2h5(data, headers, scorer) -> pd.DataFrame:
         levels = ["scorer", "bodyparts", "coords"]
     else:
         levels = ["bodyparts", "coords"]
-    return pd.DataFrame(
+    df =  pd.DataFrame(
         data,
         columns=pd.MultiIndex.from_tuples(headers, names=levels),
     )
+    df = df.copy()
+    return df
 
 
 def compute_circular_angular_velocity(angles, time_intervals):
