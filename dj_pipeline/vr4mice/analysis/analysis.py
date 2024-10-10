@@ -1,20 +1,16 @@
-import os
 import warnings
+<<<<<<< HEAD
 from pathlib import Path
+=======
+>>>>>>> tom/summary-plots-fix
 from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
-import seaborn as sns
-from scipy import stats
-from scipy.interpolate import CubicSpline
-from vr4mice.schema import base_analysis, vr4mice
-
-# from scipy.signal import savgol_filter, hilbert, find_peaks
+from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
-
-from typing import List, Tuple
 
 logger = Logger.get_logger()
 
@@ -51,7 +47,9 @@ def style():
     plt.rc("axes", edgecolor=font_color)
 
 
-def _resample_data_frame(df, resampling_period_ms=20) -> pd.DataFrame:  # in ms
+def _resample_data_frame(
+    df: pd.DataFrame, resampling_period_ms: int = 20
+) -> pd.DataFrame:  # in ms
     categorical_columns = ["aperture"]
     binary_columns = ["reward", "mouse_in_right", "mouse_in_left", "iti"]
     continuous_columns = df.columns[
@@ -97,19 +95,20 @@ def _resample_data_frame(df, resampling_period_ms=20) -> pd.DataFrame:  # in ms
     return df
 
 
-def get_rewarded(df):
+def get_rewarded(df: pd.DataFrame) -> pd.Series:
+    """Creates a `trial_rewarded` pandas.Series from a single session.
 
-    rewarded = df.groupby("trial", as_index=False)["reward"].transform(
-        lambda x: x.max()
-    )
-    return rewarded
+    Note: `df` needs to be a single session.
+
+    Returns:
+        A pandas.Series with 1 if the trial to which the timepoint
+        belongs to is rewarded and 0 else.
+    """
+
+    return df.groupby("trial")["reward"].transform(lambda x: x.max())
 
 
-# def get_choices(df):
-#    choices = df.groupby(["trial"], as_index=False).last()
-#    return choices
-
-
+<<<<<<< HEAD
 def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
     """
     Sets the first x and y positions of the given DataFrame to np.nan.
@@ -133,8 +132,14 @@ def get_dist2reward(df, box_df):
     dist2reward = np.sqrt(
         (box_df["right_box_x_center"] - (df["x"] * df["flip_one_side"])) ** 2
         + (box_df["right_box_z_center"] - df["y"]) ** 2
+=======
+def get_distance_to_reward(df: pd.DataFrame, df_box: pd.DataFrame) -> npt.NDArray:
+    distance_to_reward = np.sqrt(
+        (df_box["right_box_x_center"] - (df["x"] * df["flip_one_side"])) ** 2
+        + (df_box["right_box_z_center"] - df["y"]) ** 2
+>>>>>>> tom/summary-plots-fix
     )
-    return dist2reward
+    return distance_to_reward
 
 
 def create_data_frame(
@@ -251,10 +256,14 @@ def create_data_frame(
         lambda x: x - np.mean(x.iloc[:first_n_samples])
     )
 
+<<<<<<< HEAD
     # TODO: to think: keep as method: don't save or save separately
 
     # df["trial_rewarded"] = get_rewarded(df)
     # df["rewarded"] = get_rewarded(df)
+=======
+    df["trial_rewarded"] = get_rewarded(df)
+>>>>>>> tom/summary-plots-fix
 
     if not iti:
         df = df[df.iti == 0.0]
@@ -267,6 +276,10 @@ def create_data_frame(
         columns={"mouse_in_right_trial_right_choice": "trial_right_choice"},
         inplace=True,
     )
+<<<<<<< HEAD
+=======
+
+>>>>>>> tom/summary-plots-fix
     trial_left_choice = (
         df[df["iti"] == 0].groupby("trial")["mouse_in_left"].last().reset_index()
     )
@@ -298,7 +311,10 @@ def create_data_frame(
         .reset_index()
     )
     trial_duration["trial_duration"] = trial_duration["last"] - trial_duration["first"]
+<<<<<<< HEAD
 
+=======
+>>>>>>> tom/summary-plots-fix
     df = df.merge(trial_duration[["trial", "trial_duration"]], on="trial")
 
     if iti:
@@ -377,12 +393,12 @@ def get_box_df(key, df, interp):
     Returns:
         A dataFrame containing the dimensions.
     """
-    box_df = pd.DataFrame((vr4mice.Box & key).fetch())
+    df_box = pd.DataFrame((vr4mice.Box & key).fetch())
 
-    for col in box_df.columns:
-        for index, value in box_df[col].items():
+    for col in df_box.columns:
+        for index, value in df_box[col].items():
             if isinstance(value, list):
-                box_df.loc[index, col] = value[0]
+                df_box.loc[index, col] = value[0]
 
     a = interp["unity_arena_size_x_min"]
     b = interp["unity_arena_size_x_max"]
@@ -390,39 +406,37 @@ def get_box_df(key, df, interp):
     d = interp["unity_arena_size_z_max"]
 
     # same indexes among blocks
-    box_df.l_box_x_min = np.interp(box_df.l_box_x_min, [-1 * a, a], [-1 * d, d])
-    box_df.l_box_x_max = np.interp(box_df.l_box_x_max, [-1 * a, a], [-1 * d, d])
-    box_df.l_box_z_min = np.interp(box_df.l_box_z_min, [b, c], [-1 * d, d])
-    box_df.l_box_z_max = np.interp(box_df.l_box_z_max, [b, c], [-1 * d, d])
+    df_box.l_box_x_min = np.interp(df_box.l_box_x_min, [-1 * a, a], [-1 * d, d])
+    df_box.l_box_x_max = np.interp(df_box.l_box_x_max, [-1 * a, a], [-1 * d, d])
+    df_box.l_box_z_min = np.interp(df_box.l_box_z_min, [b, c], [-1 * d, d])
+    df_box.l_box_z_max = np.interp(df_box.l_box_z_max, [b, c], [-1 * d, d])
 
-    box_df.r_box_x_min = np.interp(box_df.r_box_x_min, [-1 * a, a], [-1 * d, d])
-    box_df.r_box_x_max = np.interp(box_df.r_box_x_max, [-1 * a, a], [-1 * d, d])
-    box_df.r_box_z_min = np.interp(box_df.r_box_z_min, [b, c], [-1 * d, d])
-    box_df.r_box_z_max = np.interp(box_df.r_box_z_max, [b, c], [-1 * d, d])
+    df_box.r_box_x_min = np.interp(df_box.r_box_x_min, [-1 * a, a], [-1 * d, d])
+    df_box.r_box_x_max = np.interp(df_box.r_box_x_max, [-1 * a, a], [-1 * d, d])
+    df_box.r_box_z_min = np.interp(df_box.r_box_z_min, [b, c], [-1 * d, d])
+    df_box.r_box_z_max = np.interp(df_box.r_box_z_max, [b, c], [-1 * d, d])
 
-    box_df.tt_box_x_min = np.interp(box_df.tt_box_x_min, [-1 * a, a], [-1 * d, d])
-    box_df.tt_box_x_max = np.interp(box_df.tt_box_x_max, [-1 * a, a], [-1 * d, d])
-    box_df.tt_box_z_min = np.interp(box_df.tt_box_z_min, [b, c], [-1 * d, d])
-    box_df.tt_box_z_max = np.interp(box_df.tt_box_z_max, [b, c], [-1 * d, d])
+    df_box.tt_box_x_min = np.interp(df_box.tt_box_x_min, [-1 * a, a], [-1 * d, d])
+    df_box.tt_box_x_max = np.interp(df_box.tt_box_x_max, [-1 * a, a], [-1 * d, d])
+    df_box.tt_box_z_min = np.interp(df_box.tt_box_z_min, [b, c], [-1 * d, d])
+    df_box.tt_box_z_max = np.interp(df_box.tt_box_z_max, [b, c], [-1 * d, d])
 
     # Mean reward position in the reward boxes
-    # Note: attention new attributes (version 2)
-    box_df["l_reward_x"] = df[(df.reward > 0.5) & (df.trial_left_choice > 0.5)][
+    # NOTE: new attributes (version 2)
+    df_box["l_reward_x"] = df[(df.reward > 0.5) & (df.trial_left_choice > 0.5)][
         "x"
     ].mean()
-    box_df["l_reward_z"] = df[(df.reward > 0.5) & (df.trial_left_choice > 0.5)][
+    df_box["l_reward_z"] = df[(df.reward > 0.5) & (df.trial_left_choice > 0.5)][
         "y"
     ].mean()
-    box_df["r_reward_x"] = df[(df.reward > 0.5) & (df.trial_right_choice > 0.5)][
+    df_box["r_reward_x"] = df[(df.reward > 0.5) & (df.trial_right_choice > 0.5)][
         "x"
     ].mean()
-    box_df["r_reward_z"] = df[(df.reward > 0.5) & (df.trial_right_choice > 0.5)][
+    df_box["r_reward_z"] = df[(df.reward > 0.5) & (df.trial_right_choice > 0.5)][
         "y"
     ].mean()
 
-    # box_df = box_df.iloc[1]
-
-    return box_df
+    return df_box
 
 
 def get_jshaped_trials(
@@ -430,6 +444,10 @@ def get_jshaped_trials(
 ):
     """
     Separates the trials in the DataFrame into 'J-shaped' and 'wandering' based on the given thresholds.
+
+    Note:
+        It also adds a column j-shaped to the df, to indicate if a given
+        trial is j-shaped or no.
 
     Args:
         df (pd.DataFrame): The DataFrame containing trial data with columns 'trial_duration' and 'trial_tortuosity'.
@@ -441,10 +459,14 @@ def get_jshaped_trials(
             - j_shaped (pd.DataFrame): DataFrame containing trials that are classified as 'J-shaped'.
             - wandering (pd.DataFrame): DataFrame containing trials that are classified as 'wandering'.
     """
-    j_shaped = df[
+    df["is_j_shaped"] = np.where(
         (df.trial_duration <= threshold_duration)
-        & (df.trial_tortuosity <= threshold_tortuosity)
-    ]
+        & (df.trial_tortuosity <= threshold_tortuosity),
+        1,
+        0,
+    )
+
+    j_shaped = df[df["is_j_shaped"] == 1]
     # NOTE: add reward param?
     # wandering = df[~df.index.isin(j_shaped.index)]
     return j_shaped  # , wandering
@@ -481,7 +503,7 @@ def get_all_datasets(mouse_list=None, load_dlc=True):
 
         # & keys).fetch(as_dict=True)[0] # or keep .npy?
         # else:
-        #    df, box_df = (base_analysis.DataFrame()).fetch(as_dict=True)[0] # or keep .npy?
+        #    df, df_box = (base_analysis.DataFrame()).fetch(as_dict=True)[0] # or keep .npy?
 
         if load_dlc == True:
             dlc_dict = load_dlc(
@@ -493,4 +515,4 @@ def get_all_datasets(mouse_list=None, load_dlc=True):
             df = sync_dlc_w_game(dlc_dict, game_data=df)
 
         big_df.append(df)
-    return pd.concat(big_df).reset_index(), box_df
+    return pd.concat(big_df).reset_index(), df_box
