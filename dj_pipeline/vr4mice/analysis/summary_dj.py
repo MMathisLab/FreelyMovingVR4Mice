@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import vr4mice.analysis.analysis as analysis
 import vr4mice.analysis.plotting as plotting
+
+from vr4mice.analysis.analysis import style
+
 import vr4mice.analysis.utils as utils
 from vr4mice.schema import base_analysis, vr4mice
 from vr4mice.utils.logger import Logger
@@ -22,7 +25,7 @@ def fetch_data(key: Dict, database: bool):
 
     Args:
         key (dict): A dictionary that specifies which dataset to generate a
-            summary plot for.
+            summary plot for. {"dataset": "dataset name"}
         database (bool): If True, fetches and populates the data, else gets
             the corresponding table direcly. Defaults to True.
 
@@ -31,44 +34,46 @@ def fetch_data(key: Dict, database: bool):
         and the `pd.DataFrame` containing the rig's dimensions (second return).
 
     """
-    # Fetch or populate to get df (externalize)
     if database:
         from vr4mice.schema import base_analysis
 
         try:
             df = base_analysis.DataFrame().get_data(key)
             
-            flag = df is False
-            if not flag:
-                logger.info("Data fetched for " + str(key))
+            if df:
+                logger.info(f"Data fetched for {key}")
             else:
-                logger.info("Populating DataFrame data for " + str(key))
+                logger.info(f"Populating DataFrame data for {key}")
                 df = base_analysis.DataFrame().populate(key)
                 df = base_analysis.DataFrame().get_data(key)
-                flag = df is False
-                if not flag:
-                    logger.info("Data populated and fetched for " + str(key))
+                if df:
+                    logger.info(f"Data populated and fetched for {key}")
+                else:
+                    logger.warning(f"Data population failed for {key}")
+
+            df ["trial_rewarded"] = base_analysis.DataFrame().get_rewarded(key)
+            df["dataset"] = key["dataset"]
 
         except Exception as e:
             logger.warning(f"An error occurred: {e}")
 
         try:
             box_df_output = base_analysis.BoxDataFrame().get_data(key)
-            flag = box_df_output is False
-            if not flag:
-                logger.info("Box data fetched for " + str(key))
+            if box_df_output:
+                logger.info(f"Box data fetched for {key}")
             else:
-                logger.info("Populating BoxDataFrame data for " + str(key))
+                logger.info(f"Populating BoxDataFrame data for {key}")
                 box_df_output = base_analysis.BoxDataFrame().populate(key)
                 box_df_output = base_analysis.BoxDataFrame().get_data(key)
-                flag = box_df_output is False
-                if not flag:
+                if box_df_output:
                     logger.info("Data populated and fetched for " + str(key))
-
+                else:
+                    logger.warning(f"Data population failed for {key}")
         except Exception as e:
             logger.warning(f"An error occurred: {e}")
     else:
         df, interp = analysis.create_data_frame(key, iti=False)
+        df["rewarded"] = analysis.get_rewarded(df) #Note(mary): that's bad, that it's the entire df that is the arg!
         box_df_output = analysis.get_box_df(key, df, interp=interp)
 
     return df, box_df_output
@@ -127,13 +132,12 @@ def vr4mice_summary_plots(
     Returns:
         str: The full path of the saved summary plot.
     """
-    
-    plotting.get_rc_params()
+    style() 
     df, box_df_output = fetch_data(key, database)
     
     df = df.infer_objects()
-    df["dataset"] = key["dataset"]
-    df ["trial_rewarded"] = analysis.get_rewarded(df)
+    #df["dataset"] = key["dataset"]
+    #df ["trial_rewarded"] = analysis.get_rewarded(df)
     
     df = df[df.iti == 0].copy()
 

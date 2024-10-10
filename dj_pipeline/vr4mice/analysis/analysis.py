@@ -1,8 +1,5 @@
 import warnings
-<<<<<<< HEAD
 from pathlib import Path
-=======
->>>>>>> tom/summary-plots-fix
 from typing import List, Tuple
 
 import matplotlib.pyplot as plt
@@ -108,7 +105,6 @@ def get_rewarded(df: pd.DataFrame) -> pd.Series:
     return df.groupby("trial")["reward"].transform(lambda x: x.max())
 
 
-<<<<<<< HEAD
 def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
     """
     Sets the first x and y positions of the given DataFrame to np.nan.
@@ -128,16 +124,10 @@ def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
     return group
 
 
-def get_dist2reward(df, box_df):
-    dist2reward = np.sqrt(
-        (box_df["right_box_x_center"] - (df["x"] * df["flip_one_side"])) ** 2
-        + (box_df["right_box_z_center"] - df["y"]) ** 2
-=======
 def get_distance_to_reward(df: pd.DataFrame, df_box: pd.DataFrame) -> npt.NDArray:
     distance_to_reward = np.sqrt(
         (df_box["right_box_x_center"] - (df["x"] * df["flip_one_side"])) ** 2
         + (df_box["right_box_z_center"] - df["y"]) ** 2
->>>>>>> tom/summary-plots-fix
     )
     return distance_to_reward
 
@@ -256,15 +246,6 @@ def create_data_frame(
         lambda x: x - np.mean(x.iloc[:first_n_samples])
     )
 
-<<<<<<< HEAD
-    # TODO: to think: keep as method: don't save or save separately
-
-    # df["trial_rewarded"] = get_rewarded(df)
-    # df["rewarded"] = get_rewarded(df)
-=======
-    df["trial_rewarded"] = get_rewarded(df)
->>>>>>> tom/summary-plots-fix
-
     if not iti:
         df = df[df.iti == 0.0]
 
@@ -276,10 +257,6 @@ def create_data_frame(
         columns={"mouse_in_right_trial_right_choice": "trial_right_choice"},
         inplace=True,
     )
-<<<<<<< HEAD
-=======
-
->>>>>>> tom/summary-plots-fix
     trial_left_choice = (
         df[df["iti"] == 0].groupby("trial")["mouse_in_left"].last().reset_index()
     )
@@ -311,10 +288,6 @@ def create_data_frame(
         .reset_index()
     )
     trial_duration["trial_duration"] = trial_duration["last"] - trial_duration["first"]
-<<<<<<< HEAD
-
-=======
->>>>>>> tom/summary-plots-fix
     df = df.merge(trial_duration[["trial", "trial_duration"]], on="trial")
 
     if iti:
