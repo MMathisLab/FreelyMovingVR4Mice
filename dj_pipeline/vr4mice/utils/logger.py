@@ -14,7 +14,7 @@ class Logger:
     __logger = None
 
     @classmethod
-    def get_logger(cls, write_stdout = True):
+    def get_logger(cls, write_stdout=True):
         if cls.__logger:
             return cls.__logger
 

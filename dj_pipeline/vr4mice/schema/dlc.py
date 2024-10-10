@@ -83,7 +83,9 @@ class DLCKptsDf(dj.Computed):
             h5path = (vr4mice.DLC & key).fetch1("keypoints_filepath")
             data = h52dj(h5path)
             if not "camera" in key or not "doe" in key:
-                key =  (vr4mice.DLC() & key).fetch(*vr4mice.DLC().primary_key, as_dict=True)[0]
+                key = (vr4mice.DLC() & key).fetch(
+                    *vr4mice.DLC().primary_key, as_dict=True
+                )[0]
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
@@ -98,7 +100,7 @@ class DLCKptsDf(dj.Computed):
         try:
             data = (self & key).fetch1()
             return dj2h5(data["data"], data["headers"], data["scorer"])
-        
+
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
@@ -141,8 +143,12 @@ class SyncDLCKptsDf(dj.Computed):
             )
             data = df2dj(sync_kpts)
 
-            if not "camera" in key or not "doe" in key: #TODO: add allow_direct_insert in arg
-                key =  (vr4mice.DLC() & key).fetch(*vr4mice.DLC().primary_key, as_dict=True)[0]
+            if (
+                not "camera" in key or not "doe" in key
+            ):  # TODO: add allow_direct_insert in arg
+                key = (vr4mice.DLC() & key).fetch(
+                    *vr4mice.DLC().primary_key, as_dict=True
+                )[0]
 
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
@@ -159,7 +165,6 @@ class SyncDLCKptsDf(dj.Computed):
         try:
             data = (self & key).fetch1()
             return dj2h5(data["data"], data["headers"], data["scorer"])
-
 
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")

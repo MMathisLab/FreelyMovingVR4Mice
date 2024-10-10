@@ -388,7 +388,7 @@ def dj2h5(data, headers, scorer) -> pd.DataFrame:
         levels = ["scorer", "bodyparts", "coords"]
     else:
         levels = ["bodyparts", "coords"]
-    df =  pd.DataFrame(
+    df = pd.DataFrame(
         data,
         columns=pd.MultiIndex.from_tuples(headers, names=levels),
     )
