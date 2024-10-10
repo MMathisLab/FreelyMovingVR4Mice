@@ -240,7 +240,7 @@ def compute_dlc_heading_angles(filt_dlc_row):
     return (center[0], center[1], heading, head_angle, body_axis, head_axis)
 
 
-def getall_dlc_heading_angles(filt_dlc):
+def get_all_dlc_heading_angles(filt_dlc):
     heading = []
     head_angles = []
     body_axis_list = []
@@ -304,7 +304,7 @@ def get_dlc_steps_in_VR_game(step_time, dlc_times):
 
 
 def compute_dlc_variables(dlc_sync):
-    df = getall_dlc_heading_angles(dlc_sync)
+    df = get_all_dlc_heading_angles(dlc_sync)
     return df
 
 

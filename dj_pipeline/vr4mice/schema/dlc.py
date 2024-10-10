@@ -158,7 +158,8 @@ class SyncDLCKptsDf(dj.Computed):
         # TODO: add columns arg as it was made in base_analysis schema
         try:
             data = (self & key).fetch1()
-            return pd.DataFrame(data["data"], columns=data["headers"])
+            return dj2h5(data["data"], data["headers"], data["scorer"])
+
 
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
@@ -169,7 +170,7 @@ class SyncDLCKptsDf(dj.Computed):
         try:
             data = self.fetch()
             for d in data:
-                df = pd.DataFrame(d["data"], columns=d["headers"])
+                df = dj2h5(d["data"], d["headers"], d["scorer"])
                 dfs.append(df)
             return dfs
 
@@ -222,7 +223,7 @@ class OfflineKinematics(dj.Computed):
     def get_data(self, key):
         try:
             data = (self & key).fetch1()
-            return pd.DataFrame(data["data"], columns=data["headers"])
+            return dj2h5(data["data"], data["headers"], data["scorer"])
 
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
@@ -233,7 +234,8 @@ class OfflineKinematics(dj.Computed):
         try:
             data = self.fetch()
             for d in data:
-                df = pd.DataFrame(d["data"], columns=d["headers"])
+                data = (self & key).fetch1()
+                df = dj2h5(data["data"], data["headers"], data["scorer"])
                 dfs.append(df)
             return dfs
 
