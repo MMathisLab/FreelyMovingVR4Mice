@@ -51,6 +51,14 @@ class DLCProcessor(dj.Imported):
         try:
             fpath = (vr4mice.DLC & key).fetch1("proc_filepath")
             data = np.load(fpath, allow_pickle=True)
+
+            if (
+                not "camera" in key or not "doe" in key
+            ):  # TODO: add allow_direct_insert in arg
+                key = (vr4mice.DLC() & key).fetch(
+                    *vr4mice.DLC().primary_key, as_dict=True
+                )[0]
+
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
@@ -217,6 +225,14 @@ class OfflineKinematics(dj.Computed):
                 (offline_dlc_variables.heading_dir - 90) + 180
             ) % 360 - 180
             data = df2dj(offline_dlc_variables)
+
+            if (
+                not "camera" in key or not "doe" in key
+            ):  # TODO: add allow_direct_insert in arg
+                key = (vr4mice.DLC() & key).fetch(
+                    *vr4mice.DLC().primary_key, as_dict=True
+                )[0]
+
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
