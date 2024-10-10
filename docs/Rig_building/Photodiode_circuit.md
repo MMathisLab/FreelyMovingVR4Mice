@@ -12,3 +12,13 @@ Here is a schematic of the circuit:
 ```
 
 Once the cicuit is built upload this [script](../../mouse_task/teensy/dual_water_valve/photodiode_reads.ino) onto it and update the `COM` port and `baudrate` in the `dlc_inference_w_pd` class in the `dlc_processor_socket_pd.py`.
+
+
+The model of the photodiode used by the Tolias lab and the circuit diagram for connecting it to the Teensy：
+
+```{image} ../../docs/images/photodiode_teensy_ToliasLab.png
+:alt: Photodiode TSL257
+:class: bg-primary mb-1
+:width: 400px
+:align: center
+```
