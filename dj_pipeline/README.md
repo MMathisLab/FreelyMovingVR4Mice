@@ -21,7 +21,8 @@
 
 ### Datajoint ERD of vr4mice pipeline:
 
-![vr4mice-erd](https://github.com/user-attachments/assets/6c72f012-0dc6-4346-a3d7-963f0106fa8c)
+![vr4mice-erd](https://github.com/user-attachments/assets/abb7d656-9970-4aa4-bb9a-634f65b55ba8)
+
 
 
 ### Instructions for Installing and Running the vr4mice pipeline:
