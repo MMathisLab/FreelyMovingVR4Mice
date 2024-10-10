@@ -41,6 +41,20 @@ if __name__ == "__main__":
             base_analysis.JShaped().make(key=t)
             base_analysis.GitCommit().make(key=t)
 
+    if mode == "an_drop":
+        from vr4mice.schema import vr4mice, base_analysis, dlc
+
+        test_datasets = [
+            {"dataset": "Jacana_2024-08-21_1"},
+            {"dataset": "Oribi_2024-08-16_1"},
+            {"dataset": "Pheasant_2024-08-28_1"},
+        ]
+        for t in test_datasets:
+            (base_analysis.DataFrame() & t).delete()
+            (base_analysis.BoxDataFrame() & t).delete()
+            (base_analysis.JShaped() & t).delete()
+            (base_analysis.GitCommit() & t).delete()
+
     elif mode == "test_dlc":
         from vr4mice.schema import vr4mice, base_analysis, dlc
 
@@ -52,3 +66,19 @@ if __name__ == "__main__":
         for t in test_datasets:
             dlc.DLCProcessor().make(key=t)
             dlc.DLCKptsDf().make(key=t)
+            dlc.SyncDLCKptsDf().make(key=t)
+            dlc.OfflineKinematics().make(key=t)
+
+    elif mode == "dlc_drop":
+        from vr4mice.schema import vr4mice, base_analysis, dlc
+
+        test_datasets = [
+            {"dataset": "Jacana_2024-08-21_1"},
+            {"dataset": "Oribi_2024-08-16_1"},
+            {"dataset": "Pheasant_2024-08-28_1"},
+        ]
+        for t in test_datasets:
+            (dlc.DLCProcessor() & t).delete()
+            (dlc.DLCKptsDf() & t).delete()
+            (dlc.SyncDLCKptsDf() & t).delete()
+            (dlc.OfflineKinematics() & t).delete()
