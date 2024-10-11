@@ -36,36 +36,37 @@ def fetch_data(key: Dict, database: bool):
     """
     if database:
         from vr4mice.schema import base_analysis
+        logger.info(f"Trying to get data from database...")
 
         try:
             df = base_analysis.DataFrame().get_data(key)
             
-            if df:
+            if df is not False or df is not None:
                 logger.info(f"Data fetched for {key}")
             else:
                 logger.info(f"Populating DataFrame data for {key}")
                 df = base_analysis.DataFrame().populate(key)
                 df = base_analysis.DataFrame().get_data(key)
-                if df:
+                if df is not False or df is not None:
                     logger.info(f"Data populated and fetched for {key}")
                 else:
                     logger.warning(f"Data population failed for {key}")
 
-            df ["trial_rewarded"] = base_analysis.DataFrame().get_rewarded(key)
-            df["dataset"] = key["dataset"]
+            logger.info(f"Add trial rewarded...")
+            df["trial_rewarded"] = base_analysis.DataFrame().get_rewarded(key)
 
         except Exception as e:
             logger.warning(f"An error occurred: {e}")
 
         try:
             box_df_output = base_analysis.BoxDataFrame().get_data(key)
-            if box_df_output:
+            if box_df_output is not False or box_df_output is not None:
                 logger.info(f"Box data fetched for {key}")
             else:
                 logger.info(f"Populating BoxDataFrame data for {key}")
                 box_df_output = base_analysis.BoxDataFrame().populate(key)
                 box_df_output = base_analysis.BoxDataFrame().get_data(key)
-                if box_df_output:
+                if box_df_output is not False or box_df_output is not None:
                     logger.info("Data populated and fetched for " + str(key))
                 else:
                     logger.warning(f"Data population failed for {key}")
@@ -73,7 +74,7 @@ def fetch_data(key: Dict, database: bool):
             logger.warning(f"An error occurred: {e}")
     else:
         df, interp = analysis.create_data_frame(key, iti=False)
-        df["rewarded"] = analysis.get_rewarded(df) #Note(mary): that's bad, that it's the entire df that is the arg!
+        df["trial_rewarded"] = analysis.get_rewarded(df) #Note(mary): that's bad, that it's the entire df that is the arg!
         box_df_output = analysis.get_box_df(key, df, interp=interp)
 
     return df, box_df_output
@@ -135,13 +136,7 @@ def vr4mice_summary_plots(
     style() 
     df, box_df_output = fetch_data(key, database)
     
-    df = df.infer_objects()
-    #df["dataset"] = key["dataset"]
-    #df ["trial_rewarded"] = analysis.get_rewarded(df)
-    
     df = df[df.iti == 0].copy()
-
-    print(df.columns)
 
     # NOTE: so that the head_dir is align to the screen
     df["head_dir"] = ((df.head_dir) + 180) % 360 - 180
@@ -202,7 +197,7 @@ def vr4mice_summary_plots(
     )
 
     ## Display mean trajectory for the j-shaped trials
-    j_shaped_df = analysis.get_jshaped_trials(df).copy()
+    j_shaped_df = analysis.get_jshaped_trials(df).copy() #Note(mary): @tom let's decide on JShape table
     j_shaped_df = utils.create_bins(
         data=j_shaped_df, spatial_ybins=[6.75, 20, 25], label="y"
     )

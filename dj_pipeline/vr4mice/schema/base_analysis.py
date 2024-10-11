@@ -165,11 +165,11 @@ class DataFrame(dj.Computed):
 
     def get_rewarded(self, key):
         from vr4mice.analysis.analysis import get_rewarded
-
+        #values needed for get_rewarded function
         df = self.get_data(key, ["dataset", "trial", "reward", "aperture"])
         if df is not False and df is not None:
             df["trial_rewarded"] = get_rewarded(df)
-            return df
+            return df["trial_rewarded"]
         return False
 
     def get_all_rewarded(self):
@@ -178,12 +178,12 @@ class DataFrame(dj.Computed):
         df = self.get_all_data(["dataset", "trial", "reward", "aperture"])
         if df is not False and df is not None:
             df["trial_rewarded"] = get_rewarded(df)
-            return df
+            return df["trial_rewarded"]
         return False
 
     def get_choices(self, key):  # TODO: implement
 
-        pass
+        pass #TODO: implement as rewarded
 
         from vr4mice.analysis.analysis import get_choices
 
@@ -406,7 +406,7 @@ class OutputPlots(dj.Computed):
 
         session_info = (federated_db.VR4Mice() & key).fetch(as_dict=True)
 
-        if session_info:
+        if len(session_info) > 0:
             name = (
                 session_info["mouse_name"]
                 + "_day"
@@ -426,7 +426,7 @@ class OutputPlots(dj.Computed):
 
         session_info = (federated_db.VR4Mice() & key).fetch(as_dict=True)
 
-        if session_info:
+        if len(session_info) > 0:
             info = (
                 session_info["mouse_name"]
                 + ", day "
@@ -441,7 +441,6 @@ class OutputPlots(dj.Computed):
         return subtitle
 
 
-# TODO: add to base_actions and add docstrings
 def insert_send_mail(key, tuple_, table, filename, send=False):
 
     user = (exp.Session() & key).fetch1("experimenter_name")

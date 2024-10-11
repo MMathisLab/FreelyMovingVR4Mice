@@ -58,7 +58,7 @@ if __name__ == "__main__":
     #    insert_fake_mouse(name="Barracuda")
 
     if mode == "connect":
-        from vr4mice.schema import vr4mice, base_analysis, dlc
+        from vr4mice.schema import vr4mice, base_analysis, dlc, federated_db
 
         pass
 
