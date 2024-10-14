@@ -37,7 +37,7 @@ def fetch_data(key: Dict, database: bool):
 
         try:
             df = base_analysis.DataFrame().get_data(key)
-            
+
             flag = df is False
             if not flag:
                 logger.info("Data fetched for " + str(key))
@@ -127,14 +127,14 @@ def vr4mice_summary_plots(
     Returns:
         str: The full path of the saved summary plot.
     """
-    
+
     plotting.get_rc_params()
     df, box_df_output = fetch_data(key, database)
-    
+
     df = df.infer_objects()
     df["dataset"] = key["dataset"]
-    df ["trial_rewarded"] = analysis.get_rewarded(df)
-    
+    df["trial_rewarded"] = analysis.get_rewarded(df)
+
     df = df[df.iti == 0].copy()
 
     print(df.columns)
@@ -308,7 +308,7 @@ def vr4mice_summary_plots(
     velocity_plot_aperture.set_ylabel("Speed / Aperture")
     velocity_plot_aperture.set_xlabel("Trial progression")
     # per trial rewarded
-    
+
     sns.lineplot(
         data=interpolated_df,
         x="trial_length",
@@ -321,7 +321,7 @@ def vr4mice_summary_plots(
     velocity_plot_reward.legend([], [], frameon=False)
     velocity_plot_reward.set_ylabel("Speed / Reward")
     velocity_plot_reward.set_xlabel("Trial progression")
-    
+
     # per choice
     sns.lineplot(
         data=interpolated_df,
@@ -337,7 +337,7 @@ def vr4mice_summary_plots(
     velocity_plot_choice.set_xlabel("Trial progression")
 
     ## Display heading direction per choice
-    
+
     sns.lineplot(
         data=interpolated_df,
         x="trial_length",

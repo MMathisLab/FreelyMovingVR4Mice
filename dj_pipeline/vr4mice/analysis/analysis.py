@@ -130,7 +130,7 @@ def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
     """
     group.loc[group.index[0], ["x", "y", "head_dir"]] = np.nan
     return group
-  
+
 
 def create_data_frame(
     key: dict,

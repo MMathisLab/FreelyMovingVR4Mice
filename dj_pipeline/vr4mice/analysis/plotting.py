@@ -86,6 +86,7 @@ def lineplot_flip_axis(ax: Optional[matplotlib.axes.Axes] = None, **kwargs):
 
     return line
 
+
 def get_rc_params():
     font_color = "black"
     font_size = 18
