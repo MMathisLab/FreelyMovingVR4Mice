@@ -42,6 +42,7 @@ class DataFrame(dj.Computed):
 
     mouse_can_report=NULL: longblob     # TO DEPRECATE
     iti: longblob
+    iti_duration=NULL: longblob
     mouse_correct: longblob             # TO DEPRECATE
     object_on_left: longblob
     mouse_in_left: longblob
@@ -90,16 +91,21 @@ class DataFrame(dj.Computed):
     def make(self, key):
         from vr4mice.analysis.analysis import create_data_frame
 
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
+
         try:
             data, interp = create_data_frame(key)
-            data.pop("level_0")  # artefact, TODO: add test + better way
             data = data.to_dict(orient="list")
             data = {**key, **data, **{"interpolation": interp}}
 
             # TODO: add test that data keys are the same with columns names
             # if not in... alert
 
-            self.insert1(data)
+            self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
@@ -219,6 +225,11 @@ class BoxDataFrame(dj.Computed):
     def make(self, key):
         from vr4mice.analysis.analysis import get_box_df
 
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
         try:
             if len(DataFrame & key) > 0:
                 df = DataFrame().get_data(key)
@@ -228,8 +239,8 @@ class BoxDataFrame(dj.Computed):
                     k: v[0] if isinstance(v, list) and len(v) == 1 else v
                     for k, v in df_box.to_dict(orient="list").items()
                 }
-                data = {**key, **df_box}  # **data}
-                self.insert1(data)
+                data = {**key, **box_df}
+                self.insert1(data, allow_direct_insert=True)
                 logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
@@ -299,6 +310,11 @@ class JShaped(dj.Computed):
 
         from vr4mice.analysis.analysis import get_jshaped_trials
 
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
         try:
             if DataFrame & key:
                 df = DataFrame().get_data(key, ["trial_duration", "trial_tortuosity"])
@@ -307,7 +323,7 @@ class JShaped(dj.Computed):
                 headers = j.columns.to_numpy()
                 data = {"j_shaped": j_np, "headers": headers}
                 data = {**data, **key}
-                self.insert1(data)
+                self.insert1(data, allow_direct_insert=True)
                 logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
@@ -355,6 +371,12 @@ class OutputPlots(dj.Computed):
 
         from vr4mice.analysis.analysis import vr4mice_summary_plots
 
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
+
         if (DataFrame & key) and (BoxDataFrame & key):
             full_path = vr4mice_summary_plots(
                 key, save_path="/data/summary_plots", database=True
@@ -368,7 +390,7 @@ class OutputPlots(dj.Computed):
             return False
 
         data = {**key, **{"filename": full_path}}
-        self.insert1(data)
+        self.insert1(data, allow_direct_insert=True)
 
         logger.info(f"{self.__class__.__name__} populated for {key}.")
 
@@ -458,10 +480,16 @@ class GitCommit(dj.Computed):
     """
 
     def make(self, key):
+
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
         try:
             ret = parse_git_commit_file()
             data = {**key, **ret}
-            self.insert1(data)
+            self.insert1(data, allow_direct_insert=True)
 
         except Exception as err:
             err = f"Error while populating the GitCommit table: key {key}\n{err}"
