@@ -215,11 +215,9 @@ class OfflineKinematics(dj.Computed):
             offline_dlc_variables = get_all_dlc_heading_angles(
                 sync_keypoints.iloc[:, :-3]
             )  # Compute all the kinematic variables
-            offline_dlc_variables[
-                ["pose_time", "step_time", "step"]
-            ] = sync_keypoints.iloc[
-                :, -3:
-            ]  # Add back in the time index
+            offline_dlc_variables[["pose_time", "step_time", "step"]] = (
+                sync_keypoints.iloc[:, -3:]
+            )  # Add back in the time index
             # Shift angles so that 0 is aligned with the main screen
             offline_dlc_variables["heading_dir"] = (
                 (offline_dlc_variables.heading_dir - 90) + 180
