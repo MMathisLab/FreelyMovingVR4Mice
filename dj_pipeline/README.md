@@ -20,7 +20,10 @@
 
 
 ### Datajoint ERD of vr4mice pipeline:
-![vr4mice](https://user-images.githubusercontent.com/43879378/234043578-22b7c8d7-acc9-4f44-9b80-9ec7d25f13f2.png)
+
+![vr4mice-erd](https://github.com/user-attachments/assets/abb7d656-9970-4aa4-bb9a-634f65b55ba8)
+
+
 
 ### Instructions for Installing and Running the vr4mice pipeline:
 #### Rig's GUI installation and run:
@@ -36,24 +39,16 @@
 2. update information in the `env.py` file (IP of server, user name provided by administrator)
 3. from working vr4mice directory start jupiter notebook  and create new Python3 page
 4. ```%run env.py``` to load environmental variables
-5. ```%run scripts/minimal_run.py connect``` to connect
+5. ```%run run.py connect``` to connect
 7. bravo, data can be fetched ```vr4mice.Dataset()``` (relative imports were done in the run script)
 
 #### DataJoint database user remote access: 
 similar to [general connection instrunctions](https://github.com/AdaptiveMotorControlLab/auxPipelines-DataJoint_Mathis/blob/mary/vr4mice/README.md#connect-to-database-from-local-host-to-remote-server)
-1. Obtain server access and database user credentials from the administrator.
-2. To connect to a remote database from a local host, modify the server IP address and user credentials in the "docker-compose" file.\
-_Note: make sure that third_party/datajoint-sftp exists in the parent folder (auxPipelines..)\
-Note-2: if using minimalistic base_schemas rename base_schemas/min_base to base_schemas/schemas, if using full base_schemas move base_schemas/schemas from current folder to the present one. (This step will be optimized, script is coming)_
+1. Obtain server access and database user credentials from the administrator (add them to .env file).
+2. To connect to a remote database from a local host, modify the server IP address and user credentials in the "docker-compose" file.
 3. Build the client service container using the "docker-compose" file and the command `make build_client`.
 4. Run the client container to access the remote database using the command `make up_client`.
-5. To execute a specific scenario, run the bash script "run/scenario1.sh", which will call the "docker-compose" application and execute the databse-related actions inside the container (actions are organized in the python scripts in the scripts folder).
-6. To connect to the DataJoint database, launch "ipython" and execute the minimal script "connect" with the appropriate username and password. 
-For example:
-`docker-compose app axec ipython3` \
-`%run scripts/minimal_run.py connect username pwd` \
-`from vr4mice.schema import vr4mice` \
-`vr4mice.Dataset()`
+5. To connect to the DataJoint database, launch "make ipython" and execute the minimal script "%run run.py connect". 
 
 ## DataJoint database deployment (on server or locally): Setup Instructions
 
