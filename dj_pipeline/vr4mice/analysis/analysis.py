@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+
 from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
 
