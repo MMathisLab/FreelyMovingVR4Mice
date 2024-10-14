@@ -8,7 +8,12 @@ logger = Logger.get_logger()
 
 import warnings
 
+import logging
+
+logging.getLogger("settings").setLevel(logging.ERROR)
+
 warnings.simplefilter(action="ignore", category=FutureWarning)
+
 
 """
     Pool of commands
@@ -84,9 +89,8 @@ if __name__ == "__main__":
         create_folder_if_not_exist("/data/summary_plots")
         dlc.DLCProcessor().populate()
         dlc.DLCKptsDf().populate()
-
-        # dlc.SyncDLCWGame().populate()
-        # dlc.DLCKptsBodyparts().populate() #TODO: optional
+        dlc.SyncDLCKptsDf().populate()
+        dlc.OfflineKinematics().populate()
 
     elif mode == "fetch":  # TODO: adjust path
         from vr4mice.actions.fetch_data import fetch_data

@@ -11,7 +11,7 @@ from vr4mice.analysis.dlc_helpers import (
     dj2h5,
     sync_dlc_w_game,
     sync_keypoint_table,
-    getall_dlc_heading_angles,
+    get_all_dlc_heading_angles,
 )
 
 from vr4mice.schema import vr4mice, base_analysis
@@ -42,11 +42,25 @@ class DLCProcessor(dj.Imported):
     """
 
     def make(self, key):
+
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
         try:
             fpath = (vr4mice.DLC & key).fetch1("proc_filepath")
             data = np.load(fpath, allow_pickle=True)
+
+            if (
+                not "camera" in key or not "doe" in key
+            ):  # TODO: add allow_direct_insert in arg
+                key = (vr4mice.DLC() & key).fetch(
+                    *vr4mice.DLC().primary_key, as_dict=True
+                )[0]
+
             data = {**key, **data}
-            self.insert1(data)
+            self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
@@ -55,7 +69,7 @@ class DLCProcessor(dj.Imported):
 
 
 @schema
-class DLCKptsDf(dj.Imported):
+class DLCKptsDf(dj.Computed):
     definition = """
     -> vr4mice.DLC
     ---
@@ -66,12 +80,22 @@ class DLCKptsDf(dj.Imported):
 
     def make(self, key):
 
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
+
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
         try:
             h5path = (vr4mice.DLC & key).fetch1("keypoints_filepath")
             data = h52dj(h5path)
+            if not "camera" in key or not "doe" in key:
+                key = (vr4mice.DLC() & key).fetch(
+                    *vr4mice.DLC().primary_key, as_dict=True
+                )[0]
             data = {**key, **data}
-            self.insert1(data)
+            self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
@@ -104,7 +128,7 @@ class DLCKptsDf(dj.Imported):
 
 
 @schema
-class SyncDLCKptsDf(dj.Imported):
+class SyncDLCKptsDf(dj.Computed):
     definition = """
     -> DLCKptsDf
     ---
@@ -114,15 +138,28 @@ class SyncDLCKptsDf(dj.Imported):
     """
 
     def make(self, key):
+
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
         try:
-            # I believe the key returned here is just the actual data set name aka mouseName_date_attempt so i need to add in the "dataset" key for this function?
             sync_kpts = sync_keypoint_table(
-                d={"dataset": key}, keypoint_cuttoff=0.6, filter_window_length=10
+                dataset_key=key, keypoint_cuttoff=0.6, filter_window_length=10
             )
             data = df2dj(sync_kpts)
+
+            if (
+                not "camera" in key or not "doe" in key
+            ):  # TODO: add allow_direct_insert in arg
+                key = (vr4mice.DLC() & key).fetch(
+                    *vr4mice.DLC().primary_key, as_dict=True
+                )[0]
+
             data = {**key, **data}
-            self.insert1(data)
+            self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
@@ -132,11 +169,10 @@ class SyncDLCKptsDf(dj.Imported):
             return None
 
     def get_data(self, key):
-        # TODO Mary_app -is there a way here that we can speficy which headers to return?
-        # i think this would solve many of both your and mine worries about fetch speed
+        # TODO: add columns arg as it was made in base_analysis schema
         try:
             data = (self & key).fetch1()
-            return pd.DataFrame(data["data"], columns=data["headers"])
+            return dj2h5(data["data"], data["headers"], data["scorer"])
 
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
@@ -147,7 +183,7 @@ class SyncDLCKptsDf(dj.Imported):
         try:
             data = self.fetch()
             for d in data:
-                df = pd.DataFrame(d["data"], columns=d["headers"])
+                df = dj2h5(d["data"], d["headers"], d["scorer"])
                 dfs.append(df)
             return dfs
 
@@ -157,7 +193,7 @@ class SyncDLCKptsDf(dj.Imported):
 
 
 @schema
-class OfflineKinematics(dj.Imported):
+class OfflineKinematics(dj.Computed):
     definition = """
     -> SyncDLCKptsDf
     ---
@@ -167,10 +203,16 @@ class OfflineKinematics(dj.Imported):
     """
 
     def make(self, key):
+
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
         try:
             sync_keypoints = SyncDLCKptsDf().get_data(key)
-            offline_dlc_variables = getall_dlc_heading_angles(
+            offline_dlc_variables = get_all_dlc_heading_angles(
                 sync_keypoints.iloc[:, :-3]
             )  # Compute all the kinematic variables
             offline_dlc_variables[
@@ -183,8 +225,16 @@ class OfflineKinematics(dj.Imported):
                 (offline_dlc_variables.heading_dir - 90) + 180
             ) % 360 - 180
             data = df2dj(offline_dlc_variables)
+
+            if (
+                not "camera" in key or not "doe" in key
+            ):  # TODO: add allow_direct_insert in arg
+                key = (vr4mice.DLC() & key).fetch(
+                    *vr4mice.DLC().primary_key, as_dict=True
+                )[0]
+
             data = {**key, **data}
-            self.insert1(data)
+            self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
@@ -194,7 +244,7 @@ class OfflineKinematics(dj.Imported):
     def get_data(self, key):
         try:
             data = (self & key).fetch1()
-            return pd.DataFrame(data["data"], columns=data["headers"])
+            return dj2h5(data["data"], data["headers"], data["scorer"])
 
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
@@ -205,7 +255,8 @@ class OfflineKinematics(dj.Imported):
         try:
             data = self.fetch()
             for d in data:
-                df = pd.DataFrame(d["data"], columns=d["headers"])
+                data = (self & key).fetch1()
+                df = dj2h5(data["data"], data["headers"], data["scorer"])
                 dfs.append(df)
             return dfs
 

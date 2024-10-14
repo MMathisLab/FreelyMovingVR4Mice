@@ -91,9 +91,14 @@ class DataFrame(dj.Computed):
     def make(self, key):
         from vr4mice.analysis.analysis import create_data_frame
 
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
+
         try:
             data, interp = create_data_frame(key)
-            data.pop("level_0")  # artefact, TODO: add test + better way
             data = data.to_dict(orient="list")
             data = {**key, **data, **{"interpolation": interp}}
 
@@ -221,6 +226,11 @@ class BoxDataFrame(dj.Computed):
     def make(self, key):
         from vr4mice.analysis.analysis import get_box_df
 
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
         try:
             if len(DataFrame & key) > 0:
                 df = DataFrame().get_data(key)
@@ -301,6 +311,11 @@ class JShaped(dj.Computed):
 
         from vr4mice.analysis.analysis import get_jshaped_trials
 
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
         try:
             if DataFrame & key:
                 df = DataFrame().get_data(key, ["trial_duration", "trial_tortuosity"])
@@ -356,6 +371,12 @@ class OutputPlots(dj.Computed):
         # generate
 
         from vr4mice.analysis.analysis import vr4mice_summary_plots
+
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
 
         if (DataFrame & key) and (BoxDataFrame & key):
             full_path = vr4mice_summary_plots(
@@ -460,6 +481,12 @@ class GitCommit(dj.Computed):
     """
 
     def make(self, key):
+
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
         try:
             ret = parse_git_commit_file()
             data = {**key, **ret}
