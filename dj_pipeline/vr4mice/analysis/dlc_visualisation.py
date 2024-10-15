@@ -1,9 +1,9 @@
-from IPython.display import HTML
-
 import matplotlib.pyplot as plt
 import numpy as np
-from analysis.dlc_helpers import dlc_interpolate, dlc_savgol_filter, filter_dlc
+from IPython.display import HTML
 from matplotlib.animation import FuncAnimation
+
+from analysis.dlc_helpers import dlc_interpolate, dlc_savgol_filter, filter_dlc
 
 
 def plot_frame_keypoints(dlc_dict, frame_number=1, heading_direction=None):
