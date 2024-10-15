@@ -687,7 +687,9 @@ def plot_time_to_reward(
     cmap = (
         colors_aperture
         if label_x == "aperture"
-        else colors_rewarded if label_x == "trial_rewarded" else colors_choice
+        else colors_rewarded
+        if label_x == "trial_rewarded"
+        else colors_choice
     )
 
     def _time_to_reward_box(group):
