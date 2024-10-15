@@ -1,9 +1,10 @@
+import subprocess
 from pathlib import Path
 from typing import List
-import subprocess
 
 import datajoint as dj
 import pandas as pd
+
 from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema

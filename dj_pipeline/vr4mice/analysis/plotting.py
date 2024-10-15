@@ -741,7 +741,8 @@ def _plot_parameter_on_trial_traj(
         label_y (str, optional): Column label for the y-axis data. Default is "y".
         cmap (str, optional): Color map for the plot. Default is "magma".
         alpha (float, optional): Alpha transparency for the plot. Default is 0.4.
-        ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None."""
+        ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
+    """
     trial = trial.reset_index(drop=True)
     points = np.array([trial[label_x], trial[label_y]]).T.reshape(-1, 1, 2)
     segments = np.concatenate([points[:-1], points[1:]], axis=1)

@@ -1,12 +1,11 @@
 import bisect
 from math import acos, atan2, copysign, degrees, pi, sqrt
 
-from IPython.display import clear_output, display
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from IPython.display import clear_output, display
 from scipy.signal import find_peaks, hilbert, savgol_filter
 
 
@@ -60,7 +59,7 @@ def _load_dlc_proc_files(
 def load_dlc(mouse_name, date, attempt, path, db_mode=True):
 
     if db_mode:
-        from vr4mice.schema import vr4mice, dlc
+        from vr4mice.schema import dlc, vr4mice
 
         # NOTE: a little bit dirty way since we are searching via kpts filepath and not PK
         # TODO: pass by PK
@@ -96,7 +95,6 @@ def _sync_dlc_w_game(game_data, dlc):
 
 
 def sync_dlc_w_game(dlc_dict, game_data):
-
     """Add the filtered head angle and head direction and compute derivatives."""
 
     filt_dlc = filter_dlc(dlc_dict.copy())

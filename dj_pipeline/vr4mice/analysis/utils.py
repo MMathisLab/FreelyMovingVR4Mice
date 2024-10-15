@@ -7,7 +7,6 @@ import scipy.interpolate
 import umap
 from sklearn.decomposition import PCA
 
-
 """
 Color codes:
     - left box: purple: '#5C0A72'

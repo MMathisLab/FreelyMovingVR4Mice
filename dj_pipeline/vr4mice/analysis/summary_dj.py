@@ -8,8 +8,8 @@ import pandas as pd
 import seaborn as sns
 from scipy import stats
 from scipy.interpolate import CubicSpline
-from vr4mice.schema import base_analysis, vr4mice
 
+from vr4mice.schema import base_analysis, vr4mice
 # from scipy.signal import savgol_filter, hilbert, find_peaks
 from vr4mice.utils.logger import Logger
 
