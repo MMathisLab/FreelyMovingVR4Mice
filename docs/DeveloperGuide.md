@@ -2,7 +2,7 @@
 
 ## Goverance 
 
-This reposity is maintained by the Mathis Lab. 
+This repository is maintained by the Mathis Lab. 
 
 ### Core Development Team
 
@@ -25,10 +25,41 @@ Decisions (in addition to adding core developers and SC membership as above) are
 
 - If an objection is raised on a lazy consensus, the proposer can appeal to the community and core developers and the change can be approved or rejected by escalating to the SC.
 
-## Code style 
+## Code style
 
-WIP
+### Use Black
+Ensure all Python code is formatted with Black before committing (current version 22.6). Black enforces consistency and removes debates over code style. Use the default settings. Command: `black .` (to run in current folder).
 
-## GitHub branching, commits, & other guidelines 
+### Use isort
+Sort your imports to keep them organized. isort should be used to handle import ordering, grouping standard library, third-party, and project-specific imports. Command: `isort .` (to run in current folder).
 
-WIP
+### Docstrings
+All public methods and functions should have docstrings using the [PEP 257 format](https://peps.python.org/pep-0257/). Briefly describe what the function does, its parameters, and return values and add any information that could help your collaborators or future users to understand your code faster.
+
+### Type Annotations
+Use type hints to make the code more readable and to help with catching potential bugs early.
+
+### Inline comments
+Use inline comments to explain non-obvious code logic or important context. Make sure they are clear and concise. Avoid comments that state the obvious, as they clutter the code. 
+
+When using TODO or NOTE comments, always include the name of the person responsible for addressing it (e.g., TODO(username): Refactor this section). Provide enough context for the TODO or NOTE to be actionable. Avoid vague comments like "TODO: fix this". Instead, specify what needs to be fixed and why. Do not leave TODO or NOTE comments unresolved in the codebase if they are unclear or outdated. Regularly review and address them to maintain code quality.
+
+## GitHub Branching, Commits, & Other Guidelines
+
+### Branching Model
+- Use the GitHub Flow: Create a branch for every feature or bug fix. **1 feature = 1 branch = 1 PR**.
+- Merging Dependent Branches: when multiple branches depend on each other (e.g., branch A is foundational, and branch B adds missing elements such as fixes, DJ integration, or tests), always **merge the first branch (branch A) into main** before merging branch B (either to main, once branch A is merged or to branch A). This approach maintains a clear history, simplifies the review process (by focusing reviews on incremental additional changes) making it more efficient, and minimizes merge conflicts.
+- Keep the main branch always deployable. Only merge into main when the feature is complete, fully tested, and reviewed.
+- Use descriptive branch names to indicate the purpose of the branch.
+
+### Commit Messages
+Write Clear, Concise Commit Messages: Follow the conventional commit style. Break down commits into small, meaningful changes, preferably addressing only one thing per commit.
+
+### Pull Requests
+- All changes must go through a pull request (PR), even minor changes.
+- Include a summary of what the PR does, and link to the issue it resolves (if any) as soon as you open the PR (even if it is still WIP).
+- PRs should include unit tests where applicable, and **pass all CI checks** before merging.
+
+### Code Reviews
+- Every PR should be reviewed by at least one other core developer. If the PR was open by one of the core developers, they should ask for a review from at least one of the members of the development team based on their expertise.
+- Address all comments before merging. **No conversation should be left open.**
