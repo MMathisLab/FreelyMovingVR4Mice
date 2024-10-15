@@ -3,7 +3,11 @@
 ## Computer:
 Lambda vector workstation:
 
-Operating system: Windows 10 Pro: Includes TensorFlow, PyTorch, CUDA, cuDNN, and Visual Studio. Processor: Intel Core i9-10900X: 10 cores, 3.70 GHz, 19.25 MB cache
+Operating system: Windows 10 Pro: Includes TensorFlow, PyTorch, CUDA, cuDNN, and Visual Studio. 
+
+Processor: Intel Core i9-10900X: 10 cores, 3.70 GHz, 19.25 MB cache
+
+Motherboard: ASUS ws x299 sage
 
 CPU Cooler: Air cooling
 
@@ -50,12 +54,14 @@ The teesny circuit will need to be soldered to a perforated board:
 
 ## Photodiode teensy components (optional):
 
+Tolias lab set-up:
 - Teensy 4.0
-- 1.2 pF capacitor
-- 330 kOhms resistor
-- Photodiode - TEFD4300
-- OpAmp - MCP6002-I/P
+- TSL257, with a built-in circuit
 
+Mathis lab setup:
+- OPT101 (Texas Instruments)
+- Mounting board for the photodiode - CJMCU-101
+- 1 Megaohm resistor
 
 ## Monitors:
 4x acer (SB241Y) + HDMI cables
