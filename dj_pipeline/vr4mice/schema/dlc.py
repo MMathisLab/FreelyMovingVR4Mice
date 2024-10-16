@@ -4,29 +4,23 @@ import datajoint as dj
 import numpy as np
 import pandas as pd
 
-from vr4mice.analysis.dlc_helpers import (
-    compute_head_angles,
-    df_to_dj,
-    dj_to_df,
-    h5_to_dj,
-    sync_keypoint_table,
-)
-from vr4mice.schema import vr4mice
-from vr4mice.utils.logger import Logger
-from vr4mice.utils.schema_config import (
-    get_schema,
-)  # TODO(mary): adjust paths (base/utils)
+import vr4mice.analysis.dlc_helpers as dlc_helpers
+import vr4mice.analysis.utils as utils
+
+import vr4mice.schema.vr4mice
+import vr4mice.utils.logger
+import vr4mice.utils.schema_config as schema_config  # TODO(mary): adjust paths (base/utils)
 
 schema_name = "dlc"
-schema = get_schema(schema_name, locals())
+schema = schema_config.get_schema(schema_name, locals())
 
-logger = Logger.get_logger()
+logger = vr4mice.utils.logger.Logger.get_logger()
 
 
 @schema
 class DLCProcessor(dj.Imported):
     definition = """
-    -> vr4mice.DLC
+    -> vr4mice.schema.vr4mice.DLC
     ---
     start_time: longblob
     frame_time: longblob
@@ -49,14 +43,14 @@ class DLCProcessor(dj.Imported):
             )
             return
         try:
-            fpath = (vr4mice.DLC & key).fetch1("proc_filepath")
+            fpath = (vr4mice.schema.vr4mice.DLC & key).fetch1("proc_filepath")
             data = np.load(fpath, allow_pickle=True)
 
             if (
                 not "camera" in key or not "doe" in key
             ):  # TODO: add allow_direct_insert in arg
-                key = (vr4mice.DLC() & key).fetch(
-                    *vr4mice.DLC().primary_key, as_dict=True
+                key = (vr4mice.schema.vr4mice.DLC() & key).fetch(
+                    *vr4mice.schema.vr4mice.DLC().primary_key, as_dict=True
                 )[0]
 
             data = {**key, **data}
@@ -73,7 +67,7 @@ class DLCKptsDf(dj.Computed):
     """All available raw DLC keypoints with likelihood."""
 
     definition = """
-    -> vr4mice.DLC
+    -> vr4mice.schema.vr4mice.DLC
     ---
     data: longblob
     headers : blob
@@ -90,11 +84,11 @@ class DLCKptsDf(dj.Computed):
 
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
         try:
-            h5_path = (vr4mice.DLC & key).fetch1("keypoints_filepath")
-            data = h5_to_dj(h5_path)
+            h5_path = (vr4mice.schema.vr4mice.DLC & key).fetch1("keypoints_filepath")
+            data = utils.h5_to_dj(h5_path)
             if not "camera" in key or not "doe" in key:
-                key = (vr4mice.DLC() & key).fetch(
-                    *vr4mice.DLC().primary_key, as_dict=True
+                key = (vr4mice.schema.vr4mice.DLC() & key).fetch(
+                    *vr4mice.schema.vr4mice.DLC().primary_key, as_dict=True
                 )[0]
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
@@ -116,7 +110,7 @@ class DLCKptsDf(dj.Computed):
                     data = dict(zip(columns, data))
                 else:
                     data = (self & key).fetch1()
-            return dj_to_df(data["data"], data["headers"], data["scorer"])
+            return utils.dj_to_df(data["data"], data["headers"], data["scorer"])
 
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
@@ -133,7 +127,7 @@ class DLCKptsDf(dj.Computed):
                 else:
                     data = self.fetch()
             for d in data:
-                df = dj_to_df(d["data"], d["headers"], d["scorer"])
+                df = utils.dj_to_df(d["data"], d["headers"], d["scorer"])
                 dfs.append(df)
             return dfs
 
@@ -147,7 +141,7 @@ class SyncDLCKptsDf(dj.Computed):
     """Filtered and game-synchronized DLC keypoints."""
 
     definition = """
-    -> vr4mice.DLC
+    -> vr4mice.schema.vr4mice.DLC
     ---
     data: longblob
     headers : blob
@@ -163,16 +157,16 @@ class SyncDLCKptsDf(dj.Computed):
             return
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
         try:
-            sync_kpts = sync_keypoint_table(
+            sync_kpts = dlc_helpers.sync_keypoint_table(
                 dataset_key=key, keypoint_cuttoff=0.6, filter_window_length=10
             )
-            data = df_to_dj(sync_kpts)
+            data = utils.df_to_dj(sync_kpts)
 
             if (
                 not "camera" in key or not "doe" in key
             ):  # TODO: add allow_direct_insert in arg
-                key = (vr4mice.DLC() & key).fetch(
-                    *vr4mice.DLC().primary_key, as_dict=True
+                key = (vr4mice.schema.vr4mice.DLC() & key).fetch(
+                    *vr4mice.schema.vr4mice.DLC().primary_key, as_dict=True
                 )[0]
 
             data = {**key, **data}
@@ -195,7 +189,7 @@ class SyncDLCKptsDf(dj.Computed):
                     data = dict(zip(columns, data))
                 else:
                     data = (self & key).fetch1()
-            return dj_to_df(data["data"], data["headers"], data["scorer"])
+            return utils.dj_to_df(data["data"], data["headers"], data["scorer"])
 
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
@@ -212,7 +206,7 @@ class SyncDLCKptsDf(dj.Computed):
                 else:
                     data = self.fetch()
             for d in data:
-                df = dj_to_df(d["data"], d["headers"], d["scorer"])
+                df = utils.dj_to_df(d["data"], d["headers"], d["scorer"])
                 dfs.append(df)
             return dfs
 
@@ -227,7 +221,7 @@ class OfflineKinematics(dj.Computed):
 
     definition = """
     -> SyncDLCKptsDf
-    -> vr4mice.DLC
+    -> vr4mice.schema.vr4mice.DLC
     ---
     data: longblob
     headers : blob
@@ -245,7 +239,7 @@ class OfflineKinematics(dj.Computed):
 
         try:
             sync_keypoints = SyncDLCKptsDf().get_data(key)
-            offline_dlc_variables = compute_head_angles(
+            offline_dlc_variables = dlc_helpers.compute_head_angles(
                 sync_keypoints.iloc[:, :-3]
             )  # Compute all the kinematic variables
             offline_dlc_variables[
@@ -257,13 +251,13 @@ class OfflineKinematics(dj.Computed):
             offline_dlc_variables["heading_dir"] = (
                 (offline_dlc_variables.heading_dir - 90) + 180
             ) % 360 - 180
-            data = df_to_dj(offline_dlc_variables)
+            data = utils.df_to_dj(offline_dlc_variables)
 
             if (
                 not "camera" in key or not "doe" in key
             ):  # TODO: add allow_direct_insert in arg
-                key = (vr4mice.DLC() & key).fetch(
-                    *vr4mice.DLC().primary_key, as_dict=True
+                key = (vr4mice.schema.vr4mice.DLC() & key).fetch(
+                    *vr4mice.schema.vr4mice.DLC().primary_key, as_dict=True
                 )[0]
 
             data = {**key, **data}
@@ -284,8 +278,7 @@ class OfflineKinematics(dj.Computed):
                     data = dict(zip(columns, data))
                 else:
                     data = (self & key).fetch1()
-            return pd.DataFrame(data["data"], columns=data["headers"])
-            # return dj_to_df(data["data"], data["headers"], data["scorer"])
+            return utils.dj_to_df(data["data"], data["headers"], data["scorer"])
 
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
@@ -302,7 +295,7 @@ class OfflineKinematics(dj.Computed):
                 else:
                     data = self.fetch()
             for d in data:
-                df = dj_to_df(d["data"], d["headers"], d["scorer"])
+                df = utils.dj_to_df(d["data"], d["headers"], d["scorer"])
                 dfs.append(df)
             return dfs
 
