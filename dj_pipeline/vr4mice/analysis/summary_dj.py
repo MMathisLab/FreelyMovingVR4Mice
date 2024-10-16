@@ -37,6 +37,7 @@ def fetch_data(key: Dict, database: bool):
 
         try:
             df = base_analysis.DataFrame().get_data(key)
+
             flag = df is False
             if not flag:
                 logger.info("Data fetched for " + str(key))
@@ -119,17 +120,22 @@ def vr4mice_summary_plots(
         key (dict): A dictionary that specifies which dataset to generate a
             summary plot for.
         save_path (str, optional): The directory path where the summary plot
-            should be saved. Defaults to "/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/".
+            should be saved. Defaults to "/data/summary_plots".
         database (bool): If True, fetches and populates the data, else gets
-            the corresponding table direcly. Defaults to True.
+            the corresponding table directly. Defaults to True.
 
     Returns:
         str: The full path of the saved summary plot.
     """
 
+    plotting.get_rc_params()
     df, box_df_output = fetch_data(key, database)
+
+    df = df.infer_objects()
     df["dataset"] = key["dataset"]
-    df = df[df.iti == 0]
+    df["trial_rewarded"] = analysis.get_rewarded(df)
+
+    df = df[df.iti == 0].copy()
 
     # NOTE: so that the head_dir is align to the screen
     df["head_dir"] = ((df.head_dir) + 180) % 360 - 180
@@ -190,7 +196,7 @@ def vr4mice_summary_plots(
     )
 
     ## Display mean trajectory for the j-shaped trials
-    j_shaped_df = analysis.get_jshaped_trials(df)
+    j_shaped_df = analysis.get_jshaped_trials(df).copy()
     j_shaped_df = utils.create_bins(
         data=j_shaped_df, spatial_ybins=[6.75, 20, 25], label="y"
     )
@@ -287,12 +293,8 @@ def vr4mice_summary_plots(
     interpolated_df["trial_length"] = interpolated_df["trial_step"] / 200
 
     ## Display the speed
-    # per aperture
-    mean_mouse_aperture = interpolated_df.groupby(
-        ["dataset", "aperture", "trial_length"], as_index=False
-    ).mean(numeric_only=True)
     sns.lineplot(
-        data=mean_mouse_aperture,
+        data=interpolated_df,
         x="trial_length",
         y="velocity",
         palette=(plotting.colors_aperture[:2] if num_apertures == 2 else "viridis"),
@@ -304,11 +306,9 @@ def vr4mice_summary_plots(
     velocity_plot_aperture.set_ylabel("Speed / Aperture")
     velocity_plot_aperture.set_xlabel("Trial progression")
     # per trial rewarded
-    mean_mouse_rewarded = interpolated_df.groupby(
-        ["dataset", "trial_rewarded", "trial_length"], as_index=False
-    ).mean(numeric_only=True)
+
     sns.lineplot(
-        data=mean_mouse_rewarded,
+        data=interpolated_df,
         x="trial_length",
         y="velocity",
         palette=plotting.colors_rewarded,
@@ -319,12 +319,10 @@ def vr4mice_summary_plots(
     velocity_plot_reward.legend([], [], frameon=False)
     velocity_plot_reward.set_ylabel("Speed / Reward")
     velocity_plot_reward.set_xlabel("Trial progression")
+
     # per choice
-    mean_mouse_left_choice = interpolated_df.groupby(
-        ["dataset", "trial_left_choice", "trial_length"], as_index=False
-    ).mean(numeric_only=True)
     sns.lineplot(
-        data=mean_mouse_left_choice,
+        data=interpolated_df,
         x="trial_length",
         y="velocity",
         palette=plotting.colors_choice,
@@ -337,11 +335,9 @@ def vr4mice_summary_plots(
     velocity_plot_choice.set_xlabel("Trial progression")
 
     ## Display heading direction per choice
-    mean_mouse = interpolated_df.groupby(
-        ["dataset", "trial_right_choice", "aperture", "trial_length"], as_index=False
-    ).mean(numeric_only=True)
+
     sns.lineplot(
-        data=mean_mouse,
+        data=interpolated_df,
         x="trial_length",
         y="head_dir",
         hue="trial_right_choice" if num_apertures <= 2 else "aperture",
