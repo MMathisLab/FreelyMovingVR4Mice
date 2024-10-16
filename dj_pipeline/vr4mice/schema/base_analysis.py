@@ -1,17 +1,18 @@
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import datajoint as dj
 import pandas as pd
 
-from vr4mice.schema import vr4mice
-from vr4mice.utils.logger import Logger
-from vr4mice.utils.schema_config import get_schema
+import vr4mice.analysis.utils as utils
+import vr4mice.schema.vr4mice as vr4mice
+import vr4mice.utils.logger
+import vr4mice.utils.schema_config as schema_config
 
 schema_name = "base_analysis"
-schema = get_schema(schema_name, locals())
+schema = schema_config.get_schema(schema_name, locals())
 
-logger = Logger.get_logger()
+logger = vr4mice.utils.logger.Logger.get_logger()
 
 
 @schema
@@ -86,7 +87,7 @@ class DataFrame(dj.Computed):
     interpolation: longblob
     """
 
-    def make(self, key):
+    def make(self, key: Dict[str]):
         from vr4mice.analysis.analysis import create_data_frame
 
         if self & key:
@@ -101,7 +102,7 @@ class DataFrame(dj.Computed):
             data = {**key, **data, **{"interpolation": unity_arena_size}}
 
             # TODO: add test that data keys are the same with columns names
-            # if not in... alert
+            # TODO(celia): use df_to_dj?
 
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
@@ -113,7 +114,7 @@ class DataFrame(dj.Computed):
             return None
 
     def get_data(
-        self, key: dict, columns: Optional[List[str]] = None
+        self, key: Dict[str], columns: Optional[List[str]] = None
     ) -> Optional[pd.DataFrame]:
         try:
             if self & key:
@@ -131,7 +132,7 @@ class DataFrame(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_unity_arena_size(self, key: dict) -> dict:
+    def get_unity_arena_size(self, key: Dict[str]) -> dict:
         try:
             if self & key:
                 unity_arena_size = (self & key).fetch("interpolation")[0]
@@ -142,7 +143,7 @@ class DataFrame(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_all_data(self, columns=None):
+    def get_all_data(self, columns: Optional[List[str]] = None):
         """
         columns: list containing the names of required columns
         return pd.Dataframe
@@ -163,7 +164,7 @@ class DataFrame(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}: {err}")
             return None
 
-    def get_rewarded(self, key):
+    def get_rewarded(self, key: Dict[str]):
         from vr4mice.analysis.analysis import get_rewarded
 
         df = self.get_data(key, ["dataset", "trial", "reward", "aperture"])
@@ -249,7 +250,7 @@ class BoxDataFrame(dj.Computed):
             )
             return None
 
-    def get_data(self, key, columns=None):
+    def get_data(self, key: Dict[str], columns: Optional[List[str]] = None):
         try:
             if self & key:
                 if columns:
@@ -297,6 +298,55 @@ class BoxDataFrame(dj.Computed):
 
 
 @schema
+class RewardsDataFrame(dj.Computed):
+    definition = """
+    -> DataFrame
+    ---
+    data=NULL: longblob     # NEW
+    headers=NULL: longblob      # NEW
+    """
+
+    def make(self, key: dict):
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
+        try:
+            if DataFrame & key:
+                df = DataFrame().get_rewarded(key)
+                df_np = df.to_numpy()
+                headers = df.columns.to_numpy()
+                data = {"data": df_np, "headers": headers}
+                data = {**data, **key}
+                self.insert1(data, allow_direct_insert=True)
+                logger.info(f"{self.__class__.__name__} populated for {key}.")
+
+        except Exception as err:
+            logger.warning(
+                f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            )
+            return None
+
+    def get_data(
+        self, key: dict, columns: Optional[List[str]] = None
+    ) -> Optional[pd.DataFrame]:
+        try:
+            if self & key:
+                if columns:
+                    data = (self & key).fetch1(*columns)
+                    data = dict(zip(columns, data))
+                else:
+                    data = (self & key).fetch1()
+            df = utils.dj_to_df(data["data"], data["headers"])
+            return df
+
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
+
+
+@schema
 class JShaped(dj.Computed):
     definition = """
     -> DataFrame
@@ -305,8 +355,7 @@ class JShaped(dj.Computed):
     headers=NULL: longblob      # NEW
     """
     # TODO: store headers once, or separately, since always the same
-
-    def make(self, key):
+    def make(self, key: dict):
 
         from vr4mice.analysis.analysis import get_jshaped_trials
 
@@ -332,12 +381,21 @@ class JShaped(dj.Computed):
             )
             return None
 
-    def get_jshaped(self, key):  # TODO: fetch_all
+    def get_jshaped(
+        self, key: dict, columns: Optional[List[str]] = None
+    ) -> Optional[pd.DataFrame]:
+        try:
+            if self & key:
+                if columns:
+                    data = (self & key).fetch1(*columns)
+                    data = dict(zip(columns, data))
+                else:
+                    data = (self & key).fetch1()
+            return utils.dj_to_df(data["data"], data["headers"])
 
-        data = (self & key).fetch1()
-        headers = data["headers"]
-        j = pd.DataFrame(data["j_shaped"], columns=headers)
-        return j
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
 
     def get_jshaped_all(self):
         data = self.fetch()
