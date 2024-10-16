@@ -6,8 +6,7 @@ import pandas as pd
 
 import vr4mice.analysis.dlc_helpers as dlc_helpers
 import vr4mice.analysis.utils as utils
-
-import vr4mice.schema.vr4mice
+import vr4mice.schema.vr4mice as vr4mice
 import vr4mice.utils.logger
 import vr4mice.utils.schema_config as schema_config  # TODO(mary): adjust paths (base/utils)
 
@@ -20,7 +19,7 @@ logger = vr4mice.utils.logger.Logger.get_logger()
 @schema
 class DLCProcessor(dj.Imported):
     definition = """
-    -> vr4mice.schema.vr4mice.DLC
+    -> vr4mice.DLC
     ---
     start_time: longblob
     frame_time: longblob
@@ -43,14 +42,14 @@ class DLCProcessor(dj.Imported):
             )
             return
         try:
-            fpath = (vr4mice.schema.vr4mice.DLC & key).fetch1("proc_filepath")
+            fpath = (vr4mice.DLC & key).fetch1("proc_filepath")
             data = np.load(fpath, allow_pickle=True)
 
             if (
                 not "camera" in key or not "doe" in key
             ):  # TODO: add allow_direct_insert in arg
-                key = (vr4mice.schema.vr4mice.DLC() & key).fetch(
-                    *vr4mice.schema.vr4mice.DLC().primary_key, as_dict=True
+                key = (vr4mice.DLC() & key).fetch(
+                    *vr4mice.DLC().primary_key, as_dict=True
                 )[0]
 
             data = {**key, **data}
@@ -67,7 +66,7 @@ class DLCKptsDf(dj.Computed):
     """All available raw DLC keypoints with likelihood."""
 
     definition = """
-    -> vr4mice.schema.vr4mice.DLC
+    -> vr4mice.DLC
     ---
     data: longblob
     headers : blob
@@ -84,11 +83,11 @@ class DLCKptsDf(dj.Computed):
 
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
         try:
-            h5_path = (vr4mice.schema.vr4mice.DLC & key).fetch1("keypoints_filepath")
+            h5_path = (vr4mice.DLC & key).fetch1("keypoints_filepath")
             data = utils.h5_to_dj(h5_path)
             if not "camera" in key or not "doe" in key:
-                key = (vr4mice.schema.vr4mice.DLC() & key).fetch(
-                    *vr4mice.schema.vr4mice.DLC().primary_key, as_dict=True
+                key = (vr4mice.DLC() & key).fetch(
+                    *vr4mice.DLC().primary_key, as_dict=True
                 )[0]
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
@@ -141,7 +140,7 @@ class SyncDLCKptsDf(dj.Computed):
     """Filtered and game-synchronized DLC keypoints."""
 
     definition = """
-    -> vr4mice.schema.vr4mice.DLC
+    -> vr4mice.DLC
     ---
     data: longblob
     headers : blob
@@ -165,8 +164,8 @@ class SyncDLCKptsDf(dj.Computed):
             if (
                 not "camera" in key or not "doe" in key
             ):  # TODO: add allow_direct_insert in arg
-                key = (vr4mice.schema.vr4mice.DLC() & key).fetch(
-                    *vr4mice.schema.vr4mice.DLC().primary_key, as_dict=True
+                key = (vr4mice.DLC() & key).fetch(
+                    *vr4mice.DLC().primary_key, as_dict=True
                 )[0]
 
             data = {**key, **data}
@@ -221,7 +220,7 @@ class OfflineKinematics(dj.Computed):
 
     definition = """
     -> SyncDLCKptsDf
-    -> vr4mice.schema.vr4mice.DLC
+    -> vr4mice.DLC
     ---
     data: longblob
     headers : blob
@@ -256,8 +255,8 @@ class OfflineKinematics(dj.Computed):
             if (
                 not "camera" in key or not "doe" in key
             ):  # TODO: add allow_direct_insert in arg
-                key = (vr4mice.schema.vr4mice.DLC() & key).fetch(
-                    *vr4mice.schema.vr4mice.DLC().primary_key, as_dict=True
+                key = (vr4mice.DLC() & key).fetch(
+                    *vr4mice.DLC().primary_key, as_dict=True
                 )[0]
 
             data = {**key, **data}
