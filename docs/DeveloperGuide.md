@@ -27,6 +27,14 @@ Decisions (in addition to adding core developers and SC membership as above) are
 
 ## Code style
 
+### Style Guide
+We use the [Google style guidelines](https://google.github.io/styleguide/). Developers are highly encouraged to have a look at it from time to time. Note that formatting will be enforced by running `black` and `isort`. 
+
+Some rules of interest included in the Google guidelines are:
+- Import each module using the full pathname location of the module.
+- Follow standard typographic rules for the use of spaces around punctuation.
+- Function names, variable names, and filenames should be descriptive; avoid abbreviation. 
+
 ### Use Black
 Ensure all Python code is formatted with Black before committing (current version 22.6). Black enforces consistency and removes debates over code style. Use the default settings. Command: `black .` (to run in current folder).
 
@@ -40,9 +48,8 @@ All public methods and functions should have docstrings using the [PEP 257 forma
 Use type hints to make the code more readable and to help with catching potential bugs early.
 
 ### Inline comments
-Use inline comments to explain non-obvious code logic or important context. Make sure they are clear and concise. Avoid comments that state the obvious, as they clutter the code. 
-
-When using TODO or NOTE comments, always include the name of the person responsible for addressing it (e.g., TODO(username): Refactor this section). Provide enough context for the TODO or NOTE to be actionable. Avoid vague comments like "TODO: fix this". Instead, specify what needs to be fixed and why. Do not leave TODO or NOTE comments unresolved in the codebase if they are unclear or outdated. Regularly review and address them to maintain code quality.
+- Use inline comments to explain non-obvious code logic or important context. Make sure they are clear and concise. Avoid comments that state the obvious, as they clutter the code. 
+- When using TODO or NOTE comments, always include the name of the person responsible for addressing it (e.g., TODO(username): Refactor this section). From Google style guidelines, TODO comments are for code that is temporary, a short-term solution, or good-enough but not perfect. Provide enough context for the TODO or NOTE to be actionable. Avoid vague comments like "TODO: fix this". Instead, specify what needs to be fixed and why. Do not leave TODO or NOTE comments unresolved in the codebase if they are unclear or outdated. Regularly review and address them to maintain code quality. 
 
 ## GitHub Branching, Commits, & Other Guidelines
 
