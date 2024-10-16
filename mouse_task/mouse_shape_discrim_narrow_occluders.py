@@ -18,9 +18,9 @@ current_dir = pathlib.Path(__file__).parent
 config_path = current_dir.joinpath(config_name)  # default class constructor input
 
 
-class ShapeDiscrimOccluders(ActiveSensingTask):
+class ShapeDiscrimNarrowOccluders(ActiveSensingTask):
     """
-    Shape discrimination task,  with occluders of different sizes
+    Shape discrimination task, with occluders of different sizes
     Mouse must report the white pacman location and ignore the teardrop.
     """
 
@@ -30,7 +30,7 @@ class ShapeDiscrimOccluders(ActiveSensingTask):
         monitor=None,
         write_video=False,
         fps=60.0,
-        session_label=["ar_shape_discrim_occluders"],
+        session_label=["ar_shape_discrim_narrow_occluders"],
         epochs=[250],
         epoch_labels=["pacman_vs_teardrop"],
         config_file_path=config_path,
@@ -44,7 +44,7 @@ class ShapeDiscrimOccluders(ActiveSensingTask):
         prob_obj_on_left=0.5,
         prob_block_coherence=0.5,
         mouse_report_delay=0.0,
-        slit_size=[8.0, 15.0, 2],
+        slit_size=[5.0, 15.0, 2],
         slit_depth=0.02,
         target_selection=13.0,
         distractor_selection=6.0,
@@ -59,7 +59,7 @@ class ShapeDiscrimOccluders(ActiveSensingTask):
         velocity_threshold=5.0,
         distractor=1.0,
         grey_screen_active=0.0,
-        target_distance=3.5,
+        target_distance=4.0,
         use_dlc=True,
     ):
         super().__init__(
