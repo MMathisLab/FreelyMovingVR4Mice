@@ -4,7 +4,6 @@ from typing import Dict
 
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 import vr4mice.analysis.analysis as analysis
 import vr4mice.analysis.plotting as plotting
 import vr4mice.analysis.utils as utils
@@ -131,8 +130,6 @@ def vr4mice_summary_plots(
     df, box_df_output = fetch_data(key, database)
     df["dataset"] = key["dataset"]
     df = df[df.iti == 0]
-
-    print(df.columns)
 
     # NOTE: so that the head_dir is align to the screen
     df["head_dir"] = ((df.head_dir) + 180) % 360 - 180

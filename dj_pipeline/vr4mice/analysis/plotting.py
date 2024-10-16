@@ -9,6 +9,7 @@ import numpy.typing as npt
 import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
+import vr4mice.analysis.analysis as analysis
 from matplotlib.collections import PathCollection
 from matplotlib.transforms import Affine2D
 from scipy.interpolate import CubicSpline
@@ -516,7 +517,73 @@ def plot_trial_count(
             df.groupby(["dataset"]).trial.nunique().mean(),
             df.groupby(["dataset"]).trial.nunique().sem(),
         )
-    print(stats)
+    # print(stats)
+
+
+def plot_rate(
+    df,  # TODO(celia): provide correct columns directly?
+    label_x: str,
+    per_aperture: bool = False,
+    per_day: bool = False,  # TODO(celia): to add for Fig.2 E.
+    alpha: float = 0.5,
+    ax: Optional[matplotlib.axes.Axes] = None,
+    cmap: str = "Set1",
+):
+    """Plot the rate for a given `label_x` column per session or per aperture.
+
+    This works specifically for plotting the choice rate, the reward rate,
+    the target location rate, the trial count.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing the data to plot.
+        label_x (str): Name of the column
+        per_aperture (bool, optional): If True, plot per aperture. Default is False.
+        per_day (bool, optional): If True, plot per day. Default is False.
+        alpha (float, optional): Alpha transparency for the plot. Default is 0.5.
+        ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
+        cmap (str, optional): Color map for the plot. Default is "Set1".
+    """
+    if per_aperture:
+        counts = (
+            df[df[label_x] == 1].groupby(["dataset", "aperture"]).trial.nunique()
+            / df.groupby(["dataset", "aperture"]).trial.nunique()
+        )
+        counts = pd.DataFrame(counts.reset_index().sort_values(by="aperture"))
+        counts.aperture = counts.aperture.round(2).astype(str)
+    else:
+        counts = (
+            df[df[label_x] == 1].groupby(["dataset"]).trial.nunique()
+            / df.groupby(["dataset"]).trial.nunique()
+        )
+        counts = pd.DataFrame(counts.reset_index())
+    counts = counts.rename(columns={"trial": "count"})
+
+    _plot_bar_counts(
+        counts=counts,
+        label_x="aperture" if per_aperture else None,
+        per_day=per_day,
+        alpha=alpha,
+        ax=ax,
+        cmap=cmap,
+    )
+
+    ax.set_xlim(-0.5, len(df.aperture.unique()) - 0.5)
+
+    if per_aperture:
+        stats = pd.DataFrame(
+            zip(
+                counts.groupby("aperture")["count"].mean(),
+                counts.groupby("aperture")["count"].sem(),
+            ),
+            columns=["mean", "sem"],
+            index=counts.groupby("aperture")["count"].mean().index,
+        )
+    else:
+        stats = (
+            counts["count"].mean(),
+            counts["count"].sem(),
+        )
+    # print(stats)
 
 
 def plot_rate(
