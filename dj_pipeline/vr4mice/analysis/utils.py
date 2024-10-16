@@ -7,7 +7,6 @@ import scipy.interpolate
 import umap
 from sklearn.decomposition import PCA
 
-
 """
 Color codes:
     - left box: purple: '#5C0A72'
@@ -37,7 +36,7 @@ def create_bins(
         data[label],
         bins=np.linspace(spatial_ybins[0], spatial_ybins[1], spatial_ybins[2]),
     )
-    data["bin_centers"] = data["bins"].apply(lambda x: x.mid).astype("float")  # - 25
+    data.loc[:, "bin_centers"] = data["bins"].apply(lambda x: x.mid).astype("float")
     return data
 
 
@@ -100,7 +99,7 @@ def interpolate_group(
 def interpolate(
     df: pd.DataFrame,
     n_points: int = 100,
-    interpolation_columns: List[int] = ["session", "trial"],
+    interpolation_columns: List[int] = ["dataset", "trial"],
     value_columns: List[int] = ["x", "norm_x", "velocity", "head_dir"],
 ) -> pd.DataFrame:
     """
@@ -159,10 +158,10 @@ def cluster(
     """
 
     data_x = np.concatenate(
-        df.groupby(["session", "trial"])[label_x].apply(np.array).values
+        df.groupby(["dataset", "trial"])[label_x].apply(np.array).values
     ).reshape(-1, 200)
     data_y = np.concatenate(
-        df.groupby(["session", "trial"])[label_y].apply(np.array).values
+        df.groupby(["dataset", "trial"])[label_y].apply(np.array).values
     ).reshape(-1, 200)
 
     data = np.concatenate(
@@ -183,7 +182,7 @@ def cluster(
 
 
 def compute_start_position(
-    df: pd.DataFrame, df_box: pd.DataFrame, n_bins: Optional[int] = 3
+    df: pd.DataFrame, box_df: pd.DataFrame, n_bins: Optional[int] = 3
 ) -> pd.DataFrame:
     """Add a column `x_init_bin_center` to the dataframe.
 
@@ -194,7 +193,7 @@ def compute_start_position(
             the trial.
     """
 
-    start, end = df_box["tt_box_x_min"], df_box["tt_box_x_max"]
+    start, end = box_df["tt_box_x_min"], box_df["tt_box_x_max"]
     bin_edges = np.linspace(start, end, n_bins + 1)
     bin_midpoints = (bin_edges[:-1] + bin_edges[1:]) / 2
 
