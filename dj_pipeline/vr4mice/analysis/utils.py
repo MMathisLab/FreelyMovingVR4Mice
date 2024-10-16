@@ -45,7 +45,7 @@ def h5_to_dj(h5_path: str) -> Dict:
 
 
 def dj_to_df(
-    data: npt.NDArray, headers: List[Union[str, Tuple[str]]], scorer = None
+    data: npt.NDArray, headers: List[Union[str, Tuple[str]]], scorer=None
 ) -> pd.DataFrame:
     """Converts a dictionary format back to a DataFrame.
 
