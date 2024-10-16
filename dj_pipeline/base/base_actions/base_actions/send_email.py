@@ -23,11 +23,14 @@ def email(
     message,
     path="/data/processeddata/summaryImgs",
     error=False,
-    pipeline_name="vr_games",
+    pipeline_name="ar_games",
 ):
+    
+    if email == "default":
+        email =  fromaddr
 
-    logger.info("Filename:" + str(filename))
-
+    logger.info(f"Sending email to {email}, file {filename}")
+    
     try:
         email_password = config.get("Email", "password")
         fromaddr = config.get("Email", "email")
