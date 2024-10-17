@@ -234,7 +234,7 @@ May be combined in single arena session with {ref}`sec:arena-habituation`.
   - [**Contrast**](./contrast_discrimination_training_parameters.md#stage-3)
   - [**Shape**](./shape_discrimination_training_parameters.md#stage-3)
 
-This is currently the **test stage**. Mice that have reached it should do **>= 4 full sessions** (i.e. should do the full 250 trials **within 1 hour**).
+This is currently the **test stage**. Mice that have reached it should do **>= 4 full sessions**, i.e. should do the full 250 trials **within 1 hour** and the experimenter should ideally let them run for the 250 trials even after the full hour passed if necessary.
 
 <!-- ### Training Stage 4: Discrimination with multiple occlusion sizes
 
