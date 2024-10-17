@@ -168,7 +168,11 @@ It is important to monitor the mice while they are training. If they stop doing 
 
 ## Training stages
 
-At this point in time, two training paths are available to train mice. The first one leads to a contrast discrimination task where mice are trained to distinguish between a black and a white object with identical shapes. The second path leads to a shape discrimination task where mice are trained to distinguish between the `white teardrop` and the `white pacman`. At the end of both training paths, the last stage consists of adding occluders that partially hide the objects thus encouraging mice to find a way to gather more information in order to make the correct choice and get a reward. Hereafter, the different stage are outlined in more detail. For each one there will be references to the game parameters and the python task script used for both the first and the second path which we'll be calling, for sake of simplicity, **Contrast** and **Shape** respectively.
+Here, we present 2 different training protocols. 
+- Contrast discrimination task: mice are trained to distinguish between a white (target) and black (distractor) object with identical shape (teardrop). 
+- Shape discrimination task: mice are trained to distinguish between a Pacman (target) and a teardrop (distractor) with identical color (white). 
+
+Below, the training stages are outlined in more detail, referencing the game parameters and the Python task script used for both protocols. In both protocols, the test stage consists of adding occluders to (partially) hide the objects, encouraging mice to find a way to gather more information before making a decision. 
 
 Note that it is possible to custom-select the objects for the tasks. To select the target type, change the `target_selection` parameter in the GUI (i.e. `target_selection = 6.0` for the white single teardrop object). To change the distractor type, change the value of the `distractor_type` parameter. For a comprehensive list of available objects to select from, have a look at the {ref}`sec:target-distractor-list`.
 
