@@ -220,33 +220,33 @@ def create_data_frame(
         df.trial != 1
     ]  # NOTE(celia): drop first trial which is DLC-live initialization trial
 
-    unity_arena_size = dict(
+    unity_to_physical_arena_size = dict(
         unity_arena_size_x_min=9,
-        unity_arena_size_x_max=-10,
+        unity_arena_size_z_max=-10,
         unity_arena_size_z_min=-2,
-        unity_arena_size_z_max=27,
+        physical_arena_size=27,
     )
 
     df["x"] = np.interp(
         df.x,
         [
-            -1 * unity_arena_size["unity_arena_size_x_min"],
-            unity_arena_size["unity_arena_size_x_min"],
+            -1 * unity_to_physical_arena_size["unity_arena_size_x_min"],
+            unity_to_physical_arena_size["unity_arena_size_x_min"],
         ],
         [
-            -1 * unity_arena_size["unity_arena_size_z_max"],
-            unity_arena_size["unity_arena_size_z_max"],
+            -1 * unity_to_physical_arena_size["physical_arena_size"],
+            unity_to_physical_arena_size["physical_arena_size"],
         ],
     )
     df["y"] = np.interp(
         df.y,
         [
-            unity_arena_size["unity_arena_size_x_max"],
-            unity_arena_size["unity_arena_size_z_min"],
+            unity_to_physical_arena_size["unity_arena_size_z_max"],
+            unity_to_physical_arena_size["unity_arena_size_z_min"],
         ],
         [
-            -1 * unity_arena_size["unity_arena_size_z_max"],
-            unity_arena_size["unity_arena_size_z_max"],
+            -1 * unity_to_physical_arena_size["physical_arena_size"],
+            unity_to_physical_arena_size["physical_arena_size"],
         ],
     )
 
@@ -379,10 +379,10 @@ def create_data_frame(
 
     df = df.drop(columns=["first", "last"])
 
-    return df, unity_arena_size
+    return df, unity_to_physical_arena_size
 
 
-def get_box_df(key: dict, df: pd.DataFrame, unity_arena_size: dict):
+def get_box_df(key: dict, df: pd.DataFrame, unity_to_physical_arena_size: dict):
     """Define the box dimensions.
 
     Define the arena, start area and reward areas dimensions.
@@ -397,10 +397,10 @@ def get_box_df(key: dict, df: pd.DataFrame, unity_arena_size: dict):
             if isinstance(value, list):
                 box_df.loc[index, col] = value[0]
 
-    a = unity_arena_size["unity_arena_size_x_min"]
-    b = unity_arena_size["unity_arena_size_x_max"]
-    c = unity_arena_size["unity_arena_size_z_min"]
-    d = unity_arena_size["unity_arena_size_z_max"]
+    a = unity_to_physical_arena_size["unity_arena_size_x_min"]
+    b = unity_to_physical_arena_size["unity_arena_size_z_max"]
+    c = unity_to_physical_arena_size["unity_arena_size_z_min"]
+    d = unity_to_physical_arena_size["physical_arena_size"]
 
     # same indexes among blocks
     box_df.l_box_x_min = np.interp(box_df.l_box_x_min, [-1 * a, a], [-1 * d, d])
