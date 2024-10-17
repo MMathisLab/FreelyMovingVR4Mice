@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+
 from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
 
@@ -101,10 +102,9 @@ def get_rewarded(df: pd.DataFrame) -> pd.Series:
         A pandas.Series with 1 if the trial to which the timepoint
         belongs to is rewarded and 0 else.
     """
-
     return df.groupby("trial")["reward"].transform(lambda x: x.max())
 
-
+  
 def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
     """
     Sets the first x and y positions of the given DataFrame to np.nan.
@@ -123,7 +123,7 @@ def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
     group.loc[group.index[0], ["x", "y", "head_dir"]] = np.nan
     return group
 
-
+  
 def get_distance_to_reward(df: pd.DataFrame, df_box: pd.DataFrame) -> npt.NDArray:
     distance_to_reward = np.sqrt(
         (df_box["right_box_x_center"] - (df["x"] * df["flip_one_side"])) ** 2
@@ -131,7 +131,7 @@ def get_distance_to_reward(df: pd.DataFrame, df_box: pd.DataFrame) -> npt.NDArra
     )
     return distance_to_reward
 
-
+  
 def create_data_frame(
     key: dict,
     iti: bool = True,
@@ -245,7 +245,6 @@ def create_data_frame(
     df["norm_y"] = df.groupby("trial", as_index=False)["y"].transform(
         lambda x: x - np.mean(x.iloc[:first_n_samples])
     )
-
     if not iti:
         df = df[df.iti == 0.0]
 
@@ -257,6 +256,7 @@ def create_data_frame(
         columns={"mouse_in_right_trial_right_choice": "trial_right_choice"},
         inplace=True,
     )
+
     trial_left_choice = (
         df[df["iti"] == 0].groupby("trial")["mouse_in_left"].last().reset_index()
     )

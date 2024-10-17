@@ -1,4 +1,4 @@
-from pathlib import Path
+nfrom pathlib import Path
 from typing import List
 import subprocess
 
@@ -241,7 +241,7 @@ class BoxDataFrame(dj.Computed):
                     k: v[0] if isinstance(v, list) and len(v) == 1 else v
                     for k, v in df_box.to_dict(orient="list").items()
                 }
-                data = {**key, **box_df}  # **data}
+                data = {**key, **box_df}
                 self.insert1(data, allow_direct_insert=True)
                 logger.info(f"{self.__class__.__name__} populated for {key}.")
 

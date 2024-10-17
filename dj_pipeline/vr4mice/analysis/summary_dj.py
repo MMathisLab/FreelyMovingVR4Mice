@@ -1,3 +1,4 @@
+
 import pathlib
 import warnings
 from typing import Dict
@@ -85,7 +86,6 @@ def fetch_data(key: Dict, database: bool):
 
 def get_path(key: Dict, base: str, ext: str = ".png") -> pathlib.Path:
     """Create the name of the summary plot file.
-
     Format is {dataset_name}_summary_plot.{ext}
 
     Args:
@@ -96,7 +96,6 @@ def get_path(key: Dict, base: str, ext: str = ".png") -> pathlib.Path:
 
     Returns:
         The path to save the summary plot to.
-
     """
     name = str(key["dataset"]) + "_summary_plot" + ext
     return pathlib.Path(base) / name
@@ -145,6 +144,7 @@ def vr4mice_summary_plots(
     df["head_dir"] = ((df.head_dir) + 180) % 360 - 180
 
     num_apertures = len(df.aperture.unique())
+
 
     # Create the summary figure grid
     fig = plt.figure(figsize=(25, 20), constrained_layout=True)
@@ -202,7 +202,7 @@ def vr4mice_summary_plots(
     ## Display mean trajectory for the j-shaped trials
     j_shaped_df = analysis.get_jshaped_trials(
         df
-    ).copy()  # Note(mary): @tom let's decide on JShape table
+    ).copy()  
     j_shaped_df = utils.create_bins(
         data=j_shaped_df, spatial_ybins=[6.75, 20, 25], label="y"
     )

@@ -19,7 +19,7 @@ current_dir = pathlib.Path(__file__).parent
 config_path = current_dir.joinpath(config_name)  # default class constructor input
 
 
-class ShapeDiscrimination(ActiveSensingTask):
+class ShapeDiscrim(ActiveSensingTask):
     """
     Discrimination for shape task,with velocity threshold for trial initiation, no occluders.
     The mouse must report the location of the white Pacman object and ignore the teardrop.

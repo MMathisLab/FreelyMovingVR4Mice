@@ -87,6 +87,28 @@ def lineplot_flip_axis(ax: Optional[matplotlib.axes.Axes] = None, **kwargs):
     return line
 
 
+def get_rc_params():
+    font_color = "black"
+    font_size = 18
+    plt.rcParams.update(
+        {
+            "text.color": font_color,
+            "axes.labelcolor": font_color,
+            "axes.labelsize": font_size,
+            "axes.titleweight": "bold",
+            "axes.titlesize": font_size,
+            "xtick.labelcolor": font_color,
+            "xtick.labelsize": font_size,
+            "ytick.labelcolor": font_color,
+            "ytick.labelsize": font_size,
+            "font.weight": "bold",
+        }
+    )
+
+    plt.rc("axes.spines", top=False, bottom=True, left=True, right=False)
+    plt.rc("axes", edgecolor=font_color)
+
+
 def plot_box_rectangle(
     df_box: pd.DataFrame,
     box_label: str,
