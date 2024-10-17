@@ -58,7 +58,7 @@ if __name__ == "__main__":
     #    insert_fake_mouse(name="Barracuda")
 
     if mode == "connect":
-        from vr4mice.schema import vr4mice, base_analysis, dlc, federated_db
+        from vr4mice.schema import vr4mice, base_analysis, dlc, base
 
         pass
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         populate_rig(path)
 
     elif mode == "analysis":
-        from vr4mice.schema import base_analysis, federated_db
+        from vr4mice.schema import base_analysis, base
 
         # NOTE: populate has to be run before
 
@@ -80,7 +80,8 @@ if __name__ == "__main__":
         base_analysis.JShaped().populate()
         base_analysis.GitCommit().populate()
 
-        # base_analysis.OutputPlots.populate()
+    elif mode == "summary":
+        base_analysis.SummaryPlots.populate(send=False)
 
     elif mode == "dlc":
         # NOTE: populate and analysis have to be run before

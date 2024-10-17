@@ -83,17 +83,21 @@ if __name__ == "__main__":
             (dlc.SyncDLCKptsDf() & t).delete()
             (dlc.OfflineKinematics() & t).delete()
 
-    elif mode == "summary_test":
+    elif mode == "federated":
         from vr4mice.schema import vr4mice, base_analysis, dlc
         from vr4mice.analysis.summary_dj import fetch_data
-        
+
+    elif mode == "summary_test":
+        from vr4mice.schema import vr4mice, base_analysis, dlc, base
+        from vr4mice.analysis.summary_dj import fetch_data
+
         test_datasets = [
+            {"dataset": "Uguisu_2024-09-06_1"},
             {"dataset": "Jacana_2024-08-21_1"},
-            #{"dataset": "Oribi_2024-08-16_1"},
-            #{"dataset": "Pheasant_2024-08-28_1"},
+            {"dataset": "Oribi_2024-08-16_1"},
+            {"dataset": "Pheasant_2024-08-28_1"},
         ]
         for t in test_datasets:
-            data_db = fetch_data(t, database=True)
-            print(data_db)
-            data_compute = fetch_data(t, database=False)
-            print(data_compute)
+            base_analysis.SummaryPlots().get_path(key=t)
+            base_analysis.SummaryPlots().get_subtitle(key=t)
+            base_analysis.SummaryPlots().make(key=t, send=False)
