@@ -198,7 +198,7 @@ May be combined in single arena session with {ref}`sec:arena-habituation`.
 - **P2: Detection task training - restricted trial initiation parameters.**
   - **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 1 session.
   - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation (see {ref}`sec:gui`).
-  - Everything is the same as in **P1** with the only difference that we constrain the trial initiation dynamics by lowering `velocity_threshold` and increasing `start_box_delay` from the task parameters.
+  - Same as in **P1** except we want the mice to learn to mark a stop at trial initiation so we lower `velocity_threshold` and increase `start_box_delay` from the task parameters compared to **P1**.
   - **Python Task** to be loaded in the GUI:
     - [DetectionWithVelocityThresholdTask](../../mouse_task/mouse_detection_p2.py)
     - [ShapeDetectionWithVelocityThresholdTask](../../mouse_task/mouse_shape_detection_p2.py)
