@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional, Dict
+from typing import List, Optional
 
 import datajoint as dj
 import pandas as pd
@@ -22,8 +22,8 @@ class DataFrame(dj.Computed):
     # TODO: This used to point to vr4mice.VR4Mice
     #       will probably point this to the next version when it's available
 
-    # TODO: Alert!
-    # "step", "reward", "step_time", "mouse_can_report", "head_dir" has to be deprecated: can be always fetched from Raw
+    # TODO: "step", "reward", "step_time", "mouse_can_report", "head_dir" have
+    #       to be deprecated: can be always fetched from Raw
 
     definition = """
     -> vr4mice.Dataset
@@ -87,8 +87,8 @@ class DataFrame(dj.Computed):
     interpolation: longblob
     """
 
-    def make(self, key: Dict[str]):
-        from vr4mice.analysis.analysis import create_data_frame
+    def make(self, key: dict):
+        import vr4mice.analysis.analysis as analysis
 
         if self & key:
             logger.info(
@@ -97,7 +97,7 @@ class DataFrame(dj.Computed):
             return
 
         try:
-            data, unity_to_physical_arena_size = create_data_frame(key)
+            data, unity_to_physical_arena_size = analysis.create_data_frame(key)
             data = data.to_dict(orient="list")
             data = {**key, **data, **{"interpolation": unity_to_physical_arena_size}}
 
@@ -114,7 +114,7 @@ class DataFrame(dj.Computed):
             return None
 
     def get_data(
-        self, key: Dict[str], columns: Optional[List[str]] = None
+        self, key: dict, columns: Optional[List[str]] = None
     ) -> Optional[pd.DataFrame]:
         try:
             if self & key:
@@ -132,7 +132,7 @@ class DataFrame(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_unity_arena_size(self, key: Dict[str]) -> dict:
+    def get_unity_arena_size(self, key: dict) -> dict:
         try:
             if self & key:
                 unity_to_physical_arena_size = (self & key).fetch("interpolation")[0]
@@ -164,7 +164,7 @@ class DataFrame(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}: {err}")
             return None
 
-    def get_rewarded(self, key: Dict[str]):
+    def get_rewarded(self, key: dict):
         from vr4mice.analysis.analysis import get_rewarded
 
         df = self.get_data(key, ["dataset", "trial", "reward", "aperture"])
@@ -250,7 +250,7 @@ class BoxDataFrame(dj.Computed):
             )
             return None
 
-    def get_data(self, key: Dict[str], columns: Optional[List[str]] = None):
+    def get_data(self, key: dict, columns: Optional[List[str]] = None):
         try:
             if self & key:
                 if columns:
