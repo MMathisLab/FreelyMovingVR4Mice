@@ -212,7 +212,7 @@ May be combined in single arena session with {ref}`sec:arena-habituation`.
 
 - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation
 (see {ref}`sec:gui`).
-- At this stage a distractor object is introduced to increase the difficulty of the task and force mice to choose between the target and the new object. Of course, choosing the new object doesn't lead to any reward. The disctractor object can be selected modifying the value of the `distractor_selection` parameter and its presence (or absence) is controlled by the `distractor` parameter which can be either `1` (presence) or `0` (absence).
+- At this stage, a distractor object is introduced so that the task becomes a discrimination task. The mouse gets no reward when going on the distractor object side. The distractor object can be selected by modifying the value of the `distractor_selection` parameter. Its presence (or absence) is controlled by the `distractor` parameter which can be either `1` (presence) or `0` (absence).
 - **Python Task** to be loaded in the GUI:
   - [DiscriminationTask](../../mouse_task/mouse_discrim.py)
   - [ShapeDiscrimination](../../mouse_task/mouse_shape_discrim.py)
