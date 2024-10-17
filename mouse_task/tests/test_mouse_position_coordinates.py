@@ -1,13 +1,24 @@
 import unittest
 import time
 import pygame
+import pickle as pkl
 import tkinter as tk
 import numpy as np
 import pandas as pd
+
 from tkinter import filedialog
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 from mouse_task.tests.test_task_class import TestTask
+from mouse_task.tests.test_helpers import (
+    plot_trajectories,
+    compute_trigger_areas_coordinates,
+    dict_to_data_frame,
+    ask_generate_data,
+)
+
+# from teensyexp.tasks_abc.unity_task import UnityTask
+# from test_task_class import TestSocket
 
 
 class TestPositionCoordinates(unittest.TestCase):
@@ -47,10 +58,9 @@ class TestPositionCoordinates(unittest.TestCase):
         self.distractor = 0.0
         self.grey_screen_active = 0.0
         self.target_distance = 3.0
-        self.use_dlc = False
+        self.use_dlc = True
         self.prob_block_coherence = 1.0
-        self.test_trajectory = []
-        self.previous_pos_idx = 0
+        self.test_data = None
 
         root = tk.Tk()
         root.withdraw()
@@ -63,6 +73,7 @@ class TestPositionCoordinates(unittest.TestCase):
             return_value=self.config,
         ):
             self.task = TestTask(
+                # self.task = UnityTask(
                 teensy=self.teensy,
                 monitor=self.monitor,
                 write_video=self.write_video,
@@ -98,84 +109,107 @@ class TestPositionCoordinates(unittest.TestCase):
                 grey_screen_active=self.grey_screen_active,
                 target_distance=self.target_distance,
                 use_dlc=self.use_dlc,
-                test_trajectory=self.test_trajectory,
-                previous_pos_idx=self.previous_pos_idx,
+                test_data=self.test_data,
             )
 
-    # def test_manual_trajectories(self):
-    #     pygame.init()
-    #     screen = pygame.display.set_mode((530, 510))
+    def test_manual_trajectories(self):
 
-    #     trajectory = []
+        if not ask_generate_data():
+            return
 
-    #     # Initialize Unity environment
-    #     self.task.start()
-    #     self.task.reset_environment()
+        self.task.use_dlc = False  # overriding the get_action method, don't need dlc
 
-    #     # Main loop
-    #     running = True
-    #     while running:
-    #         for event in pygame.event.get():
-    #             if event.type == pygame.QUIT:
-    #                 running = False
-    #             elif event.type == pygame.KEYDOWN:
-    #                 if event.key == pygame.K_ESCAPE:  # Quit on pressing Escape key
-    #                     running = False
+        window_width = self.cropped_image[1]
+        window_height = self.cropped_image[3]
 
-    #         # Get mouse position within the arena bounds
-    #         mouse_pos = pygame.mouse.get_pos()
+        RED = (255, 0, 0)
+        GREEN = (0, 255, 0)
+        BLACK = (0, 0, 0)
 
-    #         # Ensure it is within bounds
-    #         x = max(0, min(mouse_pos[0], 530))
-    #         z = max(0, min(mouse_pos[1], 510))
+        pygame.init()
+        screen = pygame.display.set_mode((window_width, window_height))
 
-    #         # Fill the screen with a background color
-    #         screen.fill((0, 0, 0))
-    #         pygame.draw.circle(screen, (255, 0, 0), (x, z), 5)
+        x_rects_upper, y_rects_upper, widths, heights = (
+            compute_trigger_areas_coordinates(self.unity_arena_size, self.cropped_image)
+        )
 
-    #         x = np.interp(
-    #             x,
-    #             [self.cropped_image[0], self.cropped_image[1]],
-    #             [self.unity_arena_size[0], self.unity_arena_size[1]],
-    #         )
-    #         z = np.interp(
-    #             510 - z,
-    #             [self.cropped_image[2], self.cropped_image[3]],
-    #             [self.unity_arena_size[2], self.unity_arena_size[3]],
-    #         )
-
-    #         self.task.loop(override_action=True, action=np.array([x, z, 0, 0]))
-    #         trajectory.append((x, z))
-
-    #         # Update display
-    #         pygame.display.flip()
-    #         time.sleep(0.02)
-
-    #     pygame.quit()
-    #     self.task.stop()
-
-    #     np.save(arr=trajectory, file="./trajectory.npy", allow_pickle=True)
-
-    def test_stored_trajectories(self):
-
-        position_coordinates = []
-        self.test_trajectory = np.load("./trajectory.npy")
-
+        # Initialize Unity environment
         self.task.start()
 
-        for pos in self.test_trajectory:
-            self.task.loop(
-                override_action=True, action=np.array([pos[0], pos[1], 0, 0])
+        # Main loop
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:  # Quit on pressing Escape key
+                        running = False
+
+            # Get mouse position within the arena bounds
+            mouse_pos = pygame.mouse.get_pos()
+
+            # Ensure it is within bounds
+            x = max(0, min(mouse_pos[0], window_width))
+            y = max(0, min(mouse_pos[1], window_height))
+
+            # Fill the screen with a background color
+            screen.fill(BLACK)
+
+            pygame.draw.circle(screen, RED, (x, y), 5)
+            [
+                pygame.draw.rect(screen, GREEN, (x, y, w, h))
+                for x, y, w, h in zip(x_rects_upper, y_rects_upper, widths, heights)
+            ]
+
+            x = np.interp(
+                x,
+                [self.cropped_image[0], self.cropped_image[1]],
+                [self.unity_arena_size[0], self.unity_arena_size[1]],
             )
-            position_coordinates.append(self.task.get_info()["position"])
+            y = np.interp(
+                y,
+                [self.cropped_image[2], self.cropped_image[3]],
+                [self.unity_arena_size[3], self.unity_arena_size[2]],
+            )
+
+            with patch(
+                "mouse_task.task_active_sensing.ActiveSensingTask.get_action",
+                return_value=np.array([x, y, 0, 0]).reshape((1, -1)),
+            ):
+                self.task.loop()
+
+            # Update display
+            pygame.display.flip()
+            time.sleep(1 / 50)
+
+        pygame.quit()
 
         data = self.task.get_data()
         self.task.stop()
 
-        import matplotlib.pyplot as plt
+        plot_trajectories(data)
 
-        plt.plot(position_coordinates)
-        plt.show()
+        with open("./data.pkl", "wb") as handle:
+            pkl.dump(data, handle, protocol=pkl.HIGHEST_PROTOCOL)
+
+    # def test_terminal_step_timing(self):
+    #     with open("./data.pkl", "rb") as handle:
+    #         data = pkl.load(handle)
+
+    #     data_df = dict_to_data_frame(data).groupby("episode").last()
+
+    #     for row in data_df.iterrows():
+    #         self.assertEqual(row["terminal"], True)
+
+    # def test_data_integrity(self):
+    #     with open("./data.pkl", "rb") as handle:
+    #         data = pkl.load(handle)
+
+    #     self.assertEqual(data["state"].shape[0], 1)
+    #     self.assertEqual(data["action"].shape[0], 1)
+    #     self.assertEqual(data["reward"].shape[0], 1)
+    #     self.assertEqual(data["terminal"].shape[0], 1)
 
 
 if __name__ == "__main__":

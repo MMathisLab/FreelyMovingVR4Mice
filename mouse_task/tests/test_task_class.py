@@ -13,6 +13,9 @@ import time as time
 import numpy as np
 
 from mouse_task.task_active_sensing import ActiveSensingTask
+from test_helpers import dict_to_data_frame
+
+# from mouse_task.dlc_utils.fake_processors.test_socket_send import MyProcessor_socket
 
 
 config_name = pathlib.Path("task_config.json")
@@ -62,11 +65,13 @@ class TestTask(ActiveSensingTask):
         grey_screen_active=0.0,
         target_distance=3,
         use_dlc=True,
-        test_trajectory=[],
-        previous_pos_idx=0,
+        test_data=None,
     ):
-        self.test_trajectory = np.load("./trajectory.npy")
-        self.previous_pos_idx = previous_pos_idx
+        if test_data is not None:
+            self.test_data = dict_to_data_frame(test_data)
+        else:
+            self.test_data = None
+        self.pos_idx = 0
         super().__init__(
             teensy=teensy,
             monitor=monitor,
@@ -106,12 +111,55 @@ class TestTask(ActiveSensingTask):
         )
 
     def _get_dlc_on_frame(self):
-        x, z = (
-            self.test_trajectory[self.previous_pos_idx][0],
-            self.test_trajectory[self.previous_pos_idx][1],
-        )
-        self.previous_pos_idx += 1
+        if self.test_trajectory is not None:
+            x, z = (
+                self.test_data.iloc[self.pos_idx].x,
+                self.test_data.iloc[self.pos_idx].y,
+            )
+            self.pos_idx += 1
 
-        self.degrees = 0
-        output = np.array([x, z, self.degrees, 0])
-        return output.reshape((1, -1))
+            self.degrees = 0
+            output = np.array([x, z, self.degrees, 0])
+            return output.reshape((1, -1))
+        else:
+            raise ValueError("No test data provided.")
+
+
+# class TestSocket(MyProcessor_socket):
+#     def __init__(
+#         self,
+#         save_file_path="./",
+#         test_trajectory=None,
+#     ):
+#         super().__init__(save_file_path=save_file_path)
+#         self.test_trajectory = test_trajectory
+#         self.pos_idx = 0
+
+#     def process(self):
+#         self.curr_time = time.time()
+#         self.get_curr_signal()
+#         print(self.curr_signal)
+#         if self.test_trajectory is not None:
+#             self.conn.send(
+#                 [
+#                     self.curr_time,
+#                     self.test_trajectory[self.pos_idx][0],
+#                     self.test_trajectory[self.pos_idx][1],
+#                     0,
+#                     0,
+#                     self.curr_signal,
+#                 ]
+#             )
+#             self.pos_idx += 1
+#         else:
+#             raise ValueError("No test trajectory provided.")
+
+#         self.signal.append(self.curr_signal)
+#         self.step.append(self.curr_step)
+#         self.time_stamp.append(self.curr_time)
+#         self.curr_step = self.curr_step + 1
+
+#         # self.time_stamp.append(time.time)
+#         ## Sending data at 50Hz ##
+#         time.sleep(1 / 50)
+#         # print(self.st - time.time())
