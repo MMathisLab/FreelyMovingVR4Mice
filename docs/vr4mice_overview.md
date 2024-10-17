@@ -44,3 +44,12 @@ To run an augmented reality experiment, vr4mice requires two objects:
 To pass actions to `vr4mice` from dlc key points in real time you will also need a working installation of [deeplabcutlive-gui](https://github.com/DeepLabCut/DeepLabCut-live-GUI). This handles reading images from the camera and live pose extraction. Deeplabcutlive-gui requires that a `processor` script is loaded, this is a file that computes various attributes such as the x, y position of the mouse and then it sends this data to via a socket to the vr4mice gui. An example processor can be found in `mouse_task/dlc_utils/dlc_processor_socket.py`
 
 These documents provide an explanation of how to use both of these objects alongside an explanation of how to build the rig and installation.
+
+## Rig Calibration checklist:
+Before running a mouse on the rig make sure you complete this checklist for testing the latency and calibrating the system:
+
+1. `Latency testing`: make sure that your [photodiode circuit](./Rig_building/Photodiode_circuit.md) is connected and run a latency test. This can be done by running a [session](./Installation/Run_a_session.md) without the mouse being in the box. You can then compare the round trip latencies by running this jupyter notebook `mouse_task/latency_tests/Latency_test_notebook/Latency_testing.ipynb`. 
+
+2. `Calibrate the monitor brightness`: Follow this [doc](./Rig_building/Monitor_Luminance_Measurement.md) to ensure that the monitors are similar brightness. 
+
+3. `Calibrate the water valves`: Check that your water ports are delivering between 3-5ul of water using this [`calibration method`](./Rig_building/Water_Valve_Calibration.md)

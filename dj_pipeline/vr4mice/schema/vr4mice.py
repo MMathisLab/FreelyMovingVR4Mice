@@ -38,23 +38,142 @@ class Dataset(dj.Manual):
     ---
     exp_teensy_filepath: varchar(255) # pickle file
     exp_session_filepath: varchar(255)  # npy file
+    session_label: varchar(255)
     """
 
+    def get_keys(self, folder="/data/processed"):
+        keys = []
+        dataset_keys = Dataset().fetch("dataset", as_dict=True)
+        camera_keys = Camera().fetch("camera", as_dict=True)
+        for dk in dataset_keys:
+            for ck in camera_keys:
+                keys.append({**dk, **ck})
+        return keys
 
-# TODO: This should be moved to its own schema.
-# @schema
-# class VR4Mice(dj.Manual):
-#     """
-#         VR4Mice definition table:
-#         links together Dataset with base Mouse, Exp schemas
-#     """
-#
-#     definition = """
-#    -> Dataset
-#    ---
-#    -> mice.Mouse
-#    -> exp.Session
-#    """
+    def populate(self):
+        keys = self.get_keys()
+        for key in keys:
+            self.make(key)
+
+    def make(self, key):
+        from vr4mice.actions.populate_rig import get_files_paths
+
+        logger.info(f"{key['dataset']}")
+        paths = get_files_paths(key["dataset"])
+        video_filepath = (
+            f"{paths['video_path']['dst']}/{paths['video_path']['filename']}"
+        )
+        timestamp_filepath = (
+            f"{paths['camera_path']['dst']}/{paths['camera_path']['filename']}"
+        )
+        video_meta = paths["video_meta"]
+        data = {
+            "doe": paths["doe"],
+            "video_filepath": video_filepath,
+            "timestamp_filepath": timestamp_filepath,
+        }
+        data = {**key, **data, **video_meta}
+        Video().insert1(data, skip_duplicates=True)
+
+
+@schema
+class Labels(dj.Lookup):
+    definition = """
+    idx: int
+    ---
+    label: varchar(128)
+    """
+
+    contents = [
+        # [0, "example_label"],  #
+    ]
+
+    @classmethod
+    def get_next_idx(cls):
+        if not cls.fetch("idx"):
+            return 0
+        current_max = cls.fetch("idx").max()
+        return current_max + 1 if current_max is not None else 0
+
+
+@schema
+class Groups(dj.Manual):
+    definition = """
+    -> Dataset
+    -> Labels
+    """
+
+    def add(self, dataset, label):
+        try:
+            key = f"dataset='{dataset}'"
+            a = (Dataset & key).fetch()
+            if a.size == 0:
+                logger.warning(
+                    f"No Dataset entry found for {dataset}: can't populate Groups table."
+                )
+                return
+            key = f"label='{label}'"
+            label_idx = (Labels & key).fetch("idx")[0]
+
+            if label_idx is None:
+                label_idx = Labels().get_next_idx()
+                Labels.insert1({"idx": label_idx, "label": label})
+
+            self.insert1({"dataset": dataset, "idx": label_idx})
+
+        except Exception as err:
+            err = f"Error while populating the Groups table: key: {dataset} {label_idx}\n {err}"
+            logger.warning(err)
+
+
+@schema
+class Labels(dj.Lookup):
+    definition = """
+    idx: int
+    ---
+    label: varchar(128)
+    """
+
+    contents = [
+        # [0, "example_label"],  #
+    ]
+
+    @classmethod
+    def get_next_idx(cls):
+        if not cls.fetch("idx"):
+            return 0
+        current_max = cls.fetch("idx").max()
+        return current_max + 1 if current_max is not None else 0
+
+
+@schema
+class Groups(dj.Manual):
+    definition = """
+    -> Dataset
+    -> Labels
+    """
+
+    def add(self, dataset, label):
+        try:
+            key = f"dataset='{dataset}'"
+            a = (Dataset & key).fetch()
+            if a.size == 0:
+                logger.warning(
+                    f"No Dataset entry found for {dataset}: can't populate Groups table."
+                )
+                return
+            key = f"label='{label}'"
+            label_idx = (Labels & key).fetch("idx")[0]
+
+            if label_idx is None:
+                label_idx = Labels().get_next_idx()
+                Labels.insert1({"idx": label_idx, "label": label})
+
+            self.insert1({"dataset": dataset, "idx": label_idx})
+
+        except Exception as err:
+            err = f"Error while populating the Groups table: key: {dataset} {label_idx}\n {err}"
+            logger.warning(err)
 
 
 @schema
@@ -77,9 +196,42 @@ class Video(dj.Manual):
     video_filepath="": varchar(255)
     timestamp_filepath="": varchar(255)
     
-    camera_type=NULL: float 
     """
     # idx to reference the video in analysis table
+
+    def get_keys(self):
+        keys = []
+        dataset_keys = Dataset().fetch("dataset", as_dict=True)
+        camera_keys = Camera().fetch("camera", as_dict=True)
+        for dk in dataset_keys:
+            for ck in camera_keys:
+                keys.append({**dk, **ck})
+        return keys
+
+    def populate(self):
+        keys = self.get_keys()
+        for key in keys:
+            self.make(key)
+
+    def make(self, key):
+        from vr4mice.actions.populate_rig import get_files_paths
+
+        logger.info(f"{key['dataset']}")
+        paths = get_files_paths(key["dataset"])
+        video_filepath = (
+            f"{paths['video_path']['dst']}/{paths['video_path']['filename']}"
+        )
+        timestamp_filepath = (
+            f"{paths['camera_path']['dst']}/{paths['camera_path']['filename']}"
+        )
+        video_meta = paths["video_meta"]
+        data = {
+            "doe": paths["doe"],
+            "video_filepath": video_filepath,
+            "timestamp_filepath": timestamp_filepath,
+        }
+        data = {**key, **data, **video_meta}
+        Video().insert1(data, skip_duplicates=True)
 
 
 @schema
@@ -97,6 +249,9 @@ class ModelName(dj.Lookup):
     """
     contents = [["DLC"]]
 
+    def add(self, model_name):
+        self.insert1({"model_name": model_name})
+
 
 @schema
 class DLC(dj.Manual):
@@ -112,6 +267,36 @@ class DLC(dj.Manual):
     keypoints_filepath: varchar(255) # keypoints hdf5
     proc_filepath: varchar(255)  # computed dlc metrics
     """
+
+    def get_keys(self):
+        keys = []
+        video_keys = Video().fetch("dataset", "camera", "doe", as_dict=True)
+        model_name = ModelName().fetch("model_name", as_dict=True)
+        for vk in video_keys:
+            for mn in model_name:
+                keys.append({**vk, **mn})
+        return keys
+
+    def populate(self):
+        keys = self.get_keys()
+        for key in keys:
+            self.make(key)
+
+    def make(self, key):
+        from vr4mice.actions.populate_rig import get_files_paths
+
+        logger.info(f"{key['dataset']}")
+        paths = get_files_paths(key["dataset"])
+        keypoints_filepath = (
+            f"{paths['dlc_path']['dst']}/{paths['dlc_path']['filename']}"
+        )
+        proc_filepath = f"{paths['proc_path']['dst']}/{paths['proc_path']['filename']}"
+        data = {
+            "keypoints_filepath": keypoints_filepath,
+            "proc_filepath": proc_filepath,
+        }
+        data = {**key, **data}
+        DLC().insert1(data, skip_duplicates=True)
 
 
 @schema
@@ -135,9 +320,10 @@ class MouseState(dj.Manual):  # variable State
     mouse_report_correct: longblob  # mouse_report_correct
     report_left: longblob   # mouse_reports_left
     report_right: longblob  # mouse_reports right
-    velocity=NULL: longblob # new
+    velocity=NULL: longblob      # new
+    frame_flip=NULL: longblob    # new to check?
     """
-    # frame_flip: longblob    # new
+    # TODO: make populate from file...
 
 
 @schema
@@ -157,15 +343,10 @@ class State(dj.Manual):
     step_time: longblob   
     action: longblob   
     reward: longblob   
-    terminal: longblob
-    
+    terminal: longblob    
     mouse_report_delay=NULL: longblob
-    
-    start_box_delay=NULL: longblob       # new
-    velocity_threshold=NULL: longblob    # new
     occlusion_type=NULL: longblob        # new
     dlc_read_time=NULL: longblob         # new
-        
     dlc_x: longblob             # pos in dlc coords 
     dlc_y: longblob             # pos in dlc coords 
     dlc_heading: longblob       # pos in dlc coords 
@@ -185,34 +366,17 @@ class Metadata(dj.Manual):
     definition = """
     -> Dataset
     ---    
-    cropped_image: longblob           # the pixels that we want to crop from the camera image (4*int)
-    unity_arena_size: longblob        # the size of the unity arena
-    right_report_box: longblob        # right report box coordinates
-    left_report_box: longblob         # Left report box coordinates
-    
-    start_box:  longblob               # the coordinates of the box that the mouse has to enter to start a trial
-    camera_rotation: longblob          # the camera rotation, to make sure the right camera angle is displayed in the game
-    prop_obj_on_left=NULL: longblob         # the probability that the object of interest is one the left
-    
-    obj_on_left=NULL: longblob              # the object of interest is one the left
-    
+    obj_on_left=NULL: longblob         # the object of interest is one the left
     slit_size: longblob                # The size of the slit that the mouse has to look through
-    slit_depth: longblob               # the depth of the slit 
+    slit_depth=NULL: longblob          # the depth of the slit # TO DEPRECATE ?
     trial_slit_depth: longblob         # 
     block_labels: longblob
-    
-    targets_height: longblob            # the distance between the targets
-    target_from_midline: longblob       # the distance between the targets and the ground   (500*floats)
-
+    targets_height=NULL: longblob            # the distance between the targets # TO DEPRECTAE
+    target_from_midline=NULL: longblob       # the distance between the targets and the ground   (500*floats) # TO DEPRECATE ?
     targets_z_pos=NULL: longblob             # new
     target_rotation=NULL: longblob           # new
     target_distance=NULL: longblob           # new
-
-    distractor=NULL: longblob                # new
-    target_size=NULL: longblob               # new
-    grey_screen_active=NULL: longblob        # new
     session_label=NULL: longblob             # new
-    
     camera_selection=NULL: longblob          # new
     target_selection=NULL: longblob          # new
     distractor_selection=NULL: longblob      # new
@@ -220,21 +384,85 @@ class Metadata(dj.Manual):
 
 
 @schema
-class DatasetType(dj.Computed):
+class GuiParams(dj.Manual):
+
     definition = """
-    -> Metadata
+    -> Dataset
+    ---    
+
+    r_report_box=NULL: blob          # right report box coordinates
+    l_report_box=NULL: blob          # Left report box coordinates
+    start_box=NULL:  blob            # the coordinates of the box that the mouse has to enter to start a trial
+    cropped_image=NULL: blob         # the pixels that we want to crop from the camera image (4*int)
+    unity_arena_size=NULL: blob      # the size of the unity arena
+    camera_rotation=NULL: blob       # the camera rotation, to make sure the right camera angle is displayed in the game
+    velocity_threshold=NULL: blob           # new 
+    start_box_delay=NULL: blob              # new
+    distractor=NULL: blob                   # new
+    target_size=NULL: blob                  # new
+    grey_screen_active=NULL: blob           # new
+    camera_type=NULL: float                 # new
+    prob_obj_on_left=NULL: blob             # the probability that the object of interest is one the left
+    slit_size_param=NULL: blob              # new 
+    block_length_param=NULL: blob           # new 
+    rotate_camera_param=NULL: blob          # new 
+    epoch_param=NULL: blob                  # new 
+    mouse_report_delay_param=NULL: blob     # new 
+    prob_block_coherence=NULL: blob         # new 
+    slit_depth_param=NULL: blob                  # new 
+    target_selection_param=NULL: blob       # new
+    distractor_selection_param=NULL: blob   # new
+    occlusion_type_param=NULL: blob         # new
+    target_spread_param=NULL: blob          # new
+    target_rotation_param=NULL: blob        # new
+    target_height_param=NULL: blob          # new 
+    target_distance_param=NULL: blob        # new
+
+    """
+
+
+@schema
+class TrainingPhaseType(dj.Lookup):
+    definition = """
+    idx: int
     ---
     training_phase: varchar(128)
     """
 
-    def make(self, key):
+    contents = [
+        [0, "pilot"],  # early trainings
+        [1, "detection"],
+        [2, "discrimination"],
+        [3, "test_discrimination_2_slit_sizes"],
+        [4, "test_discrimination_5_slit_sizes"],
+        # others with slit_size_number
+    ]
+
+    @classmethod
+    def get_next_index(cls):
+        current_max = cls.fetch("idx").max()
+        return current_max + 1 if current_max is not None else 0
+
+
+@schema
+class DatasetType(dj.Computed):
+    definition = """
+    -> Metadata
+    ---
+    -> TrainingPhaseType
+    """
+
+    def make(self, key):  # TODO(mary): refactor to a separate compact function
         try:
             undefined = False
-            distractor, slit_size = (Metadata & key).fetch1("distractor", "slit_size")
+            distractor = (GuiParams & key).fetch1("distractor")
+            slit_size = (Metadata & key).fetch1("slit_size")
             slit_size_number = len(np.unique(slit_size))
-
             if distractor is None:
-                training_phase = "pilot"  # early trainings
+                # fetch pilot
+                training_phase_idx = (
+                    TrainingPhaseType() & "training_phase='pilot'"
+                ).fetch1("idx")
             else:
 
                 if not (State & key):
@@ -251,18 +479,34 @@ class DatasetType(dj.Computed):
                     return
 
                 if (distractor == 0.0) & (occlusion_type == 0.0):
-                    training_phase = "detection"
+                    # fetch detection
+                    training_phase_idx = (
+                        TrainingPhaseType() & "training_phase='detection'"
+                    ).fetch1("idx")
 
                 elif distractor == 1.0:
 
                     if (slit_size_number == 1) & (occlusion_type == 0.0):
-                        training_phase = "discrimination"
+                        # fetch discrimination
+                        training_phase_idx = (
+                            TrainingPhaseType() & "training_phase='discrimination'"
+                        ).fetch1("idx")
 
                     elif (slit_size_number > 1) & (occlusion_type != 0.0):
-                        training_phase = (
+                        phase_type = (
                             f"test_discrimination_{slit_size_number}_slit_sizes"
                         )
-
+                        var = f"training_phase='{phase_type}'"
+                        ret = (TrainingPhaseType() & var).fetch(as_dict=True)
+                        if not ret:
+                            idx = TrainingPhaseType.get_next_index()
+                            data = {"idx": idx, "training_phase": phase_type}
+                            TrainingPhaseType.insert1(data)
+                            msg = f"New entry {data} has been added to TrainingPhaseType lookup table!"
+                            logger.warning(msg)
+                            training_phase_idx = idx
+                        else:
+                            training_phase_idx = ret[0]["idx"]
                     else:
                         undefined = True
                 else:
@@ -273,7 +517,8 @@ class DatasetType(dj.Computed):
                 logger.warning(msg)
                 return
 
-            self.insert1({"dataset": key["dataset"], "training_phase": training_phase})
+            data = {"dataset": key["dataset"], "idx": training_phase_idx}
+            self.insert1(data)
 
         except Exception as err:
             err = f"Error while populating the DatasetType table: key: {key}\n {err}"
@@ -291,14 +536,14 @@ class Box(dj.Manual):
     definition = """
     -> Metadata
     ---    
-    left_box_x_min: mediumblob
-    left_box_x_max: mediumblob
-    left_box_z_min: mediumblob
-    left_box_z_max: mediumblob
-    right_box_x_min: mediumblob
-    right_box_x_max: mediumblob
-    right_box_z_min: mediumblob
-    right_box_z_max: mediumblob
+    l_box_x_min: mediumblob
+    l_box_x_max: mediumblob
+    l_box_z_min: mediumblob
+    l_box_z_max: mediumblob
+    r_box_x_min: mediumblob
+    r_box_x_max: mediumblob
+    r_box_z_min: mediumblob
+    r_box_z_max: mediumblob
     tt_box_x_min: mediumblob
     tt_box_x_max: mediumblob
     tt_box_z_min: mediumblob

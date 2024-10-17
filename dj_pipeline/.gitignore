@@ -33,4 +33,5 @@ __pycache__/
 *config.json
 *cache.json
 *.npy
-
+*.env
+*git_commit
