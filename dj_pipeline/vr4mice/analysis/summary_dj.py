@@ -8,7 +8,7 @@ import pandas as pd
 import seaborn as sns
 from scipy import stats
 from scipy.interpolate import CubicSpline
-from vr4mice.schema import base_analysis, vr4mice
+from vr4mice.schema import base_analysis, vr4mice, dlc
 
 # from scipy.signal import savgol_filter, hilbert, find_peaks
 from vr4mice.utils.logger import Logger
@@ -143,3 +143,85 @@ def vr4mice_summary_plots(key, save_path="/data/summary_plots", database=True):
     plt.close()  # interactive
 
     return full_path
+
+
+
+def plot_keypoints(keypoints, keypoints_list, confidence, xlim, cmap, key):
+    """
+    Creates a summary plot for a list of keypoints.
+    This function plots the x,y an confidence for a given window for each of a list of keypoints.
+    
+    Parameters:
+    - keypoints: DataFrame or dictionary containing keypoint data with 'x', 'y', and 'likelihood'.
+    - keypoints_list: List of keypoint names (strings) to be plotted.
+    - confidence: Confidence threshold for coloring points.
+    - xlim: Tuple specifying the x-axis limits for the plots.
+    - cmap: Colormap to be used for plotting.
+    - key: Identifier for the plot title.
+    """
+    
+    # Number of keypoints and determine rows and columns
+    num_keypoints = len(keypoints_list)
+    num_cols = 2  # Fixed to 2 columns
+    num_rows = int(np.ceil(num_keypoints / num_cols))  # Calculate how many rows we need
+
+    # Create the figure with the required number of rows and columns
+    fig, ax = plt.subplots(num_rows * 3, num_cols, sharex=True, figsize=(15, 6 * num_rows))
+    fig.suptitle(f"DLC tracking summary plot - {key}")
+
+    # Loop over each keypoint and create three stacked subplots per keypoint
+    for i, keypoint in enumerate(keypoints_list):
+        # Determine the column and row for the current keypoint
+        col = i % num_cols  # 0 for the left column, 1 for the right column
+        row_offset = (i // num_cols) * 3  # Each keypoint takes up 3 rows
+        
+        # X position plot
+        ax[row_offset, col].scatter(keypoints.pose_time - keypoints.pose_time[0], keypoints[keypoint].x, 
+                                    c=keypoints[keypoint].likelihood < confidence, s=1, alpha=0.5, cmap=cmap)
+        ax[row_offset, col].set_ylabel(f"X pos")
+        ax[row_offset, col].set_title(f"{keypoint}")
+        
+        # Y position plot
+        ax[row_offset + 1, col].scatter(keypoints.pose_time - keypoints.pose_time[0], keypoints[keypoint].y, 
+                                        c=keypoints[keypoint].likelihood < confidence, s=1, alpha=0.5, cmap=cmap)
+        ax[row_offset + 1, col].set_ylabel(f"Y pos")
+        
+        # Confidence plot
+        ax[row_offset + 2, col].scatter(keypoints.pose_time - keypoints.pose_time[0], keypoints[keypoint].likelihood, 
+                                        c=keypoints[keypoint].likelihood < confidence, s=1, alpha=0.5, cmap=cmap)
+        ax[row_offset + 2, col].set_ylabel(f"Confidence")
+        ax[row_offset + 2, col].set_ylim(0, 1)
+        
+        # Set xlim for each of the 3 rows
+        for j in range(3):
+            ax[row_offset + j, col].set_xlim(xlim)
+        
+        # Only set xlabel for the confidence plot (the bottom plot in each column)
+        ax[row_offset + 2, col].set_xlabel('Time')
+
+    plt.tight_layout()  # Adjust subplots to fit nicely
+    plt.show()
+
+
+def plot_keypoints_summary(key, save_path="", keypoints_list = ["head_midpoint", "nose", "neck", "tail_base"], xlim=(0, 800), confidence=0.6, cmap="bwr"):
+    """
+    Generates DLC tracking summary plot for a given dataset.
+    
+    Parameters:
+    - key: key for dataset {"dataset": "Jacana_2024-08-01_1"}
+    - keypoints_list: List of keypoint names (strings) to be plotted.
+    - confidence: DLC confidence threshold for coloring points.
+    - xlim: Tuple specifying the x-axis limits for the plots.
+    - cmap: Colormap to be used for plotting.
+    - key: Identifier for the plot title.
+    
+    Returns:
+    - Figure_save_path
+    """
+    # Get keypoints data
+    figure_save_path = save_path + key ["dataset"] + ".png"
+    print(figure_save_path)
+    keypoints = dlc.DLCKptsDf().get_data(key=key)
+    plot_keypoints(keypoints, keypoints_list, xlim=xlim, cmap=cmap, confidence=confidence, key=key["dataset"])
+    #plt.figsave(save_path + key ["dataset"], transparent=True)
+    return(figure_save_path)
