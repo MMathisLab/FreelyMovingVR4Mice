@@ -185,7 +185,7 @@ May be combined in single arena session with {ref}`sec:arena-habituation`.
 - **P1: Detection task training - permissive trial initiation parameters.**
   - **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 1 session.
   - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation (see {ref}`sec:gui`).
-  - In this first stage, there is a higher velocity threshold on the trial initiation to facilitate learning of the task parameters, i.e. trial initiation and reward / visual stimuli coupling. 
+  - In this first stage, there is a higher velocity threshold on the trial initiation to facilitate learning of the task parameters, i.e. trial initiation and reward / visual stimuli coupling.
   - To encourage mice to form connection between position and visual stimuli, longer initial session (ex 75 minutes) may be necessary to allow enough serendipitous trial initiations to occur.
   - If mice are allowed to overtrain on this step their performance can reach up to 100%.
   - **Python Task** to be loaded in the GUI:

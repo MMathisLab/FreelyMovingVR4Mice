@@ -7,14 +7,14 @@ _**Note:**_ _The following installation assumes you have already installed on yo
 Create a new conda environment with local pip:
 
  ```bash
- conda create --name name_of_env python=3.10.12 pip
+ conda create --name name_of_env python==3.10.12 pip
  ```
 
  ```bash
  conda activate name_of_env
  ```
 
-Download our [forked ml-agents repository](https://github.com/AdaptiveMotorControlLab/ml-agents.git) from **AdaptiveMotorControlLab** (_the `--branch release_21_fix` option will switch to the tag of the latest stable "fixed" release, which currently is **21** and is the one we use. Omitting that will get the main branch which is potentially unstable_):
+Download our [forked ml-agents repository](https://github.com/AdaptiveMotorControlLab/ml-agents.git) from **AdaptiveMotorControlLab** (_the `--branch release_21_fix` option will switch to the tag of the latest stable "fixed" release, which currently is **21** and is the one we use. Omitting that will get the main branch_):
 
 - Clone the repository:
 
@@ -32,6 +32,9 @@ Download our [forked ml-agents repository](https://github.com/AdaptiveMotorContr
 
   ```bash
   python -m pip install ./ml-agents-envs
+  ```
+
+  ```bash
   python -m pip install ./ml-agents
   ```
 
