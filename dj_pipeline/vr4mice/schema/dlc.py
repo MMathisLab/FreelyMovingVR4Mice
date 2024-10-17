@@ -140,7 +140,7 @@ class SyncDLCKptsDf(dj.Computed):
     """Filtered and game-synchronized DLC keypoints."""
 
     definition = """
-    -> vr4mice.DLC
+    -> DLCKptsDf
     ---
     data: longblob
     headers : blob
@@ -220,7 +220,6 @@ class OfflineKinematics(dj.Computed):
 
     definition = """
     -> SyncDLCKptsDf
-    -> vr4mice.DLC
     ---
     data: longblob
     headers : blob

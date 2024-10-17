@@ -68,8 +68,8 @@ def fetch_data(key: Dict, database: bool):
         except Exception as e:
             logger.warning(f"An error occurred: {e}")
     else:
-        df, unity_arena_size = analysis.create_data_frame(key, iti=False)
-        box_df_output = analysis.get_box_df(key, df, unity_arena_size=unity_arena_size)
+        df, unity_to_physical_arena_size = analysis.create_data_frame(key, iti=False)
+        box_df_output = analysis.get_box_df(key, df, unity_to_physical_arena_size=unity_to_physical_arena_size)
 
     return df, box_df_output
 

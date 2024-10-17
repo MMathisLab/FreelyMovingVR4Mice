@@ -97,9 +97,9 @@ class DataFrame(dj.Computed):
             return
 
         try:
-            data, unity_arena_size = create_data_frame(key)
+            data, unity_to_physical_arena_size = create_data_frame(key)
             data = data.to_dict(orient="list")
-            data = {**key, **data, **{"interpolation": unity_arena_size}}
+            data = {**key, **data, **{"interpolation": unity_to_physical_arena_size}}
 
             # TODO: add test that data keys are the same with columns names
             # TODO(celia): use df_to_dj?
@@ -135,8 +135,8 @@ class DataFrame(dj.Computed):
     def get_unity_arena_size(self, key: Dict[str]) -> dict:
         try:
             if self & key:
-                unity_arena_size = (self & key).fetch("interpolation")[0]
-                return unity_arena_size
+                unity_to_physical_arena_size = (self & key).fetch("interpolation")[0]
+                return unity_to_physical_arena_size
             else:
                 return False
         except Exception as err:
@@ -234,8 +234,8 @@ class BoxDataFrame(dj.Computed):
         try:
             if len(DataFrame & key) > 0:
                 df = DataFrame().get_data(key)
-                unity_arena_size = DataFrame().get_unity_arena_size(key)
-                box_df = get_box_df(key, df, unity_arena_size=unity_arena_size)
+                unity_to_physical_arena_size = DataFrame().get_unity_arena_size(key)
+                box_df = get_box_df(key, df, unity_to_physical_arena_size=unity_to_physical_arena_size)
                 box_df = {
                     k: v[0] if isinstance(v, list) and len(v) == 1 else v
                     for k, v in box_df.to_dict(orient="list").items()
