@@ -226,7 +226,7 @@ May be combined in single arena session with {ref}`sec:arena-habituation`.
 
 - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation
 (see {ref}`sec:gui`).
-- Here occluder walls are introduced to partially hide both the target and the distractor to encourage mice to adopt a behavior that allows them to gather more information about both objects in order to choose correctly.
+- Ooccluder walls are introduced to hide varying amounts of both the target and the distractor.
 - **Python Task** to be loaded in the GUI:
   - [DiscriminationWithOccludersTask](../../mouse_task/mouse_discrim_occluders.py)
   - [ShapeDiscriminationOccluders](../../mouse_task/mouse_shape_discrim_occluders.py)
