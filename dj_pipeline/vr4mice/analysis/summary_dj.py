@@ -1,4 +1,3 @@
-
 import pathlib
 import warnings
 from typing import Dict
@@ -145,7 +144,6 @@ def vr4mice_summary_plots(
 
     num_apertures = len(df.aperture.unique())
 
-
     # Create the summary figure grid
     fig = plt.figure(figsize=(25, 20), constrained_layout=True)
     gs = plt.GridSpec(6, 10, figure=fig)
@@ -200,9 +198,7 @@ def vr4mice_summary_plots(
     )
 
     ## Display mean trajectory for the j-shaped trials
-    j_shaped_df = analysis.get_jshaped_trials(
-        df
-    ).copy()  
+    j_shaped_df = analysis.get_jshaped_trials(df).copy()
     j_shaped_df = utils.create_bins(
         data=j_shaped_df, spatial_ybins=[6.75, 20, 25], label="y"
     )

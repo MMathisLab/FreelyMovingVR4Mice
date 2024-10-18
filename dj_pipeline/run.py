@@ -1,14 +1,13 @@
+import logging
 import os
 import sys
+import warnings
 
 from base_actions.connect import connect
 from vr4mice.utils.logger import Logger, config_logger
 
 logger = Logger.get_logger()
 
-import warnings
-
-import logging
 
 logging.getLogger("settings").setLevel(logging.ERROR)
 
@@ -28,6 +27,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
     "update": sync missing data in existing tables
     "sync_days": synchronize days in the dataset (process raw .npy files)
 """
+
 
 def create_folder_if_not_exist(folder_path):
     if not os.path.exists(folder_path):

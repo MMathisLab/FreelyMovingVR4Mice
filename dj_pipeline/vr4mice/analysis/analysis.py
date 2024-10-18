@@ -92,6 +92,7 @@ def _resample_data_frame(
 
     return df
 
+
 def get_rewarded(df: pd.DataFrame) -> pd.Series:
     """Creates a `trial_rewarded` pandas.Series from a single session.
 
@@ -102,6 +103,7 @@ def get_rewarded(df: pd.DataFrame) -> pd.Series:
         belongs to is rewarded and 0 else.
     """
     return df.groupby("trial")["reward"].transform(lambda x: x.max())
+
 
 def get_distance_to_reward(df: pd.DataFrame, df_box: pd.DataFrame) -> npt.NDArray:
     distance_to_reward = np.sqrt(
