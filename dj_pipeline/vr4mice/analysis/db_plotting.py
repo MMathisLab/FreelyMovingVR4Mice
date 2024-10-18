@@ -3,10 +3,7 @@
     It fetches the columns from database tables that are only required for a function,
     Instead of fetching the whole table that is heavy as contians multiple longblobs
 """
-
-import inspect
-from typing import List, Optional, Tuple
-
+from typing import Optional, Tuple
 import matplotlib as mpl
 import matplotlib.cm as cm
 import matplotlib.collections
@@ -21,8 +18,10 @@ from matplotlib.transforms import Affine2D
 from scipy.interpolate import CubicSpline
 
 from vr4mice.analysis import plotting
-from vr4mice.schema import base_analysis, dlc, vr4mice
+from vr4mice.schema import vr4mice, base_analysis, dlc
+from typing import List
 from vr4mice.utils.logger import Logger
+import inspect
 
 logger = Logger.get_logger()
 

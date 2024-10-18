@@ -5,8 +5,8 @@ import sys
 import datajoint as dj
 import numpy as np
 from base_schemas.schemas import exp, mice
-
 from vr4mice.utils.logger import Logger
+
 
 """
     Script that fetches the data from database 

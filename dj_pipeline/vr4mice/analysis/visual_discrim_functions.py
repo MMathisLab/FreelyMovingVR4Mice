@@ -1,10 +1,9 @@
 from typing import List
 
+from vr4mice.analysis.dlc_helpers import sync_dlc_w_game, load_dlc
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-from vr4mice.analysis.dlc_helpers import load_dlc, sync_dlc_w_game
 
 
 def load_data(

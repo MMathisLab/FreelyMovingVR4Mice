@@ -4,6 +4,7 @@ from pathlib import Path
 
 import datajoint as dj
 
+
 """
     Logger initialisation script
 """
