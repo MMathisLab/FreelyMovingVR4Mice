@@ -1,4 +1,4 @@
-nfrom pathlib import Path
+from pathlib import Path
 from typing import List
 import subprocess
 
@@ -225,7 +225,7 @@ class BoxDataFrame(dj.Computed):
     """
 
     def make(self, key):
-        from vr4mice.analysis.analysis import get_box_df
+        from vr4mice.analysis.analysis import get_df_box
 
         if self & key:
             logger.info(
@@ -236,12 +236,12 @@ class BoxDataFrame(dj.Computed):
             if len(DataFrame & key) > 0:
                 df = DataFrame().get_data(key)
                 interp = DataFrame().get_interp(key)
-                df_box = get_box_df(key, df, interp=interp)
+                df_box = get_df_box(key, df, interp=interp)
                 df_box = {
                     k: v[0] if isinstance(v, list) and len(v) == 1 else v
                     for k, v in df_box.to_dict(orient="list").items()
                 }
-                data = {**key, **box_df}
+                data = {**key, **df_box}
                 self.insert1(data, allow_direct_insert=True)
                 logger.info(f"{self.__class__.__name__} populated for {key}.")
 

@@ -358,7 +358,7 @@ def create_data_frame(
     return df, interp
 
 
-def get_box_df(key, df, interp):
+def get_df_box(key, df, interp):
     """Define the box dimensions.
 
     Define the arena, start area and reward areas dimensions.

@@ -61,14 +61,14 @@ def fetch_data(key: Dict, database: bool):
             logger.warning(f"An error occurred: {e}")
 
         try:
-            box_df_output = base_analysis.BoxDataFrame().get_data(key)
-            if box_df_output is not False or box_df_output is not None:
+            df_box_output = base_analysis.BoxDataFrame().get_data(key)
+            if df_box_output is not False or df_box_output is not None:
                 logger.info(f"Box data fetched for {key}")
             else:
                 logger.info(f"Populating BoxDataFrame data for {key}")
-                box_df_output = base_analysis.BoxDataFrame().populate(key)
-                box_df_output = base_analysis.BoxDataFrame().get_data(key)
-                if box_df_output is not False or box_df_output is not None:
+                df_box_output = base_analysis.BoxDataFrame().populate(key)
+                df_box_output = base_analysis.BoxDataFrame().get_data(key)
+                if df_box_output is not False or df_box_output is not None:
                     logger.info("Data populated and fetched for " + str(key))
                 else:
                     logger.warning(f"Data population failed for {key}")
@@ -79,9 +79,9 @@ def fetch_data(key: Dict, database: bool):
         df["trial_rewarded"] = analysis.get_rewarded(
             df
         )  # Note(mary): that's bad, that it's the entire df that is the arg!
-        box_df_output = analysis.get_box_df(key, df, interp=interp)
+        df_box_output = analysis.get_df_box(key, df, interp=interp)
 
-    return df, box_df_output
+    return df, df_box_output
 
 
 def get_path(key: Dict, base: str, ext: str = ".png") -> pathlib.Path:
@@ -136,7 +136,7 @@ def vr4mice_summary_plots(
         str: The full path of the saved summary plot.
     """
     style()
-    df, box_df_output = fetch_data(key, database)
+    df, df_box_output = fetch_data(key, database)
 
     df = df[df.iti == 0].copy()
 
@@ -175,7 +175,7 @@ def vr4mice_summary_plots(
     ## Display all trials
     plotting.plot_session(
         df=df,
-        df_box=box_df_output,
+        df_box=df_box_output,
         per_aperture=False,
         per_side=True,
         ax=ax1,
@@ -184,7 +184,7 @@ def vr4mice_summary_plots(
     ## Display all rewarded trials on left side
     plotting.plot_session(
         df=df[(df.trial_rewarded == 1) & (df.trial_left_choice == 1)],
-        df_box=box_df_output,
+        df_box=df_box_output,
         per_aperture=False,
         per_side=True,
         ax=ax2,
@@ -193,7 +193,7 @@ def vr4mice_summary_plots(
     ## Display all rewarded trials on right side
     plotting.plot_session(
         df=df[(df.trial_rewarded == 1) & (df.trial_right_choice == 1)],
-        df_box=box_df_output,
+        df_box=df_box_output,
         per_aperture=False,
         per_side=True,
         ax=ax3,
