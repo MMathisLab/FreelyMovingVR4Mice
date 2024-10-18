@@ -21,7 +21,7 @@ services:
     #network_mode: host
     volumes:
         - "./:/app"
-        - "/shared:/shared"
+        - "/mnt/database/shared:/shared"
 
         - "/mnt/database/vr4mice/vr4mice_database/data:/data"
 

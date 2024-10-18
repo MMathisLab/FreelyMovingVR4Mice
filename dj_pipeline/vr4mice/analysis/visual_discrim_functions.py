@@ -36,7 +36,7 @@ def load_data(
 
     Returns:
         df (pandas DataFrame): A DataFrame containing the preprocessed behavioral data.
-        box_df (pandas DataFrame): A DataFrame containing the coordinates and dimensions of left, right, and target boxes.
+        df_box (pandas DataFrame): A DataFrame containing the coordinates and dimensions of left, right, and target boxes.
 
     """
 
@@ -208,28 +208,28 @@ def load_data(
     )
 
     # Create the box dataframe
-    box_df = pd.DataFrame()
-    box_df = _define_box(box_df, state_dict, which="left")
-    box_df = _define_box(box_df, state_dict, which="right")
-    box_df = _define_box(box_df, state_dict, which="tt")
-    box_df["left_reward_x"] = df[(df.reward > 0.5) & (df.trial_L_choice > 0.5)][
+    df_box = pd.DataFrame()
+    df_box = _define_box(df_box, state_dict, which="left")
+    df_box = _define_box(df_box, state_dict, which="right")
+    df_box = _define_box(df_box, state_dict, which="tt")
+    df_box["left_reward_x"] = df[(df.reward > 0.5) & (df.trial_L_choice > 0.5)][
         "x"
     ].mean()
-    box_df["left_reward_z"] = df[(df.reward > 0.5) & (df.trial_L_choice > 0.5)][
+    df_box["left_reward_z"] = df[(df.reward > 0.5) & (df.trial_L_choice > 0.5)][
         "y"
     ].mean()
-    box_df["right_reward_x"] = df[(df.reward > 0.5) & (df.trial_R_choice > 0.5)][
+    df_box["right_reward_x"] = df[(df.reward > 0.5) & (df.trial_R_choice > 0.5)][
         "x"
     ].mean()
-    box_df["right_reward_z"] = df[(df.reward > 0.5) & (df.trial_R_choice > 0.5)][
+    df_box["right_reward_z"] = df[(df.reward > 0.5) & (df.trial_R_choice > 0.5)][
         "y"
     ].mean()
 
-    box_df = box_df.iloc[1]
+    df_box = df_box.iloc[1]
 
     df["distance_to_reward"] = np.sqrt(
-        (box_df["right_box_x_center"] - (df["x"] * df["flip_one_side"])) ** 2
-        + (box_df["right_box_z_center"] - df["y"]) ** 2
+        (df_box["right_box_x_center"] - (df["x"] * df["flip_one_side"])) ** 2
+        + (df_box["right_box_z_center"] - df["y"]) ** 2
     )
 
     df.trial = df.trial.astype(int)
@@ -240,7 +240,7 @@ def load_data(
     # df["choices"] = df.groupby(["trial"], as_index=False).last()
     # df["box_entries"] = _time_to_rewards(df)
 
-    return (df, box_df)
+    return (df, df_box)
 
 
 def _time_to_rewards(df):  # split
@@ -267,7 +267,7 @@ def _time_to_rewards(df):  # split
     return box_entries
 
 
-def _define_box(box_df: pd.DataFrame, state_dict: dict, which: str):
+def _define_box(df_box: pd.DataFrame, state_dict: dict, which: str):
 
     if which == "left":
         l_which = "L"
@@ -278,26 +278,26 @@ def _define_box(box_df: pd.DataFrame, state_dict: dict, which: str):
     else:
         raise NotImplementedError()
 
-    box_df[f"{which}_box_x_min"] = np.interp(
+    df_box[f"{which}_box_x_min"] = np.interp(
         state_dict[f"{l_which}_box_x_min"], [-9, 9], [-27, 27]
     )
-    box_df[f"{which}_box_x_max"] = np.interp(
+    df_box[f"{which}_box_x_max"] = np.interp(
         state_dict[f"{l_which}_box_x_max"], [-9, 9], [-27, 27]
     )
-    box_df[f"{which}_box_z_min"] = np.interp(
+    df_box[f"{which}_box_z_min"] = np.interp(
         state_dict[f"{l_which}_box_z_min"], [-10, -2], [-27, 27]
     )
-    box_df[f"{which}_box_z_max"] = np.interp(
+    df_box[f"{which}_box_z_max"] = np.interp(
         state_dict[f"{l_which}_box_z_max"], [-10, -2], [-27, 27]
     )
-    box_df[f"{which}_box_x_center"] = (
-        box_df[f"{which}_box_x_min"] + box_df[f"{which}_box_x_max"]
+    df_box[f"{which}_box_x_center"] = (
+        df_box[f"{which}_box_x_min"] + df_box[f"{which}_box_x_max"]
     ) / 2
-    box_df[f"{which}_box_z_center"] = (
-        box_df[f"{which}_box_z_min"] + box_df[f"{which}_box_z_max"]
+    df_box[f"{which}_box_z_center"] = (
+        df_box[f"{which}_box_z_min"] + df_box[f"{which}_box_z_max"]
     ) / 2
 
-    return box_df
+    return df_box
 
 
 def get_rc_params():
@@ -399,7 +399,7 @@ def get_all_tolias_mice(mouse_list, path, load_dlc=True):
     """Grab tolias lab mice and make a big dataframe out of them."""
     big_df = []
     for m in mouse_list:
-        df, box_df = load_data(
+        df, df_box = load_data(
             path=path, mouse_name=m["mouse_name"], date=m["date"], attempt=m["attempt"]
         )
         if load_dlc == True:
@@ -412,4 +412,4 @@ def get_all_tolias_mice(mouse_list, path, load_dlc=True):
             df = sync_dlc_w_game(dlc_dict, game_data=df)
 
         big_df.append(df)
-    return pd.concat(big_df).reset_index(), box_df
+    return pd.concat(big_df).reset_index(), df_box
