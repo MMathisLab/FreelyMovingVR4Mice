@@ -102,7 +102,6 @@ def get_rewarded(df: pd.DataFrame) -> pd.Series:
         A pandas.Series with 1 if the trial to which the timepoint
         belongs to is rewarded and 0 else.
     """
-
     return df.groupby("trial")["reward"].transform(lambda x: x.max())
 
 
@@ -246,9 +245,6 @@ def create_data_frame(
     df["norm_y"] = df.groupby("trial", as_index=False)["y"].transform(
         lambda x: x - np.mean(x.iloc[:first_n_samples])
     )
-
-    df["trial_rewarded"] = get_rewarded(df)
-
     if not iti:
         df = df[df.iti == 0.0]
 
@@ -362,7 +358,7 @@ def create_data_frame(
     return df, interp
 
 
-def get_box_df(key, df, interp):
+def get_df_box(key, df, interp):
     """Define the box dimensions.
 
     Define the arena, start area and reward areas dimensions.

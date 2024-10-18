@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import vr4mice.analysis.analysis as analysis
 import vr4mice.analysis.plotting as plotting
+
+from vr4mice.analysis.analysis import style
+
 import vr4mice.analysis.utils as utils
 from vr4mice.schema import base_analysis, vr4mice
 from vr4mice.utils.logger import Logger
@@ -22,7 +25,7 @@ def fetch_data(key: Dict, database: bool):
 
     Args:
         key (dict): A dictionary that specifies which dataset to generate a
-            summary plot for.
+            summary plot for. Format: `{"dataset": "dataset name"}`
         database (bool): If True, fetches and populates the data, else gets
             the corresponding table direcly. Defaults to True.
 
@@ -31,52 +34,57 @@ def fetch_data(key: Dict, database: bool):
         and the `pd.DataFrame` containing the rig's dimensions (second return).
 
     """
-    # Fetch or populate to get df (externalize)
     if database:
         from vr4mice.schema import base_analysis
+
+        logger.info(f"Trying to get data from database...")
 
         try:
             df = base_analysis.DataFrame().get_data(key)
 
-            flag = df is False
-            if not flag:
-                logger.info("Data fetched for " + str(key))
+            if df is not False or df is not None:
+                logger.info(f"Data fetched for {key}")
             else:
-                logger.info("Populating DataFrame data for " + str(key))
+                logger.info(f"Populating DataFrame data for {key}")
                 df = base_analysis.DataFrame().populate(key)
                 df = base_analysis.DataFrame().get_data(key)
-                flag = df is False
-                if not flag:
-                    logger.info("Data populated and fetched for " + str(key))
+                if df is not False or df is not None:
+                    logger.info(f"Data populated and fetched for {key}")
+                else:
+                    logger.warning(f"Data population failed for {key}")
+
+            logger.info(f"Add trial rewarded...")
+            df["trial_rewarded"] = base_analysis.DataFrame().get_rewarded(key)
 
         except Exception as e:
             logger.warning(f"An error occurred: {e}")
 
         try:
-            box_df_output = base_analysis.BoxDataFrame().get_data(key)
-            flag = box_df_output is False
-            if not flag:
-                logger.info("Box data fetched for " + str(key))
+            df_box_output = base_analysis.BoxDataFrame().get_data(key)
+            if df_box_output is not False or df_box_output is not None:
+                logger.info(f"Box data fetched for {key}")
             else:
-                logger.info("Populating BoxDataFrame data for " + str(key))
-                box_df_output = base_analysis.BoxDataFrame().populate(key)
-                box_df_output = base_analysis.BoxDataFrame().get_data(key)
-                flag = box_df_output is False
-                if not flag:
+                logger.info(f"Populating BoxDataFrame data for {key}")
+                df_box_output = base_analysis.BoxDataFrame().populate(key)
+                df_box_output = base_analysis.BoxDataFrame().get_data(key)
+                if df_box_output is not False or df_box_output is not None:
                     logger.info("Data populated and fetched for " + str(key))
-
+                else:
+                    logger.warning(f"Data population failed for {key}")
         except Exception as e:
             logger.warning(f"An error occurred: {e}")
     else:
         df, interp = analysis.create_data_frame(key, iti=False)
-        box_df_output = analysis.get_box_df(key, df, interp=interp)
+        df["trial_rewarded"] = analysis.get_rewarded(
+            df
+        )  # Note(mary): that's bad, that it's the entire df that is the arg!
+        df_box_output = analysis.get_df_box(key, df, interp=interp)
 
-    return df, box_df_output
+    return df, df_box_output
 
 
 def get_path(key: Dict, base: str, ext: str = ".png") -> pathlib.Path:
     """Create the name of the summary plot file.
-
     Format is {dataset_name}_summary_plot.{ext}
 
     Args:
@@ -87,7 +95,6 @@ def get_path(key: Dict, base: str, ext: str = ".png") -> pathlib.Path:
 
     Returns:
         The path to save the summary plot to.
-
     """
     name = str(key["dataset"]) + "_summary_plot" + ext
     return pathlib.Path(base) / name
@@ -127,17 +134,10 @@ def vr4mice_summary_plots(
     Returns:
         str: The full path of the saved summary plot.
     """
-
-    plotting.get_rc_params()
-    df, box_df_output = fetch_data(key, database)
-
-    df = df.infer_objects()
-    df["dataset"] = key["dataset"]
-    df["trial_rewarded"] = analysis.get_rewarded(df)
+    style()
+    df, df_box_output = fetch_data(key, database)
 
     df = df[df.iti == 0].copy()
-
-    print(df.columns)
 
     # NOTE: so that the head_dir is align to the screen
     df["head_dir"] = ((df.head_dir) + 180) % 360 - 180
@@ -173,7 +173,7 @@ def vr4mice_summary_plots(
     ## Display all trials
     plotting.plot_session(
         df=df,
-        df_box=box_df_output,
+        df_box=df_box_output,
         per_aperture=False,
         per_side=True,
         ax=ax1,
@@ -182,7 +182,7 @@ def vr4mice_summary_plots(
     ## Display all rewarded trials on left side
     plotting.plot_session(
         df=df[(df.trial_rewarded == 1) & (df.trial_left_choice == 1)],
-        df_box=box_df_output,
+        df_box=df_box_output,
         per_aperture=False,
         per_side=True,
         ax=ax2,
@@ -191,7 +191,7 @@ def vr4mice_summary_plots(
     ## Display all rewarded trials on right side
     plotting.plot_session(
         df=df[(df.trial_rewarded == 1) & (df.trial_right_choice == 1)],
-        df_box=box_df_output,
+        df_box=df_box_output,
         per_aperture=False,
         per_side=True,
         ax=ax3,
@@ -367,10 +367,10 @@ def vr4mice_summary_plots(
     plotting.plot_choices_by_trial(df, ax=ax9)
 
     if database:
-        full_path = base_analysis.OutputPlots().get_path(
+        full_path = base_analysis.SummaryPlots().get_path(
             key=key, base=save_path, ext=".png"
         )
-        subtitle = base_analysis.OutputPlots().get_subtitle(
+        subtitle = base_analysis.SummaryPlots().get_subtitle(
             key=key, task_name="AR Task"
         )
     else:
