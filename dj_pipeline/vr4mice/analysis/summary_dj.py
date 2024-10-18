@@ -72,7 +72,9 @@ def fetch_data(key: Dict, database: bool):
             logger.warning(f"An error occurred: {e}")
     else:
         df, unity_to_physical_arena_size = analysis.create_data_frame(key, iti=False)
-        box_df_output = analysis.get_box_df(key, df, unity_to_physical_arena_size=unity_to_physical_arena_size)
+        box_df_output = analysis.get_box_df(
+            key, df, unity_to_physical_arena_size=unity_to_physical_arena_size
+        )
 
     return df, box_df_output
 

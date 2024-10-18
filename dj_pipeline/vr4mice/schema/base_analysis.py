@@ -236,7 +236,9 @@ class BoxDataFrame(dj.Computed):
             if len(DataFrame & key) > 0:
                 df = DataFrame().get_data(key)
                 unity_to_physical_arena_size = DataFrame().get_unity_arena_size(key)
-                box_df = get_box_df(key, df, unity_to_physical_arena_size=unity_to_physical_arena_size)
+                box_df = get_box_df(
+                    key, df, unity_to_physical_arena_size=unity_to_physical_arena_size
+                )
                 box_df = {
                     k: v[0] if isinstance(v, list) and len(v) == 1 else v
                     for k, v in df_box.to_dict(orient="list").items()

@@ -372,7 +372,7 @@ def create_data_frame(
 
     df.trial = df.trial.astype(int)
     df.aperture = df.aperture.round(2)
-    
+
     df["trial_rewarded"] = get_rewarded(df)
 
     df = df.drop(columns=["first", "last"])
