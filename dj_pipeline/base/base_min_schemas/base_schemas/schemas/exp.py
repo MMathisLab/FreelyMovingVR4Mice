@@ -15,10 +15,10 @@ class Experimenter(dj.Lookup):
     experimenter_name      : char(20)   # lab member in lower case
     ---
     full_name              : varchar(255)    # Full name (FirstName LastName)
-
+    mail                   : varchar(128)    # email: default None (not showing in contents but in the database)
     """
 
-    contents = [["user", "Test User"]]
+    contents = [["user", "Test User", ""]]
 
 
 @schema

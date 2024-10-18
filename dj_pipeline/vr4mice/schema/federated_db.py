@@ -3,6 +3,7 @@ from pathlib import Path
 import datajoint as dj
 import pandas as pd
 from base_schemas.schemas import exp, mice
+
 from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema

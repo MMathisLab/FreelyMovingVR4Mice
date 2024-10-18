@@ -131,7 +131,7 @@ class DLCKptsDf(dj.Computed):
             return dfs
 
         except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}")
+            logger.warning(f"Error {self.__class__.__name__}: {err}")
             return None
 
 
@@ -210,7 +210,7 @@ class SyncDLCKptsDf(dj.Computed):
             return dfs
 
         except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}")
+            logger.warning(f"Error {self.__class__.__name__}: {err}")
             return None
 
 
@@ -283,7 +283,7 @@ class OfflineKinematics(dj.Computed):
             return None
 
     def get_all_data(
-        self, key: dict, columns: Optional[List[str]] = None
+        self, columns: Optional[List[str]] = None
     ) -> Optional[List[pd.DataFrame]]:
         dfs = []
         try:
@@ -298,5 +298,5 @@ class OfflineKinematics(dj.Computed):
             return dfs
 
         except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            logger.warning(f"Error {self.__class__.__name__}: {err}")
             return None
