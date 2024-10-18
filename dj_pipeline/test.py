@@ -38,7 +38,6 @@ if __name__ == "__main__":
         for t in test_datasets:
             base_analysis.DataFrame().make(key=t)
             base_analysis.BoxDataFrame().make(key=t)
-            base_analysis.JShaped().make(key=t)
             base_analysis.GitCommit().make(key=t)
 
     if mode == "an_drop":
@@ -52,7 +51,6 @@ if __name__ == "__main__":
         for t in test_datasets:
             (base_analysis.DataFrame() & t).delete()
             (base_analysis.BoxDataFrame() & t).delete()
-            (base_analysis.JShaped() & t).delete()
             (base_analysis.GitCommit() & t).delete()
 
     elif mode == "dlc_test":
