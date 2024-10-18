@@ -25,7 +25,7 @@ def fetch_data(key: Dict, database: bool):
 
     Args:
         key (dict): A dictionary that specifies which dataset to generate a
-            summary plot for. {"dataset": "dataset name"}
+            summary plot for. Format: `{"dataset": "dataset name"}`
         database (bool): If True, fetches and populates the data, else gets
             the corresponding table direcly. Defaults to True.
 
