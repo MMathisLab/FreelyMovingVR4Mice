@@ -388,12 +388,12 @@ def get_box_df(key: dict, df: pd.DataFrame, unity_to_physical_arena_size: dict):
     Returns:
         A dataFrame containing the dimensions.
     """
-    df_box = pd.DataFrame((vr4mice.Box & key).fetch())
+    box_df = pd.DataFrame((vr4mice.Box & key).fetch())
 
-    for col in df_box.columns:
-        for index, value in df_box[col].items():
+    for col in box_df.columns:
+        for index, value in box_df[col].items():
             if isinstance(value, list):
-                df_box.loc[index, col] = value[0]
+                box_df.loc[index, col] = value[0]
 
     a = unity_to_physical_arena_size["unity_arena_size_x_min"]
     b = unity_to_physical_arena_size["unity_arena_size_z_max"]
@@ -401,32 +401,32 @@ def get_box_df(key: dict, df: pd.DataFrame, unity_to_physical_arena_size: dict):
     d = unity_to_physical_arena_size["physical_arena_size"]
 
     # same indexes among blocks
-    df_box.l_box_x_min = np.interp(df_box.l_box_x_min, [-1 * a, a], [-1 * d, d])
-    df_box.l_box_x_max = np.interp(df_box.l_box_x_max, [-1 * a, a], [-1 * d, d])
-    df_box.l_box_z_min = np.interp(df_box.l_box_z_min, [b, c], [-1 * d, d])
-    df_box.l_box_z_max = np.interp(df_box.l_box_z_max, [b, c], [-1 * d, d])
+    box_df.l_box_x_min = np.interp(box_df.l_box_x_min, [-1 * a, a], [-1 * d, d])
+    box_df.l_box_x_max = np.interp(box_df.l_box_x_max, [-1 * a, a], [-1 * d, d])
+    box_df.l_box_z_min = np.interp(box_df.l_box_z_min, [b, c], [-1 * d, d])
+    box_df.l_box_z_max = np.interp(box_df.l_box_z_max, [b, c], [-1 * d, d])
 
-    df_box.r_box_x_min = np.interp(df_box.r_box_x_min, [-1 * a, a], [-1 * d, d])
-    df_box.r_box_x_max = np.interp(df_box.r_box_x_max, [-1 * a, a], [-1 * d, d])
-    df_box.r_box_z_min = np.interp(df_box.r_box_z_min, [b, c], [-1 * d, d])
-    df_box.r_box_z_max = np.interp(df_box.r_box_z_max, [b, c], [-1 * d, d])
+    box_df.r_box_x_min = np.interp(box_df.r_box_x_min, [-1 * a, a], [-1 * d, d])
+    box_df.r_box_x_max = np.interp(box_df.r_box_x_max, [-1 * a, a], [-1 * d, d])
+    box_df.r_box_z_min = np.interp(box_df.r_box_z_min, [b, c], [-1 * d, d])
+    box_df.r_box_z_max = np.interp(box_df.r_box_z_max, [b, c], [-1 * d, d])
 
-    df_box.tt_box_x_min = np.interp(df_box.tt_box_x_min, [-1 * a, a], [-1 * d, d])
-    df_box.tt_box_x_max = np.interp(df_box.tt_box_x_max, [-1 * a, a], [-1 * d, d])
-    df_box.tt_box_z_min = np.interp(df_box.tt_box_z_min, [b, c], [-1 * d, d])
-    df_box.tt_box_z_max = np.interp(df_box.tt_box_z_max, [b, c], [-1 * d, d])
+    box_df.tt_box_x_min = np.interp(box_df.tt_box_x_min, [-1 * a, a], [-1 * d, d])
+    box_df.tt_box_x_max = np.interp(box_df.tt_box_x_max, [-1 * a, a], [-1 * d, d])
+    box_df.tt_box_z_min = np.interp(box_df.tt_box_z_min, [b, c], [-1 * d, d])
+    box_df.tt_box_z_max = np.interp(box_df.tt_box_z_max, [b, c], [-1 * d, d])
 
     # Mean reward position in the reward boxes
     box_df["l_reward_x"] = df[(df.reward > 0.5) & (df.trial_left_choice > 0.5)][
         "x"
     ].mean()
-    df_box["l_reward_z"] = df[(df.reward > 0.5) & (df.trial_left_choice > 0.5)][
+    box_df["l_reward_z"] = df[(df.reward > 0.5) & (df.trial_left_choice > 0.5)][
         "y"
     ].mean()
-    df_box["r_reward_x"] = df[(df.reward > 0.5) & (df.trial_right_choice > 0.5)][
+    box_df["r_reward_x"] = df[(df.reward > 0.5) & (df.trial_right_choice > 0.5)][
         "x"
     ].mean()
-    df_box["r_reward_z"] = df[(df.reward > 0.5) & (df.trial_right_choice > 0.5)][
+    box_df["r_reward_z"] = df[(df.reward > 0.5) & (df.trial_right_choice > 0.5)][
         "y"
     ].mean()
 
