@@ -349,6 +349,7 @@ class RewardsDataFrame(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
+
 @schema
 class SummaryPlots(dj.Computed):
     definition = """
