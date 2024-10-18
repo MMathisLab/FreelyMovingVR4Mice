@@ -667,7 +667,7 @@ def plot_time_to_reward(
     xticks: List[str],
     ax: Optional[matplotlib.axes.Axes] = None,
     alpha: float = 0.5,
-    # cmap: str = "Set1",
+    cmap: Optional[str] = None,
     log_scale: bool = True,
 ):
     """Plot the time to reward per session.
@@ -676,7 +676,7 @@ def plot_time_to_reward(
         df (pd.DataFrame): DataFrame containing the data to plot.
         label_x (str): Name of the column to use to group the time to rewards.
         xticks (List[str]): List of x labels corresponding to the groups used to group the time
-            to rewards.
+            to rewards. Note that they should be orderded as the user want them to appear on the scheme.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
         alpha (float, optional): Alpha transparency for the plot. Default is 0.5.
         cmap (str, optional): Color map for the plot. Default is "Set1".
@@ -684,13 +684,14 @@ def plot_time_to_reward(
             in normal scale. Default is True.
     """
 
-    cmap = (
-        colors_aperture
-        if label_x == "aperture"
-        else colors_rewarded
-        if label_x == "trial_rewarded"
-        else colors_choice
-    )
+    if not cmap:
+        cmap = (
+            colors_aperture
+            if label_x == "aperture"
+            else colors_rewarded
+            if label_x == "trial_rewarded"
+            else colors_choice
+        )
 
     def _time_to_reward_box(group):
         first_event_index = group[
@@ -713,10 +714,13 @@ def plot_time_to_reward(
     counts = counts.dropna()
 
     counts["count"] = counts["step_to_reward"] * 0.02
+    if label_x == "aperture":
+        counts.aperture = counts.aperture.astype(float)
     counts.sort_values(by=label_x, inplace=True)
     counts[label_x] = counts[label_x].astype(str)
     mean_counts = counts.groupby(["dataset", label_x], as_index=False)["count"].mean()
 
+    mean_counts[label_x] = mean_counts[label_x].astype(str)
     _plot_bar_counts(
         counts=mean_counts,
         label_x=label_x,
@@ -726,6 +730,7 @@ def plot_time_to_reward(
         cmap=cmap,
     )
 
+    counts[label_x] = counts[label_x].astype(str)
     sns.stripplot(
         data=counts,
         x=label_x,
