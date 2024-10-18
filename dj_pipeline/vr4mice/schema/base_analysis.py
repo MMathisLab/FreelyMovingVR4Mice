@@ -225,7 +225,7 @@ class BoxDataFrame(dj.Computed):
     """
 
     def make(self, key):
-        from vr4mice.analysis.analysis import get_df_box
+        from vr4mice.analysis.analysis import get_box_df
 
         if self & key:
             logger.info(

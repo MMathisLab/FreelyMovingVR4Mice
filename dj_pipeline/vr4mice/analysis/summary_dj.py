@@ -57,14 +57,14 @@ def fetch_data(key: Dict, database: bool):
             logger.warning(f"An error occurred: {e}")
 
         try:
-            df_box_output = base_analysis.BoxDataFrame().get_data(key)
-            if df_box_output is not False or df_box_output is not None:
+            box_df_output = base_analysis.BoxDataFrame().get_data(key)
+            if box_df_output is not False or box_df_output is not None:
                 logger.info(f"Box data fetched for {key}")
             else:
                 logger.info(f"Populating BoxDataFrame data for {key}")
-                df_box_output = base_analysis.BoxDataFrame().populate(key)
-                df_box_output = base_analysis.BoxDataFrame().get_data(key)
-                if df_box_output is not False or df_box_output is not None:
+                box_df_output = base_analysis.BoxDataFrame().populate(key)
+                box_df_output = base_analysis.BoxDataFrame().get_data(key)
+                if box_df_output is not False or box_df_output is not None:
                     logger.info("Data populated and fetched for " + str(key))
                 else:
                     logger.warning(f"Data population failed for {key}")
