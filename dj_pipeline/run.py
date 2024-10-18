@@ -19,11 +19,15 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
     Pool of commands
 
     Modes:
-        "connect": connect to the database
-        "populate": to populate the data from files
-        "fetch": to create .npy file for dropdown menu
+    "connect": connect to the database
+    "populate": populate the raw data from files
+    "fetch": create .npy file for dropdown menu
+    "analysis": perform data analysis: populate base_analysis
+    "summary": generate summary plots: populate summary plots
+    "dlc": process DeepLabCut data: populate dlc tables
+    "update": sync missing data in existing tables
+    "sync_days": synchronize days in the dataset (process raw .npy files)
 """
-
 
 def create_folder_if_not_exist(folder_path):
     if not os.path.exists(folder_path):
