@@ -223,5 +223,5 @@ def plot_keypoints_summary(key, save_path="", keypoints_list = ["head_midpoint",
     print(figure_save_path)
     keypoints = dlc.DLCKptsDf().get_data(key=key)
     plot_keypoints(keypoints, keypoints_list, xlim=xlim, cmap=cmap, confidence=confidence, key=key["dataset"])
-    #plt.figsave(save_path + key ["dataset"], transparent=True)
+    plt.savefig(figure_save_path, transparent=True)
     return(figure_save_path)
