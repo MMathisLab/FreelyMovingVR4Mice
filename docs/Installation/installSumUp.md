@@ -7,7 +7,7 @@ _**Note:**_ _The following installation assumes you have already installed on yo
 Create a new conda environment with local pip:
 
  ```bash
- conda create --name name_of_env python==3.10.12 pip
+ conda create --name name_of_env python=3.10.12 pip
  ```
 
  ```bash
