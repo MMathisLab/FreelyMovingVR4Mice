@@ -115,25 +115,6 @@ class UnityTask(Task):
         self.state = decision_steps.obs[self.vec_obs_ind]
         self.episode = 1
 
-        # - - - - - - - - - - - PREVIOUS VERSION - - - - - - - - - - - #
-        # self.agent = self.env.get_agent_groups()[self.agent_group]
-        # self.agent_spec = self.env.get_agent_group_spec(self.agent)
-
-        # obs_dim = [len(shape) for shape in self.agent_spec.observation_shapes]
-        # self.vec_obs_ind = np.where([d == 1 for d in obs_dim])[0][0]
-        # self.vis_obs_ind = np.where([d == 3 for d in obs_dim])[0]
-        # self.vis_obs_ind = self.vis_obs_ind[0] if len(self.vis_obs_ind) > 0 else None
-        # if self.vis_obs_ind:
-        #     vis_obs_shape = np.array(self.agent_spec.observation_shapes)[
-        #         self.vis_obs_ind
-        #     ]
-        #     # self.vid_writer = self.create_vid_writer(vis_obs_shape, fps) if write_video and vis_obs_shape else None
-
-        # step_result = self.get_step_result()
-        # self.state = step_result.obs[self.vec_obs_ind]
-        # self.episode = 1
-        # - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - #
-
         ### start teensy ###
         super().start()
 
@@ -179,11 +160,6 @@ class UnityTask(Task):
         Returns:
             step (DecisionSteps or TerminalSteps)
         """
-        # - - - - - - - - - - - PREVIOUS VERSION - - - - - - - - - - - #
-        # batch_result = self.env.get_step_result(self.agent)
-        # step_result = batch_result.get_agent_step_result(self.agent_num)
-        # return step_result
-        # - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - #
 
         # Retrieve DecisionSteps and TerminalSteps for the specified agent group
         decision_steps, terminal_steps = self.env.get_steps(self.agent)
@@ -204,9 +180,6 @@ class UnityTask(Task):
         """
         getters for state
         """
-        # - - - - - - - - - - - PREVIOUS VERSION - - - - - - - - - - - #
-        # step_result = self.env.get_step_result(self.agent)
-        # - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - #
 
         # could it be just self.get_step_result().obs?
         return self.get_step_result().obs[self.vec_obs_ind]
@@ -234,24 +207,12 @@ class UnityTask(Task):
         """
         Getter for actions
         """
-        # - - - - - - - - - - - PREVIOUS VERSION - - - - - - - - - - - #
-        # dtype = np.float32 if self.agent_spec.action_type == "continuous" else np.int32
-        # return np.zeros(self.agent_spec.action_size, dtype=dtype)
-        # - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - #
 
         # Determine action type and create a zero array of the appropriate type
         if self.agent_spec.action_spec.is_continuous():
             dtype = np.float32
             action_size = self.agent_spec.action_spec.continuous_size
-            action = np.array(
-                [
-                    np.sin(time.time()) * 9,
-                    -9.0,
-                    0.59740335,
-                    (np.sin(time.time() * 4) + 1) / 2,
-                ],
-                dtype=dtype,
-            )
+            action = np.zeros(len(action_size), dtype=dtype)
 
         if self.agent_spec.action_spec.is_discrete():
             dtype = np.int32
@@ -273,12 +234,10 @@ class UnityTask(Task):
         """
         self.set_channel()
         self.env.reset()
-        step_result = self.get_step_result()
-        self.state = step_result.obs[self.vec_obs_ind]
         self.ep_reward = 0
         self.episode_start_time = self.cur_time
 
-    def loop(self, override_action=False, action=None):
+    def loop(self, override=False, action=None):
         """
         method that holds the task logic: corresponds to the task execution, supports the data exchange with unity
         updates all the attributes every frame
@@ -293,8 +252,9 @@ class UnityTask(Task):
         self.state_vec.append(self.state)  # all info about the agent (ex. position)
 
         ### get action ###
-        if override_action:
+        if override:
             self.action = action
+            self.action_vec.append(self.action)
         else:
             self.action = self.get_action()  # mouse's moves
             self.action_vec.append(self.action)
