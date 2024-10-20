@@ -42,7 +42,6 @@ def plot_trajectories(data):
         lc.set_linewidth(2)
 
         ax.add_collection(lc)
-        # ax.scatter(x, y, marker="x", color="black", alpha=0.5, s=10)
 
         ax.scatter(
             x.iloc[0],
@@ -76,7 +75,7 @@ def plot_trajectories(data):
         ax.set_ylim(-10, -2)
         # plt.yticks(np.arange(-10, -1, 1))
 
-        # Define some rectangles (x, y, width, height)
+        # Define the active regions (starting box and report boxes) of the Unity game arena
         screen = patches.Rectangle(
             (-10, -2), 20, 1, linewidth=4, edgecolor="r", facecolor="none"
         )
@@ -90,7 +89,7 @@ def plot_trajectories(data):
             (-10, -4), 5, 2, linewidth=2, edgecolor="b", facecolor="none"
         )
 
-        # Add the rectangles to the plot
+        # Add patches to the plot
         ax.add_patch(screen)
         ax.add_patch(report_r)
         ax.add_patch(report_l)
@@ -100,7 +99,7 @@ def plot_trajectories(data):
 
         plt.draw()
 
-    # Add a colorbar to indicate the progression
+    # Define a colorbar to indicate the progression
     sm = plt.cm.ScalarMappable(
         cmap=plt.get_cmap("viridis"), norm=plt.Normalize(vmin=0, vmax=1)
     )
@@ -139,7 +138,7 @@ def plot_trajectories(data):
 
 def compute_trigger_areas_coordinates(unity_arena_size, cropped_image):
     """
-    Compute the coordinates of the trigger areas in the cropped image
+    Compute the coordinates of the trigger areas (start and report boxes) in the cropped image
     """
     x_rects_lower = np.interp(
         np.array([-4, -9, 5]),
