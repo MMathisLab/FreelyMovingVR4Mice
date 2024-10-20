@@ -36,9 +36,9 @@ class TestPositionCoordinates(unittest.TestCase):
         self.reward_size = 100
         self.cropped_image = [0, 530, 0, 510]
         self.unity_arena_size = [-9, 9, -10, -2]
-        self.R_report_box = [5, 10, -4, -2]
-        self.L_report_box = [-10, -5, -4, -2]
-        self.Start_box = [-4, 4, -9, -5, 90]
+        self.r_report_box = [5, 10, -4, -2]
+        self.l_report_box = [-10, -5, -4, -2]
+        self.start_box = [-4, 4, -9, -5, 90]
         self.rotate_camera = 90.0
         self.prob_obj_on_left = 0.5
         self.mouse_report_delay = 0.0
@@ -85,9 +85,9 @@ class TestPositionCoordinates(unittest.TestCase):
                 reward_size=self.reward_size,
                 cropped_image=self.cropped_image,
                 unity_arena_size=self.unity_arena_size,
-                r_report_box=self.R_report_box,
-                l_report_box=self.L_report_box,
-                start_box=self.Start_box,
+                r_report_box=self.r_report_box,
+                l_report_box=self.l_report_box,
+                start_box=self.start_box,
                 rotate_camera=self.rotate_camera,
                 prob_obj_on_left=self.prob_obj_on_left,
                 prob_block_coherence=self.prob_block_coherence,
@@ -129,9 +129,17 @@ class TestPositionCoordinates(unittest.TestCase):
         pygame.init()
         screen = pygame.display.set_mode((window_width, window_height))
 
-        x_rects_upper, y_rects_upper, widths, heights = (
-            compute_trigger_areas_coordinates(self.unity_arena_size, self.cropped_image)
+        x_rects_lower, y_rects_lower, widths, heights = (
+            compute_trigger_areas_coordinates(
+                self.unity_arena_size,
+                self.cropped_image,
+                self.start_box,
+                self.r_report_box,
+                self.l_report_box,
+            )
         )
+
+        print("------->", x_rects_lower, y_rects_lower, widths, heights)
 
         # Initialize Unity environment
         self.task.start()
@@ -159,7 +167,7 @@ class TestPositionCoordinates(unittest.TestCase):
             pygame.draw.circle(screen, RED, (x, y), 5)
             [
                 pygame.draw.rect(screen, GREEN, (x, y, w, h))
-                for x, y, w, h in zip(x_rects_upper, y_rects_upper, widths, heights)
+                for x, y, w, h in zip(x_rects_lower, y_rects_lower, widths, heights)
             ]
 
             x = np.interp(

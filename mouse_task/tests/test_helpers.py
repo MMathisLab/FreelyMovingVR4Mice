@@ -136,12 +136,18 @@ def plot_trajectories(data):
     plt.show()
 
 
-def compute_trigger_areas_coordinates(unity_arena_size, cropped_image):
+def compute_trigger_areas_coordinates(
+    unity_arena_size,
+    cropped_image,
+    start_box,
+    r_report_box,
+    l_report_box,
+):
     """
     Compute the coordinates of the trigger areas (start and report boxes) in the cropped image
     """
     x_rects_lower = np.interp(
-        np.array([-4, -9, 5]),
+        np.array([start_box[1], r_report_box[1], l_report_box[1]]),
         [unity_arena_size[0], unity_arena_size[1]],
         [
             cropped_image[1],
@@ -150,7 +156,7 @@ def compute_trigger_areas_coordinates(unity_arena_size, cropped_image):
     )
 
     x_rects_upper = np.interp(
-        np.array([4, -5, 9]),
+        np.array([start_box[0], r_report_box[0], l_report_box[0]]),
         [unity_arena_size[0], unity_arena_size[1]],
         [
             cropped_image[1],
@@ -159,7 +165,7 @@ def compute_trigger_areas_coordinates(unity_arena_size, cropped_image):
     )
 
     y_rects_lower = np.interp(
-        np.array([-9, -4, -4]),
+        np.array([start_box[3], r_report_box[3], l_report_box[3]]),
         [unity_arena_size[2], unity_arena_size[3]],
         [
             cropped_image[3],
@@ -168,7 +174,7 @@ def compute_trigger_areas_coordinates(unity_arena_size, cropped_image):
     )
 
     y_rects_upper = np.interp(
-        np.array([-5, -2, -2]),
+        np.array([start_box[2], r_report_box[2], l_report_box[2]]),
         [unity_arena_size[2], unity_arena_size[3]],
         [
             cropped_image[3],
@@ -177,9 +183,8 @@ def compute_trigger_areas_coordinates(unity_arena_size, cropped_image):
     )
 
     # the y-axis is flipped for ergonomical reasons
-    widths = x_rects_lower - x_rects_upper
-    heights = y_rects_lower - y_rects_upper
-
+    widths = x_rects_upper - x_rects_lower
+    heights = y_rects_upper - y_rects_lower
     return x_rects_lower, y_rects_lower, widths, heights
 
 
