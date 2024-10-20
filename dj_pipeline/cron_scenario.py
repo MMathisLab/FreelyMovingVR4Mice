@@ -30,21 +30,20 @@ try:
     create_folder_if_not_exist("/data/summary_plots")
     base_analysis.DataFrame.populate()
     base_analysis.BoxDataFrame()
-    base_analysis.JShaped().populate()
     base_analysis.GitCommit().populate()
 
-    # base_analysis.OutputPlots.populate()
     dlc.DLCProcessor().populate()
     dlc.DLCKptsDf().populate()
-    #dlc.SyncDLCWGame().populate()
-    #dlc.DLCKptsBodyparts().populate()  # TODO: optional
+    dlc.SyncDLCKptsDf().populate()
+    dlc.OfflineKinematics().populate()
 
+    # base_analysis.SummaryPlots.populate(send=False)
 except Exception as e:
     logger.error(f"An error occurred in populate_decision_making.populate: {e}")
 
 try:
     path = "/shared"
-    # check_folder_existence(path)
-    # fetch_data(dst="/shared/gui_menu.npy")
+    check_folder_existence(path)
+    fetch_data(dst="/shared/gui_menu.npy")
 except Exception as e:
     logger.error(f"An error occurred in fetch_data: {e}")

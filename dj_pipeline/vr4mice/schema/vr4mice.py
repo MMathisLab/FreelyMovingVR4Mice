@@ -3,6 +3,8 @@ from typing import List
 import datajoint as dj
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
+
+
 import numpy as np
 
 schema_name = "vr4mice"
@@ -41,24 +43,89 @@ class Dataset(dj.Manual):
     session_label: varchar(255)
     """
 
-    # TODO:
-    # add make call to populate raw files paths here automatically
+    def get_keys(self, folder="/data/processed"):
+        keys = []
+        dataset_keys = Dataset().fetch("dataset", as_dict=True)
+        camera_keys = Camera().fetch("camera", as_dict=True)
+        for dk in dataset_keys:
+            for ck in camera_keys:
+                keys.append({**dk, **ck})
+        return keys
+
+    def populate(self):
+        keys = self.get_keys()
+        for key in keys:
+            self.make(key)
+
+    def make(self, key):
+        from vr4mice.actions.populate_rig import get_files_paths
+
+        logger.info(f"{key['dataset']}")
+        paths = get_files_paths(key["dataset"])
+        video_filepath = (
+            f"{paths['video_path']['dst']}/{paths['video_path']['filename']}"
+        )
+        timestamp_filepath = (
+            f"{paths['camera_path']['dst']}/{paths['camera_path']['filename']}"
+        )
+        video_meta = paths["video_meta"]
+        data = {
+            "doe": paths["doe"],
+            "video_filepath": video_filepath,
+            "timestamp_filepath": timestamp_filepath,
+        }
+        data = {**key, **data, **video_meta}
+        Video().insert1(data, skip_duplicates=True)
 
 
-# TODO: This should be moved to its own schema.
-# @schema
-# class VR4Mice(dj.Manual):
-#     """
-#         VR4Mice definition table:
-#         links together Dataset with base Mouse, Exp schemas
-#     """
-#
-#     definition = """
-#    -> Dataset
-#    ---
-#    -> mice.Mouse
-#    -> exp.Session
-#    """
+@schema
+class Labels(dj.Lookup):
+    definition = """
+    idx: int
+    ---
+    label: varchar(128)
+    """
+
+    contents = [
+        # [0, "example_label"],  #
+    ]
+
+    @classmethod
+    def get_next_idx(cls):
+        if not cls.fetch("idx"):
+            return 0
+        current_max = cls.fetch("idx").max()
+        return current_max + 1 if current_max is not None else 0
+
+
+@schema
+class Groups(dj.Manual):
+    definition = """
+    -> Dataset
+    -> Labels
+    """
+
+    def add(self, dataset, label):
+        try:
+            key = f"dataset='{dataset}'"
+            a = (Dataset & key).fetch()
+            if a.size == 0:
+                logger.warning(
+                    f"No Dataset entry found for {dataset}: can't populate Groups table."
+                )
+                return
+            key = f"label='{label}'"
+            label_idx = (Labels & key).fetch("idx")[0]
+
+            if label_idx is None:
+                label_idx = Labels().get_next_idx()
+                Labels.insert1({"idx": label_idx, "label": label})
+
+            self.insert1({"dataset": dataset, "idx": label_idx})
+
+        except Exception as err:
+            err = f"Error while populating the Groups table: key: {dataset} {label_idx}\n {err}"
+            logger.warning(err)
 
 
 @schema
