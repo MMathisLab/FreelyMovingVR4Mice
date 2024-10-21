@@ -12,11 +12,11 @@ class DLCClient(object):
         self.input_data = deque()
         self.save_input_data = deque()
         self.previous = deque()  # Using deque for efficient appends
+        self.conn = Client(self.address, authkey=b"secret password")
         self.start_read_buffer()
         self.start_time = time.time()
 
     def read_on_thread(self):
-        self.conn = Client(self.address, authkey=b"secret password")
         while self.reading:
             try:
                 this_read = self.conn.recv()
