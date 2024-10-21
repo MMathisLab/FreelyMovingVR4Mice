@@ -194,12 +194,19 @@ class SyncDLCKptsDf(dj.Computed):
 
 @schema
 class OfflineKinematics(dj.Computed):
+    """ Stores the mouse body kinematics that are computed offline.
+        This table pulls data from the synchronized and interpolated DLC keypoint table and recomputes various kinematic variables.
+    """
     definition = """
     -> SyncDLCKptsDf
     ---
-    data: longblob
-    headers : blob
-    scorer=NULL: varchar(256)
+    head_center_x: longblob # the center of the mouse head in x at each frame
+    head_center_y: longblob # the center of the mouse head in y at each frame
+    heading_dir: longblob # the direction of the mouses body (tail base to neck) relaitve to the main monitor 
+    head_angle: longblob # the angle of the head relative to head_dir
+    pose_time: longblob # the time that the pose was inferred
+    step_time: longblob # the time of the frame in game time
+    step: longblob # the nearest game step to the dlc frame
     """
 
     def make(self, key):
@@ -216,7 +223,7 @@ class OfflineKinematics(dj.Computed):
                 sync_keypoints.iloc[:, :-3]
             )  # Compute all the kinematic variables
             offline_dlc_variables[
-                ["pose_time", "step_time", "step"]
+                ["pose_time", "step", "step_time"]
             ] = sync_keypoints.iloc[
                 :, -3:
             ]  # Add back in the time index
@@ -224,7 +231,8 @@ class OfflineKinematics(dj.Computed):
             offline_dlc_variables["heading_dir"] = (
                 (offline_dlc_variables.heading_dir - 90) + 180
             ) % 360 - 180
-            data = df2dj(offline_dlc_variables)
+            
+            data = offline_dlc_variables
 
             if (
                 not "camera" in key or not "doe" in key
@@ -241,24 +249,17 @@ class OfflineKinematics(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_data(self, key):
+    def get_data(self, key, columns=None):
         try:
-            data = (self & key).fetch1()
-            return dj2h5(data["data"], data["headers"], data["scorer"])
-
-        except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
-            return None
-
-    def get_all_data(self, key):
-        dfs = []
-        try:
-            data = self.fetch()
-            for d in data:
-                data = (self & key).fetch1()
-                df = dj2h5(data["data"], data["headers"], data["scorer"])
-                dfs.append(df)
-            return dfs
+            if self & key:
+                if columns:
+                    data = (self & key).fetch(*columns, as_dict=True)[0]
+                else:
+                    data = (self & key).fetch(as_dict=True)[0]
+                df = pd.DataFrame(data)    
+                return df   
+            else:
+                return False
 
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
