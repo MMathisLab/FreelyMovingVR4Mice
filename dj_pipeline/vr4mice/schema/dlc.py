@@ -195,7 +195,8 @@ class SyncDLCKptsDf(dj.Computed):
 @schema
 class OfflineKinematics(dj.Computed):
     """ Stores the mouse body kinematics that are computed offline.
-        This table pulls data from the synchronized and interpolated DLC keypoint table and recomputes various kinematic variables.
+        This table pulls data from the synchronized and interpolated DLC keypoint table 
+        and recomputes various kinematic variables.
     """
     definition = """
     -> SyncDLCKptsDf
