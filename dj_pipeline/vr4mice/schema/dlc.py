@@ -194,10 +194,11 @@ class SyncDLCKptsDf(dj.Computed):
 
 @schema
 class OfflineKinematics(dj.Computed):
-    """ Stores the mouse body kinematics that are computed offline.
-        This table pulls data from the synchronized and interpolated DLC keypoint table 
-        and recomputes various kinematic variables.
+    """Stores the mouse body kinematics that are computed offline.
+    This table pulls data from the synchronized and interpolated DLC keypoint table
+    and recomputes various kinematic variables.
     """
+
     definition = """
     -> SyncDLCKptsDf
     ---
@@ -232,7 +233,7 @@ class OfflineKinematics(dj.Computed):
             offline_dlc_variables["heading_dir"] = (
                 (offline_dlc_variables.heading_dir - 90) + 180
             ) % 360 - 180
-            
+
             data = offline_dlc_variables
 
             if (
@@ -257,8 +258,8 @@ class OfflineKinematics(dj.Computed):
                     data = (self & key).fetch(*columns, as_dict=True)[0]
                 else:
                     data = (self & key).fetch(as_dict=True)[0]
-                df = pd.DataFrame(data)    
-                return df   
+                df = pd.DataFrame(data)
+                return df
             else:
                 return False
 
