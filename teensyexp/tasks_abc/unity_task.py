@@ -290,7 +290,6 @@ class UnityTask(Task):
         self.episode_vec.append(self.episode)  # trial
         self.step_vec.append(self.step)  # frame
         self.time_vec.append(self.cur_time)  # time for each frame
-        self.state_vec.append(self.state)  # all info about the agent (ex. position)
 
         ### get action ###
         self.action = self.get_action()  # mouse's moves
@@ -319,6 +318,8 @@ class UnityTask(Task):
         ### get info ###
         self.state = step_result.obs[self.vec_obs_ind]
         info = self.get_info()
+
+        self.state_vec.append(self.state)  # all info about the agent (ex. position)
 
         ### check reset, epochs, and condition to end session; update state ###
         if self.terminal:
