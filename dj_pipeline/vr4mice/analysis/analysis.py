@@ -373,20 +373,29 @@ def create_data_frame(
     df.trial = df.trial.astype(int)
     df.aperture = df.aperture.round(2)
 
-    df["trial_rewarded"] = get_rewarded(df)
-
     df = df.drop(columns=["first", "last"])
 
     return df, unity_to_physical_arena_size
 
 
-def get_box_df(key: dict, df: pd.DataFrame, unity_to_physical_arena_size: dict):
-    """Define the box dimensions.
+def get_box_df(
+    key: dict, df: pd.DataFrame, unity_to_physical_arena_size: dict
+) -> pd.DataFrame:
+    """Define the box dimensions based on arena, start area, and reward area sizes.
 
-    Define the arena, start area and reward areas dimensions.
+    This function takes in the data related to arena box positions, interpolates
+    unity-based coordinates to physical space, and calculates the reward positions
+    within the left and right boxes based on trial results.
+
+    Args:
+        key (dict): Dictionary containing keys for VR4Mice database. (VR4Mice)
+        df (pd.DataFrame): A DataFrame containing trial data, including reward and choice columns.
+        unity_to_physical_arena_size (dict): A dictionary to interpolate physical arena sizes based
+            on Unity-based arena sizes.
 
     Returns:
-        A dataFrame containing the dimensions.
+        pd.DataFrame: A DataFrame containing the adjusted box dimensions in physical space and
+            the mean reward positions for the left and right reward boxes.
     """
     box_df = pd.DataFrame((vr4mice.Box & key).fetch())
 

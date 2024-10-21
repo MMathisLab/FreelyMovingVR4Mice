@@ -1,7 +1,6 @@
 from typing import List, Optional, Tuple
 
 import matplotlib as mpl
-import matplotlib.cm as cm
 import matplotlib.collections
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,12 +8,9 @@ import numpy.typing as npt
 import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
-import vr4mice.analysis.analysis as analysis
 from matplotlib.collections import PathCollection
 from matplotlib.transforms import Affine2D
 from scipy.interpolate import CubicSpline
-
-import vr4mice.analysis.analysis as analysis
 
 """
 Color codes:

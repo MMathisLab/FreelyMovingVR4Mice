@@ -4,11 +4,11 @@ from typing import List, Optional
 
 import datajoint as dj
 import pandas as pd
+from base_actions.send_email import email
 
 from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
-from base_actions.send_email import email
 
 schema_name = "base_analysis"
 schema = get_schema(schema_name, locals())
@@ -372,7 +372,7 @@ class SummaryPlots(dj.Computed):
 
 
 def insert_send_email(key, tuple_, table, filename, send=False):
-    from base_schemas.schemas import mice, exp
+    from base_schemas.schemas import exp, mice
 
     try:
         user = (exp.Session() & key).fetch("experimenter_name", as_dict=True)[0]
