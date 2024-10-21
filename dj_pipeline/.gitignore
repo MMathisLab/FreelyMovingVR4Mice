@@ -1,4 +1,3 @@
-*.ipynb
 data/
 s3/
 tmp/
@@ -35,3 +34,4 @@ __pycache__/
 *.npy
 *.env
 *git_commit
+*config.ini*

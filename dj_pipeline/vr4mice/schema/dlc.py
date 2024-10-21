@@ -3,18 +3,18 @@ from typing import List
 import datajoint as dj
 import numpy as np
 import pandas as pd
-from vr4mice.utils.logger import Logger
-from vr4mice.utils.schema_config import get_schema  # todo adjust paths (base/utils)
+
 from vr4mice.analysis.dlc_helpers import (
-    h52dj,
     df2dj,
     dj2h5,
+    get_all_dlc_heading_angles,
+    h52dj,
     sync_dlc_w_game,
     sync_keypoint_table,
-    get_all_dlc_heading_angles,
 )
-
-from vr4mice.schema import vr4mice, base_analysis
+from vr4mice.schema import base_analysis, vr4mice
+from vr4mice.utils.logger import Logger
+from vr4mice.utils.schema_config import get_schema  # todo adjust paths (base/utils)
 
 schema_name = "dlc"
 schema = get_schema(schema_name, locals())
