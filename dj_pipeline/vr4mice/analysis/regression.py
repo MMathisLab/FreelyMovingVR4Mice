@@ -11,10 +11,6 @@ import sklearn
 from matplotlib.collections import LineCollection
 from sklearn.model_selection import LeaveOneGroupOut
 
-colors_choice = ["#5C0A72", "#FD672C"]
-colors_aperture = ["#E41A1C", "#437FB5"]
-colors_aperture_pale = ["#EC8788", "#96B9D6"]
-
 
 def predict_decision(
     df, label: str = "norm_x", n_splits: int = 10, per_mouse: bool = False

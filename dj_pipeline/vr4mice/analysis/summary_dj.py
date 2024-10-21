@@ -4,10 +4,7 @@ from typing import Dict
 
 import matplotlib.pyplot as plt
 import seaborn as sns
-import vr4mice.analysis.analysis as analysis
-import vr4mice.analysis.plotting as plotting
-import vr4mice.analysis.utils as utils
-from vr4mice.schema import base_analysis, vr4mice
+
 from vr4mice.utils.logger import Logger
 
 logger = Logger.get_logger()
@@ -57,20 +54,22 @@ def fetch_data(key: Dict, database: bool):
             logger.warning(f"An error occurred: {e}")
 
         try:
-            df_box_output = base_analysis.BoxDataFrame().get_data(key)
-            if df_box_output is not False or df_box_output is not None:
+            box_df_output = base_analysis.BoxDataFrame().get_data(key)
+            if box_df_output is not False or box_df_output is not None:
                 logger.info(f"Box data fetched for {key}")
             else:
                 logger.info(f"Populating BoxDataFrame data for {key}")
-                df_box_output = base_analysis.BoxDataFrame().populate(key)
-                df_box_output = base_analysis.BoxDataFrame().get_data(key)
-                if df_box_output is not False or df_box_output is not None:
+                box_df_output = base_analysis.BoxDataFrame().populate(key)
+                box_df_output = base_analysis.BoxDataFrame().get_data(key)
+                if box_df_output is not False or box_df_output is not None:
                     logger.info("Data populated and fetched for " + str(key))
                 else:
                     logger.warning(f"Data population failed for {key}")
         except Exception as e:
             logger.warning(f"An error occurred: {e}")
     else:
+        from vr4mice.analysis import analysis
+
         df, unity_to_physical_arena_size = analysis.create_data_frame(key, iti=False)
         box_df_output = analysis.get_box_df(
             key, df, unity_to_physical_arena_size=unity_to_physical_arena_size
@@ -130,6 +129,8 @@ def vr4mice_summary_plots(
     Returns:
         str: The full path of the saved summary plot.
     """
+    from vr4mice.analysis import analysis, plotting, utils
+
     analysis.style()
     df, box_df_output = fetch_data(key, database)
 
@@ -365,6 +366,8 @@ def vr4mice_summary_plots(
     plotting.plot_choices_by_trial(df, ax=ax9)
 
     if database:
+        from vr4mice.schema import base_analysis
+
         full_path = base_analysis.SummaryPlots().get_path(
             key=key, base=save_path, ext=".png"
         )

@@ -4,17 +4,16 @@ from typing import List, Optional
 
 import datajoint as dj
 import pandas as pd
-
-import vr4mice.analysis.utils as utils
-import vr4mice.schema.vr4mice as vr4mice
-import vr4mice.utils.logger
-import vr4mice.utils.schema_config as schema_config
 from base_actions.send_email import email
 
-schema_name = "base_analysis"
-schema = schema_config.get_schema(schema_name, locals())
+from vr4mice.schema import vr4mice
+from vr4mice.utils.logger import Logger
+from vr4mice.utils.schema_config import get_schema
 
-logger = vr4mice.utils.logger.Logger.get_logger()
+schema_name = "base_analysis"
+schema = get_schema(schema_name, locals())
+
+logger = Logger.get_logger()
 
 
 @schema
@@ -226,7 +225,7 @@ class BoxDataFrame(dj.Computed):
     """
 
     def make(self, key):
-        from vr4mice.analysis.analysis import get_df_box
+        from vr4mice.analysis.analysis import get_box_df
 
         if self & key:
             logger.info(
@@ -242,7 +241,7 @@ class BoxDataFrame(dj.Computed):
                 )
                 box_df = {
                     k: v[0] if isinstance(v, list) and len(v) == 1 else v
-                    for k, v in df_box.to_dict(orient="list").items()
+                    for k, v in box_df.to_dict(orient="list").items()
                 }
                 data = {**key, **box_df}
                 self.insert1(data, allow_direct_insert=True)
@@ -422,7 +421,7 @@ class SummaryPlots(dj.Computed):
 
 
 def insert_send_email(key, tuple_, table, filename, send=False):
-    from base_schemas.schemas import mice, exp
+    from base_schemas.schemas import exp, mice
 
     try:
         user = (exp.Session() & key).fetch("experimenter_name", as_dict=True)[0]

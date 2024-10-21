@@ -1,7 +1,6 @@
 from typing import List, Optional, Tuple
 
 import matplotlib as mpl
-import matplotlib.cm as cm
 import matplotlib.collections
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,12 +8,9 @@ import numpy.typing as npt
 import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
-import vr4mice.analysis.analysis as analysis
 from matplotlib.collections import PathCollection
 from matplotlib.transforms import Affine2D
 from scipy.interpolate import CubicSpline
-
-import vr4mice.analysis.analysis as analysis
 
 """
 Color codes:
@@ -1512,13 +1508,13 @@ def _plot_trial_velocities(
 
 
 def _plot_all_trajectories(
-    df, df_box, ax
+    df, box_df, ax
 ):  # NOTE(celia): deprecated, replaced by plot_session()
     """
     Plot all the trajectories.
     Args:
         df (pandas.DataFrame): DataFrame containing the data to plot.
-        df_box (pandas.DataFrame): DataFrame containing the box data to plot.
+        box_df (pandas.DataFrame): DataFrame containing the box data to plot.
         ax (matplotlib.axes._subplots.AxesSubplot): Axes object to plot the data onto.
     Returns:
         None
@@ -1540,7 +1536,7 @@ def _plot_all_trajectories(
     ax.scatter(
         df.x.iloc[rewards], df.y.iloc[rewards], c="#B52916", alpha=0.7, s=30, zorder=100
     )
-    plot_all_boxes(df_box=df_box, ax=ax)
+    plot_all_boxes(box_df=box_df, ax=ax)
     ax.set_xlim(-28, 28)
     ax.set_ylim(-28, 28)
     ax.set_xlabel("X pos (cm)")
@@ -1548,13 +1544,13 @@ def _plot_all_trajectories(
 
 
 def _plot_rewarded_trial_trajectories(
-    df, df_box, ax
+    df, box_df, ax
 ):  # NOTE(celia): deprecated, replaced by plot_session() and specific data
     """
     Plot trajectories for rewarded trials for the right target and the left target - RR and LR are data frames.
     Args:
         df (pandas DataFrame): The data to plot.
-        df_box (pandas DataFrame): DataFrame containing the position and size of the boxes.
+        box_df (pandas DataFrame): DataFrame containing the position and size of the boxes.
         ax (list of matplotlib Axes): The axes to plot on.
 
     Returns:
@@ -1573,14 +1569,14 @@ def _plot_rewarded_trial_trajectories(
         & (df.trial.isin(rewarded.trial[rewarded.object_on_left == 1.0]))
     ]
 
-    _plot_all_trajectories(RR, df_box, ax=ax[0])
-    _plot_all_trajectories(LR, df_box, ax=ax[1])
+    _plot_all_trajectories(RR, box_df, ax=ax[0])
+    _plot_all_trajectories(LR, box_df, ax=ax[1])
 
     ax[0].set_title("Right rewarded")
-    plot_all_boxes(df_box=df_box, ax=ax[0])
+    plot_all_boxes(box_df=box_df, ax=ax[0])
 
     ax[1].set_title("Left rewarded")
-    plot_all_boxes(df_box=df_box, ax=ax[1])
+    plot_all_boxes(box_df=box_df, ax=ax[1])
 
     ax[0].set_xlim(-28, 28)
     ax[0].set_ylim(-28, 28)

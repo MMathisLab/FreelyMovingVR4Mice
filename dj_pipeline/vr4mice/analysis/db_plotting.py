@@ -7,20 +7,13 @@ import inspect
 from typing import List, Optional, Tuple
 
 import matplotlib as mpl
-import matplotlib.cm as cm
 import matplotlib.collections
 import matplotlib.pyplot as plt
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
-import scipy.stats as stats
-import seaborn as sns
-from matplotlib.collections import PathCollection
-from matplotlib.transforms import Affine2D
-from scipy.interpolate import CubicSpline
 
 from vr4mice.analysis import plotting
-from vr4mice.schema import base_analysis, dlc, vr4mice
+from vr4mice.schema import base_analysis
 from vr4mice.utils.logger import Logger
 
 logger = Logger.get_logger()
@@ -80,6 +73,7 @@ def plot_all_boxes(ax, datasets_keys: List = []):
 
     Args:
         ax (matplotlib.axes.Axes): A matplotlib Axes object to plot the boxes on.
+        datasets_keys: TODO
     """
     start_box = plot_box_rectangle(
         box_label="tt", edgecolor="#009B9E", datasets_keys=datasets_keys
@@ -216,9 +210,6 @@ def plot_rewards(
     ax: Optional[matplotlib.axes.Axes] = None,
     cmap: str = "Set1",
 ):
-
-    # columns = ["dataset", "trial_rewarded", "aperture", "trial"]
-
     if len(datasets_keys) == 0:
         df = base_analysis.DataFrame().get_all_rewarded()
     else:
