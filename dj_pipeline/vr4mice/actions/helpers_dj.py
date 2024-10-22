@@ -4,6 +4,7 @@ import shutil
 from pathlib import Path
 
 from base_schemas.schemas import mice
+
 from vr4mice.utils.logger import Logger
 
 """

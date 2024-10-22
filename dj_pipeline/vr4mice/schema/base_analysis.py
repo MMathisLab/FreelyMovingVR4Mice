@@ -1,13 +1,14 @@
-from pathlib import Path
-from typing import List
 import subprocess
+from pathlib import Path
+from typing import List, Optional
 
 import datajoint as dj
 import pandas as pd
+from base_actions.send_email import email
+
 from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
-from base_actions.send_email import email
 
 schema_name = "base_analysis"
 schema = get_schema(schema_name, locals())
@@ -17,9 +18,7 @@ logger = Logger.get_logger()
 
 @schema
 class DataFrame(dj.Computed):
-    """
-    Host main dataframe for analysis.
-    """
+    """Host main dataframe for analysis."""
 
     # TODO: This used to point to vr4mice.VR4Mice
     #       will probably point this to the next version when it's available
@@ -99,9 +98,9 @@ class DataFrame(dj.Computed):
             return
 
         try:
-            data, interp = create_data_frame(key)
+            data, unity_to_physical_arena_size = create_data_frame(key)
             data = data.to_dict(orient="list")
-            data = {**key, **data, **{"interpolation": interp}}
+            data = {**key, **data, **{"interpolation": unity_to_physical_arena_size}}
 
             # TODO: add test that data keys are the same with columns names
             # if not in... alert
@@ -115,28 +114,29 @@ class DataFrame(dj.Computed):
             )
             return None
 
-    def get_data(self, key, columns=None):
+    def get_data(
+        self, key: dict, columns: Optional[List[str]] = None
+    ) -> Optional[pd.DataFrame]:
         try:
             if self & key:
                 if columns:
                     data = (self & key).fetch(*columns, as_dict=True)[0]
                 else:
                     data = (self & key).fetch(as_dict=True)[0]
-                    # interp = data["interpolation"]
+                if "interpolation" in data.keys():
                     data.pop("interpolation")
                 df = pd.DataFrame(data)
-                return df  # , interp  # TODO: externalize interpolation maybe
+                return df
             else:
                 return False
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_interp(self, key):
+    def get_unity_arena_size(self, key: dict) -> dict:
         try:
             if self & key:
-                interp = (self & key).fetch("interpolation")[0]
-                return interp
+                return (self & key).fetch("interpolation")[0]
             else:
                 return False
         except Exception as err:
@@ -189,7 +189,7 @@ class DataFrame(dj.Computed):
 
         from vr4mice.analysis.analysis import get_choices
 
-        df, interp = self.get_data(key)
+        df = self.get_data(key)
         if df is not False:
             return get_choices(df)
         return df
@@ -225,7 +225,7 @@ class BoxDataFrame(dj.Computed):
     """
 
     def make(self, key):
-        from vr4mice.analysis.analysis import get_df_box
+        from vr4mice.analysis.analysis import get_box_df
 
         if self & key:
             logger.info(
@@ -235,13 +235,15 @@ class BoxDataFrame(dj.Computed):
         try:
             if len(DataFrame & key) > 0:
                 df = DataFrame().get_data(key)
-                interp = DataFrame().get_interp(key)
-                df_box = get_df_box(key, df, interp=interp)
-                df_box = {
+                unity_to_physical_arena_size = DataFrame().get_unity_arena_size(key)
+                box_df = get_box_df(
+                    key, df, unity_to_physical_arena_size=unity_to_physical_arena_size
+                )
+                box_df = {
                     k: v[0] if isinstance(v, list) and len(v) == 1 else v
-                    for k, v in df_box.to_dict(orient="list").items()
+                    for k, v in box_df.to_dict(orient="list").items()
                 }
-                data = {**key, **df_box}
+                data = {**key, **box_df}
                 self.insert1(data, allow_direct_insert=True)
                 logger.info(f"{self.__class__.__name__} populated for {key}.")
 
@@ -285,15 +287,15 @@ class BoxDataFrame(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}: {err}")
             return None
 
-    def get_distance_to_reward(self, key):
+    def calculate_distance_to_reward(self, key):
 
-        from vr4mice.analysis.analysis import get_distance_to_reward
+        from vr4mice.analysis.analysis import calculate_distance_to_reward
 
-        df, interp = DataFrame().get_data(key)
-        df_box = self.get_data(key)
+        df = DataFrame().get_data(key)
+        box_df = self.get_data(key)
 
-        if df is not False and df_box is not False:
-            return get_distance_to_reward(df, df_box)
+        if df is not False and box_df is not False:
+            return calculate_distance_to_reward(df, box_df)
 
         return False
 
@@ -370,7 +372,7 @@ class SummaryPlots(dj.Computed):
 
 
 def insert_send_email(key, tuple_, table, filename, send=False):
-    from base_schemas.schemas import mice, exp
+    from base_schemas.schemas import exp, mice
 
     try:
         user = (exp.Session() & key).fetch("experimenter_name", as_dict=True)[0]
