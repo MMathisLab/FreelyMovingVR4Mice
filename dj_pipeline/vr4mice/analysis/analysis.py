@@ -102,15 +102,8 @@ def get_rewarded(df: pd.DataFrame) -> pd.Series:
         A pandas.Series with 1 if the trial to which the timepoint
         belongs to is rewarded and 0 else.
     """
+
     return df.groupby("trial")["reward"].transform(lambda x: x.max())
-
-
-def get_distance_to_reward(df: pd.DataFrame, df_box: pd.DataFrame) -> npt.NDArray:
-    distance_to_reward = np.sqrt(
-        (df_box["right_box_x_center"] - (df["x"] * df["flip_one_side"])) ** 2
-        + (df_box["right_box_z_center"] - df["y"]) ** 2
-    )
-    return distance_to_reward
 
 
 def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
@@ -132,14 +125,32 @@ def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
     return group
 
 
+def calculate_distance_to_reward(df: pd.DataFrame, box_df: pd.DataFrame) -> npt.NDArray:
+    """Calculate the distance from each point in a DataFrame to the center of a reward box.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing the coordinates of points, with columns 'x' and 'y'.
+                           The 'x' coordinates may be flipped depending on the 'flip_one_side' column.
+        box_df (pd.DataFrame): DataFrame containing the coordinates of the reward box centers,
+                               specifically 'right_box_x_center' and 'right_box_z_center'.
+
+    Returns:
+        npt.NDArray: An array of distances to the reward box for each point in `df`.
+    """
+    distance_to_reward = np.sqrt(
+        (box_df["right_box_x_center"] - (df["x"] * df["flip_one_side"])) ** 2
+        + (box_df["right_box_z_center"] - df["y"]) ** 2
+    )
+    return distance_to_reward
+
+
 def create_data_frame(
     key: dict,
     iti: bool = True,
     first_n_samples: int = 3,
     spatial_ybins: List[int] = [-27, 27, 75],
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Create main dataframe for analysis.
+    """Create main dataframe for analysis.
 
     Load and preprocess behavioral data and box coordinates.
 
@@ -169,7 +180,7 @@ def create_data_frame(
     slit_size = np.array(
         (vr4mice.Metadata & key).fetch1("slit_size")
     )  # TODO: check type-s
-    trial = (vr4mice.State & key).fetch("episode")  # attention change of name
+    trial = (vr4mice.State & key).fetch("episode")  # change of name
     trial = np.array(np.array(trial)[0], dtype=np.int32)
 
     aperture = slit_size[trial - 1]  # TODO check type-s
@@ -209,22 +220,34 @@ def create_data_frame(
         df.trial != 1
     ]  # NOTE(celia): drop first trial which is DLC-live initialization trial
 
-    interp = dict(
+    unity_to_physical_arena_size = dict(
         unity_arena_size_x_min=9,
-        unity_arena_size_x_max=-10,
+        unity_arena_size_z_max=-10,
         unity_arena_size_z_min=-2,
-        unity_arena_size_z_max=27,
+        physical_arena_size=27,
     )
 
     df["x"] = np.interp(
         df.x,
-        [-1 * interp["unity_arena_size_x_min"], interp["unity_arena_size_x_min"]],
-        [-1 * interp["unity_arena_size_z_max"], interp["unity_arena_size_z_max"]],
+        [
+            -1 * unity_to_physical_arena_size["unity_arena_size_x_min"],
+            unity_to_physical_arena_size["unity_arena_size_x_min"],
+        ],
+        [
+            -1 * unity_to_physical_arena_size["physical_arena_size"],
+            unity_to_physical_arena_size["physical_arena_size"],
+        ],
     )
     df["y"] = np.interp(
         df.y,
-        [interp["unity_arena_size_x_max"], interp["unity_arena_size_z_min"]],
-        [-1 * interp["unity_arena_size_z_max"], interp["unity_arena_size_z_max"]],
+        [
+            unity_to_physical_arena_size["unity_arena_size_z_max"],
+            unity_to_physical_arena_size["unity_arena_size_z_min"],
+        ],
+        [
+            -1 * unity_to_physical_arena_size["physical_arena_size"],
+            unity_to_physical_arena_size["physical_arena_size"],
+        ],
     )
 
     # Handling for first frame in trial - the first frame results in the default x,y position and head_dir for virtual mouse.
@@ -273,8 +296,6 @@ def create_data_frame(
         + (np.gradient(df.y, df.time_elapsed) ** 2)
     )
 
-    # TODO: check all new parameters in df
-
     df["velocity_x"] = np.gradient(df.x, df.time_elapsed)
     df["acceleration_x"] = np.gradient(df["velocity_x"], df.time_elapsed)
 
@@ -316,7 +337,6 @@ def create_data_frame(
     )
 
     # Trial start and end position
-    # TODO: actually also can be the methods...
     df["trial_init_x"] = df.groupby("trial", as_index=False)["x"].transform(
         lambda x: x.iloc[0]
     )
@@ -355,66 +375,76 @@ def create_data_frame(
 
     df = df.drop(columns=["first", "last"])
 
-    return df, interp
+    return df, unity_to_physical_arena_size
 
 
-def get_df_box(key, df, interp):
-    """Define the box dimensions.
+def get_box_df(
+    key: dict, df: pd.DataFrame, unity_to_physical_arena_size: dict
+) -> pd.DataFrame:
+    """Define the box dimensions based on arena, start area, and reward area sizes.
 
-    Define the arena, start area and reward areas dimensions.
+    This function takes in the data related to arena box positions, interpolates
+    unity-based coordinates to physical space, and calculates the reward positions
+    within the left and right boxes based on trial results.
+
+    Args:
+        key (dict): Dictionary containing keys for VR4Mice database. (VR4Mice)
+        df (pd.DataFrame): A DataFrame containing trial data, including reward and choice columns.
+        unity_to_physical_arena_size (dict): A dictionary to interpolate physical arena sizes based
+            on Unity-based arena sizes.
 
     Returns:
-        A dataFrame containing the dimensions.
+        pd.DataFrame: A DataFrame containing the adjusted box dimensions in physical space and
+            the mean reward positions for the left and right reward boxes.
     """
-    df_box = pd.DataFrame((vr4mice.Box & key).fetch())
+    box_df = pd.DataFrame((vr4mice.Box & key).fetch())
 
-    for col in df_box.columns:
-        for index, value in df_box[col].items():
+    for col in box_df.columns:
+        for index, value in box_df[col].items():
             if isinstance(value, list):
-                df_box.loc[index, col] = value[0]
+                box_df.loc[index, col] = value[0]
 
-    a = interp["unity_arena_size_x_min"]
-    b = interp["unity_arena_size_x_max"]
-    c = interp["unity_arena_size_z_min"]
-    d = interp["unity_arena_size_z_max"]
+    a = unity_to_physical_arena_size["unity_arena_size_x_min"]
+    b = unity_to_physical_arena_size["unity_arena_size_z_max"]
+    c = unity_to_physical_arena_size["unity_arena_size_z_min"]
+    d = unity_to_physical_arena_size["physical_arena_size"]
 
     # same indexes among blocks
-    df_box.l_box_x_min = np.interp(df_box.l_box_x_min, [-1 * a, a], [-1 * d, d])
-    df_box.l_box_x_max = np.interp(df_box.l_box_x_max, [-1 * a, a], [-1 * d, d])
-    df_box.l_box_z_min = np.interp(df_box.l_box_z_min, [b, c], [-1 * d, d])
-    df_box.l_box_z_max = np.interp(df_box.l_box_z_max, [b, c], [-1 * d, d])
+    box_df.l_box_x_min = np.interp(box_df.l_box_x_min, [-1 * a, a], [-1 * d, d])
+    box_df.l_box_x_max = np.interp(box_df.l_box_x_max, [-1 * a, a], [-1 * d, d])
+    box_df.l_box_z_min = np.interp(box_df.l_box_z_min, [b, c], [-1 * d, d])
+    box_df.l_box_z_max = np.interp(box_df.l_box_z_max, [b, c], [-1 * d, d])
 
-    df_box.r_box_x_min = np.interp(df_box.r_box_x_min, [-1 * a, a], [-1 * d, d])
-    df_box.r_box_x_max = np.interp(df_box.r_box_x_max, [-1 * a, a], [-1 * d, d])
-    df_box.r_box_z_min = np.interp(df_box.r_box_z_min, [b, c], [-1 * d, d])
-    df_box.r_box_z_max = np.interp(df_box.r_box_z_max, [b, c], [-1 * d, d])
+    box_df.r_box_x_min = np.interp(box_df.r_box_x_min, [-1 * a, a], [-1 * d, d])
+    box_df.r_box_x_max = np.interp(box_df.r_box_x_max, [-1 * a, a], [-1 * d, d])
+    box_df.r_box_z_min = np.interp(box_df.r_box_z_min, [b, c], [-1 * d, d])
+    box_df.r_box_z_max = np.interp(box_df.r_box_z_max, [b, c], [-1 * d, d])
 
-    df_box.tt_box_x_min = np.interp(df_box.tt_box_x_min, [-1 * a, a], [-1 * d, d])
-    df_box.tt_box_x_max = np.interp(df_box.tt_box_x_max, [-1 * a, a], [-1 * d, d])
-    df_box.tt_box_z_min = np.interp(df_box.tt_box_z_min, [b, c], [-1 * d, d])
-    df_box.tt_box_z_max = np.interp(df_box.tt_box_z_max, [b, c], [-1 * d, d])
+    box_df.tt_box_x_min = np.interp(box_df.tt_box_x_min, [-1 * a, a], [-1 * d, d])
+    box_df.tt_box_x_max = np.interp(box_df.tt_box_x_max, [-1 * a, a], [-1 * d, d])
+    box_df.tt_box_z_min = np.interp(box_df.tt_box_z_min, [b, c], [-1 * d, d])
+    box_df.tt_box_z_max = np.interp(box_df.tt_box_z_max, [b, c], [-1 * d, d])
 
     # Mean reward position in the reward boxes
-    # NOTE: new attributes (version 2)
-    df_box["l_reward_x"] = df[(df.reward > 0.5) & (df.trial_left_choice > 0.5)][
+    box_df["l_reward_x"] = df[(df.reward > 0.5) & (df.trial_left_choice > 0.5)][
         "x"
     ].mean()
-    df_box["l_reward_z"] = df[(df.reward > 0.5) & (df.trial_left_choice > 0.5)][
+    box_df["l_reward_z"] = df[(df.reward > 0.5) & (df.trial_left_choice > 0.5)][
         "y"
     ].mean()
-    df_box["r_reward_x"] = df[(df.reward > 0.5) & (df.trial_right_choice > 0.5)][
+    box_df["r_reward_x"] = df[(df.reward > 0.5) & (df.trial_right_choice > 0.5)][
         "x"
     ].mean()
-    df_box["r_reward_z"] = df[(df.reward > 0.5) & (df.trial_right_choice > 0.5)][
+    box_df["r_reward_z"] = df[(df.reward > 0.5) & (df.trial_right_choice > 0.5)][
         "y"
     ].mean()
 
-    return df_box
+    return box_df
 
 
 def get_jshaped_trials(
     df: pd.DataFrame, threshold_duration: int = 5, threshold_tortuosity: int = 5
-):
+) -> pd.DataFrame:
     """
     Separates the trials in the DataFrame into 'J-shaped' and 'wandering' based on the given thresholds.
 
@@ -440,52 +470,4 @@ def get_jshaped_trials(
     )
 
     j_shaped = df[df["is_j_shaped"] == 1]
-    # NOTE: add reward param?
-    # wandering = df[~df.index.isin(j_shaped.index)]
-    return j_shaped  # , wandering
-
-
-def get_all_datasets(mouse_list=None, load_dlc=True):
-    """Fetch all mice and make a big dataframe out of them."""
-    # mouse list can be list of keys: [{key1}, {key2}]
-
-    big_df = []
-
-    dfs = []
-
-    # TODO: make the getter for df_box in a propper way
-
-    if load_dlc:
-        if mouse_list:
-            for key in mouse_list:
-                df = dlc.SyncDLCWGame().get_data(key)
-                dfs.append(df)
-        else:
-            dfs = dlc.SyncDLCWGame().get_all_data()
-
-        return dfs
-
-    # load_dlc False case
-    if mouse_list:
-        for key in mouse_list:
-            df = dlc.DataFrame().get_data(key)
-            dfs.append(df)
-    else:
-        dfs = dlc.SyncDLCWGame().get_all_data()
-        # = (base_analysis.DataFrame().get_data()
-
-        # & keys).fetch(as_dict=True)[0] # or keep .npy?
-        # else:
-        #    df, df_box = (base_analysis.DataFrame()).fetch(as_dict=True)[0] # or keep .npy?
-
-        if load_dlc == True:
-            dlc_dict = load_dlc(
-                path=path,
-                mouse_name=m["mouse_name"],
-                date=m["date"],
-                attempt=m["attempt"],
-            )
-            df = sync_dlc_w_game(dlc_dict, game_data=df)
-
-        big_df.append(df)
-    return pd.concat(big_df).reset_index(), df_box
+    return j_shaped

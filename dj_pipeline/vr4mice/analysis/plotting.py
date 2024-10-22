@@ -1,7 +1,6 @@
 from typing import List, Optional, Tuple
 
 import matplotlib as mpl
-import matplotlib.cm as cm
 import matplotlib.collections
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,7 +8,6 @@ import numpy.typing as npt
 import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
-import vr4mice.analysis.analysis as analysis
 from matplotlib.collections import PathCollection
 from matplotlib.transforms import Affine2D
 from scipy.interpolate import CubicSpline
@@ -110,7 +108,7 @@ def get_rc_params():
 
 
 def plot_box_rectangle(
-    df_box: pd.DataFrame,
+    box_df: pd.DataFrame,
     box_label: str,
     edgecolor: str = "#009B9E",
     fill: bool = False,
@@ -121,7 +119,7 @@ def plot_box_rectangle(
     """Create a matplotlib Rectangle patch for a specified box.
 
     Args:
-        df_box (pd.DataFrame): DataFrame containing the box coordinates.
+        box_df (pd.DataFrame): DataFrame containing the box coordinates.
         box_label (str): Prefix of the columns representing the box dimensions.
         edgecolor (str, optional): Color of the box edge. Default is "#009B9E".
         fill (bool, optional): Whether to fill the box. Default is False.
@@ -133,10 +131,10 @@ def plot_box_rectangle(
 
     """
 
-    box_x_min = df_box[f"{box_label}_box_x_min"].iloc[0]
-    box_z_min = df_box[f"{box_label}_box_z_min"].iloc[0]
-    box_x_max = df_box[f"{box_label}_box_x_max"].iloc[0]
-    box_z_max = df_box[f"{box_label}_box_z_max"].iloc[0]
+    box_x_min = box_df[f"{box_label}_box_x_min"].iloc[0]
+    box_z_min = box_df[f"{box_label}_box_z_min"].iloc[0]
+    box_x_max = box_df[f"{box_label}_box_x_max"].iloc[0]
+    box_z_max = box_df[f"{box_label}_box_z_max"].iloc[0]
 
     start_box_coords = (
         (box_x_min, box_z_min),
@@ -156,19 +154,19 @@ def plot_box_rectangle(
     )
 
 
-def plot_all_boxes(ax, df_box: pd.DataFrame):
+def plot_all_boxes(ax, box_df: pd.DataFrame):
     """Plot boxes on trajectory plots.
 
     Args:
         ax (matplotlib.axes.Axes): A matplotlib Axes object to plot the boxes on.
-        df_box (pd.DataFrame): A pandas DataFrame containing the box information.
+        box_df (pd.DataFrame): A pandas DataFrame containing the box information.
             Must have columns "<box_label>_box_x_min", "<box_label>_box_x_max",
             "<box_label>_box_z_min", and "<box_label>_box_z_max" for each box label
             ("tt", "left", "right").
     """
-    start_box = plot_box_rectangle(df_box, box_label="tt", edgecolor="#009B9E")
-    left_box = plot_box_rectangle(df_box, box_label="l", edgecolor="#5C0A72")
-    right_box = plot_box_rectangle(df_box, box_label="r", edgecolor="#FD672C")
+    start_box = plot_box_rectangle(box_df, box_label="tt", edgecolor="#009B9E")
+    left_box = plot_box_rectangle(box_df, box_label="l", edgecolor="#5C0A72")
+    right_box = plot_box_rectangle(box_df, box_label="r", edgecolor="#FD672C")
 
     ax.add_patch(start_box)
     ax.add_patch(left_box)
@@ -245,7 +243,7 @@ def plot_trajectories(
 
 def _plot_session_in_arena(
     df: pd.DataFrame,
-    df_box: pd.DataFrame,
+    box_df: pd.DataFrame,
     ax,
     per_side: bool = False,
     label_x: str = "x",
@@ -256,7 +254,7 @@ def _plot_session_in_arena(
 
     Args:
         df (pandas.DataFrame): DataFrame containing the trajectory data to plot.
-        df_box (pandas.DataFrame): DataFrame containing the box data to plot.
+        box_df (pandas.DataFrame): DataFrame containing the box data to plot.
         ax (matplotlib.axes.Axes): Axes object to plot the data onto.
         per_side (bool, optional): If True, plot trajectories separately based on
             'trial_L_choice'. Default is False.
@@ -266,7 +264,7 @@ def _plot_session_in_arena(
 
     """
 
-    plot_all_boxes(ax, df_box)
+    plot_all_boxes(ax, box_df)
     plot_trajectories(
         df=df,
         ax=ax,
@@ -279,7 +277,7 @@ def _plot_session_in_arena(
 
 def plot_session(
     df: pd.DataFrame,
-    df_box: pd.DataFrame,
+    box_df: pd.DataFrame,
     ax: Optional[matplotlib.axes.Axes] = None,
     per_side: bool = False,
     per_aperture: bool = False,
@@ -294,7 +292,7 @@ def plot_session(
         df : pandas.DataFrame
             DataFrame containing the trial data with columns.
 
-        df_box : pandas.DataFrame
+        box_df : pandas.DataFrame
             DataFrame containing the boundary values for the box.
 
         ax : list of matplotlib.axes.Axes
@@ -344,7 +342,7 @@ def plot_session(
             data = df[df.aperture == aperture]
             _plot_session_in_arena(
                 df=data,
-                df_box=df_box,
+                box_df=box_df,
                 ax=ax[j],
                 per_side=per_side,
                 label_x=label_x,
@@ -355,7 +353,7 @@ def plot_session(
     else:
         _plot_session_in_arena(
             df=df,
-            df_box=df_box,
+            box_df=box_df,
             ax=ax,
             per_side=per_side,
             label_x=label_x,
@@ -372,6 +370,7 @@ def _plot_bar_counts(
     counts: pd.DataFrame,
     cmap: str,
     label_x: str = None,
+    per_mouse: bool = False,
     per_day: bool = False,  # TODO(celia): to add for Fig.2 E.
     alpha: float = 0.5,
     ax: Optional[matplotlib.axes.Axes] = None,
@@ -399,18 +398,25 @@ def _plot_bar_counts(
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
 
+    if per_mouse:
+        unique_mice = counts["mouse_name"].unique()
+        cmap_mice = sns.color_palette(cmap, len(unique_mice))
+        color_map = {label: cmap_mice[i] for i, label in enumerate(unique_mice)}
+
     if isinstance(label_x, str):
         sns.lineplot(
             data=counts,
             x=label_x,
             y="count",
+            hue="mouse_name" if per_mouse else None,
             alpha=1,
             color="black",
+            palette=color_map,
             errorbar="se",
             err_style="bars",
             linewidth=2,
             ax=ax,
-        )
+        )  # mean line
 
         sns.lineplot(
             data=counts,
@@ -423,16 +429,20 @@ def _plot_bar_counts(
             palette=["grey"] * counts["dataset"].nunique(),
             markers="o",
             ax=ax,
-        )
+            legend=False,
+        )  # individual lines
+
     else:
         sns.barplot(
             data=counts,
             x=label_x,
             y="count",
+            hue="mouse_name" if per_mouse else None,
             color="grey",
             errorbar="se",
-            alpha=alpha,
+            alpha=1,
             ax=ax,
+            legend=False,
         )
         ax.set_xlabel("")
         ax.set_xticklabels([])
@@ -441,13 +451,17 @@ def _plot_bar_counts(
         data=counts,
         x=label_x,
         y="count",
-        alpha=1,
-        hue=label_x,
+        alpha=alpha if per_mouse else 1,
+        hue="mouse_name"
+        if per_mouse
+        else label_x,  # Color by mouse if per_mouse, else by label_x
         palette=color_map,
         ax=ax,
+        legend=False,
     )
 
-    ax.legend([], [], frameon=False)
+    if not per_mouse:
+        ax.legend([], [], frameon=False)
 
 
 def plot_trial_count(
@@ -590,10 +604,77 @@ def plot_rate(
     # print(stats)
 
 
+def plot_rate(
+    df,  # TODO(celia): provide correct columns directly?
+    label_x: str,
+    per_aperture: bool = False,
+    per_day: bool = False,  # TODO(celia): to add for Fig.2 E.
+    alpha: float = 0.5,
+    ax: Optional[matplotlib.axes.Axes] = None,
+    cmap: str = "Set1",
+):
+    """Plot the rate for a given `label_x` column per session or per aperture.
+
+    This works specifically for plotting the choice rate, the reward rate,
+    the target location rate, the trial count.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing the data to plot.
+        label_x (str): Name of the column
+        per_aperture (bool, optional): If True, plot per aperture. Default is False.
+        per_day (bool, optional): If True, plot per day. Default is False.
+        alpha (float, optional): Alpha transparency for the plot. Default is 0.5.
+        ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
+        cmap (str, optional): Color map for the plot. Default is "Set1".
+    """
+    if per_aperture:
+        counts = (
+            df[df[label_x] == 1].groupby(["dataset", "aperture"]).trial.nunique()
+            / df.groupby(["dataset", "aperture"]).trial.nunique()
+        )
+        counts = pd.DataFrame(counts.reset_index().sort_values(by="aperture"))
+        counts.aperture = counts.aperture.round(2).astype(str)
+    else:
+        counts = (
+            df[df[label_x] == 1].groupby(["dataset"]).trial.nunique()
+            / df.groupby(["dataset"]).trial.nunique()
+        )
+        counts = pd.DataFrame(counts.reset_index())
+    counts = counts.rename(columns={"trial": "count"})
+
+    _plot_bar_counts(
+        counts=counts,
+        label_x="aperture" if per_aperture else None,
+        per_day=per_day,
+        alpha=alpha,
+        ax=ax,
+        cmap=cmap,
+    )
+
+    ax.set_xlim(-0.5, len(df.aperture.unique()) - 0.5)
+
+    if per_aperture:
+        stats = pd.DataFrame(
+            zip(
+                counts.groupby("aperture")["count"].mean(),
+                counts.groupby("aperture")["count"].sem(),
+            ),
+            columns=["mean", "sem"],
+            index=counts.groupby("aperture")["count"].mean().index,
+        )
+    else:
+        stats = (
+            counts["count"].mean(),
+            counts["count"].sem(),
+        )
+    # print(stats)
+
+
 def plot_rewards(
     df,  # TODO(celia): provide correct columns directly?
     per_aperture: bool = False,
     per_day: bool = False,  # TODO(celia): to add for Fig.2 E.
+    per_mouse: bool = False,
     alpha: float = 0.5,
     ax: Optional[matplotlib.axes.Axes] = None,
     cmap: str = "Set1",
@@ -608,25 +689,32 @@ def plot_rewards(
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
         cmap (str, optional): Color map for the plot. Default is "Set1".
     """
+    group_cols = ["dataset"]
+
     if per_aperture:
-        counts = (
-            df[df.trial_rewarded == 1].groupby(["dataset", "aperture"]).trial.nunique()
-            / df.groupby(["dataset", "aperture"]).trial.nunique()
-        )
-        counts = pd.DataFrame(counts.reset_index())
+        group_cols.append("aperture")
+
+    if per_mouse:
+        group_cols.append("mouse_name")
+
+    # Calculate success rate
+    counts = (
+        df[df.trial_rewarded == 1].groupby(group_cols).trial.nunique()
+        / df.groupby(group_cols).trial.nunique()
+    )
+    counts = pd.DataFrame(counts.reset_index())
+
+    # If per_aperture, ensure aperture is formatted correctly
+    if per_aperture:
         counts.aperture = counts.aperture.round(2).astype(str)
-    else:
-        counts = (
-            df[df.trial_rewarded == 1].groupby(["dataset"]).trial.nunique()
-            / df.groupby(["dataset"]).trial.nunique()
-        )
-        counts = pd.DataFrame(counts.reset_index())
+
     counts = counts.rename(columns={"trial": "count"})
 
     _plot_bar_counts(
         counts=counts,
         label_x="aperture" if per_aperture else None,
         per_day=per_day,
+        per_mouse=per_mouse,
         alpha=alpha,
         ax=ax,
         cmap=cmap,
@@ -950,7 +1038,7 @@ def plot_parameter_on_session_traj(
 
 def plot_init_position_histogram(
     df: pd.DataFrame,
-    df_box: pd.DataFrame,
+    box_df: pd.DataFrame,
     ax: Optional[matplotlib.axes.Axes] = None,
     bins=3,
     cmap="magma",
@@ -966,7 +1054,7 @@ def plot_init_position_histogram(
             DataFrame containing the trial data with columns 'dataset', 'trial', 'trial_init_x', and 'trial_init_y'.
             The DataFrame should contain data from only one dataset.
 
-        df_box : pandas.DataFrame
+        box_df : pandas.DataFrame
             DataFrame containing the boundary values for the box.
 
         ax : matplotlib.axes.Axes
@@ -996,8 +1084,8 @@ def plot_init_position_histogram(
         bins=bins,
         cmap=cmap,
         range=[
-            (df_box["tt_box_x_min"].iloc[0], df_box["tt_box_x_max"].iloc[0]),
-            (df_box["tt_box_z_min"].iloc[0], df_box["tt_box_z_max"].iloc[0]),
+            (box_df["tt_box_x_min"].iloc[0], box_df["tt_box_x_max"].iloc[0]),
+            (box_df["tt_box_z_min"].iloc[0], box_df["tt_box_z_max"].iloc[0]),
         ],  # range of the box
         vmax=vmax,
         density=is_density,
@@ -1065,7 +1153,7 @@ def plot_clustering(
 
 def plot_decision_points_on_trajectory(
     df,
-    df_box,
+    box_df,
     decision_point=None,
     color="deeppink",
     trials=list(range(25, 30)),
@@ -1086,7 +1174,7 @@ def plot_decision_points_on_trajectory(
         print("-->", thr)
         ax2 = fig.add_subplot(gs[2, i])
         decision_point = df.groupby(["dataset", "trial"], as_index=False).apply(lambda x: regression.find_decision_point_per_trial(x, thr))
-        regression.plot_decision_points_on_trajectory(df, df_box, decision_point, color=colors[i], ax=ax, trials=list(range(10, 20)))
+        regression.plot_decision_points_on_trajectory(df, box_df, decision_point, color=colors[i], ax=ax, trials=list(range(10, 20)))
         regression.pair_plot(decision_point, ax=ax2)
 
     plt.savefig("figure.svg")
@@ -1098,7 +1186,7 @@ def plot_decision_points_on_trajectory(
         gs = plt.GridSpec(1, 1, figure=fig)
         ax = fig.add_subplot(gs[0, 0])
 
-    plot_all_boxes(ax=ax, df_box=df_box)
+    plot_all_boxes(ax=ax, box_df=box_df)
     ax.set_xlim(-27, 27)
     ax.set_ylim(-27, 27)
 
@@ -1425,13 +1513,13 @@ def _plot_trial_velocities(
 
 
 def _plot_all_trajectories(
-    df, df_box, ax
+    df, box_df, ax
 ):  # NOTE(celia): deprecated, replaced by plot_session()
     """
     Plot all the trajectories.
     Args:
         df (pandas.DataFrame): DataFrame containing the data to plot.
-        df_box (pandas.DataFrame): DataFrame containing the box data to plot.
+        box_df (pandas.DataFrame): DataFrame containing the box data to plot.
         ax (matplotlib.axes._subplots.AxesSubplot): Axes object to plot the data onto.
     Returns:
         None
@@ -1453,7 +1541,7 @@ def _plot_all_trajectories(
     ax.scatter(
         df.x.iloc[rewards], df.y.iloc[rewards], c="#B52916", alpha=0.7, s=30, zorder=100
     )
-    plot_all_boxes(df_box=df_box, ax=ax)
+    plot_all_boxes(box_df=box_df, ax=ax)
     ax.set_xlim(-28, 28)
     ax.set_ylim(-28, 28)
     ax.set_xlabel("X pos (cm)")
@@ -1461,13 +1549,13 @@ def _plot_all_trajectories(
 
 
 def _plot_rewarded_trial_trajectories(
-    df, df_box, ax
+    df, box_df, ax
 ):  # NOTE(celia): deprecated, replaced by plot_session() and specific data
     """
     Plot trajectories for rewarded trials for the right target and the left target - RR and LR are data frames.
     Args:
         df (pandas DataFrame): The data to plot.
-        df_box (pandas DataFrame): DataFrame containing the position and size of the boxes.
+        box_df (pandas DataFrame): DataFrame containing the position and size of the boxes.
         ax (list of matplotlib Axes): The axes to plot on.
 
     Returns:
@@ -1486,14 +1574,14 @@ def _plot_rewarded_trial_trajectories(
         & (df.trial.isin(rewarded.trial[rewarded.object_on_left == 1.0]))
     ]
 
-    _plot_all_trajectories(RR, df_box, ax=ax[0])
-    _plot_all_trajectories(LR, df_box, ax=ax[1])
+    _plot_all_trajectories(RR, box_df, ax=ax[0])
+    _plot_all_trajectories(LR, box_df, ax=ax[1])
 
     ax[0].set_title("Right rewarded")
-    plot_all_boxes(df_box=df_box, ax=ax[0])
+    plot_all_boxes(box_df=box_df, ax=ax[0])
 
     ax[1].set_title("Left rewarded")
-    plot_all_boxes(df_box=df_box, ax=ax[1])
+    plot_all_boxes(box_df=box_df, ax=ax[1])
 
     ax[0].set_xlim(-28, 28)
     ax[0].set_ylim(-28, 28)
