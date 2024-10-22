@@ -114,7 +114,7 @@ class ActiveSensingTask(UnityTask):
         self.t_count = None
         self.filt = None
         self.params = None
-        if use_dlc == True:
+        if use_dlc:
             self.address = ("localhost", 6000)
             self.dlcClient = DLCClient(address=self.address)
         self.t_count = 0
@@ -558,3 +558,8 @@ class ActiveSensingTask(UnityTask):
         data_dict["trial_target_spread"] = np.array(self.trial_target_spread)
         data_dict["trial_target_height"] = np.array(self.trial_target_height)
         return data_dict
+
+    def stop(self):
+        if self.use_dlc == True:
+            self.dlcClient.stop()
+        super().stop()
