@@ -11,10 +11,6 @@ import sklearn
 from matplotlib.collections import LineCollection
 from sklearn.model_selection import LeaveOneGroupOut
 
-colors_choice = ["#5C0A72", "#FD672C"]
-colors_aperture = ["#E41A1C", "#437FB5"]
-colors_aperture_pale = ["#EC8788", "#96B9D6"]
-
 
 def predict_decision(
     df, label: str = "norm_x", n_splits: int = 10, per_mouse: bool = False
@@ -145,7 +141,7 @@ def find_decision_point(
 
 def plot_decision_points_on_trajectory(
     df: pd.DataFrame,
-    df_box: pd.DataFrame,
+    box_df: pd.DataFrame,
     decision_point: Optional[pd.DataFrame] = None,
     color: str = "red",
     trials: List[int] = list(range(25, 30)),
@@ -165,7 +161,7 @@ def plot_decision_points_on_trajectory(
         print("-->", thr)
         ax2 = fig.add_subplot(gs[2, i])
         decision_point = df.groupby(["session", "trial"], as_index=False).apply(lambda x: regression.find_decision_point_per_trial(x, thr))
-        regression.plot_decision_points_on_trajectory(df, df_box, decision_point, color=colors[i], ax=ax, trials=list(range(10, 20)))
+        regression.plot_decision_points_on_trajectory(df, box_df, decision_point, color=colors[i], ax=ax, trials=list(range(10, 20)))
         regression.pair_plot(decision_point, ax=ax2)
 
     plt.savefig("figure.svg")
@@ -183,7 +179,7 @@ def plot_decision_points_on_trajectory(
         gs = plt.GridSpec(1, 1, figure=fig)
         ax = fig.add_subplot(gs[0, 0])
 
-    plotting.plot_all_boxes(ax=ax, df_box=df_box)
+    plotting.plot_all_boxes(ax=ax, box_df=box_df)
     ax.set_xlim(-27, 27)
     ax.set_ylim(-27, 27)
 
@@ -219,20 +215,20 @@ def plot_decision_points_on_trajectory(
             continue
 
 
-def find_decision_point_from_distance(trial_data: pd.DataFrame, df_box: pd.DataFrame):
+def find_decision_point_from_distance(trial_data: pd.DataFrame, box_df: pd.DataFrame):
     # NOTE(celia): not used for now.
     if all(trial_data["trial_L_choice"] > 0.5):
         trial_data = trial_data[trial_data["mouse_in_R"] < 1]
         trial_data["dist"] = np.sqrt(
-            (df_box["right_reward_x"] - trial_data["x"]) ** 2
-            + (df_box["right_reward_z"] - trial_data["y"]) ** 2
+            (box_df["right_reward_x"] - trial_data["x"]) ** 2
+            + (box_df["right_reward_z"] - trial_data["y"]) ** 2
         )
 
     else:
         trial_data = trial_data[trial_data["mouse_in_L"] < 1]
         trial_data["dist"] = np.sqrt(
-            (df_box["left_reward_x"] - trial_data["x"]) ** 2
-            + (df_box["left_reward_z"] - trial_data["y"]) ** 2
+            (box_df["left_reward_x"] - trial_data["x"]) ** 2
+            + (box_df["left_reward_z"] - trial_data["y"]) ** 2
         )
 
     trial_data = trial_data[trial_data["dist"] > 2]
@@ -245,15 +241,15 @@ def find_decision_point_from_distance(trial_data: pd.DataFrame, df_box: pd.DataF
 
 
 def find_decision_point_from_value(
-    trial_data: pd.DataFrame, df_box: pd.DataFrame, label: str = "heading_dir_velocity"
+    trial_data: pd.DataFrame, box_df: pd.DataFrame, label: str = "heading_dir_velocity"
 ):
     # NOTE(celia): not used for now.
     if all(trial_data["trial_L_choice"] > 0.5):
         trial_data = trial_data[trial_data["mouse_in_R"] < 1]
-        trial_data["dist"] = abs(df_box["right_reward_x"] - trial_data["x"])
+        trial_data["dist"] = abs(box_df["right_reward_x"] - trial_data["x"])
     else:
         trial_data = trial_data[trial_data["mouse_in_L"] < 1]
-        trial_data["dist"] = abs(df_box["left_reward_x"] - trial_data["x"])
+        trial_data["dist"] = abs(box_df["left_reward_x"] - trial_data["x"])
 
     trial_data = trial_data[trial_data["dist"] > 3]
     trial_data["difference"] = trial_data["dist"].diff()
@@ -261,7 +257,7 @@ def find_decision_point_from_value(
     good_dir = trial_data
 
     if all(trial_data["trial_L_choice"] > 0.5):
-        test = (good_dir["y"] > df_box["right_reward_z"]) & (good_dir["dist"] < 2)
+        test = (good_dir["y"] > box_df["right_reward_z"]) & (good_dir["dist"] < 2)
         good_dir = good_dir[~test]
         if "dir" in label:
             idx = good_dir[label].argmin()
@@ -270,7 +266,7 @@ def find_decision_point_from_value(
         else:
             raise NotImplementedError()
     else:
-        test = (good_dir["y"] > df_box["left_reward_z"]) & (good_dir["dist"] < 2)
+        test = (good_dir["y"] > box_df["left_reward_z"]) & (good_dir["dist"] < 2)
         good_dir = good_dir[~test]
         if "dir" in label:
             idx = good_dir[label].argmax()
