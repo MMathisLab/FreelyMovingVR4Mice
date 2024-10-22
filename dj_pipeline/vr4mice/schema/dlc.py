@@ -219,7 +219,6 @@ class OfflineKinematics(dj.Computed):
     and recomputes various kinematic variables.
     """
 
-
     definition = """
     -> SyncDLCKptsDf
     ---
@@ -257,9 +256,7 @@ class OfflineKinematics(dj.Computed):
                 (offline_dlc_variables.heading_dir - 90) + 180
             ) % 360 - 180
 
-
             data = offline_dlc_variables
-
 
             if (
                 not "camera" in key or not "doe" in key
