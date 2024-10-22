@@ -1,14 +1,13 @@
+import logging
 import os
 import sys
+import warnings
 
 from base_actions.connect import connect
 from vr4mice.utils.logger import Logger, config_logger
 
 logger = Logger.get_logger()
 
-import warnings
-
-import logging
 
 logging.getLogger("settings").setLevel(logging.ERROR)
 
@@ -19,9 +18,14 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
     Pool of commands
 
     Modes:
-        "connect": connect to the database
-        "populate": to populate the data from files
-        "fetch": to create .npy file for dropdown menu
+    "connect": connect to the database
+    "populate": populate the raw data from files
+    "fetch": create .npy file for dropdown menu
+    "analysis": perform data analysis: populate base_analysis
+    "summary": generate summary plots: populate summary plots
+    "dlc": process DeepLabCut data: populate dlc tables
+    "update": sync missing data in existing tables
+    "sync_days": synchronize days in the dataset (process raw .npy files)
 """
 
 
@@ -58,7 +62,7 @@ if __name__ == "__main__":
     #    insert_fake_mouse(name="Barracuda")
 
     if mode == "connect":
-        from vr4mice.schema import vr4mice, base_analysis, dlc
+        from vr4mice.schema import vr4mice, base_analysis, dlc, base
 
         pass
 
@@ -70,17 +74,17 @@ if __name__ == "__main__":
         populate_rig(path)
 
     elif mode == "analysis":
-        from vr4mice.schema import base_analysis, federated_db
+        from vr4mice.schema import base_analysis, base
 
         # NOTE: populate has to be run before
 
         create_folder_if_not_exist("/data/summary_plots")
         base_analysis.DataFrame.populate()
         base_analysis.BoxDataFrame().populate()
-        base_analysis.JShaped().populate()
         base_analysis.GitCommit().populate()
 
-        # base_analysis.OutputPlots.populate()
+    elif mode == "summary":
+        base_analysis.SummaryPlots.populate(send=False)
 
     elif mode == "dlc":
         # NOTE: populate and analysis have to be run before
