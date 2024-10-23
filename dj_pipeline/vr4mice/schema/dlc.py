@@ -6,7 +6,7 @@ import pandas as pd
 
 import vr4mice.schema.vr4mice as vr4mice
 from vr4mice.analysis.dlc_helpers import compute_head_angles, sync_keypoint_table
-from vr4mice.analysis.utils import df_to_dj, dj_to_df, h5_to_dj
+from vr4mice.analysis.dlc_helpers import df_to_dj, dj_to_df, h5_to_dj
 from vr4mice.utils import logger, schema_config  # TODO(mary): adjust paths (base/utils)
 
 schema_name = "dlc"
