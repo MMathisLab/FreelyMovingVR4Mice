@@ -1,77 +1,10 @@
-from typing import Dict, List, Optional, Tuple, Union
-
+from typing import List, Optional
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import scipy.interpolate
 import umap
 from sklearn.decomposition import PCA
-
-
-def df_to_dj(df: pd.DataFrame) -> Dict:
-    """Converts a DataFrame to a dictionary format for data handling.
-
-    Args:
-        df (pd.DataFrame): The DataFrame to convert.
-
-    Returns:
-        dict: A dictionary containing:
-            - "data": Numpy array of the DataFrame data.
-            - "headers": List of column headers.
-            - "scorer" (optional): The unique scorer name if multi-index has a "scorer" level.
-    """
-    dj_col = dict()
-    dj_col["data"] = df.to_numpy()
-    headers = df.columns
-    dj_col["headers"] = list(headers)
-
-    if df.columns.nlevels > 2:
-        dj_col["scorer"] = headers.get_level_values("scorer").unique()[0]
-
-    return dj_col
-
-
-def h5_to_dj(h5_path: str) -> Dict:
-    """Reads data from an HDF5 file and converts it to a dictionary format.
-
-    Args:
-        h5_path (str): The path to the HDF5 file.
-
-    Returns:
-        dict: A dictionary representation of the data.
-    """
-    df = pd.read_hdf(h5_path)
-    return df_to_dj(df)
-
-
-def dj_to_df(
-    data: npt.NDArray, headers: List[Union[str, Tuple[str]]], scorer
-) -> pd.DataFrame:
-    """Converts a dictionary format back to a DataFrame.
-
-    Args:
-        data (Any): The data to convert (should be in a compatible format).
-        headers (List[Tuple[str]]): Column headers for the DataFrame.
-        scorer: TODO
-
-    Returns:
-        pd.DataFrame: A DataFrame constructed from the provided data and headers.
-    """
-    df = pd.DataFrame(data=data, columns=headers)
-
-    if all(isinstance(item, tuple) for item in headers):
-        # NOTE(celia): this is hardcoded for DLC data format
-        if scorer:
-            levels = ["scorer", "bodyparts", "coords"]
-        else:
-            levels = ["bodyparts", "coords"]
-
-        df = pd.DataFrame(
-            df,
-            columns=pd.MultiIndex.from_tuples(headers, names=levels),
-        )
-    df = df.copy()
-    return df
 
 
 def create_bins(
