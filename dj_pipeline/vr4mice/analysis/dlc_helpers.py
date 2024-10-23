@@ -48,8 +48,8 @@ def dj_to_df(
     data: npt.NDArray, headers: List[Union[str, Tuple[str]]], scorer
 ) -> pd.DataFrame:
     """Converts a dictionary format back to a DataFrame.
-    
-    This function is specifically for retrieving dlc raw data stored in 
+
+    This function is specifically for retrieving dlc raw data stored in
     datajoint tables.
 
     Args:
@@ -263,10 +263,10 @@ def _compute_single_heading_angle(
     center = np.average(head_xy, axis=0, weights=head_conf)
 
     body_axis = xy[7] - xy[13]  # tail_base -> neck
-    body_axis /= np.sqrt(np.sum(body_axis ** 2))
+    body_axis /= np.sqrt(np.sum(body_axis**2))
 
     head_axis = xy[0] - xy[7]  # neck -> nose
-    head_axis /= np.sqrt(np.sum(head_axis ** 2))
+    head_axis /= np.sqrt(np.sum(head_axis**2))
 
     cross = body_axis[0] * head_axis[1] - head_axis[0] * body_axis[1]
     sign = math.copysign(1, cross)  # Positive when looking left
