@@ -1,6 +1,7 @@
 import os
 import warnings
 from pathlib import Path
+from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -146,12 +147,12 @@ def vr4mice_summary_plots(key, save_path="/data/summary_plots", database=True):
 
 
 
-def plot_keypoints(keypoints, keypoints_list, confidence, xlim, cmap, key):
+def plot_keypoints(keypoints: pd.DataFrame, keypoints_list: List[str], confidence: float, xlim: tuple, cmap: str, key: dict) -> None:
     """
     Creates a summary plot for a list of keypoints.
     This function plots the x,y an confidence for a given window for each of a list of keypoints.
     
-    Parameters:
+    Args:
     - keypoints: DataFrame or dictionary containing keypoint data with 'x', 'y', and 'likelihood'.
     - keypoints_list: List of keypoint names (strings) to be plotted.
     - confidence: Confidence threshold for coloring points.
@@ -203,11 +204,11 @@ def plot_keypoints(keypoints, keypoints_list, confidence, xlim, cmap, key):
     plt.show()
 
 
-def plot_keypoints_summary(key, save_path="", keypoints_list = ["head_midpoint", "nose", "neck", "tail_base"], xlim=(0, 800), confidence=0.6, cmap="bwr"):
+def plot_keypoints_summary(key, save_path="", keypoints_list = ["head_midpoint", "nose", "neck", "tail_base"], xlim=(0, 800), confidence=0.6, cmap="bwr") -> str:
     """
     Generates DLC tracking summary plot for a given dataset.
     
-    Parameters:
+    Args:
     - key: key for dataset {"dataset": "Jacana_2024-08-01_1"}
     - keypoints_list: List of keypoint names (strings) to be plotted.
     - confidence: DLC confidence threshold for coloring points.
