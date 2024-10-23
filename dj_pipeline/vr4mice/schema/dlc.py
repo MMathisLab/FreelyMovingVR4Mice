@@ -225,7 +225,7 @@ class OfflineKinematics(dj.Computed):
     head_center_x: longblob # the center of the mouse head in x at each frame
     head_center_y: longblob # the center of the mouse head in y at each frame
     heading_dir: longblob # the direction of the mouses body (tail base to neck) relative to the main screen 
-    head_angle: longblob # the angle of the head relative to head_dir
+    head_angle: longblob # the angle of the head relative to heading_dir
     pose_time: longblob # the time that the pose was inferred
     step_time: longblob # the time of the frame in game time
     step: longblob # the nearest game step to the dlc frame
