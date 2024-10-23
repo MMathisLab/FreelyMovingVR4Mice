@@ -273,7 +273,7 @@ class OfflineKinematics(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_data(self, key, columns=None):
+    def get_data(self, key: dict, columns: Optional[List[str]]=None)-> Optional[pd.DataFrame]:
         try:
             if self & key:
                 if columns:
