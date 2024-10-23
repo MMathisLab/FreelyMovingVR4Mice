@@ -153,24 +153,22 @@ def plot_keypoints(keypoints: pd.DataFrame, keypoints_list: List[str], confidenc
     This function plots the x,y an confidence for a given window for each of a list of keypoints.
     
     Args:
-    - keypoints: DataFrame or dictionary containing keypoint data with 'x', 'y', and 'likelihood'.
-    - keypoints_list: List of keypoint names (strings) to be plotted.
-    - confidence: Confidence threshold for coloring points.
-    - xlim: Tuple specifying the x-axis limits for the plots.
-    - cmap: Colormap to be used for plotting.
-    - key: Identifier for the plot title.
+        keypoints: DataFrame or dictionary containing keypoint data with 'x', 'y', and 'likelihood'.
+        keypoints_list: List of keypoint names (strings) to be plotted.
+        confidence: Confidence threshold for coloring points.
+        xlim: Tuple specifying the x-axis limits for the plots.
+        cmap: Colormap to be used for plotting.
+        key: Identifier for the plot title.
     """
     
 
     num_keypoints = len(keypoints_list)
     num_cols = 2  
     num_rows = int(np.ceil(num_keypoints / num_cols))  
-
     
     fig, ax = plt.subplots(num_rows * 3, num_cols, sharex=True, figsize=(15, 6 * num_rows))
     fig.suptitle(f"DLC tracking summary plot - {key}")
 
- 
     for i, keypoint in enumerate(keypoints_list):
         
         col = i % num_cols  
@@ -209,15 +207,15 @@ def plot_keypoints_summary(key, save_path="", keypoints_list = ["head_midpoint",
     Generates DLC tracking summary plot for a given dataset.
     
     Args:
-    - key: key for dataset {"dataset": "Jacana_2024-08-01_1"}
-    - keypoints_list: List of keypoint names (strings) to be plotted.
-    - confidence: DLC confidence threshold for coloring points.
-    - xlim: Tuple specifying the x-axis limits for the plots.
-    - cmap: Colormap to be used for plotting.
-    - key: Identifier for the plot title.
+        key: key for dataset {"dataset": "Jacana_2024-08-01_1"}
+        keypoints_list: List of keypoint names (strings) to be plotted.
+        confidence: DLC confidence threshold for coloring points.
+        xlim: Tuple specifying the x-axis limits for the plots.
+        cmap: Colormap to be used for plotting.
+        key: Identifier for the plot title.
     
     Returns:
-    - Figure_save_path
+        Figure_save_path
     """
     # Get keypoints data
     figure_save_path = save_path + key ["dataset"] + ".png"
