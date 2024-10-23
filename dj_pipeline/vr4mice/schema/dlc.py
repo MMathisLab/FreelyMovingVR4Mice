@@ -1,30 +1,22 @@
-from typing import List
+from typing import List, Optional
 
 import datajoint as dj
 import numpy as np
 import pandas as pd
 
-from vr4mice.analysis.dlc_helpers import (
-    df2dj,
-    dj2h5,
-    get_all_dlc_heading_angles,
-    h52dj,
-    sync_dlc_w_game,
-    sync_keypoint_table,
-)
-from vr4mice.schema import base_analysis, vr4mice
-from vr4mice.utils.logger import Logger
-from vr4mice.utils.schema_config import get_schema  # todo adjust paths (base/utils)
+import vr4mice.schema.vr4mice as vr4mice
+from vr4mice.analysis.dlc_helpers import compute_head_angles, sync_keypoint_table
+from vr4mice.analysis.utils import df_to_dj, dj_to_df, h5_to_dj
+from vr4mice.utils import logger, schema_config  # TODO(mary): adjust paths (base/utils)
 
 schema_name = "dlc"
-schema = get_schema(schema_name, locals())
+schema = schema_config.get_schema(schema_name, locals())
 
-logger = Logger.get_logger()
+logger = logger.Logger.get_logger()
 
 
 @schema
 class DLCProcessor(dj.Imported):
-
     definition = """
     -> vr4mice.DLC
     ---
@@ -70,6 +62,8 @@ class DLCProcessor(dj.Imported):
 
 @schema
 class DLCKptsDf(dj.Computed):
+    """All available raw DLC keypoints with likelihood."""
+
     definition = """
     -> vr4mice.DLC
     ---
@@ -78,7 +72,7 @@ class DLCKptsDf(dj.Computed):
     scorer=NULL: varchar(256)
     """
 
-    def make(self, key):
+    def make(self, key: dict):
 
         if self & key:
             logger.info(
@@ -88,8 +82,8 @@ class DLCKptsDf(dj.Computed):
 
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
         try:
-            h5path = (vr4mice.DLC & key).fetch1("keypoints_filepath")
-            data = h52dj(h5path)
+            h5_path = (vr4mice.DLC & key).fetch1("keypoints_filepath")
+            data = h5_to_dj(h5_path)
             if not "camera" in key or not "doe" in key:
                 key = (vr4mice.DLC() & key).fetch(
                     *vr4mice.DLC().primary_key, as_dict=True
@@ -104,31 +98,45 @@ class DLCKptsDf(dj.Computed):
             )
             return None
 
-    def get_data(self, key):
+    def get_data(
+        self, key: dict, columns: Optional[List[str]] = None
+    ) -> Optional[pd.DataFrame]:
         try:
-            data = (self & key).fetch1()
-            return dj2h5(data["data"], data["headers"], data["scorer"])
+            if self & key:
+                if columns:
+                    raise NotImplementedError()
+                else:
+                    data = (self & key).fetch1()
+            return dj_to_df(data["data"], data["headers"], data["scorer"])
 
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_all_data(self):
+    def get_all_data(
+        self, columns: Optional[List[str]] = None
+    ) -> Optional[List[pd.DataFrame]]:
         dfs = []
         try:
-            data = self.fetch()
+            if self:
+                if columns:
+                    raise NotImplementedError()
+                else:
+                    data = self.fetch()
             for d in data:
-                df = dj2h5(d["data"], d["headers"], d["scorer"])
+                df = dj_to_df(d["data"], d["headers"], d["scorer"])
                 dfs.append(df)
             return dfs
 
         except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            logger.warning(f"Error {self.__class__.__name__}: {err}")
             return None
 
 
 @schema
 class SyncDLCKptsDf(dj.Computed):
+    """Filtered and game-synchronized DLC keypoints."""
+
     definition = """
     -> DLCKptsDf
     ---
@@ -137,7 +145,7 @@ class SyncDLCKptsDf(dj.Computed):
     scorer=NULL: varchar(256)
     """
 
-    def make(self, key):
+    def make(self, key: dict):
 
         if self & key:
             logger.info(
@@ -149,7 +157,7 @@ class SyncDLCKptsDf(dj.Computed):
             sync_kpts = sync_keypoint_table(
                 dataset_key=key, keypoint_cuttoff=0.6, filter_window_length=10
             )
-            data = df2dj(sync_kpts)
+            data = df_to_dj(sync_kpts)
 
             if (
                 not "camera" in key or not "doe" in key
@@ -168,32 +176,45 @@ class SyncDLCKptsDf(dj.Computed):
             )
             return None
 
-    def get_data(self, key):
-        # TODO: add columns arg as it was made in base_analysis schema
+    def get_data(
+        self, key: dict, columns: Optional[List[str]] = None
+    ) -> Optional[pd.DataFrame]:
         try:
-            data = (self & key).fetch1()
-            return dj2h5(data["data"], data["headers"], data["scorer"])
+            if self & key:
+                if columns:
+                    raise NotImplementedError()
+                else:
+                    data = (self & key).fetch1()
+            return dj_to_df(data["data"], data["headers"], data["scorer"])
 
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_all_data(self, key):
+    def get_all_data(
+        self, columns: Optional[List[str]] = None
+    ) -> Optional[List[pd.DataFrame]]:
         dfs = []
         try:
-            data = self.fetch()
+            if self:
+                if columns:
+                    raise NotImplementedError()
+                else:
+                    data = self.fetch()
             for d in data:
-                df = dj2h5(d["data"], d["headers"], d["scorer"])
+                df = dj_to_df(d["data"], d["headers"], d["scorer"])
                 dfs.append(df)
             return dfs
 
         except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            logger.warning(f"Error {self.__class__.__name__}: {err}")
             return None
 
 
 @schema
 class OfflineKinematics(dj.Computed):
+    """Heading directions and head angles."""
+
     definition = """
     -> SyncDLCKptsDf
     ---
@@ -202,17 +223,19 @@ class OfflineKinematics(dj.Computed):
     scorer=NULL: varchar(256)
     """
 
-    def make(self, key):
+    def make(self, key: dict):
 
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
+
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
+
         try:
             sync_keypoints = SyncDLCKptsDf().get_data(key)
-            offline_dlc_variables = get_all_dlc_heading_angles(
+            offline_dlc_variables = compute_head_angles(
                 sync_keypoints.iloc[:, :-3]
             )  # Compute all the kinematic variables
             offline_dlc_variables[
@@ -224,7 +247,7 @@ class OfflineKinematics(dj.Computed):
             offline_dlc_variables["heading_dir"] = (
                 (offline_dlc_variables.heading_dir - 90) + 180
             ) % 360 - 180
-            data = df2dj(offline_dlc_variables)
+            data = df_to_dj(offline_dlc_variables)
 
             if (
                 not "camera" in key or not "doe" in key
@@ -241,25 +264,36 @@ class OfflineKinematics(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_data(self, key):
+    def get_data(
+        self, key: dict, columns: Optional[List[str]] = None
+    ) -> Optional[pd.DataFrame]:
         try:
-            data = (self & key).fetch1()
-            return dj2h5(data["data"], data["headers"], data["scorer"])
+            if self & key:
+                if columns:
+                    raise NotImplementedError()
+                else:
+                    data = (self & key).fetch1()
+            return dj_to_df(data["data"], data["headers"], data["scorer"])
 
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_all_data(self, key):
+    def get_all_data(
+        self, columns: Optional[List[str]] = None
+    ) -> Optional[List[pd.DataFrame]]:
         dfs = []
         try:
-            data = self.fetch()
+            if self:
+                if columns:
+                    raise NotImplementedError()
+                else:
+                    data = self.fetch()
             for d in data:
-                data = (self & key).fetch1()
-                df = dj2h5(data["data"], data["headers"], data["scorer"])
+                df = dj_to_df(d["data"], d["headers"], d["scorer"])
                 dfs.append(df)
             return dfs
 
         except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            logger.warning(f"Error {self.__class__.__name__}: {err}")
             return None

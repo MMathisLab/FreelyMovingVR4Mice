@@ -1,145 +1,63 @@
 import bisect
-from math import acos, atan2, copysign, degrees, pi, sqrt
+import math
+from typing import List, Tuple, Union
 
-from IPython.display import clear_output, display
-
-import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
-import seaborn as sns
-from scipy.signal import find_peaks, hilbert, savgol_filter
+import scipy.signal
 
 
-def get_dlc_steps_in_VR_game(step_time, dlc_times):
-    """
-    Computes for each dlc_time the closest element index in step time.
-    :param step_time: step times in the game, should be sorted in ascending order
-    :param dlc_times: DLC timestamps, should be sorted in ascending order
-    :return: numpy array containing the index of the closest step for each dlc timestamp.
-    """
-    dlc_steps = np.zeros(len(dlc_times), dtype=int)
-    step_time_index = 0
-    for i in range(dlc_steps.size):
-        current_distance = np.abs(step_time[step_time_index] - dlc_times[i])
-        found_step = False
-        while not found_step:
-            if step_time_index == len(step_time) - 1:
-                dlc_steps[i] = step_time_index
-                found_step = True
-            else:
-                next_distance = np.abs(step_time[step_time_index + 1] - dlc_times[i])
-                if next_distance >= current_distance:
-                    dlc_steps[i] = step_time_index
-                    found_step = True
-                else:
-                    current_distance = next_distance
-                    step_time_index += 1
+def _sync_dlc_with_game(game_data: pd.DataFrame, dlc_df: pd.DataFrame) -> pd.DataFrame:
+    """Synchronizes DLC pose time data with game step time data.
 
-    return dlc_steps
-
-
-# TODO: proper loader for all types all files
-# NOTE: since the database is in use, we are not supposed to use this "raw" loader anymore!
-def _load_dlc_proc_files(
-    camera_name="Imagingsource",
-    mouse_name="30559",
-    date="2024-02-14",
-    attempt="1",
-    path="/Users/thomassainsbury/Documents/Mathis_lab/Aug_Reg/AR_example_data/",
-):
-    dlc_dict = pd.read_hdf(
-        path + camera_name + "_" + mouse_name + "_" + date + "_" + attempt + "_DLC.hdf5"
-    )
-    # TS = np.load(path + camera_name + "_" + mouse_name + "_" + date + "_" + attempt + "_TS.npy")
-    # proc_dict = pd.DataFrame(np.load(path + camera_name + "_" + mouse_name + "_" + date + "_" + attempt + "_PROC", allow_pickle =True))
-    print(camera_name + "_" + mouse_name + "_" + date + "_" + attempt)
-
-    return dlc_dict
-
-
-def load_dlc(mouse_name, date, attempt, path, db_mode=True):
-
-    if db_mode:
-        from vr4mice.schema import vr4mice, dlc
-
-        # NOTE: a little bit dirty way since we are searching via kpts filepath and not PK
-        # TODO: pass by PK
-        key = f"keypoints_filepath='{path}'"
-        data = (vr4mice.DLC() & key).fetch1()
-        pk_def = vr4mice.DLC().primary_key
-        pk = (vr4mice.DLC() & key).fetch(*pk_def, as_dict=True)[0]
-        dlc_dict = dlc.DLCKptsDf().get_data(pk)
-    else:
-        dlc_dict = _load_dlc_proc_file(
-            mouse_name=mouse_name, date=date, attempt=attempt, path=path
-        )
-    return dlc_dict
-
-
-def load_dlc_key(key):
-    from vr4mice.schema import dlc
-
-    return dlc.DLCKptsDf().get_data(key)
-
-
-def _sync_dlc_w_game(game_data, dlc):
-    pose_time = np.array(dlc["pose_time"] - game_data["start_time"][0])
-    step_time = np.array(game_data["step_time"])
-    dlc[("index", "pose_time")] = pose_time
-    closest_indices = find_closest_indices(pose_time, step_time)
-    # print(closest_indices)
-    # print(len(closest_indices) == len(step_time))
-    dlc = dlc.iloc[closest_indices].reset_index(drop=True)
-    dlc[("index", "step")] = game_data["step"]
-    dlc[("index", "step_time")] = game_data["step_time"]
-    return dlc
-
-
-def sync_dlc_w_game(dlc_dict, game_data):
-
-    """Add the filtered head angle and head direction and compute derivatives."""
-
-    filt_dlc = filter_dlc(dlc_dict.copy())
-    dlc_s = _sync_dlc_w_game(game_data, filt_dlc.copy())
-    dlc_var = compute_dlc_variables(dlc_s.iloc[:, :-3].copy())
-
-    df_out = pd.concat([game_data, dlc_var], axis=1)
-
-    df_out["head_angle_velocity"] = compute_circular_angular_velocity(
-        df_out.head_angle, time_intervals=df_out.time_elapsed
-    )  # df_out.head_angle.diff()
-    df_out["heading_dir_velocity"] = compute_circular_angular_velocity(
-        df_out.heading_dir, time_intervals=df_out.time_elapsed
-    )  # df_out.heading_dir.diff()
-
-    df_out["head_angle_acceleration"] = np.gradient(
-        df_out.head_angle_velocity, df_out.time_elapsed
-    )  # df_out.head_angle.diff()
-    df_out["heading_dir_acceleration"] = np.gradient(
-        df_out.heading_dir_velocity, df_out.time_elapsed
-    )  # df_out.heading_dir.diff()
-
-    return df_out
-
-
-def sync_keypoint_table(dataset_key, keypoint_cuttoff=0.6, filter_window_length=10):
-    """Returns filtered keypoints from the DLCKptsDF table synchronized with game data.
-
-    This function loads the DLCKptsDF keypoint table for  dataset d it then removes low confidence frames and sets them to nan. it then
-    linearly interpolates between them and then filters with a Savgol filter.
+    This function adjusts the DLC data (pose times) by subtracting the game's start time
+    and aligns it with the game step times. It uses the closest matching times from the
+    game data to adjust the DLC DataFrame, adding corresponding step and step time information.
 
     Args:
-        d (str):  the data set key formatted as "mouseName_date_attempt".
-        keypoint_cuttoff (float): All keypoints below this confidence threshold will be removed and interpolated.
+        game_data (pd.DataFrame): DataFrame containing game-related data, including 'step' and 'step_time'.
+        dlc_df (pd.DataFrame): DataFrame containing DLC-related data, including 'pose_time'.
+
+    Returns:
+        pd.DataFrame: The synchronized DLC DataFrame, with added columns for 'step' and 'step_time' from game_data.
+
+    Modifies:
+        Adds columns "index/pose_time", "index/step", and "index/step_time" to `dlc_df`.
+    """
+
+    pose_time = np.array(dlc_df["pose_time"] - game_data["start_time"][0])
+    step_time = np.array(game_data["step_time"])
+    dlc_df[("index", "pose_time")] = pose_time
+
+    closest_indices = find_closest_indices(pose_time, step_time)
+    dlc_df = dlc_df.iloc[closest_indices].reset_index(drop=True)
+    dlc_df[("index", "step")] = game_data["step"]
+    dlc_df[("index", "step_time")] = game_data["step_time"]
+    return dlc_df
+
+
+def sync_keypoint_table(
+    dataset_key: str, keypoint_cuttoff: float = 0.6, filter_window_length: int = 10
+) -> pd.DataFrame:
+    """Returns filtered keypoints from the DLCKptsDF table synchronized with game data.
+
+    This function loads the DLCKptsDF keypoint table for dataset d,  replaces low confidence
+    frames with a linearly interpolates between confident points and filters with a Savgol filter.
+
+    Args:
+        dataset_key (str):  the data set key formatted as "mouseName_date_attempt".
+        keypoint_cuttoff (float): All keypoints below this confidence threshold will be removed
+            and interpolated.
         filter_window_length (int): The window in frames for the filter window size.
 
     Returns:
         pd.Dataframe: filtered and synchronized keypoints with game indexes - step and step_time
 
     """
-    # get time indexs from the game dataframe and the start time for session
     from vr4mice.schema import base_analysis, dlc, vr4mice
 
+    # Get time indexes from the game dataframe and the start time for session
     game_step_times = pd.DataFrame(
         (base_analysis.DataFrame() & dataset_key).fetch(
             "step_time", "step", "time_elapsed", "trial", as_dict=True
@@ -153,39 +71,81 @@ def sync_keypoint_table(dataset_key, keypoint_cuttoff=0.6, filter_window_length=
     filt_dlc_df = filter_dlc(
         keypoint_df, cutoff=keypoint_cuttoff, window_length=filter_window_length
     )
-    return _sync_dlc_w_game(game_data=game_step_times, dlc=filt_dlc_df)
+    return _sync_dlc_with_game(game_data=game_step_times, dlc=filt_dlc_df)
 
 
-def dlc_interpolate(trace, likelyhood, cutoff=0.6):
-    trace = np.array(trace)
-    low_conf = np.where(np.array(likelyhood) < cutoff)
-    trace[low_conf] = np.nan
-    traj_nan_below_cutoff = trace
-    df = pd.Series(traj_nan_below_cutoff)
-    df = df.interpolate().ffill().bfill()
-    traj = np.array(df)
-    return traj
+def dlc_interpolate(
+    trace: Union[List, npt.NDArray],
+    likelihood: Union[List, npt.NDArray],
+    cutoff: float = 0.6,
+) -> npt.NDArray:
+    """Interpolates the trace based on likelihood cutoff.
 
-
-def dlc_savgol_filter(traj, WL_jitter=9, polyorder=3):
-    filt = np.nan_to_num(
-        savgol_filter(traj, window_length=WL_jitter, polyorder=polyorder)
-    )
-    return filt
-
-
-def filter_dlc(dlc_dict, cutoff=0.4, window_length=9, polyorder=3):
-    """
-    Filter keypoints data based on likelihood, interpolate missing values, and apply a Savitzky-Golay filter.
+    Replaces values in the trace with NaN where the likelihood is below the cutoff and performs interpolation
+    to fill in missing values.
 
     Args:
-    - dlc_dict (pd.DataFrame): Dataframe containing the keypoints data.
-    - cutoff (float): Likelihood threshold below which values are considered missing and set to NaN.
-    - window_length (int): Length of the filter window (i.e., the number of coefficients). Must be an odd number.
-    - polyorder (int): Order of the polynomial used to fit the samples. Must be less than window_length.
+        trace (array-like): The trace data to be interpolated.
+        likelihood (array-like): The likelihood values corresponding to the trace.
+        cutoff (float, optional): The likelihood threshold below which values are considered unreliable. Default is 0.6.
 
     Returns:
-    - pd.DataFrame: The filtered DataFrame.
+        np.ndarray: The interpolated trace with low-confidence points replaced and interpolated.
+    """
+    trace = np.array(trace)
+    low_confidence_points = np.where(np.array(likelihood) < cutoff)
+    trace[low_confidence_points] = np.nan
+    trace_nan_below_cutoff = trace
+    df = pd.Series(trace_nan_below_cutoff)
+    df = df.interpolate().ffill().bfill()
+    interpolated_trace = np.array(df)
+    return interpolated_trace
+
+
+def dlc_savgol_filter(
+    trajectory: Union[list, npt.NDArray],
+    window_length_jitter: int = 9,
+    polyorder: int = 3,
+) -> npt.NDArray:
+    """Applies a Savitzky-Golay filter to smooth the trajectory data.
+
+    The function uses a Savitzky-Golay filter to smooth the input trajectory,
+    replacing NaN values with zero before filtering.
+
+    Args:
+        trajectory (array-like): The trajectory data to be smoothed.
+        window_length_jitter (int, optional): The window length for the filter.
+            Must be a positive odd integer. Default is 9.
+        polyorder (int, optional): The order of the polynomial to fit within the
+        window. Default is 3.
+
+    Returns:
+        np.ndarray: The smoothed trajectory.
+    """
+    filtered_trajectory = np.nan_to_num(
+        scipy.signal.savgol_filter(
+            trajectory, window_length=window_length_jitter, polyorder=polyorder
+        )
+    )
+    return filtered_trajectory
+
+
+def filter_dlc(
+    dlc_dict: pd.DataFrame,
+    cutoff: float = 0.4,
+    window_length: int = 9,
+    polyorder: int = 3,
+) -> pd.DataFrame:
+    """Filter keypoints data based on likelihood, interpolate missing values, and apply a Savitzky-Golay filter.
+
+    Args:
+        dlc_dict (pd.DataFrame): Dataframe containing the keypoints data.
+        cutoff (float): Likelihood threshold below which values are considered missing and set to NaN.
+        window_length (int): Length of the filter window (i.e., the number of coefficients). Must be an odd number.
+        polyorder (int): Order of the polynomial used to fit the samples. Must be less than window_length.
+
+    Returns:
+        pd.DataFrame: The filtered DataFrame.
     """
 
     body_parts = dlc_dict.columns.get_level_values(0).unique()[:-2]
@@ -195,14 +155,11 @@ def filter_dlc(dlc_dict, cutoff=0.4, window_length=9, polyorder=3):
         key_point_y = dlc_dict[b, "y"].copy()
         likelihood = dlc_dict[b, "likelihood"]
 
-        # Mask low likelihood points as NaN
+        # Mask low likelihood points as NaN and interpolate missing values
         trace_x = dlc_interpolate(key_point_x, likelyhood=likelihood, cutoff=cutoff)
         trace_y = dlc_interpolate(key_point_y, likelyhood=likelihood, cutoff=cutoff)
 
-        # Interpolate missing values
-
         # Apply Savitzky-Golay filter
-        # if len(key_point_x.dropna()) > window_length:  # Ensure there are enough points for filtering
         trace_x = dlc_savgol_filter(trace_x, window_length, polyorder)
         trace_y = dlc_savgol_filter(trace_y, window_length, polyorder)
 
@@ -213,205 +170,133 @@ def filter_dlc(dlc_dict, cutoff=0.4, window_length=9, polyorder=3):
     return dlc_dict
 
 
-def compute_dlc_heading_angles(filt_dlc_row):
-    pose = np.array(filt_dlc_row.unstack(level="coords"))
+def _compute_single_heading_angle(
+    filtered_dlc_row: pd.Series,
+) -> Tuple[float, float, float, float, npt.NDArray, npt.NDArray]:
+    """Computes the heading and head angles from DLC tracking data.
+
+    The function calculates the animal's heading angle (body orientation) and head angle
+    (relative head orientation to the body) based on filtered DLC data. It also returns
+    the body and head axes.
+
+    Args:
+        filtered_dlc_row (pd.Series): A row of DLC data with multi-level indices, where the 'coords' level contains x, y, and confidence.
+
+    Returns:
+        tuple: A tuple containing:
+            - center_x (float): The x-coordinate of the weighted average center of the head.
+            - center_y (float): The y-coordinate of the weighted average center of the head.
+            - heading (float): The heading angle (orientation of the body) in degrees.
+            - head_angle (float): The head angle relative to the body in degrees.
+            - body_axis (np.ndarray): The unit vector representing the body axis.
+            - head_axis (np.ndarray): The unit vector representing the head axis.
+    """
+    pose = np.array(filtered_dlc_row.unstack(level="coords"))
     xy = pose[:, :2]
     conf = pose[:, 2]
     head_xy = xy[[0, 1, 2, 3, 4, 5, 6, 26], :]
     head_conf = conf[[0, 1, 2, 3, 4, 5, 6, 26]]
     center = np.average(head_xy, axis=0, weights=head_conf)
-    body_axis = xy[7] - xy[13]  # tail_base -> neck
 
-    body_axis /= sqrt(np.sum(body_axis**2))
+    body_axis = xy[7] - xy[13]  # tail_base -> neck
+    body_axis /= np.sqrt(np.sum(body_axis**2))
+
     head_axis = xy[0] - xy[7]  # neck -> nose
-    head_length = xy[0] - xy[7]
-    head_axis /= sqrt(np.sum(head_axis**2))
+    head_axis /= np.sqrt(np.sum(head_axis**2))
 
     cross = body_axis[0] * head_axis[1] - head_axis[0] * body_axis[1]
-    sign = copysign(1, cross)  # Positive when looking left
+    sign = math.copysign(1, cross)  # Positive when looking left
+
     try:
-        head_angle = acos(body_axis @ head_axis) * sign
+        head_angle = math.acos(body_axis @ head_axis) * sign
     except ValueError:
         head_angle = 0
-    heading = atan2(body_axis[1], body_axis[0])
-    heading = degrees(heading)
-    head_angle = degrees(head_angle)
-    # vals = *center, heading % (360), head_angle
-    return (center[0], center[1], heading, head_angle, body_axis, head_axis)
+    heading = math.atan2(body_axis[1], body_axis[0])
+    heading = math.degrees(heading)
+    head_angle = math.degrees(head_angle)
+
+    return center[0], center[1], heading, head_angle, body_axis, head_axis
 
 
-def get_all_dlc_heading_angles(filt_dlc):
-    heading = []
-    head_angles = []
-    body_axis_list = []
-    head_axis_list = []
-    center_x = []
-    center_y = []
+def compute_head_angles(filtered_dlc: pd.DataFrame) -> pd.DataFrame:
+    """Computes heading direction and head angles for all frames in DLC data.
 
-    for i in range(filt_dlc.shape[0]):
-        (
-            x,
-            y,
-            heading_angle,
-            head_angle,
-            body_axis,
-            head_axis,
-        ) = compute_dlc_heading_angles(filt_dlc.iloc[i][:-2])
-        heading.append(heading_angle)
-        head_angles.append(head_angle)
-        body_axis_list.append(body_axis)
-        head_axis_list.append(head_axis)
-        center_x.append(x)
-        center_y.append(y)
+    Iterates through each row of filtered DLC data to calculate the heading direction,
+    head angle, and the body and head axes for each frame. Stores the results in a DataFrame.
 
-    df = pd.DataFrame(
-        {
-            "head_center_x": center_x,
-            "head_center_y": center_y,
-            "heading_dir": heading,
-            "head_angle": head_angles,
-        }
-    )
-    return df
-
-
-def get_dlc_steps_in_VR_game(step_time, dlc_times):
-    """
-    Computes for each dlc_time the closest element index in step time.
-    :param step_time: step times in the game, should be sorted in ascending order
-    :param dlc_times: DLC timestamps, should be sorted in ascending order
-    :return: numpy array containing the index of the closest step for each dlc timestamp.
-    """
-    dlc_steps = np.zeros(len(dlc_times), dtype=int)
-    step_time_index = 0
-    for i in range(dlc_steps.size):
-        current_distance = np.abs(step_time[step_time_index] - dlc_times[i])
-        found_step = False
-        while not found_step:
-            if step_time_index == len(step_time) - 1:
-                dlc_steps[i] = step_time_index
-                found_step = True
-            else:
-                next_distance = np.abs(step_time[step_time_index + 1] - dlc_times[i])
-                if next_distance >= current_distance:
-                    dlc_steps[i] = step_time_index
-                    found_step = True
-                else:
-                    current_distance = next_distance
-                    step_time_index += 1
-
-    return dlc_steps
-
-
-def compute_dlc_variables(dlc_sync):
-    df = get_all_dlc_heading_angles(dlc_sync)
-    return df
-
-
-def get_dlc_steps_in_VR_game(step_time, dlc_times):
-    """
-    Computes for each dlc_time the closest element index in step time.
-    :param step_time: step times in the game, should be sorted in ascending order
-    :param dlc_times: DLC timestamps, should be sorted in ascending order
-    :return: numpy array containing the index of the closest step for each dlc timestamp.
-    """
-    dlc_steps = np.zeros(len(dlc_times), dtype=int)
-    step_time_index = 0
-    for i in range(dlc_steps.size):
-        current_distance = np.abs(step_time[step_time_index] - dlc_times[i])
-        found_step = False
-        while not found_step:
-            if step_time_index == len(step_time) - 1:
-                dlc_steps[i] = step_time_index
-                found_step = True
-            else:
-                next_distance = np.abs(step_time[step_time_index + 1] - dlc_times[i])
-                if next_distance >= current_distance:
-                    dlc_steps[i] = step_time_index
-                    found_step = True
-                else:
-                    current_distance = next_distance
-                    step_time_index += 1
-
-    return dlc_steps
-
-
-def find_closest_indices(pose_time, step_time):
-    """
-    Finds the index of the closest point in `pose_time` for each entry in `step_time`.
-
-    Parameters:
-    - pose_time: Sorted list of timestamps.
-    - step_time: List of timestamps to find closest points for.
+    Args:
+        filtered_dlc (pd.DataFrame): DataFrame containing filtered DLC data for multiple frames.
 
     Returns:
-    A list of indices in `pose_time` for each entry in `step_time`.
+        pd.DataFrame: A DataFrame with the following columns:
+            - "head_center_x" (float): The x-coordinate of the weighted average center of the head for each frame.
+            - "head_center_y" (float): The y-coordinate of the weighted average center of the head for each frame.
+            - "heading_dir" (float): The heading angle (orientation of the body) in degrees for each frame.
+            - "head_angle" (float): The head angle relative to the body in degrees for each frame.
+    """
+
+    def _compute_angles(row):
+        x, y, heading_angle, head_angle, _, _ = _compute_single_heading_angle(row[:-2])
+        return pd.Series([x, y, heading_angle, head_angle])
+
+    results = filtered_dlc.apply(_compute_angles, axis=1)
+
+    df = pd.DataFrame(
+        results, columns=["head_center_x", "head_center_y", "heading_dir", "head_angle"]
+    )
+
+    return df
+
+
+def find_closest_indices(pose_time: List[int], step_time: List[int]) -> List[int]:
+    """Finds the index of the closest point in `pose_time` for each entry in `step_time`.
+
+    This function uses binary search to efficiently find the closest indices in `pose_time`
+    corresponding to each timestamp in `step_time`.
+
+    Args:
+        pose_time (List[int]): Sorted list of timestamps representing pose times.
+        step_time (List[int]): List of timestamps for which to find the closest points.
+
+    Returns:
+        List[int]: A list of indices in `pose_time` corresponding to each entry in `step_time`.
     """
     closest_indices = []
+
     for step in step_time:
-        # Find the insertion point
         idx = bisect.bisect_left(pose_time, step)
-        # Check if we need to compare with the previous element (to handle edge cases)
+
         if idx == 0:
-            closest_indices.append(idx)
+            closest_indices.append(0)
         elif idx == len(pose_time):
-            closest_indices.append(idx - 1)
+            closest_indices.append(len(pose_time) - 1)
         else:
             before = pose_time[idx - 1]
             after = pose_time[idx]
             closest_indices.append(idx if step - before > after - step else idx - 1)
+
     return closest_indices
 
 
-def df2dj(df) -> dict:
-    # data: pandas.core.frame.DataFrame
-    dj_col = dict()
-    dj_col["data"] = df.to_numpy()
-    headers = df.columns
-    dj_col["headers"] = list(headers)
+# TODO(celia): not used in the codebase but could be used later.
+def compute_circular_angular_velocity(
+    angles: Union[list, npt.NDArray], time_intervals: Union[list, npt.NDArray]
+) -> npt.NDArray:
+    """Computes the circular angular velocity of an angle changing over time.
 
-    if df.columns.nlevels > 2:
-        dj_col["scorer"] = headers.get_level_values("scorer").unique()[0]
-
-    return dj_col
-
-
-def h52dj(h5path: str) -> dict:
-    df = pd.read_hdf(h5path)
-    return df2dj(df)
-
-
-def dj2h5(data, headers, scorer) -> pd.DataFrame:
-
-    data = pd.DataFrame(data=data, columns=headers)
-    if scorer:
-        levels = ["scorer", "bodyparts", "coords"]
-    else:
-        levels = ["bodyparts", "coords"]
-    df = pd.DataFrame(
-        data,
-        columns=pd.MultiIndex.from_tuples(headers, names=levels),
-    )
-    df = df.copy()
-    return df
-
-
-def compute_circular_angular_velocity(angles, time_intervals):
-    """
-    Computes the circular angular velocity of an angle changing over time.
-
-    Parameters:
-    angles (array-like): Array of angles in radians.
-    time_intervals (array-like): Array of time intervals corresponding to the angles.
+    Args:
+        angles (array-like): Array of angles in radians.
+        time_intervals (array-like): Array of time intervals corresponding to the angles.
 
     Returns:
-    numpy array: Array of circular angular velocities.
+        numpy array: Array of circular angular velocities.
     """
 
     # Convert inputs to numpy arrays
     angles = np.asarray(angles, dtype=np.float64)
     time_intervals = np.asarray(time_intervals, dtype=np.float64)
     angles = np.deg2rad(angles)
+
     # Ensure angles are wrapped between -pi and pi for circular continuity
     # Compute the sine and cosine of the angles
     angles_wrapped = np.unwrap(angles)
