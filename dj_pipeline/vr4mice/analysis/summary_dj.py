@@ -161,20 +161,20 @@ def plot_keypoints(keypoints: pd.DataFrame, keypoints_list: List[str], confidenc
     - key: Identifier for the plot title.
     """
     
-    # Number of keypoints and determine rows and columns
-    num_keypoints = len(keypoints_list)
-    num_cols = 2  # Fixed to 2 columns
-    num_rows = int(np.ceil(num_keypoints / num_cols))  # Calculate how many rows we need
 
-    # Create the figure with the required number of rows and columns
+    num_keypoints = len(keypoints_list)
+    num_cols = 2  
+    num_rows = int(np.ceil(num_keypoints / num_cols))  
+
+    
     fig, ax = plt.subplots(num_rows * 3, num_cols, sharex=True, figsize=(15, 6 * num_rows))
     fig.suptitle(f"DLC tracking summary plot - {key}")
 
-    # Loop over each keypoint and create three stacked subplots per keypoint
+ 
     for i, keypoint in enumerate(keypoints_list):
-        # Determine the column and row for the current keypoint
-        col = i % num_cols  # 0 for the left column, 1 for the right column
-        row_offset = (i // num_cols) * 3  # Each keypoint takes up 3 rows
+        
+        col = i % num_cols  
+        row_offset = (i // num_cols) * 3  
         
         # X position plot
         ax[row_offset, col].scatter(keypoints.pose_time - keypoints.pose_time[0], keypoints[keypoint].x, 
@@ -200,7 +200,7 @@ def plot_keypoints(keypoints: pd.DataFrame, keypoints_list: List[str], confidenc
         # Only set xlabel for the confidence plot (the bottom plot in each column)
         ax[row_offset + 2, col].set_xlabel('Time')
 
-    plt.tight_layout()  # Adjust subplots to fit nicely
+    plt.tight_layout()  
     plt.show()
 
 
