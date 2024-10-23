@@ -39,7 +39,7 @@ class Base(dj.Computed):
                 pk = mice.Mouse().primary_key
                 mouse = (mice.Mouse() & mouse_key).fetch(*pk, as_dict=True)[0]
 
-            session_key = {"date": data["date"], "attempt": data["attempt"]}
+            session_key = {"doe": data["date"], "attempt": data["attempt"]}
 
             if exp.Session() & mouse_key & session_key:
                 pk = exp.Session().primary_key

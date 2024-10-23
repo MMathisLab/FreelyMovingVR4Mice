@@ -103,7 +103,6 @@ class DataFrame(dj.Computed):
             data = {**key, **data, **{"interpolation": unity_to_physical_arena_size}}
 
             # TODO: add test that data keys are the same with columns names
-            # TODO(celia): use df_to_dj?
 
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")

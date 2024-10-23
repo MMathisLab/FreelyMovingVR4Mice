@@ -205,9 +205,9 @@ def vr4mice_summary_plots(
         data=j_shaped_df,
         x="bin_centers",
         y="x",
-        hue="choice" if num_apertures <= 2 else "aperture",
+        hue="trial_right_choice" if num_apertures <= 2 else "aperture",
         palette=plotting.colors_choice if num_apertures <= 2 else "viridis",
-        style="aperture" if num_apertures <= 2 else "choice",
+        style="aperture" if num_apertures <= 2 else "trial_right_choice",
         errorbar="se",
         ax=ax10,
     )
@@ -252,7 +252,7 @@ def vr4mice_summary_plots(
     plotting.plot_time_to_reward(
         df,
         label_x="aperture",
-        xticks=list(df.aperture.unique()),
+        xticks=list(df.aperture.astype(float).sort_values().astype(str).unique()),
         ax=time_plots_aperture,
     )
     # per trial rewarded
@@ -285,8 +285,7 @@ def vr4mice_summary_plots(
     interpolated_df = utils.interpolate(
         df,
         n_points=200,
-        value_columns=["trial_left_choice", "trial_right_choice", "trial_rewarded"]
-        + columns,
+        value_columns=["trial_right_choice", "trial_rewarded"] + columns,
     )
     interpolated_df["trial_step"] = interpolated_df.groupby(
         ["dataset", "trial"]
@@ -303,7 +302,6 @@ def vr4mice_summary_plots(
         errorbar="se",
         ax=velocity_plot_aperture,
     )
-    velocity_plot_aperture.legend([], [], frameon=False)
     velocity_plot_aperture.set_ylabel("Speed / Aperture")
     velocity_plot_aperture.set_xlabel("Trial progression")
     # per trial rewarded
@@ -317,7 +315,6 @@ def vr4mice_summary_plots(
         errorbar="se",
         ax=velocity_plot_reward,
     )
-    velocity_plot_reward.legend([], [], frameon=False)
     velocity_plot_reward.set_ylabel("Speed / Reward")
     velocity_plot_reward.set_xlabel("Trial progression")
 
@@ -327,11 +324,10 @@ def vr4mice_summary_plots(
         x="trial_length",
         y="velocity",
         palette=plotting.colors_choice,
-        hue="trial_left_choice",
+        hue="trial_right_choice",
         errorbar="se",
         ax=velocity_plot_choice,
     )
-    velocity_plot_choice.legend([], [], frameon=False)
     velocity_plot_choice.set_ylabel("Speed / Choice")
     velocity_plot_choice.set_xlabel("Trial progression")
 

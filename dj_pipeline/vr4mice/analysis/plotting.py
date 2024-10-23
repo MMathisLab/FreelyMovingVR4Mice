@@ -409,6 +409,11 @@ def _plot_bar_counts(
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
 
+    if per_mouse:
+        unique_mice = counts["mouse_name"].unique()
+        cmap_mice = sns.color_palette(cmap, len(unique_mice))
+        color_map = {label: cmap_mice[i] for i, label in enumerate(unique_mice)}
+
     if isinstance(label_x, str):
         sns.lineplot(
             data=counts,
@@ -458,7 +463,9 @@ def _plot_bar_counts(
         x=label_x,
         y="count",
         alpha=alpha if per_mouse else 1,
-        hue="mouse_name" if per_mouse else label_x,
+        hue="mouse_name"
+        if per_mouse
+        else label_x,  # Color by mouse if per_mouse, else by label_x
         palette=color_map,
         ax=ax,
         legend=False,
