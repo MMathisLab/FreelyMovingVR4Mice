@@ -282,8 +282,7 @@ class OfflineKinematics(dj.Computed):
                     data = (self & key).fetch(*columns, as_dict=True)[0]
                 else:
                     data = (self & key).fetch(as_dict=True)[0]
-                df = pd.DataFrame(data)
-                return df
+                return pd.DataFrame(data)
             else:
                 return False
 
