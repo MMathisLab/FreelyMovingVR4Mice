@@ -58,7 +58,8 @@ def dj_to_df(
     Args:
         data (Any): The data to convert (should be in a compatible format).
         headers (List[Tuple[str]]): Column headers for the DataFrame.
-        scorer: TODO
+        scorer (str): Specifies the model that was used, along with scorer of
+                    the data if applicable.
 
     Returns:
         pd.DataFrame: A DataFrame constructed from the provided data and headers.
