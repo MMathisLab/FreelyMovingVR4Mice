@@ -380,6 +380,7 @@ def compute_circular_angular_velocity(
 
     return np.insert(angular_velocity, 0, 0)
 
+
 def convert_angles(data: pd.Series, shift: int = 90) -> pd.Series:
     """
     Shifts angles and scales range between -180 and +180.
@@ -392,4 +393,4 @@ def convert_angles(data: pd.Series, shift: int = 90) -> pd.Series:
     Returns:
         pd.Series: Corrected angles
     """
-    return(((data - shift) + 180) % 360 - 180)
+    return ((data - shift) + 180) % 360 - 180
