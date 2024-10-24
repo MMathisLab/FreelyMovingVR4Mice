@@ -517,3 +517,76 @@ def parse_git_commit_file(filename="git_commit"):  # TODO(mary): move to helpers
     except FileNotFoundError:
         logger.warning(f"Error: File '{filename}' not found.")
         return None, []
+    
+    
+@schema
+class TrackingSummaryPlots(dj.Computed):
+    definition = """
+    -> vr4mice.Dataset
+    ---
+    filename:  varchar(255)
+    """
+
+    def make(self, key, send=False):
+        """
+        key: Dataset
+        """
+        # generate
+
+        from vr4mice.analysis.tracking_summary_dj import plot_keypoints_summary
+        from vr4mice.schema import base
+        from vr4mice.schema import dlc
+
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
+
+        if (DataFrame & key) and (BoxDataFrame & key):
+            full_path = plot_keypoints_summary(
+                key, save_path="/data/summary_plots"
+            )
+        else:
+            logger.warning(
+                "Populate first DLC DLCKptsDf for "
+                + str(key)
+                + "; call DLCKptsDf.populate(); (...) or data_fetch(key, database=True)"
+            )
+            return False
+
+        data = {**key, **{"filename": full_path}}
+        key = (base.Base() & key).fetch(as_dict=True)[0]
+        insert_send_email(key, data, TrackingSummaryPlots(), full_path, send=send)
+
+
+def insert_send_email(key, tuple_, table, filename, send=False):
+    from base_schemas.schemas import exp, mice
+    
+    try:
+        user = (exp.Session() & key).fetch("experimenter_name", as_dict=True)[0]
+        if len(user) > 0:
+            addr = (exp.Experimenter & user).fetch("mail")[0]
+            if len(addr) == 0:
+                addr == "default"
+        else:
+            addr = "default"
+
+    except dj.DataJointError as e:
+        logger.warning(f"Error fetching experimenter email: {e}")
+        addr = None
+
+    try:
+        table.insert1(tuple_, allow_direct_insert=True)
+        logger.info(f"Summary plots populated successfully for {key}")
+        if send:
+            logger.info(f"Sending email now for {key}")
+            email(key, addr, filename, error=False, message=None)
+        else:
+            logger.info(f"Send flag is false for {key}. No email.")
+
+    except Exception as err:
+        err = f"Error while populating the Summary table: key {key}: err: {err}"
+        logger.warning(err)
+        if send:
+            email(key, addr, None, error=True, message=err)
