@@ -375,3 +375,17 @@ def compute_circular_angular_velocity(
     angular_velocity = cos_angles[:-1] * d_sin - sin_angles[:-1] * d_cos
 
     return np.insert(angular_velocity, 0, 0)
+
+def convert_angles(data: pd.Series, shift: int = 90) -> pd.Series:
+    """
+    Shifts angles and scales range between -180 and +180.
+    This function is used to align angles to the main monitor in the arena.
+
+    Args:
+        data (pd.Series): contains an angle in degrees for each time step
+        shift (int, optional): How much you would like to shift the angle by. Defaults to 90.
+
+    Returns:
+        pd.Series: Corrected angles
+    """
+    return(((data - shift) + 180) % 360 - 180)

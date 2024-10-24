@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 import vr4mice.schema.vr4mice as vr4mice
-from vr4mice.analysis.dlc_helpers import compute_head_angles, sync_keypoint_table
+from vr4mice.analysis.dlc_helpers import compute_head_angles, sync_keypoint_table, convert_angles
 from vr4mice.analysis.dlc_helpers import df_to_dj, dj_to_df, h5_to_dj
 from vr4mice.utils import logger, schema_config  # TODO(mary): adjust paths (base/utils)
 
@@ -243,6 +243,9 @@ class OfflineKinematics(dj.Computed):
 
         try:
             sync_keypoints = SyncDLCKptsDf().get_data(key)
+            if (sync_keypoints == False) | (sync_keypoints ==None):
+                logger.info(f"The SyncDLCKptsDf for could not be returned {self.__class__.__name__} could not be populated for {key}")
+                return None
             offline_dlc_variables = compute_head_angles(
                 sync_keypoints.iloc[:, :-3]
             )  # Compute all the kinematic variables
@@ -252,9 +255,7 @@ class OfflineKinematics(dj.Computed):
                 :, -3:
             ]  # Add back in the time index
             # Shift angles so that 0 is aligned with the main screen
-            offline_dlc_variables["heading_dir"] = (
-                (offline_dlc_variables.heading_dir - 90) + 180
-            ) % 360 - 180
+            offline_dlc_variables["heading_dir"] = convert_angles(offline_dlc_variables["heading_dir"], shift=90)
 
             data = offline_dlc_variables
 
