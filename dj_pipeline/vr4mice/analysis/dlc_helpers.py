@@ -9,11 +9,11 @@ import scipy.signal
 
 
 def df_to_dj(df: pd.DataFrame) -> Dict:
-    """ Converts a DataFrame to a dictionary format for data handling.
+    """Converts a DataFrame to a dictionary format for data handling.
 
     This function is specifically for converting a DataFrame containing DLC
     data into a DataJoint-compatible dictionary.
-    
+
     Args:
         df (pd.DataFrame): The DataFrame to convert.
 
