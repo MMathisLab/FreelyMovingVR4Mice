@@ -274,15 +274,16 @@ class OfflineKinematics(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_data(self, key: dict, columns: Optional[List[str]]=None)-> Optional[pd.DataFrame]:
+    def get_data(
+        self, key: dict, columns: Optional[List[str]] = None
+    ) -> Optional[pd.DataFrame]:
         try:
             if self & key:
                 if columns:
                     data = (self & key).fetch(*columns, as_dict=True)[0]
                 else:
                     data = (self & key).fetch(as_dict=True)[0]
-                df = pd.DataFrame(data)
-                return df
+                return pd.DataFrame(data)
             else:
                 return False
 

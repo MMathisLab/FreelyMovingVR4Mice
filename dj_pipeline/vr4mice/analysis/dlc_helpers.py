@@ -11,6 +11,9 @@ import scipy.signal
 def df_to_dj(df: pd.DataFrame) -> Dict:
     """Converts a DataFrame to a dictionary format for data handling.
 
+    This function is specifically for converting a DataFrame containing DLC
+    data into a DataJoint-compatible dictionary.
+
     Args:
         df (pd.DataFrame): The DataFrame to convert.
 
@@ -48,14 +51,15 @@ def dj_to_df(
     data: npt.NDArray, headers: List[Union[str, Tuple[str]]], scorer
 ) -> pd.DataFrame:
     """Converts a dictionary format back to a DataFrame.
-    
-    This function is specifically for retrieving dlc raw data stored in 
+
+    This function is specifically for retrieving dlc raw data stored in
     datajoint tables.
 
     Args:
         data (Any): The data to convert (should be in a compatible format).
         headers (List[Tuple[str]]): Column headers for the DataFrame.
-        scorer: TODO
+        scorer (str): Specifies the model that was used, along with scorer of
+                    the data if applicable.
 
     Returns:
         pd.DataFrame: A DataFrame constructed from the provided data and headers.
@@ -263,10 +267,10 @@ def _compute_single_heading_angle(
     center = np.average(head_xy, axis=0, weights=head_conf)
 
     body_axis = xy[7] - xy[13]  # tail_base -> neck
-    body_axis /= np.sqrt(np.sum(body_axis ** 2))
+    body_axis /= np.sqrt(np.sum(body_axis**2))
 
     head_axis = xy[0] - xy[7]  # neck -> nose
-    head_axis /= np.sqrt(np.sum(head_axis ** 2))
+    head_axis /= np.sqrt(np.sum(head_axis**2))
 
     cross = body_axis[0] * head_axis[1] - head_axis[0] * body_axis[1]
     sign = math.copysign(1, cross)  # Positive when looking left
