@@ -26,7 +26,6 @@ class MyProcessor_socket:
         self.save_file_path = save_file_path
 
     def process(self):
-        self.vals = self.vals
         self.curr_time = time.time()
         self.get_curr_signal()
         print(self.curr_signal)

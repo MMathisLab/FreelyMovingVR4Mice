@@ -37,7 +37,6 @@ class MyProcessor_socket():
 
 
     def process(self):
-        self.vals = self.vals
         self.curr_time = time.time()
         self.get_curr_signal()
         self.conn.send(
