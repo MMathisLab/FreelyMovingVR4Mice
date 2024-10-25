@@ -1,9 +1,11 @@
-from pathlib import Path
-from typing import List
 import subprocess
+from pathlib import Path
+from typing import List, Optional
 
 import datajoint as dj
 import pandas as pd
+from base_actions.send_email import email
+
 from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
@@ -16,9 +18,7 @@ logger = Logger.get_logger()
 
 @schema
 class DataFrame(dj.Computed):
-    """
-    Host main dataframe for analysis.
-    """
+    """Host main dataframe for analysis."""
 
     # TODO: This used to point to vr4mice.VR4Mice
     #       will probably point this to the next version when it's available
@@ -98,9 +98,9 @@ class DataFrame(dj.Computed):
             return
 
         try:
-            data, interp = create_data_frame(key)
+            data, unity_to_physical_arena_size = create_data_frame(key)
             data = data.to_dict(orient="list")
-            data = {**key, **data, **{"interpolation": interp}}
+            data = {**key, **data, **{"interpolation": unity_to_physical_arena_size}}
 
             # TODO: add test that data keys are the same with columns names
             # if not in... alert
@@ -114,29 +114,29 @@ class DataFrame(dj.Computed):
             )
             return None
 
-    def get_data(self, key, columns=None):
+    def get_data(
+        self, key: dict, columns: Optional[List[str]] = None
+    ) -> Optional[pd.DataFrame]:
         try:
             if self & key:
                 if columns:
                     data = (self & key).fetch(*columns, as_dict=True)[0]
                 else:
                     data = (self & key).fetch(as_dict=True)[0]
-                    # interp = data["interpolation"]
+                if "interpolation" in data.keys():
                     data.pop("interpolation")
                 df = pd.DataFrame(data)
-                return df  # , interp  # TODO: externalize interpolation maybe
+                return df
             else:
                 return False
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_interp(self, key):
+    def get_unity_arena_size(self, key: dict) -> dict:
         try:
             if self & key:
-                interp = (self & key).fetch("interpolation")[0]
-                # df = pd.DataFrame(interp)
-                return interp
+                return (self & key).fetch("interpolation")[0]
             else:
                 return False
         except Exception as err:
@@ -167,10 +167,11 @@ class DataFrame(dj.Computed):
     def get_rewarded(self, key):
         from vr4mice.analysis.analysis import get_rewarded
 
+        # values needed for get_rewarded function
         df = self.get_data(key, ["dataset", "trial", "reward", "aperture"])
         if df is not False and df is not None:
             df["trial_rewarded"] = get_rewarded(df)
-            return df
+            return df["trial_rewarded"]
         return False
 
     def get_all_rewarded(self):
@@ -179,16 +180,16 @@ class DataFrame(dj.Computed):
         df = self.get_all_data(["dataset", "trial", "reward", "aperture"])
         if df is not False and df is not None:
             df["trial_rewarded"] = get_rewarded(df)
-            return df
+            return df["trial_rewarded"]
         return False
 
     def get_choices(self, key):  # TODO: implement
 
-        pass
+        pass  # TODO: implement as rewarded
 
         from vr4mice.analysis.analysis import get_choices
 
-        df, interp = self.get_data(key)
+        df = self.get_data(key)
         if df is not False:
             return get_choices(df)
         return df
@@ -234,13 +235,15 @@ class BoxDataFrame(dj.Computed):
         try:
             if len(DataFrame & key) > 0:
                 df = DataFrame().get_data(key)
-                interp = DataFrame().get_interp(key)
-                box_df = get_box_df(key, df, interp=interp)
+                unity_to_physical_arena_size = DataFrame().get_unity_arena_size(key)
+                box_df = get_box_df(
+                    key, df, unity_to_physical_arena_size=unity_to_physical_arena_size
+                )
                 box_df = {
                     k: v[0] if isinstance(v, list) and len(v) == 1 else v
                     for k, v in box_df.to_dict(orient="list").items()
                 }
-                data = {**key, **box_df}  # **data}
+                data = {**key, **box_df}
                 self.insert1(data, allow_direct_insert=True)
                 logger.info(f"{self.__class__.__name__} populated for {key}.")
 
@@ -284,93 +287,35 @@ class BoxDataFrame(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}: {err}")
             return None
 
-    def get_dist2reward(self, key):
+    def calculate_distance_to_reward(self, key):
 
-        from vr4mice.analysis.analysis import get_dist2reward
+        from vr4mice.analysis.analysis import calculate_distance_to_reward
 
-        df, interp = DataFrame().get_data(key)
-        df_box = self.get_data(key)
+        df = DataFrame().get_data(key)
+        box_df = self.get_data(key)
 
-        if df is not False and df_box is not False:
-            return get_dist2reward(df, box_df)
+        if df is not False and box_df is not False:
+            return calculate_distance_to_reward(df, box_df)
 
         return False
 
 
 @schema
-class JShaped(dj.Computed):
-    definition = """
-    -> DataFrame
-    ---
-    j_shaped=NULL: longblob     # NEW
-    headers=NULL: longblob      # NEW
-    """
-    # TODO: store headers once, or separately, since always the same
-
-    def make(self, key):
-
-        from vr4mice.analysis.analysis import get_jshaped_trials
-
-        if self & key:
-            logger.info(
-                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
-            )
-            return
-        try:
-            if DataFrame & key:
-                df = DataFrame().get_data(key, ["trial_duration", "trial_tortuosity"])
-                j = get_jshaped_trials(df)
-                j_np = j.to_numpy()
-                headers = j.columns.to_numpy()
-                data = {"j_shaped": j_np, "headers": headers}
-                data = {**data, **key}
-                self.insert1(data, allow_direct_insert=True)
-                logger.info(f"{self.__class__.__name__} populated for {key}.")
-
-        except Exception as err:
-            logger.warning(
-                f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
-            )
-            return None
-
-    def get_jshaped(self, key):  # TODO: fetch_all
-
-        data = (self & key).fetch1()
-        headers = data["headers"]
-        j = pd.DataFrame(data["j_shaped"], columns=headers)
-        return j
-
-    def get_jshaped_all(self):
-        data = self.fetch()
-        datasets = data["dataset"]
-        headers = data["headers"]
-        j_shaped = data["j_shaped"]
-        dfs = []
-
-        for header, j, dataset in zip(headers, j_shaped, datasets):
-            df = pd.DataFrame(j, columns=header)
-            df["dataset"] = dataset
-            dfs.append(df)
-
-        final_df = pd.concat(dfs, ignore_index=True)
-        return final_df
-
-
-@schema
-class OutputPlots(dj.Computed):
+class SummaryPlots(dj.Computed):
     definition = """
     -> vr4mice.Dataset
     ---
     filename:  varchar(255)
     """
 
-    def make(self, key):
+    def make(self, key, send=False):
         """
         key: Dataset
         """
         # generate
 
-        from vr4mice.analysis.analysis import vr4mice_summary_plots
+        from vr4mice.analysis.summary_dj import vr4mice_summary_plots
+        from vr4mice.schema import base
 
         if self & key:
             logger.info(
@@ -391,83 +336,71 @@ class OutputPlots(dj.Computed):
             return False
 
         data = {**key, **{"filename": full_path}}
-        self.insert1(data, allow_direct_insert=True)
+        key = (base.Base() & key).fetch(as_dict=True)[0]
+        insert_send_email(key, data, SummaryPlots(), full_path, send=send)
 
-        logger.info(f"{self.__class__.__name__} populated for {key}.")
+    def get_name(self, key):
 
-        # todo: send mail (needs base_schemas), have a config file
+        from vr4mice.schema import base
 
-    def get_path(self, key, base, ext=".png"):
-        """
-        key: Dataset
-        Note: not used now, needs base_schemas
-        """
-        # todo: check if exists, fetch from base schemas
-        from vr4mice.schema import federated_db
-
-        session_info = (federated_db.VR4Mice() & key).fetch(as_dict=True)
-
-        if session_info:
-            name = (
-                session_info["mouse_name"]
-                + "_day"
-                + str(session_info["day"])
-                + "_attempt"
-                + str(session_info["attempt"])
-            )
+        session_info = (base.Base() & key).fetch(as_dict=True)[0]
+        if len(session_info) > 0:
+            name = f'{session_info["mouse_name"]}_day{session_info["day"]}_attempt{session_info["attempt"]}'
         else:
             name = key["dataset"]
 
-        name = str(name) + "_summary_plot" + ext
+        return name
+
+    def get_path(self, key, base="/data/summary_plots", ext=".png"):
+        """
+        key: Dataset
+        Note: used in vr4mice_summary_plots
+        """
+        name = self.get_name(key)
+        name = f"{name}_summary_plot{ext}"
         return Path(base).joinpath(name)
 
-    def get_subtitle(self, key, task_name="AR Task"):
+    def get_subtitle(self, key, task_name="AR Task: test plot"):
+        """
+        key: Dataset
+        Used in vr4mice_summary_plots
+        """
+        name = self.get_name(key)
 
-        from vr4mice.schema import federated_db
-
-        session_info = (federated_db.VR4Mice() & key).fetch(as_dict=True)
-
-        if session_info:
-            info = (
-                session_info["mouse_name"]
-                + ", day "
-                + str(session_info["day"])
-                + ", attempt "
-                + str(session_info["attempt"])
-            )  # todo add other info if needed
-        else:
-            info = "dataset: " + key["dataset"]
-
-        subtitle = task_name + ": " + info
+        subtitle = task_name + ": " + name
         return subtitle
 
 
-# todo: add to base_actions
-def insert_send_mail(key, tuple_, table, filename, send=False):
+def insert_send_email(key, tuple_, table, filename, send=False):
+    from base_schemas.schemas import exp, mice
 
-    user = (exp.Session() & key).fetch1("experimenter_name")
     try:
-        email = (exp.Experimenter & {"experimenter_name": user}).fetch1("mail")
+        user = (exp.Session() & key).fetch("experimenter_name", as_dict=True)[0]
+        if len(user) > 0:
+            addr = (exp.Experimenter & user).fetch("mail")[0]
+            if len(addr) == 0:
+                addr == "default"
+        else:
+            addr = "default"
 
     except dj.DataJointError as e:
         logger.warning(f"Error fetching experimenter email: {e}")
-        email = None
+        addr = None
 
     try:
-        table.insert1(tuple_)
-        logger.info(
-            "Behavior populated successfully. Sending email now!"
-            "mouse = %s // day = %d // attempt = %d"
-            % (key["mouse_name"], key["day"], key["attempt"])
-        )
+        table.insert1(tuple_, allow_direct_insert=True)
+        logger.info(f"Summary plots populated successfully for {key}")
         if send:
-            send_email.email(email, filename, error=False, message=None)
+            logger.info(f"Sending email now for {key}")
+            email(key, addr, filename, error=False, message=None)
+        else:
+            logger.info(f"Send flag is false for {key}. No email.")
 
     except Exception as err:
-        err = f"Error while populating the Summary table: key {key}\n{err}"
+        err = f"Error while populating the Summary table: key {key}: err: {err}"
         logger.warning(err)
         if send:
-            send_email.email(email, None, error=True, message=err)
+            email(key, addr, None, error=True, message=err)
 
 
 @schema
