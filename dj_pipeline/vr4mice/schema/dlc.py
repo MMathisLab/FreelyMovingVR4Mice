@@ -247,7 +247,7 @@ class OfflineKinematics(dj.Computed):
 
         try:
             sync_keypoints = SyncDLCKptsDf().get_data(key)
-            if (sync_keypoints == False) | (sync_keypoints == None):
+            if sync_keypoints in [False, None]:
                 logger.info(
                     f"The SyncDLCKptsDf for could not be returned {self.__class__.__name__} could not be populated for {key}"
                 )
