@@ -467,8 +467,7 @@ class TrackingSummaryPlots(dj.Computed):
         # generate
 
         from vr4mice.analysis.tracking_summary_dj import plot_keypoints_summary
-        from vr4mice.schema import base
-        from vr4mice.schema import dlc
+        from vr4mice.schema import base, dlc
 
         if self & key:
             logger.info(
