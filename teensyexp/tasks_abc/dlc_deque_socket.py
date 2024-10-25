@@ -10,7 +10,6 @@ class DLCClient(object):
         self.address = address
         self.reading = True
         self.input_data = deque()
-        self.save_input_data = deque()
         self.previous = deque()  # Using deque for efficient appends
         self.conn = Client(self.address, authkey=b"secret password")
         self.start_read_buffer()
