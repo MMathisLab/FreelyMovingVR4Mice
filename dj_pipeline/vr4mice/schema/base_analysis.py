@@ -206,6 +206,16 @@ class DataFrame(dj.Computed):
             return analysis.get_local_tortuosity(df, window=window)
         return False
 
+    def get_optimal_p(self, key: dict) -> Union[pd.Series, bool]:
+        """DJ wrapper of `analysis.get_optimal_p`."""
+        import vr4mice.analysis.analysis as analysis
+
+        df = self.get_data(key, columns=["dataset", "trial", "x", "y"])
+
+        if df is not False and df is not None:
+            return analysis.get_optimal_p(df)
+        return False
+
 
 @schema
 class BoxDataFrame(dj.Computed):

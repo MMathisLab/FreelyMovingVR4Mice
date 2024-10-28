@@ -1,11 +1,10 @@
 import warnings
-from pathlib import Path
 from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
+import scipy.optimize
 
 from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
@@ -175,6 +174,52 @@ def get_local_tortuosity(df: pd.DataFrame, window_size: int = 1) -> pd.Series:
     local_tortuosity.fillna(local_tortuosity.mean(), inplace=True)
 
     return pd.Series(local_tortuosity)
+
+
+def get_optimal_p(df: pd.DataFrame) -> pd.Series:
+    """Get the optimal parameter p to parametrize a trial trajectory with a L-p curve.
+
+    Note: L-p curves are parametrized by p which control the angularity of the curve.
+    The higher p is the higher the curve is angular (compared to a more rounded curve).
+
+    Parametrization is as follow: (|x|^p/a^p + |y|^p/b^p)^(1/p) = 1
+
+    Args:
+        df (pd.DataFrame): Dataframe containing the coordinates of points, with columns 'x' and 'y'.
+
+    Returns:
+        A pandas.Series containing the optimal p to parametrize the trajectory of the trial to
+        which each timepoint belongs.
+    """
+
+    def _compute_optimal_p(trial_data):
+        """Compute the optimal p for a given trial."""
+        x = trial_data["x"].values
+        y = trial_data["y"].values
+        points = np.vstack((x, y)).T
+
+        # Normalize the points to fit a scaled L-p curve
+        max_norm = np.max(np.linalg.norm(points, axis=1))
+        normalized_points = points / max_norm
+
+        def _loss_function(p: float):
+            """Loss function for normalized L-p curve fitting."""
+            distances = np.power(
+                (
+                    np.abs(normalized_points[:, 0]) ** p
+                    + np.abs(normalized_points[:, 1]) ** p
+                )
+                / 2,
+                1 / p,
+            )
+            return np.sum((distances - normalized_points[:, 1]) ** 2)
+
+        initial_p = 2.0
+        result = scipy.optimize.minimize(_loss_function, initial_p, bounds=[(1, 25)])
+        return result.x[0]
+
+    optimal_p_per_trial = df.groupby(["dataset", "trial"]).apply(_compute_optimal_p)
+    return df.set_index(["dataset", "trial"]).index.map(optimal_p_per_trial)
 
 
 def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
