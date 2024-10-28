@@ -103,7 +103,78 @@ def get_rewarded(df: pd.DataFrame) -> pd.Series:
         belongs to is rewarded and 0 else.
     """
 
-    return df.groupby("trial")["reward"].transform(lambda x: x.max())
+    return df.groupby(["dataset", "trial"])["reward"].transform(lambda x: x.max())
+
+
+def get_distance_to_choice(df: pd.DataFrame, box_df: pd.DataFrame) -> pd.Series:
+    """Compute the distance from each point in a DataFrame to the center of the chosen reward box.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing the coordinates of points, with columns 'x' and 'y'.
+                           The 'x' coordinates may be flipped depending on the 'flip_one_side' column.
+        box_df (pd.DataFrame): DataFrame containing the coordinates of the chosen reward box.
+
+    Returns:
+        A pandas.Series containing the distance to the chosen reward box for each point in `df`.
+    """
+
+    return pd.Series(
+        np.sqrt(
+            ((box_df["r_reward_x"].iloc[0] - (df["x"] * df["flip_one_side"]))) ** 2
+            + (box_df["r_reward_z"].iloc[0] - df["y"]) ** 2
+        )
+    )
+
+
+def get_local_tortuosity(df: pd.DataFrame, window_size: int = 1) -> pd.Series:
+    """Compute the local tortuosity around each timepoint.
+
+    The points to consider around a given point are taken around the point with
+    a window of `window_size` on each side.
+
+    Tortuosity is the ratio between the path length and the direct path between the
+    past and future points determined using the `window_size` around the current point.
+
+    Args:
+        df (pd.DataFrame): Dataframe containing the coordinates of points, with columns 'x' and 'y'.
+        window_size (int): Window size corresponding to the distance to center point to determine
+            the past and future timepoint to consider to compute tortuosity between them.
+
+    Returns:
+        A pandas.Series containing the local tortuosity for each timepoint.
+    """
+    groupby_columns = ["dataset", "trial"]
+
+    # Shift positions to create local windows (shift forward and backward by 1)
+    x_pos_after = df.groupby(groupby_columns)["x"].shift(window_size)
+    y_pos_after = df.groupby(groupby_columns)["y"].shift(window_size)
+    x_pos_before = df.groupby(groupby_columns)["x"].shift(-window_size)
+    y_pos_before = df.groupby(groupby_columns)["y"].shift(-window_size)
+
+    # Calculate total path length in the local window
+    local_path_length = sum(
+        np.sqrt(
+            (df.groupby(groupby_columns)["x"].shift(i) - df["x"]) ** 2
+            + (df.groupby(groupby_columns)["y"].shift(i) - df["y"]) ** 2
+        )
+        + np.sqrt(
+            (df["x"] - df.groupby(groupby_columns)["x"].shift(-i)) ** 2
+            + (df["y"] - df.groupby(groupby_columns)["y"].shift(-i)) ** 2
+        )
+        for i in range(1, window_size + 1)
+    )
+
+    # Calculate direct path length between past and future points
+    local_direct_path = np.sqrt(
+        (x_pos_after - x_pos_before) ** 2 + (y_pos_after - y_pos_before) ** 2
+    )
+    local_direct_path.replace(0, np.nan, inplace=True)
+
+    # Compute tortuosity and handle NaNs
+    local_tortuosity = local_path_length / local_direct_path
+    local_tortuosity.fillna(local_tortuosity.mean(), inplace=True)
+
+    return pd.Series(local_tortuosity)
 
 
 def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
@@ -123,25 +194,6 @@ def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
     """
     group.loc[group.index[0], ["x", "y", "head_dir"]] = np.nan
     return group
-
-
-def calculate_distance_to_reward(df: pd.DataFrame, box_df: pd.DataFrame) -> npt.NDArray:
-    """Calculate the distance from each point in a DataFrame to the center of a reward box.
-
-    Args:
-        df (pd.DataFrame): DataFrame containing the coordinates of points, with columns 'x' and 'y'.
-                           The 'x' coordinates may be flipped depending on the 'flip_one_side' column.
-        box_df (pd.DataFrame): DataFrame containing the coordinates of the reward box centers,
-                               specifically 'right_box_x_center' and 'right_box_z_center'.
-
-    Returns:
-        npt.NDArray: An array of distances to the reward box for each point in `df`.
-    """
-    distance_to_reward = np.sqrt(
-        (box_df["right_box_x_center"] - (df["x"] * df["flip_one_side"])) ** 2
-        + (box_df["right_box_z_center"] - df["y"]) ** 2
-    )
-    return distance_to_reward
 
 
 def create_data_frame(
@@ -364,16 +416,10 @@ def create_data_frame(
 
     df["trial_step"] = df.groupby("trial").cumcount()
 
-    # Choices as string values
-    df["choice"] = df.trial_left_choice.replace([0, 1], ["right", "left"])
-
-    # Distance to reward
     df["flip_one_side"] = df["trial_left_choice"].replace([0, 1], [1, -1])
 
     df.trial = df.trial.astype(int)
     df.aperture = df.aperture.round(2)
-
-    df = df.drop(columns=["first", "last"])
 
     return df, unity_to_physical_arena_size
 
@@ -462,7 +508,7 @@ def get_jshaped_trials(
             - j_shaped (pd.DataFrame): DataFrame containing trials that are classified as 'J-shaped'.
             - wandering (pd.DataFrame): DataFrame containing trials that are classified as 'wandering'.
     """
-    df["is_j_shaped"] = np.where(
+    df.loc[:, "is_j_shaped"] = np.where(
         (df.trial_duration <= threshold_duration)
         & (df.trial_tortuosity <= threshold_tortuosity),
         1,
