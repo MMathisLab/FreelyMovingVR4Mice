@@ -394,3 +394,34 @@ def convert_angles(data: pd.Series, shift: int = 90) -> pd.Series:
         pd.Series: Corrected angles
     """
     return ((data - shift) + 180) % 360 - 180
+
+
+def get_offline_dlc_variables(sync_keypoints: pd.DataFrame) -> pd.DataFrame:
+    """
+    Computes kinematic variables for offline DeepLabCut (DLC) analysis, including
+    head angles and other pose-related metrics, based on synchronized keypoint data.
+
+    Args:
+        sync_keypoints (DataFrame): DataFrame containing keypoint coordinates and
+            time-related columns for synchronized keypoint data. The last three columns
+            should correspond to "pose_time", "step", and "step_time".
+
+    Returns:
+        DataFrame: A DataFrame containing computed kinematic variables with an aligned
+            heading direction. The output DataFrame includes both the computed kinematic
+            variables and the time-related columns from the input.
+    """
+    # Compute all the kinematic variables
+    offline_dlc_variables = compute_head_angles(sync_keypoints.iloc[:, :-3])
+
+    # Add back in the time index
+    offline_dlc_variables[["pose_time", "step", "step_time"]] = sync_keypoints.iloc[
+        :, -3:
+    ]
+
+    # Shift angles so that 0 is aligned with the main screen
+    offline_dlc_variables["heading_dir"] = convert_angles(
+        offline_dlc_variables["heading_dir"], shift=90
+    )
+
+    return offline_dlc_variables
