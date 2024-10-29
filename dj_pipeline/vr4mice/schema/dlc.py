@@ -137,7 +137,7 @@ class SyncDLCKptsDf(dj.Computed):
             sync_kpts = dlc_helpers.sync_keypoint_table(
                 dataset_key=key, keypoint_cuttoff=0.6, filter_window_length=10
             )
-            data = dlc_helpers.df_to_dj(sync_kpts)
+            data = h5_to_dj(dlc_helpers.df_to_dj(sync_kpts))
 
             if (
                 not "camera" in key or not "doe" in key
@@ -212,7 +212,7 @@ class OfflineKinematics(dj.Computed):
                 return None
 
             data = dlc_helpers.get_offline_dlc_variables(sync_keypoints)
-
+            data = data.to_dict(orient="list")
             if (
                 not "camera" in key or not "doe" in key
             ):  # TODO: add allow_direct_insert in arg
