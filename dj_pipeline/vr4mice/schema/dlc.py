@@ -4,9 +4,9 @@ import datajoint as dj
 import numpy as np
 import pandas as pd
 
-from vr4mice.schemas import vr4mice
+from vr4mice.schema import vr4mice
 import vr4mice.analysis.dlc_helpers as dlc_helpers
-from vr4mice.utils import logger, schema_config  
+from vr4mice.utils import logger, schema_config
 
 schema_name = "dlc"
 schema = schema_config.get_schema(schema_name, locals())
@@ -210,9 +210,9 @@ class OfflineKinematics(dj.Computed):
                     f"The SyncDLCKptsDf for could not be returned {self.__class__.__name__} could not be populated for {key}"
                 )
                 return None
-            
+
             data = dlc_helpers.get_offline_dlc_variables(sync_keypoints)
-            
+
             if (
                 not "camera" in key or not "doe" in key
             ):  # TODO: add allow_direct_insert in arg
