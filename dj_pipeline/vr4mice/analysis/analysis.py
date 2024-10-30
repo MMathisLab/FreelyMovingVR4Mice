@@ -176,7 +176,9 @@ def get_local_tortuosity(df: pd.DataFrame, window_size: int = 1) -> pd.Series:
     return pd.Series(local_tortuosity)
 
 
-def get_optimal_p(df: pd.DataFrame) -> pd.Series:
+def get_optimal_p(
+    df: pd.DataFrame, groupby_columns: List[str] = ["dataset", "trial"]
+) -> pd.Series:
     """Get the optimal parameter p to parametrize a trial trajectory with a L-p curve.
 
     Note: L-p curves are parametrized by p which control the angularity of the curve.
@@ -218,8 +220,8 @@ def get_optimal_p(df: pd.DataFrame) -> pd.Series:
         result = scipy.optimize.minimize(_loss_function, initial_p, bounds=[(1, 25)])
         return result.x[0]
 
-    optimal_p_per_trial = df.groupby(["dataset", "trial"]).apply(_compute_optimal_p)
-    return df.set_index(["dataset", "trial"]).index.map(optimal_p_per_trial)
+    optimal_p_per_trial = df.groupby(groupby_columns).apply(_compute_optimal_p)
+    return df.set_index(groupby_columns).index.map(optimal_p_per_trial)
 
 
 def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:

@@ -882,7 +882,11 @@ def plot_time_to_reward(
 
 
 def pairplot_std_decision_point(
-    df: pd.DataFrame, label_parameter: str, ax: Optional[matplotlib.axes.Axes] = None
+    df: pd.DataFrame,
+    label_parameter: str,
+    ax: Optional[matplotlib.axes.Axes] = None,
+    per_mouse: bool = False,
+    cmap: str = "Set2",
 ):
     """Plot the decision point based on a specified label parameter.
 
@@ -890,10 +894,16 @@ def pairplot_std_decision_point(
         df (pd.DataFrame): DataFrame containing the data to plot.
         label_parameter (str): Column label for the parameter to plot.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
+        per_mouse (bool): TODO
     """
     ax = _create_axes(ax=ax, per_aperture=False, num_aperture=1)
 
-    counts = df.groupby(["dataset", "aperture"], as_index=False).std()
+    groupby_cols = ["dataset", "aperture"]
+
+    if per_mouse:
+        groupby_cols.append("mouse_name")
+
+    counts = df.groupby(groupby_cols, as_index=False).std()
 
     counts["count"] = counts[label_parameter]
     counts = pd.DataFrame(counts.reset_index())
@@ -903,11 +913,13 @@ def pairplot_std_decision_point(
         counts=counts,
         label_x="aperture",
         per_day=False,
+        per_mouse=per_mouse,
         alpha=0.2,
         ax=ax,
-        cmap=colors_aperture,
+        cmap=cmap if per_mouse else colors_aperture,
     )
     ax.invert_xaxis()
+    ax.set_ylabel(f"{label_parameter}")
 
     for i in counts.aperture.unique():
         for j in counts.aperture.unique():
@@ -920,7 +932,11 @@ def pairplot_std_decision_point(
 
 
 def pairplot_average_decision_point(
-    df: pd.DataFrame, label_parameter: str, ax: Optional[matplotlib.axes.Axes] = None
+    df: pd.DataFrame,
+    label_parameter: str,
+    ax: Optional[matplotlib.axes.Axes] = None,
+    per_mouse: bool = False,
+    cmap: str = "Set2",
 ):
     """Plot the decision point based on a specified label parameter.
 
@@ -931,7 +947,12 @@ def pairplot_average_decision_point(
     """
     ax = _create_axes(ax=ax, per_aperture=False, num_aperture=1)
 
-    counts = df.groupby(["dataset", "aperture"], as_index=False).mean(numeric_only=True)
+    groupby_cols = ["dataset", "aperture"]
+
+    if per_mouse:
+        groupby_cols.append("mouse_name")
+
+    counts = df.groupby(groupby_cols, as_index=False).mean(numeric_only=True)
 
     if label_parameter == "y":
         counts["count"] = np.abs(counts[label_parameter] - 27)
@@ -946,12 +967,16 @@ def pairplot_average_decision_point(
         counts=counts,
         label_x="aperture",
         per_day=False,
+        per_mouse=per_mouse,
         alpha=0.2,
         ax=ax,
-        cmap=colors_aperture,
+        cmap=cmap if per_mouse else colors_aperture,
     )
     ax.invert_xaxis()
-    ax.set_ylabel(f"{label_parameter}")
+    if label_parameter == "y":
+        ax.set_ylabel(f"Distance to screen (cm)")
+    else:
+        ax.set_ylabel(f"{label_parameter}")
 
     for i in counts.aperture.unique():
         for j in counts.aperture.unique():
