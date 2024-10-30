@@ -309,7 +309,7 @@ def compute_head_angles(filtered_dlc: pd.DataFrame) -> pd.DataFrame:
 
     df = filtered_dlc.apply(_compute_angles, axis=1)
 
-    df.columns=["head_center_x", "head_center_y", "heading_dir", "head_angle"]
+    df.columns = ["head_center_x", "head_center_y", "heading_dir", "head_angle"]
 
     return df
 
