@@ -63,9 +63,9 @@ if __name__ == "__main__":
             {"dataset": "Pheasant_2024-08-28_1"},
         ]
         for t in test_datasets:
-            dlc.DLCProcessor().make(key=t)
-            dlc.DLCKptsDf().make(key=t)
-            dlc.SyncDLCKptsDf().make(key=t)
+            # dlc.DLCProcessor().make(key=t)
+            # dlc.DLCKptsDf().make(key=t)
+            # dlc.SyncDLCKptsDf().make(key=t)
             dlc.OfflineKinematics().make(key=t)
 
     elif mode == "dlc_drop":
@@ -77,9 +77,9 @@ if __name__ == "__main__":
             {"dataset": "Pheasant_2024-08-28_1"},
         ]
         for t in test_datasets:
-            (dlc.DLCProcessor() & t).delete()
-            (dlc.DLCKptsDf() & t).delete()
-            (dlc.SyncDLCKptsDf() & t).delete()
+            # (dlc.DLCProcessor() & t).delete()
+            # (dlc.DLCKptsDf() & t).delete()
+            # (dlc.SyncDLCKptsDf() & t).delete()
             (dlc.OfflineKinematics() & t).delete()
 
     elif mode == "summary_test":

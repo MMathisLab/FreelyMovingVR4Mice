@@ -253,7 +253,7 @@ def get_files_paths(dataset, remote_src=None, local_src="/data", data="/data"):
     return files_info
 
 
-def populate_rig(path="/data/data", gui=False) -> None:
+def populate_rig(path="/data/data", gui=True) -> None:
     """
     Populates database tables with data from files in the specified directory.
 
@@ -336,7 +336,7 @@ def populate_rig(path="/data/data", gui=False) -> None:
             else:  # all datasets combined
                 raw_data = {**raw_data_pickle, **raw_data_npy}
                 # populate all schemas
-                schemas = [base, vr4mice]
+                schemas = [base]  # , vr4mice]
 
             for schema in schemas:
                 # populate all tables
