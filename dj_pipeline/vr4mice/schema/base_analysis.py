@@ -322,9 +322,14 @@ class SummaryPlots(dj.Computed):
             return
 
         if (DataFrame & key) and (BoxDataFrame & key):
-            full_path = vr4mice_summary_plots(
-                key, save_path="/data/summary_plots", database=True
-            )
+            try:
+                full_path = vr4mice_summary_plots(
+                    key, save_path="/data/summary_plots", database=True
+                )
+            except Exception as err:
+                err = f"Error while populating the Summary table: key {key}: err: {err}"
+                logger.warning(err)
+                return None
         else:
             logger.warning(
                 "Populate first DataFrame and BoxDataFrame for "
