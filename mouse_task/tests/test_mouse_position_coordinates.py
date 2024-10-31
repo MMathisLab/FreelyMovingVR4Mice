@@ -57,10 +57,6 @@ class TestPositionCoordinates(unittest.TestCase):
         self.use_dlc = False
         self.prob_block_coherence = 1.0
 
-        # with patch(
-        #     "mouse_task.task_active_sensing.process_config",
-        #     return_value=self.config,
-        # ):
         self.task = ActiveSensingTask(
             teensy=self.teensy,
             monitor=self.monitor,
@@ -226,6 +222,7 @@ class TestPositionCoordinates(unittest.TestCase):
 if __name__ == "__main__":
     import os, json
 
+    # saving game executable location for future use
     if not os.path.exists("./test_config.json"):
         root = tk.Tk()
         root.withdraw()
