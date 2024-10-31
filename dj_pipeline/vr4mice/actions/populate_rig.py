@@ -336,7 +336,7 @@ def populate_rig(path="/data/data", gui=True) -> None:
             else:  # all datasets combined
                 raw_data = {**raw_data_pickle, **raw_data_npy}
                 # populate all schemas
-                schemas = [base]  # , vr4mice]
+                schemas = [base, vr4mice]
 
             for schema in schemas:
                 # populate all tables
