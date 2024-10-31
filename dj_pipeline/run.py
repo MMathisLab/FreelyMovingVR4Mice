@@ -52,7 +52,7 @@ def check_folder_existence(folder_path):
 if __name__ == "__main__":
     config_logger(level="INFO", debug=False)
 
-    mode = sys.argv[1]  
+    mode = sys.argv[1]
 
     connect(tag="")
 
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
         pass
 
-    elif mode == "populate":  
+    elif mode == "populate":
         from vr4mice.actions.populate_rig import populate_rig
 
         path = "/data/data"
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     elif mode == "summary":
         from vr4mice.schema import base_analysis
 
-        base_analysis.SummaryPlots.populate() 
+        base_analysis.SummaryPlots.populate()
 
     elif mode == "dlc":
         # NOTE: populate and analysis have to be run before

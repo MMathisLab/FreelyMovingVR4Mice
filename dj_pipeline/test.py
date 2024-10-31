@@ -24,7 +24,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 if __name__ == "__main__":
     config_logger(level="INFO", debug=False)
 
-    mode = sys.argv[1]  
+    mode = sys.argv[1]
 
     connect(tag="")
 
