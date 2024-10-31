@@ -24,7 +24,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 if __name__ == "__main__":
     config_logger(level="INFO", debug=False)
 
-    mode = sys.argv[1]  # TODO: connect arg deprecate
+    mode = sys.argv[1]  
 
     connect(tag="")
 
@@ -63,9 +63,9 @@ if __name__ == "__main__":
             {"dataset": "Pheasant_2024-08-28_1"},
         ]
         for t in test_datasets:
-            # dlc.DLCProcessor().make(key=t)
-            # dlc.DLCKptsDf().make(key=t)
-            # dlc.SyncDLCKptsDf().make(key=t)
+            dlc.DLCProcessor().make(key=t)
+            dlc.DLCKptsDf().make(key=t)
+            dlc.SyncDLCKptsDf().make(key=t)
             dlc.OfflineKinematics().make(key=t)
 
     elif mode == "dlc_drop":
@@ -77,9 +77,9 @@ if __name__ == "__main__":
             {"dataset": "Pheasant_2024-08-28_1"},
         ]
         for t in test_datasets:
-            # (dlc.DLCProcessor() & t).delete()
-            # (dlc.DLCKptsDf() & t).delete()
-            # (dlc.SyncDLCKptsDf() & t).delete()
+            (dlc.DLCProcessor() & t).delete()
+            (dlc.DLCKptsDf() & t).delete()
+            (dlc.SyncDLCKptsDf() & t).delete()
             (dlc.OfflineKinematics() & t).delete()
 
     elif mode == "summary_test":
@@ -87,10 +87,10 @@ if __name__ == "__main__":
         from vr4mice.analysis.summary_dj import fetch_data
 
         test_datasets = [
-            # {"dataset": "Uguisu_2024-09-06_1"},
-            # {"dataset": "Jacana_2024-08-21_1"},
+            {"dataset": "Uguisu_2024-09-06_1"},
+            {"dataset": "Jacana_2024-08-21_1"},
             {"dataset": "Oribi_2024-08-16_1"},
-            # {"dataset": "Pheasant_2024-08-28_1"},
+            {"dataset": "Pheasant_2024-08-28_1"},
         ]
         for t in test_datasets:
             base_analysis.SummaryPlots().get_path(key=t)
