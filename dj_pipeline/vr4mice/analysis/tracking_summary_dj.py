@@ -2,7 +2,7 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from vr4mice.schema import  dlc
+from vr4mice.schema import dlc
 
 
 def plot_keypoints(
@@ -109,9 +109,9 @@ def plot_keypoints_summary(
         Figure_save_path
     """
     # Get keypoints data
-    k= key["dataset"]
+    k = key["dataset"]
     figure_save_path = f"{save_path}/{k}.png"
-    
+
     keypoints = dlc.DLCKptsDf().get_data(key=key)
     plot_keypoints(
         keypoints,
@@ -123,4 +123,3 @@ def plot_keypoints_summary(
     )
     plt.savefig(figure_save_path, transparent=True)
     return figure_save_path
-
