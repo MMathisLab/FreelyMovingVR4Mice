@@ -96,7 +96,7 @@ if __name__ == "__main__":
             base_analysis.SummaryPlots().get_path(key=t)
             base_analysis.SummaryPlots().get_subtitle(key=t)
             base_analysis.SummaryPlots().make(key=t, send=True)
-            
+
     elif mode == "tracking_summary_test":
         from vr4mice.schema import base_analysis, dlc
 
