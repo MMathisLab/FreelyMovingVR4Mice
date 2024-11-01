@@ -283,7 +283,6 @@ class ActiveSensingTask(UnityTask):
             self.previous = output
         else:
             # print("missed dlc frame")
-            time.sleep(0)
             output = self.previous
         return output.reshape((1, -1))
 
