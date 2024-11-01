@@ -481,7 +481,7 @@ class TrackingSummaryPlots(dj.Computed):
             logger.warning(
                 "Populate first DLC DLCKptsDf for "
                 + str(key)
-                + "; call DLCKptsDf.populate(); (...) or data_fetch(key, database=True)"
+                + "; call DLCKptsDf.populate();"
             )
             return False
 
