@@ -9,8 +9,8 @@ class DLCClient(object):
     def __init__(self, address=("localhost", 6000)):
         self.address = address
         self.reading = True
-        self.input_data = deque()
-        self.previous = deque()  # Using deque for efficient appends
+        self.latest_data = None  
+        self.lock = threading.Lock()
         self.conn = Client(self.address, authkey=b"secret password")
         self.start_read_buffer()
         self.start_time = time.time()
@@ -19,8 +19,7 @@ class DLCClient(object):
         while self.reading:
             try:
                 this_read = self.conn.recv()
-                self.input_data.append(this_read)
-
+                self.latest_data = this_read
             except EOFError:
                 self.reading = False
                 break
@@ -29,23 +28,9 @@ class DLCClient(object):
         threading.Thread(target=self.read_on_thread, daemon=True).start()
 
     def read(self):
-        if len(self.input_data) >= 1:
-
-            this_read = self.input_data.pop()
-            rec_time = time.time()
-            self.input_data = deque()
-            self.previous = this_read
-
-            # print(this_read)
-            # print("read from incoming:", rec_time, this_read)
-            return {"time": rec_time, "vals": this_read, "previous": 0}
-
-        # elif self.previous:
-        #    rec_time, this_read = self.previous.pop()
-        #    rec_time = rec_time
-        # print("read from previous", rec_time, this_read, len(self.previous))
-        #   return {"time": rec_time, "vals": this_read, "previous": 1}
-
+        with self.lock:
+            if self.latest_data is not None:
+                return {"time": time.time(), "vals": self.latest_data, "previous": 0}
         return None
 
     def stop(self):
