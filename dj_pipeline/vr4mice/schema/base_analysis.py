@@ -450,8 +450,8 @@ def parse_git_commit_file(filename="git_commit"):  # TODO(mary): move to helpers
     except FileNotFoundError:
         logger.warning(f"Error: File '{filename}' not found.")
         return None, []
-    
-    
+
+
 @schema
 class TrackingSummaryPlots(dj.Computed):
     definition = """
@@ -475,10 +475,8 @@ class TrackingSummaryPlots(dj.Computed):
             )
             return
 
-        if (dlc.DLCKptsDf & key):
-            full_path = plot_keypoints_summary(
-                key, save_path="/data/summary_plots"
-            )
+        if dlc.DLCKptsDf & key:
+            full_path = plot_keypoints_summary(key, save_path="/data/summary_plots")
         else:
             logger.warning(
                 "Populate first DLC DLCKptsDf for "
@@ -489,8 +487,5 @@ class TrackingSummaryPlots(dj.Computed):
 
         data = {**key, **{"filename": full_path}}
         key = (base.Base() & key).fetch(as_dict=True)[0]
-        
+
         insert_send_email(key, data, TrackingSummaryPlots(), full_path, send=send)
-
-
-
