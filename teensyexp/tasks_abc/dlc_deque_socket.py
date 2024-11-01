@@ -36,12 +36,6 @@ class DLCClient(object):
     def stop(self):
         self.reading = False
 
-    def get_input_data(self):
-        return np.array(list(self.input_data))
-
-    def reset(self):
-        self.input_data.clear()
-
     def close(self):
         self.stop()
         self.conn.close()
