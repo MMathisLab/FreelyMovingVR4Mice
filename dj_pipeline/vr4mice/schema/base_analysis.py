@@ -324,9 +324,14 @@ class SummaryPlots(dj.Computed):
             return
 
         if (DataFrame & key) and (BoxDataFrame & key):
-            full_path = vr4mice_summary_plots(
-                key, save_path="/data/summary_plots", database=True
-            )
+            try:
+                full_path = vr4mice_summary_plots(
+                    key, save_path="/data/summary_plots", database=True
+                )
+            except Exception as err:
+                err = f"Error while populating the Summary table: key {key}: err: {err}"
+                logger.warning(err)
+                return None
         else:
             logger.warning(
                 "Populate first DataFrame and BoxDataFrame for "
@@ -336,18 +341,24 @@ class SummaryPlots(dj.Computed):
             return False
 
         data = {**key, **{"filename": full_path}}
-        key = (base.Base() & key).fetch(as_dict=True)[0]
-        insert_send_email(key, data, SummaryPlots(), full_path, send=send)
+        if base.Base() & key:
+            key = (base.Base() & key).fetch(as_dict=True)[0]
+            insert_send_email(key, data, SummaryPlots(), full_path, send=send)
+        else:
+            logger.info(
+                f"base schemas is empty for ${key}, can'r send the email: insert only"
+            )
+            self.insert1(data, allow_direct_insert=True)
 
     def get_name(self, key):
 
         from vr4mice.schema import base
 
-        session_info = (base.Base() & key).fetch(as_dict=True)[0]
-        if len(session_info) > 0:
-            name = f'{session_info["mouse_name"]}_day{session_info["day"]}_attempt{session_info["attempt"]}'
-        else:
-            name = key["dataset"]
+        name = key["dataset"]
+        if base.Base() & key:
+            session_info = (base.Base() & key).fetch(as_dict=True)[0]
+            if len(session_info) > 0:
+                name = f'{session_info["mouse_name"]}_day{session_info["day"]}_attempt{session_info["attempt"]}'
 
         return name
 
