@@ -109,8 +109,9 @@ def plot_keypoints_summary(
         Figure_save_path
     """
     # Get keypoints data
-    figure_save_path = save_path + key["dataset"] + ".png"
-    print(figure_save_path)
+    k= key["dataset"]
+    figure_save_path = f"{save_path}/{k}.png"
+    
     keypoints = dlc.DLCKptsDf().get_data(key=key)
     plot_keypoints(
         keypoints,

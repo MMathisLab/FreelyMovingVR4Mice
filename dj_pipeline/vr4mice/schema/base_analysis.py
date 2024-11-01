@@ -475,7 +475,7 @@ class TrackingSummaryPlots(dj.Computed):
             )
             return
 
-        if (DataFrame & key) and (BoxDataFrame & key):
+        if (dlc.DLCKptsDf & key):
             full_path = plot_keypoints_summary(
                 key, save_path="/data/summary_plots"
             )
@@ -489,36 +489,8 @@ class TrackingSummaryPlots(dj.Computed):
 
         data = {**key, **{"filename": full_path}}
         key = (base.Base() & key).fetch(as_dict=True)[0]
+        
         insert_send_email(key, data, TrackingSummaryPlots(), full_path, send=send)
 
 
-def insert_send_email(key, tuple_, table, filename, send=False):
-    from base_schemas.schemas import exp, mice
-    
-    try:
-        user = (exp.Session() & key).fetch("experimenter_name", as_dict=True)[0]
-        if len(user) > 0:
-            addr = (exp.Experimenter & user).fetch("mail")[0]
-            if len(addr) == 0:
-                addr == "default"
-        else:
-            addr = "default"
 
-    except dj.DataJointError as e:
-        logger.warning(f"Error fetching experimenter email: {e}")
-        addr = None
-
-    try:
-        table.insert1(tuple_, allow_direct_insert=True)
-        logger.info(f"Summary plots populated successfully for {key}")
-        if send:
-            logger.info(f"Sending email now for {key}")
-            email(key, addr, filename, error=False, message=None)
-        else:
-            logger.info(f"Send flag is false for {key}. No email.")
-
-    except Exception as err:
-        err = f"Error while populating the Summary table: key {key}: err: {err}"
-        logger.warning(err)
-        if send:
-            email(key, addr, None, error=True, message=err)
