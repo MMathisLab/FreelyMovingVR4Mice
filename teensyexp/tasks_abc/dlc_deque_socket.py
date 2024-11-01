@@ -30,7 +30,7 @@ class DLCClient(object):
     def read(self):
         with self.lock:
             if self.latest_data is not None:
-                return {"time": time.time(), "vals": self.latest_data, "previous": 0}
+                return {"time": time.time(), "vals": self.latest_data}
         return None
 
     def stop(self):
