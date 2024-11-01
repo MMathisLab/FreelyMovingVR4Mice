@@ -383,4 +383,3 @@ def vr4mice_summary_plots(
     plt.close()
 
     return full_path
-
