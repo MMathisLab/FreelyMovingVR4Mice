@@ -4,13 +4,7 @@ from typing import Dict
 
 import matplotlib.pyplot as plt
 import seaborn as sns
-import vr4mice.analysis.analysis as analysis
-import vr4mice.analysis.plotting as plotting
 
-from vr4mice.analysis.analysis import style
-
-import vr4mice.analysis.utils as utils
-from vr4mice.schema import base_analysis, vr4mice
 from vr4mice.utils.logger import Logger
 
 logger = Logger.get_logger()
@@ -60,27 +54,28 @@ def fetch_data(key: Dict, database: bool):
             logger.warning(f"An error occurred: {e}")
 
         try:
-            df_box_output = base_analysis.BoxDataFrame().get_data(key)
-            if df_box_output is not False or df_box_output is not None:
+            box_df_output = base_analysis.BoxDataFrame().get_data(key)
+            if box_df_output is not False or box_df_output is not None:
                 logger.info(f"Box data fetched for {key}")
             else:
                 logger.info(f"Populating BoxDataFrame data for {key}")
-                df_box_output = base_analysis.BoxDataFrame().populate(key)
-                df_box_output = base_analysis.BoxDataFrame().get_data(key)
-                if df_box_output is not False or df_box_output is not None:
+                box_df_output = base_analysis.BoxDataFrame().populate(key)
+                box_df_output = base_analysis.BoxDataFrame().get_data(key)
+                if box_df_output is not False or box_df_output is not None:
                     logger.info("Data populated and fetched for " + str(key))
                 else:
                     logger.warning(f"Data population failed for {key}")
         except Exception as e:
             logger.warning(f"An error occurred: {e}")
     else:
-        df, interp = analysis.create_data_frame(key, iti=False)
-        df["trial_rewarded"] = analysis.get_rewarded(
-            df
-        )  # Note(mary): that's bad, that it's the entire df that is the arg!
-        df_box_output = analysis.get_df_box(key, df, interp=interp)
+        from vr4mice.analysis import analysis
 
-    return df, df_box_output
+        df, unity_to_physical_arena_size = analysis.create_data_frame(key, iti=False)
+        box_df_output = analysis.get_box_df(
+            key, df, unity_to_physical_arena_size=unity_to_physical_arena_size
+        )
+
+    return df, box_df_output
 
 
 def get_path(key: Dict, base: str, ext: str = ".png") -> pathlib.Path:
@@ -134,9 +129,13 @@ def vr4mice_summary_plots(
     Returns:
         str: The full path of the saved summary plot.
     """
-    style()
-    df, df_box_output = fetch_data(key, database)
+    from vr4mice.analysis import analysis, plotting, utils
 
+    analysis.style()
+    df, box_df_output = fetch_data(key, database)
+
+    df = df.infer_objects()
+    df["dataset"] = key["dataset"]
     df = df[df.iti == 0].copy()
 
     # NOTE: so that the head_dir is align to the screen
@@ -173,7 +172,7 @@ def vr4mice_summary_plots(
     ## Display all trials
     plotting.plot_session(
         df=df,
-        df_box=df_box_output,
+        box_df=box_df_output,
         per_aperture=False,
         per_side=True,
         ax=ax1,
@@ -182,7 +181,7 @@ def vr4mice_summary_plots(
     ## Display all rewarded trials on left side
     plotting.plot_session(
         df=df[(df.trial_rewarded == 1) & (df.trial_left_choice == 1)],
-        df_box=df_box_output,
+        box_df=box_df_output,
         per_aperture=False,
         per_side=True,
         ax=ax2,
@@ -191,7 +190,7 @@ def vr4mice_summary_plots(
     ## Display all rewarded trials on right side
     plotting.plot_session(
         df=df[(df.trial_rewarded == 1) & (df.trial_right_choice == 1)],
-        df_box=df_box_output,
+        box_df=box_df_output,
         per_aperture=False,
         per_side=True,
         ax=ax3,
@@ -206,9 +205,9 @@ def vr4mice_summary_plots(
         data=j_shaped_df,
         x="bin_centers",
         y="x",
-        hue="choice" if num_apertures <= 2 else "aperture",
+        hue="trial_right_choice" if num_apertures <= 2 else "aperture",
         palette=plotting.colors_choice if num_apertures <= 2 else "viridis",
-        style="aperture" if num_apertures <= 2 else "choice",
+        style="aperture" if num_apertures <= 2 else "trial_right_choice",
         errorbar="se",
         ax=ax10,
     )
@@ -253,7 +252,7 @@ def vr4mice_summary_plots(
     plotting.plot_time_to_reward(
         df,
         label_x="aperture",
-        xticks=list(df.aperture.unique()),
+        xticks=list(df.aperture.astype(float).sort_values().astype(str).unique()),
         ax=time_plots_aperture,
     )
     # per trial rewarded
@@ -286,8 +285,7 @@ def vr4mice_summary_plots(
     interpolated_df = utils.interpolate(
         df,
         n_points=200,
-        value_columns=["trial_left_choice", "trial_right_choice", "trial_rewarded"]
-        + columns,
+        value_columns=["trial_right_choice", "trial_rewarded"] + columns,
     )
     interpolated_df["trial_step"] = interpolated_df.groupby(
         ["dataset", "trial"]
@@ -304,7 +302,6 @@ def vr4mice_summary_plots(
         errorbar="se",
         ax=velocity_plot_aperture,
     )
-    velocity_plot_aperture.legend([], [], frameon=False)
     velocity_plot_aperture.set_ylabel("Speed / Aperture")
     velocity_plot_aperture.set_xlabel("Trial progression")
     # per trial rewarded
@@ -318,7 +315,6 @@ def vr4mice_summary_plots(
         errorbar="se",
         ax=velocity_plot_reward,
     )
-    velocity_plot_reward.legend([], [], frameon=False)
     velocity_plot_reward.set_ylabel("Speed / Reward")
     velocity_plot_reward.set_xlabel("Trial progression")
 
@@ -328,11 +324,10 @@ def vr4mice_summary_plots(
         x="trial_length",
         y="velocity",
         palette=plotting.colors_choice,
-        hue="trial_left_choice",
+        hue="trial_right_choice",
         errorbar="se",
         ax=velocity_plot_choice,
     )
-    velocity_plot_choice.legend([], [], frameon=False)
     velocity_plot_choice.set_ylabel("Speed / Choice")
     velocity_plot_choice.set_xlabel("Trial progression")
 
@@ -367,6 +362,8 @@ def vr4mice_summary_plots(
     plotting.plot_choices_by_trial(df, ax=ax9)
 
     if database:
+        from vr4mice.schema import base_analysis
+
         full_path = base_analysis.SummaryPlots().get_path(
             key=key, base=save_path, ext=".png"
         )

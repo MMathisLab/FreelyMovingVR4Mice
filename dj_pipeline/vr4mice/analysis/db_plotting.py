@@ -3,25 +3,18 @@
     It fetches the columns from database tables that are only required for a function,
     Instead of fetching the whole table that is heavy as contians multiple longblobs
 """
-from typing import Optional, Tuple
+import inspect
+from typing import List, Optional, Tuple
+
 import matplotlib as mpl
-import matplotlib.cm as cm
 import matplotlib.collections
 import matplotlib.pyplot as plt
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
-import scipy.stats as stats
-import seaborn as sns
-from matplotlib.collections import PathCollection
-from matplotlib.transforms import Affine2D
-from scipy.interpolate import CubicSpline
 
 from vr4mice.analysis import plotting
-from vr4mice.schema import vr4mice, base_analysis, dlc
-from typing import List
+from vr4mice.schema import base_analysis
 from vr4mice.utils.logger import Logger
-import inspect
 
 logger = Logger.get_logger()
 
@@ -80,6 +73,7 @@ def plot_all_boxes(ax, datasets_keys: List = []):
 
     Args:
         ax (matplotlib.axes.Axes): A matplotlib Axes object to plot the boxes on.
+        datasets_keys: TODO
     """
     start_box = plot_box_rectangle(
         box_label="tt", edgecolor="#009B9E", datasets_keys=datasets_keys
@@ -216,9 +210,6 @@ def plot_rewards(
     ax: Optional[matplotlib.axes.Axes] = None,
     cmap: str = "Set1",
 ):
-
-    # columns = ["dataset", "trial_rewarded", "aperture", "trial"]
-
     if len(datasets_keys) == 0:
         df = base_analysis.DataFrame().get_all_rewarded()
     else:
@@ -296,10 +287,10 @@ def plot_init_position_histogram(
 
     if len(datasets_keys) == 0:
         df = base_analysis.DataFrame().get_all_data(columns_df)
-        df_box = base_analysis.BoxDataFrame().get_all_data(columns_bx)
+        box_df = base_analysis.BoxDataFrame().get_all_data(columns_bx)
     else:
         df_data = []
-        df_box = []
+        box_df = []
         for key in datasets_keys:
             key = {"dataset": key}
             df_data_tmp = base_analysis.DataFrame().get_data(key, columns_df)
@@ -311,22 +302,22 @@ def plot_init_position_histogram(
 
             df_data.append(df_data_tmp)
 
-            df_box_tmp = base_analysis.BoxDataFrame().get_data(
+            box_df_tmp = base_analysis.BoxDataFrame().get_data(
                 key=key, columns=columns_bx
             )
 
-            if df_box_tmp is False or df_box_tmp is None:
+            if box_df_tmp is False or box_df_tmp is None:
                 logger.warning(
                     f"Warning in function: {current_function}: {key} is missing in BoxDataFrame table."
                 )
                 return False
 
-            df_box.append(df_box_tmp)
+            box_df.append(box_df_tmp)
 
         df = pd.concat(df_data, ignore_index=True)
-        df_box = pd.concat(df_box, ignore_index=True)
+        box_df = pd.concat(box_df, ignore_index=True)
 
-    if df.empty or df_box.empty:
+    if df.empty or box_df.empty:
         current_function = inspect.currentframe().f_code.co_name
         logger.warning(
             f"Warning in function: {current_function}: BoxDataFrame is empty."
@@ -334,7 +325,7 @@ def plot_init_position_histogram(
         return False
 
     return plotting.plot_init_position_histogram(
-        df, df_box, ax, bins, cmap, vmax, is_colorbar, is_density
+        df, box_df, ax, bins, cmap, vmax, is_colorbar, is_density
     )
 
 
