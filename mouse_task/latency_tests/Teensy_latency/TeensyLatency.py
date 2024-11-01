@@ -16,10 +16,14 @@ class TeensyLatency():
 
     def read_on_thread(self):
         while self.reading_teensy == True:
-            line = self.ser.readline().decode("utf-8").rstrip()
-            now = time.time()  # Current time
-            self.input_data.append(float(line))
-            self.input_data_time.append(now)
+            try:
+                line = self.ser.readline().decode("utf-8").rstrip()
+                now = time.time()  # Current time
+                self.input_data.append(float(line))
+                self.input_data_time.append(now)
+            except:
+                self.close_serial()
+                self.reading =False
             
             
 
