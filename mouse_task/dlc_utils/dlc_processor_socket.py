@@ -10,6 +10,7 @@ from collections import deque
 import numpy as np
 from dlclive import Processor
 from math import sqrt, acos, atan2, copysign, pi, degrees
+from .processor_utils.signal_generation import get_signal
 
 class MyProcessor_socket(Processor):
     def __init__(self, signal_delay = 10, signal_type ="pulse", freq =5):
@@ -55,12 +56,12 @@ class MyProcessor_socket(Processor):
             head_angle = 0
             
         self.curr_time = time.time()
-        self.curr_signal = self.get_signal(curr_time = self.curr_time, st=self.start_time,
+        self.curr_signal = get_signal(curr_time = self.curr_time, st=self.start_time,
                                            freq = self.signal_freq, 
                                            delay=self.signal_delay,  
                                            signal_type=self.signal_type)
         
-        self.curr_step + self.curr_step + 1
+        self.curr_step = self.curr_step + 1
 
         heading = atan2(body_axis[1], body_axis[0])
         heading = degrees(heading)
@@ -82,45 +83,6 @@ class MyProcessor_socket(Processor):
         self.conn.send([time.time(), vals [0], vals [1], vals [2], vals [3], vals [4]])
      
         return pose
-    
-
-    def get_signal(self, signal_type, curr_time, st, freq, delay):
-        if signal_type == "pulse":
-            curr_signal = self.get_nhz_pulse(curr_time=curr_time, st=st, freq=freq, delay=delay)
-        if signal_type == "sin":
-            curr_signal = self.get_sin_wave(curr_time=curr_time, st=st, freq=freq, delay=delay)
-        if signal_type == "flip":
-            curr_signal = self.flip_every_frame(curr_time=curr_time, st=st, delay=delay)
-        return(curr_signal)
-
-    
-    def get_nhz_pulse(self, curr_time, st, freq, delay):
-        if (curr_time - st) < delay:
-            curr_signal = 0
-        else:
-            curr_signal = (np.sign(np.sin(freq*np.pi*time.time()))+1)/2
-            #print(curr_signal)
-            #self.curr_signal = (np.sin((self.curr_step) * .1) + 1) / 2
-        return(curr_signal)      
-
-    def get_sin_wave(self, curr_time, st, delay, freq):
-        if (curr_time - st) < delay:
-            curr_signal = 0
-        else:
-            #curr_signal = (np.sign(np.sin(5*np.pi*time.time()))+1)/2
-            curr_signal = np.round((np.sin((self.curr_time*freq)) + 1)/ 4,4)
-            #print(curr_signal)
-        return(curr_signal)
-    
-    def flip_every_frame(self, curr_time, st, delay):
-        if (curr_time - st) < delay:
-            curr_signal = 0
-        else:
-            if self.curr_signal == 0:
-                curr_signal = 1
-            else:
-                curr_signal = 0
-        return(curr_signal)
         
     
     def save(self, file=None):

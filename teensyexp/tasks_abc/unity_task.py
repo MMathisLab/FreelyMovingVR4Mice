@@ -273,8 +273,6 @@ class UnityTask(Task):
         """
         self.set_channel()
         self.env.reset()
-        step_result = self.get_step_result()
-        self.state = step_result.obs[self.vec_obs_ind]
         self.ep_reward = 0
         self.episode_start_time = self.cur_time
 
