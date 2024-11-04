@@ -1,11 +1,79 @@
 import bisect
 import math
-from typing import List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import scipy.signal
+
+
+def df_to_dj(df: pd.DataFrame) -> Dict:
+    """Converts a DataFrame to a dictionary format for data handling.
+
+    This function is specifically for converting a DataFrame containing DLC
+    data into a DataJoint-compatible dictionary.
+
+    Args:
+        df (pd.DataFrame): The DataFrame to convert.
+
+    Returns:
+        dict: A dictionary containing:
+            - "data": Numpy array of the DataFrame data.
+            - "headers": List of column headers.
+            - "scorer" (optional): The unique scorer name if multi-index has a "scorer" level.
+    """
+    dj_col = dict()
+    dj_col["data"] = df.to_numpy()
+    headers = df.columns
+    dj_col["headers"] = list(headers)
+
+    if df.columns.nlevels > 2:
+        dj_col["scorer"] = headers.get_level_values("scorer").unique()[0]
+
+    return dj_col
+
+
+def h5_to_dj(h5_path: str) -> Dict:
+    """Reads data from an HDF5 file and converts it to a dictionary format.
+
+    Args:
+        h5_path (str): The path to the HDF5 file.
+
+    Returns:
+        dict: A dictionary representation of the data.
+    """
+    df = pd.read_hdf(h5_path)
+    return df_to_dj(df)
+
+
+def dj_to_df(
+    data: npt.NDArray, headers: List[Union[str, Tuple[str]]], scorer
+) -> pd.DataFrame:
+    """Converts a dictionary format back to a DataFrame.
+
+    This function is specifically for retrieving dlc raw data stored in
+    datajoint tables.
+
+    Args:
+        data (Any): The data to convert (should be in a compatible format).
+        headers (List[Tuple[str]]): Column headers for the DataFrame.
+        scorer (str): Specifies the model that was used, along with scorer of
+                    the data if applicable.
+
+    Returns:
+        pd.DataFrame: A DataFrame constructed from the provided data and headers.
+    """
+    df = pd.DataFrame(data=data, columns=headers)
+
+    if scorer:
+        levels = ["scorer", "bodyparts", "coords"]
+    else:
+        levels = ["bodyparts", "coords"]
+
+    df = pd.DataFrame(df, columns=pd.MultiIndex.from_tuples(headers, names=levels))
+    df = df.copy()
+    return df
 
 
 def _sync_dlc_with_game(game_data: pd.DataFrame, dlc_df: pd.DataFrame) -> pd.DataFrame:
@@ -239,11 +307,9 @@ def compute_head_angles(filtered_dlc: pd.DataFrame) -> pd.DataFrame:
         x, y, heading_angle, head_angle, _, _ = _compute_single_heading_angle(row[:-2])
         return pd.Series([x, y, heading_angle, head_angle])
 
-    results = filtered_dlc.apply(_compute_angles, axis=1)
+    df = filtered_dlc.apply(_compute_angles, axis=1)
 
-    df = pd.DataFrame(
-        results, columns=["head_center_x", "head_center_y", "heading_dir", "head_angle"]
-    )
+    df.columns = ["head_center_x", "head_center_y", "heading_dir", "head_angle"]
 
     return df
 
@@ -311,3 +377,49 @@ def compute_circular_angular_velocity(
     angular_velocity = cos_angles[:-1] * d_sin - sin_angles[:-1] * d_cos
 
     return np.insert(angular_velocity, 0, 0)
+
+
+def convert_angles(data: pd.Series, shift: int = 90) -> pd.Series:
+    """
+    Shifts angles and scales range between -180 and +180.
+    This function is used to align angles to the main monitor in the arena.
+
+    Args:
+        data (pd.Series): contains an angle in degrees for each time step
+        shift (int, optional): How much you would like to shift the angle by. Defaults to 90.
+
+    Returns:
+        pd.Series: Corrected angles
+    """
+    return ((data - shift) + 180) % 360 - 180
+
+
+def get_offline_dlc_variables(sync_keypoints: pd.DataFrame) -> pd.DataFrame:
+    """
+    Computes kinematic variables for offline DeepLabCut (DLC) analysis, including
+    head angles and other pose-related metrics, based on synchronized keypoint data.
+
+    Args:
+        sync_keypoints (DataFrame): DataFrame containing keypoint coordinates and
+            time-related columns for synchronized keypoint data. The last three columns
+            should correspond to "pose_time", "step", and "step_time".
+
+    Returns:
+        DataFrame: A DataFrame containing computed kinematic variables with an aligned
+            heading direction. The output DataFrame includes both the computed kinematic
+            variables and the time-related columns from the input.
+    """
+    # Compute all the kinematic variables
+    offline_dlc_variables = compute_head_angles(sync_keypoints.iloc[:, :-3])
+
+    # Add back in the time index
+    offline_dlc_variables[["pose_time", "step", "step_time"]] = sync_keypoints.iloc[
+        :, -3:
+    ]
+
+    # Shift angles so that 0 is aligned with the main screen
+    offline_dlc_variables["heading_dir"] = convert_angles(
+        offline_dlc_variables["heading_dir"], shift=90
+    )
+
+    return offline_dlc_variables

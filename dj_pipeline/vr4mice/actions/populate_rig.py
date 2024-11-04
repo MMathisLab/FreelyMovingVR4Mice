@@ -255,7 +255,7 @@ def get_files_paths(dataset, remote_src=None, local_src="/data", data="/data"):
     return files_info
 
 
-def populate_rig(path="/data/data", gui=False) -> None:
+def populate_rig(path="/data/data", gui=True) -> None:
     """
     Populates database tables with data from files in the specified directory.
 
