@@ -1,4 +1,5 @@
 from base_schemas.schemas import exp, mice
+
 from vr4mice.actions.helpers_dj import default, get_session_incr, no_value
 
 """
@@ -28,8 +29,8 @@ session = [
     "anesthesia_name",
     "opto_name",
     "task_name",
-    "force_field_name",
-    "joystick_name",
+    # "force_field_name",
+    # "joystick_name",
     "session_notes",
 ]
 

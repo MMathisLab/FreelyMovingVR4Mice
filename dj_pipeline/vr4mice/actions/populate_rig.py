@@ -3,8 +3,10 @@ import pickle
 import re
 from datetime import datetime
 from pathlib import Path
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+
 from vr4mice.actions.keys2tables_base import base
 from vr4mice.actions.keys2tables_vr4mice import vr4mice
 from vr4mice.utils.logger import Logger
@@ -253,7 +255,7 @@ def get_files_paths(dataset, remote_src=None, local_src="/data", data="/data"):
     return files_info
 
 
-def populate_rig(path="/data/data", gui=False) -> None:
+def populate_rig(path="/data/data", gui=True) -> None:
     """
     Populates database tables with data from files in the specified directory.
 

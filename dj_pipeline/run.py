@@ -52,21 +52,16 @@ def check_folder_existence(folder_path):
 if __name__ == "__main__":
     config_logger(level="INFO", debug=False)
 
-    mode = sys.argv[1]  # TODO: connect arg deprecate
+    mode = sys.argv[1]
 
     connect(tag="")
-
-    # if mode == "set_mouse":
-    #    from test.generators.fake_mice import insert_fake_mouse
-    #
-    #    insert_fake_mouse(name="Barracuda")
 
     if mode == "connect":
         from vr4mice.schema import vr4mice, base_analysis, dlc, base
 
         pass
 
-    elif mode == "populate":  # TODO: gemeral populate and split in func
+    elif mode == "populate":
         from vr4mice.actions.populate_rig import populate_rig
 
         path = "/data/data"
@@ -84,7 +79,9 @@ if __name__ == "__main__":
         base_analysis.GitCommit().populate()
 
     elif mode == "summary":
-        base_analysis.SummaryPlots.populate(send=False)
+        from vr4mice.schema import base_analysis
+
+        base_analysis.SummaryPlots.populate()
 
     elif mode == "dlc":
         # NOTE: populate and analysis have to be run before

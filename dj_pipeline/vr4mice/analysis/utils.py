@@ -1,21 +1,10 @@
 from typing import List, Optional
-
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import scipy.interpolate
 import umap
 from sklearn.decomposition import PCA
-
-"""
-Color codes:
-    - left box: purple: '#5C0A72'
-    - right box: orange: '#FD672C'
-    - center box: blue: '#009B9E'
-    
-    - SET1 colormap for the apertures, 
-    4.3 = '#EC8788', 12 = '#96B9D6'
-"""
 
 
 def create_bins(
@@ -182,7 +171,7 @@ def cluster(
 
 
 def compute_start_position(
-    df: pd.DataFrame, df_box: pd.DataFrame, n_bins: Optional[int] = 3
+    df: pd.DataFrame, box_df: pd.DataFrame, n_bins: Optional[int] = 3
 ) -> pd.DataFrame:
     """Add a column `x_init_bin_center` to the dataframe.
 
@@ -193,7 +182,7 @@ def compute_start_position(
             the trial.
     """
 
-    start, end = df_box["tt_box_x_min"], df_box["tt_box_x_max"]
+    start, end = box_df["tt_box_x_min"], box_df["tt_box_x_max"]
     bin_edges = np.linspace(start, end, n_bins + 1)
     bin_midpoints = (bin_edges[:-1] + bin_edges[1:]) / 2
 
