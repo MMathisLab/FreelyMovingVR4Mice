@@ -174,10 +174,10 @@ class TestPositionCoordinates(unittest.TestCase):
         data = self.task.get_data()
         self.task.stop()
 
-        plot_trajectories(data)
-
         with open("./data.pkl", "wb") as handle:
             pkl.dump(data, handle, protocol=pkl.HIGHEST_PROTOCOL)
+
+        plot_trajectories(data)
 
     def test_data_integrity(self):
         with open("./data.pkl", "rb") as handle:
