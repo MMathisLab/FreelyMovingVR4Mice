@@ -1,34 +1,26 @@
 import copy
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-import plotting
+from vr4mice.analysis import plotting 
 import sklearn
 from matplotlib.collections import LineCollection
 from sklearn.model_selection import LeaveOneGroupOut
 
 
 def predict_decision(
-    df, label: str = "norm_x", n_splits: int = 10, per_mouse: bool = False
+    df,
+    label: Union[List[str]] = "norm_x",
+    n_splits: int = 10,
+    per_mouse: bool = False,
+    max_iter: int = 100,
+    scale_data: bool = True,
 ) -> Tuple[pd.DataFrame, npt.NDArray]:
-    """Predict the decision of the animal based on the `label` data, through a logistic regression.
-
-    Example:
-    ```
-    label = ["norm_x", "y", "heading_dir", "head_angle", "trial_tortuosity", "trial_init_x",
-            "trial_length", "trial_init_y", "aperture"]
-    df["aperture"] = (df["aperture"] > 7).astype(int)
-
-    df, clf = regression.predict_decision(df, label=label)
-
-    names = ["x", "y", "head", "body",  "tort", "init_x", "length", "init_y", "aperture"]
-    plt.figure(figsize=(20,8))
-    plt.bar(names, clf.coef_[0,:])
-    ```
+    """Predict the animal's decision based on the `label` data, through a logistic regression.
 
     Args:
         df: The dataframe.
@@ -40,22 +32,36 @@ def predict_decision(
     Returns:
         The initial dataframe with an extra `pred` column, containing the probability that the
         animal went to the right.
+
+    Example:
+        ```
+        label = ["norm_x", "y", "heading_dir", "head_angle", "trial_tortuosity", "trial_init_x",
+                "trial_length", "trial_init_y", "aperture"]
+        df["aperture"] = (df["aperture"] > 7).astype(int)
+        df, clf = regression.predict_decision(df, label=label)
+        names = ["x", "y", "head", "body",  "tort", "init_x", "length", "init_y", "aperture"]
+        plt.figure(figsize=(20,8))
+        plt.bar(names, clf.coef_[0,:])
+        ```
     """
 
     data = df[label].values
-    labels = df.trial_L_choice.values
+    labels = df.trial_left_choice.values
 
     if not isinstance(label, list):
         data = data.reshape(-1, 1)
     pred = np.empty((data.shape[0], 2))
     scores = np.empty((data.shape[0]))
-    model = sklearn.linear_model.LogisticRegression()
+    model = sklearn.linear_model.LogisticRegression(max_iter=max_iter)
+
+    if scale_data:
+        data = sklearn.preprocessing.StandardScaler().fit_transform(data)
 
     if per_mouse:
-        sessions = df.session.values
+        sessions = df.dataset.values
         coefs = np.empty((len(np.unique(sessions)), len(label) + 1))
 
-        logo = LeaveOneGroupOut()
+        logo = sklearn.model_selection.LeaveOneGroupOut()
         for i, (train_index, test_index) in enumerate(
             logo.split(data, labels, sessions)
         ):

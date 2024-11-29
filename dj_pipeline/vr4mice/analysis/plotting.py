@@ -735,7 +735,7 @@ def plot_rewards(
         stats = pd.DataFrame(
             zip(
                 counts.groupby("aperture")["count"].mean(),
-                counts.groupby("aperture")["count"].sem(),
+                counts.groupby("aperture")["count"].std(),
             ),
             columns=["mean", "sem"],
             index=counts.groupby("aperture")["count"].mean().index,
@@ -743,10 +743,10 @@ def plot_rewards(
     else:
         stats = (
             counts["count"].mean(),
-            counts["count"].sem(),
+            counts["count"].std(),
         )
         ax.hlines(xmin=-0.5, xmax=0.5, y=0.7, color="purple", linestyles="dashed")
-    # print(stats)
+    return(counts)
 
 
 def plot_time_to_reward(

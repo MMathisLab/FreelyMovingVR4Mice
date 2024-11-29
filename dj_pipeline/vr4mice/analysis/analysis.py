@@ -37,7 +37,7 @@ def style():
             "xtick.labelsize": font_size,
             "ytick.labelcolor": font_color,
             "ytick.labelsize": font_size,
-            "font.weight": "bold",
+            "font.weight": "regular",
         }
     )
 
