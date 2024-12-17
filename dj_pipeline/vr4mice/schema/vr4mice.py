@@ -1,3 +1,4 @@
+import os
 import datajoint as dj
 import numpy as np
 
@@ -84,7 +85,7 @@ class Labels(dj.Lookup):
     """
 
     contents = [
-        # [0, "example_label"],  #
+        # [0, "example_label"],  # auto fill during Groups manual populate (if doesn't exist)
     ]
 
     @classmethod
@@ -124,6 +125,35 @@ class Groups(dj.Manual):
             err = f"Error while populating the Groups table: key: {dataset} {label_idx}\n {err}"
             logger.warning(err)
 
+
+@schema 
+class Labs(dj.Lookup):
+    definition = """
+    idx: int
+    ---
+    lab: varchar(128)
+    """
+
+    contents = [
+        [0, "test"], 
+        [1, "mathis-lab"],
+        [2, "tolias-lab"],
+        [3, "cris-lab"]
+    ]
+
+@schema
+class Collab(dj.Computed):
+    definition = """
+    -> Dataset
+    ---
+    -> Labs
+    """
+    
+    def make(self, key, lab=os.environ["DJ_LAB"]):
+        lab = f"lab='{lab}'"
+        idx = (Labs() & lab).fetch("idx", as_dict=True)[0]
+        data = {**key, **idx}
+        self.insert1(data)
 
 @schema
 class Video(dj.Manual):
