@@ -334,9 +334,8 @@ class SummaryPlots(dj.Computed):
                 return None
         else:
             logger.warning(
-                "Populate first DataFrame and BoxDataFrame for "
-                + str(key)
-                + "; call DataFrame.populate(); BoxDataFrame.populate(); (...) or data_fetch(key, database=True)"
+                f"Populate first DataFrame and BoxDataFrame for {key}; \
+                        call DataFrame.populate(); BoxDataFrame.populate(); (...) or data_fetch(key, database=True)"
             )
             return False
 
