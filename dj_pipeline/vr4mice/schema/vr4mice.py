@@ -126,56 +126,6 @@ class Groups(dj.Manual):
 
 
 @schema
-class Labels(dj.Lookup):
-    definition = """
-    idx: int
-    ---
-    label: varchar(128)
-    """
-
-    contents = [
-        # [0, "example_label"],  #
-    ]
-
-    @classmethod
-    def get_next_idx(cls):
-        if not cls.fetch("idx"):
-            return 0
-        current_max = cls.fetch("idx").max()
-        return current_max + 1 if current_max is not None else 0
-
-
-@schema
-class Groups(dj.Manual):
-    definition = """
-    -> Dataset
-    -> Labels
-    """
-
-    def add(self, dataset, label):
-        try:
-            key = f"dataset='{dataset}'"
-            a = (Dataset & key).fetch()
-            if a.size == 0:
-                logger.warning(
-                    f"No Dataset entry found for {dataset}: can't populate Groups table."
-                )
-                return
-            key = f"label='{label}'"
-            label_idx = (Labels & key).fetch("idx")[0]
-
-            if label_idx is None:
-                label_idx = Labels().get_next_idx()
-                Labels.insert1({"idx": label_idx, "label": label})
-
-            self.insert1({"dataset": dataset, "idx": label_idx})
-
-        except Exception as err:
-            err = f"Error while populating the Groups table: key: {dataset} {label_idx}\n {err}"
-            logger.warning(err)
-
-
-@schema
 class Video(dj.Manual):
     """
     Video definition table:
