@@ -84,7 +84,10 @@ public class Mouse_move : Agent
 		lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
 
 		UnityEngine.Debug.Log("START");
-		this.transform.position = new Vector3(0, 0.5f, -4.99f);
+		if (rl_training)
+		{
+			this.transform.position = new Vector3(0, 0.5f, -4.99f);
+		}
 	}
 
 	public override void OnEpisodeBegin()
