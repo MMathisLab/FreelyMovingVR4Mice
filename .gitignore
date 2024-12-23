@@ -76,4 +76,3 @@ vr4mice/cfg/*
 
 mouse_task/tests/test_config.json
 mouse_task/tests/data.pkl
-mouse_task/tests/ar_vis_obs.ipynb
