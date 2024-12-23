@@ -1,9 +1,10 @@
+import re
 from pathlib import Path
 
 import datajoint as dj
 import pandas as pd
-import re
 from base_schemas.schemas import exp, mice
+
 from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
@@ -38,7 +39,7 @@ class Base(dj.Computed):
                 pk = mice.Mouse().primary_key
                 mouse = (mice.Mouse() & mouse_key).fetch(*pk, as_dict=True)[0]
 
-            session_key = {"date": data["date"], "attempt": data["attempt"]}
+            session_key = {"doe": data["date"], "attempt": data["attempt"]}
 
             if exp.Session() & mouse_key & session_key:
                 pk = exp.Session().primary_key
