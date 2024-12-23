@@ -4,6 +4,7 @@ using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
 using UnityEngine.UI;
 using System.Diagnostics;
+using Unity.MLAgents.SideChannels;
 
 
 public class Mouse_move : Agent
@@ -57,12 +58,24 @@ public class Mouse_move : Agent
 	float lastFrameTime;
 
 	private bool rl_training = false; // Default value
+	private DebugLogSideChannel debugLogSideChannel;
+
 
 	// Start is called before the first frame update
 	void Start()
 	{
 		SetResetParams();
 
+		// - - - - - setting up debug side channel - - - - -
+		// We create the Side Channel
+		debugLogSideChannel = new DebugLogSideChannel();
+
+		// When a Debug.Log message is created, we send it to the stringChannel
+		Application.logMessageReceived += debugLogSideChannel.SendLog;
+
+		// The channel must be registered with the SideChannelManager class
+		SideChannelManager.RegisterSideChannel(debugLogSideChannel);
+		// - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 		// - - - - - retrieving RL  training param - - - - -
 		var envParams = Academy.Instance.EnvironmentParameters;
@@ -86,7 +99,18 @@ public class Mouse_move : Agent
 		UnityEngine.Debug.Log("START");
 		if (rl_training)
 		{
+			UnityEngine.Debug.Log("Reset starting position");
 			this.transform.position = new Vector3(0, 0.5f, -4.99f);
+		}
+	}
+
+	public void OnDestroy()
+	{
+		// De-register the Debug.Log callback
+		Application.logMessageReceived -= debugLogSideChannel.SendLog;
+		if (Academy.IsInitialized)
+		{
+			SideChannelManager.UnregisterSideChannel(debugLogSideChannel);
 		}
 	}
 

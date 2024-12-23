@@ -1,9 +1,28 @@
+import uuid
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.collections import LineCollection
 from matplotlib.widgets import Button
+
+from mlagents_envs.side_channel.side_channel import SideChannel
+from mlagents_envs.side_channel.side_channel import IncomingMessage
+from uuid import UUID
+
+
+class DebugLogSideChannel(SideChannel):
+    def __init__(self):
+        # Use the same UUID as the one in the Unity code
+        super().__init__(UUID("6146928a-ea90-4477-b497-c2f10400de1b"))
+
+    def on_message_received(self, msg: IncomingMessage) -> None:
+        log_message = msg.read_string()
+        print(f"Unity Debug Log: {log_message}")
+
+
+def generate_uuid():
+    return uuid.uuid4()
 
 
 def plot_trajectories(data):
