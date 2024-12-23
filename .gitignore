@@ -73,3 +73,7 @@ config_path.json
 vr4mice/cfg/*
 *git_commit*
 *dj_pipline/user_*
+
+mouse_task/tests/test_config.json
+mouse_task/tests/data.pkl
+mouse_task/tests/ar_vis_obs.ipynb

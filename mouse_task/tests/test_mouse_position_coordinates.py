@@ -96,6 +96,10 @@ class TestPositionCoordinates(unittest.TestCase):
         )
 
     def test_manual_trajectories(self):
+        """Manually controlling the position in the unity game through mouse position in pygame window. Allows
+        for manual testing of the game as well as generating trajectories data for later tesing.
+        Data is saved to a pickle file (data.pkl).
+        """
 
         window_width = self.cropped_image[1]
         window_height = self.cropped_image[3]
@@ -148,6 +152,7 @@ class TestPositionCoordinates(unittest.TestCase):
                 for x, y, w, h in zip(x_rects_lower, y_rects_lower, widths, heights)
             ]
 
+            # Interpolating mouse (digital) coordinates on pygame screen to unity arena coordinates
             x = np.interp(
                 x,
                 [self.cropped_image[0], self.cropped_image[1]],
@@ -159,6 +164,7 @@ class TestPositionCoordinates(unittest.TestCase):
                 [self.unity_arena_size[3], self.unity_arena_size[2]],
             )
 
+            # Overriding the get_action()
             with patch(
                 "mouse_task.task_active_sensing.ActiveSensingTask.get_action",
                 return_value=np.array([x, y, 0, 0]).reshape((1, -1)),
@@ -171,15 +177,20 @@ class TestPositionCoordinates(unittest.TestCase):
 
         pygame.quit()
 
+        # Quitting task
         data = self.task.get_data()
         self.task.stop()
 
+        # Saving data to a pickle file
         with open("./data.pkl", "wb") as handle:
             pkl.dump(data, handle, protocol=pkl.HIGHEST_PROTOCOL)
 
+        # Plotting trajectories
         plot_trajectories(data)
 
     def test_data_integrity(self):
+        """Testing the integrity of the data saved in the pickle file."""
+
         with open("./data.pkl", "rb") as handle:
             data = dict_to_data_frame(pkl.load(handle))
 

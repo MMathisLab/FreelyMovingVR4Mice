@@ -1,18 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
-//using UnityEngine.UIElements;
 using UnityEngine.UI;
 using System.Diagnostics;
 
 
 public class Mouse_move : Agent
 {
-	// Start is called before the first frame update
-
 	Rigidbody rBody;
 	public GameObject plane;
 	float totalEpisodeTime;
@@ -59,19 +54,37 @@ public class Mouse_move : Agent
 	public float photodiode_change_value;
 	public Image sync;
 	Stopwatch stopwatch;
-    float lastFrameTime;
+	float lastFrameTime;
 
+	private bool rl_training = false; // Default value
 
 	// Start is called before the first frame update
 	void Start()
 	{
 		SetResetParams();
+
+
+		// - - - - - retrieving RL  training param - - - - -
+		var envParams = Academy.Instance.EnvironmentParameters;
+
+		// Retrieve the "rl_training" parameter and set its value
+		float rlTrainingValue = envParams.GetWithDefault("rl_training", 0.0f); // Default to 0.0 (-> False)
+		UnityEngine.Debug.Log($"isTrainingValue: {rlTrainingValue}");
+		rl_training = rlTrainingValue > 0.5f; // Convert float to bool
+
+		UnityEngine.Debug.Log($"RL Training: {rl_training}");
+		// - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+
 		plane.GetComponent<Target_spawner>().DestroyTargets();
 		rBody = GetComponent<Rigidbody>();
 		ITIScreenOff();
 		stopwatch = new Stopwatch();
-        stopwatch.Start();
-        lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
+		stopwatch.Start();
+		lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
+
+		UnityEngine.Debug.Log("START");
+		this.transform.position = new Vector3(0, 0.5f, -4.99f);
 	}
 
 	public override void OnEpisodeBegin()
@@ -96,34 +109,31 @@ public class Mouse_move : Agent
 			spawned = 1f;
 		}
 
-
-
 		totalEpisodeTime = 0;
 
 		start_box_delay = 0f;
 		L_box_delay = 0f;
 		R_box_delay = 0f;
 
-      ITIScreenOff();
-      ITI = false;
+		ITIScreenOff();
+		ITI = false;
 
-      if (plane.GetComponent<Target_spawner>().occlusion_type > 0f){
-      		plane.GetComponent<Target_spawner>().walls_reset();
-	  }
+		if (plane.GetComponent<Target_spawner>().occlusion_type > 0f)
+		{
+			plane.GetComponent<Target_spawner>().walls_reset();
+		}
 
 		stopwatch.Restart();
-        lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
-
-		//this.transform.position = new Vector3(0, 0.5f, -6);
+		lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
 	}
 
 	float GetDeltaTime()
-    {
-        float currentTime = (float)stopwatch.Elapsed.TotalSeconds;
-        float deltaTime = currentTime - lastFrameTime;
-        lastFrameTime = currentTime;
-        return deltaTime;
-    }
+	{
+		float currentTime = (float)stopwatch.Elapsed.TotalSeconds;
+		float deltaTime = currentTime - lastFrameTime;
+		lastFrameTime = currentTime;
+		return deltaTime;
+	}
 
 	private void ITIScreenOff()
 	{
@@ -159,16 +169,35 @@ public class Mouse_move : Agent
 			targets_visable = true;
 		}
 
-		float x = actions.ContinuousActions[0];
-		float z = actions.ContinuousActions[1];
-		float head_angle = actions.ContinuousActions[2];
-		photodiode_change_value = actions.ContinuousActions[3];
 
+		if (rl_training)
+		{
+			float x = this.transform.position.x + actions.ContinuousActions[0];
+			float z = this.transform.position.z + actions.ContinuousActions[1];
+			float head_angle = this.transform.eulerAngles.y + actions.ContinuousActions[2];
+			photodiode_change_value = 1f;
 
-		this.transform.position = new Vector3(x, 0.5f, z);
-		this.transform.eulerAngles = new Vector3(0.0f, head_angle, 0.0f);
+			if (x < 9f & x > -9f & z < -2f & z > -10f)
+			{
+				this.transform.position = new Vector3(x, 0.5f, z);
+			}
+			this.transform.eulerAngles = new Vector3(0.0f, head_angle, 0.0f);
+		}
+		else
+		{
+			float x = actions.ContinuousActions[0];
+			float z = actions.ContinuousActions[1];
+			float head_angle = actions.ContinuousActions[2];
+			photodiode_change_value = actions.ContinuousActions[3];
+
+			this.transform.position = new Vector3(x, 0.5f, z);
+			this.transform.eulerAngles = new Vector3(0.0f, head_angle, 0.0f);
+		}
+
 		Vector3 currVel = (this.transform.position - prevPos) / deltaTime;
 		speed = currVel.magnitude;
+
+		// update previous position to current to compute velocity at next iteration
 		prevPos = this.transform.position;
 		//UnityEngine.Debug.Log(speed);
 
@@ -180,7 +209,7 @@ public class Mouse_move : Agent
 		{
 			//UnityEngine.Debug.Log("mouse can report");
 			MouseReported(deltaTime);
-			if (mouse_report_correct == true)
+			if (mouse_report_correct)
 			{
 				//UnityEngine.Debug.Log("mouse report correct");
 
@@ -188,20 +217,14 @@ public class Mouse_move : Agent
 				mouse_report_correct = false;
 				mouse_can_report = false;
 				UnityEngine.Debug.Log("rewarded");
-
-
 			}
-
 		}
 
 		//EpisdoeTimeOut();
 		mouse_can_report_trigger();
 
 		// Trigger ITI either - ITI can be timed or next episode can start when the agent looks back at the screen in a frontal box
-
 		triggerGreyScreen_agentTriggerd(deltaTime);
-
-
 
 		SetReward(thisReward);
 		//UnityEngine.Debug.Log(thisReward);
@@ -230,9 +253,25 @@ public class Mouse_move : Agent
 	public override void Heuristic(in ActionBuffers actionsOut)
 	{
 		ActionSegment<float> continuousActionsOut = actionsOut.ContinuousActions;
-		continuousActionsOut[0] = this.transform.position.x;
-		continuousActionsOut[1] = this.transform.position.z;
-		continuousActionsOut[2] = this.transform.eulerAngles.y;
+
+		continuousActionsOut[2] = 0f;
+
+		float newPosition_x = this.transform.position.x + Input.GetAxis("Horizontal");
+		float newPosition_z = this.transform.position.z + Input.GetAxis("Vertical");
+
+		// need to stay within arena boundaries (same as python scripts)
+		if (newPosition_x < 9f & newPosition_x > -9f & newPosition_z < -2f & newPosition_z > -10f)
+		{
+			// move
+			continuousActionsOut[0] = newPosition_x;
+			continuousActionsOut[1] = newPosition_z;
+		}
+		else
+		{
+			// keep current position
+			continuousActionsOut[0] = this.transform.position.x;
+			continuousActionsOut[1] = this.transform.position.z;
+		}
 	}
 
 
@@ -374,6 +413,12 @@ public class Mouse_move : Agent
 				mouse_can_report = false;
 				ITI = true;
 
+				if (rl_training)
+				{
+					// resetting agent position to start (in TT box)
+					this.transform.position = new Vector3(0, 0.5f, -4.99f);
+					UnityEngine.Debug.Log("CORRECT! -- resetting artificial agent's position...");
+				}
 			}
 			else
 			{
@@ -382,6 +427,12 @@ public class Mouse_move : Agent
 				mouse_can_report = false;
 				ITI = true;
 
+				if (rl_training)
+				{
+					// resetting agent position to start (in TT box)
+					this.transform.position = new Vector3(0, 0.5f, -4.99f);
+					UnityEngine.Debug.Log("WRONG! -- resetting artificial agent's position...");
+				}
 			}
 		}
 
@@ -394,9 +445,20 @@ public class Mouse_move : Agent
 		// resetParams = Academy.Instance.FloatProperties;
 		var environmentParameters = Academy.Instance.EnvironmentParameters;
 
-		mouseReportDelay = environmentParameters.GetWithDefault("mouseReportDelay", 5f);
-		box_delay = environmentParameters.GetWithDefault("startBoxDelay", 0.25f);
-		velocity_threshold = environmentParameters.GetWithDefault("velocityThreshold", 0.5f);
+		mouseReportDelay = environmentParameters.GetWithDefault("mouseReportDelay", 5f); // original
+		box_delay = environmentParameters.GetWithDefault("startBoxDelay", 0.25f); // original
+		velocity_threshold = environmentParameters.GetWithDefault("velocityThreshold", 0.5f); // original
+
+		// adjusting game parameters when training artificial agents on the task
+		if (rl_training)
+		{
+			mouseReportDelay = environmentParameters.GetWithDefault("mouseReportDelay", 0.0f); // custom for RL training
+			box_delay = environmentParameters.GetWithDefault("startBoxDelay", 0.01f); // custom for RL training
+			velocity_threshold = environmentParameters.GetWithDefault("velocityThreshold", 100f); // custom for RL training
+
+			UnityEngine.Debug.Log("--> Set RL environment training parameters <--");
+		}
+
 		report_box_delay = environmentParameters.GetWithDefault("reportBoxDelay", 0.1f);
 		distractor = environmentParameters.GetWithDefault("distractor", 1.0f);
 		L_box_x_min = environmentParameters.GetWithDefault("L_box_x_min", -10f);

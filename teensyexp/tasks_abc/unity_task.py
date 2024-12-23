@@ -106,7 +106,7 @@ class UnityTask(Task):
         self.vis_obs_inds = np.where(np.array(obs_dim) == 3)[0]
         vis_obs_ind = self.vis_obs_inds[0] if len(self.vis_obs_inds) > 0 else None
         if vis_obs_ind is not None:
-            vis_obs_shape = np.array(obs_shapes)[vis_obs_ind]
+            vis_obs_shape = np.array(obs_shapes, dtype=object)[vis_obs_ind]
             # Uncomment the following line and define create_vid_writer if video writing is needed
             # self.vid_writer = sefl.create_vid_writer(vis_obs_shape, fps) if write_video else None
 
