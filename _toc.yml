@@ -19,6 +19,9 @@ parts:
   - file: docs/Unity_games/update_Unity_Game
   - file: docs/Unity_games/build_Unity_Game
   - file: docs/Unity_games/Adding_new_objects
+- caption: Game Testing
+  chapters:
+  - file: docs/software/mouse_task_test.md
 - caption: Software Control, Teensy setup
   chapters:
   - file: docs/Rig_building/Teensy_box_design

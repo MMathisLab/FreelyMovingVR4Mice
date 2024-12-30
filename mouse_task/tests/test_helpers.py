@@ -25,6 +25,23 @@ def generate_uuid():
     return uuid.uuid4()
 
 
+def generate_zone_patches():
+    # Define the active regions (starting box and report boxes) of the Unity game arena
+    screen = patches.Rectangle(
+        (-10, -2), 20, 1, linewidth=4, edgecolor="r", facecolor="none"
+    )
+    start_box = patches.Rectangle(
+        (-4, -9), 8, 4, linewidth=2, edgecolor="g", facecolor="none"
+    )
+    report_r = patches.Rectangle(
+        (5, -4), 5, 2, linewidth=2, edgecolor="b", facecolor="none"
+    )
+    report_l = patches.Rectangle(
+        (-10, -4), 5, 2, linewidth=2, edgecolor="b", facecolor="none"
+    )
+    return screen, start_box, report_r, report_l
+
+
 def plot_trajectories(data):
     """
     Helper function that plots the trajectories of the mouse within the Unity game arena
@@ -32,6 +49,7 @@ def plot_trajectories(data):
 
     data_df = dict_to_data_frame(data)
     episodes_df = data_df[data_df.ITI == 0].copy(deep=True)
+    ITIs_df = data_df[data_df.ITI == 1].copy(deep=True)
     episode_nums = episodes_df.episode.unique()
 
     # Create a figure and axis
@@ -42,25 +60,14 @@ def plot_trajectories(data):
     def update_plot(ep_num):
         ax.clear()
         trajectory = episodes_df[episodes_df.episode == ep_num]
+        reward = (
+            True if ITIs_df[ITIs_df.episode == ep_num].reward.values[0] == 1 else False
+        )
 
         x = trajectory.x
         y = trajectory.y
 
-        points = np.array([x, y]).T.reshape(-1, 1, 2)
-        segments = np.concatenate([points[:-1], points[1:]], axis=1)
-
-        # Create a color map (viridis)
-        cmap = plt.get_cmap("viridis")
-        norm = plt.Normalize(0, len(x))
-
-        # Create the line segments with gradient coloring
-        lc = LineCollection(segments, cmap=cmap, norm=norm)
-        lc.set_array(
-            np.arange(len(x))
-        )  # Set the color values based on the order of points
-        lc.set_linewidth(2)
-
-        ax.add_collection(lc)
+        ax.plot(x, y, color="black", linewidth=4, alpha=0.3)
 
         ax.scatter(
             x.iloc[0],
@@ -71,7 +78,7 @@ def plot_trajectories(data):
             alpha=0.5,
         )
 
-        if trajectory.iloc[-1].reward == 1:
+        if reward:
             ax.scatter(
                 trajectory.iloc[-1].x,
                 trajectory.iloc[-1].y,
@@ -95,18 +102,7 @@ def plot_trajectories(data):
         # plt.yticks(np.arange(-10, -1, 1))
 
         # Define the active regions (starting box and report boxes) of the Unity game arena
-        screen = patches.Rectangle(
-            (-10, -2), 20, 1, linewidth=4, edgecolor="r", facecolor="none"
-        )
-        start_box = patches.Rectangle(
-            (-4, -9), 8, 4, linewidth=2, edgecolor="g", facecolor="none"
-        )
-        report_r = patches.Rectangle(
-            (5, -4), 5, 2, linewidth=2, edgecolor="b", facecolor="none"
-        )
-        report_l = patches.Rectangle(
-            (-10, -4), 5, 2, linewidth=2, edgecolor="b", facecolor="none"
-        )
+        screen, start_box, report_r, report_l = generate_zone_patches()
 
         # Add patches to the plot
         ax.add_patch(screen)
@@ -117,18 +113,6 @@ def plot_trajectories(data):
         ax.grid(True, alpha=0.3)
 
         plt.draw()
-
-    # Define a colorbar to indicate the progression
-    sm = plt.cm.ScalarMappable(
-        cmap=plt.get_cmap("viridis"), norm=plt.Normalize(vmin=0, vmax=1)
-    )
-    sm.set_array([])
-
-    # Add colorbar with labels for start and end, tied to the current axis (ax)
-    cbar = fig.colorbar(sm, ax=ax)
-    cbar.set_label("Progression")
-    cbar.set_ticks([0, 1])
-    cbar.set_ticklabels(["Start", "End"])
 
     # Function for the "Next" button
     def next_trajectory(event):
@@ -163,7 +147,8 @@ def compute_trigger_areas_coordinates(
     l_report_box,
 ):
     """
-    Compute the coordinates of the trigger areas (start and report boxes) in the cropped image
+    Compute the coordinates of the trigger areas (start and report boxes) in the cropped image.
+    Done by interpolating Unity arena coordinates to pygame window coordinates.
     """
     x_rects_lower = np.interp(
         np.array([start_box[1], r_report_box[1], l_report_box[1]]),

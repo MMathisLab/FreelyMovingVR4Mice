@@ -132,7 +132,7 @@ class TestDetectionP1Randomization(unittest.TestCase):
     def test_block_switch(self):
         """Tests that the block switches at the correct time."""
         # if block coherence is 1 and we are in a left block
-        # the next block should right and the target should appear on the right
+        # the next block should be right and the target should appear on the right
         self.task.block_length = 2
         self.task.correct = 2
         self.task.block_Left = 1.0
@@ -141,7 +141,7 @@ class TestDetectionP1Randomization(unittest.TestCase):
         self.assertEqual(self.task.object_on_left, 0.0)
 
         # if block coherence is 0 and we are in a left block
-        # the next block should left but the target should be on the right
+        # the next block should be left but the target should be on the right
         self.task.block_length = 2
         self.task.correct = 2
         self.task.block_Left = 1.0

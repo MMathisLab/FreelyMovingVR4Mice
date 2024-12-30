@@ -2,49 +2,47 @@
 
 The FreelyMovingVR4Mice repository contains main **vr4mice** package (src code: teensyexp folder) and **mouse_task** module that is the input for **vr4mice**
 
-_**Note:**_ _The following installation assumes you have already installed on your system the `conda` package manager. If you haven't, please follow the official installation process for Windows [here](https://docs.conda.io/projects/conda/en/stable/) (check [this](https://docs.anaconda.com/miniconda/) for more details)._
+_**Note:**_ _The following installation assumes you have already installed on your system the `conda` package manager. If you haven't, please follow the [official installation tutorial for Windows](https://docs.conda.io/projects/conda/en/stable/) (check [this](https://docs.anaconda.com/miniconda/) for more details)._
 
-Create a new conda environment with local pip:
-
- ```bash
- conda create --name name_of_env python=3.10.12 pip
- ```
+Create and activate a new conda environment with local pip:
 
  ```bash
- conda activate name_of_env
+ conda create -n name_of_env python=3.10.12 && conda activate mlagents
  ```
 
-Download our [forked ml-agents repository](https://github.com/AdaptiveMotorControlLab/ml-agents.git) from **AdaptiveMotorControlLab** (_the `--branch release_21_fix` option will switch to the tag of the latest stable "fixed" release, which currently is **21** and is the one we use. Omitting that will get the main branch which is potentially unstable_):
+Download and install **ml-agents**'s 22nd release directly from the repository:
 
 - Clone the repository:
 
   ```bash
-  git clone --branch release_21_fix https://github.com/AdaptiveMotorControlLab/ml-agents.git
+  git clone --branch release_22 https://github.com/Unity-Technologies/ml-agents.git
   ```
 
   ```bash
   cd ml-agents/
   ```
 
-<!-- - Inside this main directory, find the `ml-agents-envs/` sub-directory and open, with any text editor, the `setup.py` file found within it. Near the end of the file, find the list of required dependencies and modify the `numpy` version: change it from `"numpy==1.21.2"` to `"numpy==1.23.3"` then save. When that is done, run the following two commands in order: -->
-
-- Then, run the following two commands in order:
+- Then, run the following command:
 
   ```bash
   python -m pip install ./ml-agents-envs
-  python -m pip install ./ml-agents
   ```
 
-- To check the installation was successful, run the following command:
+  > _Note: since we're using this library to interface with the Unity game from python, we only need the `ml-agents-envs` dependency. If you want to install the full package, you can additionally run the following command after the previous one:_
+  >
+  >```bash
+  >python -m pip install ./ml-agents
+  >```
+  >
+  > To verify that this additional installation was successful, you can try to run, in the conda environment created above, the following command:
+  >
+  >```bash
+  > mlagents-learn --help
+  >```
+  >
+  > If the installation was successful, the help manual of the `mlagents-learn` command should be displayed on your terminal window. For more details on how to install **ml-agents**, check the official documentation [here](https://unity-technologies.github.io/ml-agents/Installation/).
 
-  ```bash
-  mlagents-learn -h
-  ```
-
-  This should print-out the **help** manual on how to use the `mlagents-learn` command.\
-  >_Note: you can ignore WARNINGS related to PyTorch_
-
-Finally go "up" one level (back to the location where you cloned the previous repository) and download the **vr4mice** source code:
+Now, we'll go "up" one level (back to the location where you cloned the previous repository) and download the **vr4mice** source code:
 
 - To return to previous folder from the command line you can run:
 
@@ -68,9 +66,9 @@ Finally go "up" one level (back to the location where you cloned the previous re
   git checkout branch_name
   ```
 
-  > By default, the `main` branch  will be used.
+  > _When cloning a Github repository, the default branch will usually be the `main` (or `master`)._
 
-- Install the **vr4mice** package  (_use `pip install -e .` if package is under development_):
+- Install the **vr4mice** package  (_use `pip install -e .` if you're planning on actively developing the package_):
 
   ```bash
   pip install .
