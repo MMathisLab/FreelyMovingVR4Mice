@@ -63,10 +63,12 @@ if __name__ == "__main__":
 
     elif mode == "populate":
         from vr4mice.actions.populate_rig import populate_rig
-
+        from vr4mice.schema import vr4mice
+        
         path = "/data/data"
         check_folder_existence(path)
         populate_rig(path)
+        vr4mice.Collab().populate()
 
     elif mode == "analysis":
         from vr4mice.schema import base_analysis, base
