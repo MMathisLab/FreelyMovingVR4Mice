@@ -20,8 +20,8 @@ class DLCProcessor(dj.Imported):
     -> vr4mice.DLC
     ---
     start_time=NULL: longblob
-    frame_time: longblob
-    time_stamp: longblob
+    frame_time=NULL: longblob
+    time_stamp=NULL: longblob
     step: longblob
     signal: longblob
     photodiode_read=NULL: longblob
