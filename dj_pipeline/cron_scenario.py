@@ -20,7 +20,7 @@ logger = Logger.get_logger()
 try:
     path = "/data/data"
     check_folder_existence(path)
-    populate_rig(path=path, gui=os.environ["DJ_GUI"])
+    populate_rig(path=path, gui=os.environ["GUI"])
 except Exception as e:
     logger.error(f"An error occurred in populate_and_move: {e}")
 
