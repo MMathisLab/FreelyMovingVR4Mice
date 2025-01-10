@@ -22,7 +22,7 @@ class DLCProcessor(dj.Imported):
     start_time=NULL: longblob
     frame_time=NULL: longblob
     time_stamp=NULL: longblob
-    step: longblob
+    step=NULL: longblob
     signal: longblob
     photodiode_read=NULL: longblob
     photodiode_time=NULL: longblob
