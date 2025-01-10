@@ -139,7 +139,7 @@ def sync_keypoint_table(
     filt_dlc_df = filter_dlc(
         keypoint_df, cutoff=keypoint_cuttoff, window_length=filter_window_length
     )
-    return _sync_dlc_with_game(game_data=game_step_times, dlc=filt_dlc_df)
+    return _sync_dlc_with_game(game_data=game_step_times, dlc_df=filt_dlc_df)
 
 
 def dlc_interpolate(
