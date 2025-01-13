@@ -123,7 +123,7 @@ def get_state(raw_data=None, key=None, **kwargs):
 
 
 def get_path(
-    raw_data=None, key=None, transformer=None, srcf="/data", dstf="processed", **kwargs
+    raw_data=None, key=None, transformer=None, srcf="/data", dstf="processed", move=True, **kwargs
 ):
     """
     A function that gets the path from the raw_data file, verifies that the file exists,
@@ -170,11 +170,10 @@ def get_path(
             if not os.path.exists(processed):
                 os.makedirs(processed)
             processed = processed.joinpath(filename)
-            shutil.move(path, processed)  # TODO: change
-
-            logger.info("Moving: " + str(path) + " --> " + str(processed))
-
-            path = str(processed)
+            if move:
+                shutil.move(path, processed)
+                logger.info("Moving: " + str(path) + " --> " + str(processed))
+                path = str(processed)
         return path
     else:
         logger.warning("Path doesn not exist: " + str(path))
