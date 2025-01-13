@@ -10,6 +10,7 @@ schema = get_schema(schema_name, locals())
 
 logger = Logger.get_logger()
 
+
 @schema
 class Camera(dj.Lookup):
     """
@@ -85,18 +86,17 @@ class FailedSession(dj.Manual):
     error_message                :   varchar(1024)  # Error message
     """
 
-    def add_entry(self, dataset_key, table_name, 
-            error_message, skip_duplicates=True):
+    def add_entry(self, dataset_key, table_name, error_message, skip_duplicates=True):
         self.insert1(
-        {
-            "dataset": dataset_key,
-            "failed_table_name": table_name,
-            "error_message": error_message,
-        },
-        skip_duplicates=skip_duplicates,
-    )
+            {
+                "dataset": dataset_key,
+                "failed_table_name": table_name,
+                "error_message": error_message,
+            },
+            skip_duplicates=skip_duplicates,
+        )
 
-        
+
 @schema
 class Labels(dj.Lookup):
     definition = """
@@ -142,13 +142,15 @@ class Groups(dj.Manual):
 
             self.insert1({"dataset": dataset, "idx": label_idx})
 
-        except Exception as err: 
-            FailedSession().add_entry(f"{dataset}", f"{self.__class__.__name__}", str(err))
+        except Exception as err:
+            FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
             err = f"Can't populate {self.__class__.__name__}, key: {dataset}. Error: {err}."
             logger.warning(err)
 
 
-@schema 
+@schema
 class Labs(dj.Lookup):
     definition = """
     idx: int
@@ -156,12 +158,8 @@ class Labs(dj.Lookup):
     lab: varchar(128)
     """
 
-    contents = [
-        [0, "test"], 
-        [1, "mathis-lab"],
-        [2, "tolias-lab"],
-        [3, "niell-lab"]
-    ]
+    contents = [[0, "test"], [1, "mathis-lab"], [2, "tolias-lab"], [3, "niell-lab"]]
+
 
 @schema
 class Collab(dj.Computed):
@@ -170,7 +168,7 @@ class Collab(dj.Computed):
     ---
     -> Labs
     """
-    
+
     def make(self, key, lab=os.environ["DJ_LAB"]):
         try:
             lab = f"lab='{lab}'"
@@ -178,10 +176,13 @@ class Collab(dj.Computed):
             data = {**key, **idx}
             self.insert1(data)
         except Exception as err:
-            dataset = key['dataset']
-            FailedSession().add_entry(f"{dataset}", f"{self.__class__.__name__}", str(err)) 
+            dataset = key["dataset"]
+            FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
+
 
 @schema
 class Video(dj.Manual):
@@ -242,10 +243,13 @@ class Video(dj.Manual):
             Video().insert1(data, skip_duplicates=True)
 
         except Exception as err:
-            dataset = key['dataset']
-            FailedSession().add_entry(f"{dataset}", f"{self.__class__.__name__}", str(err)) 
+            dataset = key["dataset"]
+            FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
+
 
 @schema
 class ModelName(dj.Lookup):
@@ -304,7 +308,9 @@ class DLC(dj.Manual):
             keypoints_filepath = (
                 f"{paths['dlc_path']['dst']}/{paths['dlc_path']['filename']}"
             )
-            proc_filepath = f"{paths['proc_path']['dst']}/{paths['proc_path']['filename']}"
+            proc_filepath = (
+                f"{paths['proc_path']['dst']}/{paths['proc_path']['filename']}"
+            )
             data = {
                 "keypoints_filepath": keypoints_filepath,
                 "proc_filepath": proc_filepath,
@@ -313,10 +319,13 @@ class DLC(dj.Manual):
             DLC().insert1(data, skip_duplicates=True)
 
         except Exception as err:
-            dataset = key['dataset']
-            FailedSession().add_entry(f"{dataset}", f"{self.__class__.__name__}", str(err)) 
+            dataset = key["dataset"]
+            FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
+
 
 @schema
 class MouseState(dj.Manual):  # variable State
@@ -540,10 +549,13 @@ class DatasetType(dj.Computed):
             self.insert1(data)
 
         except Exception as err:
-            dataset = key['dataset']
-            FailedSession().add_entry(f"{dataset}", f"{self.__class__.__name__}", str(err))
+            dataset = key["dataset"]
+            FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
+
 
 @schema
 class Box(dj.Manual):

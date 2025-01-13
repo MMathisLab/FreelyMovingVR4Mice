@@ -51,8 +51,10 @@ class Base(dj.Computed):
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
-            dataset = key['dataset']
-            vr4mice.FailedSession().add_entry(f"{dataset}", f"{self.__class__.__name__}", str(err))
+            dataset = key["dataset"]
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
 

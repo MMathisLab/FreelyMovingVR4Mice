@@ -137,7 +137,9 @@ def check_keys(value, raw_data, key, schema, none=True) -> bool:
     return True, none_vals
 
 
-def populate(table_name, attributes, raw_data, schema, srcf="/data", dstf="processed", move=True) -> None:
+def populate(
+    table_name, attributes, raw_data, schema, srcf="/data", dstf="processed", move=True
+) -> None:
     """
     Populates the given table in the database with the given attributes and raw data.
 
@@ -161,8 +163,12 @@ def populate(table_name, attributes, raw_data, schema, srcf="/data", dstf="proce
         # check if there is a special processing for the generation of value of given attribute
         if a in schema["local_def"].keys():
             data[a] = schema["local_def"][a](
-                raw_data=raw_data, key=a, transformer=schema["transformer"],
-                srcf="/data", dstf="processed", move=True
+                raw_data=raw_data,
+                key=a,
+                transformer=schema["transformer"],
+                srcf="/data",
+                dstf="processed",
+                move=True,
             )
         else:  # dj_def-orientated
             label = a
@@ -256,7 +262,9 @@ def get_files_paths(dataset, remote_src=None, local_src="/data", data="/data"):
     return files_info
 
 
-def populate_rig(path="/data/data", gui=True, srcf="/data", dstf="processed", move=True) -> None:
+def populate_rig(
+    path="/data/data", gui=True, srcf="/data", dstf="processed", move=True
+) -> None:
     """
     Populates database tables with data from files in the specified directory.
 
@@ -298,7 +306,7 @@ def populate_rig(path="/data/data", gui=True, srcf="/data", dstf="processed", mo
             logger.info("Processing file: " + str(pickle_file))
             raw_data_pickle, dataset = get_new_file(pickle_file, path)
             key = f'dataset="{dataset}"'
-            
+
             if (vr4mice.Dataset & key).fetch(as_dict=True):
                 logger.info(f"{key} is already in the database, skip.")
                 break
@@ -356,4 +364,12 @@ def populate_rig(path="/data/data", gui=True, srcf="/data", dstf="processed", mo
                     )
                     if flag:
                         raw_data = {**raw_data, **none_vals}
-                        populate(table_name, attributes, raw_data, schema=schema, srcf="/data", dstf="processed", move=True)
+                        populate(
+                            table_name,
+                            attributes,
+                            raw_data,
+                            schema=schema,
+                            srcf="/data",
+                            dstf="processed",
+                            move=True,
+                        )

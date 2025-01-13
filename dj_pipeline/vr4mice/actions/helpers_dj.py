@@ -123,7 +123,13 @@ def get_state(raw_data=None, key=None, **kwargs):
 
 
 def get_path(
-    raw_data=None, key=None, transformer=None, srcf="/data", dstf="processed", move=True, **kwargs
+    raw_data=None,
+    key=None,
+    transformer=None,
+    srcf="/data",
+    dstf="processed",
+    move=True,
+    **kwargs,
 ):
     """
     A function that gets the path from the raw_data file, verifies that the file exists,

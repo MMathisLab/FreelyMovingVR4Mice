@@ -26,6 +26,7 @@ except Exception as e:
 
 try:
     from vr4mice.schema import base_analysis, dlc, vr4mice
+
     vr4mice.Collab().populate()
     create_folder_if_not_exist("/data/summary_plots")
     base_analysis.DataFrame.populate()

@@ -109,8 +109,10 @@ class DataFrame(dj.Computed):
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
-            dataset = key['dataset']
-            vr4mice.FailedSession().add_entry(f"{dataset}", f"{self.__class__.__name__}", str(err))
+            dataset = key["dataset"]
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
 
@@ -250,11 +252,13 @@ class BoxDataFrame(dj.Computed):
                 logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
-            dataset = key['dataset']
-            vr4mice.FailedSession().add_entry(f"{dataset}", f"{self.__class__.__name__}", str(err))
+            dataset = key["dataset"]
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
-            
+
             return None
 
     def get_data(self, key, columns=None):
@@ -333,8 +337,10 @@ class SummaryPlots(dj.Computed):
                     key, save_path="/data/summary_plots", database=True
                 )
             except Exception as err:
-                dataset = key['dataset']
-                vr4mice.FailedSession().add_entry(f"{dataset}", f"{self.__class__.__name__}", str(err))
+                dataset = key["dataset"]
+                vr4mice.FailedSession().add_entry(
+                    f"{dataset}", f"{self.__class__.__name__}", str(err)
+                )
                 err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
                 logger.warning(err)
                 return None
@@ -413,8 +419,10 @@ def insert_send_email(key, tuple_, table, filename, send=False):
             logger.info(f"Send flag is false for {key}. No email.")
 
     except Exception as err:
-        dataset = key['dataset']
-        vr4mice.FailedSession().add_entry(f"{dataset}", f"{self.__class__.__name__}", str(err))
+        dataset = key["dataset"]
+        vr4mice.FailedSession().add_entry(
+            f"{dataset}", f"{self.__class__.__name__}", str(err)
+        )
         err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
         logger.warning(err)
         if send:
@@ -444,8 +452,10 @@ class GitCommit(dj.Computed):
             self.insert1(data, allow_direct_insert=True)
 
         except Exception as err:
-            dataset = key['dataset']
-            vr4mice.FailedSession().add_entry(f"{dataset}", f"{self.__class__.__name__}", str(err))
+            dataset = key["dataset"]
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
 
