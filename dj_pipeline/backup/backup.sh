@@ -49,13 +49,13 @@ for db in $databases; do
  #execute_command "$cmd2" "$msg"
 
 tables=$(mysql $group$s1_prefix $ssl -e "SHOW TABLES IN $db;" -s --skip-column-names)
-
 	# Loop through each table
 	for table in $tables; do
 	    
 	    msg="Dumping and importing database: $db, table $table"
 	    
-	    cmd3="mysqldump $group$s1_prefix $ssl --ignore-table='$db'.'~log' --max_allowed_packet=1G $db $table \
+	    cmd3="mysqldump $group$s1_prefix $ssl --ignore-table='$db'.'~log' --max_allowed_packet=1G  \
+		    --skip-add-drop-table --insert-ignore $db $table \
 			| sed 's/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g' \
 				    | sed 's/INSERT INTO/INSERT IGNORE INTO/g' \
 				    | mysql $group$aws_prefix $db --max_allowed_packet=1G"
