@@ -9,7 +9,7 @@ databases=$(mysql $group$s1_prefix $ssl -e "SHOW DATABASES;" |
 
 log "Detected databases to backup: $databases"
 
-databases=(dlc)
+#databases=(dlc)
 
 #for db in "${databases[@]}"; do
 for db in $databases; do
