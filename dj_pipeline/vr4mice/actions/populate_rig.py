@@ -291,7 +291,9 @@ def populate_rig(
 
     dataset = name of file : mouse_name_doe_attempt
     """
-
+    
+    gui = os.environ.get("GUI", "false").lower() in ["true", "1", "yes"]
+    
     if gui:
         ext = [".npy", ".pickle"]
     else:
