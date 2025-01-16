@@ -332,13 +332,13 @@ def populate_rig(
             if raw_data_npy is None:
                 if gui:
                     logger.warning(
-                        f"Attention: .npy file from GUI was not found for {dataset};
+                        f"Attention: .npy file from GUI was not found for {dataset}; \
                         As .npy files from gui were expected (gui flag is {gui}) the population will be aborted."
                     )
                     return False
 
                 logger.info(
-                    f"Attention: .npy file from GUI was not found for {dataset};
+                    f"Attention: .npy file from GUI was not found for {dataset}; \
                     As .npy files from gui can be skipped (gui flag is {gui}) the population will be continued."
                 )
 
