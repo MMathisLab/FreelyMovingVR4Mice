@@ -21,7 +21,8 @@ class Camera(dj.Lookup):
     definition = """
     camera: varchar(128)
     """
-    contents = [["Imagingsource"]]
+    contents = [["Imagingsource"], 
+                ["TISCam"]]
 
 
 @schema
