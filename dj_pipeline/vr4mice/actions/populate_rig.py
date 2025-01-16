@@ -10,6 +10,7 @@ import pandas as pd
 from vr4mice.actions.keys2tables_base import base
 from vr4mice.actions.keys2tables_vr4mice import vr4mice
 from vr4mice.utils.logger import Logger
+from vr4mice import schema as dj_schema
 
 """
     Script that populates database according on the input data from files and key2tables hints.
@@ -307,7 +308,7 @@ def populate_rig(
             raw_data_pickle, dataset = get_new_file(pickle_file, path)
             key = f'dataset="{dataset}"'
 
-            if (vr4mice.Dataset() & key).fetch(as_dict=True):
+            if (dj_schema.vr4mice.Dataset() & key).fetch(as_dict=True):
                 logger.info(f"{key} is already in the database, skip.")
                 break
             else:
