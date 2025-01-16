@@ -264,7 +264,7 @@ def get_files_paths(dataset, remote_src=None, local_src="/data", data="/data"):
 
 
 def populate_rig(
-    path="/data/data", gui=True, srcf="/data", dstf="processed", move=True
+    path="/data/data", gui=os.environ["GUI"], srcf="/data", dstf="processed", move=True
 ) -> None:
     """
     Populates database tables with data from files in the specified directory.
