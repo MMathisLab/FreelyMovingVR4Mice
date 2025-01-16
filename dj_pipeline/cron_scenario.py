@@ -22,7 +22,7 @@ try:
     check_folder_existence(path)
     populate_rig(path=path, gui=os.environ["GUI"])
 except Exception as e:
-    logger.error(f"An error occurred in populate_and_move: {e}")
+    logger.error(f"An error occurred in the raw data population (populate_rig): {e}")
 
 try:
     from vr4mice.schema import base_analysis, dlc, vr4mice

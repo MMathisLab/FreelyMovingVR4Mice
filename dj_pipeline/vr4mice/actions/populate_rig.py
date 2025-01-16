@@ -307,9 +307,11 @@ def populate_rig(
             raw_data_pickle, dataset = get_new_file(pickle_file, path)
             key = f'dataset="{dataset}"'
 
-            if (vr4mice.Dataset & key).fetch(as_dict=True):
+            if (vr4mice.Dataset() & key).fetch(as_dict=True):
                 logger.info(f"{key} is already in the database, skip.")
                 break
+            else:
+                logger.info(f"{key} not yet in the database, continue.")
 
             raw_data_npy = None
 
