@@ -211,7 +211,7 @@ def parse_date(filename):
         return None
 
 
-def get_files_paths(dataset, remote_src=None, local_src="/data", data="/data"):
+def get_files_paths(dataset, remote_src=None, local_src="/data", data="/data", filename=os.environ['IMG_SRC']):
     """
     Simulation of data from gui .npy, if it's missing
     # todo: add files move if one folder
@@ -226,22 +226,22 @@ def get_files_paths(dataset, remote_src=None, local_src="/data", data="/data"):
             "dst": local_src + data,
         },
         "dlc_path": {
-            "filename": "Imagingsource_" + dataset + "_DLC.hdf5",
+            "filename": filename + "_" + dataset + "_DLC.hdf5",
             "src": remote_src,
             "dst": dlc_video_path,
         },
         "camera_path": {
-            "filename": "Imagingsource_" + dataset + "_TS.npy",
+            "filename": filename + "_" + dataset + "_TS.npy",
             "src": remote_src,
             "dst": dlc_video_path,
         },
         "video_path": {
-            "filename": "Imagingsource_" + dataset + "_VIDEO.avi",
-            "src": "Imagingsource_" + dataset + "_VIDEO.avi",
+            "filename": filename + "_" + dataset + "_VIDEO.avi",
+            "src": filename + "_" + dataset + "_VIDEO.avi",
             "dst": dlc_video_path,  # false (remote only)
         },
         "proc_path": {
-            "filename": "Imagingsource_" + dataset + "_PROC",
+            "filename": filename + "_" + dataset + "_PROC",
             "src": remote_src,
             "dst": dlc_video_path,
         },
