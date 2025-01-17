@@ -384,4 +384,4 @@ def populate_rig(
                                 move=True,
                             )
             except Exception as e:
-                logger.warning(f"Population of raw data failed for {dataset}")
+                logger.warning(f"Population of raw data failed for {pickle_file}")
