@@ -312,73 +312,76 @@ def populate_rig(
     if ".pickle" in dir_list.keys():
 
         for pickle_file in dir_list[".pickle"]:
-            logger.info("Processing file: " + str(pickle_file))
-            raw_data_pickle, dataset = get_new_file(pickle_file, path)
-            key = f'dataset="{dataset}"'
+            try:
+                logger.info(f"Processing file: {pickle_file}")
+                raw_data_pickle, dataset = get_new_file(pickle_file, path)
+                key = f'dataset="{dataset}"'
 
-            if (dj_schema.vr4mice.Dataset() & key).fetch(as_dict=True):
-                logger.info(f"{key} is already in the database, skip.")
-                break
-            else:
-                logger.info(f"{key} not yet in the database, continue.")
+                if (dj_schema.vr4mice.Dataset() & key).fetch(as_dict=True):
+                    logger.info(f"{key} is already in the database, skip.")
+                    break
+                else:
+                    logger.info(f"{key} not yet in the database, continue.")
 
-            raw_data_npy = None
+                raw_data_npy = None
 
-            # todo: add check that it's not Imagingsource/S!!
-            # if finds some (it's dlc_video) => move it
+                # todo: add check that it's not Imagingsource/S!!
+                # if finds some (it's dlc_video) => move it
 
-            if ".npy" in dir_list.keys():  # todo(mary) optimize
-                for npy_file in dir_list[".npy"]:
-                    # Note: algo should be modified if names of files for same dataset are not similar
-                    # (if GUI is not used f.ex.)
-                    if Path(npy_file).stem == dataset:
-                        logger.info(f"Processing file: {npy_file}")
-                        raw_data_npy, dataset = get_new_file(npy_file, path)
-                        break
+                if ".npy" in dir_list.keys():  # todo(mary) optimize
+                    for npy_file in dir_list[".npy"]:
+                        # Note: algo should be modified if names of files for same dataset are not similar
+                        # (if GUI is not used f.ex.)
+                        if Path(npy_file).stem == dataset:
+                            logger.info(f"Processing file: {npy_file}")
+                            raw_data_npy, dataset = get_new_file(npy_file, path)
+                            break
 
-            # if .npy file is missing return
-            if raw_data_npy is None:
-                if gui:
-                    logger.warning(
-                        f"Attention: .npy file from GUI was not found for {dataset}; \
-                        As .npy files from gui were expected (gui flag is {gui}) the population will be aborted."
-                    )
-                    return False
-
-                logger.info(
-                    f"Attention: .npy file from GUI was not found for {dataset}; \
-                    As .npy files from gui can be skipped (gui flag is {gui}) the population will be continued."
-                )
-
-                # as there is no .npy, we have to restore some parts of raw_data
-                # (mostly info about filepaths location)
-                files_info = get_files_paths(
-                    dataset=dataset, remote_src=None, local_src="/data", data=path
-                )  # paths correspond to docker env
-                raw_data = {**files_info, **raw_data_pickle}
-                schemas = [vr4mice]
-
-            else:  # all datasets combined
-                raw_data = {**raw_data_pickle, **raw_data_npy}
-                # populate all schemas
-                schemas = [base, vr4mice]
-
-            for schema in schemas:
-                # populate all tables
-                for table_name, attributes in schema[
-                    "tables"
-                ].items():  # get attributes
-                    flag, none_vals = check_keys(
-                        attributes, raw_data, table_name, schema=schema
-                    )
-                    if flag:
-                        raw_data = {**raw_data, **none_vals}
-                        populate(
-                            table_name,
-                            attributes,
-                            raw_data,
-                            schema=schema,
-                            srcf="/data",
-                            dstf="processed",
-                            move=True,
+                # if .npy file is missing return
+                if raw_data_npy is None:
+                    if gui:
+                        logger.warning(
+                            f"Attention: .npy file from GUI was not found for {dataset}; \
+                            As .npy files from gui were expected (gui flag is {gui}) the population will be aborted."
                         )
+                        return False
+
+                    logger.info(
+                        f"Attention: .npy file from GUI was not found for {dataset}; \
+                        As .npy files from gui can be skipped (gui flag is {gui}) the population will be continued."
+                    )
+
+                    # as there is no .npy, we have to restore some parts of raw_data
+                    # (mostly info about filepaths location)
+                    files_info = get_files_paths(
+                        dataset=dataset, remote_src=None, local_src="/data", data=path
+                    )  # paths correspond to docker env
+                    raw_data = {**files_info, **raw_data_pickle}
+                    schemas = [vr4mice]
+
+                else:  # all datasets combined
+                    raw_data = {**raw_data_pickle, **raw_data_npy}
+                    # populate all schemas
+                    schemas = [base, vr4mice]
+
+                for schema in schemas:
+                    # populate all tables
+                    for table_name, attributes in schema[
+                        "tables"
+                    ].items():  # get attributes
+                        flag, none_vals = check_keys(
+                            attributes, raw_data, table_name, schema=schema
+                        )
+                        if flag:
+                            raw_data = {**raw_data, **none_vals}
+                            populate(
+                                table_name,
+                                attributes,
+                                raw_data,
+                                schema=schema,
+                                srcf="/data",
+                                dstf="processed",
+                                move=True,
+                            )
+            except Exception as e:
+                logger.warning(f"Population of raw data failed for {dataset}")
