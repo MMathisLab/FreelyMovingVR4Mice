@@ -211,7 +211,13 @@ def parse_date(filename):
         return None
 
 
-def get_files_paths(dataset, remote_src=None, local_src="/data", data="/data", filename=os.environ['IMG_SRC']):
+def get_files_paths(
+    dataset,
+    remote_src=None,
+    local_src="/data",
+    data="/data",
+    filename=os.environ["IMG_SRC"],
+):
     """
     Simulation of data from gui .npy, if it's missing
     # todo: add files move if one folder
@@ -291,9 +297,9 @@ def populate_rig(
 
     dataset = name of file : mouse_name_doe_attempt
     """
-    
+
     gui = os.environ.get("GUI", "false").lower() in ["true", "1", "yes"]
-    
+
     if gui:
         ext = [".npy", ".pickle"]
     else:
