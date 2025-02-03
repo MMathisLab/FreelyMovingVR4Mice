@@ -41,7 +41,7 @@ Perform 3 measurements for each opening time to ensure consistency. Performing s
 
 Here is an example of a calibration from Tolias Lab.
 
-```python
+```{code-block} python
 import numpy as np
 import matplotlib.pyplot as plt
 
