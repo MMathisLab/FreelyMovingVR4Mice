@@ -14,8 +14,8 @@ data = []
 timestamps = []
 start_time = time.time()
 
-# Record data for 10 seconds
-timeout = time.time() + 30  # 10 seconds from now
+# Record data for 30 seconds
+timeout = time.time() + 30  # 30 seconds from now
 
 while True:
     # Read data from serial port

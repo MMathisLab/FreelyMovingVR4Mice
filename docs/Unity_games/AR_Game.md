@@ -2,30 +2,32 @@
 
 This page outlines the steps required to install the Unity Augmented Reality game(s).
 
-### Install Unity:
+## Install Unity
 
-#### Download and install Anaconda:
+### Download and install Anaconda
 
 You can install Anaconda from the [Anaconda website](https://www.anaconda.com/products/individual) directly.
 
-#### Download and install unity (version 2022.3.15f1).
+### Download and install unity (version 2022.3.15f1)
 
-Install both in the same order: 
+Install both in the same order:
+
 - Download [UnityHub](https://unity3d.com/fr/get-unity/download).
 - Download the *approved* version (2022.3.15f1) of [Unity Editor](https://unity3d.com).
 
-#### Install the MLagents package:
+### Install the MLagents package
 
-***Nota bene***: _you can skip this part if you already cloned the repository while following the {doc}`../../docs/Installation/installSumUp`_
+***Nota bene***: *you can skip this part if you already cloned the repository while following the {doc}`../../docs/Installation/installSumUp`*
 
 - Clone the `ml-agents` [github repo](https://github.com/Unity-Technologies/ml-agents):
 
-	```
-	git clone --branch release_21 https://github.com/Unity-Technologies/ml-agents.git
-	```
-	(_the `--branch release_21` option will switch to the tag of the latest stable release, which currently is **21** and is the one we use. Omitting that will get the main branch which is potentially unstable_)
+ ```bash
+ git clone --branch release_22 https://github.com/Unity-Technologies/ml-agents.git
+ ```
 
-### Add and Open the `AugmentedReality` project to Unity.
+(*the `--branch release_22` option will allow to download the [latest stable release](https://github.com/Unity-Technologies/ml-agents/releases), as of January 2025. Omitting that will get the main branch which is potentially unstable*)
+
+## Add and Open the `AugmentedReality` project to Unity
 
 - Open the Unity-Hub app.
 - Go to `Add` >> ``Add from disk`` and add the `FreelyMovingVR4Mice/AugmentedReality` folder as a project (you should have the repo cloned on your computer for that step -- see {doc}`../../docs/Installation/installSumUp` if that's not the case).
@@ -51,7 +53,6 @@ Install both in the same order:
 :width: 400px
 :align: center
 ```
-
 
 - Go to the `ml-agents` folder you cloned previously and select `com.unity.ml-agents/package.json`. This should import the `ml-agents` package.
 

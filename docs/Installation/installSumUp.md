@@ -42,15 +42,15 @@ Download and install **ml-agents**'s 22nd release directly from the repository:
   >
   > If the installation was successful, the help manual of the `mlagents-learn` command should be displayed on your terminal window. For more details on how to install **ml-agents**, check the official documentation [here](https://unity-technologies.github.io/ml-agents/Installation/).
 
-Now, we'll go "up" one level (back to the location where you cloned the previous repository) and download the **vr4mice** source code:
+Now, it is necessary to go "up" one level (back to the location where the previous repository was cloned) and download the **vr4mice** source code:
 
-- To return to previous folder from the command line you can run:
+- To return to previous folder from the command line, the following simple command can be used:
 
   ```bash
   cd ..
   ```
 
-- Clone the FreelyMovingVR4Mice repository:
+- To clone the FreelyMovingVR4Mice repository:
 
   ```bash
   git clone https://github.com/MMathisLab/FreelyMovingVR4Mice.git
@@ -60,21 +60,21 @@ Now, we'll go "up" one level (back to the location where you cloned the previous
   cd FreelyMovingVR4Mice
   ```
 
-- Choose a specific **branch**, if needed, by running:
+- Choosing a specific **branch**, if needed, can be done as follows:
 
   ```bash
-  git checkout branch_name
+  git checkout <name-of-the-branch>
   ```
 
   > _When cloning a Github repository, the default branch will usually be the `main` (or `master`)._
 
-- Install the **vr4mice** package  (_use `pip install -e .` if you're planning on actively developing the package_):
+- To install the **vr4mice** package  (_use `pip install -e .` instead if planning to actively developing the package_):
 
   ```bash
   pip install .
   ```
 
-- To check everything installed successfully (assuming no **ERRORS** were displayed in the process), try to run the following in your conda environment:
+- To check everything installed successfully (assuming no **ERRORS** were displayed in the process), try running the following in your conda environment:
 
   ```bash
   vr4mice

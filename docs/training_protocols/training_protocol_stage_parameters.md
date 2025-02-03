@@ -10,7 +10,7 @@
 |monitor             |`None`                     |slit_depth          |`0.2`                      |
 |write_video         |`False`                    |target_selection    |`6.0`                      |
 |fps                 |`60.0`                     |distractor_selection|`4.0`                      |
-|session_label       |`["ar_detection_no_velthr]`|occlusion_type      |`0.0`                      |
+|session_label       |`["ar_detection_no_velthr"]`|occlusion_type      |`0.0`                      |
 |epochs              |`[250]`                    |camera_type         |`1.0`                      |
 |epoch_labels        |`["single_teardrop"]`      |target_spread       |`4.0`                      |
 |config_file_path    |`Path` object              |target_rotation     |`0`                        |
@@ -33,7 +33,7 @@
 |monitor             |`None`                     |slit_depth          |`0.2`                      |
 |write_video         |`False`                    |target_selection    |`6.0`                      |
 |fps                 |`60.0`                     |distractor_selection|`4.0`                      |
-|session_label       |`["ar_detection_velthr]`   |occlusion_type      |`0.0`                      |
+|session_label       |`["ar_detection_velthr"]`   |occlusion_type      |`0.0`                      |
 |epochs              |`[250]`                    |camera_type         |`1.0`                      |
 |epoch_labels        |`["single_teardrop"]`      |target_spread       |`4.0`                      |
 |config_file_path    |`Path` object              |target_rotation     |`0`                        |

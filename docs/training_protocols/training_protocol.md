@@ -272,14 +272,12 @@ This is currently the **test stage**. Mice that have reached it should do **>= 4
 - Hover over stimulus to view if desired.
 - Note start time.
 
-Note that you can mix and match different targets and distators by changing the `target_selection` and `distractor_selection` parameters. See {ref}`sec:target-distractor-list` for a list of the floats used and their corresponding targets/distractors that can be spawned.
-
-(sec:target-distractor-list)=
+Note that you can mix and match different targets and distators by changing the `target_selection` and `distractor_selection` parameters. See the table below for a list of the floats used and their corresponding targets/distractors that can be spawned.
 
 ```{list-table} **List of available targets/distractors**
-:align: center
-:width: 300px
 :header-rows: 1
+:align: center
+:width: 50%
 
 * - ID
   - Name

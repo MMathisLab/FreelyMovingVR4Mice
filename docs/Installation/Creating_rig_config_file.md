@@ -1,1 +1,1 @@
-# Creating a rig config file 
+# Creating a rig config file
