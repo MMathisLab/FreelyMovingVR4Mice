@@ -17,14 +17,13 @@ Wait till glue is dry and use heavy objects to ensure that the pieces are pushed
 
 coat one of the floor pieces with the light diffuser sheet ensuring that there are no air bubbles. The diffuser sheet is slightly smaller than the floor plate so you will need to add on another small part of diffuser sheet near the back of the floor plate. Reports from the Tolias lab suggest that this seam does not impact the performance of the mice. Once fully coated you can place this floor plate inside the box. This floor plate can then be removed between sessions for cleaning.
 
-If you have a machine shop i recommend asking them to do this for you, so that this is done with the highest quality!
+If you have a machine shop, it is recommend to ask them to do this for you, so that it is done with the highest quality!
 
 Image of the box:
 
 ```{figure} https://user-images.githubusercontent.com/9136089/210344507-22470a55-9464-40d7-9c89-54d46f2980f1.jpeg
 :alt: plexiglass box
-:class: bg-primary mb-1
-:width: 400px
+:width: 500px
 :align: center
 ```
 
@@ -32,7 +31,6 @@ Image of the light diffuser sandwiched between the two floor plates:
 
 ```{figure} https://user-images.githubusercontent.com/9136089/210345652-e1dde5a4-3057-4db5-baa6-1a5663d10f9f.jpeg
 :alt: light diffuser sheet sandwiched between two floor plates
-:class: bg-primary mb-1
-:width: 400px
+:width: 500px
 :align: center
 ```
