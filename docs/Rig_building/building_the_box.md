@@ -23,7 +23,7 @@ Image of the box:
 
 ```{figure} https://user-images.githubusercontent.com/9136089/210344507-22470a55-9464-40d7-9c89-54d46f2980f1.jpeg
 :alt: plexiglass box
-:width: 500px
+:width: 400px
 :align: center
 ```
 
@@ -31,6 +31,6 @@ Image of the light diffuser sandwiched between the two floor plates:
 
 ```{figure} https://user-images.githubusercontent.com/9136089/210345652-e1dde5a4-3057-4db5-baa6-1a5663d10f9f.jpeg
 :alt: light diffuser sheet sandwiched between two floor plates
-:width: 500px
+:width: 400px
 :align: center
 ```
