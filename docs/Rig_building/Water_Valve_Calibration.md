@@ -20,7 +20,7 @@
 
 To accurately measure the amount of water dispensed by the valve, it is required to take measurements of the water dispensed at different valve opening times. For instance, we will do so for the following opening times: `100 ms`, `200 ms`, `300 ms`, `400 ms`, `500 ms`, `600 ms`, `700 ms`, `800 ms`, `900 ms`, `1000 ms`.
 
-Perform the following <u>**3 times**</u> steps <u>**for each opening time**</u>:
+Perform the following set of steps <u>**3 times**</u> steps <u>**for each opening time**</u>:
 
 1. In `vr4mice`, select the manual water task and set the water valve opening times to the desired value (i.e. one of the values listed above).
 2. Collect dispensed water:
