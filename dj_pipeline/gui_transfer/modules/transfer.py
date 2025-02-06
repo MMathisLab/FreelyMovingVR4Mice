@@ -374,20 +374,22 @@ class Transfer(Template):
             self.info["video_meta"]["fps"] = 0
             self.info["video_meta"]["width"] = 0
             self.info["video_meta"]["height"] = 0
+            
+            try:
+                clip = VideoFileClip(str(filename))
+                if clip:
+                    if clip.duration:
+                        self.info["video_meta"]["duration"] = clip.duration
+                    if clip.fps:
+                        self.info["video_meta"]["fps"] = clip.fps
+                    if clip.size:
+                        (
+                            self.info["video_meta"]["width"],
+                            self.info["video_meta"]["height"],
+                        ) = clip.size
+            except Exception as e:
+                logger.warning(f"An error occurred while processing the video: {e}")
 
-            clip = VideoFileClip(str(filename))
-            if clip:
-                if clip.duration:
-                    self.info["video_meta"]["duration"] = clip.duration
-                if clip.fps:
-                    self.info["video_meta"]["fps"] = clip.fps
-                if clip.size:
-                    (
-                        self.info["video_meta"]["width"],
-                        self.info["video_meta"]["height"],
-                    ) = clip.size
-
-                    # todo err
 
     def _pre_fetch_files(self, filenames):
         """
