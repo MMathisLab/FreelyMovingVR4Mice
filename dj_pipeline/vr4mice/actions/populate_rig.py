@@ -161,6 +161,7 @@ def populate(
     data = dict()
 
     for a in attributes:
+        print(a)
         # check if there is a special processing for the generation of value of given attribute
         if a in schema["local_def"].keys():
             data[a] = schema["local_def"][a](
@@ -307,8 +308,6 @@ def populate_rig(
 
     dir_list = get_filenames(ext, path)
 
-    # Case: if .pickle is here and .npy (as optional)
-    # TODO: make it independent by dataset
     if ".pickle" in dir_list.keys():
 
         for pickle_file in dir_list[".pickle"]:
@@ -325,13 +324,8 @@ def populate_rig(
 
                 raw_data_npy = None
 
-                # todo: add check that it's not Imagingsource/S!!
-                # if finds some (it's dlc_video) => move it
-
-                if ".npy" in dir_list.keys():  # todo(mary) optimize
+                if ".npy" in dir_list.keys():
                     for npy_file in dir_list[".npy"]:
-                        # Note: algo should be modified if names of files for same dataset are not similar
-                        # (if GUI is not used f.ex.)
                         if Path(npy_file).stem == dataset:
                             logger.info(f"Processing file: {npy_file}")
                             raw_data_npy, dataset = get_new_file(npy_file, path)
@@ -358,14 +352,11 @@ def populate_rig(
                     )  # paths correspond to docker env
                     raw_data = {**files_info, **raw_data_pickle}
                     schemas = [vr4mice]
-
-                else:  # all datasets combined
+                else:
                     raw_data = {**raw_data_pickle, **raw_data_npy}
-                    # populate all schemas
                     schemas = [base, vr4mice]
-
+              
                 for schema in schemas:
-                    # populate all tables
                     for table_name, attributes in schema[
                         "tables"
                     ].items():  # get attributes
@@ -382,6 +373,38 @@ def populate_rig(
                                 srcf="/data",
                                 dstf="processed",
                                 move=True,
-                            )
+                                )
+            
             except Exception as e:
                 logger.warning(f"Population of raw data failed for {pickle_file}: {e}")
+            
+    elif ".npy" in dir_list.keys(): # case no pickle
+        for npy_file in dir_list[".npy"]:
+            raw_data_npy, dataset = get_new_file(npy_file, path)
+            raw_data_npy["rig_id"] = 12
+            raw_data_npy["license"] = "N/A"
+            files_info = get_files_paths(
+                dataset=dataset, remote_src=None, local_src="/data", data=path
+            )  # paths correspond to docker env
+            raw_data = {**files_info, **raw_data_npy}
+            schemas = [base]
+
+            for schema in schemas:
+                for table_name, attributes in schema[
+                    "tables"
+                ].items():  # get attributes
+                    flag, none_vals = check_keys(
+                        attributes, raw_data, table_name, schema=schema
+                    )
+                    if flag:
+                        raw_data = {**raw_data, **none_vals}
+                        populate(
+                            table_name,
+                            attributes,
+                            raw_data,
+                            schema=schema,
+                            srcf="/data",
+                            dstf="processed",
+                            move=True,
+                            )
+
