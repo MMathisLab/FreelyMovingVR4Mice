@@ -347,18 +347,29 @@ def plot_session(
     ax = _create_axes(ax=ax, per_aperture=per_aperture, num_aperture=num_aperture)
 
     if per_aperture:
-        for j, aperture in enumerate(np.sort(df.aperture.unique())):
-            data = df[df.aperture == aperture]
+        if num_aperture > 1:
+            for j, aperture in enumerate(np.sort(df.aperture.unique())):
+                data = df[df.aperture == aperture]
+                _plot_session_in_arena(
+                    df=data,
+                    box_df=box_df,
+                    ax=ax[j],
+                    per_side=per_side,
+                    label_x=label_x,
+                    label_y=label_y,
+                    scatter_reward=scatter_reward,
+                )
+                ax[j].set_title(f"{df.dataset.unique()[0]}_{aperture}")
+        else:
             _plot_session_in_arena(
-                df=data,
+                df=df,
                 box_df=box_df,
-                ax=ax[j],
+                ax=ax,
                 per_side=per_side,
                 label_x=label_x,
                 label_y=label_y,
                 scatter_reward=scatter_reward,
             )
-            ax[j].set_title(f"{df.dataset.unique()[0]}_{aperture}")
     else:
         _plot_session_in_arena(
             df=df,
