@@ -207,7 +207,8 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Experiments, Training protocol and parameters</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../training_protocols/training_protocol.html">Mouse training</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../training_protocols/training_protocol_stage_parameters.html">Game parameters for all training stages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training_protocols/contrast_discrimination_training_parameters.html">Contrast discrimination game parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training_protocols/shape_discrimination_training_parameters.html">Shape discrimination game parameters</a></li>
 </ul>
 
     </div>
@@ -432,7 +433,7 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>name_of_env
 </pre></div>
 </div>
-<p>Download our <a class="reference external" href="https://github.com/AdaptiveMotorControlLab/ml-agents.git">forked ml-agents repository</a> from <strong>AdaptiveMotorControlLab</strong> (<em>the <code class="docutils literal notranslate"><span class="pre">--branch</span> <span class="pre">release_21_fix</span></code> option will switch to the tag of the latest stable “fixed” release, which currently is <strong>21</strong> and is the one we use. Omitting that will get the main branch which is potentially unstable</em>):</p>
+<p>Download our <a class="reference external" href="https://github.com/AdaptiveMotorControlLab/ml-agents.git">forked ml-agents repository</a> from <strong>AdaptiveMotorControlLab</strong> (<em>the <code class="docutils literal notranslate"><span class="pre">--branch</span> <span class="pre">release_21_fix</span></code> option will switch to the tag of the latest stable “fixed” release, which currently is <strong>21</strong> and is the one we use. Omitting that will get the main branch</em>):</p>
 <ul>
 <li><p>Clone the repository:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--branch<span class="w"> </span>release_21_fix<span class="w"> </span>https://github.com/AdaptiveMotorControlLab/ml-agents.git
@@ -447,7 +448,9 @@
 <ul>
 <li><p>Then, run the following two commands in order:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>./ml-agents-envs
-python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>./ml-agents
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>./ml-agents
 </pre></div>
 </div>
 </li>

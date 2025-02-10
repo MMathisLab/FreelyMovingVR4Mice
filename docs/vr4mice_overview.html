@@ -210,7 +210,8 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Experiments, Training protocol and parameters</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="training_protocols/training_protocol.html">Mouse training</a></li>
-<li class="toctree-l1"><a class="reference internal" href="training_protocols/training_protocol_stage_parameters.html">Game parameters for all training stages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_protocols/contrast_discrimination_training_parameters.html">Contrast discrimination game parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_protocols/shape_discrimination_training_parameters.html">Shape discrimination game parameters</a></li>
 </ul>
 
     </div>
@@ -406,7 +407,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hardware-requirements">Hardware requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#software-requirements">Software requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-gui">vr4mice GUI</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deeplabcut-live-gui">Deeplabcut-live-gui</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deeplabcut-live-gui">DeepLabCut-live-GUI</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rig-calibration-checklist">Rig Calibration checklist</a></li>
 </ul>
             </nav>
@@ -422,8 +423,8 @@
   <section class="tex2jax_ignore mathjax_ignore" id="freelymovingvr4mice-overview">
 <h1>FreelyMovingVR4mice overview<a class="headerlink" href="#freelymovingvr4mice-overview" title="Link to this heading">#</a></h1>
 <a class="bg-primary mb-1 reference internal image-reference" href="../_images/Rig_Figure.jpg"><img alt="AR" class="bg-primary mb-1 align-center" src="../_images/Rig_Figure.jpg" style="width: 400px;" /></a>
-<p>This documentation provides a user guide for the installation and getting an augmented reality system up and running.
-FreelyMovingVR4mice uses two GUIs (<code class="docutils literal notranslate"><span class="pre">vr4mice</span></code> and <code class="docutils literal notranslate"><span class="pre">Deeplabcut-live-gui</span></code>) that were both developed within the Mathis lab. These two packages communicate with each other through a socket and allow for DeepLabCut poses to be passed to a video game so that the video can be rendered dynamically in real-time.</p>
+<p>This documentation provides a user guide for the installation and getting an augmented reality system up and running.</p>
+<p>FreelyMovingVR4mice uses two GUIs (<code class="docutils literal notranslate"><span class="pre">vr4mice</span></code> and <code class="docutils literal notranslate"><span class="pre">Deeplabcut-live-gui</span></code>) that were both developed within the Mathis lab. These two packages communicate with each other through a socket and allow for DeepLabCut poses to be passed to a video game so that the video can be rendered dynamically in real-time.</p>
 <section id="hardware-requirements">
 <h2>Hardware requirements<a class="headerlink" href="#hardware-requirements" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -437,7 +438,7 @@ FreelyMovingVR4mice uses two GUIs (<code class="docutils literal notranslate"><s
 <ul class="simple">
 <li><p>Python version: <em><strong>3.10.12</strong></em> (this version only)</p></li>
 <li><p>Unity3D (Version tested: <em><strong>2022.3.15f1</strong></em>)</p></li>
-<li><p>see <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> for additional requirements</p></li>
+<li><p>see <a class="reference download internal" download="" href="../_downloads/380c6a8ebbbce17d55d50ef17d3cf906/setup.cfg"><span class="xref download myst">setup.cfg</span></a> for additional requirements</p></li>
 </ul>
 <p>The augmented reality system runs on a python framework, <strong>vr4mice</strong>, this code was initially developed by <em><strong>Gary Kane</strong></em>, <em><strong>Michael Beauzile</strong></em>, and <em><strong>Mackenzie Mathis</strong></em> as a simple and scalable control suite for a host of systems neuroscience tasks. This was expanded with <em><strong>Thomas Sainsbury</strong></em>, <em><strong>Sebastien Hausmann</strong></em>, <em><strong>Mariia Popova</strong></em> and <em><strong>Jessy Lauer</strong></em>. This framework handles input and output to a teensy, parses actions to the Unity video game and handles all data logging for the experiments. In addition, it provides a simple GUI for the user to run the experiments and manually change parameters which control the experiments trial-like structure.</p>
 </section>
@@ -450,7 +451,7 @@ FreelyMovingVR4mice uses two GUIs (<code class="docutils literal notranslate"><s
 </ol>
 </section>
 <section id="deeplabcut-live-gui">
-<h2>Deeplabcut-live-gui<a class="headerlink" href="#deeplabcut-live-gui" title="Link to this heading">#</a></h2>
+<h2>DeepLabCut-live-GUI<a class="headerlink" href="#deeplabcut-live-gui" title="Link to this heading">#</a></h2>
 <p>To pass actions to <code class="docutils literal notranslate"><span class="pre">vr4mice</span></code> from dlc key points in real time you will also need a working installation of <a class="reference external" href="https://github.com/DeepLabCut/DeepLabCut-live-GUI">deeplabcutlive-gui</a>. This handles reading images from the camera and live pose extraction. Deeplabcutlive-gui requires that a <code class="docutils literal notranslate"><span class="pre">processor</span></code> script is loaded, this is a file that computes various attributes such as the x, y position of the mouse and then it sends this data to via a socket to the vr4mice gui. An example processor can be found in <code class="docutils literal notranslate"><span class="pre">mouse_task/dlc_utils/dlc_processor_socket.py</span></code></p>
 <p>These documents provide an explanation of how to use both of these objects alongside an explanation of how to build the rig and installation.</p>
 </section>
@@ -536,7 +537,7 @@ FreelyMovingVR4mice uses two GUIs (<code class="docutils literal notranslate"><s
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hardware-requirements">Hardware requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#software-requirements">Software requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-gui">vr4mice GUI</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deeplabcut-live-gui">Deeplabcut-live-gui</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deeplabcut-live-gui">DeepLabCut-live-GUI</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rig-calibration-checklist">Rig Calibration checklist</a></li>
 </ul>
   </nav></div>
