@@ -1,10 +1,12 @@
+import subprocess
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional
 
 import datajoint as dj
 import pandas as pd
 from base_actions.send_email import email
 
+from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
 
@@ -21,8 +23,8 @@ class DataFrame(dj.Computed):
     # TODO: This used to point to vr4mice.VR4Mice
     #       will probably point this to the next version when it's available
 
-    # TODO: "step", "reward", "step_time", "mouse_can_report", "head_dir" have
-    #       to be deprecated: can be always fetched from Raw
+    # TODO: Alert!
+    # "step", "reward", "step_time", "mouse_can_report", "head_dir" has to be deprecated: can be always fetched from Raw
 
     definition = """
     -> vr4mice.Dataset
@@ -86,9 +88,8 @@ class DataFrame(dj.Computed):
     interpolation: longblob
     """
 
-    def make(self, key: dict):
-
-        import vr4mice.analysis.analysis as analysis
+    def make(self, key):
+        from vr4mice.analysis.analysis import create_data_frame
 
         if self & key:
             logger.info(
@@ -97,11 +98,12 @@ class DataFrame(dj.Computed):
             return
 
         try:
-            data, unity_to_physical_arena_size = analysis.create_data_frame(key)
+            data, unity_to_physical_arena_size = create_data_frame(key)
             data = data.to_dict(orient="list")
             data = {**key, **data, **{"interpolation": unity_to_physical_arena_size}}
 
             # TODO: add test that data keys are the same with columns names
+            # if not in... alert
 
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
@@ -145,7 +147,7 @@ class DataFrame(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_all_data(self, columns: Optional[List[str]] = None):
+    def get_all_data(self, columns=None):
         """
         columns: list containing the names of required columns
         return pd.Dataframe
@@ -166,59 +168,35 @@ class DataFrame(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}: {err}")
             return None
 
-    def get_rewarded(self, key: dict) -> Union[pd.Series, bool]:
-        """DJ wrapper of `analysis.get_rewarded`."""
-        import vr4mice.analysis.analysis as analysis
+    def get_rewarded(self, key):
+        from vr4mice.analysis.analysis import get_rewarded
 
         # values needed for get_rewarded function
-        df = self.get_data(key, ["dataset", "trial", "reward"])
+        df = self.get_data(key, ["dataset", "trial", "reward", "aperture"])
         if df is not False and df is not None:
-            return analysis.get_rewarded(df)
+            df["trial_rewarded"] = get_rewarded(df)
+            return df["trial_rewarded"]
         return False
 
-    def get_all_rewarded(self) -> Union[pd.Series, bool]:
-        import vr4mice.analysis.analysis as analysis
+    def get_all_rewarded(self):
+        from vr4mice.analysis.analysis import get_rewarded
 
-        df = self.get_all_data(["dataset", "trial", "reward"])
+        df = self.get_all_data(["dataset", "trial", "reward", "aperture"])
         if df is not False and df is not None:
-            return analysis.get_rewarded(df)
+            df["trial_rewarded"] = get_rewarded(df)
+            return df["trial_rewarded"]
         return False
 
-    def get_distance_to_choice(self, key: dict) -> Union[pd.Series, bool]:
-        """DJ wrapper of `analysis.get_distance_to_choice`."""
-        import vr4mice.analysis.analysis as analysis
+    def get_choices(self, key):  # TODO: implement
 
-        df = self.get_data(key, ["dataset", "trial", "trial_left_choice", "x", "y"])
-        df["flip_one_side"] = df["trial_left_choice"].replace([0, 1], [1, -1])
+        pass  # TODO: implement as rewarded
 
-        box_df = BoxDataFrame().get_data(key, columns=["r_reward_x", "r_reward_z"])
+        from vr4mice.analysis.analysis import get_choices
 
-        if df is not False and df is not None:
-            return analysis.get_distance_to_choice(df, box_df)
-        return False
-
-    def get_local_tortuosity(
-        self, key: dict, window: int = 1
-    ) -> Union[pd.Series, bool]:
-        """DJ wrapper of `analysis.get_local_tortuosity`."""
-        import vr4mice.analysis.analysis as analysis
-
-        df = self.get_data(key, ["dataset", "trial", "x", "y"])
-        df["flip_one_side"] = df["trial_left_choice"].replace([0, 1], [1, -1])
-
-        if df is not False and df is not None:
-            return analysis.get_local_tortuosity(df, window=window)
-        return False
-
-    def get_optimal_p(self, key: dict) -> Union[pd.Series, bool]:
-        """DJ wrapper of `analysis.get_optimal_p`."""
-        import vr4mice.analysis.analysis as analysis
-
-        df = self.get_data(key, columns=["dataset", "trial", "x", "y"])
-
-        if df is not False and df is not None:
-            return analysis.get_optimal_p(df)
-        return False
+        df = self.get_data(key)
+        if df is not False:
+            return get_choices(df)
+        return df
 
 
 @schema
@@ -283,14 +261,15 @@ class BoxDataFrame(dj.Computed):
 
             return None
 
-    def get_data(self, key: dict, columns: Optional[List[str]] = None):
+    def get_data(self, key, columns=None):
         try:
             if self & key:
                 if columns:
                     data = (self & key).fetch(*columns, as_dict=True)
                 else:
                     data = (self & key).fetch(as_dict=True)
-                return pd.DataFrame(data)
+                df = pd.DataFrame(data)
+                return df
             return False
 
         except Exception as err:
@@ -299,7 +278,7 @@ class BoxDataFrame(dj.Computed):
             )
             return None
 
-    def get_all_data(self, columns: Optional[List[str]] = None) -> pd.DataFrame:
+    def get_all_data(self, columns):
         try:
 
             dfs = []
@@ -308,21 +287,23 @@ class BoxDataFrame(dj.Computed):
                 key = f"dataset='{key}'"
                 data = self.get_data(key, columns)
                 dfs.append(data)
-            return pd.concat(dfs).reset_index(drop=True)
+
+            df = pd.concat(dfs).reset_index(drop=True)
+            return df
 
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}: {err}")
             return None
 
-    def compute_distance_to_choice(self, key):
+    def calculate_distance_to_reward(self, key):
 
-        from vr4mice.analysis.analysis import compute_distance_to_choice
+        from vr4mice.analysis.analysis import calculate_distance_to_reward
 
         df = DataFrame().get_data(key)
         box_df = self.get_data(key)
 
         if df is not False and box_df is not False:
-            return compute_distance_to_choice(df, box_df)
+            return calculate_distance_to_reward(df, box_df)
 
         return False
 
@@ -335,10 +316,11 @@ class SummaryPlots(dj.Computed):
     filename:  varchar(255)
     """
 
-    def make(self, key: dict, send: bool = False):
+    def make(self, key, send=False):
         """
         key: Dataset
         """
+        # generate
 
         from vr4mice.analysis.summary_dj import vr4mice_summary_plots
         from vr4mice.schema import base
@@ -379,7 +361,7 @@ class SummaryPlots(dj.Computed):
             )
             self.insert1(data, allow_direct_insert=True)
 
-    def get_name(self, key: dict):
+    def get_name(self, key):
 
         from vr4mice.schema import base
 
@@ -391,7 +373,7 @@ class SummaryPlots(dj.Computed):
 
         return name
 
-    def get_path(self, key: dict, base: str = "/data/summary_plots", ext: str = ".png"):
+    def get_path(self, key, base="/data/summary_plots", ext=".png"):
         """
         key: Dataset
         Note: used in vr4mice_summary_plots
@@ -400,7 +382,7 @@ class SummaryPlots(dj.Computed):
         name = f"{name}_summary_plot{ext}"
         return Path(base).joinpath(name)
 
-    def get_subtitle(self, key: dict, task_name: str = "AR Task: test plot"):
+    def get_subtitle(self, key, task_name="AR Task: test plot"):
         """
         key: Dataset
         Used in vr4mice_summary_plots
@@ -411,7 +393,7 @@ class SummaryPlots(dj.Computed):
         return subtitle
 
 
-def insert_send_email(key: dict, tuple_, table, filename, send: bool = False):
+def insert_send_email(key, tuple_, table, filename, send=False):
     from base_schemas.schemas import exp, mice
 
     try:
@@ -457,7 +439,7 @@ class GitCommit(dj.Computed):
     changed_files: blob
     """
 
-    def make(self, key: dict):
+    def make(self, key):
 
         if self & key:
             logger.info(
@@ -478,7 +460,7 @@ class GitCommit(dj.Computed):
             logger.warning(err)
 
 
-def parse_git_commit_file(filename: str = "git_commit"):  # TODO(mary): move to helpers
+def parse_git_commit_file(filename="git_commit"):  # TODO(mary): move to helpers
     commit_hash = None
     modified_files = []
 
