@@ -8,24 +8,18 @@
 ```
 
 This documentation provides a user guide for the installation and getting an augmented reality system up and running.
-FreelyMovingVR4mice uses two GUIs (`vr4mice` and `Deeplabcut-live-gui`) that were both developed within the Mathis lab. These two packages communicate with each other through a socket and allow for dlc poses to be passed to a video game so that the video can be rendered dynamically in real time.
+
+FreelyMovingVR4mice uses two GUIs (`vr4mice` and `Deeplabcut-live-gui`) that were both developed within the Mathis lab. These two packages communicate with each other through a socket and allow for DeepLabCut poses to be passed to a video game so that the video can be rendered dynamically in real-time.
 
 ## Hardware requirements
 
-- Teensy 4.x board
+- Teensy 4.0 (or above) board
 - Windows OS 10 or above
 - GPU for DeepLabCut, with at least 8 GB of memory
 
 ## Software requirements
-<!-- Old requirements: -->
-<!-- 
-- Python3+ (tested on: 3.7)
-- Unity3D (versions tested: 2019.3.2.f1)
-- see `setup.py` for additional requirements 
--->
 
-<!-- New requirements: -->
-- Python ***v3.10.12*** or above
+- Python version: ***3.10.12*** (this version only)
 - Unity3D (Version tested: ***2022.3.15f1***)
 - see [setup.cfg](../setup.cfg) for additional requirements
 
@@ -51,6 +45,6 @@ Before running a mouse on the rig make sure you complete this checklist for test
 
 1. `Latency testing`: make sure that your [photodiode circuit](./Rig_building/Photodiode_circuit.md) is connected and run a latency test. This can be done by running a [session](./Installation/Run_a_session.md) without the mouse being in the box. You can then compare the round trip latencies by running this jupyter notebook `mouse_task/latency_tests/Latency_test_notebook/Latency_testing.ipynb`.
 
-2. `Calibrate the monitor brightness`: Follow this [doc](./Rig_building/Monitor_Luminance_Measurement.md) to ensure that the monitors are similar brightness.
+2. `Calibrate the monitor brightness`: Follow this [doc](./Rig_building/Monitor_Luminance_Measurement.md) to ensure that the monitors have similar brightness across labs.
 
 3. `Calibrate the water valves`: Check that your water ports are delivering between 3-5ul of water using this [`calibration method`](./Rig_building/Water_Valve_Calibration.md)
