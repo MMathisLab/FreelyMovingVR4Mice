@@ -48,7 +48,7 @@ class Base(dj.Computed):
                 )[0]
             else:
                 logger.warning(f"{self.__class__.__name__} no Session entry for {key}.")
-                return 
+                return
             data = {**key, **mouse, **session}
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")

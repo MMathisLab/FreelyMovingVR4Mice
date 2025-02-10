@@ -355,7 +355,7 @@ def populate_rig(
                 else:
                     raw_data = {**raw_data_pickle, **raw_data_npy}
                     schemas = [base, vr4mice]
-              
+
                 for schema in schemas:
                     for table_name, attributes in schema[
                         "tables"
@@ -373,12 +373,12 @@ def populate_rig(
                                 srcf="/data",
                                 dstf="processed",
                                 move=True,
-                                )
-            
+                            )
+
             except Exception as e:
                 logger.warning(f"Population of raw data failed for {pickle_file}: {e}")
-            
-    elif ".npy" in dir_list.keys(): # case no pickle
+
+    elif ".npy" in dir_list.keys():  # case no pickle
         for npy_file in dir_list[".npy"]:
             raw_data_npy, dataset = get_new_file(npy_file, path)
             raw_data_npy["rig_id"] = 12
@@ -406,5 +406,4 @@ def populate_rig(
                             srcf="/data",
                             dstf="processed",
                             move=True,
-                            )
-
+                        )

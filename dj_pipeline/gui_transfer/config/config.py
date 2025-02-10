@@ -35,7 +35,9 @@ config.json example
 """
 
 
-def get_system_config(config_path=os.environ["config_path"], config_name=os.environ["config_name"]):
+def get_system_config(
+    config_path=os.environ["config_path"], config_name=os.environ["config_name"]
+):
     """
     Loads the system configuration from a JSON file.
 

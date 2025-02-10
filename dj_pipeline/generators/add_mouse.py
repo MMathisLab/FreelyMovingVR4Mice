@@ -11,7 +11,7 @@ from base_schemas.schemas import mice
 mouse_data = {
     "mouse_name": "Testmouse",
     "mouse_id": 999,  # Unique mouse ID; adjust if necessary to avoid conflicts, start from big number if external
-    "dob": datetime.date(2022, 3, 15), # date of birth
+    "dob": datetime.date(2022, 3, 15),  # date of birth
     "sex": choice(["M", "F"]),
     "strain": "WT",  # Assuming "WT" strain exists in Strain table contents
 }
@@ -20,12 +20,13 @@ mouse_data = {
 surgery_types = ["injection craniotomy", "7 mm craniotomy", "optical fibers"]
 
 surgery_data = {
-        "mouse_name": "Testmouse",
-        "surgery_type": "7 mm craniotomy",
-        "surgery_details": "Initial surgery for imaging access",
-        "surgery_date": "2022-05-01",
+    "mouse_name": "Testmouse",
+    "surgery_type": "7 mm craniotomy",
+    "surgery_details": "Initial surgery for imaging access",
+    "surgery_date": "2022-05-01",
 }
 # Note: modify populate_surgery_image too
+
 
 def populate_mouse():
     try:
@@ -33,12 +34,15 @@ def populate_mouse():
     except dj.errors.DuplicateError:
         print(f"Mouse {mouse_data} already exists.")
 
+
 def populate_surgery_type():
     for s_type in surgery_types:
         mice.SurgeryType.insert1({"surgery_type": s_type}, skip_duplicates=True)
 
+
 def populate_surgery():
     mice.Surgery.insert1(surgery_data, skip_duplicates=True)
+
 
 def create_fake_paths(
     folder="/tmp/data/rawdata/surgery_images", fpath="fake_image.png"
@@ -79,9 +83,9 @@ def populate_surgery_image():
 # Main function to execute all population steps
 def populate_all():
     populate_mouse()
-    #populate_surgery_type()
-    #populate_surgery()
-    #populate_surgery_image()
+    # populate_surgery_type()
+    # populate_surgery()
+    # populate_surgery_image()
 
 
 # Execute the population process
