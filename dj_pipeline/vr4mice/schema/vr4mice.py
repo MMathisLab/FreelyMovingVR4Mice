@@ -1,3 +1,4 @@
+import os
 import datajoint as dj
 import numpy as np
 
@@ -20,7 +21,7 @@ class Camera(dj.Lookup):
     definition = """
     camera: varchar(128)
     """
-    contents = [["Imagingsource"]]
+    contents = [["Imagingsource"], ["TISCam"]]
 
 
 @schema
@@ -76,6 +77,27 @@ class Dataset(dj.Manual):
 
 
 @schema
+class FailedSession(dj.Manual):
+    definition = """
+    # Keys that failed under populate
+    -> Dataset
+    failed_table_name:   varchar(64)  
+    ---
+    error_message                :   varchar(1024)  # Error message
+    """
+
+    def add_entry(self, dataset_key, table_name, error_message, skip_duplicates=True):
+        self.insert1(
+            {
+                "dataset": dataset_key,
+                "failed_table_name": table_name,
+                "error_message": error_message,
+            },
+            skip_duplicates=skip_duplicates,
+        )
+
+
+@schema
 class Labels(dj.Lookup):
     definition = """
     idx: int
@@ -84,7 +106,7 @@ class Labels(dj.Lookup):
     """
 
     contents = [
-        # [0, "example_label"],  #
+        # [0, "example_label"],  # auto fill during Groups manual populate (if doesn't exist)
     ]
 
     @classmethod
@@ -108,7 +130,7 @@ class Groups(dj.Manual):
             a = (Dataset & key).fetch()
             if a.size == 0:
                 logger.warning(
-                    f"No Dataset entry found for {dataset}: can't populate Groups table."
+                    f"No Dataset entry found for {dataset}: can't populate {self.__class__.__name__} table."
                 )
                 return
             key = f"label='{label}'"
@@ -121,57 +143,44 @@ class Groups(dj.Manual):
             self.insert1({"dataset": dataset, "idx": label_idx})
 
         except Exception as err:
-            err = f"Error while populating the Groups table: key: {dataset} {label_idx}\n {err}"
+            FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
+            err = f"Can't populate {self.__class__.__name__}, key: {dataset}. Error: {err}."
             logger.warning(err)
 
 
 @schema
-class Labels(dj.Lookup):
+class Labs(dj.Lookup):
     definition = """
     idx: int
     ---
-    label: varchar(128)
+    lab: varchar(128)
     """
 
-    contents = [
-        # [0, "example_label"],  #
-    ]
-
-    @classmethod
-    def get_next_idx(cls):
-        if not cls.fetch("idx"):
-            return 0
-        current_max = cls.fetch("idx").max()
-        return current_max + 1 if current_max is not None else 0
+    contents = [[0, "test"], [1, "mathis-lab"], [2, "tolias-lab"], [3, "niell-lab"]]
 
 
 @schema
-class Groups(dj.Manual):
+class Collab(dj.Computed):
     definition = """
     -> Dataset
-    -> Labels
+    ---
+    -> Labs
     """
 
-    def add(self, dataset, label):
+    def make(self, key, lab=os.environ["DJ_LAB"]):
         try:
-            key = f"dataset='{dataset}'"
-            a = (Dataset & key).fetch()
-            if a.size == 0:
-                logger.warning(
-                    f"No Dataset entry found for {dataset}: can't populate Groups table."
-                )
-                return
-            key = f"label='{label}'"
-            label_idx = (Labels & key).fetch("idx")[0]
-
-            if label_idx is None:
-                label_idx = Labels().get_next_idx()
-                Labels.insert1({"idx": label_idx, "label": label})
-
-            self.insert1({"dataset": dataset, "idx": label_idx})
-
+            lab = f"lab='{lab}'"
+            idx = (Labs() & lab).fetch("idx", as_dict=True)[0]
+            data = {**key, **idx}
+            self.insert1(data)
         except Exception as err:
-            err = f"Error while populating the Groups table: key: {dataset} {label_idx}\n {err}"
+            dataset = key["dataset"]
+            FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
 
 
@@ -215,22 +224,31 @@ class Video(dj.Manual):
     def make(self, key):
         from vr4mice.actions.populate_rig import get_files_paths
 
-        logger.info(f"{key['dataset']}")
-        paths = get_files_paths(key["dataset"])
-        video_filepath = (
-            f"{paths['video_path']['dst']}/{paths['video_path']['filename']}"
-        )
-        timestamp_filepath = (
-            f"{paths['camera_path']['dst']}/{paths['camera_path']['filename']}"
-        )
-        video_meta = paths["video_meta"]
-        data = {
-            "doe": paths["doe"],
-            "video_filepath": video_filepath,
-            "timestamp_filepath": timestamp_filepath,
-        }
-        data = {**key, **data, **video_meta}
-        Video().insert1(data, skip_duplicates=True)
+        try:
+            logger.info(f"{key['dataset']}")
+            paths = get_files_paths(key["dataset"])
+            video_filepath = (
+                f"{paths['video_path']['dst']}/{paths['video_path']['filename']}"
+            )
+            timestamp_filepath = (
+                f"{paths['camera_path']['dst']}/{paths['camera_path']['filename']}"
+            )
+            video_meta = paths["video_meta"]
+            data = {
+                "doe": paths["doe"],
+                "video_filepath": video_filepath,
+                "timestamp_filepath": timestamp_filepath,
+            }
+            data = {**key, **data, **video_meta}
+            Video().insert1(data, skip_duplicates=True)
+
+        except Exception as err:
+            dataset = key["dataset"]
+            FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            logger.warning(err)
 
 
 @schema
@@ -284,18 +302,29 @@ class DLC(dj.Manual):
     def make(self, key):
         from vr4mice.actions.populate_rig import get_files_paths
 
-        logger.info(f"{key['dataset']}")
-        paths = get_files_paths(key["dataset"])
-        keypoints_filepath = (
-            f"{paths['dlc_path']['dst']}/{paths['dlc_path']['filename']}"
-        )
-        proc_filepath = f"{paths['proc_path']['dst']}/{paths['proc_path']['filename']}"
-        data = {
-            "keypoints_filepath": keypoints_filepath,
-            "proc_filepath": proc_filepath,
-        }
-        data = {**key, **data}
-        DLC().insert1(data, skip_duplicates=True)
+        try:
+            logger.info(f"{key['dataset']}")
+            paths = get_files_paths(key["dataset"])
+            keypoints_filepath = (
+                f"{paths['dlc_path']['dst']}/{paths['dlc_path']['filename']}"
+            )
+            proc_filepath = (
+                f"{paths['proc_path']['dst']}/{paths['proc_path']['filename']}"
+            )
+            data = {
+                "keypoints_filepath": keypoints_filepath,
+                "proc_filepath": proc_filepath,
+            }
+            data = {**key, **data}
+            DLC().insert1(data, skip_duplicates=True)
+
+        except Exception as err:
+            dataset = key["dataset"]
+            FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            logger.warning(err)
 
 
 @schema
@@ -520,7 +549,11 @@ class DatasetType(dj.Computed):
             self.insert1(data)
 
         except Exception as err:
-            err = f"Error while populating the DatasetType table: key: {key}\n {err}"
+            dataset = key["dataset"]
+            FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
 
 

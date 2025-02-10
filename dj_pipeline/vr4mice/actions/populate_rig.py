@@ -10,6 +10,7 @@ import pandas as pd
 from vr4mice.actions.keys2tables_base import base
 from vr4mice.actions.keys2tables_vr4mice import vr4mice
 from vr4mice.utils.logger import Logger
+from vr4mice import schema as dj_schema
 
 """
     Script that populates database according on the input data from files and key2tables hints.
@@ -137,7 +138,9 @@ def check_keys(value, raw_data, key, schema, none=True) -> bool:
     return True, none_vals
 
 
-def populate(table_name, attributes, raw_data, schema) -> None:
+def populate(
+    table_name, attributes, raw_data, schema, srcf="/data", dstf="processed", move=True
+) -> None:
     """
     Populates the given table in the database with the given attributes and raw data.
 
@@ -158,10 +161,16 @@ def populate(table_name, attributes, raw_data, schema) -> None:
     data = dict()
 
     for a in attributes:
+        print(a)
         # check if there is a special processing for the generation of value of given attribute
         if a in schema["local_def"].keys():
             data[a] = schema["local_def"][a](
-                raw_data=raw_data, key=a, transformer=schema["transformer"]
+                raw_data=raw_data,
+                key=a,
+                transformer=schema["transformer"],
+                srcf="/data",
+                dstf="processed",
+                move=True,
             )
         else:  # dj_def-orientated
             label = a
@@ -203,7 +212,13 @@ def parse_date(filename):
         return None
 
 
-def get_files_paths(dataset, remote_src=None, local_src="/data", data="/data"):
+def get_files_paths(
+    dataset,
+    remote_src=None,
+    local_src="/data",
+    data="/data",
+    filename=os.environ["IMG_SRC"],
+):
     """
     Simulation of data from gui .npy, if it's missing
     # todo: add files move if one folder
@@ -218,22 +233,22 @@ def get_files_paths(dataset, remote_src=None, local_src="/data", data="/data"):
             "dst": local_src + data,
         },
         "dlc_path": {
-            "filename": "Imagingsource_" + dataset + "_DLC.hdf5",
+            "filename": filename + "_" + dataset + "_DLC.hdf5",
             "src": remote_src,
             "dst": dlc_video_path,
         },
         "camera_path": {
-            "filename": "Imagingsource_" + dataset + "_TS.npy",
+            "filename": filename + "_" + dataset + "_TS.npy",
             "src": remote_src,
             "dst": dlc_video_path,
         },
         "video_path": {
-            "filename": "Imagingsource_" + dataset + "_VIDEO.avi",
-            "src": "Imagingsource_" + dataset + "_VIDEO.avi",
+            "filename": filename + "_" + dataset + "_VIDEO.avi",
+            "src": filename + "_" + dataset + "_VIDEO.avi",
             "dst": dlc_video_path,  # false (remote only)
         },
         "proc_path": {
-            "filename": "Imagingsource_" + dataset + "_PROC",
+            "filename": filename + "_" + dataset + "_PROC",
             "src": remote_src,
             "dst": dlc_video_path,
         },
@@ -255,7 +270,9 @@ def get_files_paths(dataset, remote_src=None, local_src="/data", data="/data"):
     return files_info
 
 
-def populate_rig(path="/data/data", gui=True) -> None:
+def populate_rig(
+    path="/data/data", gui=os.environ["GUI"], srcf="/data", dstf="processed", move=True
+) -> None:
     """
     Populates database tables with data from files in the specified directory.
 
@@ -282,6 +299,8 @@ def populate_rig(path="/data/data", gui=True) -> None:
     dataset = name of file : mouse_name_doe_attempt
     """
 
+    gui = os.environ.get("GUI", "false").lower() in ["true", "1", "yes"]
+
     if gui:
         ext = [".npy", ".pickle"]
     else:
@@ -289,59 +308,88 @@ def populate_rig(path="/data/data", gui=True) -> None:
 
     dir_list = get_filenames(ext, path)
 
-    # Case: if .pickle is here and .npy (as optional)
-    # TODO: make it independent by dataset
     if ".pickle" in dir_list.keys():
 
         for pickle_file in dir_list[".pickle"]:
-            logger.info("Processing file: " + str(pickle_file))
-            raw_data_pickle, dataset = get_new_file(pickle_file, path)
+            try:
+                logger.info(f"Processing file: {pickle_file}")
+                raw_data_pickle, dataset = get_new_file(pickle_file, path)
+                key = f'dataset="{dataset}"'
 
-            raw_data_npy = None
+                if (dj_schema.vr4mice.Dataset() & key).fetch(as_dict=True):
+                    logger.info(f"{key} is already in the database, skip.")
+                    break
+                else:
+                    logger.info(f"{key} not yet in the database, continue.")
 
-            # todo: add check that it's not Imagingsource/S!!
-            # if finds some (it's dlc_video) => move it
+                raw_data_npy = None
 
-            if ".npy" in dir_list.keys():  # todo(mary) optimize
-                for npy_file in dir_list[".npy"]:
-                    # Note: algo should be modified if names of files for same dataset are not similar
-                    # (if GUI is not used f.ex.)
-                    if Path(npy_file).stem == dataset:
-                        logger.info(f"Processing file: {npy_file}")
-                        raw_data_npy, dataset = get_new_file(npy_file, path)
-                        break
+                if ".npy" in dir_list.keys():
+                    for npy_file in dir_list[".npy"]:
+                        if Path(npy_file).stem == dataset:
+                            logger.info(f"Processing file: {npy_file}")
+                            raw_data_npy, dataset = get_new_file(npy_file, path)
+                            break
 
-            # if .npy file is missing return
-            if raw_data_npy is None:
-                if gui:
-                    logger.warning(
-                        "Attention: .npy file from GUI was not found for "
-                        + str(dataset)
-                        + "; As .npy files from gui were expected (gui flag is true) the population will be aborted."
+                # if .npy file is missing return
+                if raw_data_npy is None:
+                    if gui:
+                        logger.warning(
+                            f"Attention: .npy file from GUI was not found for {dataset}; \
+                            As .npy files from gui were expected (gui flag is {gui}) the population will be aborted."
+                        )
+                        return False
+
+                    logger.info(
+                        f"Attention: .npy file from GUI was not found for {dataset}; \
+                        As .npy files from gui can be skipped (gui flag is {gui}) the population will be continued."
                     )
-                    return False
 
-                logger.info(
-                    "Attention: .npy file from GUI was not found for "
-                    + str(dataset)
-                    + "; As .npy files from gui can be skipped (gui flag is false) the population will be continued."
-                )
+                    # as there is no .npy, we have to restore some parts of raw_data
+                    # (mostly info about filepaths location)
+                    files_info = get_files_paths(
+                        dataset=dataset, remote_src=None, local_src="/data", data=path
+                    )  # paths correspond to docker env
+                    raw_data = {**files_info, **raw_data_pickle}
+                    schemas = [vr4mice]
+                else:
+                    raw_data = {**raw_data_pickle, **raw_data_npy}
+                    schemas = [base, vr4mice]
 
-                # as there is no .npy, we have to restore some parts of raw_data
-                # (mostly info about filepaths location)
-                files_info = get_files_paths(
-                    dataset=dataset, remote_src=None, local_src="/data", data=path
-                )  # paths correspond to docker env
-                raw_data = {**files_info, **raw_data_pickle}
-                schemas = [vr4mice]
+                for schema in schemas:
+                    for table_name, attributes in schema[
+                        "tables"
+                    ].items():  # get attributes
+                        flag, none_vals = check_keys(
+                            attributes, raw_data, table_name, schema=schema
+                        )
+                        if flag:
+                            raw_data = {**raw_data, **none_vals}
+                            populate(
+                                table_name,
+                                attributes,
+                                raw_data,
+                                schema=schema,
+                                srcf="/data",
+                                dstf="processed",
+                                move=True,
+                            )
 
-            else:  # all datasets combined
-                raw_data = {**raw_data_pickle, **raw_data_npy}
-                # populate all schemas
-                schemas = [base, vr4mice]
+            except Exception as e:
+                logger.warning(f"Population of raw data failed for {pickle_file}: {e}")
+
+    elif ".npy" in dir_list.keys():  # case no pickle
+        for npy_file in dir_list[".npy"]:
+            raw_data_npy, dataset = get_new_file(npy_file, path)
+            raw_data_npy["rig_id"] = 12
+            raw_data_npy["license"] = "N/A"
+            files_info = get_files_paths(
+                dataset=dataset, remote_src=None, local_src="/data", data=path
+            )  # paths correspond to docker env
+            raw_data = {**files_info, **raw_data_npy}
+            schemas = [base]
 
             for schema in schemas:
-                # populate all tables
                 for table_name, attributes in schema[
                     "tables"
                 ].items():  # get attributes
@@ -350,4 +398,12 @@ def populate_rig(path="/data/data", gui=True) -> None:
                     )
                     if flag:
                         raw_data = {**raw_data, **none_vals}
-                        populate(table_name, attributes, raw_data, schema=schema)
+                        populate(
+                            table_name,
+                            attributes,
+                            raw_data,
+                            schema=schema,
+                            srcf="/data",
+                            dstf="processed",
+                            move=True,
+                        )
