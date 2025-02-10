@@ -29,8 +29,8 @@ session = [
     "anesthesia_name",
     "opto_name",
     "task_name",
-    "force_field_name",
-    "joystick_name",
+    # "force_field_name",
+    # "joystick_name",
     "session_notes",
 ]
 

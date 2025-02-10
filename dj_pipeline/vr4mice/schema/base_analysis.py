@@ -107,9 +107,13 @@ class DataFrame(dj.Computed):
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
-            logger.warning(
-                f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            dataset = key["dataset"]
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            logger.warning(err)
+
             return None
 
     def get_data(
@@ -270,9 +274,13 @@ class BoxDataFrame(dj.Computed):
                 logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
-            logger.warning(
-                f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            dataset = key["dataset"]
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            logger.warning(err)
+
             return None
 
     def get_data(self, key: dict, columns: Optional[List[str]] = None):
@@ -342,30 +350,44 @@ class SummaryPlots(dj.Computed):
             return
 
         if (DataFrame & key) and (BoxDataFrame & key):
-            full_path = vr4mice_summary_plots(
-                key, save_path="/data/summary_plots", database=True
-            )
+            try:
+                full_path = vr4mice_summary_plots(
+                    key, save_path="/data/summary_plots", database=True
+                )
+            except Exception as err:
+                dataset = key["dataset"]
+                vr4mice.FailedSession().add_entry(
+                    f"{dataset}", f"{self.__class__.__name__}", str(err)
+                )
+                err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+                logger.warning(err)
+                return None
         else:
             logger.warning(
-                "Populate first DataFrame and BoxDataFrame for "
-                + str(key)
-                + "; call DataFrame.populate(); BoxDataFrame.populate(); (...) or data_fetch(key, database=True)"
+                f"Populate first DataFrame and BoxDataFrame for {key}; \
+                        call DataFrame.populate(); BoxDataFrame.populate(); (...) or data_fetch(key, database=True)"
             )
             return False
 
         data = {**key, **{"filename": full_path}}
-        key = (base.Base() & key).fetch(as_dict=True)[0]
-        insert_send_email(key, data, SummaryPlots(), full_path, send=send)
+        if base.Base() & key:
+            key = (base.Base() & key).fetch(as_dict=True)[0]
+            insert_send_email(key, data, SummaryPlots(), full_path, send=send)
+        else:
+            logger.info(
+                f"base schemas is empty for ${key}, can'r send the email: insert only"
+            )
+            self.insert1(data, allow_direct_insert=True)
 
     def get_name(self, key: dict):
 
         from vr4mice.schema import base
 
-        session_info = (base.Base() & key).fetch(as_dict=True)[0]
-        if len(session_info) > 0:
-            name = f'{session_info["mouse_name"]}_day{session_info["day"]}_attempt{session_info["attempt"]}'
-        else:
-            name = key["dataset"]
+        name = key["dataset"]
+        if base.Base() & key:
+            session_info = (base.Base() & key).fetch(as_dict=True)[0]
+            if len(session_info) > 0:
+                name = f'{session_info["mouse_name"]}_day{session_info["day"]}_attempt{session_info["attempt"]}'
 
         return name
 
@@ -415,7 +437,11 @@ def insert_send_email(key: dict, tuple_, table, filename, send: bool = False):
             logger.info(f"Send flag is false for {key}. No email.")
 
     except Exception as err:
-        err = f"Error while populating the Summary table: key {key}: err: {err}"
+        dataset = key["dataset"]
+        vr4mice.FailedSession().add_entry(
+            f"{dataset}", f"{self.__class__.__name__}", str(err)
+        )
+        err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
         logger.warning(err)
         if send:
             email(key, addr, None, error=True, message=err)
@@ -444,7 +470,11 @@ class GitCommit(dj.Computed):
             self.insert1(data, allow_direct_insert=True)
 
         except Exception as err:
-            err = f"Error while populating the GitCommit table: key {key}\n{err}"
+            dataset = key["dataset"]
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
 
 
