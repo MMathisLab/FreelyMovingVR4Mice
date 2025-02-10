@@ -139,7 +139,7 @@ def sync_keypoint_table(
     filt_dlc_df = filter_dlc(
         keypoint_df, cutoff=keypoint_cuttoff, window_length=filter_window_length
     )
-    return _sync_dlc_with_game(game_data=game_step_times, dlc=filt_dlc_df)
+    return _sync_dlc_with_game(game_data=game_step_times, dlc_df=filt_dlc_df)
 
 
 def dlc_interpolate(
@@ -224,8 +224,8 @@ def filter_dlc(
         likelihood = dlc_dict[b, "likelihood"]
 
         # Mask low likelihood points as NaN and interpolate missing values
-        trace_x = dlc_interpolate(key_point_x, likelyhood=likelihood, cutoff=cutoff)
-        trace_y = dlc_interpolate(key_point_y, likelyhood=likelihood, cutoff=cutoff)
+        trace_x = dlc_interpolate(key_point_x, likelihood=likelihood, cutoff=cutoff)
+        trace_y = dlc_interpolate(key_point_y, likelihood=likelihood, cutoff=cutoff)
 
         # Apply Savitzky-Golay filter
         trace_x = dlc_savgol_filter(trace_x, window_length, polyorder)
