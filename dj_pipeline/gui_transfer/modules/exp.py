@@ -192,8 +192,8 @@ class Exp(Template):
                 for d in delete:
                     choices[key].remove(d)
 
-        if key == "Rig":  # todo general
-            choices[key] = [choices[key][11]]
+        # if key == "Rig":  # todo general
+        #    choices[key] = [choices[key][11]]
         return choices
 
     def _doe(self, key, date, **kwargs):

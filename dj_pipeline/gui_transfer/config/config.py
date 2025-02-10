@@ -1,3 +1,4 @@
+import os
 import json
 import subprocess
 from pathlib import Path
@@ -34,7 +35,9 @@ config.json example
 """
 
 
-def get_system_config(config_path="default", config_name="config.json"):
+def get_system_config(
+    config_path=os.environ["config_path"], config_name=os.environ["config_name"]
+):
     """
     Loads the system configuration from a JSON file.
 
@@ -57,7 +60,6 @@ def get_system_config(config_path="default", config_name="config.json"):
 
     Todo: config not found error
     """
-
     if config_path == "default":
         config_path = Path(__file__).parent.absolute().joinpath(config_name)
 
@@ -107,7 +109,7 @@ class Config:
      Todo: check that all default paths exist
     """
 
-    config_dict = get_system_config(config_path="default", config_name="config.json")
+    config_dict = get_system_config()
     cache_file = Path(__file__).parent.absolute().joinpath("cache.json")
 
     @property
