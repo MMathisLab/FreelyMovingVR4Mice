@@ -20,16 +20,17 @@ logger = Logger.get_logger()
 try:
     path = "/data/data"
     check_folder_existence(path)
-    populate_rig(path)
+    populate_rig(path=path, gui=os.environ["GUI"])
 except Exception as e:
-    logger.error(f"An error occurred in populate_and_move: {e}")
+    logger.error(f"An error occurred in the raw data population (populate_rig): {e}")
 
 try:
-    from vr4mice.schema import base_analysis, dlc
+    from vr4mice.schema import base_analysis, dlc, vr4mice
 
+    vr4mice.Collab().populate()
     create_folder_if_not_exist("/data/summary_plots")
     base_analysis.DataFrame.populate()
-    base_analysis.BoxDataFrame()
+    base_analysis.BoxDataFrame.populate()
     base_analysis.GitCommit().populate()
 
     dlc.DLCProcessor().populate()
