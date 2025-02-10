@@ -19,13 +19,13 @@ class DLCProcessor(dj.Imported):
     definition = """
     -> vr4mice.DLC
     ---
-    start_time: longblob
-    frame_time: longblob
-    time_stamp: longblob
-    step: longblob
-    signal: longblob
-    photodiode_read: longblob
-    photodiode_time: longblob
+    start_time=NULL: longblob
+    frame_time=NULL: longblob
+    time_stamp=NULL: longblob
+    step=NULL: longblob
+    signal=NULL: longblob
+    photodiode_read=NULL: longblob
+    photodiode_time=NULL: longblob
     x_pos: longblob
     y_pos: longblob
     heading_direction: longblob
@@ -55,7 +55,13 @@ class DLCProcessor(dj.Imported):
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            dataset = key["dataset"]
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            logger.warning(err)
+
             return None
 
 
@@ -92,9 +98,13 @@ class DLCKptsDf(dj.Computed):
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
-            logger.warning(
-                f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            dataset = key["dataset"]
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            logger.warning(err)
+
             return None
 
     def get_data(
@@ -137,7 +147,7 @@ class SyncDLCKptsDf(dj.Computed):
             sync_kpts = dlc_helpers.sync_keypoint_table(
                 dataset_key=key, keypoint_cuttoff=0.6, filter_window_length=10
             )
-            data = h5_to_dj(dlc_helpers.df_to_dj(sync_kpts))
+            data = dlc_helpers.df_to_dj(sync_kpts)
 
             if (
                 not "camera" in key or not "doe" in key
@@ -151,9 +161,13 @@ class SyncDLCKptsDf(dj.Computed):
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
-            logger.warning(
-                f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            dataset = key["dataset"]
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            logger.warning(err)
+
             return None
 
     def get_data(
@@ -225,7 +239,12 @@ class OfflineKinematics(dj.Computed):
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            dataset = key["dataset"]
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            logger.warning(err)
             return None
 
     def get_data(
