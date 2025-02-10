@@ -407,7 +407,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#software-requirements">Software requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-gui">vr4mice GUI</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deeplabcut-live-gui">Deeplabcut-live-gui</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rig-calibration-checklist">Rig Calibration checklist:</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rig-calibration-checklist">Rig Calibration checklist</a></li>
 </ul>
             </nav>
         </div>
@@ -423,26 +423,19 @@
 <h1>FreelyMovingVR4mice overview<a class="headerlink" href="#freelymovingvr4mice-overview" title="Link to this heading">#</a></h1>
 <a class="bg-primary mb-1 reference internal image-reference" href="../_images/Rig_Figure.jpg"><img alt="AR" class="bg-primary mb-1 align-center" src="../_images/Rig_Figure.jpg" style="width: 400px;" /></a>
 <p>This documentation provides a user guide for the installation and getting an augmented reality system up and running.
-FreelyMovingVR4mice uses two GUIs (<code class="docutils literal notranslate"><span class="pre">vr4mice</span></code> and <code class="docutils literal notranslate"><span class="pre">Deeplabcut-live-gui</span></code>) that were both developed within the Mathis lab. These two packages communicate with each other through a socket and allow for dlc poses to be passed to a video game so that the video can be rendered dynamically in real time.</p>
+FreelyMovingVR4mice uses two GUIs (<code class="docutils literal notranslate"><span class="pre">vr4mice</span></code> and <code class="docutils literal notranslate"><span class="pre">Deeplabcut-live-gui</span></code>) that were both developed within the Mathis lab. These two packages communicate with each other through a socket and allow for DeepLabCut poses to be passed to a video game so that the video can be rendered dynamically in real-time.</p>
 <section id="hardware-requirements">
 <h2>Hardware requirements<a class="headerlink" href="#hardware-requirements" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Teensy 3.x board</p></li>
-<li><p>windows OS 10 or above</p></li>
+<li><p>Teensy 4.0 (or above) board</p></li>
+<li><p>Windows OS 10 or above</p></li>
 <li><p>GPU for DeepLabCut, with at least 8 GB of memory</p></li>
 </ul>
 </section>
 <section id="software-requirements">
 <h2>Software requirements<a class="headerlink" href="#software-requirements" title="Link to this heading">#</a></h2>
-<!-- Old requirements: -->
-<!-- 
-- Python3+ (tested on: 3.7)
-- Unity3D (versions tested: 2019.3.2.f1)
-- see `setup.py` for additional requirements 
--->
-<!-- New requirements: -->
 <ul class="simple">
-<li><p>Python <em><strong>v3.10.12</strong></em> or above</p></li>
+<li><p>Python version: <em><strong>3.10.12</strong></em> (this version only)</p></li>
 <li><p>Unity3D (Version tested: <em><strong>2022.3.15f1</strong></em>)</p></li>
 <li><p>see <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> for additional requirements</p></li>
 </ul>
@@ -462,11 +455,11 @@ FreelyMovingVR4mice uses two GUIs (<code class="docutils literal notranslate"><s
 <p>These documents provide an explanation of how to use both of these objects alongside an explanation of how to build the rig and installation.</p>
 </section>
 <section id="rig-calibration-checklist">
-<h2>Rig Calibration checklist:<a class="headerlink" href="#rig-calibration-checklist" title="Link to this heading">#</a></h2>
+<h2>Rig Calibration checklist<a class="headerlink" href="#rig-calibration-checklist" title="Link to this heading">#</a></h2>
 <p>Before running a mouse on the rig make sure you complete this checklist for testing the latency and calibrating the system:</p>
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Latency</span> <span class="pre">testing</span></code>: make sure that your <a class="reference internal" href="Rig_building/Photodiode_circuit.html"><span class="std std-doc">photodiode circuit</span></a> is connected and run a latency test. This can be done by running a <a class="reference internal" href="Installation/Run_a_session.html"><span class="std std-doc">session</span></a> without the mouse being in the box. You can then compare the round trip latencies by running this jupyter notebook <code class="docutils literal notranslate"><span class="pre">mouse_task/latency_tests/Latency_test_notebook/Latency_testing.ipynb</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Calibrate</span> <span class="pre">the</span> <span class="pre">monitor</span> <span class="pre">brightness</span></code>: Follow this <a class="reference internal" href="Rig_building/Monitor_Luminance_Measurement.html"><span class="std std-doc">doc</span></a> to ensure that the monitors are similar brightness.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Calibrate</span> <span class="pre">the</span> <span class="pre">monitor</span> <span class="pre">brightness</span></code>: Follow this <a class="reference internal" href="Rig_building/Monitor_Luminance_Measurement.html"><span class="std std-doc">doc</span></a> to ensure that the monitors have similar brightness across labs.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Calibrate</span> <span class="pre">the</span> <span class="pre">water</span> <span class="pre">valves</span></code>: Check that your water ports are delivering between 3-5ul of water using this <a class="reference internal" href="Rig_building/Water_Valve_Calibration.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">calibration</span> <span class="pre">method</span></code></span></a></p></li>
 </ol>
 </section>
@@ -544,7 +537,7 @@ FreelyMovingVR4mice uses two GUIs (<code class="docutils literal notranslate"><s
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#software-requirements">Software requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-gui">vr4mice GUI</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deeplabcut-live-gui">Deeplabcut-live-gui</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rig-calibration-checklist">Rig Calibration checklist:</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rig-calibration-checklist">Rig Calibration checklist</a></li>
 </ul>
   </nav></div>
 
