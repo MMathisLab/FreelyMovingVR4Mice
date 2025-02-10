@@ -16,8 +16,8 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
-  <!-- 
-    this give us a css class that will be invisible only if js is disabled 
+  <!--
+    this give us a css class that will be invisible only if js is disabled
   -->
   <noscript>
     <style>
@@ -27,10 +27,10 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -39,10 +39,10 @@
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- So that users can add custom icons -->
-  <script src="../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
@@ -216,9 +216,14 @@
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
@@ -487,7 +492,7 @@ If you want to modify the task handling you can edit the code within these funct
 <p>Here is an explanation of the parameters that can be set in the GUI. Such parameters can either be used to control aspects of the game that need to be sent to the teensy such as reward size. Or these parameters can be sent to the unity game on a trial by trial basis to control the unity game parameters:</p>
 <div class="cell tag_mytag docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">teensy</span><span class="p">,</span>
         <span class="n">monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -572,7 +577,7 @@ If you want to send these parameters to the teensy you can use the <a class="ref
 For example see the <a class="reference internal" href="#../mouse_task/mouse_ar_task.py"><span class="xref myst">check_reward</span></a> function below. This function gets input from the unity game on every frame in the form of a binary vector where 0 represents no reward and 1 represents a time frame when the reward was given. When this reward vector is above zero the function sends a command to the water pin on the teensy, telling it to open the valve for a set number of ms:</p>
 <div class="cell tag_check_reward docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">check_reward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">check_reward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set up the reward.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -595,7 +600,7 @@ For example see the <a class="reference internal" href="#../mouse_task/mouse_ar_
 <p>Alternatively, parameters can also be sent the unity game and the beginning of the each trail to set up various features of the game, this can be done by adding them as a “side channel” in the <a class="reference internal" href="#mouse_task/mouse_ar_task.py"><span class="xref myst">set_channel</span></a> function:</p>
 <div class="cell tag_set_channel docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">set_channel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">set_channel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Send parameters to unity when the game is reset i.e. at the beginning of each trial</span>
 
@@ -696,7 +701,7 @@ For example see the <a class="reference internal" href="#../mouse_task/mouse_ar_
 <p>We can then read from this thread periodically and send the data to unity by the <code class="docutils literal notranslate"><span class="pre">dlcClient.read()</span></code> method. In the python task script this is called within the <code class="docutils literal notranslate"><span class="pre">_get_dlc_on_frame()</span></code> function. This function adds the incoming data to vectors which can be saved at the end of the experiment. It also maps the dlc data (which is in pixel coordinates from the camera images) to unity coordinates.</p>
 <div class="cell tag__get_dlc_on_frame docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">_get_dlc_on_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span><span class="w"> </span><span class="nf">_get_dlc_on_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Runs DLC on every frame.</span>
 
@@ -760,7 +765,7 @@ For example see the <a class="reference internal" href="#../mouse_task/mouse_ar_
 <h4>get action function<a class="headerlink" href="#get-action-function" title="Link to this heading">#</a></h4>
 <div class="cell tag_get_action docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">get_action</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span><span class="w"> </span><span class="nf">get_action</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get actions from DLC and parse them to unity.</span>
 
@@ -787,7 +792,7 @@ For example see the <a class="reference internal" href="#../mouse_task/mouse_ar_
 <p>In addition, to the parameters being identical across trials we may also like to add block like structure such as a baseline and perturbation block. An example of this could be the visual discrimination task without occluders for the first <code class="docutils literal notranslate"><span class="pre">100</span></code> trial followed by <code class="docutils literal notranslate"><span class="pre">100</span></code> trials with occulders. This can be achieved by passing the parameters to the class as lists:</p>
 <div class="cell tag_set_channel docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">teensy</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">write_video</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span> <span class="n">cropped_image</span> <span class="o">=</span> <span class="p">[</span><span class="mi">55</span><span class="p">,</span><span class="mi">610</span><span class="p">,</span><span class="mi">55</span><span class="p">,</span><span class="mi">455</span><span class="p">],</span> <span class="n">rotate_camera</span> <span class="o">=</span> <span class="p">[</span><span class="mi">270</span><span class="p">],</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">teensy</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">write_video</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span> <span class="n">cropped_image</span> <span class="o">=</span> <span class="p">[</span><span class="mi">55</span><span class="p">,</span><span class="mi">610</span><span class="p">,</span><span class="mi">55</span><span class="p">,</span><span class="mi">455</span><span class="p">],</span> <span class="n">rotate_camera</span> <span class="o">=</span> <span class="p">[</span><span class="mi">270</span><span class="p">],</span>
                  <span class="n">epochs</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">],</span> <span class="n">epoch_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;baseline&quot;</span><span class="p">,</span> <span class="s2">&quot;occluded&quot;</span><span class="p">],</span>
                  <span class="n">config_file_path</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">,</span>
                  <span class="n">reward_size</span> <span class="o">=</span> <span class="p">[</span><span class="mi">45</span><span class="p">,</span><span class="mi">45</span><span class="p">],</span>  <span class="n">Prop_Obj_on_Left</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">],</span> 
@@ -933,8 +938,8 @@ By MWMathis Lab
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
   </footer>
