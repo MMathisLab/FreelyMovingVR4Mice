@@ -46,18 +46,24 @@ class Base(dj.Computed):
                 session = (exp.Session() & mouse_key & session_key).fetch(
                     *pk, as_dict=True
                 )[0]
+            else:
+                logger.warning(f"{self.__class__.__name__} no Session entry for {key}.")
+                return
             data = {**key, **mouse, **session}
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
-            err = f"Error while populating the {self.__class__.__name__} table: \
-                    key: {key} \n {err}"
+            dataset = key["dataset"]
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
 
 
 def parse_filename(filename):
-    pattern = r"^(?P<name>[A-Za-z]+)_(?P<date>\d{4}-\d{2}-\d{2})_(?P<attempt>\d+)$"
+    pattern = r"^(?P<name>[A-Za-z\d]+)_(?P<date>\d{4}-\d{2}-\d{2})_(?P<attempt>\d+)$"
     match = re.match(pattern, filename)
 
     if match:

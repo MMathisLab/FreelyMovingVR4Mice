@@ -7,9 +7,8 @@ from pathlib import Path
 from PyQt5.QtWidgets import QComboBox, QLabel, QLineEdit, QPlainTextEdit
 
 import numpy as np
-from config.config import config
 from utils.alert import AlertMsg
-from utils.logger import Logger
+from config.config import config, logger
 
 
 def load_dj_input(path_dj_data, path_json):
@@ -369,7 +368,7 @@ def move_files(files_info):
         - `filename` (str): The filename of the file to be moved.
     """
     dst = config.get_processed_path
-    for file_info in files_info:
+    for file_info in files_info[0].values():
         src = str(Path(file_info["src"]).joinpath(file_info["filename"]))
         shutil.move(src, dst)
 

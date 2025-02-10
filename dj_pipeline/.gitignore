@@ -35,3 +35,7 @@ __pycache__/
 *.env
 *git_commit
 *config.ini*
+
+# collab
+*docker-compose*
+*Makefile*
