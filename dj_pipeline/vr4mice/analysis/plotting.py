@@ -28,6 +28,29 @@ colors_aperture_pale = ["#EC8788", "#96B9D6"]
 colors_rewarded = ["black", "red"]
 
 
+def _create_axes(
+    ax: Optional[matplotlib.axes.Axes], per_aperture: bool, num_aperture: int
+):
+    if ax is None:
+        if per_aperture:
+            fig, ax = plt.subplots(1, num_aperture, figsize=(int(num_aperture * 5), 5))
+        else:
+            fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+        fig.tight_layout(pad=0.1)
+    else:
+        if (
+            per_aperture
+            and num_aperture > 1
+            and (isinstance(ax, matplotlib.axes.Axes) or len(ax) < num_aperture)
+        ):
+            raise ValueError(
+                f"ax should contain one axis per aperture, got {len(ax)}, expect {num_aperture}."
+            )
+        elif not isinstance(ax, matplotlib.axes.Axes):
+            raise ValueError(f"ax should contain one axis, got {len(ax)}.")
+    return ax
+
+
 def lineplot_flip_axis(ax: Optional[matplotlib.axes.Axes] = None, **kwargs):
     """Creates a seaborn line plot and flips the axes.
 
@@ -321,35 +344,32 @@ def plot_session(
         )
     num_aperture = len(df.aperture.unique())
 
-    if ax is None:
-        if per_aperture:
-            fig, ax = plt.subplots(1, num_aperture, figsize=(int(num_aperture * 5), 5))
-        else:
-            fig, ax = plt.subplots(1, 1, figsize=(5, 5))
-        fig.tight_layout(pad=0.1)
-    else:
-        if per_aperture and (
-            isinstance(ax, matplotlib.axes.Axes) or len(ax) < num_aperture
-        ):
-            raise ValueError(
-                f"ax should contain one axis per aperture, got {len(ax)}, expect {num_aperture}."
-            )
-        elif not isinstance(ax, matplotlib.axes.Axes):
-            raise ValueError(f"ax should contain one axis, got {len(ax)}.")
+    ax = _create_axes(ax=ax, per_aperture=per_aperture, num_aperture=num_aperture)
 
     if per_aperture:
-        for j, aperture in enumerate(np.sort(df.aperture.unique())):
-            data = df[df.aperture == aperture]
+        if num_aperture > 1:
+            for j, aperture in enumerate(np.sort(df.aperture.unique())):
+                data = df[df.aperture == aperture]
+                _plot_session_in_arena(
+                    df=data,
+                    box_df=box_df,
+                    ax=ax[j],
+                    per_side=per_side,
+                    label_x=label_x,
+                    label_y=label_y,
+                    scatter_reward=scatter_reward,
+                )
+                ax[j].set_title(f"{df.dataset.unique()[0]}_{aperture}")
+        else:
             _plot_session_in_arena(
-                df=data,
+                df=df,
                 box_df=box_df,
-                ax=ax[j],
+                ax=ax,
                 per_side=per_side,
                 label_x=label_x,
                 label_y=label_y,
                 scatter_reward=scatter_reward,
             )
-            # ax[j].set_title(f"{df.dataset.unique()[0]}_{aperture}")
     else:
         _plot_session_in_arena(
             df=df,
@@ -360,7 +380,7 @@ def plot_session(
             label_y=label_y,
             scatter_reward=scatter_reward,
         )
-        # ax.set_title(f"{df.dataset.unique()[0]}")
+        ax.set_title(f"{df.dataset.unique()[0]}")
 
 
 #### Trial counts
@@ -385,15 +405,26 @@ def _plot_bar_counts(
         alpha (float, optional): Alpha transparency for the plot. Default is 0.5.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
     """
-    if label_x is None:
-        label_x = [str(1) for i in range(len(counts))]
-        figsize = (2, 5)
-        color_map = cmap
+
+    if per_mouse:
+        unique_mice = counts["mouse_name"].unique()
+        cmap = sns.color_palette(cmap, len(unique_mice))
+        color_map = {label: cmap[i] for i, label in enumerate(unique_mice)}
     else:
-        unique_labels = counts[label_x].sort_values().unique()
-        figsize = (int(2 * len(unique_labels)), 5)
-        cmap = sns.color_palette(cmap, len(unique_labels))
-        color_map = {label: cmap[i] for i, label in enumerate(unique_labels)}
+        if label_x is None:
+            label_x = [str(1) for i in range(len(counts))]
+            figsize = (2, 5)
+            color_map = cmap
+        else:
+            if label_x == "aperture":
+                unique_labels = (
+                    counts[label_x].astype(float).sort_values().astype(str).unique()
+                )
+            else:
+                unique_labels = counts[label_x].sort_values().unique()
+            figsize = (int(2 * len(unique_labels)), 5)
+            cmap = sns.color_palette(cmap, len(unique_labels))
+            color_map = {label: cmap[i] for i, label in enumerate(unique_labels)}
 
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
@@ -482,6 +513,10 @@ def plot_trial_count(
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
         cmap (str, optional): Color map for the plot. Default is "Set1".
     """
+
+    num_aperture = len(df.aperture.unique())
+    ax = _create_axes(ax=ax, per_aperture=per_aperture, num_aperture=1)
+
     if per_aperture:
         counts = (
             df.groupby(["dataset", "trial"])
@@ -508,7 +543,7 @@ def plot_trial_count(
     )
 
     ax.set_ylabel("#Trials / session")
-    ax.set_xlim(-0.5, len(df.aperture.unique()) - 0.5)
+    ax.set_xlim(-0.5, num_aperture - 0.5)
 
     if per_aperture:
         stats = pd.DataFrame(
@@ -561,6 +596,10 @@ def plot_rate(
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
         cmap (str, optional): Color map for the plot. Default is "Set1".
     """
+
+    num_aperture = len(df.aperture.unique())
+    ax = _create_axes(ax=ax, per_aperture=per_aperture, num_aperture=1)
+
     if per_aperture:
         counts = (
             df[df[label_x] == 1].groupby(["dataset", "aperture"]).trial.nunique()
@@ -585,7 +624,7 @@ def plot_rate(
         cmap=cmap,
     )
 
-    ax.set_xlim(-0.5, len(df.aperture.unique()) - 0.5)
+    ax.set_xlim(-0.5, num_aperture - 0.5)
 
     if per_aperture:
         stats = pd.DataFrame(
@@ -608,6 +647,7 @@ def plot_rate(
     df,  # TODO(celia): provide correct columns directly?
     label_x: str,
     per_aperture: bool = False,
+    per_mouse: bool = False,
     per_day: bool = False,  # TODO(celia): to add for Fig.2 E.
     alpha: float = 0.5,
     ax: Optional[matplotlib.axes.Axes] = None,
@@ -627,18 +667,27 @@ def plot_rate(
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
         cmap (str, optional): Color map for the plot. Default is "Set1".
     """
+
+    num_aperture = len(df.aperture.unique())
+    ax = _create_axes(ax=ax, per_aperture=per_aperture, num_aperture=1)
+
+    group_cols = ["dataset"]
+
     if per_aperture:
-        counts = (
-            df[df[label_x] == 1].groupby(["dataset", "aperture"]).trial.nunique()
-            / df.groupby(["dataset", "aperture"]).trial.nunique()
-        )
+        group_cols.append("aperture")
+
+    if per_mouse:
+        group_cols.append("mouse_name")
+
+    counts = (
+        df[df[label_x] == 1].groupby(group_cols).trial.nunique()
+        / df.groupby(group_cols).trial.nunique()
+    )
+
+    if per_aperture:
         counts = pd.DataFrame(counts.reset_index().sort_values(by="aperture"))
         counts.aperture = counts.aperture.round(2).astype(str)
     else:
-        counts = (
-            df[df[label_x] == 1].groupby(["dataset"]).trial.nunique()
-            / df.groupby(["dataset"]).trial.nunique()
-        )
         counts = pd.DataFrame(counts.reset_index())
     counts = counts.rename(columns={"trial": "count"})
 
@@ -647,11 +696,12 @@ def plot_rate(
         label_x="aperture" if per_aperture else None,
         per_day=per_day,
         alpha=alpha,
+        per_mouse=per_mouse,
         ax=ax,
         cmap=cmap,
     )
 
-    ax.set_xlim(-0.5, len(df.aperture.unique()) - 0.5)
+    ax.set_xlim(-0.5, num_aperture - 0.5)
 
     if per_aperture:
         stats = pd.DataFrame(
@@ -689,6 +739,9 @@ def plot_rewards(
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
         cmap (str, optional): Color map for the plot. Default is "Set1".
     """
+    num_aperture = len(df.aperture.unique())
+    ax = _create_axes(ax=ax, per_aperture=per_aperture, num_aperture=1)
+
     group_cols = ["dataset"]
 
     if per_aperture:
@@ -721,13 +774,13 @@ def plot_rewards(
     )
 
     ax.set_ylim([0, 1])
-    ax.set_xlim(-0.5, len(df.aperture.unique()) - 0.5)
+    ax.set_xlim(-0.5, num_aperture - 0.5)
     ax.set_ylabel("Success rate")
 
     if per_aperture:
         ax.hlines(
             xmin=-0.25,
-            xmax=len(df.aperture.unique()) - 0.75,
+            xmax=num_aperture - 0.75,
             y=0.7,
             color="purple",
             linestyles="dashed",
@@ -767,10 +820,11 @@ def plot_time_to_reward(
             to rewards. Note that they should be orderded as the user want them to appear on the scheme.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
         alpha (float, optional): Alpha transparency for the plot. Default is 0.5.
-        cmap (str, optional): Color map for the plot. Default is "Set1".
+        cmap (str, optional): Color map for the plot.
         log_scale (bool): If True, the time to reward is plotted in log-scale, else
             in normal scale. Default is True.
     """
+    ax = _create_axes(ax=ax, per_aperture=False, num_aperture=1)
 
     if not cmap:
         cmap = (
@@ -805,7 +859,6 @@ def plot_time_to_reward(
     if label_x == "aperture":
         counts.aperture = counts.aperture.astype(float)
     counts.sort_values(by=label_x, inplace=True)
-    counts[label_x] = counts[label_x].astype(str)
     mean_counts = counts.groupby(["dataset", label_x], as_index=False)["count"].mean()
 
     mean_counts[label_x] = mean_counts[label_x].astype(str)
@@ -839,8 +892,12 @@ def plot_time_to_reward(
     ax.legend([], [], frameon=False)
 
 
-def plot_decision_point(
-    df: pd.DataFrame, label_parameter: str, ax: Optional[matplotlib.axes.Axes] = None
+def pairplot_std_decision_point(
+    df: pd.DataFrame,
+    label_parameter: str,
+    ax: Optional[matplotlib.axes.Axes] = None,
+    per_mouse: bool = False,
+    cmap: str = "Set2",
 ):
     """Plot the decision point based on a specified label parameter.
 
@@ -848,12 +905,18 @@ def plot_decision_point(
         df (pd.DataFrame): DataFrame containing the data to plot.
         label_parameter (str): Column label for the parameter to plot.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
+        per_mouse (bool): TODO
     """
-    counts = df.groupby(["dataset", "aperture"], as_index=False).mean(
-        numeric_only=True
-    )  # one value per dataset per aperture
+    ax = _create_axes(ax=ax, per_aperture=False, num_aperture=1)
 
-    counts["count"] = np.abs(counts[label_parameter] - 27)
+    groupby_cols = ["dataset", "aperture"]
+
+    if per_mouse:
+        groupby_cols.append("mouse_name")
+
+    counts = df.groupby(groupby_cols, as_index=False).std()
+
+    counts["count"] = counts[label_parameter]
     counts = pd.DataFrame(counts.reset_index())
     counts.aperture = counts.aperture.round(2).astype(str)
 
@@ -861,14 +924,13 @@ def plot_decision_point(
         counts=counts,
         label_x="aperture",
         per_day=False,
+        per_mouse=per_mouse,
         alpha=0.2,
         ax=ax,
-        cmap=colors_aperture,
+        cmap=cmap if per_mouse else colors_aperture,
     )
-
-    ax.set_ylim(0, 25)
     ax.invert_xaxis()
-    ax.set_ylabel("Distance to screen (cm)")
+    ax.set_ylabel(f"{label_parameter}")
 
     for i in counts.aperture.unique():
         for j in counts.aperture.unique():
@@ -877,7 +939,64 @@ def plot_decision_point(
                     counts[counts["aperture"] == i][label_parameter],
                     counts[counts["aperture"] == j][label_parameter],
                 )
-                # print(f"{i}-{j}: {stat}")
+                print(f"{i}-{j}: {stat}")
+
+
+def pairplot_average_decision_point(
+    df: pd.DataFrame,
+    label_parameter: str,
+    ax: Optional[matplotlib.axes.Axes] = None,
+    per_mouse: bool = False,
+    cmap: str = "Set2",
+):
+    """Plot the decision point based on a specified label parameter.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing the data to plot.
+        label_parameter (str): Column label for the parameter to plot.
+        ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
+    """
+    ax = _create_axes(ax=ax, per_aperture=False, num_aperture=1)
+
+    groupby_cols = ["dataset", "aperture"]
+
+    if per_mouse:
+        groupby_cols.append("mouse_name")
+
+    counts = df.groupby(groupby_cols, as_index=False).mean(numeric_only=True)
+
+    if label_parameter == "y":
+        counts["count"] = np.abs(counts[label_parameter] - 27)
+    elif label_parameter in ["heading_dir", "head_angle", "velocity_x"]:
+        counts["count"] = np.abs(counts[label_parameter])
+    else:
+        counts["count"] = counts[label_parameter]
+    counts = pd.DataFrame(counts.reset_index())
+    counts.aperture = counts.aperture.round(2).astype(str)
+
+    _plot_bar_counts(
+        counts=counts,
+        label_x="aperture",
+        per_day=False,
+        per_mouse=per_mouse,
+        alpha=0.2,
+        ax=ax,
+        cmap=cmap if per_mouse else colors_aperture,
+    )
+    ax.invert_xaxis()
+    if label_parameter == "y":
+        ax.set_ylabel(f"Distance to screen (cm)")
+    else:
+        ax.set_ylabel(f"{label_parameter}")
+
+    for i in counts.aperture.unique():
+        for j in counts.aperture.unique():
+            if i < j:
+                stat = stats.ttest_rel(
+                    counts[counts["aperture"] == i][label_parameter],
+                    counts[counts["aperture"] == j][label_parameter],
+                )
+                print(f"{i}-{j}: {stat}")
 
 
 ### TORTUOSITY / DURATION
@@ -901,8 +1020,11 @@ def _plot_distribution(
         cmap (str, optional): Color map for the plot. Default is "Set1".
         bins (int, optional): Number of bins for the histogram. Default is 100.
     """
+
+    data = df.groupby(["dataset", "trial"]).first()
+
     sns.histplot(
-        data=df.groupby(["dataset", "trial"]).first(),
+        data=data,
         x=param,
         kde=True,
         palette=cmap,
@@ -932,7 +1054,7 @@ def plot_tortuosity_duration_distribution(
         cmap (str, optional): Color map for the plot. Default is "Set1".
         bins (int, optional): Number of bins for the histogram. Default is 100.
     """
-    if ax is None:  # TODO(celia): add tests
+    if ax is None:
         fig, ax = plt.subplots(1, 2, figsize=(15, 5))
 
     _plot_distribution(
@@ -987,7 +1109,7 @@ def _plot_parameter_on_trial_traj(
         cmap=cmap,
         alpha=alpha,
     )
-    lc.set_norm(plt.Normalize(vmin=vrange[0], vmax=vrange[1]))
+    # lc.set_norm(plt.Normalize(vmin=vrange[0], vmax=vrange[1]))
     lc.set_array(trial[label_parameter])
     lc.set_linewidth(1)
 
@@ -1022,9 +1144,9 @@ def plot_parameter_on_session_traj(
 
     """
 
-    if len(df.session.unique()) > 1:
+    if len(df.dataset.unique()) > 1:
         raise ValueError(
-            f"Only one dataset should be provided, {len(df.session.unique())} were provided."
+            f"Only one dataset should be provided, {len(df.dataset.unique())} were provided."
         )
 
     for _, trial in df.groupby(["trial"]):
@@ -1146,68 +1268,6 @@ def plot_clustering(
             # cbar.set_label(axes_labels[i])
 
     plt.tight_layout(pad=1.5)
-
-
-### DECISION POINT
-
-
-def plot_decision_points_on_trajectory(
-    df,
-    box_df,
-    decision_point=None,
-    color="deeppink",
-    trials=list(range(25, 30)),
-    ax: Optional[matplotlib.axes.Axes] = None,
-    cmap="PuOr",
-):
-    """
-
-    Example:
-    ```
-    fig = plt.figure(figsize = (15,15), constrained_layout=True)
-    gs = plt.GridSpec(3, 5, figure=fig)
-    ax = fig.add_subplot(gs[:2, :])
-
-    colors=["red", "blue", "green", "purple", "orange"]
-
-    for i, thr in enumerate([0.1, 0.2, 0.3, 0.4, 0.5]):
-        print("-->", thr)
-        ax2 = fig.add_subplot(gs[2, i])
-        decision_point = df.groupby(["dataset", "trial"], as_index=False).apply(lambda x: regression.find_decision_point_per_trial(x, thr))
-        regression.plot_decision_points_on_trajectory(df, box_df, decision_point, color=colors[i], ax=ax, trials=list(range(10, 20)))
-        regression.pair_plot(decision_point, ax=ax2)
-
-    plt.savefig("figure.svg")
-    ```
-
-    """
-    if ax is None:
-        fig = plt.figure(figsize=(8, 7), constrained_layout=True)
-        gs = plt.GridSpec(1, 1, figure=fig)
-        ax = fig.add_subplot(gs[0, 0])
-
-    plot_all_boxes(ax=ax, box_df=box_df)
-    ax.set_xlim(-27, 27)
-    ax.set_ylim(-27, 27)
-
-    for idx_trial, trial in df.groupby("trial"):
-        if idx_trial in trials:
-            trial = trial.reset_index(drop=True)
-            _plot_parameter_on_trial_traj(
-                trial, (0, 1), "proba_left", "x", "y", "PuOr", 1, ax
-            )
-
-            if decision_point is not None:
-                mpl.rcParams["lines.markersize"] = 10
-                ax.scatter(
-                    decision_point[decision_point["trial"] == idx_trial]["x"],
-                    decision_point[decision_point["trial"] == idx_trial]["y"],
-                    color=color,
-                )
-
-            ax.legend([], [], frameon=False)
-        else:
-            continue
 
 
 ### DEPRECATED (from analysis)
