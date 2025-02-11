@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from vr4mice.analysis import plotting 
+from vr4mice.analysis import plotting
 import sklearn
 import sklearn.model_selection
 import sklearn.preprocessing
@@ -216,11 +216,12 @@ def plot_decision_points_on_trajectory(
             )
 
             if decision_point is not None:
-                mpl.rcParams["lines.markersize"] = 10
+                mpl.rcParams["lines.markersize"] = 8
                 ax.scatter(
                     decision_point[decision_point["trial"] == idx_trial]["x"],
                     decision_point[decision_point["trial"] == idx_trial]["y"],
                     color=color,
+                    zorder=100,
                 )
 
             ax.legend([], [], frameon=False)

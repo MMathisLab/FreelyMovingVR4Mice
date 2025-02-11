@@ -24,6 +24,7 @@ Color codes:
 
 colors_choice = ["#5C0A72", "#FD672C"]
 colors_aperture = ["#E41A1C", "#437FB5", "#4daf4a", "#984ea3", "#ff7f00"]
+colors_multi_aperture = ["#fde725", "#5ec962", "#21918c", "#3b528b", "#440154"]
 colors_aperture_pale = ["#EC8788", "#96B9D6"]
 colors_rewarded = ["black", "red"]
 
@@ -106,28 +107,6 @@ def lineplot_flip_axis(ax: Optional[matplotlib.axes.Axes] = None, **kwargs):
     line.set_ylabel(xlabel)
 
     return line
-
-
-def get_rc_params():
-    font_color = "black"
-    font_size = 18
-    plt.rcParams.update(
-        {
-            "text.color": font_color,
-            "axes.labelcolor": font_color,
-            "axes.labelsize": font_size,
-            "axes.titleweight": "bold",
-            "axes.titlesize": font_size,
-            "xtick.labelcolor": font_color,
-            "xtick.labelsize": font_size,
-            "ytick.labelcolor": font_color,
-            "ytick.labelsize": font_size,
-            "font.weight": "bold",
-        }
-    )
-
-    plt.rc("axes.spines", top=False, bottom=True, left=True, right=False)
-    plt.rc("axes", edgecolor=font_color)
 
 
 def plot_box_rectangle(
@@ -382,6 +361,8 @@ def plot_session(
         )
         ax.set_title(f"{df.dataset.unique()[0]}")
 
+    return ax
+
 
 #### Trial counts
 
@@ -392,7 +373,7 @@ def _plot_bar_counts(
     label_x: str = None,
     per_mouse: bool = False,
     per_day: bool = False,  # TODO(celia): to add for Fig.2 E.
-    alpha: float = 0.5,
+    alpha: float = 0.3,
     ax: Optional[matplotlib.axes.Axes] = None,
 ):
     """Plot bar or line counts with optional color mapping.
@@ -406,33 +387,23 @@ def _plot_bar_counts(
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
     """
 
-    if per_mouse:
-        unique_mice = counts["mouse_name"].unique()
-        cmap = sns.color_palette(cmap, len(unique_mice))
-        color_map = {label: cmap[i] for i, label in enumerate(unique_mice)}
+    if label_x is None:
+        label_x = [str(1) for i in range(len(counts))]
+        figsize = (2, 5)
+        color_map = cmap
     else:
-        if label_x is None:
-            label_x = [str(1) for i in range(len(counts))]
-            figsize = (2, 5)
-            color_map = cmap
+        if label_x == "aperture":
+            unique_labels = (
+                counts[label_x].astype(float).sort_values().astype(str).unique()
+            )
         else:
-            if label_x == "aperture":
-                unique_labels = (
-                    counts[label_x].astype(float).sort_values().astype(str).unique()
-                )
-            else:
-                unique_labels = counts[label_x].sort_values().unique()
-            figsize = (int(2 * len(unique_labels)), 5)
-            cmap = sns.color_palette(cmap, len(unique_labels))
-            color_map = {label: cmap[i] for i, label in enumerate(unique_labels)}
+            unique_labels = counts[label_x].sort_values().unique()
+        figsize = (int(2 * len(unique_labels)), 5)
+        cmap = sns.color_palette(cmap, len(unique_labels))
+        color_map = {label: cmap[i] for i, label in enumerate(unique_labels)}
 
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
-
-    if per_mouse:
-        unique_mice = counts["mouse_name"].unique()
-        cmap_mice = sns.color_palette(cmap, len(unique_mice))
-        color_map = {label: cmap_mice[i] for i, label in enumerate(unique_mice)}
 
     if isinstance(label_x, str):
         sns.lineplot(
@@ -440,28 +411,46 @@ def _plot_bar_counts(
             x=label_x,
             y="count",
             hue="mouse_name" if per_mouse else None,
-            alpha=1,
+            alpha=0.7 if per_mouse else 1,
             color="black",
-            palette=color_map,
             errorbar="se",
-            err_style="bars",
-            linewidth=2,
+            palette=["grey"] * counts["mouse_name"].nunique() if per_mouse else None,
+            err_style=None if per_mouse else "bars",
+            linewidth=1 if per_mouse else 2,
+            zorder=3,
             ax=ax,
-        )  # mean line
+        )  # mean lines per mouse or overall
 
-        sns.lineplot(
-            data=counts,
-            x=label_x,
-            y="count",
-            hue="dataset",
-            errorbar=None,
-            alpha=alpha,
-            color="black",
-            palette=["grey"] * counts["dataset"].nunique(),
-            markers="o",
-            ax=ax,
-            legend=False,
-        )  # individual lines
+        if per_mouse:
+            sns.scatterplot(
+                data=counts.groupby(["aperture", "mouse_name"], as_index=False)[
+                    "count"
+                ].mean(),
+                x=label_x,
+                y="count",
+                alpha=0.7 if per_mouse else 1,
+                palette=color_map,
+                zorder=4,
+                hue=label_x,
+                ax=ax,
+                s=50,
+            )  # per mouse scatter
+
+        else:
+            sns.lineplot(
+                data=counts,
+                x=label_x,
+                y="count",
+                hue="dataset",
+                errorbar=None,
+                alpha=alpha,
+                color="grey",
+                palette=["grey"] * counts["dataset"].nunique(),
+                markers="o",
+                linewidth=0.5,
+                ax=ax,
+                legend=False,
+            )  # individual lines
 
     else:
         sns.barplot(
@@ -483,13 +472,48 @@ def _plot_bar_counts(
         x=label_x,
         y="count",
         alpha=alpha if per_mouse else 1,
-        hue="mouse_name"
-        if per_mouse
-        else label_x,  # Color by mouse if per_mouse, else by label_x
-        palette=color_map,
+        hue=label_x,
+        palette=["grey"] * len(counts["count"]) if per_mouse else color_map,
+        s=25 if per_mouse else 50,
         ax=ax,
         legend=False,
+        zorder=2,
     )
+
+    if per_mouse:
+        # Compute means and standard errors
+        grouped_counts = counts.groupby([label_x, "mouse_name"], as_index=False)[
+            "count"
+        ].mean()
+        means = grouped_counts.groupby(label_x)["count"].mean()
+        errors = grouped_counts.groupby(label_x)["count"].sem()
+
+        # Plot the mean line without error bars
+        sns.lineplot(
+            data=grouped_counts,
+            x=label_x,
+            y="count",
+            errorbar=None,  # Disable seaborn error bars
+            alpha=1,
+            color="black",
+            linewidth=1.5,
+            ax=ax,
+            legend=False,
+            zorder=50,  # Mean line zorder
+        )
+
+        # Manually add error bars on top
+        ax.errorbar(
+            x=means.index,
+            y=means,
+            yerr=errors,
+            fmt="none",  # No connecting line, only error bars
+            ecolor="black",
+            elinewidth=1.5,
+            # capsize=4,
+            # capthick=1.5,
+            zorder=100,  # Set very high to ensure it's on top
+        )
 
     if not per_mouse:
         ax.legend([], [], frameon=False)
@@ -500,6 +524,7 @@ def plot_trial_count(
     per_aperture: bool = False,
     per_day: bool = False,  # TODO(celia): to add for Fig.2 E.
     alpha: float = 0.5,
+    per_mouse: bool = False,
     ax: Optional[matplotlib.axes.Axes] = None,
     cmap: str = "Set1",
 ):
@@ -537,6 +562,7 @@ def plot_trial_count(
         counts=counts,
         label_x="aperture" if per_aperture else None,
         per_day=per_day,
+        per_mouse=per_mouse,
         alpha=alpha,
         ax=ax,
         cmap=cmap,
@@ -569,76 +595,6 @@ def plot_trial_count(
         stats = (
             df.groupby(["dataset"]).trial.nunique().mean(),
             df.groupby(["dataset"]).trial.nunique().sem(),
-        )
-    # print(stats)
-
-
-def plot_rate(
-    df,  # TODO(celia): provide correct columns directly?
-    label_x: str,
-    per_aperture: bool = False,
-    per_day: bool = False,  # TODO(celia): to add for Fig.2 E.
-    alpha: float = 0.5,
-    ax: Optional[matplotlib.axes.Axes] = None,
-    cmap: str = "Set1",
-):
-    """Plot the rate for a given `label_x` column per session or per aperture.
-
-    This works specifically for plotting the choice rate, the reward rate,
-    the target location rate, the trial count.
-
-    Args:
-        df (pd.DataFrame): DataFrame containing the data to plot.
-        label_x (str): Name of the column
-        per_aperture (bool, optional): If True, plot per aperture. Default is False.
-        per_day (bool, optional): If True, plot per day. Default is False.
-        alpha (float, optional): Alpha transparency for the plot. Default is 0.5.
-        ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
-        cmap (str, optional): Color map for the plot. Default is "Set1".
-    """
-
-    num_aperture = len(df.aperture.unique())
-    ax = _create_axes(ax=ax, per_aperture=per_aperture, num_aperture=1)
-
-    if per_aperture:
-        counts = (
-            df[df[label_x] == 1].groupby(["dataset", "aperture"]).trial.nunique()
-            / df.groupby(["dataset", "aperture"]).trial.nunique()
-        )
-        counts = pd.DataFrame(counts.reset_index().sort_values(by="aperture"))
-        counts.aperture = counts.aperture.round(2).astype(str)
-    else:
-        counts = (
-            df[df[label_x] == 1].groupby(["dataset"]).trial.nunique()
-            / df.groupby(["dataset"]).trial.nunique()
-        )
-        counts = pd.DataFrame(counts.reset_index())
-    counts = counts.rename(columns={"trial": "count"})
-
-    _plot_bar_counts(
-        counts=counts,
-        label_x="aperture" if per_aperture else None,
-        per_day=per_day,
-        alpha=alpha,
-        ax=ax,
-        cmap=cmap,
-    )
-
-    ax.set_xlim(-0.5, num_aperture - 0.5)
-
-    if per_aperture:
-        stats = pd.DataFrame(
-            zip(
-                counts.groupby("aperture")["count"].mean(),
-                counts.groupby("aperture")["count"].sem(),
-            ),
-            columns=["mean", "sem"],
-            index=counts.groupby("aperture")["count"].mean().index,
-        )
-    else:
-        stats = (
-            counts["count"].mean(),
-            counts["count"].sem(),
         )
     # print(stats)
 
@@ -713,11 +669,8 @@ def plot_rate(
             index=counts.groupby("aperture")["count"].mean().index,
         )
     else:
-        stats = (
-            counts["count"].mean(),
-            counts["count"].sem(),
-        )
-    # print(stats)
+        stats = (counts["count"].mean(), counts["count"].sem())
+    print(stats)
 
 
 def plot_rewards(
@@ -794,12 +747,9 @@ def plot_rewards(
             index=counts.groupby("aperture")["count"].mean().index,
         )
     else:
-        stats = (
-            counts["count"].mean(),
-            counts["count"].std(),
-        )
+        stats = (counts["count"].mean(), counts["count"].std())
         ax.hlines(xmin=-0.5, xmax=0.5, y=0.7, color="purple", linestyles="dashed")
-    return(counts)
+    return counts
 
 
 def plot_time_to_reward(
@@ -850,8 +800,7 @@ def plot_time_to_reward(
         .reset_index(name="step_to_reward")
     )
     counts = counts.merge(
-        df[["dataset", "trial", label_x]].drop_duplicates(),
-        on=["dataset", "trial"],
+        df[["dataset", "trial", label_x]].drop_duplicates(), on=["dataset", "trial"]
     )
     counts = counts.dropna()
 
@@ -873,13 +822,7 @@ def plot_time_to_reward(
 
     counts[label_x] = counts[label_x].astype(str)
     sns.stripplot(
-        data=counts,
-        x=label_x,
-        y="count",
-        palette=cmap,
-        hue=label_x,
-        ax=ax,
-        alpha=0.4,
+        data=counts, x=label_x, y="count", palette=cmap, hue=label_x, ax=ax, alpha=0.4
     )
 
     if log_scale:
@@ -1104,11 +1047,7 @@ def _plot_parameter_on_trial_traj(
     points = np.array([trial[label_x], trial[label_y]]).T.reshape(-1, 1, 2)
     segments = np.concatenate([points[:-1], points[1:]], axis=1)
 
-    lc = matplotlib.collections.LineCollection(
-        segments,
-        cmap=cmap,
-        alpha=alpha,
-    )
+    lc = matplotlib.collections.LineCollection(segments, cmap=cmap, alpha=alpha)
     # lc.set_norm(plt.Normalize(vmin=vrange[0], vmax=vrange[1]))
     lc.set_array(trial[label_parameter])
     lc.set_linewidth(1)
