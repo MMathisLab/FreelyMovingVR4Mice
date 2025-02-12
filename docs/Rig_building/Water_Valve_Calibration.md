@@ -67,8 +67,7 @@ plt.plot(valve,func_time(valve,*popt),color='blue',label='func',marker='8',alpha
 plt.xlabel('weight g')
 plt.ylabel('time ms')
 plt.legend()
-# plt.savefig("time needed for water weight.jpg")
-
+plt.show()
 # get reward size
 reward_size = func_time(0.005,*popt)
 print('reward size 5ul = ' + str(reward_size)+'ms')

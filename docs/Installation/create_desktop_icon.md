@@ -1,6 +1,6 @@
 # Create a desktop icon to launch Teensy experiments
 
-Activating the vr4mice conda envrioment, moving to the code directory and launching the software from the terminal can be very time consuming, particularly when testing therefore we recommend creating a desktop icon that launches a .bat script. To do this, make a text file on your desktop and edit it in notepad and add in the following lines of code:
+Activating the vr4mice conda environment, moving to the code directory and launching the software from the terminal can be very time-consuming, particularly when testing therefore we recommend creating a desktop icon that launches a .bat script. To do this, make a text file on your desktop and edit it in notepad and add in the following lines of code:
 
 ```bash
 call activate vr4mice
