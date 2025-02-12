@@ -931,6 +931,12 @@ def pairplot_average_decision_point(
         ax.set_ylabel(f"Distance to screen (cm)")
     else:
         ax.set_ylabel(f"{label_parameter}")
+    
+    if len(counts.aperture.unique()) > 2:
+        ax.set_xlabel("Occluder (%)")
+    else: 
+        ax.set_xlabel("Occluder")
+    
 
     for i in counts.aperture.unique():
         for j in counts.aperture.unique():

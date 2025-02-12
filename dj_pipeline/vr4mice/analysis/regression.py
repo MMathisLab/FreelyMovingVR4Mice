@@ -19,7 +19,7 @@ def predict_decision(
     df,
     label: Union[List[str]] = "norm_x",
     n_splits: int = 10,
-    per_mouse: bool = False,
+    per_mouse: bool = True,
     max_iter: int = 100,
     scale_data: bool = True,
 ) -> Tuple[pd.DataFrame, npt.NDArray]:
@@ -30,7 +30,9 @@ def predict_decision(
         label: The name of the column in the `df` dataframe.
         n_splits: The number of splits fo the cross validation.
         per_mouse: If `True` split the data per session, else split
-            randomly across all sessions.
+            randomly across all sessions. If per_mouse, we train on 
+            all sessions but one, and test on the left out session.
+        scale_data: If `True`, standardize the data before fitting the model.
 
     Returns:
         The initial dataframe with an extra `pred` column, containing the probability that the
