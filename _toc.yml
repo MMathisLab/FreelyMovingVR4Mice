@@ -36,7 +36,8 @@ parts:
 - caption: Experiments, Training protocol and parameters
   chapters:
   - file: docs/training_protocols/training_protocol
-  - file: docs/training_protocols/training_protocol_stage_parameters
+  - file: docs/training_protocols/contrast_discrimination_training_parameters
+  - file: docs/training_protocols/shape_discrimination_training_parameters
 
 
 
