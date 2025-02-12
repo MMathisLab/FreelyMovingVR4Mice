@@ -931,12 +931,11 @@ def pairplot_average_decision_point(
         ax.set_ylabel(f"Distance to screen (cm)")
     else:
         ax.set_ylabel(f"{label_parameter}")
-    
+
     if len(counts.aperture.unique()) > 2:
         ax.set_xlabel("Occluder (%)")
-    else: 
+    else:
         ax.set_xlabel("Occluder")
-    
 
     for i in counts.aperture.unique():
         for j in counts.aperture.unique():
@@ -1020,8 +1019,7 @@ def plot_tortuosity_duration_distribution(
         df, param="trial_duration", log_scale=log_scale, ax=ax[1], cmap=cmap, bins=bins
     )
     ax[1].set_ylabel("Probability")
-
-    fig.tight_layout(pad=2.0)
+    return ax
 
 
 ### PARAMETERS IN TRAJECTORY
@@ -1160,6 +1158,8 @@ def plot_init_position_histogram(
 
     if is_colorbar:
         cbar = plt.colorbar(img, ax=ax)
+
+    plt.close()
 
     return hist
 

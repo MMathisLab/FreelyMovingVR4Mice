@@ -15,6 +15,37 @@ import sklearn.preprocessing
 from vr4mice.analysis import plotting
 
 
+model_labels = [
+    "x",
+    "y",
+    "velocity_x",
+    "velocity_y",
+    "heading_dir_sin",
+    "heading_dir_cos",
+    "head_angle_sin",
+    "head_angle_cos",
+    "trial_tortuosity",
+    # "trial_duration",
+    # "aperture",
+    "trial_rewarded",
+    "trial_length",
+]
+
+clean_model_labels = [
+    "x position",
+    "y position",
+    "x velocity",
+    "y velocity",
+    "sin(running direction)",
+    "cos(running direction)",
+    "sin(head-body angle)",
+    "cos(head-body angle)",
+    "Trial tortuosity",
+    "Trial rewarded",
+    "Trial progression",
+]
+
+
 def predict_decision(
     df,
     label: Union[List[str]] = "norm_x",
