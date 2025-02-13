@@ -295,7 +295,6 @@ def _transfer_file(file_info, ip):
     """
     src = Path(file_info["src"]).joinpath(file_info["filename"])
 
-
     if src is not None and Path(src).exists():
 
         src = str(src).replace("\\", "/")
