@@ -146,7 +146,7 @@ class Config:
         stdout, stderr = process.communicate()
         exit_code = process.wait()
         if exit_code != 0:
-            logger.info(f"{cmd} failed: {stdout} {stderr}")  
+            logger.info(f"{cmd} failed: {stdout} {stderr}")
             return False
         logger.info(cmd)
         self.config_dict["dropdown_menu"] = dst
