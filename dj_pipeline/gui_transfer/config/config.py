@@ -137,13 +137,16 @@ class Config:
         src = adr + self.config_dict["remote_dropdown_menu"]
         dst = self.config_dict["host_dropdown_menu"]
 
-        cmd = ["scp", src, dst]
+        if ip == "localhost":
+            cmd = ["cp", src, dst]
+        else:
+            cmd = ["scp", src, dst]
 
         process = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         stdout, stderr = process.communicate()
         exit_code = process.wait()
         if exit_code != 0:
-            logger.info("[scp problem] " + str(stdout) + str(stderr))  # todo logs
+            logger.info(f"{cmd} failed: {stdout} {stderr}")  
             return False
         logger.info(cmd)
         self.config_dict["dropdown_menu"] = dst
