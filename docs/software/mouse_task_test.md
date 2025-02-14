@@ -1,6 +1,6 @@
 # Tests for the mouse task
 
-As the **mouse_task** is represent the core of the game logic that mice are trained on, some tests have been developed to ensure the correct and consistent behavior of the game.
+Some tests have been developed to ensure correct and consistent behavior of the game, more specifically on the **mouse_task** files, which represents the core of the game logic.
 
 These tests can be found in the `FreelyMovingVR4Mice/mouse_task/tests/` folder.
 The two mains files here are the following:
