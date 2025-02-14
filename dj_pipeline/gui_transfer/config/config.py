@@ -135,14 +135,19 @@ class Config:
             adr = ip + ":"
 
         dst = self.config_dict["host_dropdown_menu"]
+        dst = str(dst).replace("\\", "/")
         
         if "localhost" in ip:
             src = self.config_dict["remote_dropdown_menu"]
+            src = str(src).replace("\\", "/")
             cmd = ["cp", src, dst]
         else:
             src = adr + self.config_dict["remote_dropdown_menu"]
+            src = str(src).replace("\\", "/")
             cmd = ["scp", src, dst]
         
+
+
         process = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         stdout, stderr = process.communicate()
         exit_code = process.wait()
