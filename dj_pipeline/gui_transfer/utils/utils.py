@@ -293,25 +293,25 @@ def _transfer_file(file_info, ip):
             The boolean is True if the transfer was successful, otherwise False.
             The file path is the source file path.
     """
-    file = Path(file_info["src"]).joinpath(file_info["filename"])
+    src = Path(file_info["src"]).joinpath(file_info["filename"])
     dst = ip + str(Path(file_info["dst"]).joinpath(file_info["filename"]))
 
-    if file is not None and Path(file).exists():
+    if src is not None and Path(src).exists():
         dst = str(dst).replace("\\", "/")
-        file = str(file).replace("\\", "/")
-        # transfer!
-        logger.info(file)
-        logger.info(dst)
-        cmd = ["scp", file, dst]
-        # subprocess.run(cmd) #todo check if works on windows
+        src = str(src).replace("\\", "/")
+        if "localhost" in dst:
+            cmd = ["cp", src, dst]
+        else:
+            cmd = ["scp", src, dst]
+        logger.info(f"{cmd}")
         process = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         stdout, stderr = process.communicate()
         exit_code = process.wait()
         if exit_code != 0:
-            logger.info("[scp problem] " + str(stdout) + str(stderr))  # todo logs
-            return False, file
+            logger.warning(f"{cmd} : failed")
+            return False, src
         logger.info(cmd)
-    return True, file
+    return True, src
 
 
 def transfer_files(transfer_files):
