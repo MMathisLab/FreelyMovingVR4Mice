@@ -297,27 +297,30 @@ def _transfer_file(file_info, ip):
 
     if src is not None and Path(src).exists():
 
-        src = str(src).replace("\\", "/")
+        #src = str(src).replace("\\", "/")
 
         if "localhost" in dst:
             dst = str(Path(file_info["dst"]).joinpath(file_info["filename"]))
-            dst = str(dst).replace("\\", "/")
+            #dst = str(dst).replace("\\", "/")
             cmd = ["cp", src, dst]
         else:
             dst = ip + str(Path(file_info["dst"]).joinpath(file_info["filename"])) 
             dst = str(dst).replace("\\", "/")
             cmd = ["scp", src, dst]
         
-        logger.info(f"{cmd}")
+        if src == dst:
+            logger.info(f"src == dst == {src}. No transfer required.")
+        else:
+
+            logger.info(f"{cmd}")
+            process = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            stdout, stderr = process.communicate()
         
-        process = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        stdout, stderr = process.communicate()
-        
-        exit_code = process.wait()
-        if exit_code != 0:
-            logger.warning(f"{cmd} : failed")
-            return False, src
-        logger.info(cmd)
+            exit_code = process.wait()
+            if exit_code != 0:
+                logger.warning(f"{cmd} : failed")
+                return False, src
+    
     return True, src
 
 
