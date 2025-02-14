@@ -1,4 +1,5 @@
 import os
+import shutil
 import json
 import subprocess
 from pathlib import Path
@@ -135,29 +136,32 @@ class Config:
             adr = ip + ":"
 
         dst = self.config_dict["host_dropdown_menu"]
-        #dst = str(dst).replace("\\", "/")
-        
+
         if "localhost" in ip:
             src = self.config_dict["remote_dropdown_menu"]
-            #src = str(src).replace("\\", "/")
-            cmd = ["cp", src, dst]
+            if Path(src) != Path(dst):
+                if Path(src).exists():
+                    shutil.copy(Path(src), Path(dst))
+                    self.config_dict["dropdown_menu"] = dst
         else:
             src = adr + self.config_dict["remote_dropdown_menu"]
-            src = str(src).replace("\\", "/")
+            dst = str(dst).replace("\\", "/")
             cmd = ["scp", src, dst]
-        
 
+            if Path(src).exists():
+                process = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                stdout, stderr = process.communicate()
+                exit_code = process.wait()
+                if exit_code != 0:
+                    logger.warning(f"{cmd} failed: {stdout} {stderr}")
+                    return False
+                self.config_dict["dropdown_menu"] = dst
+            else:
+                logger.warning(f"{src} doesn't exist.")
+                return False
 
-        process = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        stdout, stderr = process.communicate()
-        exit_code = process.wait()
-        if exit_code != 0:
-            logger.info(f"{cmd} failed: {stdout} {stderr}")
-            return False
-        logger.info(cmd)
-        self.config_dict["dropdown_menu"] = dst
         return self.config_dict["dropdown_menu"]
-
+    
     @property
     def get_gui_output_folder_path(self):
         return self.config_dict["gui_output_folder"]

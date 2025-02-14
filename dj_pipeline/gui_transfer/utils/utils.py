@@ -301,17 +301,14 @@ def _transfer_file(file_info, ip):
 
         if "localhost" in dst:
             dst = str(Path(file_info["dst"]).joinpath(file_info["filename"]))
-            #dst = str(dst).replace("\\", "/")
-            cmd = ["cp", src, dst]
+            if Path(src) != Path(dst):
+                if Path(src).exists():
+                    shutil.copy(Path(src), Path(dst))
         else:
             dst = ip + str(Path(file_info["dst"]).joinpath(file_info["filename"])) 
             dst = str(dst).replace("\\", "/")
             cmd = ["scp", src, dst]
         
-        if src == dst:
-            logger.info(f"src == dst == {src}. No transfer required.")
-        else:
-
             logger.info(f"{cmd}")
             process = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
             stdout, stderr = process.communicate()
