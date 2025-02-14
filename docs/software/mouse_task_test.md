@@ -7,7 +7,7 @@ The two mains files here are the following:
 
 1. `test_mouse_active_sensing.py`: contains some unit tests for the main `ActiveSensingTask` to make sure that the main functionalities are working as intended.
 
-2. `test_mouse_active_sensing_manual.py`: contains a script allowing the user to manually test the `ActiveSensingTask` through a pygame interface where the position inside the Unity game can be controlled by moving the cursor within the pygame window. To simply things, triggers areas (such as the `TT`, and `report` boxes) have been highlighted in green.
+2. `test_mouse_active_sensing_manual.py`: contains a script allowing the user to manually test the `ActiveSensingTask` through a pygame interface where the position inside the Unity game can be controlled by moving the cursor within the pygame window. To simplify things, trigger areas (such as the `TT`, and `report` boxes) have been highlighted in green.
 
 ## How to run tests
 
