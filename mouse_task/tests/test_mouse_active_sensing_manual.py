@@ -1,4 +1,6 @@
 import unittest
+import tempfile
+import json
 import time
 import pygame
 import pickle as pkl
@@ -20,6 +22,17 @@ from mouse_task.tests.test_helpers import (
 class TestPositionCoordinates(unittest.TestCase):
 
     def setUp(self):
+        # Open file dialog window to let user choose unity executable path
+        root = tk.Tk()
+        root.withdraw()
+        file_path = filedialog.askopenfilename(title="Select game executable")
+        root.destroy()
+
+        config = {"ar_env_unity_absolute_path": file_path}
+        tfile = tempfile.NamedTemporaryFile(mode="w+")
+        json.dump(config, tfile)
+        tfile.flush()
+
         """Setup the initial conditions for each test."""
         self.teensy = MagicMock()
         self.monitor = None
@@ -28,7 +41,7 @@ class TestPositionCoordinates(unittest.TestCase):
         self.session_label = ["test"]
         self.epochs = [250]
         self.epoch_labels = ["single_teardrop"]
-        self.config_file_path = Path("./test_config.json")
+        self.config_file_path = Path(tfile.name)
         self.reward_size = 100
         self.cropped_image = [0, 530, 0, 510]
         self.unity_arena_size = [-9, 9, -10, -2]
@@ -56,7 +69,6 @@ class TestPositionCoordinates(unittest.TestCase):
         self.target_distance = 3.0
         self.use_dlc = False
         self.prob_block_coherence = 1.0
-
         self.task = ActiveSensingTask(
             teensy=self.teensy,
             monitor=self.monitor,
@@ -95,7 +107,7 @@ class TestPositionCoordinates(unittest.TestCase):
             use_dlc=self.use_dlc,
         )
 
-    def test_manual_trajectories(self):
+    def test_manual(self):
         """Manually controlling the position in the unity game through mouse position in pygame window. Allows
         for manual testing of the game as well as generating trajectories data for later tesing.
         Data is saved to a pickle file (data.pkl).
@@ -121,7 +133,25 @@ class TestPositionCoordinates(unittest.TestCase):
             )
         )
 
-        print("------->", x_rects_lower, y_rects_lower, widths, heights)
+        # x_rects_lower -> [147.22222222, 0., 412.22222222]
+        # y_rects_lower -> [191.25, 0., 0.]
+        #        widths -> [235.55555556, 117.77777778, 117.77777778]
+        #       heights -> [255., 127.5, 127.5]
+
+        rtolerance = 0.5  # 0.5% error accepted
+        self.assertTrue(
+            np.allclose(
+                np.array([x_rects_lower, y_rects_lower, widths, heights]),
+                [
+                    [147.2, 0.0, 412.2],
+                    [191.25, 0.0, 0.0],
+                    [235.5, 117.7, 117.7],
+                    [255.0, 127.5, 127.5],
+                ],
+                atol=0,
+                rtol=rtolerance,
+            )
+        )
 
         # Initialize Unity environment
         self.task.start()
@@ -178,21 +208,11 @@ class TestPositionCoordinates(unittest.TestCase):
         pygame.quit()
 
         # Quitting task
-        data = self.task.get_data()
+        data = dict_to_data_frame(self.task.get_data())
         self.task.stop()
-
-        # Saving data to a pickle file
-        with open("./data.pkl", "wb") as handle:
-            pkl.dump(data, handle, protocol=pkl.HIGHEST_PROTOCOL)
 
         # Plotting trajectories
         plot_trajectories(data)
-
-    def test_data_integrity(self):
-        """Testing the integrity of the data saved in the pickle file."""
-
-        with open("./data.pkl", "rb") as handle:
-            data = dict_to_data_frame(pkl.load(handle))
 
         # checking that there are no duplicate steps
         self.assertTrue(data["step"].is_unique)
@@ -231,16 +251,4 @@ class TestPositionCoordinates(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import os, json
-
-    # saving game executable location for future use
-    if not os.path.exists("./test_config.json"):
-        root = tk.Tk()
-        root.withdraw()
-        file_path = filedialog.askopenfilename(title="Select game executable")
-
-        with open("./test_config.json", "w") as f:
-            json.dump({"ar_env_unity_absolute_path": file_path}, f)
-
-        root.destroy()
     unittest.main()

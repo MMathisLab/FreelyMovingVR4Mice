@@ -9,10 +9,10 @@ import time
 import numpy as np
 from mlagents_envs.environment import ActionTuple
 from mlagents_envs.environment import UnityEnvironment
-from mlagents_envs.side_channel.float_properties_channel import FloatPropertiesChannel
 from mlagents_envs.side_channel.environment_parameters_channel import (
     EnvironmentParametersChannel,
 )
+from mouse_task.tests.test_helpers import DebugLogSideChannel
 import cv2
 from teensyexp.tasks_abc.task import Task
 
@@ -59,6 +59,7 @@ class UnityTask(Task):
         self.agent_group = agent_group
         self.agent_num = 0
         self.channel = EnvironmentParametersChannel()
+        self.debug_channel = DebugLogSideChannel(verbose=False)
 
         self.epochs = np.cumsum(self.as_list(epochs))
         self.epoch_trials = epoch_trials
@@ -84,14 +85,16 @@ class UnityTask(Task):
         method tp start unity game: initializes UnityEnvironment, extracts agents, set up state observations,
         use parent's start() call to notify teensy
         """
+
         ### start unity game ###
         self.set_channel()
 
+        print(f"!!! GAME PATH !!! {self.env_path} !!! GAME PATH !!!")
         self.env = UnityEnvironment(
             file_name=self.env_path,
             base_port=5004,
             additional_args=self.display_args,
-            side_channels=[self.channel],
+            side_channels=[self.channel, self.debug_channel],
         )
 
         self.env.reset()

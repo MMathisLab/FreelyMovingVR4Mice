@@ -12,13 +12,15 @@ from uuid import UUID
 
 
 class DebugLogSideChannel(SideChannel):
-    def __init__(self):
+    def __init__(self, verbose: bool = False):
         # Use the same UUID as the one in the Unity code
         super().__init__(UUID("6146928a-ea90-4477-b497-c2f10400de1b"))
+        self.verbose = verbose
 
     def on_message_received(self, msg: IncomingMessage) -> None:
-        log_message = msg.read_string()
-        print(f"Unity Debug Log: {log_message}")
+        if self.verbose:
+            log_message = msg.read_string()
+            print(f"Unity Debug Log: {log_message}")
 
 
 def generate_uuid():
@@ -47,9 +49,8 @@ def plot_trajectories(data):
     Helper function that plots the trajectories of the mouse within the Unity game arena
     """
 
-    data_df = dict_to_data_frame(data)
-    episodes_df = data_df[data_df.ITI == 0].copy(deep=True)
-    ITIs_df = data_df[data_df.ITI == 1].copy(deep=True)
+    episodes_df = data[data.ITI == 0].copy(deep=True)
+    ITIs_df = data[data.ITI == 1].copy(deep=True)
     episode_nums = episodes_df.episode.unique()
 
     # Create a figure and axis
@@ -192,7 +193,7 @@ def compute_trigger_areas_coordinates(
     return x_rects_lower, y_rects_lower, widths, heights
 
 
-def dict_to_data_frame(data):
+def dict_to_data_frame(data: dict) -> pd.DataFrame:
     """
     Convert dictionary to pandas dataframe
     """
@@ -212,17 +213,18 @@ def dict_to_data_frame(data):
         "start_box_delay",
     ]
 
-    data_df = pd.DataFrame(
+    df = pd.DataFrame(
         data=data["action"].reshape(
             data["action"].shape[0],
             data["action"].shape[2],
         ),
         columns=["action_x", "action_y", "action_head_angle", "action_photodiode"],
     )
-    data_df["episode"] = data["episode"]
-    data_df["step"] = data["step"]
-    data_df[states] = data["state"]
-    data_df["terminal"] = data["terminal"]
-    data_df["reward"] = data["reward"]
+    df["episode"] = data["episode"]
+    df["step"] = data["step"]
+    df["step_time"] = data["step_time"]
+    df[states] = data["state"]
+    df["terminal"] = data["terminal"]
+    df["reward"] = data["reward"]
 
-    return data_df
+    return df
