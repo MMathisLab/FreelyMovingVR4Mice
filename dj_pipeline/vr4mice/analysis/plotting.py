@@ -11,6 +11,7 @@ import seaborn as sns
 from matplotlib.collections import PathCollection
 from matplotlib.transforms import Affine2D
 from scipy.interpolate import CubicSpline
+from scipy.stats import ttest_rel, ttest_ind
 
 """
 Color codes:
@@ -668,10 +669,20 @@ def plot_rate(
             columns=["mean", "sem"],
             index=counts.groupby("aperture")["count"].mean().index,
         )
+        for i in counts.aperture.unique():
+            for j in counts.aperture.unique():
+                if i < j:
+                    stat = ttest_rel(
+                        counts[counts["aperture"] == i]["count"],
+                        counts[counts["aperture"] == j]["count"],
+                    )
+                    print(f"{i}-{j}: {stat}")
+
     else:
         stats = (counts["count"].mean(), counts["count"].sem())
-    print(stats)
 
+    print(stats)
+    
 
 def plot_rewards(
     df,  # TODO(celia): provide correct columns directly?
