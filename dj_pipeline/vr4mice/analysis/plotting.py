@@ -682,7 +682,7 @@ def plot_rate(
         stats = (counts["count"].mean(), counts["count"].sem())
 
     print(stats)
-    
+
 
 def plot_rewards(
     df,  # TODO(celia): provide correct columns directly?
