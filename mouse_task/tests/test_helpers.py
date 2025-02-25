@@ -1,14 +1,15 @@
 import uuid
 import numpy as np
 import pandas as pd
+import tkinter as tk
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from matplotlib.collections import LineCollection
 from matplotlib.widgets import Button
 
+from uuid import UUID
+from tkinter import filedialog
 from mlagents_envs.side_channel.side_channel import SideChannel
 from mlagents_envs.side_channel.side_channel import IncomingMessage
-from uuid import UUID
 
 
 class DebugLogSideChannel(SideChannel):
@@ -27,89 +28,95 @@ def generate_uuid():
     return uuid.uuid4()
 
 
-def generate_zone_patches():
-    # Define the active regions (starting box and report boxes) of the Unity game arena
+def generate_patch(x_start, x_end, y_start, y_end):
+    w = abs(x_end - x_start)
+    h = abs(y_end - y_start)
+    return patches.Rectangle(
+        xy=(x_start, y_start),
+        width=w,
+        height=h,
+        linewidth=2,
+        edgecolor="g",
+        facecolor="none",
+    )
+
+
+def generate_active_regions(arena, Lbox, Rbox, Sbox):
+    """Define the active regions (starting box and report boxes) of the Unity game arena"""
+
+    arena_start_x, arena_end_x, _, arena_end_y = arena
+
+    width_screen = abs(arena_end_x - arena_start_x)
     screen = patches.Rectangle(
-        (-10, -2), 20, 1, linewidth=4, edgecolor="r", facecolor="none"
+        (arena_start_x, arena_end_y),
+        width=width_screen,
+        height=1,
+        linewidth=4,
+        edgecolor="r",
+        facecolor="none",
     )
-    start_box = patches.Rectangle(
-        (-4, -9), 8, 4, linewidth=2, edgecolor="g", facecolor="none"
-    )
-    report_r = patches.Rectangle(
-        (5, -4), 5, 2, linewidth=2, edgecolor="b", facecolor="none"
-    )
-    report_l = patches.Rectangle(
-        (-10, -4), 5, 2, linewidth=2, edgecolor="b", facecolor="none"
-    )
+
+    start_box, report_l, report_r = [
+        generate_patch(x_start, x_end, y_start, y_end)
+        for x_start, x_end, y_start, y_end in [Sbox[:4], Lbox[:4], Rbox[:4]]
+    ]
+
     return screen, start_box, report_r, report_l
 
 
-def plot_trajectories(data):
+def plot_trajectories(data, arena, Lbox, Rbox, Sbox):
     """
     Helper function that plots the trajectories of the mouse within the Unity game arena
     """
 
     episodes_df = data[data.ITI == 0].copy(deep=True)
-    ITIs_df = data[data.ITI == 1].copy(deep=True)
+    # ITIs_df = data[data.ITI == 1].copy(deep=True)
     episode_nums = episodes_df.episode.unique()
 
     # Create a figure and axis
-    fig, ax = plt.subplots(figsize=(7, 5))
+    _, ax = plt.subplots(figsize=(7, 5))
     plt.subplots_adjust(bottom=0.2)  # Make space for the button
     trajectory_index = [0]
 
     def update_plot(ep_num):
         ax.clear()
         trajectory = episodes_df[episodes_df.episode == ep_num]
-        reward = (
-            True if ITIs_df[ITIs_df.episode == ep_num].reward.values[0] == 1 else False
-        )
+        # reward = (
+        #     True if ITIs_df[ITIs_df.episode == ep_num].reward.values[0] == 1 else False
+        # )
 
         x = trajectory.x
         y = trajectory.y
 
         ax.plot(x, y, color="black", linewidth=4, alpha=0.3)
 
-        ax.scatter(
-            x.iloc[0],
-            y.iloc[0],
-            marker="X",
-            color="black",
-            s=150,
-            alpha=0.5,
-        )
+        [
+            ax.scatter(
+                x,
+                y,
+                marker=marker,
+                color="black",
+                s=100,
+                alpha=0.5,
+            )
+            for x, y, marker in [
+                [x.iloc[0], y.iloc[0], "o"],  # Start
+                [trajectory.iloc[-1].x, trajectory.iloc[-1].y, "X"],  # End
+            ]
+        ]
 
-        if reward:
-            ax.scatter(
-                trajectory.iloc[-1].x,
-                trajectory.iloc[-1].y,
-                marker="*",
-                color="green",
-                s=150,
-            )
-        else:
-            ax.scatter(
-                trajectory.iloc[-1].x,
-                trajectory.iloc[-1].y,
-                marker="*",
-                color="red",
-                s=150,
-            )
+        x_start_arena, x_end_arena, y_start_arena, y_end_arena = arena
 
         # Boundaries of the Unity arena
-        ax.set_xlim(-9, 9)
-        # plt.xticks(np.arange(-9, 10, 2))
-        ax.set_ylim(-10, -2)
-        # plt.yticks(np.arange(-10, -1, 1))
+        ax.set_xlim(x_start_arena, x_end_arena)
+        ax.set_ylim(y_start_arena, y_end_arena)
 
-        # Define the active regions (starting box and report boxes) of the Unity game arena
-        screen, start_box, report_r, report_l = generate_zone_patches()
+        # Generate and add active regions to the plot
+        [
+            ax.add_patch(patch)
+            for patch in generate_active_regions(arena, Lbox, Rbox, Sbox)
+        ]
 
-        # Add patches to the plot
-        ax.add_patch(screen)
-        ax.add_patch(report_r)
-        ax.add_patch(report_l)
-        ax.add_patch(start_box)
         ax.set_title(f"Episode {ep_num}")
         ax.grid(True, alpha=0.3)
 
@@ -151,43 +158,33 @@ def compute_trigger_areas_coordinates(
     Compute the coordinates of the trigger areas (start and report boxes) in the cropped image.
     Done by interpolating Unity arena coordinates to pygame window coordinates.
     """
-    x_rects_lower = np.interp(
-        np.array([start_box[1], r_report_box[1], l_report_box[1]]),
-        [unity_arena_size[0], unity_arena_size[1]],
-        [
-            cropped_image[1],
-            cropped_image[0],
-        ],  # the y-axis is flipped for ergonomical reasons
-    )
 
-    x_rects_upper = np.interp(
-        np.array([start_box[0], r_report_box[0], l_report_box[0]]),
-        [unity_arena_size[0], unity_arena_size[1]],
-        [
-            cropped_image[1],
-            cropped_image[0],
-        ],  # the y-axis is flipped for ergonomical reasons
-    )
+    x_unity = [unity_arena_size[0], unity_arena_size[1]]
+    x_image = [
+        cropped_image[1],
+        cropped_image[0],
+    ]  # the y-axis is flipped for ergonomical reasons
 
-    y_rects_lower = np.interp(
-        np.array([start_box[3], r_report_box[3], l_report_box[3]]),
-        [unity_arena_size[2], unity_arena_size[3]],
-        [
-            cropped_image[3],
-            cropped_image[2],
-        ],  # the y-axis is flipped for ergonomical reasons
-    )
+    y_unity = [unity_arena_size[2], unity_arena_size[3]]
+    y_image = [
+        cropped_image[3],
+        cropped_image[2],
+    ]  # the y-axis is flipped for ergonomical reasons
 
-    y_rects_upper = np.interp(
-        np.array([start_box[2], r_report_box[2], l_report_box[2]]),
-        [unity_arena_size[2], unity_arena_size[3]],
-        [
-            cropped_image[3],
-            cropped_image[2],
-        ],  # the y-axis is flipped for ergonomical reasons
-    )
+    x_rects_upper, x_rects_lower = [
+        np.interp(
+            np.array([start_box[i], r_report_box[i], l_report_box[i]]), x_unity, x_image
+        )
+        for i in range(0, 2)
+    ]
 
-    # the y-axis is flipped for ergonomical reasons
+    y_rects_upper, y_rects_lower = [
+        np.interp(
+            np.array([start_box[i], r_report_box[i], l_report_box[i]]), y_unity, y_image
+        )
+        for i in range(2, 4)
+    ]
+
     widths = x_rects_upper - x_rects_lower
     heights = y_rects_upper - y_rects_lower
     return x_rects_lower, y_rects_lower, widths, heights
@@ -228,3 +225,37 @@ def dict_to_data_frame(data: dict) -> pd.DataFrame:
     df["reward"] = data["reward"]
 
     return df
+
+
+def save_visual_observation(i, dec_steps, obs_specs, out_path):
+    """
+    Save visual observation as an image
+    """
+    for index, obs_spec in enumerate(obs_specs):
+        if len(obs_spec.shape) == 3:
+            # Check visual observation(s)
+            for index, obs_spec in enumerate(obs_specs):
+                if len(obs_spec.shape) == 3:
+                    plt.imshow(np.moveaxis(dec_steps.obs[index][0, :, :, :], 0, -1))
+                    plt.savefig(out_path)
+                    plt.close()
+
+                    # 1 stack | 3 channels | 256x256 pixels (=> specified in Unity)
+                    vis_obs_shape = dec_steps.obs[index].shape
+
+            # Check vector observation(s)
+            for index, obs_spec in enumerate(obs_specs):
+                if len(obs_spec.shape) == 1:
+                    # Check that the vector observation has 13 elements (=> specified in Unity)
+                    vec_obs_size = len(dec_steps.obs[index][0, :])
+
+    return vis_obs_shape, vec_obs_size
+
+
+def select_executable():
+    # Open file dialog window to let user choose unity executable path
+    root = tk.Tk()
+    root.withdraw()
+    game_path = filedialog.askopenfilename(title="Select game executable")
+    root.destroy()
+    return game_path
