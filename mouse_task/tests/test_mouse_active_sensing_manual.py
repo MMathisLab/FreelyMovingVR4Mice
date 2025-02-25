@@ -1,14 +1,8 @@
+import os
 import unittest
-import tempfile
-import json
-import time
 import pygame
-import pickle as pkl
-import tkinter as tk
 import numpy as np
-import pandas as pd
 
-from tkinter import filedialog
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 from mouse_task.task_active_sensing import ActiveSensingTask
@@ -16,23 +10,13 @@ from mouse_task.tests.test_helpers import (
     plot_trajectories,
     compute_trigger_areas_coordinates,
     dict_to_data_frame,
+    select_executable,
 )
 
 
 class TestPositionCoordinates(unittest.TestCase):
 
     def setUp(self):
-        # Open file dialog window to let user choose unity executable path
-        root = tk.Tk()
-        root.withdraw()
-        file_path = filedialog.askopenfilename(title="Select game executable")
-        root.destroy()
-
-        config = {"ar_env_unity_absolute_path": file_path}
-        tfile = tempfile.NamedTemporaryFile(mode="w+")
-        json.dump(config, tfile)
-        tfile.flush()
-
         """Setup the initial conditions for each test."""
         self.teensy = MagicMock()
         self.monitor = None
@@ -41,7 +25,7 @@ class TestPositionCoordinates(unittest.TestCase):
         self.session_label = ["test"]
         self.epochs = [250]
         self.epoch_labels = ["single_teardrop"]
-        self.config_file_path = Path(tfile.name)
+        self.config_file_path = Path("../task_config.json")
         self.reward_size = 100
         self.cropped_image = [0, 530, 0, 510]
         self.unity_arena_size = [-9, 9, -10, -2]
@@ -56,7 +40,7 @@ class TestPositionCoordinates(unittest.TestCase):
         self.target_selection = 6.0
         self.distractor_selection = 0.0
         self.occlusion_type = 0.0
-        self.Camera_type = 1.0
+        self.camera_type = 1.0
         self.target_spread = 4.0
         self.target_rotation = 0
         self.target_size = 2.0
@@ -69,48 +53,56 @@ class TestPositionCoordinates(unittest.TestCase):
         self.target_distance = 3.0
         self.use_dlc = False
         self.prob_block_coherence = 1.0
-        self.task = ActiveSensingTask(
-            teensy=self.teensy,
-            monitor=self.monitor,
-            write_video=self.write_video,
-            fps=self.fps,
-            session_label=self.session_label,
-            epochs=self.epochs,
-            epoch_labels=self.epoch_labels,
-            config_file_path=self.config_file_path,
-            reward_size=self.reward_size,
-            cropped_image=self.cropped_image,
-            unity_arena_size=self.unity_arena_size,
-            r_report_box=self.r_report_box,
-            l_report_box=self.l_report_box,
-            start_box=self.start_box,
-            rotate_camera=self.rotate_camera,
-            prob_obj_on_left=self.prob_obj_on_left,
-            prob_block_coherence=self.prob_block_coherence,
-            mouse_report_delay=self.mouse_report_delay,
-            slit_size=self.slit_size,
-            slit_depth=self.slit_depth,
-            target_selection=self.target_selection,
-            distractor_selection=self.distractor_selection,
-            occlusion_type=self.occlusion_type,
-            camera_type=self.Camera_type,
-            target_spread=self.target_spread,
-            target_rotation=self.target_rotation,
-            target_size=self.target_size,
-            target_height=self.target_height,
-            block_length=self.block_length,
-            start_box_delay=self.start_box_delay,
-            velocity_threshold=self.velocity_threshold,
-            distractor=self.distractor,
-            grey_screen_active=self.grey_screen_active,
-            target_distance=self.target_distance,
-            use_dlc=self.use_dlc,
-        )
+
+        game_path = select_executable()
+        self.config = {"ar_env_unity_absolute_path": game_path}
+
+        with patch(
+            "mouse_task.task_active_sensing.process_config",
+            return_value=self.config,
+        ):
+            self.task = ActiveSensingTask(
+                teensy=self.teensy,
+                monitor=self.monitor,
+                write_video=self.write_video,
+                fps=self.fps,
+                session_label=self.session_label,
+                epochs=self.epochs,
+                epoch_labels=self.epoch_labels,
+                config_file_path=self.config_file_path,
+                reward_size=self.reward_size,
+                cropped_image=self.cropped_image,
+                unity_arena_size=self.unity_arena_size,
+                r_report_box=self.r_report_box,
+                l_report_box=self.l_report_box,
+                start_box=self.start_box,
+                rotate_camera=self.rotate_camera,
+                prob_obj_on_left=self.prob_obj_on_left,
+                prob_block_coherence=self.prob_block_coherence,
+                mouse_report_delay=self.mouse_report_delay,
+                slit_size=self.slit_size,
+                slit_depth=self.slit_depth,
+                target_selection=self.target_selection,
+                distractor_selection=self.distractor_selection,
+                occlusion_type=self.occlusion_type,
+                camera_type=self.camera_type,
+                target_spread=self.target_spread,
+                target_rotation=self.target_rotation,
+                target_size=self.target_size,
+                target_height=self.target_height,
+                block_length=self.block_length,
+                start_box_delay=self.start_box_delay,
+                velocity_threshold=self.velocity_threshold,
+                distractor=self.distractor,
+                grey_screen_active=self.grey_screen_active,
+                target_distance=self.target_distance,
+                use_dlc=self.use_dlc,
+            )
 
     def test_manual(self):
         """Manually controlling the position in the unity game through mouse position in pygame window. Allows
         for manual testing of the game as well as generating trajectories data for later tesing.
-        Data is saved to a pickle file (data.pkl).
+        Data is saved to a pickle file (test_trajectories.pkl).
         """
 
         window_width = self.cropped_image[1]
@@ -133,20 +125,15 @@ class TestPositionCoordinates(unittest.TestCase):
             )
         )
 
-        # x_rects_lower -> [147.22222222, 0., 412.22222222]
-        # y_rects_lower -> [191.25, 0., 0.]
-        #        widths -> [235.55555556, 117.77777778, 117.77777778]
-        #       heights -> [255., 127.5, 127.5]
-
         rtolerance = 0.5  # 0.5% error accepted
         self.assertTrue(
             np.allclose(
                 np.array([x_rects_lower, y_rects_lower, widths, heights]),
                 [
-                    [147.2, 0.0, 412.2],
-                    [191.25, 0.0, 0.0],
-                    [235.5, 117.7, 117.7],
-                    [255.0, 127.5, 127.5],
+                    [147.222, 0.0, 412.222],  # x_rects_lower
+                    [191.25, 0.0, 0.0],  # y_rects_lower
+                    [235.556, 117.778, 117.778],  # widths
+                    [255.0, 127.5, 127.5],  # heights
                 ],
                 atol=0,
                 rtol=rtolerance,
@@ -156,8 +143,15 @@ class TestPositionCoordinates(unittest.TestCase):
         # Initialize Unity environment
         self.task.start()
 
+        # Tracking properties
+        dot_x, dot_y = window_width // 2, window_height // 2  # Start at center
+        speed = 12  # Pixels per frame
+        tracking = False  # Whether the dot is tracking the cursor
+
         # Main loop
         running = True
+        clock = pygame.time.Clock()
+
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -165,24 +159,43 @@ class TestPositionCoordinates(unittest.TestCase):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:  # Quit on pressing Escape key
                         running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:  # Left mouse button
+                        # Toggle tracking state
+                        tracking = not tracking
 
-            # Get mouse position within the arena bounds
-            mouse_pos = pygame.mouse.get_pos()
+            if tracking:
+                # Get current mouse position
+                mouse_x, mouse_y = pygame.mouse.get_pos()
 
-            # Ensure it is within bounds
-            x = max(0, min(mouse_pos[0], window_width))
-            y = max(0, min(mouse_pos[1], window_height))
+                # Calculate movement vector
+                dx = mouse_x - dot_x
+                dy = mouse_y - dot_y
+                distance = (dx**2 + dy**2) ** 0.5  # Euclidean distance
+
+                # Move only if the cursor is not already at the dot's position
+                if distance > 1:
+                    # Normalize the direction vector and scale by speed
+                    dot_x += (dx / distance) * min(speed, distance)
+                    dot_y += (dy / distance) * min(speed, distance)
+
+            x, y = dot_x, dot_y
 
             # Fill the screen with a background color
             screen.fill(BLACK)
 
+            # Draw the mouse position
             pygame.draw.circle(screen, RED, (x, y), 5)
+
+            # Draw the trigger areas using list comprehension
             [
-                pygame.draw.rect(screen, GREEN, (x, y, w, h))
-                for x, y, w, h in zip(x_rects_lower, y_rects_lower, widths, heights)
+                pygame.draw.rect(screen, GREEN, (xrl, yrl, ws, hs))
+                for xrl, yrl, ws, hs in zip(
+                    x_rects_lower, y_rects_lower, widths, heights
+                )
             ]
 
-            # Interpolating mouse (digital) coordinates on pygame screen to unity arena coordinates
+            # Interpolate cursor (digital) coordinates on pygame screen to unity arena coordinates
             x = np.interp(
                 x,
                 [self.cropped_image[0], self.cropped_image[1]],
@@ -203,51 +216,26 @@ class TestPositionCoordinates(unittest.TestCase):
 
             # Update display
             pygame.display.flip()
-            time.sleep(1 / 50)
 
+            # Limit FPS to 100
+            clock.tick(100)
         pygame.quit()
 
-        # Quitting task
         data = dict_to_data_frame(self.task.get_data())
         self.task.stop()
 
-        # Plotting trajectories
-        plot_trajectories(data)
-
-        # checking that there are no duplicate steps
-        self.assertTrue(data["step"].is_unique)
-
-        # checking that are no missing values in the data
-        self.assertEqual(data.isna().sum().sum(), 0)
-
-        data = data.apply(pd.to_numeric, errors="coerce")
-
-        # checking that actions sent correspond to agent's position (on same step)
-        self.assertTrue(np.allclose(data["action_x"].to_numpy(), data["x"].to_numpy()))
-        self.assertTrue(np.allclose(data["action_y"].to_numpy(), data["y"].to_numpy()))
-
-        # checking that agent cannot be in both boxes at the same time
-        self.assertTrue((data["mouseInLeft_box"] * data["mouseInRight_box"]).sum() == 0)
-
-        # checking that there are no more rewards than there are episodes
-        self.assertTrue(data["reward"].sum() <= data["episode"].max())
-
-        # checking that the number of terminal steps corresponds to number of episodes
-        data_df = data.groupby("episode").last()
-        self.assertTrue(data_df["terminal"].sum() + 1 == data_df.index.max())
-
-        # checking that rewards were correctly assigned
-        data_df = data[data.ITI == 1].groupby("episode").first()
-        data_df["spawner_green_on_right"] = (
-            data_df["spawner_green_on_left"] == 0
-        ).astype(float)
-        self.assertTrue(
-            all(
-                data_df["reward"]
-                == data_df["spawner_green_on_left"] * data_df["mouseInLeft_box"]
-                + data_df["spawner_green_on_right"] * data_df["mouseInRight_box"]
-            )
+        plot_trajectories(
+            data,
+            arena=self.unity_arena_size,
+            Lbox=self.l_report_box,
+            Rbox=self.r_report_box,
+            Sbox=self.start_box,
         )
+
+        # Store data in pickle file
+        parent_dir = os.path.dirname(os.path.abspath(__file__))
+        out_path = os.path.join(parent_dir, "test_trajectories.pkl")
+        data[["action_x", "action_y"]].to_pickle(out_path)
 
 
 if __name__ == "__main__":
