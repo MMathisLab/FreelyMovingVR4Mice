@@ -19,9 +19,9 @@ class TestDetectionP1Randomization(unittest.TestCase):
         self.reward_size = 100
         self.cropped_image = [0, 530, 0, 510]
         self.unity_arena_size = [-9, 9, -10, -2]
-        self.R_report_box = [5, 10, -4, -2]
-        self.L_report_box = [-10, -5, -4, -2]
-        self.Start_box = [-4, 4, -9, -5, 90]
+        self.r_report_box = [5, 10, -4, -2]
+        self.l_report_box = [-10, -5, -4, -2]
+        self.start_box = [-4, 4, -9, -5, 90]
         self.rotate_camera = 90.0
         self.prob_obj_on_left = 0.5
         self.mouse_report_delay = 0.0
@@ -30,7 +30,7 @@ class TestDetectionP1Randomization(unittest.TestCase):
         self.target_selection = 6.0
         self.distractor_selection = 0.0
         self.occlusion_type = 0.0
-        self.Camera_type = 1.0
+        self.camera_type = 1.0
         self.target_spread = 4.0
         self.target_rotation = 0
         self.target_size = 2.0
@@ -62,9 +62,9 @@ class TestDetectionP1Randomization(unittest.TestCase):
                 reward_size=self.reward_size,
                 cropped_image=self.cropped_image,
                 unity_arena_size=self.unity_arena_size,
-                r_report_box=self.R_report_box,
-                l_report_box=self.L_report_box,
-                start_box=self.Start_box,
+                r_report_box=self.r_report_box,
+                l_report_box=self.l_report_box,
+                start_box=self.start_box,
                 rotate_camera=self.rotate_camera,
                 prob_obj_on_left=self.prob_obj_on_left,
                 prob_block_coherence=self.prob_block_coherence,
@@ -74,7 +74,7 @@ class TestDetectionP1Randomization(unittest.TestCase):
                 target_selection=self.target_selection,
                 distractor_selection=self.distractor_selection,
                 occlusion_type=self.occlusion_type,
-                camera_type=self.Camera_type,
+                camera_type=self.camera_type,
                 target_spread=self.target_spread,
                 target_rotation=self.target_rotation,
                 target_size=self.target_size,
