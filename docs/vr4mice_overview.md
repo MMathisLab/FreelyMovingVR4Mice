@@ -20,7 +20,7 @@ FreelyMovingVR4mice uses two GUIs (`vr4mice` and `Deeplabcut-live-gui`) that wer
 ## Software requirements
 
 - Python version: ***3.10.12*** (this version only)
-- Unity3D (Version tested: ***2022.3.15f1***)
+- Unity3D (Required: >= ***2023.2*** | Tested: ***2023.2.20f1***)
 - see [setup.cfg](../setup.cfg) for additional requirements
 
 The augmented reality system runs on a python framework, **vr4mice**, this code was initially developed by **Gary Kane**, **Michael Beauzile**, and **Mackenzie Mathis** as a simple and scalable control suite for a host of systems neuroscience tasks. This was expanded with **Thomas Sainsbury**, **Sébastien Hausmann**, **Mariia Popova**, **Jessy Lauer** and **Léo Bruneau**. This framework handles input and output to a teensy, parses actions to the Unity video game and handles all data logging for the experiments. In addition, it provides a simple GUI for the user to run the experiments and manually change parameters which control the experiments trial-like structure.
