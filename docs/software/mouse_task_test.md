@@ -13,14 +13,14 @@ The two mains files here are the following:
 
 ### Unit tests
 
-To run the unit tests, simply execute the script from the command line with the following command:
+To run the unit tests, simply the corresponding python script, i.e. `test_mouse_active_sensing.py` in the `mouse_task/tests/` directory. To do so, you can execute the following command in your terminal:
 
 ```bash
 python mouse_task/tests/test_mouse_active_sensing.py
 ```
 
-```{note}
- It is assumed that you are currently located at the root of the `FreelyMovingVR4Mice` repository and that the conda environment created [here](../Installation/installSumUp.md) is activated and has the necessary packages installed. If you are already in the `tests` subfolder, you can simply run:
+```{warning}
+ It is assumed that your terminal window is open at the root of the `FreelyMovingVR4Mice` repository and that the conda environment created [here](../Installation/installSumUp.md) is activated and has the necessary packages installed. If you are already in the `mouse_task/tests/` subfolder, you can directly run:
 
  ```bash
  python test_mouse_active_sensing.py
@@ -28,34 +28,36 @@ python mouse_task/tests/test_mouse_active_sensing.py
 
 The unit tests contain several assertions that check crucial aspects of the game logic. Some of the tests include:
 
-- testing that the object appears on the correct side based on the `prob_obj_on_left` attribute. Naturally, if `prob_obj_on_left = 1.0`, then the object will always appear on the left side and on the right side if `prob_obj_on_left = 0.0`. If the value is `0.5`, then the object will appear randomly on either side.
+- testing that the object appears on the correct side based on the `prob_obj_on_left` attribute. Naturally, if `prob_obj_on_left = 1.0`, then the object will always appear on the left side and on the right side if `prob_
+obj_on_left = 0.0`. If the value is `0.5`, then the object will appear randomly on either side.
 - testing whether trial blocks are correctly generated
 - testing whether slit sizes are correctly calculated based on the list of values passed to the `task.get_slit_sizes([...])` class method.
 
 ### Manual tests
 
-Performing manual testing of the game is similar to the above procedure, just run the corresponding python script in the `tests` folder. For instance, you can run the following command in your open terminal window:
+Performing manual testing of the game is similar to the above procedure, just run the corresponding python script in the `mouse_task/tests/` sub-folder. For instance, the python script can be run with:
 
 ```bash
 python mouse_task/tests/test_mouse_active_sensing_manual.py
 ```
 
-```{note}
- The same assumptions as above apply here. Again, if you are already in the `tests` folder (in your open terminal window), you can just run:
+```{warning}
+ It is assumed that your terminal window is open at the root of the `FreelyMovingVR4Mice` repository and that the conda environment created [here](../Installation/installSumUp.md) is activated and has the necessary packages installed. If you are already in the `mouse_task/tests/` subfolder, you can directly run:
+
  ```bash
  python test_mouse_active_sensing_manual.py
  ```
 
-By executing the above command, you will first be prompted to select the location of the Unity game executable file, then the game will start and a pygame window will pop up as well. Here is a quick demonstration of the testing interface:
+By executing the above command (either one), you will first be prompted to select the location of the Unity game executable file, then the game will start and a pygame window will pop up as well. Here is a quick demonstration of the testing interface:
 
 ![interface](../images/testing_interface_720p.gif)
 
-```{note}
+```{warning}
 Since the game may boot up in full screen mode, you may have to resize the window to obtain a similar setup to the one shown above.
 ```
 
 To exit the pygame and the game window, you just need to press the `ESC` key on your keyboard. After that, a matplotlib window will pop up displaying the different episode trajectories that have been "drawn" by the cursor during testing.
-One important feature of the plot is that, at the end of each trajecotory, a green or red star has been added based on whethere the "mouse" reported correctly or not respectively.
+One important feature of the plot is that, at the end of each trajecotory, a green or red star has been added based on whether the "mouse" reported correctly or not respectively.
 
 ## How it works
 
@@ -71,7 +73,8 @@ The testing framework is still early stage and will be continuously updated over
 - some of the game logic found in the python task scripts under `./mouse_task/`
 - most of the scripts found under `./teensyexp/tasks_abc/`
 
-## Necessary python libraries
+<!-- TODO: add a python requirements.txt file for the testing suite. Maybe add how to install libraries from requirements file. I.e. pip install -r requirements.txt -->
+<!-- ## Necessary python libraries
 
 Here is a list of necessary libraries to run the above mentioned tests. Some of these, present by default in any python environment, were kept for sake of completeness:
 
@@ -94,4 +97,4 @@ or, more concisely, with:
 
 ```bash
 pip install <name-of-package>
-```
+``` -->
