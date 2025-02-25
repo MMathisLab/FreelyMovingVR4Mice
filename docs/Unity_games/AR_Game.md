@@ -4,59 +4,24 @@ This page outlines the steps required to install the Unity Augmented Reality gam
 
 ## Install Unity
 
-### Download and install Anaconda
+### Download and install Miniconda
 
-You can install Anaconda from the [Anaconda website](https://www.anaconda.com/products/individual) directly.
+You can install **Miniconda** from the [Anaconda website](https://docs.anaconda.com/miniconda/) directly.
+Miniconda is a free, miniature installation of Anaconda Distribution that includes only `conda`, Python, the packages they both depend on, and a small number of other useful packages.
 
-### Download and install unity (version 2022.3.15f1)
+### Download and install Unity Hub and Unity Editor
 
-Install both in the same order:
+Install both in the following order:
 
-- Download [UnityHub](https://unity3d.com/fr/get-unity/download).
-- Download the *approved* version (2022.3.15f1) of [Unity Editor](https://unity3d.com).
-
-### Install the MLagents package
-
-***Nota bene***: *you can skip this part if you already cloned the repository while following the {doc}`../../docs/Installation/installSumUp`*
-
-- Clone the `ml-agents` [github repo](https://github.com/Unity-Technologies/ml-agents):
-
- ```bash
- git clone --branch release_22 https://github.com/Unity-Technologies/ml-agents.git
- ```
-
-(*the `--branch release_22` option will allow to download the [latest stable release](https://github.com/Unity-Technologies/ml-agents/releases), as of January 2025. Omitting that will get the main branch which is potentially unstable*)
+1. Download [UnityHub](https://unity3d.com/fr/get-unity/download).
+2. Download the *approved* version **2023.2.20f1** of [Unity Editor](https://unity.com/releases/editor/whats-new/2023.2.20#installs).
 
 ## Add and Open the `AugmentedReality` project to Unity
 
-- Open the Unity-Hub app.
-- Go to `Add` >> ``Add from disk`` and add the `FreelyMovingVR4Mice/AugmentedReality` folder as a project (you should have the repo cloned on your computer for that step -- see {doc}`../../docs/Installation/installSumUp` if that's not the case).
-- Open the project.
+1. Open the Unity-Hub app.
+2. Go to `Add` >> `Add from disk` and add the `FreelyMovingVR4Mice/AugmentedReality` folder as a project (you should have the repo cloned on your computer for that step -- see {doc}`../../docs/Installation/installSumUp` if that's not the case).
+3. Open the project.
 
-(unity:mlagents)=
-<!-- ### Add the `mlagents` package to your project:
-
-- Go to `Window` >> `Package manager` >> click on the `+` icon.
-
-```{image} ../../docs/images/window.png
-:alt: window
-:class: bg-primary mb-1
-:width: 400px
-:align: center
+```{important}
+If you encounter any problems, let the **Mathis Lab** (as of February 2025, contact **Célia Benquet**) know so that they can update this document with solutions!
 ```
-
-- Click on `Add package from disk...`. 
-
-```{image} ../../docs/images/add_package.png
-:alt: add-package
-:class: bg-primary mb-1
-:width: 400px
-:align: center
-```
-
-- Go to the `ml-agents` folder you cloned previously and select `com.unity.ml-agents/package.json`. This should import the `ml-agents` package.
-
-- If you now click on the ▶️ play icon, the game should start to run with no compile errors.
- -->
-
-ℹ️ If you encounter any problems, let the Mathis lab (as of now - 07.12.23 - contact Célia Benquet) know so that they can update this document with solutions!
