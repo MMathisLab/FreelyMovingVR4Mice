@@ -1,56 +1,33 @@
 # Installation
 
-The FreelyMovingVR4Mice repository contains main **vr4mice** package (src code: teensyexp folder) and **mouse_task** module that is the input for **vr4mice**
+The FreelyMovingVR4Mice repository contains the main **vr4mice** package (the source code is in the `teensyexp/` sub-folder) and **mouse_task** module that is the input for **vr4mice**
 
-_**Note:**_ _The following installation assumes you have already installed on your system the `conda` package manager. If you haven't, please follow the [official installation tutorial for Windows](https://docs.conda.io/projects/conda/en/stable/) (check [this](https://docs.anaconda.com/miniconda/) for more details)._
+```{warning}
+The following installation assumes you have already installed on your system the `conda` package manager. If you haven't, please follow the [official installation tutorial](https://docs.anaconda.com/miniconda/install/) for the correct platform.
+To be more specific, we will install `miniconda` which is a free, miniature installation of Anaconda Distribution that includes only conda, Python, the packages they both depend on, and a small number of other useful packages. See [this](https://docs.anaconda.com/miniconda/) for more information.
+```
 
 Create and activate a new conda environment with local pip:
 
  ```bash
- conda create -n name_of_env python=3.10.12 && conda activate mlagents
+ conda create -n <name-of-env> python=3.10.12 && conda activate <name-of-env>
  ```
 
-Download and install **ml-agents**'s 22nd release directly from the repository:
-
-- Clone the repository:
-
+ ```{hint}
+ As an example, with `vr4mice_env` as the environment name, the above command would become as follows:
   ```bash
-  git clone --branch release_22 https://github.com/Unity-Technologies/ml-agents.git
+  conda create -n vr4mice_env python=3.10.12 && conda activate vr4mice_env
   ```
 
-  ```bash
-  cd ml-agents/
-  ```
+Download and install the **mlagents-envs** python package necessary for interfacing with the Unity game with python. To do so, run the following command:
 
-- Then, run the following command:
+```bash
+python -m pip install mlagents-envs==1.1.0
+```
 
-  ```bash
-  python -m pip install ./ml-agents-envs
-  ```
+Now, it is necessary to clone the **FreelyMovingVR4Mice** repository and install the **vr4mice** package that comes with it:
 
-  > _Note: since we're using this library to interface with the Unity game from python, we only need the `ml-agents-envs` dependency. If you want to install the full package, you can additionally run the following command after the previous one:_
-  >
-  >```bash
-  >python -m pip install ./ml-agents
-  >```
-  >
-  > To verify that this additional installation was successful, you can try to run, in the conda environment created above, the following command:
-  >
-  >```bash
-  > mlagents-learn --help
-  >```
-  >
-  > If the installation was successful, the help manual of the `mlagents-learn` command should be displayed on your terminal window. For more details on how to install **ml-agents**, check the official documentation [here](https://unity-technologies.github.io/ml-agents/Installation/).
-
-Now, it is necessary to go "up" one level (back to the location where the previous repository was cloned) and download the **vr4mice** source code:
-
-- To return to previous folder from the command line, the following simple command can be used:
-
-  ```bash
-  cd ..
-  ```
-
-- To clone the FreelyMovingVR4Mice repository:
+- To clone the **FreelyMovingVR4Mice** repository:
 
   ```bash
   git clone https://github.com/MMathisLab/FreelyMovingVR4Mice.git
@@ -60,21 +37,21 @@ Now, it is necessary to go "up" one level (back to the location where the previo
   cd FreelyMovingVR4Mice
   ```
 
-- Choosing a specific **branch**, if needed, can be done as follows:
+- To choose a specific **branch** other than `main` or `master` (if needed):
 
   ```bash
   git checkout <name-of-the-branch>
   ```
 
-  > _When cloning a Github repository, the default branch will usually be the `main` (or `master`)._
+  > _When cloning a GitHub repository, the default branch will usually be the `main` (or `master`)._
 
-- To install the **vr4mice** package  (_use `pip install -e .` instead if planning to actively developing the package_):
+- To install the **vr4mice** package  (_use `pip install -e .` instead if planning to actively develop the package and modify the source code_):
 
   ```bash
   pip install .
   ```
 
-- To check everything installed successfully (assuming no **ERRORS** were displayed in the process), try running the following in your conda environment:
+- To check everything was installed successfully, run the following in your conda environment:
 
   ```bash
   vr4mice
