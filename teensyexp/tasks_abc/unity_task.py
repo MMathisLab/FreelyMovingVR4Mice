@@ -89,7 +89,6 @@ class UnityTask(Task):
         ### start unity game ###
         self.set_channel()
 
-        print(f"!!! GAME PATH !!! {self.env_path} !!! GAME PATH !!!")
         self.env = UnityEnvironment(
             file_name=self.env_path,
             base_port=5004,
