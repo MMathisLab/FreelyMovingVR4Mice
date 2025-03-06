@@ -32,7 +32,9 @@ Case: Lambda Vector case
 
 Two cameras are necessary if you would like to use 3d reconstruction.
 
-## Thor labs parts (for building monitor mounting cage)
+## Parts for building montior-supporting cage
+
+### Thor labs parts
 
 5 x [Raw, Unanodized 25 mm Rail Extrusion, 2 m](https://www.thorlabs.com/thorproduct.cfm?partnumber=XE25RL2)
 
@@ -40,9 +42,17 @@ Two cameras are necessary if you would like to use 3d reconstruction.
 
 4 x [Right-Angle Bracket for 25 mm Rails](https://www.thorlabs.com/thorproduct.cfm?partnumber=XE25A90)
 
-2x [Drop-In T-Nut, 1/4\"-20 Tapped Hole, 10 Pack](http://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=4101)
+2 x [Drop-In T-Nut, 1/4\"-20 Tapped Hole, 10 Pack](http://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=4101)
 
-1x [1/4\"-20 Low-Profile Channel Screw, 5/8\" Long, 50 Pack](http://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=4101)
+1 x [1/4\"-20 Low-Profile Channel Screw, 5/8\" Long, 50 Pack](http://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=4101)
+
+### 3D printed parts
+
+8 x [Top monitor holder](../stl_files/top_monitor_holder.stl)
+
+4 x [Bottom monitor holder](../stl_files/Bottom_monitor_holder_only.stl)
+
+4 x [Bottom monitor holder with box adaptor](../stl_files/Bottom_monitor_box_holder.stl)
 
 ## Water delivery teensy components
 
@@ -108,11 +118,3 @@ Mathis lab setup:
 ## Power supply
 
 1x Power Supply (12V Wall wart)
-
-## 3D printed parts
-
-8 x  Top monitor holder - `../stl_files/top_monitor_holder.stl`
-
-4 x Bottom monitor holder - `../stl_files/Bottom_monitor_holder_only.stl`
-
-4 x Bottom monitor holder with box adaptor - `../stl_files/Bottom_monitor_box_holder.stl`
