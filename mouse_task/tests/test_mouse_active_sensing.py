@@ -1,3 +1,6 @@
+# Description: Series of unittests for the active sensing task. Checks several aspects of the task logic, such as
+# the randomization of the target location, the block switching logic, and the slit size generation.
+
 import unittest
 from unittest.mock import MagicMock, patch
 from pathlib import Path

@@ -1,3 +1,7 @@
+# Description: Test the active sensing task by using artificial trajectories (generated through test_mouse_active_sensing_manual.py) to control the position of
+# the agent in the Unity game. The trajectories are loaded from a pickle file. At the end of the virtual session, the saved data undergoes testing to ensure
+# data integrity and coherence.
+
 import os
 import unittest
 import numpy as np

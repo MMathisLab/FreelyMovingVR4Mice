@@ -1,3 +1,5 @@
+# Description: Helper functions for the mouse task tests
+
 import uuid
 import numpy as np
 import pandas as pd

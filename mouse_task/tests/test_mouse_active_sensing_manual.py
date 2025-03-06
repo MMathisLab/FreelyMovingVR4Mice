@@ -1,3 +1,6 @@
+# Description: Test the active sensing task by manually controlling the position of the agent in the Unity game through a pygame window interface.
+# The manually generated trajectories are saved to a pickle file for later testing.
+
 import os
 import unittest
 import pygame
