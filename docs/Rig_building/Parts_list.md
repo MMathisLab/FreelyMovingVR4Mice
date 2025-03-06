@@ -48,11 +48,11 @@ Two cameras are necessary if you would like to use 3d reconstruction.
 
 ### 3D printed parts
 
-8 x [Top monitor holder](../stl_files/top_monitor_holder.stl)
+8 x [Top monitor holder](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/stl_files/top_monitor_holder.stl)
 
-4 x [Bottom monitor holder](../stl_files/Bottom_monitor_holder_only.stl)
+4 x [Bottom monitor holder](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/stl_files/Bottom_monitor_holder_only.stl)
 
-4 x [Bottom monitor holder with box adaptor](../stl_files/Bottom_monitor_box_holder.stl)
+4 x [Bottom monitor holder with box adaptor](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/stl_files/Bottom_monitor_box_holder.stl)
 
 ## Water delivery teensy components
 
