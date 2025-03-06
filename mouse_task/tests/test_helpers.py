@@ -80,9 +80,6 @@ def plot_trajectories(data, arena, Lbox, Rbox, Sbox):
     def update_plot(ep_num):
         ax.clear()
         trajectory = episodes_df[episodes_df.episode == ep_num]
-        # reward = (
-        #     True if ITIs_df[ITIs_df.episode == ep_num].reward.values[0] == 1 else False
-        # )
 
         x = trajectory.x
         y = trajectory.y
