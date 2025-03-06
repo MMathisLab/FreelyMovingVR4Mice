@@ -23,5 +23,5 @@ Install both in the following order:
 3. Open the project.
 
 ```{important}
-If you encounter any problems, let the **Mathis Lab** (as of February 2025, contact **Célia Benquet**) know so that they can update this document with solutions!
+If you encounter any problems, let the **Mathis Lab** (as of February 2025, contact **Célia Benquet**) know so that they can update this document with solutions or open an issue on the repository!
 ```
