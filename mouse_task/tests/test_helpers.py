@@ -70,7 +70,6 @@ def plot_trajectories(data, arena, Lbox, Rbox, Sbox):
     """
 
     episodes_df = data[data.ITI == 0].copy(deep=True)
-    # ITIs_df = data[data.ITI == 1].copy(deep=True)
     episode_nums = episodes_df.episode.unique()
 
     # Create a figure and axis
