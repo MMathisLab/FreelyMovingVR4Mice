@@ -112,13 +112,12 @@ class TestPositionCoordinates(unittest.TestCase):
         self.assertEqual(behavior_name, "My Behavior?team=0")
         spec = env.behavior_specs[behavior_name]
 
-        # Check that agent has two observations: one vector and one visual
-        self.assertEqual(len(spec.observation_specs), 2)
-
-        # Double-check presence of visual observation
-        # Visual observations have 3 dimensions: Height, Width and number of channels
-        vis_obs = any(len(spec.shape) == 3 for spec in spec.observation_specs)
-        self.assertTrue(vis_obs)
+        # Check that agent has a single observation
+        self.assertEqual(len(spec.observation_specs), 1)
+        # Check the size of the vector observation
+        self.assertEqual(spec.observation_specs[0].shape, (13,))
+        # Check the type of the observation (i.e. VectorSensor)
+        self.assertTrue("VectorSensor" in spec.observation_specs[0].name)
 
         # Check there are 4 continuous actions (i.e. x, y, head_angle and photodiode)
         self.assertTrue(spec.action_spec.continuous_size > 0)
@@ -137,24 +136,6 @@ class TestPositionCoordinates(unittest.TestCase):
                 return_value=np.array([x, y, 0, 0]).reshape((1, -1)),
             ):
                 self.task.loop()
-
-            # Save visual observation halfway through (if there is one)
-            if i == len(trajectories_df) // 2:
-                decision_steps, _ = env.get_steps(behavior_name)
-
-                out_path = os.path.join(parent_dir, "test_visual_observation.png")
-                vis_obs_shape, vec_obs_size = save_visual_observation(
-                    i=i,
-                    dec_steps=decision_steps,
-                    obs_specs=spec.observation_specs,
-                    out_path=out_path,
-                )
-
-                # Check correct size of visual observation
-                self.assertEqual(vis_obs_shape, (1, 3, 256, 256))
-
-                # Check correct size of vector observation
-                self.assertEqual(vec_obs_size, 13)
 
         # Collect data
         data = dict_to_data_frame(self.task.get_data())
