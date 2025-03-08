@@ -56,8 +56,6 @@ public class Mouse_move : Agent
 	public Image sync;
 	Stopwatch stopwatch;
 	float lastFrameTime;
-
-	private bool rl_training = false; // Default value
 	private DebugLogSideChannel debugLogSideChannel;
 
 
@@ -77,17 +75,6 @@ public class Mouse_move : Agent
 		SideChannelManager.RegisterSideChannel(debugLogSideChannel);
 		// - - - - - - - - - - - - - - - - - - - - - - - - - 
 
-		// - - - - - retrieving RL  training param - - - - -
-		var envParams = Academy.Instance.EnvironmentParameters;
-
-		// Retrieve the "rl_training" parameter and set its value
-		float rlTrainingValue = envParams.GetWithDefault("rl_training", 0.0f); // Default to 0.0 (-> False)
-		UnityEngine.Debug.Log($"isTrainingValue: {rlTrainingValue}");
-		rl_training = rlTrainingValue > 0.5f; // Convert float to bool
-
-		UnityEngine.Debug.Log($"RL Training: {rl_training}");
-		// - - - - - - - - - - - - - - - - - - - - - - - - - 
-
 
 		plane.GetComponent<Target_spawner>().DestroyTargets();
 		rBody = GetComponent<Rigidbody>();
@@ -97,11 +84,6 @@ public class Mouse_move : Agent
 		lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
 
 		UnityEngine.Debug.Log("START");
-		if (rl_training)
-		{
-			UnityEngine.Debug.Log("Reset starting position");
-			this.transform.position = new Vector3(0, 0.5f, -4.99f);
-		}
 	}
 
 	public void OnDestroy()
@@ -166,7 +148,6 @@ public class Mouse_move : Agent
 	{
 		foreach (GameObject can in ITI_screen)
 		{
-			// UnityEngine.Debug.Log(can);
 			can.SetActive(false);
 
 		}
@@ -174,7 +155,6 @@ public class Mouse_move : Agent
 
 	private void ITIScreenOn()
 	{
-		//UnityEngine.Debug.Log("turn on");
 		foreach (GameObject can in ITI_screen)
 		{
 			can.SetActive(true);
@@ -196,37 +176,16 @@ public class Mouse_move : Agent
 			targets_visable = true;
 		}
 
+		float x = actions.ContinuousActions[0];
+		float z = actions.ContinuousActions[1];
+		float head_angle = actions.ContinuousActions[2];
+		photodiode_change_value = actions.ContinuousActions[3];
 
-		if (rl_training)
-		{
-			float x = this.transform.position.x + actions.ContinuousActions[0];
-			float z = this.transform.position.z + actions.ContinuousActions[1];
-			float head_angle = this.transform.eulerAngles.y + actions.ContinuousActions[2];
-			photodiode_change_value = 1f;
-
-			if (x < 9f & x > -9f & z < -2f & z > -10f)
-			{
-				this.transform.position = new Vector3(x, 0.5f, z);
-			}
-			this.transform.eulerAngles = new Vector3(0.0f, head_angle, 0.0f);
-		}
-		else
-		{
-			float x = actions.ContinuousActions[0];
-			float z = actions.ContinuousActions[1];
-			float head_angle = actions.ContinuousActions[2];
-			photodiode_change_value = actions.ContinuousActions[3];
-
-			this.transform.position = new Vector3(x, 0.5f, z);
-			this.transform.eulerAngles = new Vector3(0.0f, head_angle, 0.0f);
-		}
-
+		this.transform.position = new Vector3(x, 0.5f, z);
+		this.transform.eulerAngles = new Vector3(0.0f, head_angle, 0.0f);
 		Vector3 currVel = (this.transform.position - prevPos) / deltaTime;
 		speed = currVel.magnitude;
-
-		// update previous position to current to compute velocity at next iteration
 		prevPos = this.transform.position;
-		//UnityEngine.Debug.Log(speed);
 
 		mouseInRight_box = agentInBox(R_box_x_min, R_box_x_max, R_box_z_min, R_box_z_max, false);
 
@@ -234,12 +193,9 @@ public class Mouse_move : Agent
 
 		if (mouse_can_report)
 		{
-			//UnityEngine.Debug.Log("mouse can report");
 			MouseReported(deltaTime);
 			if (mouse_report_correct)
 			{
-				//UnityEngine.Debug.Log("mouse report correct");
-
 				thisReward = 1f;
 				mouse_report_correct = false;
 				mouse_can_report = false;
@@ -247,21 +203,19 @@ public class Mouse_move : Agent
 			}
 		}
 
-		//EpisdoeTimeOut();
 		mouse_can_report_trigger();
 
 		// Trigger ITI either - ITI can be timed or next episode can start when the agent looks back at the screen in a frontal box
 		triggerGreyScreen_agentTriggerd(deltaTime);
 
+		UnityEngine.Debug.Log("reward: " + thisReward);
 		SetReward(thisReward);
-		//UnityEngine.Debug.Log(thisReward);
-
 	}
 
 
 	public override void CollectObservations(VectorSensor sensor)
 	{
-		// log agent position and heading direction
+		// Log agent position and heading direction
 		sensor.AddObservation(this.transform.position.x);  // 0
 		sensor.AddObservation(this.transform.position.z); // 1
 		sensor.AddObservation(this.transform.eulerAngles.y); // 2
@@ -280,25 +234,9 @@ public class Mouse_move : Agent
 	public override void Heuristic(in ActionBuffers actionsOut)
 	{
 		ActionSegment<float> continuousActionsOut = actionsOut.ContinuousActions;
-
-		continuousActionsOut[2] = 0f;
-
-		float newPosition_x = this.transform.position.x + Input.GetAxis("Horizontal");
-		float newPosition_z = this.transform.position.z + Input.GetAxis("Vertical");
-
-		// need to stay within arena boundaries (same as python scripts)
-		if (newPosition_x < 9f & newPosition_x > -9f & newPosition_z < -2f & newPosition_z > -10f)
-		{
-			// move
-			continuousActionsOut[0] = newPosition_x;
-			continuousActionsOut[1] = newPosition_z;
-		}
-		else
-		{
-			// keep current position
-			continuousActionsOut[0] = this.transform.position.x;
-			continuousActionsOut[1] = this.transform.position.z;
-		}
+		continuousActionsOut[0] = this.transform.position.x;
+		continuousActionsOut[1] = this.transform.position.z;
+		continuousActionsOut[2] = this.transform.eulerAngles.y;
 	}
 
 
@@ -439,13 +377,6 @@ public class Mouse_move : Agent
 				plane.GetComponent<Target_spawner>().DestroyTargets();
 				mouse_can_report = false;
 				ITI = true;
-
-				if (rl_training)
-				{
-					// resetting agent position to start (in TT box)
-					this.transform.position = new Vector3(0, 0.5f, -4.99f);
-					UnityEngine.Debug.Log("CORRECT! -- resetting artificial agent's position...");
-				}
 			}
 			else
 			{
@@ -453,13 +384,6 @@ public class Mouse_move : Agent
 				plane.GetComponent<Target_spawner>().DestroyTargets();
 				mouse_can_report = false;
 				ITI = true;
-
-				if (rl_training)
-				{
-					// resetting agent position to start (in TT box)
-					this.transform.position = new Vector3(0, 0.5f, -4.99f);
-					UnityEngine.Debug.Log("WRONG! -- resetting artificial agent's position...");
-				}
 			}
 		}
 
@@ -472,22 +396,12 @@ public class Mouse_move : Agent
 		// resetParams = Academy.Instance.FloatProperties;
 		var environmentParameters = Academy.Instance.EnvironmentParameters;
 
-		mouseReportDelay = environmentParameters.GetWithDefault("mouseReportDelay", 5f); // original
-		box_delay = environmentParameters.GetWithDefault("startBoxDelay", 0.25f); // original
-		velocity_threshold = environmentParameters.GetWithDefault("velocityThreshold", 0.5f); // original
-
-		// adjusting game parameters when training artificial agents on the task
-		if (rl_training)
-		{
-			mouseReportDelay = environmentParameters.GetWithDefault("mouseReportDelay", 0.0f); // custom for RL training
-			box_delay = environmentParameters.GetWithDefault("startBoxDelay", 0.01f); // custom for RL training
-			velocity_threshold = environmentParameters.GetWithDefault("velocityThreshold", 100f); // custom for RL training
-
-			UnityEngine.Debug.Log("--> Set RL environment training parameters <--");
-		}
-
+		mouseReportDelay = environmentParameters.GetWithDefault("mouseReportDelay", 5f);
+		box_delay = environmentParameters.GetWithDefault("startBoxDelay", 0.25f);
+		velocity_threshold = environmentParameters.GetWithDefault("velocityThreshold", 0.5f);
 		report_box_delay = environmentParameters.GetWithDefault("reportBoxDelay", 0.1f);
 		distractor = environmentParameters.GetWithDefault("distractor", 1.0f);
+
 		L_box_x_min = environmentParameters.GetWithDefault("L_box_x_min", -10f);
 		L_box_x_max = environmentParameters.GetWithDefault("L_box_x_max", -6f);
 		L_box_z_min = environmentParameters.GetWithDefault("L_box_z_min", -10f);
