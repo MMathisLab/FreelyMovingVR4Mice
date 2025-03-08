@@ -1,6 +1,5 @@
 # Description: Helper functions for the mouse task tests
 
-import uuid
 import numpy as np
 import pandas as pd
 import tkinter as tk
@@ -23,11 +22,7 @@ class DebugLogSideChannel(SideChannel):
     def on_message_received(self, msg: IncomingMessage) -> None:
         if self.verbose:
             log_message = msg.read_string()
-            print(f"Unity Debug Log: {log_message}")
-
-
-def generate_uuid():
-    return uuid.uuid4()
+            print(f"== UNITY LOG == '{log_message}'")
 
 
 def generate_patch(x_start, x_end, y_start, y_end):
@@ -250,10 +245,10 @@ def save_visual_observation(i, dec_steps, obs_specs, out_path):
     return vis_obs_shape, vec_obs_size
 
 
-def select_executable():
+def select_executable(msg: str = "Select executable") -> str:
     # Open file dialog window to let user choose unity executable path
     root = tk.Tk()
     root.withdraw()
-    game_path = filedialog.askopenfilename(title="Select game executable")
+    path = filedialog.askopenfilename(title=msg)
     root.destroy()
-    return game_path
+    return path

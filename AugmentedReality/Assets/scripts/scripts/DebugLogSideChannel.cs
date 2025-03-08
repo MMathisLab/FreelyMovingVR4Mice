@@ -11,7 +11,7 @@ public class DebugLogSideChannel : SideChannel
 
 	protected override void OnMessageReceived(IncomingMessage msg)
 	{
-		// This side channel is for sending logs, so no incoming messages are expected
+		// This side channel is for sending logs out, so no incoming messages are expected
 	}
 
 	public void SendLog(string logMessage, string stackTrace, LogType type)
