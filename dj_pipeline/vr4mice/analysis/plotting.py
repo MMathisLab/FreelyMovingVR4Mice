@@ -746,7 +746,7 @@ def plot_rewards(
             counts["count"].std(),
         )
         ax.hlines(xmin=-0.5, xmax=0.5, y=0.7, color="purple", linestyles="dashed")
-    return(counts)
+    return counts
 
 
 def plot_time_to_reward(

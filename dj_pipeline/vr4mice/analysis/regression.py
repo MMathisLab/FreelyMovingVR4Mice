@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from vr4mice.analysis import plotting 
+from vr4mice.analysis import plotting
 import sklearn
 from matplotlib.collections import LineCollection
 from sklearn.model_selection import LeaveOneGroupOut
