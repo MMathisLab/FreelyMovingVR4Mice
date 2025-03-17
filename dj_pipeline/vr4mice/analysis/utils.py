@@ -88,7 +88,7 @@ def interpolate_group(
 def interpolate(
     df: pd.DataFrame,
     n_points: int = 100,
-    interpolation_columns: List[int] = ["dataset", "trial"],
+    interpolation_columns: List[int] = ["mouse_name", "dataset", "trial"],
     value_columns: List[int] = ["x", "norm_x", "velocity", "head_dir"],
 ) -> pd.DataFrame:
     """
