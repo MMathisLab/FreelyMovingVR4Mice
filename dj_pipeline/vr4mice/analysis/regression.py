@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from vr4mice.analysis import plotting
 import sklearn
 import sklearn.model_selection
 import sklearn.preprocessing

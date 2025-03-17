@@ -33,6 +33,22 @@ colors_rewarded = ["black", "red"]
 def _create_axes(
     ax: Optional[matplotlib.axes.Axes], per_aperture: bool, num_aperture: int
 ):
+    """Create axes.
+
+    Create `num_aperture` axes if `per_aperture` is `True` else creates a single
+    axis for the figure.
+
+    Args:
+        ax: Axis of the figure. If `None`, this creates the axes based on the
+        other parameters, else checks that this is valid.
+        per_aperture: If `True`, the function creates `num_aperture` axes.
+        num_aperture: Number of apertures presented to the mouse in the
+        session.
+
+    Returns:
+        The axis, either passed to the function or created in the function.
+
+    """
     if ax is None:
         if per_aperture:
             fig, ax = plt.subplots(1, num_aperture, figsize=(int(num_aperture * 5), 5))
@@ -388,20 +404,25 @@ def _plot_bar_counts(
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
     """
 
-    if label_x is None:
-        label_x = [str(1) for i in range(len(counts))]
-        figsize = (2, 5)
-        color_map = cmap
+    if per_mouse:
+        unique_mice = counts["mouse_name"].unique()
+        cmap = sns.color_palette(cmap, len(unique_mice))
+        color_map = {label: cmap[i] for i, label in enumerate(unique_mice)}
     else:
-        if label_x == "aperture":
-            unique_labels = (
-                counts[label_x].astype(float).sort_values().astype(str).unique()
-            )
+        if label_x is None:
+            label_x = [str(1) for i in range(len(counts))]
+            figsize = (2, 5)
+            color_map = cmap
         else:
-            unique_labels = counts[label_x].sort_values().unique()
-        figsize = (int(2 * len(unique_labels)), 5)
-        cmap = sns.color_palette(cmap, len(unique_labels))
-        color_map = {label: cmap[i] for i, label in enumerate(unique_labels)}
+            if label_x == "aperture":
+                unique_labels = (
+                    counts[label_x].astype(float).sort_values().astype(str).unique()
+                )
+            else:
+                unique_labels = counts[label_x].sort_values().unique()
+            figsize = (int(2 * len(unique_labels)), 5)
+            cmap = sns.color_palette(cmap, len(unique_labels))
+            color_map = {label: cmap[i] for i, label in enumerate(unique_labels)}
 
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
@@ -1062,7 +1083,11 @@ def _plot_parameter_on_trial_traj(
     points = np.array([trial[label_x], trial[label_y]]).T.reshape(-1, 1, 2)
     segments = np.concatenate([points[:-1], points[1:]], axis=1)
 
-    lc = matplotlib.collections.LineCollection(segments, cmap=cmap, alpha=alpha)
+    lc = matplotlib.collections.LineCollection(
+        segments,
+        cmap=cmap,
+        alpha=alpha,
+    )
     # lc.set_norm(plt.Normalize(vmin=vrange[0], vmax=vrange[1]))
     lc.set_array(trial[label_parameter])
     lc.set_linewidth(1)

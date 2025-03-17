@@ -463,6 +463,9 @@ def create_data_frame(
 
     df["trial_step"] = df.groupby("trial").cumcount()
 
+    # Choices as string values
+    df["choice"] = df.trial_left_choice.replace([0, 1], ["right", "left"])
+
     df["flip_one_side"] = df["trial_left_choice"].replace([0, 1], [1, -1])
 
     df.trial = df.trial.astype(int)
