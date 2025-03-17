@@ -31,20 +31,22 @@ colors_rewarded = ["black", "red"]
 def _create_axes(
     ax: Optional[matplotlib.axes.Axes], per_aperture: bool, num_aperture: int
 ):
-"""Create axes. 
-    Create `num_aperture` axes if `per_aperture` is `True` else creates a single 
+    """Create axes.
+
+    Create `num_aperture` axes if `per_aperture` is `True` else creates a single
     axis for the figure.
-    
-    Args: 
-        ax: Axis of the figure. If `None`, this creates the axes based on the 
+
+    Args:
+        ax: Axis of the figure. If `None`, this creates the axes based on the
         other parameters, else checks that this is valid.
         per_aperture: If `True`, the function creates `num_aperture` axes.
-        num_aperture: Number of apertures presented to the mouse in the 
+        num_aperture: Number of apertures presented to the mouse in the
         session.
-    
+
     Returns:
         The axis, either passed to the function or created in the function.
-"""
+
+    """
     if ax is None:
         if per_aperture:
             fig, ax = plt.subplots(1, num_aperture, figsize=(int(num_aperture * 5), 5))
