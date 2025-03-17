@@ -14,11 +14,42 @@ import sklearn.preprocessing
 from vr4mice.analysis import plotting
 
 
+model_labels = [
+    "x",
+    "y",
+    "velocity_x",
+    "velocity_y",
+    "heading_dir_sin",
+    "heading_dir_cos",
+    "head_angle_sin",
+    "head_angle_cos",
+    "trial_tortuosity",
+    # "trial_duration",
+    # "aperture",
+    "trial_rewarded",
+    "trial_length",
+]
+
+clean_model_labels = [
+    "x position",
+    "y position",
+    "x velocity",
+    "y velocity",
+    "sin(running direction)",
+    "cos(running direction)",
+    "sin(head-body angle)",
+    "cos(head-body angle)",
+    "Trial tortuosity",
+    "Trial rewarded",
+    "Trial progression",
+]
+
+
 def predict_decision(
     df,
     label: Union[List[str]] = "norm_x",
     n_splits: int = 10,
-    per_mouse: bool = False,
+    per_mouse: bool = True,
     max_iter: int = 100,
     scale_data: bool = True,
 ) -> Tuple[pd.DataFrame, npt.NDArray]:
@@ -29,7 +60,9 @@ def predict_decision(
         label: The name of the column in the `df` dataframe.
         n_splits: The number of splits fo the cross validation.
         per_mouse: If `True` split the data per session, else split
-            randomly across all sessions.
+            randomly across all sessions. If per_mouse, we train on
+            all sessions but one, and test on the left out session.
+        scale_data: If `True`, standardize the data before fitting the model.
 
     Returns:
         The initial dataframe with an extra `pred` column, containing the probability that the
@@ -215,11 +248,12 @@ def plot_decision_points_on_trajectory(
             )
 
             if decision_point is not None:
-                mpl.rcParams["lines.markersize"] = 10
+                mpl.rcParams["lines.markersize"] = 8
                 ax.scatter(
                     decision_point[decision_point["trial"] == idx_trial]["x"],
                     decision_point[decision_point["trial"] == idx_trial]["y"],
                     color=color,
+                    zorder=100,
                 )
 
             ax.legend([], [], frameon=False)

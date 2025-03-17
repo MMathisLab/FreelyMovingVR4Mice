@@ -30,13 +30,13 @@ def style():
             "text.color": font_color,
             "axes.labelcolor": font_color,
             "axes.labelsize": font_size,
-            "axes.titleweight": "bold",
+            # "axes.titleweight": "bold",
             "axes.titlesize": font_size,
             "xtick.labelcolor": font_color,
             "xtick.labelsize": font_size,
             "ytick.labelcolor": font_color,
             "ytick.labelsize": font_size,
-            "font.weight": "bold",
+            "font.weight": "regular",
         }
     )
 
@@ -470,8 +470,6 @@ def create_data_frame(
 
     df.trial = df.trial.astype(int)
     df.aperture = df.aperture.round(2)
-
-    df = df.drop(columns=["first", "last"])
 
     return df, unity_to_physical_arena_size
 

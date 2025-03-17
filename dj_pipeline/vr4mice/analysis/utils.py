@@ -6,6 +6,8 @@ import scipy.interpolate
 import umap
 from sklearn.decomposition import PCA
 
+import vr4mice.analysis.analysis as analysis
+
 
 def create_bins(
     data, spatial_ybins: List[int] = [-13, 24, 50], label: str = "y"
@@ -119,6 +121,68 @@ def interpolate(
     final_interpolated_df = pd.concat(interpolated_dfs).reset_index(drop=True)
 
     return final_interpolated_df
+
+
+def interpolate_j_shaped(big_df, box_df, n_points=500):
+    # big_df["norm_x"] = big_df.groupby(["dataset", "trial"], as_index=False)["x"].transform(
+    #         lambda x: x - np.mean(x.iloc[:3])
+    #     )
+
+    big_df["optimal_p"] = analysis.get_optimal_p(big_df)
+    big_df["local_tortuosity"] = analysis.get_local_tortuosity(big_df, window_size=1)
+    big_df["flip_one_side"] = big_df["trial_left_choice"].replace([0, 1], [1, -1])
+    big_df["distance_to_choice"] = analysis.get_distance_to_choice(big_df, box_df)
+
+    columns = [
+        # "norm_y",
+        # "norm_x",
+        "heading_dir",
+        "head_angle",
+        "trial_tortuosity",
+        "trial_duration",
+        "x",
+        "y",
+        "aperture",
+        "velocity",
+        "velocity_x",
+        "velocity_y",
+        "trial_rewarded",
+        "flip_one_side",
+        "distance_to_choice",
+        "optimal_p",
+        "local_tortuosity",
+    ]
+
+    j_shaped = analysis.get_jshaped_trials(big_df)
+
+    interpolated_j_shaped = interpolate(
+        j_shaped, n_points=n_points, value_columns=["trial_left_choice"] + columns
+    )
+    interpolated_j_shaped["trial_step"] = interpolated_j_shaped.groupby(
+        ["dataset", "trial"], as_index=False
+    ).trial.cumcount()
+
+    interpolated_j_shaped["trial_length"] = (
+        interpolated_j_shaped["trial_step"] / n_points
+    )
+    interpolated_j_shaped["head_angle_sin"] = np.sin(
+        np.deg2rad(interpolated_j_shaped.head_angle)
+    )
+    interpolated_j_shaped["head_angle_cos"] = np.cos(
+        np.deg2rad(interpolated_j_shaped.head_angle)
+    )
+
+    interpolated_j_shaped["heading_dir_sin"] = np.sin(
+        np.deg2rad(interpolated_j_shaped.heading_dir)
+    )
+    interpolated_j_shaped["heading_dir_cos"] = np.cos(
+        np.deg2rad(interpolated_j_shaped.heading_dir)
+    )
+
+    interpolated_j_shaped["velocity_x_fliped"] = (
+        interpolated_j_shaped["velocity_x"] * interpolated_j_shaped["flip_one_side"]
+    )
+    return interpolated_j_shaped
 
 
 def cluster(
