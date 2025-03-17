@@ -40,7 +40,7 @@ Two cameras are necessary if you would like to use 3d reconstruction.
 
 8 x [1" Construction Cube](https://www.thorlabs.com/thorproduct.cfm?partnumber=RM1G)
 
-4 x [Right-Angle Bracket for 25 mm Rails](https://www.thorlabs.com/thorproduct.cfm?partnumber=XE25A90)
+5 x [Right-Angle Bracket for 25 mm Rails](https://www.thorlabs.com/thorproduct.cfm?partnumber=XE25A90) (4 + 1 for the camera)
 
 2 x [Drop-In T-Nut, 1/4\"-20 Tapped Hole, 10 Pack](http://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=4101)
 
