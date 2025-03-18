@@ -470,7 +470,9 @@ def create_data_frame(
 
     df.trial = df.trial.astype(int)
     df.aperture = df.aperture.round(2)
-
+    
+    df = df.drop(columns=["first", "last"])
+    
     return df, unity_to_physical_arena_size
 
 
