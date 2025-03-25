@@ -294,23 +294,32 @@ def _transfer_file(file_info, ip):
             The file path is the source file path.
     """
     src = Path(file_info["src"]).joinpath(file_info["filename"])
-    dst = ip + str(Path(file_info["dst"]).joinpath(file_info["filename"]))
 
     if src is not None and Path(src).exists():
-        dst = str(dst).replace("\\", "/")
-        src = str(src).replace("\\", "/")
-        if "localhost" in dst:
-            cmd = ["cp", src, dst]
+
+        # src = str(src).replace("\\", "/")
+
+        if "localhost" in ip:
+            dst = str(Path(file_info["dst"]).joinpath(file_info["filename"]))
+            if Path(src) != Path(dst):
+                if Path(src).exists():
+                    shutil.copy(Path(src), Path(dst))
         else:
+            dst = ip + str(Path(file_info["dst"]).joinpath(file_info["filename"]))
+            dst = str(dst).replace("\\", "/")
             cmd = ["scp", src, dst]
-        logger.info(f"{cmd}")
-        process = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        stdout, stderr = process.communicate()
-        exit_code = process.wait()
-        if exit_code != 0:
-            logger.warning(f"{cmd} : failed")
-            return False, src
-        logger.info(cmd)
+
+            logger.info(f"{cmd}")
+            process = subprocess.Popen(
+                cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE
+            )
+            stdout, stderr = process.communicate()
+
+            exit_code = process.wait()
+            if exit_code != 0:
+                logger.warning(f"{cmd} : failed")
+                return False, src
+
     return True, src
 
 
