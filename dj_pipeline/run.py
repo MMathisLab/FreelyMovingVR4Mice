@@ -83,7 +83,8 @@ if __name__ == "__main__":
     elif mode == "summary":
         from vr4mice.schema import base_analysis
 
-        base_analysis.SummaryPlots.populate()
+        base_analysis.SummaryPlots().populate(send=True)
+        base_analysis.TrackingSummaryPlots().populate(send=True)
 
     elif mode == "dlc":
         # NOTE: populate and analysis have to be run before
