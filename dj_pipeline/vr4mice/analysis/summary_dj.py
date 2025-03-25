@@ -133,16 +133,26 @@ def vr4mice_summary_plots(
         str: The full path of the saved summary plot.
     """
     from vr4mice.analysis import analysis, plotting, utils
+    from vr4mice.schema.vr4mice import GuiParams
 
     analysis.style()
     df, box_df_output = fetch_data(key, database)
 
     df = df.infer_objects()
     df["dataset"] = key["dataset"]
+
+    # if not fecthing from database the trial rewarded needs to be computed, otherwise summary plots fail
+    if database == False:
+        df.groupby(["dataset", "trial"])["reward"].transform(lambda x: x.max())
+
     df = df[df.iti == 0].copy()
 
     # NOTE: so that the head_dir is align to the screen
     df["head_dir"] = ((df.head_dir) + 180) % 360 - 180
+
+    # ensure that if the occluder is not displayed (as in training data) that there are no multiple apertures
+    if (GuiParams() & key).fetch("occlusion_type_param") == 0.0:
+        df["aperture"] = 0
 
     num_apertures = len(df.aperture.unique())
 
