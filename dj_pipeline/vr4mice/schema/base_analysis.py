@@ -351,15 +351,27 @@ class SummaryPlots(dj.Computed):
             )
             return False
 
-        data = {**key, **{"filename": full_path}}
-        if base.Base() & key:
-            key = (base.Base() & key).fetch(as_dict=True)[0]
-            insert_send_email(key, data, SummaryPlots(), full_path, send=send)
+        if send:
+            data = {**key, **{"filename": full_path}}
+            if base.Base() & key:
+                key = (base.Base() & key).fetch(as_dict=True)[0]
+            else:
+                key = self.parse_dataset(dataset)
+                insert_send_email(key, data, SummaryPlots(), full_path, send=send)
+
+    def parse_dataset(self, dataset):
+        pattern = r"(\d+)?_?(\d{4}-\d{2}-\d{2})_?(\d+)?(?:\.pickle)?"
+        match = re.match(pattern, filename)
+
+        if match:
+            mouse_name, date, attempt = match.groups()
+            return {
+                "mouse_name": mouse_name if mouse_name else None,
+                "date": date,
+                "attempt": int(attempt) if attempt else None,
+            }
         else:
-            logger.info(
-                f"base schemas is empty for ${key}, can'r send the email: insert only"
-            )
-            self.insert1(data, allow_direct_insert=True)
+            return None
 
     def get_name(self, key):
 
@@ -394,16 +406,23 @@ class SummaryPlots(dj.Computed):
 
 
 def insert_send_email(key, tuple_, table, filename, send=False):
+
     from base_schemas.schemas import exp, mice
 
+    toaddr = []
     try:
+        for name in ["thomas", "mathislab", "Yyng"]:
+            user_email = (exp.Experimenter & {"experimenter_name": name}).fetch("mail")[
+                0
+            ]
+            if user_email:
+                toaddr.append(user_email)
+
         user = (exp.Session() & key).fetch("experimenter_name", as_dict=True)[0]
         if len(user) > 0:
             addr = (exp.Experimenter & user).fetch("mail")[0]
-            if len(addr) == 0:
-                addr == "default"
-        else:
-            addr = "default"
+            if addr and addr not in toaddr:
+                toaddr.append(addr)
 
     except dj.DataJointError as e:
         logger.warning(f"Error fetching experimenter email: {e}")
@@ -414,7 +433,7 @@ def insert_send_email(key, tuple_, table, filename, send=False):
         logger.info(f"Summary plots populated successfully for {key}")
         if send:
             logger.info(f"Sending email now for {key}")
-            email(key, addr, filename, error=False, message=None)
+            email(key, toaddr, filename, error=False, message=None)
         else:
             logger.info(f"Send flag is false for {key}. No email.")
 
@@ -426,7 +445,7 @@ def insert_send_email(key, tuple_, table, filename, send=False):
         err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
         logger.warning(err)
         if send:
-            email(key, addr, None, error=True, message=err)
+            email(key, toaddr, None, error=True, message=err)
 
 
 @schema
@@ -515,7 +534,24 @@ class TrackingSummaryPlots(dj.Computed):
             )
             return False
 
-        data = {**key, **{"filename": full_path}}
-        key = (base.Base() & key).fetch(as_dict=True)[0]
+        if send:
+            data = {**key, **{"filename": full_path}}
+            if base.Base() & key:
+                key = (base.Base() & key).fetch(as_dict=True)[0]
+            else:
+                key = self.parse_dataset(dataset)
+                insert_send_email(key, data, SummaryPlots(), full_path, send=send)
 
-        insert_send_email(key, data, TrackingSummaryPlots(), full_path, send=send)
+    def parse_dataset(self, dataset):
+        pattern = r"(\d+)?_?(\d{4}-\d{2}-\d{2})_?(\d+)?(?:\.pickle)?"
+        match = re.match(pattern, filename)
+
+        if match:
+            mouse_name, date, attempt = match.groups()
+            return {
+                "mouse_name": mouse_name if mouse_name else None,
+                "date": date,
+                "attempt": int(attempt) if attempt else None,
+            }
+        else:
+            return None

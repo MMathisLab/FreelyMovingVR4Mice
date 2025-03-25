@@ -35,21 +35,3 @@ services:
         - .env
     stdin_open: true
     tty: true
-
-  aws_sync:
-      image: "mysql:sync"
-      container_name: aws_sync
-      build:
-        context: .
-        dockerfile: DockerfileSync
-        args:
-           - user
-           - usern
-           - mysql_config
-      network_mode: host
-      volumes:
-       - ./logs:/logs
-       - ./backup:/app
-      working_dir: /app
-      stdin_open: true
-      tty: true
