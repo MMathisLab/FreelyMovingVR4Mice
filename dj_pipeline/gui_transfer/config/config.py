@@ -149,7 +149,9 @@ class Config:
             cmd = ["scp", src, dst]
 
             if Path(src).exists():
-                process = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                process = subprocess.Popen(
+                    cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE
+                )
                 stdout, stderr = process.communicate()
                 exit_code = process.wait()
                 if exit_code != 0:
@@ -161,7 +163,7 @@ class Config:
                 return False
 
         return self.config_dict["dropdown_menu"]
-    
+
     @property
     def get_gui_output_folder_path(self):
         return self.config_dict["gui_output_folder"]

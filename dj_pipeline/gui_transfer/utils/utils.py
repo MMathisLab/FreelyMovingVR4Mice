@@ -297,7 +297,7 @@ def _transfer_file(file_info, ip):
 
     if src is not None and Path(src).exists():
 
-        #src = str(src).replace("\\", "/")
+        # src = str(src).replace("\\", "/")
 
         if "localhost" in ip:
             dst = str(Path(file_info["dst"]).joinpath(file_info["filename"]))
@@ -305,19 +305,21 @@ def _transfer_file(file_info, ip):
                 if Path(src).exists():
                     shutil.copy(Path(src), Path(dst))
         else:
-            dst = ip + str(Path(file_info["dst"]).joinpath(file_info["filename"])) 
+            dst = ip + str(Path(file_info["dst"]).joinpath(file_info["filename"]))
             dst = str(dst).replace("\\", "/")
             cmd = ["scp", src, dst]
-        
+
             logger.info(f"{cmd}")
-            process = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            process = subprocess.Popen(
+                cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE
+            )
             stdout, stderr = process.communicate()
-        
+
             exit_code = process.wait()
             if exit_code != 0:
                 logger.warning(f"{cmd} : failed")
                 return False, src
-    
+
     return True, src
 
 
