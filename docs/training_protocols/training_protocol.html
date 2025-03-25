@@ -416,6 +416,7 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-protocol-overview">Training protocol overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general-mouse-training">General mouse training</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#handling-habituation-and-baseline-weight">Handling habituation and baseline weight</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-habituation-to-experimenter-presence">Step 1: Habituation to experimenter presence</a></li>
@@ -428,7 +429,11 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stages">Training stages</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-1-detection-task">Training Stage 1: Detection task</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-2-discrimination-without-occlusion">Training Stage 2: Discrimination without occlusion</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-3-discrimination-with-occlusion">Training Stage 3: Discrimination with occlusion</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-days">Test Days</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#test-stage-1-discrimination-with-occlusion">Test stage 1: Discrimination with occlusion</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#test-stage-2-discrimination-with-multiple-occlusion-sizes">Test Stage 2: Discrimination with multiple occlusion sizes</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-timeline">Reference timeline</a></li>
@@ -451,6 +456,11 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="mouse-training">
 <h1>Mouse training<a class="headerlink" href="#mouse-training" title="Link to this heading">#</a></h1>
+<section id="training-protocol-overview">
+<h2>Training protocol overview<a class="headerlink" href="#training-protocol-overview" title="Link to this heading">#</a></h2>
+<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/training_protocol.jpg"><img alt="AR" class="bg-primary mb-1 align-center" src="../../_images/training_protocol.jpg" style="width: 800px;" />
+</a>
+</section>
 <section id="general-mouse-training">
 <h2>General mouse training<a class="headerlink" href="#general-mouse-training" title="Link to this heading">#</a></h2>
 <p>This documents give a protocol for training mice in the AR setup. This protocol should be followed by all labs so that we can get consistent data. Note that this will need to be adjusted as we perform the experiments but we should only deviate from it after we discussed a change in the monday meetings. This protocol should then be updated to reflect that by opening a pull request on the <a class="reference external" href="https://github.com/MMathisLab/FreelyMovingVR4Mice">GitHub repository</a>.</p>
@@ -637,7 +647,7 @@ rim of arena more than once)</p></li>
 <p>May be combined in single arena session with <a class="reference internal" href="#sec-arena-habituation"><span class="std std-ref">Arena and Reward Port Habituation</span></a>.</p>
 </div>
 <ul class="simple">
-<li><p><strong>P1: Detection task training - permissive trial initiation parameters.</strong></p>
+<li><p><strong>1.1: Detection task training - permissive trial initiation parameters.</strong></p>
 <ul>
 <li><p><strong>Continuation Criteria:</strong> Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 1 session.</p></li>
 <li><p>Standard arena preparation (see <a class="reference internal" href="#sec-arena-habituation"><span class="std std-ref">Arena and Reward Port Habituation</span></a>) and control software preparation (see <a class="reference internal" href="#sec-gui"><span class="std std-ref">Using GUIs to run software</span></a>).</p></li>
@@ -658,11 +668,11 @@ rim of arena more than once)</p></li>
 </li>
 </ul>
 </li>
-<li><p><strong>P2: Detection task training - restricted trial initiation parameters.</strong></p>
+<li><p><strong>1.2: Detection task training - restricted trial initiation parameters.</strong></p>
 <ul>
 <li><p><strong>Continuation Criteria:</strong> Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 1 session.</p></li>
 <li><p>Standard arena preparation (see <a class="reference internal" href="#sec-arena-habituation"><span class="std std-ref">Arena and Reward Port Habituation</span></a>) and control software preparation (see <a class="reference internal" href="#sec-gui"><span class="std std-ref">Using GUIs to run software</span></a>).</p></li>
-<li><p>Same as in <strong>P1</strong> except we want the mice to learn to mark a stop at trial initiation so we lower <code class="docutils literal notranslate"><span class="pre">velocity_threshold</span></code> and increase <code class="docutils literal notranslate"><span class="pre">start_box_delay</span></code> from the task parameters compared to <strong>P1</strong>.</p></li>
+<li><p>Same as in <strong>1.1</strong> except we want the mice to learn to mark a stop at trial initiation so we lower <code class="docutils literal notranslate"><span class="pre">velocity_threshold</span></code> and increase <code class="docutils literal notranslate"><span class="pre">start_box_delay</span></code> from the task parameters compared to <strong>1.1</strong>.</p></li>
 <li><p><strong>Python Task</strong> to be loaded in the GUI:</p>
 <ul>
 <li><p><a class="reference download internal" download="" href="../../_downloads/fddb21bea5b1e389e811633ae5e320d8/mouse_detection_p2.py"><span class="xref download myst">DetectionWithVelocityThresholdTask</span></a></p></li>
@@ -700,9 +710,11 @@ rim of arena more than once)</p></li>
 </li>
 </ul>
 </section>
-<section id="training-stage-3-discrimination-with-occlusion">
-<h3>Training Stage 3: Discrimination with occlusion<a class="headerlink" href="#training-stage-3-discrimination-with-occlusion" title="Link to this heading">#</a></h3>
-<p><strong>Continuation Criteria:</strong> Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 2 sessions.</p>
+</section>
+<section id="test-days">
+<h2>Test Days<a class="headerlink" href="#test-days" title="Link to this heading">#</a></h2>
+<section id="test-stage-1-discrimination-with-occlusion">
+<h3>Test stage 1: Discrimination with occlusion<a class="headerlink" href="#test-stage-1-discrimination-with-occlusion" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Standard arena preparation (see <a class="reference internal" href="#sec-arena-habituation"><span class="std std-ref">Arena and Reward Port Habituation</span></a>) and control software preparation
 (see <a class="reference internal" href="#sec-gui"><span class="std std-ref">Using GUIs to run software</span></a>).</p></li>
@@ -720,20 +732,27 @@ rim of arena more than once)</p></li>
 </ul>
 </li>
 </ul>
-<p>This is currently the <strong>test stage</strong>. Mice that have reached it should do <strong>&gt;= 4 full sessions</strong>, i.e. should do the full 250 trials <strong>within 1 hour</strong> and the experimenter should ideally let them run for the 250 trials even after the full hour passed if necessary.</p>
-<!-- ### Training Stage 4: Discrimination with multiple occlusion sizes
-
-**Continuation Criteria:** This is currently the last training stage, thus no criteria apply.
-
-- Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation
-(see {ref}`sec:gui`).
-- **Python Task** to be selected in the GUI:
-  - [DiscriminationWithMultiOccludersTask](../../mouse_task/mouse_discrim_multioccluders.py)
-- **Parameters**:
-  - [**Contrast**](./contrast_discrimination_training_parameters.md#stage-4)
-  - [**Shape**](./shape_discrimination_training_parameters.md#stage-4)
-
-This is currently the **test stage**. Mice that have reached it should do **>= 4 full sessions** (i.e. should do the full 250 trials during each session). -->
+<p>This is currently the <strong>test stage</strong>. Mice that have reached it should do <strong>== 5 full sessions</strong>, i.e. should do the full 250 trials <strong>within 1 hour</strong> and the experimenter should ideally let them run for the 250 trials even after the full hour passed if necessary.</p>
+</section>
+<section id="test-stage-2-discrimination-with-multiple-occlusion-sizes">
+<h3>Test Stage 2: Discrimination with multiple occlusion sizes<a class="headerlink" href="#test-stage-2-discrimination-with-multiple-occlusion-sizes" title="Link to this heading">#</a></h3>
+<p><strong>Continuation Criteria:</strong> This is currently the last training stage, thus no criteria apply.</p>
+<ul class="simple">
+<li><p>Standard arena preparation (see <a class="reference internal" href="#sec-arena-habituation"><span class="std std-ref">Arena and Reward Port Habituation</span></a>) and control software preparation
+(see <a class="reference internal" href="#sec-gui"><span class="std std-ref">Using GUIs to run software</span></a>).</p></li>
+<li><p><strong>Python Task</strong> to be selected in the GUI:</p>
+<ul>
+<li><p><a class="reference download internal" download="" href="../../_downloads/66500493e40e1406d8b06cae09e962c0/mouse_discrim_multioccluders.py"><span class="xref download myst">DiscriminationWithMultiOccludersTask</span></a></p></li>
+</ul>
+</li>
+<li><p><strong>Parameters</strong>:</p>
+<ul>
+<li><p><a class="reference internal" href="contrast_discrimination_training_parameters.html#stage-4"><span class="std std-ref"><strong>Contrast</strong></span></a></p></li>
+<li><p><a class="reference internal" href="shape_discrimination_training_parameters.html#stage-4"><span class="std std-ref"><strong>Shape</strong></span></a></p></li>
+</ul>
+</li>
+</ul>
+<p>This is currently the <strong>test stage</strong>. Mice that have reached it should do <strong>== 5 full sessions</strong> (i.e. should do the full 250 trials during each session). –&gt;</p>
 </section>
 </section>
 <section id="reference-timeline">
@@ -747,20 +766,24 @@ This is currently the **test stage**. Mice that have reached it should do **>= 4
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>1.1</p></td>
+<tr class="row-even"><td><p>Training stage 1.1</p></td>
 <td><p>Detection task WITHOUT velocity threshold</p></td>
 <td><p>4-5 days</p></td>
 </tr>
-<tr class="row-odd"><td><p>1.2</p></td>
+<tr class="row-odd"><td><p>Training stage 1.2</p></td>
 <td><p>Detection task WITH velocity threshold</p></td>
 <td><p>1-2 days</p></td>
 </tr>
-<tr class="row-even"><td><p>2</p></td>
+<tr class="row-even"><td><p>Training stage 2</p></td>
 <td><p>Discrimination task WITHOUT occluders</p></td>
 <td><p>2-3 days</p></td>
 </tr>
-<tr class="row-odd"><td><p>3</p></td>
-<td><p>Discrimination task WITH occluders</p></td>
+<tr class="row-odd"><td><p>Test stage 1</p></td>
+<td><p>Discrimination task WITH dual occluders</p></td>
+<td><p>5 <strong>test</strong> days</p></td>
+</tr>
+<tr class="row-even"><td><p>Test stage 2</p></td>
+<td><p>Discrimination task WITH multiple occluders</p></td>
 <td><p>5 <strong>test</strong> days</p></td>
 </tr>
 </tbody>
@@ -923,6 +946,7 @@ This is currently the **test stage**. Mice that have reached it should do **>= 4
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-protocol-overview">Training protocol overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general-mouse-training">General mouse training</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#handling-habituation-and-baseline-weight">Handling habituation and baseline weight</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-habituation-to-experimenter-presence">Step 1: Habituation to experimenter presence</a></li>
@@ -935,7 +959,11 @@ This is currently the **test stage**. Mice that have reached it should do **>= 4
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stages">Training stages</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-1-detection-task">Training Stage 1: Detection task</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-2-discrimination-without-occlusion">Training Stage 2: Discrimination without occlusion</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-3-discrimination-with-occlusion">Training Stage 3: Discrimination with occlusion</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-days">Test Days</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#test-stage-1-discrimination-with-occlusion">Test stage 1: Discrimination with occlusion</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#test-stage-2-discrimination-with-multiple-occlusion-sizes">Test Stage 2: Discrimination with multiple occlusion sizes</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-timeline">Reference timeline</a></li>
