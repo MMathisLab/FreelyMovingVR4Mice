@@ -318,7 +318,7 @@ def populate_rig(
 
                 if (dj_schema.vr4mice.Dataset() & key).fetch(as_dict=True):
                     logger.info(f"{key} is already in the database, skip.")
-                    break
+                    # break
                 else:
                     logger.info(f"{key} not yet in the database, continue.")
 
