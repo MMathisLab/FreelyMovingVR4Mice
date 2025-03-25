@@ -140,19 +140,19 @@ def vr4mice_summary_plots(
 
     df = df.infer_objects()
     df["dataset"] = key["dataset"]
-    
+
     # if not fecthing from database the trial rewarded needs to be computed, otherwise summary plots fail
     if database == False:
         df.groupby(["dataset", "trial"])["reward"].transform(lambda x: x.max())
-        
+
     df = df[df.iti == 0].copy()
 
     # NOTE: so that the head_dir is align to the screen
     df["head_dir"] = ((df.head_dir) + 180) % 360 - 180
-    
+
     # ensure that if the occluder is not displayed (as in training data) that there are no multiple apertures
     if (GuiParams() & key).fetch("occlusion_type_param") == 0.0:
-        df ["aperture"] = 0
+        df["aperture"] = 0
 
     num_apertures = len(df.aperture.unique())
 
@@ -294,9 +294,7 @@ def vr4mice_summary_plots(
         "trial_traj_path_length",
         "flip_one_side",
     ]
-    
-    
-    
+
     interpolated_df = utils.interpolate(
         df,
         n_points=200,
