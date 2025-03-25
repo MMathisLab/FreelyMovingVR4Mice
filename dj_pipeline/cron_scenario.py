@@ -38,7 +38,9 @@ try:
     dlc.SyncDLCKptsDf().populate()
     dlc.OfflineKinematics().populate()
 
-    base_analysis.SummaryPlots.populate()
+    base_analysis.SummaryPlots().populate(send=True)
+    base_analysis.TrackingSummaryPlots().populate(send=True)
+
 except Exception as e:
     logger.error(f"An error occurred in populate_decision_making.populate: {e}")
 

@@ -1,5 +1,14 @@
 # Mouse training
 
+## Training protocol overview
+
+```{image} ../../docs/images/training_protocol.jpg
+:alt: AR
+:class: bg-primary mb-1
+:width: 800px
+:align: center
+```
+
 ## General mouse training
 
 This documents give a protocol for training mice in the AR setup. This protocol should be followed by all labs so that we can get consistent data. Note that this will need to be adjusted as we perform the experiments but we should only deviate from it after we discussed a change in the monday meetings. This protocol should then be updated to reflect that by opening a pull request on the [GitHub repository](https://github.com/MMathisLab/FreelyMovingVR4Mice).
@@ -188,7 +197,7 @@ On each training day, between sessions with different mice, make sure to clean t
 May be combined in single arena session with {ref}`sec:arena-habituation`.
 ```
 
-- **P1: Detection task training - permissive trial initiation parameters.**
+- **1.1: Detection task training - permissive trial initiation parameters.**
   - **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 1 session.
   - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation (see {ref}`sec:gui`).
   - In this first stage, there is a higher velocity threshold on the trial initiation to facilitate learning of the task parameters, i.e. trial initiation and reward / visual stimuli coupling.
@@ -201,10 +210,10 @@ May be combined in single arena session with {ref}`sec:arena-habituation`.
     - [**Contrast**](./contrast_discrimination_training_parameters.md#stage-1-p1)
     - [**Shape**](./shape_discrimination_training_parameters.md#stage-1-p1)
 
-- **P2: Detection task training - restricted trial initiation parameters.**
+- **1.2: Detection task training - restricted trial initiation parameters.**
   - **Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 1 session.
   - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation (see {ref}`sec:gui`).
-  - Same as in **P1** except we want the mice to learn to mark a stop at trial initiation so we lower `velocity_threshold` and increase `start_box_delay` from the task parameters compared to **P1**.
+  - Same as in **1.1** except we want the mice to learn to mark a stop at trial initiation so we lower `velocity_threshold` and increase `start_box_delay` from the task parameters compared to **1.1**.
   - **Python Task** to be loaded in the GUI:
     - [DetectionWithVelocityThresholdTask](../../mouse_task/mouse_detection_p2.py)
     - [ShapeDetectionWithVelocityThresholdTask](../../mouse_task/mouse_shape_detection_p2.py)
@@ -226,9 +235,8 @@ May be combined in single arena session with {ref}`sec:arena-habituation`.
   - [**Contrast**](./contrast_discrimination_training_parameters.md#stage-2)
   - [**Shape**](./shape_discrimination_training_parameters.md#stage-2)
 
-### Training Stage 3: Discrimination with occlusion
-
-**Continuation Criteria:** Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 2 sessions.
+## Test Days
+### Test stage 1: Discrimination with occlusion
 
 - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation
 (see {ref}`sec:gui`).
@@ -240,9 +248,9 @@ May be combined in single arena session with {ref}`sec:arena-habituation`.
   - [**Contrast**](./contrast_discrimination_training_parameters.md#stage-3)
   - [**Shape**](./shape_discrimination_training_parameters.md#stage-3)
 
-This is currently the **test stage**. Mice that have reached it should do **>= 4 full sessions**, i.e. should do the full 250 trials **within 1 hour** and the experimenter should ideally let them run for the 250 trials even after the full hour passed if necessary.
+This is currently the **test stage**. Mice that have reached it should do **== 5 full sessions**, i.e. should do the full 250 trials **within 1 hour** and the experimenter should ideally let them run for the 250 trials even after the full hour passed if necessary.
 
-<!-- ### Training Stage 4: Discrimination with multiple occlusion sizes
+### Test Stage 2: Discrimination with multiple occlusion sizes
 
 **Continuation Criteria:** This is currently the last training stage, thus no criteria apply.
 
@@ -254,7 +262,7 @@ This is currently the **test stage**. Mice that have reached it should do **>= 4
   - [**Contrast**](./contrast_discrimination_training_parameters.md#stage-4)
   - [**Shape**](./shape_discrimination_training_parameters.md#stage-4)
 
-This is currently the **test stage**. Mice that have reached it should do **>= 4 full sessions** (i.e. should do the full 250 trials during each session). -->
+This is currently the **test stage**. Mice that have reached it should do **== 5 full sessions** (i.e. should do the full 250 trials during each session). -->
 
 (reference-timeline)=
 
@@ -268,17 +276,20 @@ This is currently the **test stage**. Mice that have reached it should do **>= 4
 * - Stage
   - Name
   - Duration estimate
-* - 1.1
+* - Training stage 1.1
   - Detection task WITHOUT velocity threshold
   - 4-5 days
-* - 1.2
+* - Training stage 1.2
   - Detection task WITH velocity threshold
   - 1-2 days
-* - 2
+* - Training stage 2
   - Discrimination task WITHOUT occluders
   - 2-3 days
-* - 3
-  - Discrimination task WITH occluders
+* - Test stage 1
+  - Discrimination task WITH dual occluders
+  - 5 **test** days
+* - Test stage 2
+  - Discrimination task WITH multiple occluders
   - 5 **test** days
 ```
 
