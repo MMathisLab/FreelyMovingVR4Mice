@@ -516,6 +516,12 @@ class TrackingSummaryPlots(dj.Computed):
             return False
 
         data = {**key, **{"filename": full_path}}
-        key = (base.Base() & key).fetch(as_dict=True)[0]
-
-        insert_send_email(key, data, TrackingSummaryPlots(), full_path, send=send)
+        
+        if base.Base() & key:
+            key = (base.Base() & key).fetch(as_dict=True)[0]
+            insert_send_email(key, data, SummaryPlots(), full_path, send=send)
+        else:
+            logger.info(
+                f"base schemas is empty for ${key}, can'r send the email: insert only"
+            )
+            self.insert1(data, allow_direct_insert=True)
