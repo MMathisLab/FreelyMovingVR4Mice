@@ -299,7 +299,7 @@ def _transfer_file(file_info, ip):
 
         #src = str(src).replace("\\", "/")
 
-        if "localhost" in dst:
+        if "localhost" in ip:
             dst = str(Path(file_info["dst"]).joinpath(file_info["filename"]))
             if Path(src) != Path(dst):
                 if Path(src).exists():
