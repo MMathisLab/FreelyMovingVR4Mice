@@ -1,4 +1,5 @@
 import os
+import shutil
 import json
 import subprocess
 from pathlib import Path
@@ -134,22 +135,33 @@ class Config:
         else:
             adr = ip + ":"
 
-        src = adr + self.config_dict["remote_dropdown_menu"]
         dst = self.config_dict["host_dropdown_menu"]
 
-        if ip == "localhost":
-            cmd = ["cp", src, dst]
+        if "localhost" in ip:
+            src = self.config_dict["remote_dropdown_menu"]
+            if Path(src) != Path(dst):
+                if Path(src).exists():
+                    shutil.copy(Path(src), Path(dst))
+                    self.config_dict["dropdown_menu"] = dst
         else:
+            src = adr + self.config_dict["remote_dropdown_menu"]
+            dst = str(dst).replace("\\", "/")
             cmd = ["scp", src, dst]
 
-        process = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        stdout, stderr = process.communicate()
-        exit_code = process.wait()
-        if exit_code != 0:
-            logger.info(f"{cmd} failed: {stdout} {stderr}")
-            return False
-        logger.info(cmd)
-        self.config_dict["dropdown_menu"] = dst
+            if Path(src).exists():
+                process = subprocess.Popen(
+                    cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE
+                )
+                stdout, stderr = process.communicate()
+                exit_code = process.wait()
+                if exit_code != 0:
+                    logger.warning(f"{cmd} failed: {stdout} {stderr}")
+                    return False
+                self.config_dict["dropdown_menu"] = dst
+            else:
+                logger.warning(f"{src} doesn't exist.")
+                return False
+
         return self.config_dict["dropdown_menu"]
 
     @property
