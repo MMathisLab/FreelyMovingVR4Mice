@@ -16,37 +16,52 @@ logger = Logger.get_logger()
 # note: paths and args are set here to default (same as in the source file),
 # here to show up the specs
 
+def main():
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="Script to handle AWS or local execution.")
+    parser.add_argument("--aws", action="store_true", help="Enable AWS-specific execution.")
+    args = parser.parse_args()
 
-try:
-    path = "/data/data"
-    check_folder_existence(path)
-    populate_rig(path=path, gui=os.environ["GUI"])
-except Exception as e:
-    logger.error(f"An error occurred in the raw data population (populate_rig): {e}")
+    try:
+        if args.aws:
+            path = "/data/processed"
+            move = True
+        else:
+            path = "/data/data" 
+            moce = False
 
-try:
-    from vr4mice.schema import base_analysis, dlc, vr4mice
+        check_folder_existence(path)
+        populate_rig(path=path, gui=os.environ["GUI"], move=move)
+    except Exception as e:
+        logger.error(f"An error occurred in the raw data population (populate_rig): {e}")
 
-    vr4mice.Collab().populate()
-    create_folder_if_not_exist("/data/summary_plots")
-    base_analysis.DataFrame.populate()
-    base_analysis.BoxDataFrame.populate()
-    base_analysis.GitCommit().populate()
+    try:
+        from vr4mice.schema import base_analysis, dlc, vr4mice
 
-    dlc.DLCProcessor().populate()
-    dlc.DLCKptsDf().populate()
-    dlc.SyncDLCKptsDf().populate()
-    dlc.OfflineKinematics().populate()
+        vr4mice.Collab().populate()
+        create_folder_if_not_exist("/data/summary_plots")
+        base_analysis.DataFrame.populate()
+        base_analysis.BoxDataFrame.populate()
+        base_analysis.GitCommit().populate()
 
-    base_analysis.SummaryPlots().populate()
-    base_analysis.TrackingSummaryPlots().populate()
+        dlc.DLCProcessor().populate()
+        dlc.DLCKptsDf().populate()
+        dlc.SyncDLCKptsDf().populate()
+        dlc.OfflineKinematics().populate()
 
-except Exception as e:
-    logger.error(f"An error occurred in populate_decision_making.populate: {e}")
+        base_analysis.SummaryPlots().populate()
+        base_analysis.TrackingSummaryPlots().populate()
 
-try:
-    path = "/shared"
-    check_folder_existence(path)
-    fetch_data(dst="/shared/gui_menu.npy")
-except Exception as e:
-    logger.error(f"An error occurred in fetch_data: {e}")
+    except Exception as e:
+        logger.error(f"An error occurred in populate_decision_making.populate: {e}")
+
+    try:
+        path = "/shared"
+        check_folder_existence(path)
+        fetch_data(dst="/shared/gui_menu.npy")
+    except Exception as e:
+        logger.error(f"An error occurred in fetch_data: {e}")
+
+
+if __name__ == "__main__":
+    main()
