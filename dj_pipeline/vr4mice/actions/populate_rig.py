@@ -348,7 +348,10 @@ def populate_rig(
                         # as there is no .npy, we have to restore some parts of raw_data
                         # (mostly info about filepaths location)
                         files_info = get_files_paths(
-                            dataset=dataset, remote_src=None, local_src="/data", data=path
+                            dataset=dataset,
+                            remote_src=None,
+                            local_src="/data",
+                            data=path,
                         )  # paths correspond to docker env
                         raw_data = {**files_info, **raw_data_pickle}
                         schemas = [vr4mice]
