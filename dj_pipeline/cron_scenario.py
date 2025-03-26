@@ -30,10 +30,10 @@ def main():
     try:
         if args.aws:
             path = "/data/processed"
-            move = True
+            move = False
         else:
             path = "/data/data"
-            moce = False
+            move = True
 
         check_folder_existence(path)
         populate_rig(path=path, gui=os.environ["GUI"], move=move)

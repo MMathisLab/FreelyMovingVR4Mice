@@ -1,5 +1,7 @@
 import logging
 import os
+import argparse
+
 import sys
 import warnings
 
@@ -50,6 +52,14 @@ def check_folder_existence(folder_path):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Script to handle AWS or local execution."
+    )
+    parser.add_argument(
+        "--aws", action="store_true", help="Enable AWS-specific execution."
+    )
+    args = parser.parse_args()
+
     config_logger(level="INFO", debug=False)
 
     mode = sys.argv[1]
@@ -65,9 +75,15 @@ if __name__ == "__main__":
         from vr4mice.actions.populate_rig import populate_rig
         from vr4mice.schema import vr4mice
 
-        path = "/data/data"
+        if args.aws:
+            path = "/data/processed"
+            move = False
+        else:
+            path = "/data/data"
+            move = True
+
         check_folder_existence(path)
-        populate_rig(path)
+        populate_rig(path=path, move=move)
         vr4mice.Collab().populate()
 
     elif mode == "analysis":
