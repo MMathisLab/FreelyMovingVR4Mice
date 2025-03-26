@@ -2,7 +2,9 @@ git_repo :=FreelyMovingVR4Mice/dj_pipeline
 mount :=/mnt/database
 base_schemas_path="$(mount)/$(git_repo)/base_schemas"
 base_actions_path="$(mount)/$(git_repo)/base_actions"
-#todo: add commit in docker build
+
+cron_script_path := $(mount)/$(git_repo)/cron_script.sh
+cron_script_aws_path := $(mount)/$(git_repo)/cron_script_aws.sh
 
 BUILD_ARGS := \
 	--build-arg uid=$(shell id -u) \
@@ -86,4 +88,7 @@ sync_build:
 
 sync_up:
 	docker-compose up -d aws_sync
+
+add-cron:
+	echo "0 2 * * * bash $(cron_script_path) && bash $(cron_script_aws_path) >> ~/vr4mice_logs/cron.log 2>&1" | crontab -
 

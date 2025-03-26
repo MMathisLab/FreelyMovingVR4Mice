@@ -1,5 +1,5 @@
 import os
-
+import argparse
 from base_actions.connect import connect
 
 connect(tag="", db_host=os.environ["DJ_HOST"])
@@ -17,36 +17,58 @@ logger = Logger.get_logger()
 # here to show up the specs
 
 
-try:
-    path = "/data/data"
-    check_folder_existence(path)
-    populate_rig(path=path, gui=os.environ["GUI"])
-except Exception as e:
-    logger.error(f"An error occurred in the raw data population (populate_rig): {e}")
+def main():
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description="Script to handle AWS or local execution."
+    )
+    parser.add_argument(
+        "--aws", action="store_true", help="Enable AWS-specific execution."
+    )
+    args = parser.parse_args()
 
-try:
-    from vr4mice.schema import base_analysis, dlc, vr4mice
+    try:
+        if args.aws:
+            path = "/data/processed"
+            move = False
+        else:
+            path = "/data/data"
+            move = True
 
-    vr4mice.Collab().populate()
-    create_folder_if_not_exist("/data/summary_plots")
-    base_analysis.DataFrame.populate()
-    base_analysis.BoxDataFrame.populate()
-    base_analysis.GitCommit().populate()
+        check_folder_existence(path)
+        populate_rig(path=path, gui=os.environ["GUI"], move=move)
+    except Exception as e:
+        logger.error(
+            f"An error occurred in the raw data population (populate_rig): {e}"
+        )
 
-    dlc.DLCProcessor().populate()
-    dlc.DLCKptsDf().populate()
-    dlc.SyncDLCKptsDf().populate()
-    dlc.OfflineKinematics().populate()
+    try:
+        from vr4mice.schema import base_analysis, dlc, vr4mice
 
-    base_analysis.SummaryPlots().populate(send=True)
-    base_analysis.TrackingSummaryPlots().populate(send=True)
+        vr4mice.Collab().populate()
+        create_folder_if_not_exist("/data/summary_plots")
+        base_analysis.DataFrame.populate()
+        base_analysis.BoxDataFrame.populate()
+        base_analysis.GitCommit().populate()
 
-except Exception as e:
-    logger.error(f"An error occurred in populate_decision_making.populate: {e}")
+        dlc.DLCProcessor().populate()
+        dlc.DLCKptsDf().populate()
+        dlc.SyncDLCKptsDf().populate()
+        dlc.OfflineKinematics().populate()
 
-try:
-    path = "/shared"
-    check_folder_existence(path)
-    fetch_data(dst="/shared/gui_menu.npy")
-except Exception as e:
-    logger.error(f"An error occurred in fetch_data: {e}")
+        base_analysis.SummaryPlots().populate()
+        base_analysis.TrackingSummaryPlots().populate()
+
+    except Exception as e:
+        logger.error(f"An error occurred in populate_decision_making.populate: {e}")
+
+    try:
+        path = "/shared"
+        check_folder_existence(path)
+        fetch_data(dst="/shared/gui_menu.npy")
+    except Exception as e:
+        logger.error(f"An error occurred in fetch_data: {e}")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,5 +1,7 @@
 import logging
 import os
+import argparse
+
 import sys
 import warnings
 
@@ -50,27 +52,53 @@ def check_folder_existence(folder_path):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Script to handle AWS or local execution."
+    )
+    parser.add_argument(
+        "--aws", action="store_true", help="Enable AWS-specific execution."
+    )
+
+    parser.add_argument(
+        "mode",
+        choices=[
+            "connect",
+            "populate",
+            "analysis",
+            "summary",
+            "fetch",
+            "dlc",
+            "sync_days",
+        ],
+        help="Mode to execute: 'connect', 'populate', 'summary', 'dlc', 'fetch', 'sync_days', 'analysis'",
+    )
+
+    args = parser.parse_args()
+
     config_logger(level="INFO", debug=False)
-
-    mode = sys.argv[1]
-
     connect(tag="")
 
-    if mode == "connect":
+    if args.mode == "connect":
         from vr4mice.schema import vr4mice, base_analysis, dlc, base
 
         pass
 
-    elif mode == "populate":
+    elif args.mode == "populate":
         from vr4mice.actions.populate_rig import populate_rig
         from vr4mice.schema import vr4mice
 
-        path = "/data/data"
+        if args.aws:
+            path = "/data/processed"
+            move = False
+        else:
+            path = "/data/data"
+            move = True
+
         check_folder_existence(path)
-        populate_rig(path)
+        populate_rig(path=path, move=move)
         vr4mice.Collab().populate()
 
-    elif mode == "analysis":
+    elif args.mode == "analysis":
         from vr4mice.schema import base_analysis, base
 
         # NOTE: populate has to be run before
@@ -80,13 +108,13 @@ if __name__ == "__main__":
         base_analysis.BoxDataFrame().populate()
         base_analysis.GitCommit().populate()
 
-    elif mode == "summary":
+    elif args.mode == "summary":
         from vr4mice.schema import base_analysis
 
-        base_analysis.SummaryPlots().populate(send=True)
-        base_analysis.TrackingSummaryPlots().populate(send=True)
+        base_analysis.SummaryPlots().populate()
+        base_analysis.TrackingSummaryPlots().populate()
 
-    elif mode == "dlc":
+    elif args.mode == "dlc":
         # NOTE: populate and analysis have to be run before
         from vr4mice.schema import dlc
 
@@ -96,7 +124,7 @@ if __name__ == "__main__":
         dlc.SyncDLCKptsDf().populate()
         dlc.OfflineKinematics().populate()
 
-    elif mode == "fetch":  # TODO: adjust path
+    elif args.mode == "fetch":  # TODO: adjust path
         from vr4mice.actions.fetch_data import fetch_data
 
         path = "/shared"
@@ -104,10 +132,7 @@ if __name__ == "__main__":
 
         fetch_data(dst="/shared/gui_menu.npy")
 
-    elif mode == "update":  # sync with main: missing data in existed tables
-        pass
-
-    elif mode == "sync_days":
+    elif args.mode == "sync_days":
         from vr4mice.actions.sync_days import sync_days
 
         sync_days(path="/data/data")

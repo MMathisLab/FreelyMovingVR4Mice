@@ -105,7 +105,7 @@ class Gui(QWidget):
             return False
 
         # move files in processed:
-        move_files(args["transfer"].get_processed_files())
+        # move_files(args["transfer"].get_processed_files())
 
         self.submitted = True
         args["mouse"].set_auto(True)
