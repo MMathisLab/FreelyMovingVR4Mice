@@ -2,7 +2,7 @@
 
 ## Training protocol overview
 
-```{image} ../../docs/images/training_protocol.jpg
+```{image} ../../docs/images/training_protocol_2.jpg
 :alt: AR
 :class: bg-primary mb-1
 :width: 800px
