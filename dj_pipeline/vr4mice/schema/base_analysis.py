@@ -1,4 +1,5 @@
 import subprocess
+import re
 from pathlib import Path
 from typing import List, Optional
 
@@ -356,18 +357,18 @@ class SummaryPlots(dj.Computed):
             if base.Base() & key:
                 key = (base.Base() & key).fetch(as_dict=True)[0]
             else:
-                key = self.parse_dataset(dataset)
+                key = self.parse_dataset(key["dataset"])
                 insert_send_email(key, data, SummaryPlots(), full_path, send=send)
 
     def parse_dataset(self, dataset):
         pattern = r"(\d+)?_?(\d{4}-\d{2}-\d{2})_?(\d+)?(?:\.pickle)?"
-        match = re.match(pattern, filename)
+        match = re.match(pattern, dataset)
 
         if match:
             mouse_name, date, attempt = match.groups()
             return {
                 "mouse_name": mouse_name if mouse_name else None,
-                "date": date,
+                "day": date,
                 "attempt": int(attempt) if attempt else None,
             }
         else:
@@ -411,18 +412,20 @@ def insert_send_email(key, tuple_, table, filename, send=False):
 
     toaddr = []
     try:
-        for name in ["thomas", "mathislab", "Yyng"]:
+        for name in ["thomas", "mathislab", "yang"]:
             user_email = (exp.Experimenter & {"experimenter_name": name}).fetch("mail")[
                 0
             ]
             if user_email:
                 toaddr.append(user_email)
-
-        user = (exp.Session() & key).fetch("experimenter_name", as_dict=True)[0]
-        if len(user) > 0:
-            addr = (exp.Experimenter & user).fetch("mail")[0]
-            if addr and addr not in toaddr:
-                toaddr.append(addr)
+   
+        if len(exp.Session() & key) > 0:
+            user = (exp.Session() & key).fetch("experimenter_name", as_dict=True)[0]
+            if len(user) > 0:
+                addr = (exp.Experimenter & user).fetch("mail")[0]
+                if addr and addr not in toaddr:
+                    toaddr.append(addr)
+        
 
     except dj.DataJointError as e:
         logger.warning(f"Error fetching experimenter email: {e}")
@@ -539,18 +542,18 @@ class TrackingSummaryPlots(dj.Computed):
             if base.Base() & key:
                 key = (base.Base() & key).fetch(as_dict=True)[0]
             else:
-                key = self.parse_dataset(dataset)
+                key = self.parse_dataset(key["dataset"])
                 insert_send_email(key, data, SummaryPlots(), full_path, send=send)
 
     def parse_dataset(self, dataset):
         pattern = r"(\d+)?_?(\d{4}-\d{2}-\d{2})_?(\d+)?(?:\.pickle)?"
-        match = re.match(pattern, filename)
+        match = re.match(pattern, dataset)
 
         if match:
             mouse_name, date, attempt = match.groups()
             return {
                 "mouse_name": mouse_name if mouse_name else None,
-                "date": date,
+                "day": date,
                 "attempt": int(attempt) if attempt else None,
             }
         else:
