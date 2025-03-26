@@ -1,4 +1,5 @@
 import subprocess
+import os
 import re
 from pathlib import Path
 from typing import List, Optional
@@ -317,7 +318,7 @@ class SummaryPlots(dj.Computed):
     filename:  varchar(255)
     """
 
-    def make(self, key, send=False):
+    def make(self, key, send=os.environ["EMAIL"]):
         """
         key: Dataset
         """
@@ -511,7 +512,7 @@ class TrackingSummaryPlots(dj.Computed):
     filename:  varchar(255)
     """
 
-    def make(self, key, send=False):
+    def make(self, key, send=os.environ["EMAIL"]):
         """
         key: Dataset
         """
