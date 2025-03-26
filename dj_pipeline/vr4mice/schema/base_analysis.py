@@ -322,7 +322,7 @@ class SummaryPlots(dj.Computed):
         """
         key: Dataset
         """
-        # generate
+        send = os.environ.get("EMAIL", "false").lower() in ["true", "1", "yes"]
 
         from vr4mice.analysis.summary_dj import vr4mice_summary_plots
         from vr4mice.schema import base
@@ -516,8 +516,8 @@ class TrackingSummaryPlots(dj.Computed):
         """
         key: Dataset
         """
-        # generate
-
+        send = os.environ.get("EMAIL", "false").lower() in ["true", "1", "yes"]
+        
         from vr4mice.analysis.tracking_summary_dj import plot_keypoints_summary
         from vr4mice.schema import base, dlc
 
