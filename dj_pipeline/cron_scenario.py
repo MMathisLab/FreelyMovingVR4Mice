@@ -16,10 +16,15 @@ logger = Logger.get_logger()
 # note: paths and args are set here to default (same as in the source file),
 # here to show up the specs
 
+
 def main():
     # Parse command-line arguments
-    parser = argparse.ArgumentParser(description="Script to handle AWS or local execution.")
-    parser.add_argument("--aws", action="store_true", help="Enable AWS-specific execution.")
+    parser = argparse.ArgumentParser(
+        description="Script to handle AWS or local execution."
+    )
+    parser.add_argument(
+        "--aws", action="store_true", help="Enable AWS-specific execution."
+    )
     args = parser.parse_args()
 
     try:
@@ -27,13 +32,15 @@ def main():
             path = "/data/processed"
             move = True
         else:
-            path = "/data/data" 
+            path = "/data/data"
             moce = False
 
         check_folder_existence(path)
         populate_rig(path=path, gui=os.environ["GUI"], move=move)
     except Exception as e:
-        logger.error(f"An error occurred in the raw data population (populate_rig): {e}")
+        logger.error(
+            f"An error occurred in the raw data population (populate_rig): {e}"
+        )
 
     try:
         from vr4mice.schema import base_analysis, dlc, vr4mice
