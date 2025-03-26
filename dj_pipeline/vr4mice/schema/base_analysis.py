@@ -418,14 +418,13 @@ def insert_send_email(key, tuple_, table, filename, send=False):
             ]
             if user_email:
                 toaddr.append(user_email)
-   
+
         if len(exp.Session() & key) > 0:
             user = (exp.Session() & key).fetch("experimenter_name", as_dict=True)[0]
             if len(user) > 0:
                 addr = (exp.Experimenter & user).fetch("mail")[0]
                 if addr and addr not in toaddr:
                     toaddr.append(addr)
-        
 
     except dj.DataJointError as e:
         logger.warning(f"Error fetching experimenter email: {e}")
