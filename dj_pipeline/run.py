@@ -59,13 +59,21 @@ if __name__ == "__main__":
         "--aws", action="store_true", help="Enable AWS-specific execution."
     )
 
-
     parser.add_argument(
-        "mode", choices=["connect", "populate", "analysis", "summary", "fetch", "dlc", "sync_days"], help="Mode to execute: 'connect', 'populate', 'summary', 'dlc', 'fetch', 'sync_days', 'analysis'"
+        "mode",
+        choices=[
+            "connect",
+            "populate",
+            "analysis",
+            "summary",
+            "fetch",
+            "dlc",
+            "sync_days",
+        ],
+        help="Mode to execute: 'connect', 'populate', 'summary', 'dlc', 'fetch', 'sync_days', 'analysis'",
     )
 
     args = parser.parse_args()
-    
 
     config_logger(level="INFO", debug=False)
     connect(tag="")
