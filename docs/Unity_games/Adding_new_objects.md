@@ -40,7 +40,9 @@ To create new objects, or to edit the shape of existing objects, you will need t
     :align: center
     ```
 
-ℹ️ If you have any issues with this, you can find more detailed steps alongside an explanation of the different save options [here](https://all3dp.com/2/blender-to-unity-how-to-import-blender-models-in-unity/#:~:text=Importing%20a%20Blender%20File%20to%20Unity,-Importing%20a%20Blender&text=Alternatively%2C%20move%20and%20save%20the,That's%20it).
+```{important}
+If you have any issues with this, you can find more detailed steps alongside an explanation of the different saving options [here](https://all3dp.com/2/blender-to-unity-how-to-import-blender-models-in-unity/#:~:text=Importing%20a%20Blender%20File%20to%20Unity,-Importing%20a%20Blender&text=Alternatively%2C%20move%20and%20save%20the,That's%20it).
+```
 
 ## Importing the file into Unity
 
