@@ -4,11 +4,11 @@ The mice are placed within a perspex box, which has transparent sides so that th
 
 ## To build the box you will need
 
-- 2x PMMA (transparent perspex) floor pieces (520 x 520 x 5 mm)
+- 2 x PMMA (transparent perspex) floor pieces (520 x 520 x 5 mm)
 
-- 4x PMMA (transparent perspex) side pieces (525 x 360 x 5 mm)
+- 4 x PMMA (transparent perspex) side pieces (525 x 360 x 5 mm)
 
-- 1x anti-glare adhesive
+- 1 x anti-glare adhesive
 
 ## Assembly
 
