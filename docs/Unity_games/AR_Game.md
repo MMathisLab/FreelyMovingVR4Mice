@@ -14,7 +14,7 @@ Miniconda is a free, miniature installation of Anaconda Distribution that includ
 Install both in the following order:
 
 1. Download [UnityHub](https://unity3d.com/fr/get-unity/download).
-2. Download the *approved* version **2023.2.20f1** of [Unity Editor](https://unity.com/releases/editor/whats-new/2023.2.20#installs).
+2. Download the *approved* and *tested* [Unity Editor](<https://unity.com/releases/editor/whats-new/2023.2.20#installs>) version (**2023.2.20f1**).
 
 ## Add and Open the `AugmentedReality` project to Unity
 
