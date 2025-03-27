@@ -147,7 +147,9 @@ Here the order is important, make sure to start with the **DeepLabCut-live** GUI
 
 16. Last but not least, go back to **OBS** and stop the screen recording you started earlier. This will automatically save the video to a default path. Normally it should be in the current user's `Videos` folder. Make sure, after each session, to go to the aforementioned folder and rename the recorded video by inserting the name of the subject (i.e. mouse's name) at the beginning and the attempt number at the end. The naming convention used is `Name_Date_Attempt.*` (e.g. `Nightingale_2024-07-28_1.*`). The **Date** should already be present since it's automatically added by the **OBS** software.
 
- > _Note: the date will have US format._
+```{note}
+The date will and/or should have US format.
+```
 
 To run another session, repeat the above steps. Data from the previous session is still loaded (and can be saved again with a different file name by changing the subject or attempt) until a new task is initialized (i.e. until you click "**Ready**").
 Usually you'll need to run another mouse, thus meaning that **Subject Name** should be changed accordingly as well as the **Attempt**, which should be set back to 1 if not already. The task may also need to be changed since different mice may be at different training stages depending on the **continuation criteria** present in the [protocol](../training_protocols/training_protocol.md). After the new session parameters have been set, go back to **step 9** [here](#open-the-deeplabcut-live-gui) and repeat the steps from there.
