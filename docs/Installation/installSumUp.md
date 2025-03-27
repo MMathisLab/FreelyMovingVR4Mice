@@ -19,7 +19,7 @@ Create and activate a new conda environment with local pip:
   conda create -n vr4mice_env python=3.10.12 && conda activate vr4mice_env
   ```
 
-Download and install the **mlagents-envs** python package necessary for interfacing with the Unity game with python. To do so, run the following command:
+Download and install the **mlagents-envs** package necessary for interfacing with the Unity game through python. To do so, run the following command:
 
 ```bash
 python -m pip install mlagents-envs==1.1.0
