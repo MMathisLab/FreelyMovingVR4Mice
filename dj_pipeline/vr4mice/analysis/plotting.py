@@ -404,25 +404,20 @@ def _plot_bar_counts(
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
     """
 
-    if per_mouse:
-        unique_mice = counts["mouse_name"].unique()
-        cmap = sns.color_palette(cmap, len(unique_mice))
-        color_map = {label: cmap[i] for i, label in enumerate(unique_mice)}
+    if label_x is None:
+        label_x = [str(1) for i in range(len(counts))]
+        figsize = (2, 5)
+        color_map = cmap
     else:
-        if label_x is None:
-            label_x = [str(1) for i in range(len(counts))]
-            figsize = (2, 5)
-            color_map = cmap
+        if label_x == "aperture":
+            unique_labels = (
+                counts[label_x].astype(float).sort_values().astype(str).unique()
+            )
         else:
-            if label_x == "aperture":
-                unique_labels = (
-                    counts[label_x].astype(float).sort_values().astype(str).unique()
-                )
-            else:
-                unique_labels = counts[label_x].sort_values().unique()
-            figsize = (int(2 * len(unique_labels)), 5)
-            cmap = sns.color_palette(cmap, len(unique_labels))
-            color_map = {label: cmap[i] for i, label in enumerate(unique_labels)}
+            unique_labels = counts[label_x].sort_values().unique()
+        figsize = (int(2 * len(unique_labels)), 5)
+        cmap = sns.color_palette(cmap, len(unique_labels))
+        color_map = {label: cmap[i] for i, label in enumerate(unique_labels)}
 
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
