@@ -16,6 +16,7 @@ schema_name = "session_metrics"
 schema = get_schema(schema_name, locals())
 logger = Logger.get_logger()
 
+
 @schema
 class SessionMetrics(dj.Computed):
     definition = """
@@ -29,6 +30,7 @@ class SessionMetrics(dj.Computed):
     session_bias:               float # proportion of trials that mouse chose the left port 
     session_tortuosity:         float # session mean tortuosity
     """
+
     def make(self, key):
 
         if self & key:
@@ -38,26 +40,47 @@ class SessionMetrics(dj.Computed):
             return
         try:
             if len(base_analysis.DataFrame & key) > 0:
-                df = (base_analysis.DataFrame()).get_data(key=key, columns = ["dataset", "step_time", "trial", "trial_left_choice", "trial_duration", "trial_tortuosity"])
-                
-                df ["trial_rewarded"] = (base_analysis.DataFrame()).get_rewarded(key=key)
+                df = (base_analysis.DataFrame()).get_data(
+                    key=key,
+                    columns=[
+                        "dataset",
+                        "step_time",
+                        "trial",
+                        "trial_left_choice",
+                        "trial_duration",
+                        "trial_tortuosity",
+                    ],
+                )
+
+                df["trial_rewarded"] = (base_analysis.DataFrame()).get_rewarded(key=key)
                 trial_number = df.trial.nunique()
-                                
+
                 j_shaped = get_jshaped_trials(df)
                 n_j_shaped = j_shaped.trial.nunique() / trial_number
-                mean_df = df.groupby(["dataset", "trial"], as_index=False).mean(numeric_only=True)
-                mean_df = df.groupby(["dataset"], as_index=False).mean(numeric_only=True)
-                mean_df ["max_trial_number"] =  trial_number
-                mean_df ["session_duration"] = df.groupby(["dataset"], as_index=False)["step_time"].max(numeric_only=True)["step_time"]
-                mean_df ["session_jshaped"] = n_j_shaped
+                mean_df = df.groupby(["dataset", "trial"], as_index=False).mean(
+                    numeric_only=True
+                )
+                mean_df = df.groupby(["dataset"], as_index=False).mean(
+                    numeric_only=True
+                )
+                mean_df["max_trial_number"] = trial_number
+                mean_df["session_duration"] = df.groupby(["dataset"], as_index=False)[
+                    "step_time"
+                ].max(numeric_only=True)["step_time"]
+                mean_df["session_jshaped"] = n_j_shaped
 
-                insert_dict = {"session_reward": mean_df.trial_rewarded.values[0], "session_trial_duration": mean_df.trial_duration.values[0], 
-                                "session_jshaped": mean_df.session_jshaped.values[0], "session_max_trial_number": mean_df.max_trial_number.values[0], 
-                                "session_duration": mean_df.session_duration.values[0], "session_bias": mean_df.trial_left_choice.values[0], 
-                                "session_tortuosity": mean_df.trial_tortuosity.values[0]}
-                
+                insert_dict = {
+                    "session_reward": mean_df.trial_rewarded.values[0],
+                    "session_trial_duration": mean_df.trial_duration.values[0],
+                    "session_jshaped": mean_df.session_jshaped.values[0],
+                    "session_max_trial_number": mean_df.max_trial_number.values[0],
+                    "session_duration": mean_df.session_duration.values[0],
+                    "session_bias": mean_df.trial_left_choice.values[0],
+                    "session_tortuosity": mean_df.trial_tortuosity.values[0],
+                }
+
                 self.insert1(insert_dict)
-                
+
         except Exception as err:
             dataset = key["dataset"]
             vr4mice.FailedSession().add_entry(
@@ -67,4 +90,3 @@ class SessionMetrics(dj.Computed):
             logger.warning(err)
 
             return None
-                
