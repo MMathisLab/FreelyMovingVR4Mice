@@ -8,6 +8,8 @@ from sklearn.decomposition import PCA
 
 import vr4mice.analysis.analysis as analysis
 
+from vr4mice.schema import vr4mice, dlc, base_analysis
+
 
 def create_bins(
     data, spatial_ybins: List[int] = [-13, 24, 50], label: str = "y"
@@ -262,6 +264,45 @@ def compute_start_position(
     return pd.merge(
         df, starting_positions[["trial", "x_init_bin_center"]], on="trial", how="left"
     )
+    
+def get_data_from_list(data_set_list,  game_columns, dlc_columns=None):
+    big_df = []
+    for d in data_set_list:
+        split_d = d["dataset"].split("_")
+        print(split_d)
+        data_set_name = d["dataset"]
+        training_stage = (vr4mice.Dataset() & f"dataset = '{data_set_name}'").fetch("session_label")[0]
+        
+        df = base_analysis.DataFrame().get_data(
+            key=d,
+            columns=game_columns,
+        )
+        df["trial_rewarded"] = base_analysis.DataFrame().get_rewarded(key=d)
+        if dlc_columns is not None:
+            offline_kinematics_df = dlc.OfflineKinematics().get_data(
+            key=d,
+            columns=dlc_columns,
+            )
+            df = pd.concat([df, offline_kinematics_df], axis=1)
+
+        df["mouse_name"] = split_d[0]
+        df["date"] = split_d[1]
+        df["attempt"] = split_d[2]
+        df["training_stage"] = training_stage
+
+        big_df.append(df)
+
+    big_df = pd.concat(big_df).reset_index()
+
+    big_df["session_increment"] = (
+        big_df.groupby("mouse_name")["dataset"]
+        .rank(method="dense", ascending=True)
+        .astype(int)
+    )
+
+    big_df = big_df.infer_objects()
+
+    return big_df.reset_index(drop=True)
     
 def dual_occluder_inclusion_criteria(data: pd.DataFrame, threshold_wide: Optional[float] = .7, threshold_drop: Optional[float] = .3, return_excluded: Optional[bool] = False) -> pd.DataFrame:
     """get all datasets that survive the inclusion criteria
