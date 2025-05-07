@@ -134,12 +134,13 @@ class Groups(dj.Manual):
                 )
                 return
             key = f"label='{label}'"
-            label_idx = (Labels & key).fetch("idx")[0] # to fix: fails: if [0]
+            label_idx = (Labels & key).fetch("idx")[0]
 
             if label_idx is None:
                 label_idx = Labels().get_next_idx()
                 Labels.insert1({"idx": label_idx, "label": label})
-
+            else:
+                label_idx = label_idx[0] 
             self.insert1({"dataset": dataset, "idx": label_idx})
 
         except Exception as err:
