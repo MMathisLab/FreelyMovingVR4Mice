@@ -401,7 +401,7 @@ class Transfer(Template):
             list: List of processed keys.
         """
         # todo for pickle too
-        parent = config.get_config("dlc_path")
+        parent = Path(config.get_config("dlc_path"))
         filename = Path(filenames).name
         name = filename.split(".")[0]
 

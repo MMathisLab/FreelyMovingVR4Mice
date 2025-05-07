@@ -26,12 +26,6 @@ def email(
     error=False,
     pipeline_name="AR pipeline",
 ):
-
-    if email == "default":
-        email = fromaddr
-
-    logger.info(f"Sending email to {email}, file {filename}")
-
     try:
         email_password = config.get("Email", "password")
         fromaddr = config.get("Email", "email")
@@ -40,7 +34,19 @@ def email(
         logger.warning("Error: section not found in config.ini")
         return
 
-    toaddr = [fromaddr, email] if email and (email != fromaddr) else [fromaddr]
+    if email == "default":
+        email = fromaddr
+
+    logger.info(f"Sending email to {email}, file {filename}")
+
+    toaddr = [fromaddr]
+    if email:
+        if isinstance(email, str):  # If email is a single string
+            if email != fromaddr:
+                toaddr.append(email)
+        elif isinstance(email, list):  # If email is a list
+            toaddr.extend(e for e in email if e and e != fromaddr)
+
     msg = MIMEMultipart()
     msg["From"] = fromaddr
     msg["To"] = ", ".join(toaddr)

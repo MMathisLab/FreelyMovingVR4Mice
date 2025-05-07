@@ -1,4 +1,6 @@
 import subprocess
+import os
+import re
 from pathlib import Path
 from typing import List, Optional
 
@@ -316,11 +318,11 @@ class SummaryPlots(dj.Computed):
     filename:  varchar(255)
     """
 
-    def make(self, key, send=False):
+    def make(self, key, send=os.environ["EMAIL"]):
         """
         key: Dataset
         """
-        # generate
+        send = os.environ.get("EMAIL", "false").lower() in ["true", "1", "yes"]
 
         from vr4mice.analysis.summary_dj import vr4mice_summary_plots
         from vr4mice.schema import base
@@ -351,15 +353,27 @@ class SummaryPlots(dj.Computed):
             )
             return False
 
-        data = {**key, **{"filename": full_path}}
-        if base.Base() & key:
-            key = (base.Base() & key).fetch(as_dict=True)[0]
-            insert_send_email(key, data, SummaryPlots(), full_path, send=send)
+        if send:
+            data = {**key, **{"filename": full_path}}
+            if base.Base() & key:
+                key = (base.Base() & key).fetch(as_dict=True)[0]
+            else:
+                key = self.parse_dataset(key["dataset"])
+                insert_send_email(key, data, SummaryPlots(), full_path, send=send)
+
+    def parse_dataset(self, dataset):
+        pattern = r"(\d+)?_?(\d{4}-\d{2}-\d{2})_?(\d+)?(?:\.pickle)?"
+        match = re.match(pattern, dataset)
+
+        if match:
+            mouse_name, date, attempt = match.groups()
+            return {
+                "mouse_name": mouse_name if mouse_name else None,
+                "day": date,
+                "attempt": int(attempt) if attempt else None,
+            }
         else:
-            logger.info(
-                f"base schemas is empty for ${key}, can'r send the email: insert only"
-            )
-            self.insert1(data, allow_direct_insert=True)
+            return None
 
     def get_name(self, key):
 
@@ -394,16 +408,24 @@ class SummaryPlots(dj.Computed):
 
 
 def insert_send_email(key, tuple_, table, filename, send=False):
+
     from base_schemas.schemas import exp, mice
 
+    toaddr = []
     try:
-        user = (exp.Session() & key).fetch("experimenter_name", as_dict=True)[0]
-        if len(user) > 0:
-            addr = (exp.Experimenter & user).fetch("mail")[0]
-            if len(addr) == 0:
-                addr == "default"
-        else:
-            addr = "default"
+        for name in ["thomas", "mathislab", "yang"]:
+            user_email = (exp.Experimenter & {"experimenter_name": name}).fetch("mail")[
+                0
+            ]
+            if user_email:
+                toaddr.append(user_email)
+
+        if len(exp.Session() & key) > 0:
+            user = (exp.Session() & key).fetch("experimenter_name", as_dict=True)[0]
+            if len(user) > 0:
+                addr = (exp.Experimenter & user).fetch("mail")[0]
+                if addr and addr not in toaddr:
+                    toaddr.append(addr)
 
     except dj.DataJointError as e:
         logger.warning(f"Error fetching experimenter email: {e}")
@@ -414,7 +436,7 @@ def insert_send_email(key, tuple_, table, filename, send=False):
         logger.info(f"Summary plots populated successfully for {key}")
         if send:
             logger.info(f"Sending email now for {key}")
-            email(key, addr, filename, error=False, message=None)
+            email(key, toaddr, filename, error=False, message=None)
         else:
             logger.info(f"Send flag is false for {key}. No email.")
 
@@ -426,7 +448,7 @@ def insert_send_email(key, tuple_, table, filename, send=False):
         err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
         logger.warning(err)
         if send:
-            email(key, addr, None, error=True, message=err)
+            email(key, toaddr, None, error=True, message=err)
 
 
 @schema
@@ -490,11 +512,11 @@ class TrackingSummaryPlots(dj.Computed):
     filename:  varchar(255)
     """
 
-    def make(self, key, send=False):
+    def make(self, key, send=os.environ["EMAIL"]):
         """
         key: Dataset
         """
-        # generate
+        send = os.environ.get("EMAIL", "false").lower() in ["true", "1", "yes"]
 
         from vr4mice.analysis.tracking_summary_dj import plot_keypoints_summary
         from vr4mice.schema import base, dlc
@@ -515,7 +537,24 @@ class TrackingSummaryPlots(dj.Computed):
             )
             return False
 
-        data = {**key, **{"filename": full_path}}
-        key = (base.Base() & key).fetch(as_dict=True)[0]
+        if send:
+            data = {**key, **{"filename": full_path}}
+            if base.Base() & key:
+                key = (base.Base() & key).fetch(as_dict=True)[0]
+            else:
+                key = self.parse_dataset(key["dataset"])
+                insert_send_email(key, data, SummaryPlots(), full_path, send=send)
 
-        insert_send_email(key, data, TrackingSummaryPlots(), full_path, send=send)
+    def parse_dataset(self, dataset):
+        pattern = r"(\d+)?_?(\d{4}-\d{2}-\d{2})_?(\d+)?(?:\.pickle)?"
+        match = re.match(pattern, dataset)
+
+        if match:
+            mouse_name, date, attempt = match.groups()
+            return {
+                "mouse_name": mouse_name if mouse_name else None,
+                "day": date,
+                "attempt": int(attempt) if attempt else None,
+            }
+        else:
+            return None
