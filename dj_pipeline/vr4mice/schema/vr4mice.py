@@ -134,7 +134,7 @@ class Groups(dj.Manual):
                 )
                 return
             key = f"label='{label}'"
-            label_idx = (Labels & key).fetch("idx")[0]
+            label_idx = (Labels & key).fetch("idx")[0] # to fix: fails: if [0]
 
             if label_idx is None:
                 label_idx = Labels().get_next_idx()
