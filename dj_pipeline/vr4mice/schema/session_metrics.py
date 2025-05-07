@@ -20,7 +20,7 @@ logger = Logger.get_logger()
 @schema
 class SessionMetrics(dj.Computed):
     definition = """
-    -> DataFrame
+    -> base_analysis.DataFrame
     ---
     session_reward:             float # proportion of rewarded trials
     session_trial_duration:     float # mean trial duration in seconds
@@ -79,7 +79,7 @@ class SessionMetrics(dj.Computed):
                     "session_tortuosity": mean_df.trial_tortuosity.values[0],
                 }
 
-                self.insert1(insert_dict)
+                self.insert1({**key, **insert_dict})
 
         except Exception as err:
             dataset = key["dataset"]
