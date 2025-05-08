@@ -1740,3 +1740,66 @@ def interpolate_trials_cubic_spline(
         )
 
     return interpolated_df
+
+
+
+def plot_training_phases(ax, data, y="session_reward", hue=None, ylim=None, ylabel=None):
+    """
+    Plot training phases with individual trajectories and group means.
+    
+    Parameters:
+    -----------
+    data : DataFrame
+        The dataframe containing the training data
+    y_var : str, optional (default="session_reward")
+        The variable to plot on the y-axis
+    hue_var : str, optional
+        The variable to use for coloring the lines/points (e.g., "lab_id")
+        If None, all lines will be grey and points will be black
+    """
+
+    
+    # Plot individual trajectories
+    if hue:
+        sns.lineplot(data=data, x="num_train_stage", y=y, 
+                     units="mouse_name", hue=hue, estimator=None, 
+                     marker="o", zorder=0, alpha=.3, ax=ax, legend=False)
+        sns.pointplot(data=data, x="num_train_stage", y=y, 
+                      hue=hue, capsize=0.1, ax=ax)
+    else:
+        sns.lineplot(data=data, x="num_train_stage", y=y, 
+                     units="mouse_name", estimator=None, marker="o", 
+                     color="grey", zorder=0, alpha=.3, ax=ax)
+        sns.pointplot(data=data, x="num_train_stage", y=y, 
+                      color="black", capsize=0.1, ax=ax)
+    
+    # Set labels and limits
+    ax.set_xlabel("Training Phase")
+    ax.set_ylabel(ylabel)
+    
+    if ylim:
+        ax.set_ylim(0, 1)
+    
+    # Define tick positions and labels
+    stage_positions = np.arange(6)
+    stage_labels = ["First", "Middle", "Last", "First", "Middle", "Last"]
+    stage_colors = ["#3FB47C", "#3FB47C", "#1F6F49", "#FF1493", "#FF1493", "#FF1493"]
+
+    ax.set_xticks(stage_positions)
+    ax.set_xticklabels(stage_labels, rotation=0, fontsize=12)
+    
+    # Add reference lines
+    if y == "session_reward":
+        ax.axhline(0.5, linestyle="dashed", color="black", alpha=0.5)
+        ax.axhline(0.70, linestyle="dashed", color="red", alpha=0.3)
+    
+    # Color the x-tick labels
+    for j, label in enumerate(ax.get_xticklabels()):
+        label.set_color(stage_colors[j])
+    
+    # Improve legend if hue is used
+    if hue:
+        ax.legend(title=hue.replace("_", " ").title(), 
+                 bbox_to_anchor=(1.05, 1), 
+                 loc='upper left')
+    
