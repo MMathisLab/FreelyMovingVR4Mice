@@ -348,3 +348,37 @@ def multi_occluder_inclusion_criteria(data: pd.DataFrame, threshold_wide: Option
     else:
         filtered_data = data [data.dataset.isin(pivoted_reward.index)]
     return filtered_data, reward_table
+
+def get_training_stage_per_mouse(big_df, mouse_name):
+    new_df_list = []
+    mouse_df = big_df[big_df.mouse_name == mouse_name].copy()
+
+    df = mouse_df[(mouse_df.training_stage == "ar_detection_no_velthr")].copy()
+    early = df[df.session_increment == df.session_increment.unique()[0]].copy()
+    early["num_train_stage"] = 0
+    new_df_list.append(early)
+
+    mid = df[df.session_increment == df.session_increment.unique()[-1]].copy()  # -2
+    mid["num_train_stage"] = 1
+    new_df_list.append(mid)
+
+    df = mouse_df[(mouse_df.training_stage == "ar_detection_velthr")].copy()
+    late = df[df.session_increment == df.session_increment.unique()[-1]].copy()  # 0
+    late["num_train_stage"] = 2
+    new_df_list.append(late)
+
+    df = mouse_df[(mouse_df.training_stage == "ar_discrim")].copy()
+
+    early = df[df.session_increment == df.session_increment.unique()[0]].copy()
+    early["num_train_stage"] = 3
+    new_df_list.append(early)
+
+    late = df[df.session_increment == df.session_increment.unique()[-1]].copy()  # 1
+    late["num_train_stage"] = 5
+    new_df_list.append(late)
+
+    if len(df.session_increment.unique()) > 2:
+        mid = df[df.session_increment == df.session_increment.unique()[-2]].copy()
+        mid["num_train_stage"] = 4
+        new_df_list.append(mid)
+    return pd.concat(new_df_list)
