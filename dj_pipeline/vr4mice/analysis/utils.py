@@ -125,7 +125,7 @@ def interpolate(
     return final_interpolated_df
 
 
-def interpolate_j_shaped(big_df, box_df, n_points=500):
+def interpolate_j_shaped(big_df, box_df, n_points=100):
     # big_df["norm_x"] = big_df.groupby(["dataset", "trial"], as_index=False)["x"].transform(
     #         lambda x: x - np.mean(x.iloc[:3])
     #     )
