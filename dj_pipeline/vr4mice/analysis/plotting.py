@@ -1776,6 +1776,7 @@ def plot_training_phases(ax, data, y="session_reward", hue=None, ylim=None, ylab
     # Set labels and limits
     ax.set_xlabel("Training Phase")
     ax.set_ylabel(ylabel)
+    sns.despine(offset=10)
     
     if ylim:
         ax.set_ylim(0, 1)
@@ -1803,3 +1804,99 @@ def plot_training_phases(ax, data, y="session_reward", hue=None, ylim=None, ylab
                  bbox_to_anchor=(1.05, 1), 
                  loc='upper left')
     
+
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D  # For custom legend handles
+
+def plot_mean_xy_trajectory(df, cmap=["red", "blue"], color_by="choice", style_by="aperture"):
+    """
+    Plots mean trajectories with flexible assignment of colors and line styles.
+    
+    Parameters:
+    -----------
+    df : DataFrame
+        Contains columns: x, y, sem_x, sem_y, aperture, trial_left_choice
+    cmap : list or matplotlib colormap
+        Color scheme for different choices
+    color_by : str ('choice' or 'aperture')
+        Which variable to represent with colors
+    style_by : str ('choice' or 'aperture')
+        Which variable to represent with line styles
+    """
+    
+    if color_by not in ['choice', 'aperture']:
+        raise ValueError("color_by must be either 'choice' or 'aperture'")
+    if style_by not in ['choice', 'aperture']:
+        raise ValueError("style_by must be either 'choice' or 'aperture'")
+    if color_by == style_by:
+        raise ValueError("color_by and style_by must represent different variables")
+    
+
+    choices = df.trial_left_choice.unique()
+    apertures = df.aperture.unique()
+    
+   
+    if color_by == 'choice':
+        color_var = 'trial_left_choice'
+        color_values = choices
+    else:
+        color_var = 'aperture'
+        color_values = apertures
+    
+    if isinstance(cmap, list):
+        if len(cmap) < len(color_values):
+            raise ValueError(f"Need at least {len(color_values)} colors, got {len(cmap)}")
+        colors = {val: cmap[i] for i, val in enumerate(color_values)}
+    else:
+        colors = {val: cmap(i/(len(color_values)-1)) for i, val in enumerate(color_values)}
+    
+   
+    if style_by == 'choice':
+        style_var = 'trial_left_choice'
+        style_values = choices
+    else:
+        style_var = 'aperture'
+        style_values = apertures
+    
+    line_styles = ['-', '--', ':', '-.']
+    styles = {val: line_styles[i % len(line_styles)] 
+              for i, val in enumerate(style_values)}
+    
+    
+    fig, ax = plt.subplots(figsize=(5, 5))
+    
+    group_vars = [color_var, style_var]
+    for (color_val, style_val), data in df.groupby(group_vars):
+        color = colors[color_val]
+        style = styles[style_val]
+        label = f"{color_var.capitalize()} {color_val} | {style_var.capitalize()} {style_val}"
+        
+        # Main trajectory
+        ax.plot(data.x, data.y, color=color, linestyle=style, label=label, linewidth=2)
+        
+        # Error bands
+        alpha = 0.15
+        ax.fill_betweenx(data.y, data.x-data.sem_x, data.x+data.sem_x,
+                        color=color, alpha=alpha)
+        ax.fill_between(data.x, data.y-data.sem_y, data.y+data.sem_y,
+                       color=color, alpha=alpha)
+    
+    
+    legend_elements = []
+   
+    for val in color_values:
+        legend_elements.append(Line2D([0], [0], color=colors[val], lw=4,
+                                    label=f'{color_var.capitalize()} {val}'))
+    for val in style_values:
+        legend_elements.append(Line2D([0], [0], color='black', linestyle=styles[val],
+                                    lw=2, label=f'{style_var.capitalize()} {val}'))
+    
+    ax.legend(handles=legend_elements, loc='lower right')
+    ax.grid(False)
+    ax.set_xlim(-18,18)
+    ax.set_ylim(0,23)
+    ax.vlines(x=-15, ymin=2, ymax=7, color="black", linewidth=2)
+    ax.hlines(y=2, xmin=-15, xmax=-5, color="black", linewidth=2)
+    plt.axis("off")
+    
+    return fig, ax

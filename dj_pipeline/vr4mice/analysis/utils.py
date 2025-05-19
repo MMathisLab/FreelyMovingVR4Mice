@@ -293,12 +293,13 @@ def get_data_from_list(data_set_list,  game_columns, dlc_columns=None):
         big_df.append(df)
 
     big_df = pd.concat(big_df).reset_index()
-
+    
     big_df["session_increment"] = (
         big_df.groupby("mouse_name")["dataset"]
         .rank(method="dense", ascending=True)
         .astype(int)
     )
+    
 
     big_df = big_df.infer_objects()
 
