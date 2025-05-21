@@ -56,6 +56,82 @@ def detect_signal_polarity(photodiode_read):
         return 1
 
 
+
+def filter_pulsed_signal(signal, sample_rate, cutoff_freq=50, filter_order=5):
+    """
+    Filters high-frequency noise from a pulsed signal and plots the results.
+    
+    Parameters:
+    - signal: The input signal with noise
+    - sample_rate: Sampling rate in Hz
+
+    - cutoff_freq: Cutoff frequency for the low-pass filter in Hz (default 50Hz)
+    - filter_order: Order of the Butterworth filter (default 5)
+    
+    Returns:
+    - filtered_signal: The filtered output signal
+    """
+    # Calculate Nyquist frequency
+    nyquist = 0.5 * sample_rate
+    
+    # Design Butterworth low-pass filter
+    b, a = butter(filter_order, cutoff_freq/nyquist, btype='low', analog=False)
+    
+    # Apply zero-phase filtering (filtfilt to avoid phase shift)
+    filtered_signal = filtfilt(b, a, signal)
+   
+    return filtered_signal
+
+
+def find_rising_edges(time, signal, threshold=0.5):
+    "calculates the rising edges of photodiode and signal."
+    rising_edges = []
+    for i in range(1, len(signal)):
+        if signal[i-1] < threshold and signal[i] >= threshold:
+            rising_edges.append(time[i])
+    return rising_edges
+
+
+def detect_signal_polarity(photodiode_read):    
+    # Calculate the mean value prior to signal coming in to scale the signal and scale the trace 
+    read = photodiode_read 
+    read = read - np.mean(read [0:100])
+
+    if np.abs(np.min(read)) > np.abs(np.max(read)):
+        print("flipping signal")
+        return -1
+    else:
+        print("not flipping signal")
+        return 1
+
+    
+def get_latency(rising_edges_singal, rising_edges_photodiode):
+    latencies = []
+    
+    # Convert to numpy arrays if they aren't already
+    rising_edges_singal = np.array(rising_edges_singal)
+    rising_edges_photodiode = np.array(rising_edges_photodiode)
+    
+    for i in range(len(rising_edges_singal)-1):
+        start = rising_edges_singal[i]
+        end = rising_edges_singal[i+1]
+        
+        # Find photodiode edges between current and next signal edge
+        mask = (rising_edges_photodiode > start) & (rising_edges_photodiode < end)
+        temp_photodiode = rising_edges_photodiode[mask]
+        
+        if len(temp_photodiode) > 0:
+            closest = temp_photodiode[np.argmin(np.abs(temp_photodiode - start))]
+            latencies.append({
+                'frame_time': start,
+                'time_diff': closest - start,
+                'photodiode_time': closest
+            })
+    
+    return pd.DataFrame(latencies)
+
+
+
 def get_signals(data, threshold=.2):
     """
     Processes photodiode and generated signal data from a PROC file and returns a merged DataFrame 
@@ -123,29 +199,3 @@ def get_signals(data, threshold=.2):
     df ["photodiode_read"]  = df.photodiode_read
    
     return(df)
-
-
-def filter_pulsed_signal(signal, sample_rate, cutoff_freq=50, filter_order=5):
-    """
-    Filters high-frequency noise from a pulsed signal and plots the results.
-    
-    Parameters:
-    - signal: The input signal with noise
-    - sample_rate: Sampling rate in Hz
-
-    - cutoff_freq: Cutoff frequency for the low-pass filter in Hz (default 50Hz)
-    - filter_order: Order of the Butterworth filter (default 5)
-    
-    Returns:
-    - filtered_signal: The filtered output signal
-    """
-    # Calculate Nyquist frequency
-    nyquist = 0.5 * sample_rate
-    
-    # Design Butterworth low-pass filter
-    b, a = butter(filter_order, cutoff_freq/nyquist, btype='low', analog=False)
-    
-    # Apply zero-phase filtering (filtfilt to avoid phase shift)
-    filtered_signal = filtfilt(b, a, signal)
-   
-    return filtered_signal
