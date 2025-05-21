@@ -82,10 +82,10 @@ def get_signals(data, threshold=.2):
     """
     
     photodiode_read = data ["photodiode_read"] 
-    photodiode_time = dlc ["photodiode_time"]- dlc ["start_time"]
+    photodiode_time = data ["photodiode_time"]- data ["start_time"]
 
     # estimate the delay by find the first point where sent signal is 1
-    delay = dlc ["generated_frame_time"][np.where(dlc ["generated_signal"] > 0.5)[0][0]]- dlc ["start_time"]
+    delay = data ["generated_frame_time"][np.where(data ["generated_signal"] > 0.5)[0][0]]- data ["start_time"]
     print("delay: ", delay)
     
     # remove first point as this corresponds to the thread starting
