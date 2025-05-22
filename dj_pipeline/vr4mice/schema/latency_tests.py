@@ -35,8 +35,8 @@ class SignalPhotodiodeAligned(dj.Computed):
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
-            return 
-        
+            return
+
         try:
             data = (vr4mice.SignalPhotodiode() & key).fetch1(as_dict=True)
             data = dict(get_signals(data))
@@ -47,6 +47,7 @@ class SignalPhotodiodeAligned(dj.Computed):
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
+
 
 class AllLatencies(dj.Computed):
     definition = """
@@ -64,15 +65,22 @@ class AllLatencies(dj.Computed):
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
-        
+
         try:
             df = pd.DataFrame((SignalPhotodiodeAligned() & key).fetch1(as_dict=True))
             rising_edges_a = find_rising_edges(df.time_stamp, df.signal_read)
-            rising_edges_photodiode = find_rising_edges(df.time_stamp, df.photodiode_read)
+            rising_edges_photodiode = find_rising_edges(
+                df.time_stamp, df.photodiode_read
+            )
             latencies = get_latency(rising_edges_a, rising_edges_photodiode)
-            
-            raw_data = (vr4mice.SignalPhotodiode() & key).fetch1("generated_frame_time", "generated_send_time", as_dict=True)
-            latencies ["frame_to_socket"] = np.mean(raw_data ["generated_send_time"][100:]- raw_data ["generated_frame_time"][100:])
+
+            raw_data = (vr4mice.SignalPhotodiode() & key).fetch1(
+                "generated_frame_time", "generated_send_time", as_dict=True
+            )
+            latencies["frame_to_socket"] = np.mean(
+                raw_data["generated_send_time"][100:]
+                - raw_data["generated_frame_time"][100:]
+            )
             data = dict(latencies)
             self.insert1(**key, **data)
 
@@ -84,4 +92,3 @@ class AllLatencies(dj.Computed):
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
             return None
-        
