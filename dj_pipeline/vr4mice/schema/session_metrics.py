@@ -6,7 +6,7 @@ from typing import List, Optional
 
 import datajoint as dj
 import pandas as pd
-
+import numpy as np
 from vr4mice.analysis.analysis import get_jshaped_trials
 from vr4mice.schema import vr4mice, base_analysis
 from vr4mice.utils.logger import Logger
