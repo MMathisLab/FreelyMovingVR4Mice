@@ -90,3 +90,66 @@ class SessionMetrics(dj.Computed):
             logger.warning(err)
 
             return None
+
+
+
+@schema
+class TrialMetrics(dj.Computed):
+    definition = """
+    -> base_analysis.DataFrame
+    ---
+    trial_rewarded: float # proportion of rewarded trials
+    """
+    definition = """
+    -> base_analysis.DataFrame
+    ---
+    aperture:             longblob # occlusion slit aperture in game units
+    trial:                longblob # trial number
+    trial_left_choice:    longblob # mouse chose left port 0.0 or 1
+    trial_rewarded:       longblob # trial duration in seconds
+    trial_tortuosity:     longblob # trial tortuosity
+    trial_duration:       longblob # trial duration in seconds
+    trial_jshaped:        longblob # trial jshaped
+    """
+
+    def make(self, key):
+        if self & key:
+            logger.info(
+                f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
+            )
+            return
+        
+        try:
+            if len(base_analysis.DataFrame & key) > 0:
+                df = (base_analysis.DataFrame()).get_data(key=key)
+                df["trial_rewarded"] = (base_analysis.DataFrame()).get_rewarded(key=key)
+                df["trial_jshaped"] = get_jshaped_trials(df)
+                df.loc[:, "trial_jshaped"] = np.where((df.trial_duration <= 5) & (df.trial_tortuosity <= 5), 1, 0)
+
+                mean_df = df.groupby(["dataset", "trial"], as_index=False).mean(
+                    numeric_only=True
+                )
+                insert_dict = {
+                    "aperture": mean_df.aperture.values,
+                    "trial": mean_df.trial.values,
+                    "trial_left_choice": mean_df.trial_left_choice.values,
+                    "trial_rewarded": mean_df.trial_rewarded.values,
+                    "trial_tortuosity": mean_df.trial_tortuosity.values,
+                    "trial_duration": mean_df.trial_duration.values,
+                    "trial_jshaped": mean_df.trial_jshaped.values,
+                }
+                self.insert1({**key, **insert_dict})
+
+
+        except Exception as err:
+            dataset = key["dataset"]
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            logger.warning(err)
+
+            return None
+
+        
+    
