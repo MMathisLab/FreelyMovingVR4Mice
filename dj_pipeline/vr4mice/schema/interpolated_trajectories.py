@@ -17,6 +17,7 @@ schema_name = "interpolated_trajectories"
 schema = get_schema(schema_name, locals())
 logger = Logger.get_logger()
 
+
 @schema
 class InterpolatedTrials(dj.Computed):
     definition = """
@@ -56,19 +57,23 @@ class InterpolatedTrials(dj.Computed):
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
-        
+
         try:
             if len(base_analysis.DataFrame & key) > 0:
                 df = (base_analysis.DataFrame()).get_data(key=key)
-                df ["trial_rewarded"] = (base_analysis.DataFrame()).get_rewarded(key=key)
+                df["trial_rewarded"] = (base_analysis.DataFrame()).get_rewarded(key=key)
                 box_df = (base_analysis.BoxDataFrame()).get_data(key=key)
-                offline_kinematics_df = (vr4mice.dlc.OfflineKinematics()).get_data(columns=["heading_direction", "head_angle"], key=key)
+                offline_kinematics_df = (vr4mice.dlc.OfflineKinematics()).get_data(
+                    columns=["heading_direction", "head_angle"], key=key
+                )
                 df = pd.concat([df, offline_kinematics_df], axis=1)
-                df = df [df.iti == 0.0]
-                df ["mouse_name"] = key["dataset"].split("_")[0]
+                df = df[df.iti == 0.0]
+                df["mouse_name"] = key["dataset"].split("_")[0]
                 interpolated_df = interpolate_j_shaped(df, box_df=box_df)
-                interpolated_df = interpolated_df.drop(columns=["time", "dataset", "trial_step"])
-                interpolated_df ["x_flipped"] =  df["x"] * df ["flip_one_side"]
+                interpolated_df = interpolated_df.drop(
+                    columns=["time", "dataset", "trial_step"]
+                )
+                interpolated_df["x_flipped"] = df["x"] * df["flip_one_side"]
                 self.insert1({**key, **interpolated_df.to_dict()})
 
         except Exception as err:
@@ -102,11 +107,31 @@ class MeanXYTrajectory(dj.Computed):
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
-        
+
         try:
             if len(InterpolatedTrials & key) > 0:
-                df = (InterpolatedTrials()).get_data(columns=["dataset", "aperture", "trial", "trial_left_choice", "trial_length", "x", "y"], key=key)
-                mean_df = mean_xy_trajectory(df, index_col=["dataset", "aperture", "trial", "trial_left_choice", "trial_length"])
+                df = (InterpolatedTrials()).get_data(
+                    columns=[
+                        "dataset",
+                        "aperture",
+                        "trial",
+                        "trial_left_choice",
+                        "trial_length",
+                        "x",
+                        "y",
+                    ],
+                    key=key,
+                )
+                mean_df = mean_xy_trajectory(
+                    df,
+                    index_col=[
+                        "dataset",
+                        "aperture",
+                        "trial",
+                        "trial_left_choice",
+                        "trial_length",
+                    ],
+                )
                 mean_df = mean_df.drop(columns=["dataset"])
                 self.insert1({**key, **mean_df.to_dict()})
 
@@ -117,8 +142,7 @@ class MeanXYTrajectory(dj.Computed):
             )
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
-        
-        
+
 
 class YBinnedXYTrajectory(dj.Computed):
     definition = """
@@ -137,14 +161,23 @@ class YBinnedXYTrajectory(dj.Computed):
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
-        
+
         try:
             if len(InterpolatedTrials & key) > 0:
-                df = (InterpolatedTrials()).get_data(columns=["aperture", "trial", "trial_length", "x_flipped", "y"], key=key) 
-                mean_df = mean_xy_trajectory(df, index_col=["aperture", "trial", "trial_length"], values=["x_flipped", "y"])
+                df = (InterpolatedTrials()).get_data(
+                    columns=["aperture", "trial", "trial_length", "x_flipped", "y"],
+                    key=key,
+                )
+                mean_df = mean_xy_trajectory(
+                    df,
+                    index_col=["aperture", "trial", "trial_length"],
+                    values=["x_flipped", "y"],
+                )
                 binned_df = create_bins(mean_df)
-                binned_df = binned_df [["aperture", "bin_centers", "x_flipped", "y"]]
-                binned_df = binned_df.groupby(["aperture", "bin_centers"], as_index=False).mean(numeric_only=True)
+                binned_df = binned_df[["aperture", "bin_centers", "x_flipped", "y"]]
+                binned_df = binned_df.groupby(
+                    ["aperture", "bin_centers"], as_index=False
+                ).mean(numeric_only=True)
                 self.insert1({**key, **binned_df.to_dict()})
 
         except Exception as err:
@@ -154,6 +187,7 @@ class YBinnedXYTrajectory(dj.Computed):
             )
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
+
 
 class MeanVelocities(dj.Computed):
     definition = """
@@ -171,12 +205,25 @@ class MeanVelocities(dj.Computed):
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
-            return  
-        
+            return
+
         try:
             if len(InterpolatedTrials & key) > 0:
-                df = pd.DataFrame(InterpolatedTrials()).get_data(columns=["aperture", "trial", "trial_length", "velocity", "velocity_x", "velocity_y", "velocity_x_flipped"], key=key)
-                mean_df = df.groupby(["aperture", "trial_length"], as_index=False).mean(numeric_only=True)
+                df = pd.DataFrame(InterpolatedTrials()).get_data(
+                    columns=[
+                        "aperture",
+                        "trial",
+                        "trial_length",
+                        "velocity",
+                        "velocity_x",
+                        "velocity_y",
+                        "velocity_x_flipped",
+                    ],
+                    key=key,
+                )
+                mean_df = df.groupby(["aperture", "trial_length"], as_index=False).mean(
+                    numeric_only=True
+                )
                 self.insert1({**key, **mean_df.to_dict()})
 
         except Exception as err:

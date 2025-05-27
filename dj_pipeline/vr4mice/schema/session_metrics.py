@@ -92,7 +92,6 @@ class SessionMetrics(dj.Computed):
             return None
 
 
-
 @schema
 class TrialMetrics(dj.Computed):
     definition = """
@@ -118,13 +117,15 @@ class TrialMetrics(dj.Computed):
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
-        
+
         try:
             if len(base_analysis.DataFrame & key) > 0:
                 df = (base_analysis.DataFrame()).get_data(key=key)
                 df["trial_rewarded"] = (base_analysis.DataFrame()).get_rewarded(key=key)
                 df["trial_jshaped"] = get_jshaped_trials(df)
-                df.loc[:, "trial_jshaped"] = np.where((df.trial_duration <= 5) & (df.trial_tortuosity <= 5), 1, 0)
+                df.loc[:, "trial_jshaped"] = np.where(
+                    (df.trial_duration <= 5) & (df.trial_tortuosity <= 5), 1, 0
+                )
 
                 mean_df = df.groupby(["dataset", "trial"], as_index=False).mean(
                     numeric_only=True
@@ -140,7 +141,6 @@ class TrialMetrics(dj.Computed):
                 }
                 self.insert1({**key, **insert_dict})
 
-
         except Exception as err:
             dataset = key["dataset"]
             vr4mice.FailedSession().add_entry(
@@ -150,6 +150,3 @@ class TrialMetrics(dj.Computed):
             logger.warning(err)
 
             return None
-
-        
-    
