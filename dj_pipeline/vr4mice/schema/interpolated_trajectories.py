@@ -128,7 +128,6 @@ class MeanXYTrajectory(dj.Computed):
                     index_col=[
                         "dataset",
                         "aperture",
-                        "trial",
                         "trial_left_choice",
                         "trial_length",
                     ],
