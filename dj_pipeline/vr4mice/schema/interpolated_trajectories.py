@@ -125,11 +125,12 @@ class YBinnedXYTrajectory(dj.Computed):
     -> InterpolatedTrials
     aperture: longblob # occlusion aperture size 
     x_flipped: longblob # x-coordinate for each y bin center
-    y_bin_centers: longblob # y bin centers 
+    bin_centers: longblob # y bin centers 
     """
 
     def make(self, key):
         from vr4mice.analysis.analysis import mean_xy_trajectory
+        from vr4mice.analysis.utils import create_bins
 
         if self & key:
             logger.info(
@@ -141,8 +142,10 @@ class YBinnedXYTrajectory(dj.Computed):
             if len(InterpolatedTrials & key) > 0:
                 df = (InterpolatedTrials()).get_data(columns=["aperture", "trial", "trial_length", "x_flipped", "y"], key=key) 
                 mean_df = mean_xy_trajectory(df, index_col=["aperture", "trial", "trial_length"], values=["x_flipped", "y"])
-
-                self.insert1({**key, **mean_df.to_dict()})
+                binned_df = create_bins(mean_df)
+                binned_df = binned_df [["aperture", "bin_centers", "x_flipped", "y"]]
+                binned_df = binned_df.groupby(["aperture", "bin_centers"], as_index=False).mean(numeric_only=True)
+                self.insert1({**key, **binned_df.to_dict()})
 
         except Exception as err:
             dataset = key["dataset"]
