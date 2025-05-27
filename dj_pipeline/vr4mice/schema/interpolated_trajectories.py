@@ -174,7 +174,7 @@ class YBinnedXYTrajectory(dj.Computed):
                 )
                 mean_df = mean_xy_trajectory(
                     df,
-                    index_col=["aperture", "trial", "trial_length"],
+                    index_col=["aperture", "trial_length"],
                     values=["x_flipped", "y"],
                 )
                 binned_df = create_bins(mean_df)
