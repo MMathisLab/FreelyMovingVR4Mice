@@ -110,7 +110,7 @@ class MeanXYTrajectory(dj.Computed):
 
         try:
             if len(InterpolatedTrials & key) > 0:
-                df = (InterpolatedTrials()).get_data(
+                df = pd.DataFrame((InterpolatedTrials()).get_data(
                     columns=[
                         "dataset",
                         "aperture",
@@ -121,7 +121,8 @@ class MeanXYTrajectory(dj.Computed):
                         "y",
                     ],
                     key=key,
-                )
+                ))
+
                 mean_df = mean_xy_trajectory(
                     df,
                     index_col=[
@@ -164,10 +165,10 @@ class YBinnedXYTrajectory(dj.Computed):
 
         try:
             if len(InterpolatedTrials & key) > 0:
-                df = (InterpolatedTrials()).get_data(
+                df = pd.DataFrame((InterpolatedTrials()).get_data(
                     columns=["aperture", "trial", "trial_length", "x_flipped", "y"],
                     key=key,
-                )
+                ))
                 mean_df = mean_xy_trajectory(
                     df,
                     index_col=["aperture", "trial", "trial_length"],
