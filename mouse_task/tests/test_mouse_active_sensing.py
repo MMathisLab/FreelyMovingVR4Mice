@@ -1,8 +1,12 @@
+# Description: Series of unittests for the active sensing task. Checks several aspects of the task logic, such as
+# the randomization of the target location, the block switching logic, and the slit size generation.
+
 import unittest
 from unittest.mock import MagicMock, patch
 from pathlib import Path
-from mouse_task.task_active_sensing import ActiveSensingTask  # Ensure this path is correct
+from mouse_task.task_active_sensing import ActiveSensingTask
 import numpy as np
+
 
 class TestDetectionP1Randomization(unittest.TestCase):
     def setUp(self):
@@ -18,9 +22,9 @@ class TestDetectionP1Randomization(unittest.TestCase):
         self.reward_size = 100
         self.cropped_image = [0, 530, 0, 510]
         self.unity_arena_size = [-9, 9, -10, -2]
-        self.R_report_box = [5, 10, -4, -2]
-        self.L_report_box = [-10, -5, -4, -2]
-        self.Start_box = [-4, 4, -9, -5, 90]
+        self.r_report_box = [5, 10, -4, -2]
+        self.l_report_box = [-10, -5, -4, -2]
+        self.start_box = [-4, 4, -9, -5, 90]
         self.rotate_camera = 90.0
         self.prob_obj_on_left = 0.5
         self.mouse_report_delay = 0.0
@@ -29,7 +33,7 @@ class TestDetectionP1Randomization(unittest.TestCase):
         self.target_selection = 6.0
         self.distractor_selection = 0.0
         self.occlusion_type = 0.0
-        self.Camera_type = 1.0
+        self.camera_type = 1.0
         self.target_spread = 4.0
         self.target_rotation = 0
         self.target_size = 2.0
@@ -43,11 +47,12 @@ class TestDetectionP1Randomization(unittest.TestCase):
         self.use_dlc = False
         self.prob_block_coherence = 1.0
 
-        self.mock_config = {
-            "ar_env_unity_absolute_path": "mock_path"
-        }
+        self.mock_config = {"ar_env_unity_absolute_path": "mock_path"}
 
-        with patch('mouse_task.task_active_sensing.process_config', return_value=self.mock_config):
+        with patch(
+            "mouse_task.task_active_sensing.process_config",
+            return_value=self.mock_config,
+        ):
             self.task = ActiveSensingTask(
                 teensy=self.teensy,
                 monitor=self.monitor,
@@ -60,9 +65,9 @@ class TestDetectionP1Randomization(unittest.TestCase):
                 reward_size=self.reward_size,
                 cropped_image=self.cropped_image,
                 unity_arena_size=self.unity_arena_size,
-                r_report_box=self.R_report_box,
-                l_report_box=self.L_report_box,
-                start_box=self.Start_box,
+                r_report_box=self.r_report_box,
+                l_report_box=self.l_report_box,
+                start_box=self.start_box,
                 rotate_camera=self.rotate_camera,
                 prob_obj_on_left=self.prob_obj_on_left,
                 prob_block_coherence=self.prob_block_coherence,
@@ -72,7 +77,7 @@ class TestDetectionP1Randomization(unittest.TestCase):
                 target_selection=self.target_selection,
                 distractor_selection=self.distractor_selection,
                 occlusion_type=self.occlusion_type,
-                camera_type=self.Camera_type,
+                camera_type=self.camera_type,
                 target_spread=self.target_spread,
                 target_rotation=self.target_rotation,
                 target_size=self.target_size,
@@ -85,63 +90,61 @@ class TestDetectionP1Randomization(unittest.TestCase):
                 target_distance=self.target_distance,
                 use_dlc=self.use_dlc,
             )
-    
+
     def test_target_on_left(self):
         """test that target appears on the left"""
         self.task.prob_obj_on_left = 1.0
         self.task.random_target_location()
         self.assertEqual(self.task.object_on_left, 1.0)
-    
+
     def test_target_on_right(self):
         """test that target appears on the right"""
         self.task.prob_obj_on_left = 0.0
         self.task.random_target_location()
         self.assertEqual(self.task.object_on_left, 0.0)
-        
+
     def test_target_on_lr(self):
-        """ test that target appears on either the left or the right"""
+        """test that target appears on either the left or the right"""
         self.task.prob_obj_on_left = 0.5
         self.task.random_target_location()
-        self.assertIn(self.task.object_on_left, [0.0,1.0])
-        
+        self.assertIn(self.task.object_on_left, [0.0, 1.0])
+
     def test_block_sampler_stay(self):
-        """ test that if number correct is less than the block length we stay within the same block"""
+        """test that if number correct is less than the block length we stay within the same block"""
         self.task.block_length = 2
         self.task.correct = 1
         self.task.block_Left = 0.0
         self.task.prob_block_coherence = 1.0
         self.task.block_sampler()
         self.assertEqual(self.task.object_on_left, 0.0)
-         
+
         self.task.block_length = 2
         self.task.correct = 1
         self.task.block_Left = 1.0
         self.task.prob_block_coherence = 1.0
         self.task.block_sampler()
         self.assertEqual(self.task.object_on_left, 1.0)
-         
+
         self.task.block_length = 2
         self.task.correct = 1
         self.task.block_Left = 1.0
         self.task.prob_block_coherence = 0.0
         self.task.block_sampler()
         self.assertEqual(self.task.object_on_left, 0.0)
-         
-         
+
     def test_block_switch(self):
-        """ Tests that the block switches at the correct time.
-        """
-        # if block coherence is 1 and we are in a left block 
-        # the next block should right and the target should appear on the right
+        """Tests that the block switches at the correct time."""
+        # if block coherence is 1 and we are in a left block
+        # the next block should be right and the target should appear on the right
         self.task.block_length = 2
         self.task.correct = 2
         self.task.block_Left = 1.0
         self.task.prob_block_coherence = 1.0
         self.task.block_sampler()
         self.assertEqual(self.task.object_on_left, 0.0)
-        
-        # if block coherence is 0 and we are in a left block 
-        # the next block should left but the target should be on the right
+
+        # if block coherence is 0 and we are in a left block
+        # the next block should be left but the target should be on the right
         self.task.block_length = 2
         self.task.correct = 2
         self.task.block_Left = 1.0
@@ -149,32 +152,40 @@ class TestDetectionP1Randomization(unittest.TestCase):
         self.task.block_sampler()
         self.assertEqual(self.task.object_on_left, 1.0)
         self.assertEqual(self.task.block_Left, 0.0)
-        
+
     def test_slit_size_linspace(self):
-        """ Test when slit_sizes_list has exactly 3 elements"""
+        """Test when slit_sizes_list has exactly 3 elements"""
         slit_sizes_list = [1.0, 10.0, 5]
         expected_result = np.linspace(1.0, 10.0, 5)
         result = self.task.get_slit_sizes(slit_sizes_list)
-        np.testing.assert_array_equal(result, expected_result, 
-                                      err_msg="Failed to generate linspace with exactly 3 elements.")
-        
+        np.testing.assert_array_equal(
+            result,
+            expected_result,
+            err_msg="Failed to generate linspace with exactly 3 elements.",
+        )
+
     def test_slit_size_custom(self):
-        """ Test when slit_sizes_list has more than 3 elements """
+        """Test when slit_sizes_list has more than 3 elements"""
         slit_sizes_list = [1.0, 2.0, 3.0, 4.0]
         expected_result = np.array(slit_sizes_list)
         result = self.task.get_slit_sizes(slit_sizes_list)
-        np.testing.assert_array_equal(result, expected_result, 
-                                      err_msg="Failed to return array when slit_sizes_list has more than 3 elements.")
-        
+        np.testing.assert_array_equal(
+            result,
+            expected_result,
+            err_msg="Failed to return array when slit_sizes_list has more than 3 elements.",
+        )
+
     def test_slit_sizes_1_element(self):
         """Test when slit_sizes_list has 3 elements and check the array size"""
         slit_sizes_list = [0, 10, 1]
         expected_result = np.linspace(0, 10, 1)
         result = self.task.get_slit_sizes(slit_sizes_list)
-        np.testing.assert_array_equal(result, expected_result, 
-                                      err_msg="Failed to handle edge case with 3 elements but minimal linspace generation.")
-        
-        
+        np.testing.assert_array_equal(
+            result,
+            expected_result,
+            err_msg="Failed to handle edge case with 3 elements but minimal linspace generation.",
+        )
+
     def test_slit_size_empty_list(self):
         """Test when slit_sizes_list is empty"""
         slit_sizes_list = []
@@ -188,16 +199,11 @@ class TestDetectionP1Randomization(unittest.TestCase):
             self.task.get_slit_sizes(slit_sizes_list)
 
     def test_slit_size_invalid_type(self):
-        """ Test when slit_sizes_list contains non-numeric types"""
-        slit_sizes_list = [1.0, 2.0, 'a']
+        """Test when slit_sizes_list contains non-numeric types"""
+        slit_sizes_list = [1.0, 2.0, "a"]
         with self.assertRaises(TypeError):
             self.task.get_slit_sizes(slit_sizes_list)
 
 
-
-
-
- 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
