@@ -102,6 +102,7 @@ class TestPositionCoordinates(unittest.TestCase):
             )
 
     def test_game(self):
+        """Manually runs the game loop bypassing the get_action() method to control agent position"""
 
         self.task.start()
         env = self.task.env

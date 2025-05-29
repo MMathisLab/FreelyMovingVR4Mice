@@ -9,25 +9,10 @@ import matplotlib.patches as patches
 from tkinter import filedialog
 from matplotlib.widgets import Button
 
-# =============== DEBUGGING channel ==============
-# from uuid import UUID
-# from mlagents_envs.side_channel.side_channel import SideChannel
-# from mlagents_envs.side_channel.side_channel import IncomingMessage
-
-# class DebugLogSideChannel(SideChannel):
-#     def __init__(self, verbose: bool = False):
-#         # Use the same UUID as the one in the Unity code
-#         super().__init__(UUID("6146928a-ea90-4477-b497-c2f10400de1b"))
-#         self.verbose = verbose
-
-#     def on_message_received(self, msg: IncomingMessage) -> None:
-#         if self.verbose:
-#             log_message = msg.read_string()
-#             print(f"== UNITY LOG == '{log_message}'")
-# ================================================
-
 
 def generate_patch(x_start, x_end, y_start, y_end):
+    """Creates a patch (i.e. rectangle) to be displayed on pygame interface"""
+    
     w = abs(x_end - x_start)
     h = abs(y_end - y_start)
     return patches.Rectangle(
@@ -41,7 +26,7 @@ def generate_patch(x_start, x_end, y_start, y_end):
 
 
 def generate_active_regions(arena, Lbox, Rbox, Sbox):
-    """Define the active regions (starting box and report boxes) of the Unity game arena"""
+    """Defines the active regions (starting box and report boxes) of the Unity game arena"""
 
     arena_start_x, arena_end_x, _, arena_end_y = arena
 
@@ -64,9 +49,7 @@ def generate_active_regions(arena, Lbox, Rbox, Sbox):
 
 
 def plot_trajectories(data, arena, Lbox, Rbox, Sbox):
-    """
-    Helper function that plots the trajectories of the mouse within the Unity game arena
-    """
+    """Plots the trajectories of the mouse within the Unity game arena"""
 
     episodes_df = data[data.ITI == 0].copy(deep=True)
     episode_nums = episodes_df.episode.unique()
@@ -149,8 +132,7 @@ def compute_trigger_areas_coordinates(
     r_report_box,
     l_report_box,
 ):
-    """
-    Compute the coordinates of the trigger areas (start and report boxes) in the cropped image.
+    """Computes the coordinates of the trigger areas (start and report boxes) in the cropped image.
     Done by interpolating Unity arena coordinates to pygame window coordinates.
     """
 
@@ -166,6 +148,9 @@ def compute_trigger_areas_coordinates(
         cropped_image[2],
     ]  # the y-axis is flipped for ergonomical reasons
 
+
+	# Reverse-interpolation to compute trigger areas on pygame
+	# window from values specified in the ActiveSensingTask() class
     x_rects_upper, x_rects_lower = [
         np.interp(
             np.array([start_box[i], r_report_box[i], l_report_box[i]]), x_unity, x_image
@@ -186,9 +171,8 @@ def compute_trigger_areas_coordinates(
 
 
 def dict_to_data_frame(data: dict) -> pd.DataFrame:
-    """
-    Convert dictionary to pandas dataframe
-    """
+    """Converts data dictionary to pandas dataframe"""
+    
     states = [
         "x",
         "y",
@@ -223,9 +207,8 @@ def dict_to_data_frame(data: dict) -> pd.DataFrame:
 
 
 def save_visual_observation(i, dec_steps, obs_specs, out_path):
-    """
-    Save visual observation as an image
-    """
+    """Saves visual observation as an image"""
+    
     for index, obs_spec in enumerate(obs_specs):
         if len(obs_spec.shape) == 3:
             # Check visual observation(s)
@@ -248,7 +231,8 @@ def save_visual_observation(i, dec_steps, obs_specs, out_path):
 
 
 def select_executable(msg: str = "Select executable") -> str:
-    # Open file dialog window to let user choose unity executable path
+    """Opens tkinter file dialog window to allow user to select Unity executable"""
+    
     root = tk.Tk()
     root.withdraw()
     path = filedialog.askopenfilename(title=msg)

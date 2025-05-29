@@ -92,25 +92,25 @@ class TestDetectionP1Randomization(unittest.TestCase):
             )
 
     def test_target_on_left(self):
-        """test that target appears on the left"""
+        """Test that target appears on the left"""
         self.task.prob_obj_on_left = 1.0
         self.task.random_target_location()
         self.assertEqual(self.task.object_on_left, 1.0)
 
     def test_target_on_right(self):
-        """test that target appears on the right"""
+        """Test that target appears on the right"""
         self.task.prob_obj_on_left = 0.0
         self.task.random_target_location()
         self.assertEqual(self.task.object_on_left, 0.0)
 
     def test_target_on_lr(self):
-        """test that target appears on either the left or the right"""
+        """Test that target appears on either the left or the right"""
         self.task.prob_obj_on_left = 0.5
         self.task.random_target_location()
         self.assertIn(self.task.object_on_left, [0.0, 1.0])
 
     def test_block_sampler_stay(self):
-        """test that if number correct is less than the block length we stay within the same block"""
+        """Test that if number correct is less than the block length we stay within the same block"""
         self.task.block_length = 2
         self.task.correct = 1
         self.task.block_Left = 0.0

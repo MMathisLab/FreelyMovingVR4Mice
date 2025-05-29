@@ -104,8 +104,8 @@ class TestPositionCoordinates(unittest.TestCase):
 
     def test_manual(self):
         """Manually controlling the position in the unity game through mouse position in pygame window. Allows
-        for manual testing of the game as well as generating trajectories data for later tesing.
-        Data is saved to a pickle file (test_trajectories.pkl).
+		for manual testing of the game as well as generating trajectories data for later tesing.
+		Data is saved to a pickle file (test_trajectories.pkl).
         """
 
         window_width = self.cropped_image[1]
