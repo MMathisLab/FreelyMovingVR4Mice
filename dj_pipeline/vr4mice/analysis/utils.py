@@ -348,7 +348,7 @@ def dual_occluder_inclusion_criteria(
     ]
     pivoted_reward = pivoted_reward[abs(pivoted_reward.reward_drop) < threshold_drop]
 
-    logger.info(
+    print(
         "Excluded datasets: ",
         data[data.dataset.isin(pivoted_reward.index) == 0].dataset.unique(),
     )
