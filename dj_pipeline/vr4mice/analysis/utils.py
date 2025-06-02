@@ -5,6 +5,9 @@ import pandas as pd
 import scipy.interpolate
 import umap
 from sklearn.decomposition import PCA
+from vr4mice.utils.logger import Logger
+
+logger = Logger.get_logger()
 
 import vr4mice.analysis.analysis as analysis
 
@@ -272,7 +275,7 @@ def get_data_from_list(data_set_list, game_columns, dlc_columns=None):
     big_df = []
     for d in data_set_list:
         split_d = d["dataset"].split("_")
-        print(split_d)
+        Logger(split_d)
         data_set_name = d["dataset"]
         training_stage = (vr4mice.Dataset() & f"dataset = '{data_set_name}'").fetch(
             "session_label"
@@ -345,7 +348,7 @@ def dual_occluder_inclusion_criteria(
     ]
     pivoted_reward = pivoted_reward[abs(pivoted_reward.reward_drop) < threshold_drop]
 
-    print(
+    logger.info(
         "Excluded datasets: ",
         data[data.dataset.isin(pivoted_reward.index) == 0].dataset.unique(),
     )
@@ -380,7 +383,7 @@ def multi_occluder_inclusion_criteria(
     ]
     pivoted_reward = pivoted_reward[abs(pivoted_reward.reward_drop) < threshold_drop]
 
-    print(
+    logger.info(
         "Excluded datasets: ",
         data[data.dataset.isin(pivoted_reward.index) == 0].dataset.unique(),
     )
