@@ -275,7 +275,7 @@ def get_data_from_list(data_set_list, game_columns, dlc_columns=None):
     big_df = []
     for d in data_set_list:
         split_d = d["dataset"].split("_")
-        Logger(split_d)
+        logger.info(split_d)
         data_set_name = d["dataset"]
         training_stage = (vr4mice.Dataset() & f"dataset = '{data_set_name}'").fetch(
             "session_label"
