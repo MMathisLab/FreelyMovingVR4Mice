@@ -12,7 +12,7 @@ Motherboard: ASUS ws x299 sage
 
 CPU Cooler: Air cooling
 
-GPUs: 2x RTX 3080
+GPUs: 2 x RTX 3080
 
 Memory: 128 GB
 
@@ -20,7 +20,7 @@ Operating system drive: 1 TB SSD (NVMe)
 
 Data drive: 2 TB SSD (SATA)
 
-Network: 2x 1 gigabit LAN (RJ45)
+Network: 2 x 1 Gigabit LAN (RJ45)
 
 Case: Lambda Vector case
 
@@ -54,9 +54,11 @@ Two cameras are necessary if you would like to use 3d reconstruction.
 
 4 x [Bottom monitor holder with box adaptor](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/stl_files/Bottom_monitor_box_holder.stl)
 
-## Water delivery teensy components
+## Water delivery
 
-The teesny circuit will need to be soldered to a perforated board:
+### Teensy components
+
+The teensy circuit will need to be soldered to a perforated board:
 
 - Teensy 4.0
 
@@ -64,14 +66,28 @@ The teesny circuit will need to be soldered to a perforated board:
 
 - [1N4005-E3/54 - Standard Recovery Rectifier Diode 600V 1A DO-204AL, Vishay](https://www.distrelec.ch/en/standard-recovery-rectifier-diode-600v-1a-do-204al-vishay-1n4005-e3-54/p/30151890?marketingPopup=false&no-cache=true&track=true)
 
+### Lickports
+
+- [EW-06407-41 - Cole-Parmer, PTFE Tubing, 1/32"ID x 1/16"OD](cole_parmer_ew_06407_41_packof1_masterflex_transfer_p9556775) that goes from the valves to the lickport cases.
+
+- 2 x [Lickport case](../stl_files/lickport_case.stl).
+
+### Water circuit
+
+Additional tubing material and synringes to complete the water delivery system:
+
+- [Auxiliary tubing](https://us.vwr.com/store/product/39213295/masterflex-l-s-precision-pump-tubing-peroxide-cured-silicone-avantor) for the water delivery system. Necessary to bridge syringes, valves, and lickport tubes together.
+
+- 2 x [20 ml syringe](https://www.eickemeyer.com/shop/050361-eickinject-3-part-syringe-20ml-50-box-sterile-14177#attr=) with needle. Used as water reservoirs.
+
 ## Photodiode teensy components (optional)
 
-Tolias lab set-up:
+<u>Tolias lab set-up</u>:
 
 - Teensy 4.0
 - TSL257, with a built-in circuit
 
-Mathis lab setup:
+<u>Mathis lab setup</u>:
 
 - OPT101 (Texas Instruments)
 - Mounting board for the photodiode - CJMCU-101
@@ -79,7 +95,7 @@ Mathis lab setup:
 
 ## Monitors
 
-4x acer (SB241Y) + HDMI cables
+4 x acer (SB241Y) + HDMI cables
 
 3 monitors for the mouse setup, 1 for launching the task.
 
@@ -95,26 +111,24 @@ Mathis lab setup:
 :align: center
 ```
 
-## Anti-reflection material
+## Anti-reflection and filtering material
 
-4x [0.9 neutral density filters](https://www.amazon.com/Filters-Neutral-Density-Compact-Roll/dp/B0C5KT8H5P/ref=sr_1_3?crid=LZW094XXVJMZ&keywords=LEE+Filters+211+0.9+Neutral+Density+Filter&qid=1698694952&sprefix=lee+filters+211+0.9+neutral+density+filter%2Caps%2C412&sr=8-3). For all screens, to decrease the monitor luminance into the 10 cd/m2 range.
+4 x [0.9 neutral density filters](https://www.amazon.com/Filters-Neutral-Density-Compact-Roll/dp/B0C5KT8H5P/ref=sr_1_3?crid=LZW094XXVJMZ&keywords=LEE+Filters+211+0.9+Neutral+Density+Filter&qid=1698694952&sprefix=lee+filters+211+0.9+neutral+density+filter%2Caps%2C412&sr=8-3) for all screens, to decrease the monitor luminance to the 10 cd/m2 range.
 
-1x [Anti-glare adhesive](https://www.amazon.com/dp/B0BZ33NP92?ref_=cm_sw_r_cso_cp_apin_dp_MFR3FADA7P2NRNE6F3CY&starsLeft=1&language=en-US&th=1). For the floor. The size is not exactly the same as the setup floor. The seam needs to be at the back of the box (close to the back monitor). Mice do not seem to show interest in it (or very briefly at the beginning).
+1 x [Anti-glare adhesive](https://www.amazon.com/dp/B0BZ33NP92?ref_=cm_sw_r_cso_cp_apin_dp_MFR3FADA7P2NRNE6F3CY&starsLeft=1&language=en-US&th=1) for the floor. The size is not exactly the same as the setup floor. The seam needs to be at the back of the box (close to the back monitor). Mice do not seem to show interest in it (or very briefly at the beginning).
+
+1 x [Light diffuser sheet](https://leefilters.com/colour/216/) to be placed between the two perspex floor plates.
 
 ## Transparent Perspex box
 
-2x Floor: 520 x 520 x 5 mm (transparent plastic = PMMA).
+2 x Floor: 520 x 520 x 5 mm (transparent plastic = PMMA).
 
-4x Sides: 525 x 360 x 5 mm (transparent plastic = PMMA).
+4 x Sides: 525 x 360 x 5 mm (transparent plastic = PMMA).
 
 ## IR lights
 
 4 x [lights](https://www.amazon.com/CMVision-IR30-WideAngle-IR-Illuminator/dp/B001P2E4U4)
 
-## Water valves
-
-[Solenoid (solenoid: Lee lhda1233115H2)](https://www.theleeco.com/product/high-flow-2-way-single-coil-solenoid-valve/)
-
 ## Power supply
 
-1x Power Supply (12V Wall wart)
+1 x Power Supply (12V Wall wart)

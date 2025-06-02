@@ -5,8 +5,13 @@ import pandas as pd
 import scipy.interpolate
 import umap
 from sklearn.decomposition import PCA
+from vr4mice.utils.logger import Logger
+
+logger = Logger.get_logger()
 
 import vr4mice.analysis.analysis as analysis
+
+from vr4mice.schema import vr4mice, dlc, base_analysis
 
 
 def create_bins(
@@ -123,7 +128,7 @@ def interpolate(
     return final_interpolated_df
 
 
-def interpolate_j_shaped(big_df, box_df, n_points=500):
+def interpolate_j_shaped(big_df, box_df, n_points=100):
     # big_df["norm_x"] = big_df.groupby(["dataset", "trial"], as_index=False)["x"].transform(
     #         lambda x: x - np.mean(x.iloc[:3])
     #     )
@@ -156,7 +161,10 @@ def interpolate_j_shaped(big_df, box_df, n_points=500):
     j_shaped = analysis.get_jshaped_trials(big_df)
 
     interpolated_j_shaped = interpolate(
-        j_shaped, n_points=n_points, value_columns=["trial_left_choice"] + columns
+        j_shaped,
+        n_points=n_points,
+        value_columns=["trial_left_choice"] + columns,
+        interpolation_columns=["dataset", "trial"],
     )
     interpolated_j_shaped["trial_step"] = interpolated_j_shaped.groupby(
         ["dataset", "trial"], as_index=False
@@ -261,3 +269,161 @@ def compute_start_position(
     return pd.merge(
         df, starting_positions[["trial", "x_init_bin_center"]], on="trial", how="left"
     )
+
+
+def get_data_from_list(data_set_list, game_columns, dlc_columns=None):
+    big_df = []
+    for d in data_set_list:
+        split_d = d["dataset"].split("_")
+        logger.info(split_d)
+        data_set_name = d["dataset"]
+        training_stage = (vr4mice.Dataset() & f"dataset = '{data_set_name}'").fetch(
+            "session_label"
+        )[0]
+
+        df = base_analysis.DataFrame().get_data(
+            key=d,
+            columns=game_columns,
+        )
+        df["trial_rewarded"] = base_analysis.DataFrame().get_rewarded(key=d)
+        if dlc_columns is not None:
+            offline_kinematics_df = dlc.OfflineKinematics().get_data(
+                key=d,
+                columns=dlc_columns,
+            )
+            df = pd.concat([df, offline_kinematics_df], axis=1)
+
+        df["mouse_name"] = split_d[0]
+        df["date"] = split_d[1]
+        df["attempt"] = split_d[2]
+        df["training_stage"] = training_stage
+
+        big_df.append(df)
+
+    big_df = pd.concat(big_df).reset_index()
+
+    big_df["session_increment"] = (
+        big_df.groupby("mouse_name")["dataset"]
+        .rank(method="dense", ascending=True)
+        .astype(int)
+    )
+
+    big_df = big_df.infer_objects()
+
+    return big_df.reset_index(drop=True)
+
+
+def dual_occluder_inclusion_criteria(
+    data: pd.DataFrame,
+    threshold_wide: Optional[float] = 0.7,
+    threshold_drop: Optional[float] = 0.3,
+    return_excluded: Optional[bool] = False,
+) -> pd.DataFrame:
+    """get all datasets that survive the inclusion criteria
+
+    This function calculates performance parameters and returns those datasets
+    that survive the inclusion criteria
+
+    Args:
+        data (pd.DataFrame): a dataframe, containing multiple datasets
+        threshold_wide (float): the minimum reward success for the wide occlusion
+        threshold drop (float): the maximum reward drop between wide and narrow occluders
+    """
+
+    reward_table = data.groupby(["dataset", "aperture", "trial"], as_index=False)[
+        "trial_rewarded"
+    ].mean()
+    reward_table = reward_table.groupby(["dataset", "aperture"], as_index=False)[
+        "trial_rewarded"
+    ].mean()
+    pivoted_reward = reward_table.pivot(index="dataset", columns="aperture")
+
+    pivoted_reward["reward_drop"] = (
+        pivoted_reward[("trial_rewarded", 12.0)]
+        - pivoted_reward[("trial_rewarded", 4.3)]
+    )
+    reward_table = pivoted_reward
+    pivoted_reward = pivoted_reward[
+        (pivoted_reward[("trial_rewarded", 12.0)] > threshold_wide)
+    ]
+    pivoted_reward = pivoted_reward[abs(pivoted_reward.reward_drop) < threshold_drop]
+
+    print(
+        "Excluded datasets: ",
+        data[data.dataset.isin(pivoted_reward.index) == 0].dataset.unique(),
+    )
+    if return_excluded:
+        filtered_data = data[data.dataset.isin(pivoted_reward.index) == 0]
+    else:
+        filtered_data = data[data.dataset.isin(pivoted_reward.index)]
+    return filtered_data, reward_table
+
+
+def multi_occluder_inclusion_criteria(
+    data: pd.DataFrame,
+    threshold_wide: Optional[float] = 0.7,
+    threshold_drop: Optional[float] = 0.3,
+    return_excluded: Optional[bool] = False,
+):
+    reward_table = data.groupby(["dataset", "aperture", "trial"], as_index=False)[
+        "trial_rewarded"
+    ].mean()
+    reward_table = reward_table.groupby(["dataset", "aperture"], as_index=False)[
+        "trial_rewarded"
+    ].mean()
+    pivoted_reward = reward_table.pivot(index="dataset", columns="aperture")
+
+    pivoted_reward["reward_drop"] = (
+        pivoted_reward[("trial_rewarded", 12.0)]
+        - pivoted_reward[("trial_rewarded", 3.0)]
+    )
+    reward_table = pivoted_reward
+    pivoted_reward = pivoted_reward[
+        (pivoted_reward[("trial_rewarded", 12.0)] > threshold_wide)
+    ]
+    pivoted_reward = pivoted_reward[abs(pivoted_reward.reward_drop) < threshold_drop]
+
+    logger.info(
+        "Excluded datasets: ",
+        data[data.dataset.isin(pivoted_reward.index) == 0].dataset.unique(),
+    )
+    if return_excluded:
+        filtered_data = data[data.dataset.isin(pivoted_reward.index) == 0]
+    else:
+        filtered_data = data[data.dataset.isin(pivoted_reward.index)]
+    return filtered_data, reward_table
+
+
+def get_training_stage_per_mouse(big_df, mouse_name):
+    new_df_list = []
+    mouse_df = big_df[big_df.mouse_name == mouse_name].copy()
+
+    df = mouse_df[(mouse_df.training_stage == "ar_detection_no_velthr")].copy()
+    early = df[df.session_increment == df.session_increment.unique()[0]].copy()
+    early["num_train_stage"] = 0
+    new_df_list.append(early)
+
+    mid = df[df.session_increment == df.session_increment.unique()[-1]].copy()  # -2
+    mid["num_train_stage"] = 1
+    new_df_list.append(mid)
+
+    df = mouse_df[(mouse_df.training_stage == "ar_detection_velthr")].copy()
+    late = df[df.session_increment == df.session_increment.unique()[-1]].copy()  # 0
+    late["num_train_stage"] = 2
+    new_df_list.append(late)
+
+    df = mouse_df[(mouse_df.training_stage == "ar_discrim")].copy()
+
+    early = df[df.session_increment == df.session_increment.unique()[0]].copy()
+    early["num_train_stage"] = 3
+    new_df_list.append(early)
+
+    late = df[df.session_increment == df.session_increment.unique()[-1]].copy()  # 1
+    late["num_train_stage"] = 5
+    new_df_list.append(late)
+
+    if len(df.session_increment.unique()) > 2:
+        mid = df[df.session_increment == df.session_increment.unique()[-2]].copy()
+        mid["num_train_stage"] = 4
+        new_df_list.append(mid)
+    return pd.concat(new_df_list)
