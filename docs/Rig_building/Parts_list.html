@@ -421,13 +421,17 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#d-printed-parts">3D printed parts</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#water-delivery-teensy-components">Water delivery teensy components</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#water-delivery">Water delivery</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teensy-components">Teensy components</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lickports">Lickports</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#water-circuit">Water circuit</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#photodiode-teensy-components-optional">Photodiode teensy components (optional)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#monitors">Monitors</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anti-reflection-material">Anti-reflection material</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anti-reflection-and-filtering-material">Anti-reflection and filtering material</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#transparent-perspex-box">Transparent Perspex box</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ir-lights">IR lights</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#water-valves">Water valves</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#power-supply">Power supply</a></li>
 </ul>
             </nav>
@@ -449,11 +453,11 @@ document.write(`
 <p>Processor: Intel Core i9-10900X: 10 cores, 3.70 GHz, 19.25 MB cache</p>
 <p>Motherboard: ASUS ws x299 sage</p>
 <p>CPU Cooler: Air cooling</p>
-<p>GPUs: 2x RTX 3080</p>
+<p>GPUs: 2 x RTX 3080</p>
 <p>Memory: 128 GB</p>
 <p>Operating system drive: 1 TB SSD (NVMe)</p>
 <p>Data drive: 2 TB SSD (SATA)</p>
-<p>Network: 2x 1 gigabit LAN (RJ45)</p>
+<p>Network: 2 x 1 Gigabit LAN (RJ45)</p>
 <p>Case: Lambda Vector case</p>
 </section>
 <section id="cameras">
@@ -479,23 +483,41 @@ document.write(`
 <p>4 x <a class="reference external" href="https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/stl_files/Bottom_monitor_box_holder.stl">Bottom monitor holder with box adaptor</a></p>
 </section>
 </section>
-<section id="water-delivery-teensy-components">
-<h2>Water delivery teensy components<a class="headerlink" href="#water-delivery-teensy-components" title="Link to this heading">#</a></h2>
-<p>The teesny circuit will need to be soldered to a perforated board:</p>
+<section id="water-delivery">
+<h2>Water delivery<a class="headerlink" href="#water-delivery" title="Link to this heading">#</a></h2>
+<section id="teensy-components">
+<h3>Teensy components<a class="headerlink" href="#teensy-components" title="Link to this heading">#</a></h3>
+<p>The teensy circuit will need to be soldered to a perforated board:</p>
 <ul class="simple">
 <li><p>Teensy 4.0</p></li>
 <li><p><a class="reference external" href="https://www.distrelec.ch/en/darlington-transistor-npn-60v-to-220-onsemi-tip120g/p/30240404?no-cache=true&amp;amp;marketingPopup=false&amp;amp;track=true">TIP120G, Darlington Transistor, TO-220, NPN, 60V, onsemi</a></p></li>
 <li><p><a class="reference external" href="https://www.distrelec.ch/en/standard-recovery-rectifier-diode-600v-1a-do-204al-vishay-1n4005-e3-54/p/30151890?marketingPopup=false&amp;amp;no-cache=true&amp;amp;track=true">1N4005-E3/54 - Standard Recovery Rectifier Diode 600V 1A DO-204AL, Vishay</a></p></li>
 </ul>
 </section>
+<section id="lickports">
+<h3>Lickports<a class="headerlink" href="#lickports" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="#cole_parmer_ew_06407_41_packof1_masterflex_transfer_p9556775"><span class="xref myst">EW-06407-41 - Cole-Parmer, PTFE Tubing, 1/32”ID x 1/16”OD</span></a> that goes from the valves to the lickport cases.</p></li>
+<li><p>2 x <a class="reference download internal" download="" href="../../_downloads/092237569108fff82ab75ef9c741fee8/lickport_case.stl"><span class="xref download myst">Lickport case</span></a>.</p></li>
+</ul>
+</section>
+<section id="water-circuit">
+<h3>Water circuit<a class="headerlink" href="#water-circuit" title="Link to this heading">#</a></h3>
+<p>Additional tubing material and synringes to complete the water delivery system:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://us.vwr.com/store/product/39213295/masterflex-l-s-precision-pump-tubing-peroxide-cured-silicone-avantor">Auxiliary tubing</a> for the water delivery system. Necessary to bridge syringes, valves, and lickport tubes together.</p></li>
+<li><p>2 x <a class="reference external" href="https://www.eickemeyer.com/shop/050361-eickinject-3-part-syringe-20ml-50-box-sterile-14177#attr=">20 ml syringe</a> with needle. Used as water reservoirs.</p></li>
+</ul>
+</section>
+</section>
 <section id="photodiode-teensy-components-optional">
 <h2>Photodiode teensy components (optional)<a class="headerlink" href="#photodiode-teensy-components-optional" title="Link to this heading">#</a></h2>
-<p>Tolias lab set-up:</p>
+<p><u>Tolias lab set-up</u>:</p>
 <ul class="simple">
 <li><p>Teensy 4.0</p></li>
 <li><p>TSL257, with a built-in circuit</p></li>
 </ul>
-<p>Mathis lab setup:</p>
+<p><u>Mathis lab setup</u>:</p>
 <ul class="simple">
 <li><p>OPT101 (Texas Instruments)</p></li>
 <li><p>Mounting board for the photodiode - CJMCU-101</p></li>
@@ -504,7 +526,7 @@ document.write(`
 </section>
 <section id="monitors">
 <h2>Monitors<a class="headerlink" href="#monitors" title="Link to this heading">#</a></h2>
-<p>4x acer (SB241Y) + HDMI cables</p>
+<p>4 x acer (SB241Y) + HDMI cables</p>
 <p>3 monitors for the mouse setup, 1 for launching the task.</p>
 <p><strong>Calibration:</strong></p>
 <ul class="simple">
@@ -514,27 +536,24 @@ document.write(`
 <a class="bg-primary mb-1 reference internal image-reference" href="../../_images/monitor_luminance.png"><img alt="monitors_luminance" class="bg-primary mb-1 align-center" src="../../_images/monitor_luminance.png" style="width: 400px;" />
 </a>
 </section>
-<section id="anti-reflection-material">
-<h2>Anti-reflection material<a class="headerlink" href="#anti-reflection-material" title="Link to this heading">#</a></h2>
-<p>4x <a class="reference external" href="https://www.amazon.com/Filters-Neutral-Density-Compact-Roll/dp/B0C5KT8H5P/ref=sr_1_3?crid=LZW094XXVJMZ&amp;amp;keywords=LEE+Filters+211+0.9+Neutral+Density+Filter&amp;amp;qid=1698694952&amp;amp;sprefix=lee+filters+211+0.9+neutral+density+filter%2Caps%2C412&amp;amp;sr=8-3">0.9 neutral density filters</a>. For all screens, to decrease the monitor luminance into the 10 cd/m2 range.</p>
-<p>1x <a class="reference external" href="https://www.amazon.com/dp/B0BZ33NP92?ref_=cm_sw_r_cso_cp_apin_dp_MFR3FADA7P2NRNE6F3CY&amp;amp;starsLeft=1&amp;amp;language=en-US&amp;amp;th=1">Anti-glare adhesive</a>. For the floor. The size is not exactly the same as the setup floor. The seam needs to be at the back of the box (close to the back monitor). Mice do not seem to show interest in it (or very briefly at the beginning).</p>
+<section id="anti-reflection-and-filtering-material">
+<h2>Anti-reflection and filtering material<a class="headerlink" href="#anti-reflection-and-filtering-material" title="Link to this heading">#</a></h2>
+<p>4 x <a class="reference external" href="https://www.amazon.com/Filters-Neutral-Density-Compact-Roll/dp/B0C5KT8H5P/ref=sr_1_3?crid=LZW094XXVJMZ&amp;amp;keywords=LEE+Filters+211+0.9+Neutral+Density+Filter&amp;amp;qid=1698694952&amp;amp;sprefix=lee+filters+211+0.9+neutral+density+filter%2Caps%2C412&amp;amp;sr=8-3">0.9 neutral density filters</a> for all screens, to decrease the monitor luminance to the 10 cd/m2 range.</p>
+<p>1 x <a class="reference external" href="https://www.amazon.com/dp/B0BZ33NP92?ref_=cm_sw_r_cso_cp_apin_dp_MFR3FADA7P2NRNE6F3CY&amp;amp;starsLeft=1&amp;amp;language=en-US&amp;amp;th=1">Anti-glare adhesive</a> for the floor. The size is not exactly the same as the setup floor. The seam needs to be at the back of the box (close to the back monitor). Mice do not seem to show interest in it (or very briefly at the beginning).</p>
+<p>1 x <a class="reference external" href="https://leefilters.com/colour/216/">Light diffuser sheet</a> to be placed between the two perspex floor plates.</p>
 </section>
 <section id="transparent-perspex-box">
 <h2>Transparent Perspex box<a class="headerlink" href="#transparent-perspex-box" title="Link to this heading">#</a></h2>
-<p>2x Floor: 520 x 520 x 5 mm (transparent plastic = PMMA).</p>
-<p>4x Sides: 525 x 360 x 5 mm (transparent plastic = PMMA).</p>
+<p>2 x Floor: 520 x 520 x 5 mm (transparent plastic = PMMA).</p>
+<p>4 x Sides: 525 x 360 x 5 mm (transparent plastic = PMMA).</p>
 </section>
 <section id="ir-lights">
 <h2>IR lights<a class="headerlink" href="#ir-lights" title="Link to this heading">#</a></h2>
 <p>4 x <a class="reference external" href="https://www.amazon.com/CMVision-IR30-WideAngle-IR-Illuminator/dp/B001P2E4U4">lights</a></p>
 </section>
-<section id="water-valves">
-<h2>Water valves<a class="headerlink" href="#water-valves" title="Link to this heading">#</a></h2>
-<p><a class="reference external" href="https://www.theleeco.com/product/high-flow-2-way-single-coil-solenoid-valve/">Solenoid (solenoid: Lee lhda1233115H2)</a></p>
-</section>
 <section id="power-supply">
 <h2>Power supply<a class="headerlink" href="#power-supply" title="Link to this heading">#</a></h2>
-<p>1x Power Supply (12V Wall wart)</p>
+<p>1 x Power Supply (12V Wall wart)</p>
 </section>
 </section>
 
@@ -609,13 +628,17 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#d-printed-parts">3D printed parts</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#water-delivery-teensy-components">Water delivery teensy components</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#water-delivery">Water delivery</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teensy-components">Teensy components</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lickports">Lickports</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#water-circuit">Water circuit</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#photodiode-teensy-components-optional">Photodiode teensy components (optional)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#monitors">Monitors</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anti-reflection-material">Anti-reflection material</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anti-reflection-and-filtering-material">Anti-reflection and filtering material</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#transparent-perspex-box">Transparent Perspex box</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ir-lights">IR lights</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#water-valves">Water valves</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#power-supply">Power supply</a></li>
 </ul>
   </nav></div>
