@@ -3,6 +3,7 @@ from typing import List, Optional, Tuple
 import matplotlib as mpl
 import matplotlib.collections
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D  # For custom legend handles
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
@@ -1827,8 +1828,7 @@ def plot_training_phases(
         )
 
 
-import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D  # For custom legend handles
+
 
 
 def plot_mean_xy_trajectory(
