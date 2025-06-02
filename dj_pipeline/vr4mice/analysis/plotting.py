@@ -1828,9 +1828,6 @@ def plot_training_phases(
         )
 
 
-
-
-
 def plot_mean_xy_trajectory(
     df, cmap=["red", "blue"], color_by="choice", style_by="aperture"
 ):
