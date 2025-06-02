@@ -161,10 +161,10 @@ def interpolate_j_shaped(big_df, box_df, n_points=100):
         j_shaped,
         n_points=n_points,
         value_columns=["trial_left_choice"] + columns,
-        interpolation_columns=["dataset", "mouse_name", "trial"],
+        interpolation_columns=["dataset", "trial"],
     )
     interpolated_j_shaped["trial_step"] = interpolated_j_shaped.groupby(
-        ["dataset", "mouse_name", "trial"], as_index=False
+        ["dataset", "trial"], as_index=False
     ).trial.cumcount()
 
     interpolated_j_shaped["trial_length"] = (
