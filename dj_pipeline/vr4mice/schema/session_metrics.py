@@ -20,7 +20,7 @@ logger = Logger.get_logger()
 @schema
 class SessionMetrics(dj.Computed):
     definition = """
-    -> base_analysis.DataFrame
+    -> vr4mice.Dataset
     ---
     session_reward:             float # proportion of rewarded trials
     session_trial_duration:     float # mean trial duration in seconds
