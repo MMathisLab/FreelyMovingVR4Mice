@@ -15,9 +15,9 @@ logger = Logger.get_logger()
 
 
 @schema
-class SignalPhotodiodeAligned(dj.Computed):
+class SignalsPhotodiodeAligned(dj.Computed):
     definition = """
-    -> vr4mice.SignalPhotodiode
+    -> vr4mice.SignalsPhotodiode
     ---
     time_stamp: float # time stamp of the interpolated of the generated and photodiode signal   
     send_time: float # time stamp of the interpolated of the generated signal
@@ -38,12 +38,16 @@ class SignalPhotodiodeAligned(dj.Computed):
             return
 
         try:
-            data = (vr4mice.SignalPhotodiode() & key).fetch1(as_dict=True)
-            data = dict(get_signals(data))
+            data = (vr4mice.SignalsPhotodiode() & key).fetch(as_dict=True)[0]
+            data = get_signals(data)
             self.insert1(**key, **data)
 
         except Exception as err:
             dataset = key["dataset"]
+
+            logger.warning(
+                    f"{self.__class__.__name__} population failed: key: {key}, {err}"
+            )
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
@@ -51,7 +55,7 @@ class SignalPhotodiodeAligned(dj.Computed):
 
 class AllLatencies(dj.Computed):
     definition = """
-    -> SignalPhotodiodeAligned
+    -> SignalsPhotodiodeAligned
     ---
     frame_time: float # time stamp of the interpolated of the generated frame time
     time_diff: float # time differences between the generated signal and the photodiode signal's rising edge
@@ -67,14 +71,14 @@ class AllLatencies(dj.Computed):
             return
 
         try:
-            df = pd.DataFrame((SignalPhotodiodeAligned() & key).fetch1(as_dict=True))
+            df = pd.DataFrame((SignalsPhotodiodeAligned() & key).fetch1(as_dict=True))
             rising_edges_a = find_rising_edges(df.time_stamp, df.signal_read)
             rising_edges_photodiode = find_rising_edges(
                 df.time_stamp, df.photodiode_read
             )
             latencies = get_latency(rising_edges_a, rising_edges_photodiode)
 
-            raw_data = (vr4mice.SignalPhotodiode() & key).fetch1(
+            raw_data = (vr4mice.SignalsPhotodiode() & key).fetch1(
                 "generated_frame_time", "generated_send_time", as_dict=True
             )
             latencies["frame_to_socket"] = np.mean(

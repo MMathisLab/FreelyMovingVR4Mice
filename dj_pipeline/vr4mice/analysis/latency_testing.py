@@ -11,8 +11,7 @@ def check_data(data):
     # first check that all data variables are present
     vars = [
         "frame_time",
-        "frame_time",
-        "timestamp",
+        "time_stamp",
         "photodiode_read",
         "photodiode_time",
         "signal",

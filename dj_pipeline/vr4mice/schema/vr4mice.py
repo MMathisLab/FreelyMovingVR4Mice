@@ -413,7 +413,7 @@ class Metadata(dj.Manual):
 
 
 @schema
-class SignalsPhotodiode(dj.Manual):
+class SignalsPhotodiode(dj.Computed):
 
     definition = """
     -> Dataset
@@ -443,16 +443,17 @@ class SignalsPhotodiode(dj.Manual):
                 f"{paths['proc_path']['dst']}/{paths['proc_path']['filename']}"
             )
             if os.path.exists(proc_filepath):
-                photodiode_data = np.load(proc_filepath)
+                photodiode_data = np.load(proc_filepath, allow_pickle=True)
                 if check_data(photodiode_data):
                     data = {
                         "start_time": photodiode_data["start_time"],
                         "photodiode_time": photodiode_data["photodiode_time"],
                         "photodiode_read": photodiode_data["photodiode_read"],
                         "generated_frame_time": photodiode_data["frame_time"],
-                        "generated_send_time": photodiode_data["timestamp"],
+                        "generated_send_time": photodiode_data["time_stamp"],
+                        "generated_signal": photodiode_data["signal"],
                     }
-                    self.insert1(**key, **data)
+                    self.insert1({**key, **data}, allow_direct_insert=True)
             else:
                 logger.warning(f"No photodiode data found for {key['dataset']}")
                 return
