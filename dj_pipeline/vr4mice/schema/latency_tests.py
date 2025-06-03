@@ -45,7 +45,7 @@ class SignalsPhotodiodeAligned(dj.Computed):
             dataset = key["dataset"]
 
             logger.warning(
-                    f"{self.__class__.__name__} population failed: key: {key}, {err}"
+                f"{self.__class__.__name__} population failed: key: {key}, {err}"
             )
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
