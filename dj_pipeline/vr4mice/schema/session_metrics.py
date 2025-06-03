@@ -122,7 +122,7 @@ class TrialMetrics(dj.Computed):
             if len(base_analysis.DataFrame & key) > 0:
                 df = (base_analysis.DataFrame()).get_data(key=key)
                 df["trial_rewarded"] = (base_analysis.DataFrame()).get_rewarded(key=key)
-                df["trial_jshaped"] = get_jshaped_trials(df)
+                #df["trial_jshaped"] = get_jshaped_trials(df)
                 df.loc[:, "trial_jshaped"] = np.where(
                     (df.trial_duration <= 5) & (df.trial_tortuosity <= 5), 1, 0
                 )
