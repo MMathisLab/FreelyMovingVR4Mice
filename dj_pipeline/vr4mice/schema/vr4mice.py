@@ -418,7 +418,7 @@ class SignalsPhotodiode(dj.Computed):
     definition = """
     -> Dataset
     ---
-    start_time: float
+    start_time: blob
     photodiode_time: longblob # timestamp of the photodiode signal
     photodiode_read: longblob # value of the photodiode signal
     generated_frame_time: longblob # timestamp of frame relative to the generated signal

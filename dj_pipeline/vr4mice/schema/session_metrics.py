@@ -79,7 +79,7 @@ class SessionMetrics(dj.Computed):
                     "session_tortuosity": mean_df.trial_tortuosity.values[0],
                 }
 
-                self.insert1({**key, **insert_dict})
+                self.insert1({**key, **insert_dict}, allow_direct_insert=True)
 
         except Exception as err:
             dataset = key["dataset"]
