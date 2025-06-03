@@ -83,6 +83,7 @@ class InterpolatedTrials(dj.Computed):
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
 
+
 @schema
 class MeanXYTrajectory(dj.Computed):
     definition = """
@@ -112,13 +113,14 @@ class MeanXYTrajectory(dj.Computed):
             if len(InterpolatedTrials & key) > 0:
                 df = pd.DataFrame(
                     (InterpolatedTrials() & key).fetch(
-                            "dataset",
-                            "aperture",
-                            "trial",
-                            "trial_left_choice",
-                            "trial_length",
-                            "x",
-                            "y", as_dict=True
+                        "dataset",
+                        "aperture",
+                        "trial",
+                        "trial_left_choice",
+                        "trial_length",
+                        "x",
+                        "y",
+                        as_dict=True,
                     )[0]
                 )
 
@@ -130,7 +132,7 @@ class MeanXYTrajectory(dj.Computed):
                         "trial_left_choice",
                         "trial_length",
                     ],
-                ) # returns pd.DataFrame
+                )  # returns pd.DataFrame
                 mean_df = (mean_df.drop(columns=["dataset"])).to_dict()
                 self.insert1({**key, **mean_df})
 
@@ -168,8 +170,12 @@ class YBinnedXYTrajectory(dj.Computed):
             if len(InterpolatedTrials & key) > 0:
                 df = pd.DataFrame(
                     (InterpolatedTrials() & key).fetch(
-                        "aperture", "trial", "trial_length", "x_flipped", "y",
-                        as_dict=True
+                        "aperture",
+                        "trial",
+                        "trial_length",
+                        "x_flipped",
+                        "y",
+                        as_dict=True,
                     )[0]
                 )
                 mean_df = mean_xy_trajectory(
@@ -179,9 +185,11 @@ class YBinnedXYTrajectory(dj.Computed):
                 )
                 binned_df = create_bins(mean_df)
                 binned_df = binned_df[["aperture", "bin_centers", "x_flipped", "y"]]
-                binned_df = (binned_df.groupby(
-                    ["aperture", "bin_centers"], as_index=False
-                ).mean(numeric_only=True)).to_dict()
+                binned_df = (
+                    binned_df.groupby(["aperture", "bin_centers"], as_index=False).mean(
+                        numeric_only=True
+                    )
+                ).to_dict()
                 self.insert1({**key, **binned_df})
 
         except Exception as err:
@@ -215,15 +223,16 @@ class MeanVelocities(dj.Computed):
 
         try:
             if len(InterpolatedTrials & key) > 0:
-                df = pd.DataFrame((InterpolatedTrials() & key).fetch(
+                df = pd.DataFrame(
+                    (InterpolatedTrials() & key).fetch(
                         "aperture",
                         "trial_length",
                         "velocity",
                         "velocity_x",
                         "velocity_y",
                         "velocity_x_fliped",
-                    as_dict=True
-                )[0]
+                        as_dict=True,
+                    )[0]
                 )
                 mean_df = df.groupby(["aperture", "trial_length"], as_index=False).mean(
                     numeric_only=True
