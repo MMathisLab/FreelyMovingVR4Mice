@@ -39,3 +39,4 @@ __pycache__/
 # collab
 *docker-compose*
 *Makefile*
+*.swp*
