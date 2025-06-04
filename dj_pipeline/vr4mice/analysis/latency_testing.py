@@ -208,13 +208,14 @@ def get_signals(data, threshold=0.2):
     min_start = np.mean(
         photodiode_read[(photodiode_time > delay - 3) & (photodiode_time < delay - 0.5)]
     )
-    photodiode_read = (photodiode_read - min_start) / (
+
+    
+    photodiode_signal_scaled = (photodiode_read - min_start) / (
         np.max(photodiode_read) - min_start
     )
-    photodiode_signal_scaled = photodiode_read
 
     # binarise the signal
-    photodiode_read = photodiode_read > threshold
+    photodiode_read = filtered_photodiode_scaled > threshold
 
     signal_time = data["generated_frame_time"]
     send_time = data["generated_send_time"]
@@ -242,6 +243,6 @@ def get_signals(data, threshold=0.2):
     df = pd.merge_asof(left=photodiode, right=signal, on="time_stamp")
 
     df["signal_read"] = df.signal_read.ffill()
-    df["photodiode_read"] = df.photodiode_read
+    #df["photodiode_read"] = df.photodiode_read
 
     return df
