@@ -209,7 +209,6 @@ def get_signals(data, threshold=0.2):
         photodiode_read[(photodiode_time > delay - 3) & (photodiode_time < delay - 0.5)]
     )
 
-    
     photodiode_signal_scaled = (photodiode_read - min_start) / (
         np.max(photodiode_read) - min_start
     )
@@ -243,6 +242,6 @@ def get_signals(data, threshold=0.2):
     df = pd.merge_asof(left=photodiode, right=signal, on="time_stamp")
 
     df["signal_read"] = df.signal_read.ffill()
-    #df["photodiode_read"] = df.photodiode_read
+    # df["photodiode_read"] = df.photodiode_read
 
     return df
