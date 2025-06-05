@@ -52,6 +52,7 @@ class InterpolatedTrials(dj.Computed):
     def make(self, key):
         from vr4mice.analysis.utils import interpolate_j_shaped
 
+
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
@@ -60,6 +61,10 @@ class InterpolatedTrials(dj.Computed):
 
         try:
             if len(base_analysis.DataFrame & key) > 0:
+
+                logger.info(
+                    f"{self.__class__.__name__}: populate key: {key}"
+                )
                 df = (base_analysis.DataFrame()).get_data(key=key)
                 df["trial_rewarded"] = (base_analysis.DataFrame()).get_rewarded(key=key)
                 box_df = (base_analysis.BoxDataFrame()).get_data(key=key)
