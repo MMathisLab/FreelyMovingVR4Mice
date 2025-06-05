@@ -68,6 +68,8 @@ if __name__ == "__main__":
             "summary",
             "fetch",
             "dlc",
+            "interp",
+            "latency",
             "sync_days",
         ],
         help="Mode to execute: 'connect', 'populate', 'summary', 'dlc', 'fetch', 'sync_days', 'analysis'",
@@ -123,6 +125,26 @@ if __name__ == "__main__":
         dlc.DLCKptsDf().populate()
         dlc.SyncDLCKptsDf().populate()
         dlc.OfflineKinematics().populate()
+
+    elif args.mode == "interp":
+
+        from vr4mice.schema import interpolated_trajectories, session_metrics
+
+        interpolated_trajectories.InterpolatedTrials().populate()
+        interpolated_trajectories.MeanXYTrajectory().populate()
+        interpolated_trajectories.YBinnedXYTrajectory().populate()
+        interpolated_trajectories.MeanVelocities().populate()
+
+        session_metrics.SessionMetrics().populate()
+        session_metrics.TrialMetrics().populate()
+
+    elif args.mode == "latency":
+
+        from vr4mice.schema import vr4mice, latency_tests
+
+        vr4mice.SignalsPhotodiode().populate()
+        latency_tests.SignalsPhotodiodeAligned().populate()
+        latency_tests.AllLatencies()
 
     elif args.mode == "fetch":  # TODO: adjust path
         from vr4mice.actions.fetch_data import fetch_data
