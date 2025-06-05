@@ -43,7 +43,14 @@ def main():
         )
 
     try:
-        from vr4mice.schema import base_analysis, dlc, vr4mice, interpolated_trajectories, session_metrics, latency_tests
+        from vr4mice.schema import (
+            base_analysis,
+            dlc,
+            vr4mice,
+            interpolated_trajectories,
+            session_metrics,
+            latency_tests,
+        )
 
         vr4mice.Collab().populate()
         create_folder_if_not_exist("/data/summary_plots")
@@ -63,7 +70,7 @@ def main():
 
         session_metrics.SessionMetrics().populate()
         session_metrics.TrialMetrics().populate()
-        
+
         vr4mice.SignalsPhotodiode().populate()
         latency_tests.SignalsPhotodiodeAligned().populate()
         latency_tests.AllLatencies()
