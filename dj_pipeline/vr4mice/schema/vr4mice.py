@@ -139,8 +139,7 @@ class Groups(dj.Manual):
             if label_idx is None:
                 label_idx = Labels().get_next_idx()
                 Labels.insert1({"idx": label_idx, "label": label})
-            else:
-                label_idx = label_idx[0]
+            
             self.insert1({"dataset": dataset, "idx": label_idx})
 
         except Exception as err:
