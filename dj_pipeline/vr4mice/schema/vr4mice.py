@@ -140,7 +140,7 @@ class Groups(dj.Manual):
                 label_idx = Labels().get_next_idx()
                 Labels.insert1({"idx": label_idx, "label": label})
             else:
-                label_idx = label_idx[0]
+                label_idx = label_idx
             self.insert1({"dataset": dataset, "idx": label_idx})
 
         except Exception as err:
