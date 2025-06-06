@@ -173,11 +173,13 @@ class YBinnedXYTrajectory(dj.Computed):
                         "aperture",
                         "trial",
                         "trial_length",
-                        "x_flipped",
+                        "x"
+                        "flip_one_side",
                         "y",
                         as_dict=True,
                     )[0]
                 )
+                df ["x_flipped"] = df.x * df.flip_one_side
                 mean_df = mean_xy_trajectory(
                     df,
                     index_columns=["aperture", "trial_length"],
