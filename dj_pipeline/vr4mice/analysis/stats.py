@@ -133,6 +133,7 @@ import numpy as np
 
 def plot_aperture_heatmap(
     df, 
+    ax,
     value_col="p_value",  # Choose "p_value" or "p_value_corr"
     title="Aperture Comparison Heatmap",
     cmap="viridis_r",     # Color map (low values = dark)
@@ -143,6 +144,7 @@ def plot_aperture_heatmap(
     cbar_label="p-value",
     mask_nan=True,        # Hide NaN values
     linewidths=0.5        # Border width for cells
+    
 ):
     """
     Plots a heatmap of aperture comparisons using p-values or corrected p-values.
@@ -172,7 +174,7 @@ def plot_aperture_heatmap(
             matrix.loc[a2, a1] = value  # Mirror for symmetry
     
     # Plot
-    plt.figure(figsize=figsize)
+
     sns.heatmap(
         matrix,
         annot=annot,
@@ -180,12 +182,11 @@ def plot_aperture_heatmap(
         cmap=cmap,
         cbar_kws={'label': cbar_label},
         mask=matrix.isna() if mask_nan else None,
-        linewidths=linewidths
+        linewidths=linewidths, ax=ax
     )
-    plt.title(title)
-    plt.xlabel("Aperture 2")
-    plt.ylabel("Aperture 1")
-    plt.show()
-        
+    ax.set_title(title)
+    ax.set_xlabel("Aperture 2")
+    ax.set_ylabel("Aperture 1")
+
        
     
