@@ -5,6 +5,7 @@ import os
 import unittest
 import pygame
 import numpy as np
+import pickle as pkl
 
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -13,6 +14,7 @@ from mouse_task.tests.test_helpers import (
     plot_trajectories,
     compute_trigger_areas_coordinates,
     dict_to_data_frame,
+    format_data,
     select_executable,
 )
 
@@ -104,8 +106,8 @@ class TestPositionCoordinates(unittest.TestCase):
 
     def test_manual(self):
         """Manually controlling the position in the unity game through mouse position in pygame window. Allows
-		for manual testing of the game as well as generating trajectories data for later tesing.
-		Data is saved to a pickle file (test_trajectories.pkl).
+        for manual testing of the game as well as generating trajectories data for later tesing.
+        Data is saved to a pickle file (test_trajectories.pkl).
         """
 
         window_width = self.cropped_image[1]
@@ -161,7 +163,7 @@ class TestPositionCoordinates(unittest.TestCase):
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:  # Quit on pressing Escape key
+                    if event.key == pygame.K_ESCAPE:  # Quit on pressing "ESC" key
                         if is_ITI:  # Can quit only when in ITI
                             running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -229,7 +231,7 @@ class TestPositionCoordinates(unittest.TestCase):
             clock.tick(100)
         pygame.quit()
 
-        data = dict_to_data_frame(self.task.get_data())
+        data = format_data(self.task.get_data())
         self.task.stop()
 
         plot_trajectories(
@@ -240,10 +242,18 @@ class TestPositionCoordinates(unittest.TestCase):
             Sbox=self.start_box,
         )
 
-        # Store data in pickle file
+        # Store trajectory coordinates as .npy
         parent_dir = os.path.dirname(os.path.abspath(__file__))
-        out_path = os.path.join(parent_dir, "test_trajectories.pkl")
-        data[["action_x", "action_y"]].to_pickle(out_path)
+        out_path = os.path.join(parent_dir, "test_trajectories.npy")
+        np.save(
+            out_path,
+            np.vstack(
+                (
+                    data["action_x"],
+                    data["action_y"],
+                )
+            ).T,
+        )
 
 
 if __name__ == "__main__":

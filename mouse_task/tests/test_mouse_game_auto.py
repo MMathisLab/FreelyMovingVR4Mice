@@ -3,6 +3,7 @@
 # data integrity and coherence.
 
 import os
+import pickle
 import unittest
 import numpy as np
 import pandas as pd
@@ -11,7 +12,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 from mouse_task.task_active_sensing import ActiveSensingTask
 from mouse_task.tests.test_helpers import (
-    dict_to_data_frame,
+    format_data,
     select_executable,
 )
 
@@ -109,27 +110,34 @@ class TestPositionCoordinates(unittest.TestCase):
 
         # Only considering the first Behavior
         behavior_name = list(env.behavior_specs)[0]
-        self.assertEqual(behavior_name, "My Behavior?team=0")
+        self.assertEqual(
+            behavior_name,
+            "My Behavior?team=0",
+        )
         spec = env.behavior_specs[behavior_name]
 
         # Check that agent has a single observation
-        self.assertEqual(len(spec.observation_specs), 1)
+        self.assertEqual(
+            len(spec.observation_specs),
+            1,
+        )
         # Check the size of the vector observation
-        self.assertEqual(spec.observation_specs[0].shape, (13,))
+        self.assertEqual(
+            spec.observation_specs[0].shape,
+            (13,),
+        )
         # Check the type of the observation (i.e. VectorSensor)
         self.assertTrue("VectorSensor" in spec.observation_specs[0].name)
 
         # Check there are 4 continuous actions (i.e. x, y, head_angle and photodiode)
-        self.assertTrue(spec.action_spec.continuous_size > 0)
+        self.assertGreater(spec.action_spec.continuous_size, 0)
         self.assertEqual(spec.action_spec.continuous_size, 4)
 
         parent_dir = os.path.dirname(os.path.abspath(__file__))
-        in_path = os.path.join(parent_dir, "test_trajectories.pkl")
-        trajectories_df = pd.read_pickle(in_path)
+        in_path = os.path.join(parent_dir, "test_trajectories.npy")
+        trajectories = np.load(in_path)
 
-        for i, step in trajectories_df.iterrows():
-            x, y = step["action_x"], step["action_y"]
-
+        for x, y in trajectories:
             # Overriding the get_action()
             with patch(
                 "mouse_task.task_active_sensing.ActiveSensingTask.get_action",
@@ -138,46 +146,64 @@ class TestPositionCoordinates(unittest.TestCase):
                 self.task.loop()
 
         # Collect data
-        data = dict_to_data_frame(self.task.get_data())
+        data = format_data(self.task.get_data())
 
         # Quit task
         self.task.stop()
 
         # Check that there are no duplicate steps
-        self.assertTrue(data["step"].is_unique)
+        self.assertEqual(
+            len(data["step"]),
+            len(np.unique(data["step"])),
+        )
 
         # Check that are no missing values in the data
-        self.assertEqual(data.isna().sum().sum(), 0)
-
-        data = data.apply(pd.to_numeric, errors="coerce")
+        self.assertTrue(np.all([not np.isnan(data[key]).any() for key in data.keys()]))
 
         # Check that actions sent correspond to agent's position (on subsequent steps)
         # i.e. action_x and action_y will get sent on step n and x and y will be updated on step n+1
-        self.assertTrue(np.allclose(data["action_x"].to_numpy(), data["x"].to_numpy()))
-        self.assertTrue(np.allclose(data["action_y"].to_numpy(), data["y"].to_numpy()))
+        self.assertTrue(np.allclose(data["action_x"], data["x"]))
+        self.assertTrue(np.allclose(data["action_y"], data["y"]))
 
         # Check that agent cannot be in both boxes at the same time
-        self.assertTrue((data["mouseInLeft_box"] * data["mouseInRight_box"]).sum() == 0)
+        self.assertEqual(
+            (data["mouseInLeft_box"] * data["mouseInRight_box"]).sum(),
+            0,
+        )
 
         # Check that there are no more rewards than there are episodes
-        self.assertTrue(data["reward"].sum() <= data["episode"].max())
+        self.assertLessEqual(
+            data["reward"].sum(),
+            data["episode"].max(),
+        )
 
-        # Check that the number of terminal steps corresponds to number of episodes
-        data_df = data.groupby("episode").last()
-        self.assertTrue(data_df["terminal"].sum() + 1 == data_df.index.max())
+        # Check that the number of terminal steps corresponds to number of episodes - 1
+        last_ep_step_idx = [
+            np.where(data["episode"] == ep)[0][-1] for ep in np.unique(data["episode"])
+        ]
+        self.assertEqual(
+            sum([data["terminal"][idx] for idx in last_ep_step_idx]),
+            data["episode"].max() - 1,
+        )
 
         # Check that rewards were correctly assigned
-        data_df = data[data.ITI == 1].groupby("episode").first()
-        data_df["spawner_green_on_right"] = (
-            data_df["spawner_green_on_left"] == 0
-        ).astype(float)
-        self.assertTrue(
-            all(
-                data_df["reward"]
-                == data_df["spawner_green_on_left"] * data_df["mouseInLeft_box"]
-                + data_df["spawner_green_on_right"] * data_df["mouseInRight_box"]
+        ITI_idx = np.where(data["ITI"] == 1)[0]  # indices where ITI is 1
+        gaps = np.where(np.diff(ITI_idx) > 1)[0]  # gaps in ITI steps (-> new ep.)
+        report_idx = np.concatenate(
+            [
+                [ITI_idx[0]],  # included by default
+                ITI_idx[gaps + 1],
+            ]
+        ).astype(np.int64)
+        rewards = [
+            (
+                data["mouseInLeft_box"][idx] == data["reward"][idx]
+                if data["spawner_green_on_left"][idx]
+                else data["mouseInRight_box"][idx] == data["reward"][idx]
             )
-        )
+            for idx in report_idx
+        ]
+        self.assertTrue(np.all(rewards))
 
 
 if __name__ == "__main__":
