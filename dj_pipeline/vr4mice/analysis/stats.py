@@ -1,25 +1,29 @@
+from typing import Tuple
+import numpy.typing as npt
+
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import itertools
 from scipy.stats import ttest_rel, ttest_ind
 import scipy.stats as stats
+import matplotlib.pyplot as plt
 
 
-def tukey_results_to_matrix(results):
+def tukey_results_to_matrix(
+    results: "statsmodels.stats.multicomp.TukeyHSDResults",
+) -> Tuple[pd.DataFrame, npt.NDArray]:
     """
     Convert Tukey HSD test results into a symmetric matrix of p-values.
 
     Parameters:
-    -----------
-    results : statsmodels TukeyHSDResults object
-        The results object from pairwise_tukeyhsd()
+        results : statsmodels TukeyHSDResults object
+            The results object from pairwise_tukeyhsd()
 
     Returns:
-    --------
-    tuple: (p_df, mask)
-        p_df: DataFrame of p-values with group labels
-        mask: Boolean mask for upper triangle (for visualization)
+        tuple: (p_df, mask)
+            p_df: DataFrame of p-values with group labels
+            mask: Boolean mask for upper triangle (for visualization)
     """
     # Extract summary data (skip header row)
     summary_data = results._results_table.data[1:]
@@ -50,10 +54,19 @@ def tukey_results_to_matrix(results):
     return p_df, mask
 
 
-def plot_training_stats_heatmap(ax, results):
+def plot_training_stats_heatmap(
+    ax: plt.Axes, results: "statsmodels.stats.multicomp.TukeyHSDResults"
+):
+    """Plot a heatmap of p-values from Tukey HSD test results.
+
+    Parameters:
+        ax : matplotlib Axes
+            The axes to plot on.
+        results : statsmodels TukeyHSDResults object
+            The results object from pairwise_tukeyhsd()
+    """
     p_df, mask = tukey_results_to_matrix(results)
 
-    # Plot heatmap
     sns.heatmap(
         p_df,
         mask=mask,
@@ -80,8 +93,24 @@ def plot_training_stats_heatmap(ax, results):
         label.set_color(stage_colors[j])
 
 
-def get_p_values_multi(mean_mouse, x_var="trial_length", y_var="velocity"):
+def get_p_values_multi(
+    mean_mouse: pd.DataFrame, x_var: str = "trial_length", y_var: str = "velocity"
+) -> pd.DataFrame:
+    """Calculate p-values for performance metrics across different apertures and bins.
 
+    This function computes paired t-tests for each pair of apertures within each bin
+    of the specified x variable.
+
+    Parameters:
+        mean_mouse (pd.DataFrame): DataFrame containing trial data with columns 'dataset',
+            'aperture', and the performance metric.
+        x_var (str): The column name of the variable to bin by (e.g., 'trial_length').
+        y_var (str): The column name of the performance metric to compare across apertures.
+
+    Returns:
+        pd.DataFrame: DataFrame containing p-values for each pair of apertures within each bin,
+            with columns 'bin', 'aperture1', 'aperture2', and 'p_value'.
+    """
     p_values = []
     for bin_val in mean_mouse[x_var].unique():
         bin_data = mean_mouse[mean_mouse[x_var] == bin_val]
@@ -111,7 +140,20 @@ def get_p_values_multi(mean_mouse, x_var="trial_length", y_var="velocity"):
     return p_value_df
 
 
-def get_multi_performance_p_val(trial_df, y_var):
+def get_multi_performance_p_val(trial_df: pd.DataFrame, y_var: str) -> pd.DataFrame:
+    """Calculate p-values for performance metrics across different apertures.
+
+    This function computes paired t-tests for each pair of apertures within each dataset.
+
+    Parameters:
+        trial_df (pd.DataFrame): DataFrame containing trial data with columns 'dataset',
+            'aperture', and the performance metric.
+        y_var (str): The column name of the performance metric to compare across apertures.
+
+    Returns:
+        pd.DataFrame: DataFrame containing p-values for each pair of apertures with columns
+            'aperture1', 'aperture2', and 'p_value'.
+    """
     mean_mouse = trial_df.groupby(["dataset", "aperture"], as_index=False).mean()
     p_values = []
     for ap1, ap2 in itertools.combinations(mean_mouse.aperture.unique(), 2):
@@ -130,25 +172,19 @@ def get_multi_performance_p_val(trial_df, y_var):
     return p_value_df
 
 
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-import numpy as np
-
-
 def plot_aperture_heatmap(
-    df,
-    ax,
-    value_col="p_value",  # Choose "p_value" or "p_value_corr"
-    title="Aperture Comparison Heatmap",
-    cmap="viridis_r",  # Color map (low values = dark)
-    annot=True,  # Show values in cells
-    fmt=".1e",  # Scientific notation for annotations
-    figsize=(8, 6),
-    symmetric=True,  # Mirror values for symmetry
-    cbar_label="p-value",
-    mask_nan=True,  # Hide NaN values
-    linewidths=0.5,  # Border width for cells
+    df: pd.DataFrame,
+    ax: plt.Axes,
+    value_col: str = "p_value",
+    title: str = "Aperture Comparison Heatmap",
+    cmap: str = "viridis_r",
+    annot: bool = True,
+    fmt: str = ".1e",
+    figsize: Tuple[int] = (8, 6),
+    symmetric: bool = True,
+    cbar_label: str = "p-value",
+    mask_nan: bool = True,
+    linewidths: float = 0.5,
 ):
     """
     Plots a heatmap of aperture comparisons using p-values or corrected p-values.
@@ -157,7 +193,7 @@ def plot_aperture_heatmap(
         df (pd.DataFrame): Input DataFrame with columns: aperture1, aperture2, p_value, p_value_corr.
         value_col (str): Column to plot ("p_value" or "p_value_corr").
         title (str): Plot title.
-        cmap (str): Matplotlib/seaborn colormap.
+        cmap (str): Matplotlib/seaborn colormap. By default, "viridis_r" (dark for low values).
         annot (bool): Whether to annotate cells with values.
         fmt (str): Format string for annotations (e.g., ".1e" for scientific notation).
         figsize (tuple): Figure size (width, height).
@@ -176,8 +212,6 @@ def plot_aperture_heatmap(
         matrix.loc[a1, a2] = value
         if symmetric:
             matrix.loc[a2, a1] = value  # Mirror for symmetry
-
-    # Plot
 
     sns.heatmap(
         matrix,
