@@ -1,11 +1,15 @@
-import cv2
-import numpy as np
 import os
+
+import numpy as np
+
+import cv2
 
 BLACK_THRESHOLD = 5  # Default threshold for detecting black pixels
 MAX_SEARCH_RANGE = 60  # Maximum search range in seconds for session detection
 CONSECUTIVE_FRAMES = 10
 SESSION_START_BUFFER = 15
+
+# NOTE(celia): all recordings are 120 fps (frame rate per second).
 
 
 class VideoTrimmer:
