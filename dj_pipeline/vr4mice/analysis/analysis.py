@@ -37,7 +37,7 @@ def style():
             "ytick.labelcolor": font_color,
             "ytick.labelsize": font_size,
             "font.weight": "regular",
-            "svg.fonttype": "none",
+            #"svg.fonttype": "none",
         }
     )
 

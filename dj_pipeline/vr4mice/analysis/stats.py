@@ -177,11 +177,11 @@ def plot_aperture_heatmap(
     ax: plt.Axes,
     value_col: str = "p_value",
     title: str = "Aperture Comparison Heatmap",
-    cmap: str = "viridis_r",
+    cmap: str = "magma_r",
     annot: bool = True,
     fmt: str = ".1e",
     figsize: Tuple[int] = (8, 6),
-    symmetric: bool = True,
+    symmetric: bool = False,
     cbar_label: str = "p-value",
     mask_nan: bool = True,
     linewidths: float = 0.5,
@@ -209,20 +209,19 @@ def plot_aperture_heatmap(
     # Fill the matrix
     for _, row in df.iterrows():
         a1, a2, value = row["aperture1"], row["aperture2"], row[value_col]
-        matrix.loc[a1, a2] = value
+        matrix.loc[a2, a1] = value
         if symmetric:
-            matrix.loc[a2, a1] = value  # Mirror for symmetry
+            matrix.loc[a1, a2] = value  # Mirror for symmetry
 
     sns.heatmap(
         matrix,
         annot=annot,
-        fmt=fmt,
+        fmt=".3f",
         cmap=cmap,
+        vmin=0,
+        vmax=0.05,
         cbar_kws={"label": cbar_label},
         mask=matrix.isna() if mask_nan else None,
         linewidths=linewidths,
         ax=ax,
     )
-    ax.set_title(title)
-    ax.set_xlabel("Aperture 2")
-    ax.set_ylabel("Aperture 1")

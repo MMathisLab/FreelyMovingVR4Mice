@@ -28,6 +28,8 @@ colors_choice = ["#5C0A72", "#FD672C"]
 colors_aperture = ["#E41A1C", "#437FB5", "#4daf4a", "#984ea3", "#ff7f00"]
 colors_multi_aperture = ["#fde725", "#5ec962", "#21918c", "#3b528b", "#440154"]
 colors_aperture_pale = ["#EC8788", "#96B9D6"]
+colors_labs = ["#FF7F0E", "#2CA02C", "#1F77B4"] # sorted: cris, mathis, tolias 
+#NOTE(celia): to adapt if we put Niell instead of Cris back
 colors_rewarded = ["black", "red"]
 
 
@@ -390,7 +392,7 @@ def _plot_bar_counts(
     cmap: str,
     label_x: str = None,
     per_mouse: bool = False,
-    per_day: bool = False,  # TODO(celia): to add for Fig.2 E.
+    per_lab: bool = False,
     alpha: float = 0.3,
     ax: Optional[matplotlib.axes.Axes] = None,
 ):
@@ -400,7 +402,6 @@ def _plot_bar_counts(
         counts (pd.DataFrame): DataFrame containing count data to plot.
         label_x (str, optional): Column label for the x-axis. Default is None.
         cmap (str): Color map for the plot.
-        per_day (bool, optional): If True, plot per day. Default is False.
         alpha (float, optional): Alpha transparency for the plot. Default is 0.5.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
     """
@@ -416,6 +417,7 @@ def _plot_bar_counts(
             )
         else:
             unique_labels = counts[label_x].sort_values().unique()
+        
         figsize = (int(2 * len(unique_labels)), 5)
         cmap = sns.color_palette(cmap, len(unique_labels))
         color_map = {label: cmap[i] for i, label in enumerate(unique_labels)}
@@ -428,12 +430,13 @@ def _plot_bar_counts(
             data=counts,
             x=label_x,
             y="count",
-            hue="mouse_name" if per_mouse else None,
+            hue="mouse_name" if per_mouse else "lab_id" if per_lab else None,
             alpha=0.7 if per_mouse else 1,
             color="black",
             errorbar="se",
-            palette=["grey"] * counts["mouse_name"].nunique() if per_mouse else None,
-            err_style=None if per_mouse else "bars",
+            #palette=["grey"] * counts["mouse_name"].nunique() if per_mouse else ["grey"] * counts["lab_id"].nunique() if per_lab else None,
+            palette=["grey"] * counts["mouse_name"].nunique() if per_mouse else colors_labs if per_lab else None,
+            err_style=None if per_mouse or per_lab else "bars",
             linewidth=1 if per_mouse else 2,
             zorder=3,
             ax=ax,
@@ -446,7 +449,7 @@ def _plot_bar_counts(
                 ].mean(),
                 x=label_x,
                 y="count",
-                alpha=0.7 if per_mouse else 1,
+                alpha=0.7,
                 palette=color_map,
                 zorder=4,
                 hue=label_x,
@@ -470,12 +473,27 @@ def _plot_bar_counts(
                 legend=False,
             )  # individual lines
 
+        if per_lab:
+            sns.scatterplot(
+                data=counts.groupby(["aperture", "lab_id"], as_index=False)[
+                    "count"
+                ].mean(),
+                x=label_x,
+                y="count",
+                alpha=0.7,
+                palette=colors_labs,
+                zorder=4,
+                hue="lab_id",
+                ax=ax,
+                s=50,
+            )  # per mouse scatter
+
     else:
         sns.barplot(
             data=counts,
             x=label_x,
             y="count",
-            hue="mouse_name" if per_mouse else None,
+            hue="mouse_name" if per_mouse else "lab_id" if per_lab else None,
             color="grey",
             errorbar="se",
             alpha=1,
@@ -489,10 +507,10 @@ def _plot_bar_counts(
         data=counts,
         x=label_x,
         y="count",
-        alpha=alpha if per_mouse else 1,
+        alpha=alpha if per_mouse or per_lab else 1,
         hue=label_x,
-        palette=["grey"] * len(counts["count"]) if per_mouse else color_map,
-        s=25 if per_mouse else 50,
+        palette=["grey"] * len(counts["count"]) if per_mouse or per_lab else color_map,
+        s=25 if per_mouse or per_lab else 50,
         ax=ax,
         legend=False,
         zorder=2,
@@ -533,6 +551,43 @@ def _plot_bar_counts(
             zorder=100,  # Set very high to ensure it's on top
         )
 
+
+    if per_lab:
+        # Compute means and standard errors
+        grouped_counts = counts.groupby([label_x, "lab_id"], as_index=False)[
+            "count"
+        ].mean()
+        means = grouped_counts.groupby(label_x)["count"].mean()
+        errors = grouped_counts.groupby(label_x)["count"].sem()
+
+        # Plot the mean line without error bars
+        sns.lineplot(
+            data=grouped_counts,
+            x=label_x,
+            y="count",
+            errorbar=None,  # Disable seaborn error bars
+            alpha=1,
+            color="black",
+            linewidth=1.5,
+            ax=ax,
+            legend=False,
+            zorder=50,  # Mean line zorder
+        )
+
+        # Manually add error bars on top
+        ax.errorbar(
+            x=means.index,
+            y=means,
+            yerr=errors,
+            fmt="none",  # No connecting line, only error bars
+            ecolor="black",
+            elinewidth=1.5,
+            # capsize=4,
+            # capthick=1.5,
+            zorder=100,  # Set very high to ensure it's on top
+        )
+
+
     if not per_mouse:
         ax.legend([], [], frameon=False)
 
@@ -540,9 +595,9 @@ def _plot_bar_counts(
 def plot_trial_count(
     df,  # TODO(celia): provide correct columns directly?
     per_aperture: bool = False,
-    per_day: bool = False,  # TODO(celia): to add for Fig.2 E.
     alpha: float = 0.5,
     per_mouse: bool = False,
+    per_lab: bool = False,
     ax: Optional[matplotlib.axes.Axes] = None,
     cmap: str = "Set1",
 ):
@@ -551,7 +606,6 @@ def plot_trial_count(
     Args:
         df (pd.DataFrame): DataFrame containing the data to plot.
         per_aperture (bool, optional): If True, plot per aperture. Default is False.
-        per_day (bool, optional): If True, plot per day. Default is False.
         alpha (float, optional): Alpha transparency for the plot. Default is 0.5.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
         cmap (str, optional): Color map for the plot. Default is "Set1".
@@ -560,9 +614,24 @@ def plot_trial_count(
     num_aperture = len(df.aperture.unique())
     ax = _create_axes(ax=ax, per_aperture=per_aperture, num_aperture=1)
 
+    group_cols = ["dataset"]
+
+    if per_aperture:
+        group_cols.append("aperture")
+        
+    if per_mouse and per_lab:
+        raise ValueError(
+            "Cannot plot per mouse and per lab at the same time, please choose one.")
+
+    if per_mouse:
+        group_cols.append("mouse_name")
+    elif per_lab:
+        group_cols.append("lab_id")
+
+
     if per_aperture:
         counts = (
-            df.groupby(["dataset", "trial"])
+            df.groupby(group_cols + ["trial"])
             .aperture.first()
             .groupby(level="dataset")
             .value_counts()
@@ -572,14 +641,14 @@ def plot_trial_count(
         counts.sort_values(by="aperture", inplace=True)
         counts["aperture"] = counts.aperture.round(2).astype(str)
     else:
-        counts = df.groupby(["dataset"]).trial.nunique()
+        counts = df.groupby(group_cols).trial.nunique()
         counts = pd.DataFrame(counts.reset_index())
         counts = counts.rename(columns={"trial": "count"})
 
     _plot_bar_counts(
         counts=counts,
         label_x="aperture" if per_aperture else None,
-        per_day=per_day,
+        per_lab=per_lab,
         per_mouse=per_mouse,
         alpha=alpha,
         ax=ax,
@@ -622,7 +691,7 @@ def plot_rate(
     label_x: str,
     per_aperture: bool = False,
     per_mouse: bool = False,
-    per_day: bool = False,  # TODO(celia): to add for Fig.2 E.
+    per_lab: bool = False,
     alpha: float = 0.5,
     ax: Optional[matplotlib.axes.Axes] = None,
     cmap: str = "Set1",
@@ -636,7 +705,6 @@ def plot_rate(
         df (pd.DataFrame): DataFrame containing the data to plot.
         label_x (str): Name of the column
         per_aperture (bool, optional): If True, plot per aperture. Default is False.
-        per_day (bool, optional): If True, plot per day. Default is False.
         alpha (float, optional): Alpha transparency for the plot. Default is 0.5.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
         cmap (str, optional): Color map for the plot. Default is "Set1".
@@ -649,9 +717,15 @@ def plot_rate(
 
     if per_aperture:
         group_cols.append("aperture")
+        
+    if per_mouse and per_lab:
+        raise ValueError(
+            "Cannot plot per mouse and per lab at the same time, please choose one.")
 
     if per_mouse:
         group_cols.append("mouse_name")
+    elif per_lab:
+        group_cols.append("lab_id")
 
     counts = (
         df[df[label_x] == 1].groupby(group_cols).trial.nunique()
@@ -659,16 +733,22 @@ def plot_rate(
     )
 
     if per_aperture:
-        counts = pd.DataFrame(counts.reset_index().sort_values(by="aperture"))
+        if per_lab: 
+            counts = pd.DataFrame(counts.reset_index().sort_values(by=["aperture", "lab_id"]))
+        else: 
+            counts = pd.DataFrame(counts.reset_index().sort_values(by="aperture"))
         counts.aperture = counts.aperture.round(2).astype(str)
     else:
-        counts = pd.DataFrame(counts.reset_index())
+        if per_lab: 
+            counts = pd.DataFrame(counts.reset_index().sort_values(by="lab_id"))
+        else: 
+            counts = pd.DataFrame(counts.reset_index())
     counts = counts.rename(columns={"trial": "count"})
 
     _plot_bar_counts(
         counts=counts,
         label_x="aperture" if per_aperture else None,
-        per_day=per_day,
+        per_lab=per_lab,
         alpha=alpha,
         per_mouse=per_mouse,
         ax=ax,
@@ -704,7 +784,7 @@ def plot_rate(
 def plot_rewards(
     df,  # TODO(celia): provide correct columns directly?
     per_aperture: bool = False,
-    per_day: bool = False,  # TODO(celia): to add for Fig.2 E.
+    per_lab: bool = False,
     per_mouse: bool = False,
     alpha: float = 0.5,
     ax: Optional[matplotlib.axes.Axes] = None,
@@ -715,7 +795,6 @@ def plot_rewards(
     Args:
         df (pd.DataFrame): DataFrame containing the data to plot.
         per_aperture (bool, optional): If True, plot per aperture. Default is False.
-        per_day (bool, optional): If True, plot per day. Default is False.
         alpha (float, optional): Alpha transparency for the plot. Default is 0.5.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
         cmap (str, optional): Color map for the plot. Default is "Set1".
@@ -743,11 +822,11 @@ def plot_rewards(
         counts.aperture = counts.aperture.round(2).astype(str)
 
     counts = counts.rename(columns={"trial": "count"})
-
+    
     _plot_bar_counts(
         counts=counts,
         label_x="aperture" if per_aperture else None,
-        per_day=per_day,
+        per_lab=per_lab,
         per_mouse=per_mouse,
         alpha=alpha,
         ax=ax,
@@ -842,7 +921,6 @@ def plot_time_to_reward(
     _plot_bar_counts(
         counts=mean_counts,
         label_x=label_x,
-        per_day=False,
         alpha=alpha,
         ax=ax,
         cmap=cmap,
@@ -868,6 +946,7 @@ def pairplot_std_decision_point(
     label_parameter: str,
     ax: Optional[matplotlib.axes.Axes] = None,
     per_mouse: bool = False,
+    per_lab: bool = False,
     cmap: str = "Set2",
 ):
     """Plot the decision point based on a specified label parameter.
@@ -882,8 +961,15 @@ def pairplot_std_decision_point(
 
     groupby_cols = ["dataset", "aperture"]
 
+    if per_lab and per_mouse:
+        raise ValueError(
+            "Cannot plot per mouse and per lab at the same time, please choose one."
+        )
+
     if per_mouse:
         groupby_cols.append("mouse_name")
+    elif per_lab:
+        groupby_cols.append("lab_id")
 
     counts = df.groupby(groupby_cols, as_index=False).std()
 
@@ -894,8 +980,8 @@ def pairplot_std_decision_point(
     _plot_bar_counts(
         counts=counts,
         label_x="aperture",
-        per_day=False,
         per_mouse=per_mouse,
+        per_lab=per_lab,
         alpha=0.2,
         ax=ax,
         cmap=cmap if per_mouse else colors_aperture,
@@ -918,6 +1004,7 @@ def pairplot_average_decision_point(
     label_parameter: str,
     ax: Optional[matplotlib.axes.Axes] = None,
     per_mouse: bool = False,
+    per_lab: bool = False,
     cmap: str = "Set2",
 ):
     """Plot the decision point based on a specified label parameter.
@@ -931,9 +1018,16 @@ def pairplot_average_decision_point(
 
     groupby_cols = ["dataset", "aperture"]
 
+    if per_lab and per_mouse:
+        raise ValueError(
+            "Cannot plot per mouse and per lab at the same time, please choose one."
+        )
+        
     if per_mouse:
         groupby_cols.append("mouse_name")
-
+    elif per_lab:
+        groupby_cols.append("lab_id")
+        
     counts = df.groupby(groupby_cols, as_index=False).mean(numeric_only=True)
 
     if label_parameter == "y":
@@ -942,17 +1036,26 @@ def pairplot_average_decision_point(
         counts["count"] = np.abs(counts[label_parameter])
     else:
         counts["count"] = counts[label_parameter]
-    counts = pd.DataFrame(counts.reset_index())
+    #counts = pd.DataFrame(counts.reset_index())
+    #counts.aperture = counts.aperture.round(2).astype(str)
+    
+    
+    if per_lab: 
+        counts = pd.DataFrame(counts.reset_index().sort_values(by=["aperture", "lab_id"]))
+    else: 
+        counts = pd.DataFrame(counts.reset_index().sort_values(by="aperture"))
     counts.aperture = counts.aperture.round(2).astype(str)
+
+    
 
     _plot_bar_counts(
         counts=counts,
         label_x="aperture",
-        per_day=False,
+        per_lab=per_lab,
         per_mouse=per_mouse,
         alpha=0.2,
         ax=ax,
-        cmap=cmap if per_mouse else colors_aperture,
+        cmap=cmap if per_mouse or per_lab else colors_aperture,
     )
     ax.invert_xaxis()
     if label_parameter == "y":
@@ -1745,7 +1848,7 @@ def interpolate_trials_cubic_spline(
 
 
 def plot_training_phases(
-    ax, data, y="session_reward", hue=None, ylim=None, ylabel=None
+    ax, data, y="session_reward", hue=None, ylim=None, ylabel=None, x_label="num_train_stage"
 ):
     """
     Plot training phases with individual trajectories and group means.
@@ -1765,7 +1868,7 @@ def plot_training_phases(
     if hue:
         sns.lineplot(
             data=data,
-            x="num_train_stage",
+            x=x_label,
             y=y,
             units="mouse_name",
             hue=hue,
@@ -1776,11 +1879,11 @@ def plot_training_phases(
             ax=ax,
             legend=False,
         )
-        sns.pointplot(data=data, x="num_train_stage", y=y, hue=hue, capsize=0.1, ax=ax)
+        sns.pointplot(data=data, x=x_label, y=y, hue=hue, capsize=0.1, ax=ax)
     else:
         sns.lineplot(
             data=data,
-            x="num_train_stage",
+            x=x_label,
             y=y,
             units="mouse_name",
             estimator=None,
@@ -1791,41 +1894,46 @@ def plot_training_phases(
             ax=ax,
         )
         sns.pointplot(
-            data=data, x="num_train_stage", y=y, color="black", capsize=0.1, ax=ax
+            data=data, x=x_label, y=y, color="black", capsize=0.1, ax=ax
         )
 
-    # Set labels and limits
-    ax.set_xlabel("Training Phase")
-    ax.set_ylabel(ylabel)
-    sns.despine(offset=10)
+    if x_label == "num_train_stage":
+        # Set labels and limits
+        ax.set_xlabel("Training Phase")
+        ax.set_ylabel(ylabel)
+        sns.despine(offset=10)
 
-    if ylim:
-        ax.set_ylim(0, 1)
+        if ylim:
+            ax.set_ylim(0, 1)
 
-    # Define tick positions and labels
-    stage_positions = np.arange(6)
-    stage_labels = ["First", "Middle", "Last", "First", "Middle", "Last"]
-    stage_colors = ["#3FB47C", "#3FB47C", "#1F6F49", "#FF1493", "#FF1493", "#FF1493"]
+        # Define tick positions and labels
+        stage_positions = np.arange(6)
+        stage_labels = ["First", "Middle", "Last", "First", "Middle", "Last"]
+        stage_colors = ["#3FB47C", "#3FB47C", "#1F6F49", "#FF1493", "#FF1493", "#FF1493"]
 
-    ax.set_xticks(stage_positions)
-    ax.set_xticklabels(stage_labels, rotation=0, fontsize=12)
+        ax.set_xticks(stage_positions)
+        ax.set_xticklabels(stage_labels, rotation=0, fontsize=12)
+        
+        # Color the x-tick labels
+        for j, label in enumerate(ax.get_xticklabels()):
+            label.set_color(stage_colors[j])
+
 
     # Add reference lines
     if y == "session_reward":
         ax.axhline(0.5, linestyle="dashed", color="black", alpha=0.5)
         ax.axhline(0.70, linestyle="dashed", color="red", alpha=0.3)
 
-    # Color the x-tick labels
-    for j, label in enumerate(ax.get_xticklabels()):
-        label.set_color(stage_colors[j])
 
     # Improve legend if hue is used
-    if hue:
-        ax.legend(
-            title=hue.replace("_", " ").title(),
-            bbox_to_anchor=(1.05, 1),
-            loc="upper left",
-        )
+    # if hue:
+    #     ax.legend(
+    #         title=hue.replace("_", " ").title(),
+    #         bbox_to_anchor=(1.05, 1),
+    #         loc="upper left",
+    #     )
+        
+    return ax
 
 
 def plot_mean_xy_trajectory(
