@@ -13,9 +13,9 @@ from mouse_task.task_active_sensing import ActiveSensingTask
 from mouse_task.tests.test_helpers import (
     plot_trajectories,
     compute_trigger_areas_coordinates,
-    dict_to_data_frame,
     format_data,
     select_executable,
+    prompt_save_trajectories,
 )
 
 
@@ -244,7 +244,8 @@ class TestPositionCoordinates(unittest.TestCase):
 
         # Store trajectory coordinates as .npy
         parent_dir = os.path.dirname(os.path.abspath(__file__))
-        out_path = os.path.join(parent_dir, "test_trajectories.npy")
+        out_path = prompt_save_trajectories(parent_dir)
+
         np.save(
             out_path,
             np.vstack(

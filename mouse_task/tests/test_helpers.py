@@ -1,7 +1,7 @@
 # Description: Helper functions for the mouse task tests
 
+import os
 import numpy as np
-import pandas as pd
 import tkinter as tk
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -161,47 +161,6 @@ def compute_trigger_areas_coordinates(
     return x_rects_lower, y_rects_lower, widths, heights
 
 
-def dict_to_data_frame(data: dict) -> pd.DataFrame:
-    """Converts data dictionary to pandas dataframe"""
-
-    states = [
-        "x",
-        "y",
-        "z",
-        "mouse_can_report",
-        "ITI",
-        "spawner_green_on_left",
-        "mouse_report_correct",
-        "mouseInLeft_box",
-        "mouseInRight_box",
-        "speed",
-        "photodiode_sync_state",
-        "photodiode_change_value",
-        "start_box_delay",
-    ]
-
-    df = pd.DataFrame(
-        data=data["action"].reshape(
-            data["action"].shape[0],
-            data["action"].shape[2],
-        ),
-        columns=[
-            "action_x",
-            "action_y",
-            "action_head_angle",
-            "action_photodiode",
-        ],
-    )
-    df["episode"] = data["episode"]
-    df["step"] = data["step"]
-    df["step_time"] = data["step_time"]
-    df[states] = data["state"]
-    df["terminal"] = data["terminal"]
-    df["reward"] = data["reward"]
-
-    return df
-
-
 def format_data(data: dict) -> dict:
     """Re-arranges data dictionary for easier downstream analysis"""
 
@@ -300,3 +259,35 @@ def select_executable(msg: str = "Select executable") -> str:
     path = filedialog.askopenfilename(title=msg)
     root.destroy()
     return path
+
+
+def prompt_save_trajectories(parent_dir, default_name="test_trajectories.npy"):
+    """Prompts user to choose the name for the trajectories' .npy file"""
+
+    root = tk.Tk()
+    root.withdraw()
+
+    out_path = filedialog.asksaveasfilename(
+        initialdir=parent_dir,
+        title="Save trajectory file as...",
+        defaultextension=".npy",
+        filetypes=[("NumPy files", "*.npy")],
+        initialfile=default_name.split(".")[0],
+    )
+
+    # Ensure .npy extension
+    if out_path and not out_path.endswith(".npy"):
+        out_path += ".npy"
+
+    # If user cancels, keep default name and append index
+    if not out_path:
+        base, ext = os.path.splitext(default_name)
+        i = 1
+        while True:
+            candidate = os.path.join(parent_dir, f"{base}_{i}{ext}")
+            if not os.path.exists(candidate):
+                out_path = candidate
+                break
+            i += 1
+
+    return out_path
