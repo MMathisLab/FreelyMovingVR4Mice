@@ -37,6 +37,7 @@ def style():
             "ytick.labelcolor": font_color,
             "ytick.labelsize": font_size,
             "font.weight": "regular",
+            "svg.fonttype": "none",
         }
     )
 
@@ -569,3 +570,24 @@ def get_jshaped_trials(
 
     j_shaped = df[df["is_j_shaped"] == 1]
     return j_shaped
+
+
+def mean_xy_trajectory(
+    df,
+    index_columns=[
+        "dataset",
+        "mouse_name",
+        "aperture",
+        "trial_left_choice",
+        "trial_length",
+    ],
+    values=["x", "y"],
+):
+    mean_df = df.groupby(index_columns, as_index=False)[values].mean()
+    mean_df[["sem_x", "sem_y"]] = df.groupby(index_columns, as_index=False)[
+        values
+    ].sem()[values]
+    mean_df[["std_x", "std_y"]] = df.groupby(index_columns, as_index=False)[
+        values
+    ].std()[values]
+    return mean_df
