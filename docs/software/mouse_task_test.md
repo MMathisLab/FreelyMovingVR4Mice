@@ -11,7 +11,7 @@ To run the tests, the following packages are required. They should already be av
 - `pathlib`
 - `numpy`
 
-```{warning}
+```{note}
 These packages are already installed and available, thus there is no need to install them again.
 ```
 
