@@ -95,7 +95,7 @@ python mouse_task/tests/test_mouse_game_auto.py
 
 This script will load the numpy array file with the trajectories and simulate the mouse's actions in the game. The results will be printed in the terminal, showing whether each trial was successful or not.
 
-#### Manual
+#### [Optional] Manual
 
 In order to manually test the game and/or generate a different set of manual trajectories to use in the automatic testing script, the following procedure can be followed. Run the corresponding python script in the `mouse_task/tests/` sub-folder. For instance, the python script can be run with the following command:
 
