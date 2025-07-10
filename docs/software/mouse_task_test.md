@@ -37,7 +37,7 @@ Some tests have been developed to ensure correct and consistent behavior of the 
 These tests can be found in the `FreelyMovingVR4Mice/mouse_task/tests/` folder.
 The two mains files here are the following:
 
-1. [test_mouse_active_sensing.py](../../mouse_task/tests/test_mouse_active_sensing.py) : contains some unit tests for the main `ActiveSensingTask` class to make sure that core functionalities are working as intended.
+1. [test_mouse_active_sensing.py](../../mouse_task/tests/test_mouse_active_sensing.py): contains some unit tests for the main `ActiveSensingTask` class to make sure that core functionalities are working as intended.
 
 2. [test_mouse_game_auto.py](../../mouse_task/tests/test_mouse_game_auto.py) : leveraging the provided `test_trajectories.npy` file, this script can be used to automatically test the game by loading the numpy array and simulating the mouse's actions in the game. The code also performs additional tests to make sure that information about the state of the agent has the correct structure and contains valid values.
 
