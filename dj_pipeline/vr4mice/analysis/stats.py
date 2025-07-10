@@ -161,7 +161,6 @@ def get_multi_performance_p_val(trial_df: pd.DataFrame, y_var: str) -> pd.DataFr
         ap2_data = mean_mouse[mean_mouse["aperture"] == ap2][y_var]
 
         t_stat, p_val = ttest_rel(ap1_data, ap2_data)
-        # print(f"Bin {bin_val}: Aperture {ap1} vs {ap2} - t = {t_stat:.3f}, p = {p_val:.4f}")
         p_values.append(
             pd.DataFrame(
                 {"aperture1": ap1, "aperture2": ap2, "p_value": p_val}, index=[0]
