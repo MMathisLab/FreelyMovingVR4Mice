@@ -17,7 +17,7 @@ These packages are already installed and available, thus there is no need to ins
 
 ### Optional packages
 
-One of the testing scripts allows the user to manually test the game by moving the mouse cursor in a pygame window and to create artificial trajectories that can be later use to test the game automatically. For this, the following packages are required:
+One of the testing scripts allows the user to manually test the game by moving the mouse cursor in a `pygame` window and to create artificial trajectories that can be later used to test the game automatically. For this, the following packages are required:
 
 - `matplotlib`
 - `pygame`
