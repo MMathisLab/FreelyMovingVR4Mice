@@ -46,7 +46,7 @@ The two mains files here are the following:
 ```{note}
 Since trials are randomly generated (i.e. the object can appear on either side of the arena with given probabilities), trials that were successful during manual testing (point `3.`) may not have the same outcome when performing automatic testing (point `2.`).
 
-Since manual trajectories are already provided, automatic testing should be preferred over manual testing. If the creation of new trajectories is desired, the manual testing script can be used to do so.
+Since manual trajectories are already provided, **automatic testing should be preferred over manual testing**. If the creation of new trajectories is desired, the manual testing script can be used to do so.
 ```
 
 ## How to run tests
