@@ -44,7 +44,7 @@ The two mains files here are the following:
 3. [test_mouse_game_manual.py](../../mouse_task/tests/test_mouse_game_manual.py): allows the user to manually test the `ActiveSensingTask` class through a pygame interface where the position inside the Unity game can be controlled by moving the cursor within the pygame window. To simplify things, trigger areas (such as the `TT` and `report` boxes) have been highlighted in green. This script also saves the traced trajectories of the mouse cursor in a numpy array (i.e., a `*.npy` file), which can be later loaded to automatically test the game with the `test_mouse_game_auto.py` script (below). When performing this manual testing, please run the script below as well as `test_mouse_game_auto.py` contains additional tests for data integrity and structure of the agent's state information.
 
 ```{note}
-Obviously, since trials are randomly generated (i.e. the object can appear on either side of the arena with given probabilities), trials that were successful during manual testing (point `3.`) may not have the same outcome when performing automatic testing (point `2.`) since targets may appear on either side.
+Since trials are randomly generated (i.e. the object can appear on either side of the arena with given probabilities), trials that were successful during manual testing (point `3.`) may not have the same outcome when performing automatic testing (point `2.`).
 
 Since manual trajectories are already provided, automatic testing should be preferred over manual testing. If the creation of new trajectories is desired, the manual testing script can be used to do so.
 ```
