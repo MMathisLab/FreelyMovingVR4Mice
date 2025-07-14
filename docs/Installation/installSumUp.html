@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
     <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
@@ -200,6 +200,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../Unity_games/update_Unity_Game.html">Update the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Unity_games/build_Unity_Game.html">Rebuild a Unity game</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Unity_games/Adding_new_objects.html">Adding new target objects</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software, Tests</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../software/mouse_task_test.html">Mouse task</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software Control, Teensy setup</span></p>
 <ul class="nav bd-sidenav">
@@ -439,52 +443,20 @@ document.write(`
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
 <p>The FreelyMovingVR4Mice repository contains main <strong>vr4mice</strong> package (src code: teensyexp folder) and <strong>mouse_task</strong> module that is the input for <strong>vr4mice</strong></p>
 <p><em><strong>Note:</strong></em> <em>The following installation assumes you have already installed on your system the <code class="docutils literal notranslate"><span class="pre">conda</span></code> package manager. If you haven’t, please follow the official installation process for Windows <a class="reference external" href="https://docs.conda.io/projects/conda/en/stable/">here</a> (check <a class="reference external" href="https://docs.anaconda.com/miniconda/">this</a> for more details).</em></p>
-<p>Create a new conda environment with local pip:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>name_of_env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10.12<span class="w"> </span>pip
+<p>Create and activate a new conda environment with local pip:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>&lt;name-of-env&gt;<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10.12<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>conda<span class="w"> </span>activate<span class="w"> </span>&lt;name-of-env&gt;
 </pre></div>
 </div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>name_of_env
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>As an example, with <code class="docutils literal notranslate"><span class="pre">vr4mice_env</span></code> as the environment name, the above command would become as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>vr4mice_env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10.12<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>conda<span class="w"> </span>activate<span class="w"> </span>vr4mice_env
 </pre></div>
 </div>
-<p>Download our <a class="reference external" href="https://github.com/AdaptiveMotorControlLab/ml-agents.git">forked ml-agents repository</a> from <strong>AdaptiveMotorControlLab</strong> (<em>the <code class="docutils literal notranslate"><span class="pre">--branch</span> <span class="pre">release_21_fix</span></code> option will switch to the tag of the latest stable “fixed” release, which currently is <strong>21</strong> and is the one we use. Omitting that will get the main branch</em>):</p>
+</div>
+<p>Now, it is necessary to clone the <strong>FreelyMovingVR4Mice</strong> repository and install the <strong>vr4mice</strong> package that comes with it:</p>
 <ul>
-<li><p>Clone the repository:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--branch<span class="w"> </span>release_21_fix<span class="w"> </span>https://github.com/AdaptiveMotorControlLab/ml-agents.git
-</pre></div>
-</div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>ml-agents/
-</pre></div>
-</div>
-</li>
-</ul>
-<!-- - Inside this main directory, find the `ml-agents-envs/` sub-directory and open, with any text editor, the `setup.py` file found within it. Near the end of the file, find the list of required dependencies and modify the `numpy` version: change it from `"numpy==1.21.2"` to `"numpy==1.23.3"` then save. When that is done, run the following two commands in order: -->
-<ul>
-<li><p>Then, run the following two commands in order:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>./ml-agents-envs
-</pre></div>
-</div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>./ml-agents
-</pre></div>
-</div>
-</li>
-<li><p>To check the installation was successful, run the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mlagents-learn<span class="w"> </span>-h
-</pre></div>
-</div>
-<p>This should print-out the <strong>help</strong> manual on how to use the <code class="docutils literal notranslate"><span class="pre">mlagents-learn</span></code> command.\</p>
-<blockquote>
-<div><p><em>Note: you can ignore WARNINGS related to PyTorch</em></p>
-</div></blockquote>
-</li>
-</ul>
-<p>Finally go “up” one level (back to the location where you cloned the previous repository) and download the <strong>vr4mice</strong> source code:</p>
-<ul>
-<li><p>To return to previous folder from the command line you can run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>..
-</pre></div>
-</div>
-</li>
-<li><p>Clone the FreelyMovingVR4Mice repository:</p>
+<li><p>To clone the <strong>FreelyMovingVR4Mice</strong> repository:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/MMathisLab/FreelyMovingVR4Mice.git
 </pre></div>
 </div>
@@ -492,25 +464,24 @@ document.write(`
 </pre></div>
 </div>
 </li>
-<li><p>Choose a specific <strong>branch</strong>, if needed, by running:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>checkout<span class="w"> </span>branch_name
+<li><p>To choose a specific <strong>branch</strong> other than <code class="docutils literal notranslate"><span class="pre">main</span></code> or <code class="docutils literal notranslate"><span class="pre">master</span></code> (if needed):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>checkout<span class="w"> </span>&lt;name-of-the-branch&gt;
 </pre></div>
 </div>
 <blockquote>
-<div><p>By default, the <code class="docutils literal notranslate"><span class="pre">main</span></code> branch  will be used.</p>
+<div><p><em>When cloning a GitHub repository, the default branch will usually be the <code class="docutils literal notranslate"><span class="pre">main</span></code> (or <code class="docutils literal notranslate"><span class="pre">master</span></code>).</em></p>
 </div></blockquote>
 </li>
-<li><p>Install the <strong>vr4mice</strong> package  (<em>use <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code> if package is under development</em>):</p>
+<li><p>To install the <strong>vr4mice</strong> package  (<em>use <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code> instead if planning to actively develop the package and modify the source code</em>):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>.
 </pre></div>
 </div>
 </li>
-<li><p>To check everything installed successfully (assuming no <strong>ERRORS</strong> were displayed in the process), try to run the following in your conda environment:</p>
+</ul>
+<p>To check everything installed successfully (assuming no <strong>ERRORS</strong> were displayed in the process), try to run the following in your conda environment:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vr4mice
 </pre></div>
 </div>
-</li>
-</ul>
 <p>🎉 <strong>The GUI should appear on your screen!</strong> 🎉</p>
 <section id="install-dlclivegui">
 <h2>Install DLCliveGUI<a class="headerlink" href="#install-dlclivegui" title="Link to this heading">#</a></h2>
