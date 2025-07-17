@@ -1,3 +1,8 @@
+"""ROI Helper for Video Analysis
+This script helps in extracting and analyzing regions of interest (ROIs) from a video file.
+It allows for sample frame extraction, frame analysis with grid overlays, and testing of ROI extraction.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -82,7 +87,7 @@ class ROIHelper:
 
 
 def main():
-    video_path = "/home/celia/FreelyMovingVR4Mice/dj_pipeline/vr4mice/videos/Nightingale_2024-08-14_1.mkv"
+    video_path = "/app/vr4mice/videos/test_session/CeliaTest_2025_07_11.mkv"
 
     helper = ROIHelper(video_path)
 
@@ -93,7 +98,9 @@ def main():
     helper.analyze_frame_regions("sample_frame_02.jpg")
 
     # Test ROI coordinates
-    test_rois = {"sync_signal": (1900, 560, 20, 20), "visual_input": (0, 570, 925, 510)}
+    # NOTE(celia): should be that: (1900, 560, 20, 20) if full screen for the 4 quarters.
+    # on CeliaTest_2025_07_11.mkv it's (1850, 560, 20, 20).
+    test_rois = {"sync_signal": (1850, 560, 20, 20), "visual_input": (0, 570, 925, 510)}
 
     for roi_name, roi_coords in test_rois.items():
         helper.test_roi_extraction(roi_coords, roi_name)
