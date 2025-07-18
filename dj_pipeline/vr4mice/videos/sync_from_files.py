@@ -162,6 +162,7 @@ def plot_synchronization_results(sync_results):
         sample_frames = frame_indices[::step]
         sample_timepoints = timepoint_indices[::step]
 
+        # Get timestamps using the original data arrays
         sample_video_times = [
             original_video_timestamps[f]
             for f in sample_frames
@@ -182,7 +183,7 @@ def plot_synchronization_results(sync_results):
             )
             axes[2].set_xlabel("Video Time (s)")
             axes[2].set_ylabel("Photodiode Time (s)")
-            axes[2].set_title("Frame-to-Timepoint Mapping (original timestamps)")
+            axes[2].set_title("Frame-to-Timepoint Mapping")
             axes[2].legend()
             axes[2].grid(True, alpha=0.3)
             axes[2].set_xlim(0, time_limit)
@@ -237,65 +238,50 @@ Quality: {'✓ Excellent' if sync_results['sync_quality'] > 0.9 else '✓ Good' 
 
 def main():
     # ===== CONFIGURATION - UPDATE THESE PATHS =====
-    sync_signal_npy_path = (
-        "/app/sync_signal.npy"  # Path to your video sync signal (numpy file)
-    )
-    photodiode_pickle_path = (
-        "/app/photodiode_read.pkl"  # Path to your photodiode signal (pickle file)
-    )
-
-    # Sampling rates
+    sync_signal_pickle_path = "/app/sync_signal.pkl"  # Path to video sync signal DataFrame
+    photodiode_pickle_path = "/app/photodiode.pkl"  # Path to photodiode signal DataFrame
+    
+    # Sampling rates (for reference, but we'll use the timestamps from DataFrames)
     video_fps = 120.0  # Video frame rate in Hz
-    photodiode_sampling_rate = 1000.0  # Photodiode sampling rate in Hz (corrected)
-
+    photodiode_sampling_rate = 1000.0  # Photodiode sampling rate in Hz
+    
     print("=== Loading Signals ===")
-
-    # Load video sync signal from numpy file
-    print(f"Loading video sync signal from: {sync_signal_npy_path}")
+    
+    # Load video sync signal DataFrame
+    print(f"Loading video sync signal from: {sync_signal_pickle_path}")
     try:
-        video_sync_signal = np.load(sync_signal_npy_path)
-        print(f"✓ Video sync signal loaded: {len(video_sync_signal)} samples")
-        print(
-            f"  Signal range: {np.min(video_sync_signal):.3f} to {np.max(video_sync_signal):.3f}"
-        )
+        video_sync_df = pd.read_pickle(sync_signal_pickle_path)
+        print(f"✓ Video sync DataFrame loaded: {len(video_sync_df)} rows")
+        print(f"  Columns: {list(video_sync_df.columns)}")
+        print(f"  Duration: {video_sync_df['timestamp'].max():.2f} seconds")
+        
+        # Extract signal and timestamps
+        video_timestamps = video_sync_df['timestamp'].values
+        video_signal = video_sync_df['signal'].values
+        
+        print(f"  Signal range: {np.min(video_signal)} to {np.max(video_signal)}")
+        
     except FileNotFoundError:
-        print(f"✗ Error: Video sync signal file not found: {sync_signal_npy_path}")
+        print(f"✗ Error: Video sync signal file not found: {sync_signal_pickle_path}")
         return
     except Exception as e:
         print(f"✗ Error loading video sync signal: {e}")
         return
-
-    # Load photodiode signal from pickle file
+    
+    # Load photodiode signal DataFrame
     print(f"Loading photodiode signal from: {photodiode_pickle_path}")
     try:
-        photodiode_data = pd.read_pickle(photodiode_pickle_path)
-
-        # Handle different data formats
-        if isinstance(photodiode_data, pd.DataFrame):
-            # If it's a DataFrame, extract the signal column
-            if "photodiode_read" in photodiode_data.columns:
-                photodiode_signal = photodiode_data["photodiode_read"].values
-                print(f"  Using 'photodiode_read' column")
-            else:
-                # Use first numeric column
-                numeric_cols = photodiode_data.select_dtypes(
-                    include=[np.number]
-                ).columns
-                if len(numeric_cols) > 0:
-                    photodiode_signal = photodiode_data[numeric_cols[0]].values
-                    print(f"  Using column '{numeric_cols[0]}' as photodiode signal")
-                else:
-                    raise ValueError("No numeric columns found in photodiode DataFrame")
-        else:
-            # If it's a numpy array or other format
-            photodiode_signal = np.array(photodiode_data)
-            print(f"  Loaded as numpy array")
-
-        print(f"✓ Photodiode signal loaded: {len(photodiode_signal)} samples")
-        print(
-            f"  Signal range: {np.min(photodiode_signal):.3f} to {np.max(photodiode_signal):.3f}"
-        )
-
+        photodiode_df = pd.read_pickle(photodiode_pickle_path)
+        print(f"✓ Photodiode DataFrame loaded: {len(photodiode_df)} rows")
+        print(f"  Columns: {list(photodiode_df.columns)}")
+        print(f"  Duration: {photodiode_df['time_stamp'].max():.2f} seconds")
+        
+        # Extract signal and timestamps
+        photodiode_timestamps = photodiode_df['time_stamp'].values
+        photodiode_signal = photodiode_df['photodiode_read'].values
+        
+        print(f"  Signal range: {np.min(photodiode_signal.astype(int))} to {np.max(photodiode_signal.astype(int))}")
+        
     except FileNotFoundError:
         print(f"✗ Error: Photodiode signal file not found: {photodiode_pickle_path}")
         return
@@ -304,105 +290,47 @@ def main():
         return
 
     print("\n=== Processing Signals ===")
-
-    # Create timestamps for original signals
-    video_timestamps_original = np.arange(len(video_sync_signal)) / video_fps
-    photodiode_timestamps = np.arange(len(photodiode_signal)) / photodiode_sampling_rate
-
-    print(f"Original video duration: {video_timestamps_original[-1]:.2f} seconds")
-    print(f"Photodiode duration: {photodiode_timestamps[-1]:.2f} seconds")
-
-    # Resample video signal to match photodiode sampling rate
-    print(
-        f"Resampling video signal from {video_fps} Hz to {photodiode_sampling_rate} Hz..."
-    )
-
-    # Create new time array for resampled video at photodiode sampling rate
-    video_duration = len(video_sync_signal) / video_fps
-    video_timestamps_resampled = np.arange(
-        0, video_duration, 1 / photodiode_sampling_rate
-    )
-
-    # Interpolate video signal to match photodiode sampling rate
-    from scipy.interpolate import interp1d
-
-    video_interpolator = interp1d(
-        video_timestamps_original,
-        video_sync_signal,
-        kind="linear",
-        bounds_error=False,
-        fill_value="extrapolate",
-    )
-    video_sync_resampled = video_interpolator(video_timestamps_resampled)
-
-    print(f"Resampled video signal: {len(video_sync_resampled)} samples")
-    print(f"Resampled video duration: {video_timestamps_resampled[-1]:.2f} seconds")
-
-    # Binarize resampled video sync signal
-    video_signal_min = np.min(video_sync_resampled)
-    video_signal_max = np.max(video_sync_resampled)
-    video_threshold = video_signal_min + (video_signal_max - video_signal_min) * 0.5
-    video_binary = (video_sync_resampled > video_threshold).astype(int)
-    print(f"Video signal binarized with threshold: {video_threshold:.3f}")
-    print(
-        f"  Binary signal: {np.sum(video_binary)} high samples ({np.mean(video_binary)*100:.1f}%)"
-    )
-
-    # Binarize photodiode signal if not already binary
-    if not np.all(np.isin(photodiode_signal, [0, 1])):
-        photodiode_threshold = np.mean(photodiode_signal) + 0.5 * np.std(
-            photodiode_signal
-        )
-        photodiode_binary = (photodiode_signal > photodiode_threshold).astype(int)
-        print(f"Photodiode signal binarized with threshold: {photodiode_threshold:.3f}")
-    else:
-        photodiode_binary = photodiode_signal.astype(int)
-        print("Photodiode signal already binary")
-
-    print(
-        f"  Binary signal: {np.sum(photodiode_binary)} high samples ({np.mean(photodiode_binary)*100:.1f}%)"
-    )
-
-    # Now both signals are at the same sampling rate
-    print(f"Both signals now at {photodiode_sampling_rate} Hz sampling rate")
-
+    
+    # Since we have timestamps, we don't need to create them from scratch
+    print(f"Video signal duration: {video_timestamps[-1]:.2f} seconds")
+    print(f"Photodiode signal duration: {photodiode_timestamps[-1]:.2f} seconds")
+    
+    # Convert video signal to binary if needed (it should already be binary)
+    video_binary = video_signal.astype(int)
+    print(f"Video binary signal: {np.sum(video_binary)} high samples ({np.mean(video_binary)*100:.1f}%)")
+    
+    # Convert photodiode signal to binary if needed (it should already be binary)
+    photodiode_binary = photodiode_signal.astype(int)
+    print(f"Photodiode binary signal: {np.sum(photodiode_binary)} high samples ({np.mean(photodiode_binary)*100:.1f}%)")
+    
     print("\n=== Starting Synchronization from 10 Seconds ===")
-
-    # Start synchronization from 10 seconds to account for photodiode recording delay
-    # but keep original frame indices for mapping
+    
+    # Find signals starting from 10 seconds
     start_time = 10.0  # seconds
-
-    # Find indices for starting synchronization
-    video_start_idx = int(start_time * photodiode_sampling_rate)
-    photodiode_start_idx = int(start_time * photodiode_sampling_rate)
-
-    # Get signals starting from 10 seconds for synchronization
-    if video_start_idx < len(video_timestamps_resampled):
-        video_timestamps_sync = video_timestamps_resampled[video_start_idx:]
-        video_binary_sync = video_binary[video_start_idx:]
-        print(
-            f"Video synchronization starting from index {video_start_idx} ({video_timestamps_sync[0]:.3f}s)"
-        )
+    
+    # Get video signal starting from 10 seconds
+    video_start_mask = video_timestamps >= start_time
+    if np.any(video_start_mask):
+        video_timestamps_sync = video_timestamps[video_start_mask]
+        video_binary_sync = video_binary[video_start_mask]
+        print(f"Video synchronization starting from {video_timestamps_sync[0]:.3f}s")
+        print(f"Video sync signal: {len(video_timestamps_sync)} samples")
     else:
         print("Warning: Video signal is shorter than 10 seconds, using original signal")
-        video_timestamps_sync = video_timestamps_resampled
+        video_timestamps_sync = video_timestamps
         video_binary_sync = video_binary
-        video_start_idx = 0
-
+    
     # Get photodiode signal starting from 10 seconds
-    if photodiode_start_idx < len(photodiode_timestamps):
-        photodiode_timestamps_sync = photodiode_timestamps[photodiode_start_idx:]
-        photodiode_binary_sync = photodiode_binary[photodiode_start_idx:]
-        print(
-            f"Photodiode synchronization starting from index {photodiode_start_idx} ({photodiode_timestamps_sync[0]:.3f}s)"
-        )
+    photodiode_start_mask = photodiode_timestamps >= start_time
+    if np.any(photodiode_start_mask):
+        photodiode_timestamps_sync = photodiode_timestamps[photodiode_start_mask]
+        photodiode_binary_sync = photodiode_binary[photodiode_start_mask]
+        print(f"Photodiode synchronization starting from {photodiode_timestamps_sync[0]:.3f}s")
+        print(f"Photodiode sync signal: {len(photodiode_timestamps_sync)} samples")
     else:
-        print(
-            "Warning: Photodiode signal is shorter than 10 seconds, using original signal"
-        )
+        print("Warning: Photodiode signal is shorter than 10 seconds, using original signal")
         photodiode_timestamps_sync = photodiode_timestamps
         photodiode_binary_sync = photodiode_binary
-        photodiode_start_idx = 0
 
     print("\n=== Synchronizing Signals ===")
 
@@ -419,28 +347,29 @@ def main():
         print("✗ Error: No rising edges found in one or both signals")
         return
 
-    # Use first photodiode rising edge as reference
+    # Use first photodiode rising edge as reference and find the video edge just before it
     first_photodiode_edge = photodiode_rising_edges[0]
-    print(
-        f"Using first photodiode rising edge as reference: {first_photodiode_edge:.3f}s"
-    )
-
-    # Find the video rising edge that occurs closest to the photodiode reference time
-    # This handles the case where video signal starts before photodiode signal
-    video_edge_diffs = np.abs(np.array(video_rising_edges) - first_photodiode_edge)
-    closest_video_edge_idx = np.argmin(video_edge_diffs)
-    corresponding_video_edge = video_rising_edges[closest_video_edge_idx]
-
-    # Calculate time offset based on photodiode reference
+    
+    # Find the video rising edge that occurs just before the first photodiode edge
+    # Look for video edges that are before the photodiode edge
+    video_edges_before = video_rising_edges[video_rising_edges < first_photodiode_edge]
+    
+    if len(video_edges_before) == 0:
+        print("✗ Error: No video rising edges found before the first photodiode edge")
+        print(f"  First photodiode edge: {first_photodiode_edge:.3f}s")
+        print(f"  Video edges: {video_rising_edges[:5] if len(video_rising_edges) > 0 else 'None'}")
+        return
+    
+    # Use the last video edge before the photodiode edge (closest preceding edge)
+    corresponding_video_edge = video_edges_before[-1]
+    
+    # Calculate time offset based on aligning these edges
     time_offset = corresponding_video_edge - first_photodiode_edge
-
+    
     print(f"Photodiode-referenced synchronization:")
-    print(f"  Reference photodiode edge: {first_photodiode_edge:.3f}s")
-    print(f"  Corresponding video edge: {corresponding_video_edge:.3f}s")
+    print(f"  First photodiode edge: {first_photodiode_edge:.3f}s")
+    print(f"  Corresponding video edge (just before): {corresponding_video_edge:.3f}s")
     print(f"  Time offset: {time_offset:.3f}s")
-    print(
-        f"  Video edge index used: {closest_video_edge_idx} (out of {len(video_rising_edges)} video edges)"
-    )
 
     # Validate synchronization quality
     sync_quality = validate_edge_synchronization(
@@ -462,43 +391,28 @@ def main():
         # Apply offset to get corresponding video time
         video_time = photodiode_time + time_offset
 
-        # Find closest resampled video frame
-        resampled_frame_idx = None
+        # Find closest video frame using DataFrame
+        video_frame_idx = None
         original_frame_idx = None
 
-        if (
-            video_time >= video_timestamps_resampled[0]
-            and video_time <= video_timestamps_resampled[-1]
-        ):
-            # Find closest index in resampled video timestamps
-            closest_resampled_idx = np.argmin(
-                np.abs(video_timestamps_resampled - video_time)
-            )
-            resampled_frame_idx = closest_resampled_idx
+        if video_time >= video_timestamps[0] and video_time <= video_timestamps[-1]:
+            # Find closest timestamp in video DataFrame
+            time_diffs = np.abs(video_timestamps - video_time)
+            closest_idx = np.argmin(time_diffs)
+            
+            # Get the original frame index from the DataFrame
+            original_frame_idx = video_sync_df.iloc[closest_idx]['frame']
+            video_frame_idx = closest_idx
 
-            # Convert resampled frame index to original video frame index
-            # Since resampled is at 1000Hz and original is at 120Hz
-            original_frame_idx = int(
-                closest_resampled_idx * video_fps / photodiode_sampling_rate
-            )
+            frame_to_timepoint_mapping[closest_idx] = timepoint_idx
+            timepoint_to_frame_mapping[timepoint_idx] = closest_idx
 
-            # Make sure original frame index is within bounds
-            if original_frame_idx >= len(video_timestamps_original):
-                original_frame_idx = len(video_timestamps_original) - 1
-
-            frame_to_timepoint_mapping[closest_resampled_idx] = timepoint_idx
-            timepoint_to_frame_mapping[timepoint_idx] = closest_resampled_idx
-
-        # Add to mapping data (photodiode timepoint, resampled frame, original frame)
+        # Add to mapping data (photodiode timepoint, video frame, original frame)
         photodiode_mapping_data.append(
             [
                 timepoint_idx,  # photodiode timepoint index
-                resampled_frame_idx
-                if resampled_frame_idx is not None
-                else np.nan,  # resampled video frame
-                original_frame_idx
-                if original_frame_idx is not None
-                else np.nan,  # original video frame
+                video_frame_idx if video_frame_idx is not None else np.nan,  # video frame
+                original_frame_idx if original_frame_idx is not None else np.nan,  # original video frame
             ]
         )
 
@@ -508,7 +422,7 @@ def main():
     # Export photodiode-based mapping to CSV
     if len(photodiode_mapping_data) > 0:
         mapping_array = np.array(photodiode_mapping_data)
-        header = "photodiode_timepoint_index,resampled_video_frame_index,original_video_frame_index"
+        header = "photodiode_timepoint_index,video_frame_index,original_video_frame_index"
 
         # Handle NaN values for CSV output
         mapping_df = pd.DataFrame(mapping_array, columns=header.split(","))
@@ -520,10 +434,8 @@ def main():
         # Also create the original frame-based mapping for backward compatibility
         frame_mapping_data = []
         for frame_idx, timepoint_idx in frame_to_timepoint_mapping.items():
-            # Convert resampled frame to original frame
-            original_frame_idx = int(frame_idx * video_fps / photodiode_sampling_rate)
-            if original_frame_idx >= len(video_timestamps_original):
-                original_frame_idx = len(video_timestamps_original) - 1
+            # Get the original frame index from the video DataFrame
+            original_frame_idx = video_sync_df.iloc[frame_idx]['frame']
             frame_mapping_data.append([original_frame_idx, timepoint_idx])
 
         if len(frame_mapping_data) > 0:
@@ -553,7 +465,7 @@ def main():
         "video_timestamps": video_timestamps_sync,
         "photodiode_binary": photodiode_binary_sync,
         "video_binary": video_binary_sync,
-        "original_video_timestamps": video_timestamps_resampled,  # Original timestamps for mapping
+        "original_video_timestamps": video_timestamps,  # Original timestamps for mapping
         "original_photodiode_timestamps": photodiode_timestamps,
     }
 
@@ -567,15 +479,12 @@ def main():
     print("Photodiode timepoint -> Video frame:")
     for timepoint_idx in example_timepoints:
         if timepoint_idx < len(photodiode_timestamps):
-            resampled_frame_idx = timepoint_to_frame_mapping.get(timepoint_idx, None)
-            if resampled_frame_idx is not None:
-                original_frame_idx = int(
-                    resampled_frame_idx * video_fps / photodiode_sampling_rate
-                )
-                if original_frame_idx >= len(video_timestamps_original):
-                    original_frame_idx = len(video_timestamps_original) - 1
+            video_frame_idx = timepoint_to_frame_mapping.get(timepoint_idx, None)
+            if video_frame_idx is not None:
+                original_frame_idx = video_sync_df.iloc[video_frame_idx]['frame']
+                frame_time = video_sync_df.iloc[video_frame_idx]['timestamp']
                 print(
-                    f"  Timepoint {timepoint_idx} ({photodiode_timestamps[timepoint_idx]:.3f}s) -> Original frame {original_frame_idx} ({original_frame_idx/video_fps:.3f}s)"
+                    f"  Timepoint {timepoint_idx} ({photodiode_timestamps[timepoint_idx]:.3f}s) -> Original frame {original_frame_idx} ({frame_time:.3f}s)"
                 )
             else:
                 print(
@@ -586,23 +495,20 @@ def main():
     example_frames = [100, 500, 1000, 2000, 5000]
     print("Original video frame -> Photodiode timepoint:")
     for original_frame_idx in example_frames:
-        if original_frame_idx < len(video_timestamps_original):
-            # Convert to resampled frame index
-            resampled_frame_idx = int(
-                original_frame_idx * photodiode_sampling_rate / video_fps
-            )
-            if resampled_frame_idx < len(video_timestamps_resampled):
-                timepoint_idx = frame_to_timepoint_mapping.get(
-                    resampled_frame_idx, None
+        # Find the DataFrame row with this original frame index
+        frame_rows = video_sync_df[video_sync_df['frame'] == original_frame_idx]
+        if len(frame_rows) > 0:
+            video_frame_idx = frame_rows.index[0]
+            timepoint_idx = frame_to_timepoint_mapping.get(video_frame_idx, None)
+            if timepoint_idx is not None:
+                frame_time = frame_rows.iloc[0]['timestamp']
+                print(
+                    f"  Original frame {original_frame_idx} ({frame_time:.3f}s) -> Timepoint {timepoint_idx} ({photodiode_timestamps[timepoint_idx]:.3f}s)"
                 )
-                if timepoint_idx is not None:
-                    print(
-                        f"  Original frame {original_frame_idx} ({original_frame_idx/video_fps:.3f}s) -> Timepoint {timepoint_idx} ({photodiode_timestamps[timepoint_idx]:.3f}s)"
-                    )
-                else:
-                    print(
-                        f"  Original frame {original_frame_idx} ({original_frame_idx/video_fps:.3f}s) -> No corresponding timepoint"
-                    )
+            else:
+                print(
+                    f"  Original frame {original_frame_idx} -> No corresponding timepoint"
+                )
 
     print("\n=== Summary ===")
     print(f"✓ Successfully synchronized {len(frame_to_timepoint_mapping)} frames")
@@ -616,7 +522,7 @@ def main():
     print(f"\n=== Usage Example ===")
     print(f"# Primary CSV (photodiode_timepoint_mapping.csv) structure:")
     print(f"# - photodiode_timepoint_index: Index in photodiode signal")
-    print(f"# - resampled_video_frame_index: Frame index in resampled video (1000Hz)")
+    print(f"# - video_frame_index: Frame index in video DataFrame")
     print(f"# - original_video_frame_index: Frame index in original video (120fps)")
     print(f"# - NaN values indicate no corresponding frame for that timepoint")
     print(f"# Total photodiode timepoints: {len(photodiode_timestamps)}")
