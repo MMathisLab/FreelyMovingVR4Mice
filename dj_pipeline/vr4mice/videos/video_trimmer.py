@@ -590,32 +590,22 @@ class VideoTrimmer:
 
 def main():
     # Video path
-    input_video = "/app/vr4mice/videos/test_session/CeliaTest_2025_07_11.mkv"
+    input_video = "/app/vr4mice/videos/full_videos_2/2025-07-18 15-58-26.mkv"
 
     # ROI coordinates for your setup -- obtained using the roi_helper.py script
     visual_roi = (0, 540, 960, 540)  # Bottom left quarter - visual input
-    sync_roi = (
-        1850,
-        560,
-        20,
-        20,
-    )  # (1900, 560, 20, 20)  # Top right of bottom right quarter - sync signal
+    sync_roi = (1900, 540, 20, 20)  # Top right of bottom right quarter - sync signal
 
+    # (1850,
+    #     560,
+    #     20,
+    #     20,)
+    
     # Create trimmer (this will automatically check frame rate)
     trimmer = VideoTrimmer(input_video)
 
     # Get comprehensive video information
     video_info = trimmer.get_video_info()
-
-    # Perform additional frame rate check with custom parameters if needed
-    # print("\n=== Custom Frame Rate Check ===")
-    # if not trimmer.check_frame_rate(expected_fps=120.0, tolerance=0.5):
-    #     print("Frame rate check failed - you may want to verify the video file")
-    #     # You can still proceed or exit based on your requirements
-    #     response = input("Continue anyway? (y/n): ")
-    #     if response.lower() != 'y':
-    #         print("Exiting...")
-    #         return
 
     # Auto-trim with validation - now saves two ROI videos
     session_start, session_end = trimmer.auto_trim_video(
