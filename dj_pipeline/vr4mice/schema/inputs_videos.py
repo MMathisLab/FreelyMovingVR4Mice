@@ -44,8 +44,12 @@ class ProcessedVideo(dj.Computed):
         video_path = (RawVideo & key).fetch1("video_path")
 
         # Define ROIs
+        # The visual ROI should correspond the bottom right screen of the OBS video
         visual_roi = (0, 540, 950, 540)
-        sync_roi = (1900, 540, 20, 20)
+        # NOTE(celia) 2x2 pixel of the ROI for lighter files
+        # The sync ROI is 30 x 30 pixels in the top left corner of bottom left
+        # screen on the OBS video
+        sync_roi = (1900, 540, 2, 2)
 
         # Process
         trimmer = VideoTrimmer(video_path)
@@ -183,9 +187,9 @@ class AlignedVideoFrame(dj.Computed):
                 "send_time": (SignalsPhotodiodeAligned() & key).fetch1("send_time"),
             }
         )
-        state_dict = (State() & key).fetch("step", "step_time", "dlc_read_time", as_dict=True)[
-            0
-        ]
+        state_dict = (State() & key).fetch(
+            "step", "step_time", "dlc_read_time", as_dict=True
+        )[0]
 
         resampled_data = sync_video_to_game_time(frames_and_dlc_aligned, state_dict)
 
