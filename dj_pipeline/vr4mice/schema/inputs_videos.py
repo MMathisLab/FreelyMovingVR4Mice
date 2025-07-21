@@ -183,7 +183,7 @@ class AlignedVideoFrame(dj.Computed):
                 "send_time": (SignalsPhotodiodeAligned() & key).fetch1("send_time"),
             }
         )
-        state_dict = (State() & key).fetch("step_time", "dlc_read_time", as_dict=True)[
+        state_dict = (State() & key).fetch("step", "step_time", "dlc_read_time", as_dict=True)[
             0
         ]
 
@@ -193,6 +193,7 @@ class AlignedVideoFrame(dj.Computed):
         self.insert1(
             {
                 **key,
+                "step": state_dict["step"],
                 "step_time": resampled_data["step_time"],
                 "video_frame": resampled_data["video_frame"],
             }
