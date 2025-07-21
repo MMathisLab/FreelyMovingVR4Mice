@@ -1,42 +1,21 @@
-"""Video Trimmer for Freely Moving VR4Mice
-This script trims a video file to extract specific regions of interest (ROIs) defined by the user
-in roi_helper.py. Then it detects session start and end frames based on visual input and sync signal ROIs,
-and creates trimmed videos for both ROIs. It supports multiple trimming methods including direct cropping,
-fast copy-based trimming, and OpenCV-based trimming as a fallback.
-"""
 import os
-
 import numpy as np
-
 import cv2
+import pandas as pd
 
 BLACK_THRESHOLD = 5  # Default threshold for detecting black pixels
 CONSECUTIVE_FRAMES = 5
-SESSION_START_BUFFER = 120  # Search buffer in sec for session start detection
+SESSION_START_BUFFER = 60  # Search buffer in sec for session start detection
 
-# NOTE(celia): all recordings are 120 fps (frame rate per second).
-
-
-def extract_frames(video_path, frame_indices):
-    cap = cv2.VideoCapture(video_path)
-    frames = []
-    for idx in frame_indices:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
-        ret, frame = cap.read()
-        if ret:
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frames.append(frame_rgb)
-    cap.release()
-    return frames
+# NOTE(celia): all recordings should be 120 fps (frame rate per second).
 
 
 class VideoTrimmer:
-    def __init__(self, input_video_path, output_video_path=None):
+    def __init__(self, input_video_path):
         """Initialize video trimmer
 
         Args:
             input_video_path: Path to input video file
-            output_video_path: Path for output trimmed video (optional)
         """
         self.input_path = input_video_path
         self.cap = cv2.VideoCapture(input_video_path)
@@ -46,11 +25,6 @@ class VideoTrimmer:
         self.total_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-        # print(f"Input video: {self.input_path}")
-        # print(
-        #     f"Video properties: {self.width}x{self.height}, {self.fps} fps, {self.total_frames} frames"
-        # )
 
     def _frame_to_time_str(self, frame_idx):
         """Convert frame index to time string (MM:SS.s format)"""
@@ -84,18 +58,8 @@ class VideoTrimmer:
         center_x = x + w // 2 - sample_center_size // 2
         center_y = y + h // 2 - sample_center_size // 2
 
-        # print(
-        #     f"Analyzing visual ROI center region: ({center_x}, {center_y}, {sample_center_size}, {sample_center_size})"
-        # )
-
         # Calculate search ranges
-        start_search_frame = int(
-            SESSION_START_BUFFER * self.fps
-        )  # Start from 10th second
-
-        # print(
-        #     f"Searching for session start from frame {start_search_frame} ({self._frame_to_time_str(start_search_frame)})"
-        # )
+        start_search_frame = int(SESSION_START_BUFFER * self.fps)
 
         # Find session start: check every frame from 10th second onwards for consecutive session frames
         session_start = None
@@ -120,18 +84,9 @@ class VideoTrimmer:
                     if consecutive_session_count >= consecutive_frames:
                         # Found sustained session activity, go back to find actual start
                         session_start = frame_idx - consecutive_frames + 1
-                        # print(
-                        #     f"Session start found at frame {session_start} ({self._frame_to_time_str(session_start)})"
-                        # )
                         break
                 else:
                     consecutive_session_count = 0
-
-            # Progress update every 1000 frames
-            # if frame_idx % 1000 == 0:
-            #     print(
-            #         f"  Checking frame {frame_idx} ({self._frame_to_time_str(frame_idx)})..."
-            #     )
 
         if session_start is None:
             raise ValueError("Could not detect session start.")
@@ -156,16 +111,7 @@ class VideoTrimmer:
                 # If this frame is above threshold, it's session content - this is our end
                 if mean_intensity > black_threshold:
                     session_end = frame_idx
-                    # print(
-                    #     f"Session end found at frame {session_end} ({self._frame_to_time_str(session_end)})"
-                    # )
                     break
-
-            # Progress update every 1000 frames
-            # if frame_idx % 1000 == 0:
-            #     print(
-            #         f"  Checking frame {frame_idx} ({self._frame_to_time_str(frame_idx)})..."
-            #     )
 
         if session_end is None:
             raise ValueError(f"Could not detect session end.")
@@ -173,20 +119,6 @@ class VideoTrimmer:
         # Ensure session_end is after session_start
         if session_end <= session_start:
             raise ValueError("Session end before session start.")
-
-        session_duration_sec = (session_end - session_start) / self.fps
-
-        # print(f"\nDetected session boundaries:")
-        # print(
-        #     f"  Start frame: {session_start} ({self._frame_to_time_str(session_start)})"
-        # )
-        # print(f"  End frame: {session_end} ({self._frame_to_time_str(session_end)})")
-        # print(
-        #     f"  Duration: {session_duration_sec:.1f}s ({session_end-session_start} frames)"
-        # )
-        # print(
-        #     f"  Frames to remove: {session_start} (start) + {self.total_frames-session_end} (end)"
-        # )
 
         return session_start, session_end
 
@@ -284,10 +216,6 @@ class VideoTrimmer:
         """
         import subprocess
 
-        # print(
-        #     f"\nTrimming video from frame {session_start} ({self._frame_to_time_str(session_start)}) to frame {session_end} ({self._frame_to_time_str(session_end)})..."
-        # )
-
         # Calculate time ranges
         start_time = session_start / self.fps
         duration = (session_end - session_start) / self.fps
@@ -302,13 +230,7 @@ class VideoTrimmer:
         visual_x, visual_y, visual_w, visual_h = visual_roi_coords
         sync_x, sync_y, sync_w, sync_h = sync_roi_coords
 
-        # print(f"Visual ROI: ({visual_x}, {visual_y}, {visual_w}, {visual_h})")
-        # print(f"Sync ROI: ({sync_x}, {sync_y}, {sync_w}, {sync_h})")
-
         try:
-            # Process both ROIs in parallel using subprocess
-            # print("Processing both ROIs simultaneously...")
-
             # Visual ROI command
             visual_cmd = [
                 "ffmpeg",
@@ -371,18 +293,6 @@ class VideoTrimmer:
                 print(f"Sync ROI error: {stderr2.decode()}")
                 return False
 
-            # Get output file sizes
-            visual_size_mb = os.path.getsize(visual_output_path) / (1024 * 1024)
-            sync_size_mb = os.path.getsize(sync_output_path) / (1024 * 1024)
-            input_size_mb = os.path.getsize(self.input_path) / (1024 * 1024)
-
-            # print(f"\nTrimming completed!")
-            # print(f"  Input file: {input_size_mb:.1f} MB")
-            # print(
-            #     f"  Visual ROI output: {visual_size_mb:.1f} MB - {visual_output_path}"
-            # )
-            # print(f"  Sync ROI output: {sync_size_mb:.1f} MB - {sync_output_path}")
-
             return True, visual_output_path, sync_output_path
 
         except Exception as e:
@@ -434,26 +344,204 @@ class VideoTrimmer:
             self.cap.release()
 
 
-def main():
-    # Video path
-    input_video = "/app/vr4mice/videos/full_videos_2/2025-07-18 15-58-26.mkv"
+def extract_sync_signal_from_video(video_path):
+    """
+    Extract sync signal from video — returns arrays for frame IDs, timestamps, and binary signal.
+    """
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        raise ValueError(f"Could not open video file: {video_path}")
 
-    # ROI coordinates for your setup -- obtained using the roi_helper.py script
-    visual_roi = (0, 540, 950, 540)  # Bottom left quarter - visual input
-    sync_roi = (1900, 540, 20, 20)  # Top right of bottom right quarter - sync signal
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    # Create trimmer (this will automatically check frame rate)
-    trimmer = VideoTrimmer(input_video)
+    frame_ids = []
+    timestamps = []
+    signals = []
 
-    # Auto-trim with validation - now saves two ROI videos
-    session_start, session_end = trimmer.auto_trim_video(
-        visual_roi,
-        sync_roi,
-        black_threshold=BLACK_THRESHOLD,
-        sample_center_size=20,
-        validate=True,
+    for frame_count in range(total_frames):
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        raw_val = frame[0, 0].sum()
+        signal = 0 if raw_val < 400 else 1
+        timestamp = frame_count / fps
+
+        frame_ids.append(frame_count)
+        timestamps.append(timestamp)
+        signals.append(signal)
+
+    cap.release()
+
+    return (
+        np.array(frame_ids, dtype=int),
+        np.array(timestamps, dtype=float),
+        np.array(signals, dtype=int),
+        fps,
+        total_frames,
     )
 
 
-if __name__ == "__main__":
-    main()
+def find_rising_edges(time, signal, threshold=0.5):
+    """Find rising edges in binary signal"""
+    rising_edges = []
+    for i in range(1, len(signal)):
+        if signal[i - 1] < threshold and signal[i] >= threshold:
+            rising_edges.append(time[i])
+    return np.array(rising_edges)
+
+
+def sync_video_to_photodiode(video_sync_df, photodiode_df):
+    """
+    Synchronize video sync signal with photodiode signal.
+
+    Args:
+        video_sync_df: DataFrame containing video sync timestamps and signals.
+        photodiode_signal: DataFrame containing photodiode timestamps and signals.
+
+    Returns:
+        DataFrame with synchronized timestamps and signals.
+    """
+    video_timestamps = video_sync_df["timestamp"].values
+    video_signal = video_sync_df["signal"].values
+
+    photodiode_timestamps = photodiode_df["time_stamp"].values
+    photodiode_signal = photodiode_df["photodiode_read"].values
+
+    # Convert signals to binary
+    video_binary = video_signal.astype(int)
+    photodiode_binary = photodiode_signal.astype(int)
+
+    # Find rising edges in both signals
+    photodiode_rising_edges = find_rising_edges(
+        photodiode_timestamps, photodiode_binary
+    )
+    video_rising_edges = find_rising_edges(video_timestamps, video_binary)
+
+    if len(photodiode_rising_edges) == 0 or len(video_rising_edges) == 0:
+        return
+
+    # Use first photodiode rising edge as reference
+    first_photodiode_edge = photodiode_rising_edges[0]
+    video_edges_before = video_rising_edges[video_rising_edges < first_photodiode_edge]
+
+    if len(video_edges_before) == 0:
+        return
+
+    corresponding_video_edge = video_edges_before[-1]
+    time_offset = corresponding_video_edge - first_photodiode_edge
+
+    # Create photodiode-based mapping
+    photodiode_mapping_data = []
+
+    for timepoint_idx, photodiode_time in enumerate(photodiode_timestamps):
+        video_time = photodiode_time + time_offset
+        video_frame_idx = None
+        original_frame_idx = None
+
+        if video_time >= video_timestamps[0] and video_time <= video_timestamps[-1]:
+            time_diffs = np.abs(video_timestamps - video_time)
+            closest_idx = np.argmin(time_diffs)
+            original_frame_idx = video_sync_df.iloc[closest_idx]["frame"]
+            video_frame_idx = closest_idx
+
+        video_frame_idx = video_frame_idx if video_frame_idx is not None else np.nan
+        original_frame_idx = (
+            original_frame_idx if original_frame_idx is not None else np.nan
+        )
+
+    return timepoint_idx, video_frame_idx, original_frame_idx
+
+
+def sync_video_to_game_time(sync_df, time_dict):
+    """
+    Map video frames to step_time intervals based on corresponding dlc_read_time.
+
+    Parameters:
+    -----------
+    sync_df : pandas.DataFrame
+        Synchronized data with columns: video_frame_index, send_time
+    time_dict : dict
+        Dictionary with keys 'dlc_read_time' and 'step_time' containing arrays of corresponding times
+
+    Returns:
+    --------
+    pandas.DataFrame
+        DataFrame with columns: step_time, dlc_read_time, send_time, video_frame
+    """
+
+    # Extract arrays from synchronized data
+    sync_send_times = sync_df["send_time"].values
+    video_frames = sync_df["original_frame_idx"].values
+
+    # Extract time arrays from dictionary
+    dict_dlc_times = np.array(time_dict["dlc_read_time"])
+    dict_step_times = np.array(time_dict["step_time"])
+
+    # Calculate step rate for tolerance
+    step_rate = (
+        1.0 / np.mean(np.diff(dict_step_times)) if len(dict_step_times) > 1 else 10.0
+    )
+
+    # Create mapping for ALL step_times
+    step_times_list = []
+    send_times_list = []
+    dlc_read_times_list = []
+    video_frames_list = []
+
+    for i, step_time in enumerate(dict_step_times):
+        step_times_list.append(step_time)
+
+        # Get corresponding dlc_read_time for this step_time
+        if len(dict_dlc_times) > 1:
+            dlc_index = i * (len(dict_dlc_times) - 1) / (len(dict_step_times) - 1)
+            dlc_index_floor = int(np.floor(dlc_index))
+            dlc_index_ceil = min(dlc_index_floor + 1, len(dict_dlc_times) - 1)
+
+            if dlc_index_floor == dlc_index_ceil:
+                corresponding_dlc_time = dict_dlc_times[dlc_index_floor]
+            else:
+                weight = dlc_index - dlc_index_floor
+                corresponding_dlc_time = (
+                    dict_dlc_times[dlc_index_floor] * (1 - weight)
+                    + dict_dlc_times[dlc_index_ceil] * weight
+                )
+        else:
+            corresponding_dlc_time = dict_dlc_times[0]
+
+        dlc_read_times_list.append(corresponding_dlc_time)
+
+        # Find video frames with send_time close to this step_time
+        time_tolerance = 1.0 / step_rate
+        time_diffs = np.abs(sync_send_times - step_time)
+        close_frames_mask = time_diffs <= time_tolerance
+
+        if np.any(close_frames_mask):
+            close_frame_indices = video_frames[close_frames_mask]
+            close_send_times = sync_send_times[close_frames_mask]
+
+            # Take the closest frame
+            closest_idx = np.argmin(time_diffs[close_frames_mask])
+            best_frame = close_frame_indices[closest_idx]
+            best_send_time = close_send_times[closest_idx]
+
+            video_frames_list.append(best_frame)
+            send_times_list.append(best_send_time)
+        else:
+            video_frames_list.append(np.nan)
+            send_times_list.append(np.nan)
+
+    # Create resampled dataset
+    resampled_data = pd.DataFrame(
+        {
+            "step_time": step_times_list,  # NOTE(celia): this is the game time
+            "dlc_read_time": dlc_read_times_list,
+            "send_time": send_times_list,  # NOTE(celia): should be the same as dlc_read_time
+            "video_frame": video_frames_list,
+        }
+    )
+
+    return resampled_data.sort_values("step_time").reset_index(drop=True)
