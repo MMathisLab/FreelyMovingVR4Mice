@@ -5,7 +5,12 @@ Latency testing tables should be imported before this.
 import cv2
 import datajoint as dj
 import pandas as pd
+import numpy as np
+import scipy.interpolate
+import pickle
 
+from vr4mice.schema.vr4mice import State, Dataset
+from vr4mice.schema.latency_tests import SignalsPhotodiodeAligned
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
 
@@ -16,13 +21,20 @@ logger = Logger.get_logger()
 
 
 @schema
-class RawVideo(dj.Manual):
+class RawVideo(dj.Imported):
     definition = """
-    video_id: int
+    -> Dataset
     ---
     video_path: varchar(255)
-    recording_time: datetime
     """
+
+    def make(self, key, base_path: str):
+        dataset = key["dataset"]
+        video_path = f"{base_path}/{dataset}.mkv"
+
+        self.insert1(
+            {**key, "video_path": video_path},
+        )
 
 
 @schema
@@ -39,7 +51,9 @@ class ProcessedVideo(dj.Computed):
     """
 
     def make(self, key):
-        from vr4mice.analysis.input_videos import VideoTrimmer
+        from FreelyMovingVR4Mice.dj_pipeline.vr4mice.analysis.inputs_videos import (
+            VideoTrimmer,
+        )
 
         video_path = (RawVideo & key).fetch1("video_path")
 
@@ -113,7 +127,9 @@ class VideoSyncSignal(dj.Computed):
     """
 
     def make(self, key):
-        from vr4mice.analysis.input_videos import extract_sync_signal_from_video
+        from FreelyMovingVR4Mice.dj_pipeline.vr4mice.analysis.inputs_videos import (
+            extract_sync_signal_from_video,
+        )
 
         sync_path = (ProcessedVideo & key).fetch1("sync_video_path")
         frame_ids, timestamps, signals, fps, total = extract_sync_signal_from_video(
@@ -131,8 +147,9 @@ class VideoSyncSignal(dj.Computed):
             }
         )
 
-    def get_sync_df(key):
-        data = (VideoSyncSignal & key).fetch1()
+    @classmethod
+    def get_sync_df(cls, key):
+        data = (cls & key).fetch1()
         import pandas as pd
 
         return pd.DataFrame(
@@ -155,17 +172,16 @@ class AlignedVideoFrame(dj.Computed):
     -> SignalsPhotodiodeAligned
     -> State
     ---
+    step: longblob          # array of step indices corresponding to game time
     step_time: longblob       # array of step times corresponding to game time
     video_frame: longblob      # array of video frame indices aligned to step times
     """
 
     def make(self, key):
-        from vr4mice.schema.latency_tests import SignalsPhotodiodeAligned
-        from vr4mice.analysis.input_videos import (
+        from FreelyMovingVR4Mice.dj_pipeline.vr4mice.analysis.inputs_videos import (
             sync_video_to_photodiode,
             sync_video_to_game_time,
         )
-        from vr4mice.schema.vr4mice import State
 
         # 1. Align to photodiode signal
         video_signal = pd.DataFrame(
@@ -193,12 +209,43 @@ class AlignedVideoFrame(dj.Computed):
 
         resampled_data = sync_video_to_game_time(frames_and_dlc_aligned, state_dict)
 
+        timeinter_func = scipy.interpolate.interp1d(
+            resampled_data["video_frame"],
+            resampled_data["step_time"],
+            bounds_error=False,
+            fill_value="extrapolate",
+        )
+
         # 3. Create keys
         self.insert1(
             {
                 **key,
+                "n_steps": len(resampled_data["step"]),
                 "step": state_dict["step"],
                 "step_time": resampled_data["step_time"],
                 "video_frame": resampled_data["video_frame"],
+                "interpol_func": pickle.dumps(timeinter_func),
             }
         )
+
+    @classmethod
+    def align_step_to_frames(cls, key, timepoints: list):
+        """Aligns timepoints using interpolation, this should account for clock drift.
+
+        Args:
+            timepoints (list): List of timepoints to align.
+        """
+        interpol_func = pickle.loads((cls & key).fetch1("interpol_func"))
+
+        for idx in timepoints:
+            if not isinstance(idx, (int, float)):
+                raise TypeError(f"Timepoint {idx} is not a number.")
+            if idx < 0 or idx >= (cls & key).fetch1("n_steps"):
+                raise ValueError(
+                    f"Timepoint {idx} is out of bounds for the number of steps."
+                )
+
+        timepoints = np.array(timepoints, dtype=np.float64)
+        return [
+            int(tx) if not np.isnan(tx) else None for tx in interpol_func(timepoints)
+        ]
