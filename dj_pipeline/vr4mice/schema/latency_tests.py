@@ -39,8 +39,8 @@ class SignalsPhotodiodeAligned(dj.Computed):
         try:
             data = (vr4mice.SignalsPhotodiode() & key).fetch(as_dict=True)[0]
             data = get_signals(data).to_dict()
-            
-            if np.unique(data["photodiode_read"]).size < 2:
+
+            if len(np.unique(np.array(list(data["photodiode_read"].values())))) != 2:
                 raise ValueError(
                     f"Photodiode signal in {key['dataset']} is not binary, check that the photodiode was recording."
                 )

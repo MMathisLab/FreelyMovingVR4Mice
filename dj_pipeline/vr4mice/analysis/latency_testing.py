@@ -36,12 +36,12 @@ def check_data(data: dict):
     return has_signal(data)
 
 
-def has_signal(data, threshold_sigma: float = 8.0):
+def has_signal(data, mean_threshold: float = 8.0):
     """Check if the photodiode signal is present in the data.
     
     Args: 
         data (dict): Dictionary containing the photodiode and generated signal data.
-        threshold_sigma (float): Threshold for detecting the signal presence, default is 8.0.
+        mean_threshold (float): Threshold for detecting the signal presence, default is 8.0.
     """
     photodiode_time = data["photodiode_time"] - data["start_time"]
     signal = data["photodiode_read"] * detect_signal_polarity(data["photodiode_read"])
@@ -57,17 +57,18 @@ def has_signal(data, threshold_sigma: float = 8.0):
         )
         return False
 
-    # check if peak signal is above noise threshold
-    min_start = np.mean(
+    # check if peak-to-peak distance is above mean noise: NOTE(celia): DOESN'T WORK
+    mean_start = np.mean(
         signal[(photodiode_time > delay - 3) & (photodiode_time < delay - 0.5)]
     )
-    std = np.std(
-        signal[(photodiode_time > delay - 3) & (photodiode_time < delay - 0.5)]
-    )
-    peak_to_peak = np.max(signal) - np.min(signal)
-    is_signal_present = peak_to_peak > (min_start + threshold_sigma * std)
+    # std = np.std(
+    #     signal[(photodiode_time > delay - 3) & (photodiode_time < delay - 0.5)]
+    # )
+    # peak_to_peak = np.max(signal) - np.min(signal)
+    # is_signal_present = peak_to_peak > (mean_start + threshold_sigma * std)
 
-    # Signal present if peak-to-peak is significantly larger than noise
+    is_signal_present = mean_start > mean_threshold
+    
     if not is_signal_present:
         logger.warning(
             f"No significant signal detected, make sure the photodiode was recording."
@@ -84,7 +85,6 @@ def detect_signal_polarity(photodiode_read):
     if np.abs(np.min(read)) > np.abs(np.max(read)):
         return -1
     else:
-        print("not flipping signal")
         return 1
 
 
@@ -142,7 +142,6 @@ def detect_signal_polarity(photodiode_read):
         print("flipping signal")
         return -1
     else:
-        print("not flipping signal")
         return 1
 
 
@@ -190,8 +189,13 @@ def get_signals(data, threshold=0.2):
     containing aligned signal and photodiode values.
 
     Args:
-        data (dict):
-
+        data (dict): Dictionary containing the following
+            - 'photodiode_read': Photodiode signal values.
+            - 'photodiode_time': Time stamps of the photodiode signal.
+            - 'start_time': Start time of the recording.
+            - 'generated_frame_time': Time stamps of the generated frame.
+            - 'generated_send_time': Time stamps of the generated signal send times.
+            - 'generated_signal': Generated signal values.
         threshold (float, optional): Threshold for the signal. Default is 0.2.
 
     Returns:
@@ -233,25 +237,25 @@ def get_signals(data, threshold=0.2):
         * flip_photodiode_signal
     )
     # Calculate the mean value prior to signal coming in to scale the signal and scale the trace
-    min_start = np.mean(
+    filtered_mean_start = np.mean(
         filtered_photodiode_read[
             (photodiode_time > delay - 3) & (photodiode_time < delay - 0.5)
         ]
     )
-    filtered_photodiode_scaled = (filtered_photodiode_read - min_start) / (
-        np.max(filtered_photodiode_read) - min_start
+    filtered_photodiode_scaled = (filtered_photodiode_read - filtered_mean_start) / (
+        np.max(filtered_photodiode_read) - filtered_mean_start
     )
 
-    min_start = np.mean(
+    mean_start = np.mean(
         photodiode_read[(photodiode_time > delay - 3) & (photodiode_time < delay - 0.5)]
     )
 
-    photodiode_signal_scaled = (photodiode_read - min_start) / (
-        np.max(photodiode_read) - min_start
+    photodiode_signal_scaled = (photodiode_read - mean_start) / (
+        np.max(photodiode_read) - mean_start
     )
 
     # Binarise the signal (int)
-    photodiode_read = (filtered_photodiode_scaled > threshold).astype(int)
+    photodiode_read = filtered_photodiode_scaled > threshold
 
     signal_time = data["generated_frame_time"]
     send_time = data["generated_send_time"]
