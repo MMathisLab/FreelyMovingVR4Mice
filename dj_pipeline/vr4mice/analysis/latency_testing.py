@@ -33,9 +33,7 @@ def check_data(data: dict):
         logger.warning("Session population failed: %s", e)
         return False
 
-    has_signal(data)
-
-    return True
+    return has_signal(data)
 
 
 def has_signal(data, threshold_sigma: float = 8.0):
