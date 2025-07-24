@@ -2,6 +2,7 @@ import os
 import numpy as np
 import cv2
 import pandas as pd
+import pathlib
 
 BLACK_THRESHOLD = 5  # Default threshold for detecting black pixels
 CONSECUTIVE_FRAMES = 5
@@ -11,13 +12,25 @@ SESSION_START_BUFFER = 60  # Search buffer in sec for session start detection
 
 
 class VideoTrimmer:
-    def __init__(self, input_video_path):
+    def __init__(
+        self,
+        input_video_path,
+        session_start_buffer=SESSION_START_BUFFER,
+        black_threshold=BLACK_THRESHOLD,
+        consecutive_frames=CONSECUTIVE_FRAMES,
+    ):
         """Initialize video trimmer
 
         Args:
-            input_video_path: Path to input video file
+            input_video_path: Path to input video file.
+            session_start_buffer: Buffer in seconds to search for session start.
+            black_threshold: Pixel intensity threshold to detect black frames.
+            consecutive_frames: Number of consecutive frames to confirm session start.
         """
         self.input_path = input_video_path
+        self.session_start_buffer = session_start_buffer
+        self.black_threshold = black_threshold
+        self.consecutive_frames = consecutive_frames
         self.cap = cv2.VideoCapture(input_video_path)
 
         # Video properties
@@ -33,21 +46,13 @@ class VideoTrimmer:
         seconds = seconds % 60
         return f"{minutes:02d}:{seconds:05.2f}"
 
-    def detect_session_frames_by_roi(
-        self,
-        visual_roi_coords,
-        black_threshold=BLACK_THRESHOLD,
-        sample_center_size=20,
-        consecutive_frames=CONSECUTIVE_FRAMES,
-    ):
+    def detect_session_frames_by_roi(self, visual_roi_coords, sample_center_size=20):
         """
         Detect exact session frames by analyzing every frame in search regions
 
         Args:
             visual_roi_coords: (x, y, width, height) coordinates of visual input ROI
-            black_threshold: Pixel intensity threshold - below this is considered "black" (welcome screen)
             sample_center_size: Size of center region to sample (e.g., 20x20 pixels)
-            consecutive_frames: Number of consecutive "session" frames needed to confirm session start
 
         Returns:
             tuple: (session_start_frame, session_end_frame)
@@ -59,7 +64,7 @@ class VideoTrimmer:
         center_y = y + h // 2 - sample_center_size // 2
 
         # Calculate search ranges
-        start_search_frame = int(SESSION_START_BUFFER * self.fps)
+        start_search_frame = int(self.session_start_buffer * self.fps)
 
         # Find session start: check every frame from 10th second onwards for consecutive session frames
         session_start = None
@@ -79,11 +84,11 @@ class VideoTrimmer:
                 gray_center = cv2.cvtColor(center_region, cv2.COLOR_BGR2GRAY)
                 mean_intensity = np.mean(gray_center)
 
-                if mean_intensity > black_threshold:
+                if mean_intensity > self.black_threshold:
                     consecutive_session_count += 1
-                    if consecutive_session_count >= consecutive_frames:
+                    if consecutive_session_count >= self.consecutive_frames:
                         # Found sustained session activity, go back to find actual start
-                        session_start = frame_idx - consecutive_frames + 1
+                        session_start = frame_idx - self.consecutive_frames + 1
                         break
                 else:
                     consecutive_session_count = 0
@@ -109,7 +114,7 @@ class VideoTrimmer:
                 mean_intensity = np.mean(gray_center)
 
                 # If this frame is above threshold, it's session content - this is our end
-                if mean_intensity > black_threshold:
+                if mean_intensity > self.black_threshold:
                     session_end = frame_idx
                     break
 
@@ -124,11 +129,11 @@ class VideoTrimmer:
 
     def save_validation_frames(
         self,
-        session_start,
-        session_end,
-        visual_roi_coords,
-        sync_roi_coords,
-        sample_center_size=20,
+        session_start: int,
+        session_end: int,
+        visual_roi_coords: tuple,
+        sync_roi_coords: tuple,
+        sample_center_size: int = 20,
     ):
         """Save session start frame for validation"""
         x, y, w, h = visual_roi_coords
@@ -197,10 +202,11 @@ class VideoTrimmer:
                     2,
                 )
 
-                cv2.imwrite(
-                    f"validation_session_start_frame{frame_idx}.jpg",
-                    full_frame_marked,
-                )
+                base_path = pathlib.Path(self.input_path).parent
+                base_name = pathlib.Path(self.input_path).stem
+                output_path = f"{base_path}/{base_name}_start_frame{frame_idx}.jpg"
+                cv2.imwrite(output_path, full_frame_marked)
+            return output_path
 
     def trim_video_to_rois(
         self, session_start, session_end, visual_roi_coords, sync_roi_coords
@@ -300,32 +306,24 @@ class VideoTrimmer:
             return False
 
     def auto_trim_video(
-        self,
-        visual_roi_coords,
-        sync_roi_coords,
-        black_threshold=BLACK_THRESHOLD,
-        sample_center_size=20,
-        validate=True,
+        self, visual_roi_coords, sync_roi_coords, sample_center_size=20
     ):
         """
         Automatically detect and trim video to ROI regions
         """
         # Step 1: Detect session boundaries
         session_start, session_end = self.detect_session_frames_by_roi(
-            visual_roi_coords,
-            black_threshold=black_threshold,
-            sample_center_size=sample_center_size,
+            visual_roi_coords, sample_center_size=sample_center_size
         )
 
         # Step 2: Save validation frames if requested
-        if validate:
-            self.save_validation_frames(
-                session_start,
-                session_end,
-                visual_roi_coords,
-                sync_roi_coords,
-                sample_center_size,
-            )
+        validation_path = self.save_validation_frames(
+            session_start,
+            session_end,
+            visual_roi_coords,
+            sync_roi_coords,
+            sample_center_size,
+        )
 
         # Step 3: Trim video
         success, visual_output_path, sync_output_path = self.trim_video_to_rois(
@@ -336,7 +334,13 @@ class VideoTrimmer:
             print("Trimming failed!")
             return None, None
 
-        return visual_output_path, sync_output_path, session_start, session_end
+        return (
+            visual_output_path,
+            sync_output_path,
+            validation_path,
+            session_start,
+            session_end,
+        )
 
     def __del__(self):
         """Clean up video capture"""
@@ -385,13 +389,24 @@ def extract_sync_signal_from_video(video_path):
     )
 
 
-def find_rising_edges(time, signal, threshold=0.5):
-    """Find rising edges in binary signal"""
-    rising_edges = []
-    for i in range(1, len(signal)):
-        if signal[i - 1] < threshold and signal[i] >= threshold:
-            rising_edges.append(time[i])
-    return np.array(rising_edges)
+def find_edges(time, signal, threshold=0.5):
+    """Find rising and falling edges using exact logic from loop, vectorized."""
+    signal = np.asarray(signal)
+    time = np.asarray(time)
+
+    # Rising: signal[i-1] < threshold and signal[i] >= threshold
+    prev_rising = signal[:-1] < threshold
+    curr_rising = signal[1:] >= threshold
+    rising_indices = np.where(prev_rising & curr_rising)[0] + 1
+    rising_edges = time[rising_indices]
+
+    # Falling: signal[i-1] >= threshold and signal[i] < threshold
+    prev_falling = signal[:-1] >= threshold
+    curr_falling = signal[1:] < threshold
+    falling_indices = np.where(prev_falling & curr_falling)[0] + 1
+    falling_edges = time[falling_indices]
+
+    return rising_edges, falling_edges
 
 
 def sync_video_to_photodiode(video_sync_df, photodiode_df):
@@ -405,8 +420,8 @@ def sync_video_to_photodiode(video_sync_df, photodiode_df):
     Returns:
         DataFrame with synchronized timestamps and signals.
     """
-    video_timestamps = video_sync_df["timestamp"].values
-    video_signal = video_sync_df["signal"].values
+    video_timestamps = video_sync_df["timestamps"].values
+    video_signal = video_sync_df["signals"].values
 
     photodiode_timestamps = photodiode_df["time_stamp"].values
     photodiode_signal = photodiode_df["photodiode_read"].values
@@ -415,45 +430,74 @@ def sync_video_to_photodiode(video_sync_df, photodiode_df):
     video_binary = video_signal.astype(int)
     photodiode_binary = photodiode_signal.astype(int)
 
-    # Find rising edges in both signals
-    photodiode_rising_edges = find_rising_edges(
+    # Find edges in both signals using vectorized operations
+    photodiode_rising_edges, photodiode_falling_edges = find_edges(
         photodiode_timestamps, photodiode_binary
     )
-    video_rising_edges = find_rising_edges(video_timestamps, video_binary)
+    if len(photodiode_rising_edges) == 0:
+        raise ValueError("No rising edges found in photodiode signal.")
 
-    if len(photodiode_rising_edges) == 0 or len(video_rising_edges) == 0:
-        return
+    video_rising_edges, video_falling_edges = find_edges(video_timestamps, video_binary)
+
+    if len(video_rising_edges) == 0:
+        raise ValueError("No rising edges found in video signal.")
 
     # Use first photodiode rising edge as reference
     first_photodiode_edge = photodiode_rising_edges[0]
+
+    # Use vectorized comparison to find video edges before photodiode edge
     video_edges_before = video_rising_edges[video_rising_edges < first_photodiode_edge]
 
     if len(video_edges_before) == 0:
-        return
+        raise ValueError("No video edges found before the first photodiode edge.")
 
     corresponding_video_edge = video_edges_before[-1]
     time_offset = corresponding_video_edge - first_photodiode_edge
 
-    # Create photodiode-based mapping
-    photodiode_mapping_data = []
+    # Vectorized mapping using numpy operations
+    photodiode_times_array = np.array(photodiode_timestamps)
+    video_times_shifted = photodiode_times_array + time_offset
 
-    for timepoint_idx, photodiode_time in enumerate(photodiode_timestamps):
-        video_time = photodiode_time + time_offset
-        video_frame_idx = None
-        original_frame_idx = None
+    # Find valid time range mask
+    valid_mask = (video_times_shifted >= video_timestamps[0]) & (
+        video_times_shifted <= video_timestamps[-1]
+    )
 
-        if video_time >= video_timestamps[0] and video_time <= video_timestamps[-1]:
-            time_diffs = np.abs(video_timestamps - video_time)
-            closest_idx = np.argmin(time_diffs)
-            original_frame_idx = video_sync_df.iloc[closest_idx]["frame"]
-            video_frame_idx = closest_idx
+    # Pre-allocate arrays for results
+    num_timepoints = len(photodiode_timestamps)
+    video_frame_indices = np.full(num_timepoints, np.nan)
+    original_frame_indices = np.full(num_timepoints, np.nan)
 
-        video_frame_idx = video_frame_idx if video_frame_idx is not None else np.nan
-        original_frame_idx = (
-            original_frame_idx if original_frame_idx is not None else np.nan
-        )
+    # Only process valid timepoints
+    valid_indices = np.where(valid_mask)[0]
+    if len(valid_indices) > 0:
+        valid_video_times = video_times_shifted[valid_indices]
 
-    return timepoint_idx, video_frame_idx, original_frame_idx
+        # Use searchsorted for efficient closest index finding
+        insert_indices = np.searchsorted(video_timestamps, valid_video_times)
+
+        # Handle edge cases and find closest indices
+        closest_indices = np.zeros_like(insert_indices)
+        for i, insert_idx in enumerate(insert_indices):
+            if insert_idx == 0:
+                closest_indices[i] = 0
+            elif insert_idx >= len(video_timestamps):
+                closest_indices[i] = len(video_timestamps) - 1
+            else:
+                # Compare distances to left and right neighbors
+                left_dist = abs(valid_video_times[i] - video_timestamps[insert_idx - 1])
+                right_dist = abs(valid_video_times[i] - video_timestamps[insert_idx])
+                closest_indices[i] = (
+                    insert_idx - 1 if left_dist < right_dist else insert_idx
+                )
+
+        # Fill in the results for valid timepoints
+        video_frame_indices[valid_indices] = closest_indices
+        original_frame_indices[valid_indices] = video_sync_df.iloc[closest_indices][
+            "frame_ids"
+        ].values
+
+    return np.arange(num_timepoints), video_frame_indices, original_frame_indices
 
 
 def sync_video_to_game_time(sync_df, time_dict):

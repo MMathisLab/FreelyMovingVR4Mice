@@ -194,7 +194,7 @@ class Video(dj.Manual):
 
     definition = """
     -> Dataset
-    -> Camera    
+    -> Camera
     doe: date  # YYYY-MM-DD
     ---  
     duration=NULL: int
@@ -442,6 +442,7 @@ class SignalsPhotodiode(dj.Computed):
             proc_filepath = (
                 f"{paths['proc_path']['dst']}/{paths['proc_path']['filename']}"
             )
+            logger.info(f"proc_filepath: {proc_filepath}")
             if os.path.exists(proc_filepath):
                 photodiode_data = np.load(proc_filepath, allow_pickle=True)
                 if check_data(photodiode_data):
@@ -454,8 +455,11 @@ class SignalsPhotodiode(dj.Computed):
                         "generated_signal": photodiode_data["signal"],
                     }
                     self.insert1({**key, **data}, allow_direct_insert=True)
+                else: 
+                    logger.warning(f"Photodiode data check failed for {key['dataset']}")
+                    return
             else:
-                logger.warning(f"No photodiode data found for {key['dataset']}")
+                logger.warning(f"PROC file not found: {key['dataset']}")
                 return
 
         except Exception as err:
