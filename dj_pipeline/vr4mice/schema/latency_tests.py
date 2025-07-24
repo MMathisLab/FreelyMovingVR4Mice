@@ -39,6 +39,12 @@ class SignalsPhotodiodeAligned(dj.Computed):
         try:
             data = (vr4mice.SignalsPhotodiode() & key).fetch(as_dict=True)[0]
             data = get_signals(data).to_dict()
+            
+            if np.unique(data["photodiode_read"]).size < 2:
+                raise ValueError(
+                    f"Photodiode signal in {key['dataset']} is not binary, check that the photodiode was recording."
+                )
+            
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
         except Exception as err:
@@ -71,10 +77,13 @@ class AllLatencies(dj.Computed):
             return
 
         try:
-            df = pd.DataFrame((SignalsPhotodiodeAligned() & key).fetch(as_dict=True)[0])
-            rising_edges_a = find_rising_edges(df.time_stamp, df.signal_read)
+            photodiode_df = pd.DataFrame((SignalsPhotodiodeAligned() & key).fetch(
+                "time_stamp",  "signal_read", "photodiode_read", as_dict=True
+            )[0])
+
+            rising_edges_a = find_rising_edges(photodiode_df.time_stamp, photodiode_df.signal_read)
             rising_edges_photodiode = find_rising_edges(
-                df.time_stamp, df.photodiode_read
+                photodiode_df.time_stamp, photodiode_df.photodiode_read
             )
             latencies = get_latency(rising_edges_a, rising_edges_photodiode)
 

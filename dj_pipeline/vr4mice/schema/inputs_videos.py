@@ -2,6 +2,7 @@
 Latency testing tables should be imported before this.
 """
 
+import pathlib
 import cv2
 import datajoint as dj
 import pandas as pd
@@ -14,7 +15,7 @@ from vr4mice.schema.latency_tests import SignalsPhotodiodeAligned
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
 
-schema_name = "input_videos"
+schema_name = "inputs_videos"
 schema = get_schema(schema_name, locals())
 
 logger = Logger.get_logger()
@@ -28,13 +29,19 @@ class RawVideo(dj.Imported):
     video_path: varchar(255)
     """
 
-    def make(self, key, base_path: str):
+    # NOTE(celia): to update the default path when we put the videos onto the server
+    def make(self, key, base_path: str = "/app/vr4mice/videos/full_videos/full"):
         dataset = key["dataset"]
         video_path = f"{base_path}/{dataset}.mkv"
 
-        self.insert1(
-            {**key, "video_path": video_path},
-        )
+        try:
+            if not pathlib.Path(video_path).exists():
+                raise FileNotFoundError(f"Video file not found: {video_path}")
+
+            self.insert1({**key, "video_path": video_path})
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
 
 
 @schema
@@ -44,6 +51,7 @@ class ProcessedVideo(dj.Computed):
     ---
     visual_video_path: varchar(255)
     sync_video_path: varchar(255)
+    img_validation_path: varchar(255)
     start_frame: float
     end_frame: float
     visual_roi: blob
@@ -51,9 +59,7 @@ class ProcessedVideo(dj.Computed):
     """
 
     def make(self, key):
-        from FreelyMovingVR4Mice.dj_pipeline.vr4mice.analysis.inputs_videos import (
-            VideoTrimmer,
-        )
+        from vr4mice.analysis.inputs_videos import VideoTrimmer
 
         video_path = (RawVideo & key).fetch1("video_path")
 
@@ -63,29 +69,36 @@ class ProcessedVideo(dj.Computed):
         # NOTE(celia) 2x2 pixel of the ROI for lighter files
         # The sync ROI is 30 x 30 pixels in the top left corner of bottom left
         # screen on the OBS video
-        sync_roi = (1900, 540, 2, 2)
+        sync_roi = (1905, 545, 2, 2)
 
-        # Process
-        trimmer = VideoTrimmer(video_path)
-        visual_video_path, sync_video_path, start, end = trimmer.auto_trim_video(
-            visual_roi,
-            sync_roi,
-            black_threshold=5,
-            sample_center_size=20,
-            validate=False,  # True would save an image for manual validation
-        )
+        visual_roi = (0, 570, 930, 510)
+        # NOTE(celia) 2x2 pixel of the ROI for lighter files
+        # The sync ROI is 30 x 30 pixels in the top left corner of bottom left
+        # screen on the OBS video
+        sync_roi = (1895, 590, 2, 2)
 
-        self.insert1(
-            {
-                **key,
-                "visual_video_path": visual_video_path,
-                "sync_video_path": sync_video_path,
-                "start_frame": start,
-                "end_frame": end,
-                "visual_roi": visual_roi,
-                "sync_roi": sync_roi,
-            }
-        )
+        try:
+            trimmer = VideoTrimmer(video_path, session_start_buffer=60)
+
+            visual_video_path, sync_video_path, validation_path, start, end = trimmer.auto_trim_video(
+                visual_roi, sync_roi, sample_center_size=20
+            )
+
+            self.insert1(
+                {
+                    **key,
+                    "visual_video_path": visual_video_path,
+                    "sync_video_path": sync_video_path,
+                    "img_validation_path": validation_path,
+                    "start_frame": start,
+                    "end_frame": end,
+                    "visual_roi": visual_roi,
+                    "sync_roi": sync_roi,
+                }
+            )
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
 
     def get_visual_frame(self, key, frame_index: int):
         """Return the frame at `frame_index` from the visual video."""
@@ -127,25 +140,32 @@ class VideoSyncSignal(dj.Computed):
     """
 
     def make(self, key):
-        from FreelyMovingVR4Mice.dj_pipeline.vr4mice.analysis.inputs_videos import (
-            extract_sync_signal_from_video,
-        )
+        from vr4mice.analysis.inputs_videos import extract_sync_signal_from_video
 
-        sync_path = (ProcessedVideo & key).fetch1("sync_video_path")
-        frame_ids, timestamps, signals, fps, total = extract_sync_signal_from_video(
-            sync_path
-        )
+        try:
+            sync_path = (ProcessedVideo & key).fetch1("sync_video_path")
+            frame_ids, timestamps, signals, fps, total = extract_sync_signal_from_video(
+                sync_path
+            )
 
-        self.insert1(
-            {
-                **key,
-                "video_fps": fps,
-                "total_frames": total,
-                "frame_ids": frame_ids,
-                "timestamps": timestamps,
-                "signals": signals,
-            }
-        )
+            if np.unique(signals).size < 2:
+                raise ValueError(
+                    f"Sync signal in {sync_path} is not binary, check the sync ROI."
+                )
+
+            self.insert1(
+                {
+                    **key,
+                    "video_fps": fps,
+                    "total_frames": total,
+                    "frame_ids": frame_ids,
+                    "timestamps": timestamps,
+                    "signals": signals,
+                }
+            )
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
 
     @classmethod
     def get_sync_df(cls, key):
@@ -154,9 +174,9 @@ class VideoSyncSignal(dj.Computed):
 
         return pd.DataFrame(
             {
-                "frame": data["frame_ids"],
-                "timestamp": data["timestamps"],
-                "signal": data["signals"],
+                "frame_ids": data["frame_ids"],
+                "timestamps": data["timestamps"],
+                "signals": data["signals"],
             }
         )
 
@@ -178,29 +198,34 @@ class AlignedVideoFrame(dj.Computed):
     """
 
     def make(self, key):
-        from FreelyMovingVR4Mice.dj_pipeline.vr4mice.analysis.inputs_videos import (
+        from vr4mice.analysis.inputs_videos import (
             sync_video_to_photodiode,
             sync_video_to_game_time,
         )
 
+        # try:
         # 1. Align to photodiode signal
-        video_signal = pd.DataFrame(
-            (VideoSyncSignal() & key).fetch("timestamps", "signal", as_dict=True)[0]
-        )
+        video_signal = VideoSyncSignal.get_sync_df(key)
+        assert video_signal.columns.tolist() == [
+            "frame_ids",
+            "timestamps",
+            "signals",
+        ], "VideoSyncSignal.get_sync_df should return columns: frame_ids, timestamps, signals"
+
         photodiode_signal = pd.DataFrame(
             (SignalsPhotodiodeAligned() & key).fetch(
-                "time_stamp", "photodiode_read", as_dict=True
+                "time_stamp", "photodiode_read", "send_time", as_dict=True
             )[0]
         )
         _, _, original_frame_idx = sync_video_to_photodiode(
-            video_signal, photodiode_signal
+            video_signal, photodiode_signal[["time_stamp", "photodiode_read"]]
         )
 
         # 2. Resample based on State
         frames_and_dlc_aligned = pd.DataFrame(
             {
                 "original_frame_idx": original_frame_idx,
-                "send_time": (SignalsPhotodiodeAligned() & key).fetch1("send_time"),
+                "send_time": photodiode_signal["send_time"],
             }
         )
         state_dict = (State() & key).fetch(
@@ -215,18 +240,20 @@ class AlignedVideoFrame(dj.Computed):
             bounds_error=False,
             fill_value="extrapolate",
         )
-
         # 3. Create keys
         self.insert1(
             {
                 **key,
-                "n_steps": len(resampled_data["step"]),
+                "n_steps": len(state_dict["step"]),
                 "step": state_dict["step"],
                 "step_time": resampled_data["step_time"],
                 "video_frame": resampled_data["video_frame"],
                 "interpol_func": pickle.dumps(timeinter_func),
             }
         )
+        # except Exception as err:
+        #     logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+        #     return None
 
     @classmethod
     def align_step_to_frames(cls, key, timepoints: list):
