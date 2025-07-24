@@ -9,6 +9,9 @@ logger = Logger.get_logger()
 def check_data(data: dict):
     """
     Check that photodiode and generated signals are both in the dictionary
+    
+    Args:
+        data (dict): Dictionary containing the photodiode and generated signal data.
 
     Args:
         data (dict): Dictionary containing the photodiode and generated signal data.
@@ -73,7 +76,6 @@ def has_signal(data, mean_threshold: float = 8.0):
         logger.warning(
             f"No significant signal detected, make sure the photodiode was recording."
         )
-
     return is_signal_present
 
 
@@ -152,7 +154,6 @@ def detect_signal_polarity(photodiode_read):
 def get_latency(rising_edges_singal, rising_edges_photodiode):
     rising_edges_singal = np.array(rising_edges_singal)
     rising_edges_photodiode = np.array(rising_edges_photodiode)
-
     if len(rising_edges_singal) < 2:
         return pd.DataFrame(columns=["frame_time", "time_diff", "photodiode_time"])
 
