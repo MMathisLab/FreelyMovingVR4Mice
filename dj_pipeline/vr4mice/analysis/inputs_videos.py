@@ -6,20 +6,15 @@ import pathlib
 
 from vr4mice.analysis.latency_testing import find_rising_edges
 
-BLACK_THRESHOLD = 5  # Default threshold for detecting black pixels
-CONSECUTIVE_FRAMES = 5
-SESSION_START_BUFFER = 10  # Search buffer in sec for session start detection
-
 # NOTE(celia): all recordings should be 120 fps (frame rate per second).
-
 
 class VideoTrimmer:
     def __init__(
         self,
         input_video_path,
-        session_start_buffer=SESSION_START_BUFFER,
-        black_threshold=BLACK_THRESHOLD,
-        consecutive_frames=CONSECUTIVE_FRAMES,
+        session_start_buffer=10,
+        black_threshold=5,
+        consecutive_frames=5,
     ):
         """Initialize video trimmer
 
@@ -220,7 +215,7 @@ class VideoTrimmer:
                     if label == "start":
                         output_path_start_frame = output_path
 
-            return output_path_start_frame
+        return output_path_start_frame
 
     def trim_video_to_rois(
         self, session_start, session_end, visual_roi_coords, sync_roi_coords

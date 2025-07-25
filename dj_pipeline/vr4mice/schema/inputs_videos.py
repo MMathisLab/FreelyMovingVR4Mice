@@ -73,7 +73,7 @@ class ProcessedVideo(dj.Computed):
         sync_roi = (1895, 580, 2, 2)
 
         try:
-            trimmer = VideoTrimmer(video_path, session_start_buffer=60)
+            trimmer = VideoTrimmer(video_path, session_start_buffer=10)
 
             visual_video_path, sync_video_path, validation_path, start, end = (
                 trimmer.auto_trim_video(visual_roi, sync_roi, sample_center_size=20)
