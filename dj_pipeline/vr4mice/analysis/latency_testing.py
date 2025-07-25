@@ -221,7 +221,7 @@ def get_signals(data, threshold=0.2):
         data["generated_frame_time"][np.where(data["generated_signal"] > 0.5)[0][0]]
         - data["start_time"]
     )
-    print("delay: ", delay)
+    logger.info("Delay: %s", delay)
 
     # remove first point as this corresponds to the thread starting
     if len(photodiode_time) != len(photodiode_read):

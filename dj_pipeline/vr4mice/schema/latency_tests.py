@@ -37,6 +37,7 @@ class SignalsPhotodiodeAligned(dj.Computed):
             return
 
         try:
+            logger.info(f"{key['dataset']}")
             data = (vr4mice.SignalsPhotodiode() & key).fetch(as_dict=True)[0]
             data = get_signals(data).to_dict()
 
@@ -51,7 +52,7 @@ class SignalsPhotodiodeAligned(dj.Computed):
             dataset = key["dataset"]
 
             logger.warning(
-                f"{self.__class__.__name__} population failed: key: {key}, {err}"
+                f"{self.__class__.__name__} population failed: key: {dataset[key]}, {err}"
             )
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
@@ -77,6 +78,7 @@ class AllLatencies(dj.Computed):
             return
 
         try:
+            logger.info(f"{key['dataset']}")
             photodiode_df = pd.DataFrame((SignalsPhotodiodeAligned() & key).fetch(
                 "time_stamp",  "signal_read", "photodiode_read", as_dict=True
             )[0])
@@ -102,6 +104,6 @@ class AllLatencies(dj.Computed):
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
-            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
-            logger.warning(err)
+            
+            logger.warning(f"Can't populate {self.__class__.__name__}, key: {dataset}. Error: {err}.")
             return None
