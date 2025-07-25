@@ -442,7 +442,6 @@ class SignalsPhotodiode(dj.Computed):
             proc_filepath = (
                 f"{paths['proc_path']['dst']}/{paths['proc_path']['filename']}"
             )
-            logger.info(f"proc_filepath: {proc_filepath}")
             if os.path.exists(proc_filepath):
                 photodiode_data = np.load(proc_filepath, allow_pickle=True)
                 if check_data(photodiode_data):
