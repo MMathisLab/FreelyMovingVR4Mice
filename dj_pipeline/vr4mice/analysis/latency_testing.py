@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from scipy.signal import butter, filtfilt
+import scipy.signal
 from vr4mice.utils.logger import Logger
 
 logger = Logger.get_logger()
@@ -57,10 +57,12 @@ def has_signal(data, mean_threshold: float = 8.0):
         )
         return False
 
-    # check if peak-to-peak distance is above mean noise: NOTE(celia): DOESN'T WORK
     mean_start = np.mean(
         signal[(photodiode_time > delay - 3) & (photodiode_time < delay - 0.5)]
     )
+    
+    # NOTE(celia): DOESN'T WORK as it's about the range of values rather than the scale
+    # check if peak-to-peak distance is above mean noise: 
     # std = np.std(
     #     signal[(photodiode_time > delay - 3) & (photodiode_time < delay - 0.5)]
     # )
@@ -78,7 +80,7 @@ def has_signal(data, mean_threshold: float = 8.0):
 
 
 def detect_signal_polarity(photodiode_read):
-    # Calculate the mean value prior to signal coming in to scale the signal and scale the trace
+    """Calculate the mean value prior to signal coming in."""
     read = photodiode_read
     read = read - np.mean(read[0:100])
 
@@ -89,7 +91,7 @@ def detect_signal_polarity(photodiode_read):
 
 
 def filter_pulsed_signal(signal, sample_rate, cutoff_freq=50, filter_order=5):
-    """Filters high-frequency noise from a pulsed signal and plots the results.
+    """Filters high-frequency noise from a pulsed signal.
 
     Args:
         signal: The input signal with noise
@@ -104,10 +106,15 @@ def filter_pulsed_signal(signal, sample_rate, cutoff_freq=50, filter_order=5):
     nyquist = 0.5 * sample_rate
 
     # Design Butterworth low-pass filter
-    b, a = butter(filter_order, cutoff_freq / nyquist, btype="low", analog=False)
+    b, a = scipy.signal.butter(N=filter_order, 
+                               Wn=cutoff_freq / nyquist, 
+                               btype="low", 
+                               analog=False)
 
     # Apply zero-phase filtering (filtfilt to avoid phase shift)
-    filtered_signal = filtfilt(b, a, signal)
+    # NOTE(celia): as filtfilt applies the filter twice, 
+    # the filter_order is doubled so we could use a lower order filter than 5.
+    filtered_signal = scipy.signal.filtfilt(b, a, signal)
 
     return filtered_signal
 
@@ -139,7 +146,7 @@ def detect_signal_polarity(photodiode_read):
     read = read - np.mean(read[0:100])
 
     if np.abs(np.min(read)) > np.abs(np.max(read)):
-        print("flipping signal")
+        # flipping signal
         return -1
     else:
         return 1
@@ -230,12 +237,26 @@ def get_signals(data, threshold=0.2):
     photodiode_time = photodiode_time[photodiode_time > 1]
 
     flip_photodiode_signal = detect_signal_polarity(photodiode_read)
-    filtered_photodiode_read = (
-        filter_pulsed_signal(
-            photodiode_read, int(1 // np.mean(np.diff(photodiode_time))), cutoff_freq=50
+    
+    #NOTE(celia): in newer recordings, photodiode signal is sampled at 1000Hz,
+    # so we can use a lower sample rate to filter the signal, in older recordings
+    # the photodiode signal is sampled at 50Hz, so we do not apply the filter.
+    sampling_rate = int(1 // np.mean(np.diff(photodiode_time)))
+    if sampling_rate > 70: 
+        filtered_photodiode_read = (
+            filter_pulsed_signal(
+                signal=photodiode_read, 
+                sample_rate=sampling_rate, 
+                cutoff_freq=50
+            )
+            * flip_photodiode_signal
         )
-        * flip_photodiode_signal
-    )
+    else:
+        logger.info(
+            f"Photodiode signal sampled at {sampling_rate}, skipping filtering step."
+        )
+        filtered_photodiode_read = photodiode_read * flip_photodiode_signal
+    
     # Calculate the mean value prior to signal coming in to scale the signal and scale the trace
     filtered_mean_start = np.mean(
         filtered_photodiode_read[
@@ -246,15 +267,15 @@ def get_signals(data, threshold=0.2):
         np.max(filtered_photodiode_read) - filtered_mean_start
     )
 
-    mean_start = np.mean(
+    raw_mean_start = np.mean(
         photodiode_read[(photodiode_time > delay - 3) & (photodiode_time < delay - 0.5)]
     )
 
-    photodiode_signal_scaled = (photodiode_read - mean_start) / (
-        np.max(photodiode_read) - mean_start
+    raw_photodiode_signal_scaled = (photodiode_read - raw_mean_start) / (
+        np.max(photodiode_read) - raw_mean_start
     )
 
-    # Binarise the signal (int)
+    # Binarise the signal
     photodiode_read = filtered_photodiode_scaled > threshold
 
     signal_time = data["generated_frame_time"]
@@ -275,7 +296,7 @@ def get_signals(data, threshold=0.2):
         {
             "time_stamp": photodiode_time,
             "photodiode_read": photodiode_read,
-            "photodiode_raw_scaled": photodiode_signal_scaled,
+            "photodiode_raw_scaled": raw_photodiode_signal_scaled,
             "filtered_photodiode_scaled": filtered_photodiode_scaled,
             "threshold": threshold,
         }

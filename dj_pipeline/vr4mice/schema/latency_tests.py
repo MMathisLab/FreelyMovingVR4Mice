@@ -58,6 +58,32 @@ class SignalsPhotodiodeAligned(dj.Computed):
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
 
+    @classmethod
+    def get_photodiode_df(cls, key: dict) -> pd.DataFrame:
+        data = (cls & key).fetch1()
+        import pandas as pd
+
+        return pd.DataFrame(
+            {
+                "send_time": data["send_time"],
+                "signal_read": data["signal_read"],
+            }
+        )
+
+    @classmethod
+    def get_dlc_df(cls, key: dict) -> pd.DataFrame:
+        data = (cls & key).fetch1()
+        import pandas as pd
+
+        return pd.DataFrame(
+            {
+                "time_stamp": data["time_stamp"],
+                "photodiode_read": data["photodiode_read"],
+                "photodiode_raw_scaled": data["photodiode_raw_scaled"],
+                "filtered_photodiode_scaled": data["filtered_photodiode_scaled"],
+            }
+        )
+
 
 @schema
 class AllLatencies(dj.Computed):
