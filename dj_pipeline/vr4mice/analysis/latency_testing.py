@@ -9,7 +9,7 @@ logger = Logger.get_logger()
 def check_data(data: dict):
     """
     Check that photodiode and generated signals are both in the dictionary
-    
+
     Args:
         data (dict): Dictionary containing the photodiode and generated signal data.
 
@@ -24,8 +24,8 @@ def check_data(data: dict):
         "photodiode_time",
         "signal",
     ]
-    
-    try: 
+
+    try:
         for var in vars:
             if var not in data:
                 raise ValueError(f"{var} not found in PROC file")
@@ -38,8 +38,8 @@ def check_data(data: dict):
 
 def has_signal(data, mean_threshold: float = 8.0):
     """Check if the photodiode signal is present in the data.
-    
-    Args: 
+
+    Args:
         data (dict): Dictionary containing the photodiode and generated signal data.
         mean_threshold (float): Threshold for detecting the signal presence, default is 8.0.
     """
@@ -52,17 +52,15 @@ def has_signal(data, mean_threshold: float = 8.0):
             - data["start_time"]
         )
     except Exception as e:
-        logger.warning(
-            f"Error finding delay, {e}."
-        )
+        logger.warning(f"Error finding delay, {e}.")
         return False
 
     mean_start = np.mean(
         signal[(photodiode_time > delay - 3) & (photodiode_time < delay - 0.5)]
     )
-    
+
     # NOTE(celia): DOESN'T WORK as it's about the range of values rather than the scale
-    # check if peak-to-peak distance is above mean noise: 
+    # check if peak-to-peak distance is above mean noise:
     # std = np.std(
     #     signal[(photodiode_time > delay - 3) & (photodiode_time < delay - 0.5)]
     # )
@@ -70,12 +68,12 @@ def has_signal(data, mean_threshold: float = 8.0):
     # is_signal_present = peak_to_peak > (mean_start + threshold_sigma * std)
 
     is_signal_present = mean_start > mean_threshold
-    
+
     if not is_signal_present:
         logger.warning(
             f"No significant signal detected, make sure the photodiode was recording."
         )
-    
+
     return is_signal_present
 
 
@@ -106,13 +104,12 @@ def filter_pulsed_signal(signal, sample_rate, cutoff_freq=50, filter_order=5):
     nyquist = 0.5 * sample_rate
 
     # Design Butterworth low-pass filter
-    b, a = scipy.signal.butter(N=filter_order, 
-                               Wn=cutoff_freq / nyquist, 
-                               btype="low", 
-                               analog=False)
+    b, a = scipy.signal.butter(
+        N=filter_order, Wn=cutoff_freq / nyquist, btype="low", analog=False
+    )
 
     # Apply zero-phase filtering (filtfilt to avoid phase shift)
-    # NOTE(celia): as filtfilt applies the filter twice, 
+    # NOTE(celia): as filtfilt applies the filter twice,
     # the filter_order is doubled so we could use a lower order filter than 5.
     filtered_signal = scipy.signal.filtfilt(b, a, signal)
 
@@ -121,13 +118,13 @@ def filter_pulsed_signal(signal, sample_rate, cutoff_freq=50, filter_order=5):
 
 def find_rising_edges(time, signal, threshold=0.5):
     """Calculate the rising edge of the photodiode and signal.
-    
-    Args: 
+
+    Args:
         time (np.ndarray): Time array corresponding to the signal.
         signal (np.ndarray): Signal array to find rising edges in.
         threshold (float): Threshold value to determine rising edges. Default is 0.5.
-    
-    Note: 
+
+    Note:
         When signal crosses from < threshold to >= threshold.
     """
     signal = np.asarray(signal)
@@ -155,39 +152,47 @@ def detect_signal_polarity(photodiode_read):
 def get_latency(rising_edges_singal, rising_edges_photodiode):
     rising_edges_singal = np.array(rising_edges_singal)
     rising_edges_photodiode = np.array(rising_edges_photodiode)
-    
+
     if len(rising_edges_singal) < 2:
         return pd.DataFrame(columns=["frame_time", "time_diff", "photodiode_time"])
 
     signal_starts = rising_edges_singal[:-1]
     signal_ends = rising_edges_singal[1:]
-    
+
     # Use searchsorted to find indices where photodiode times fall into intervals
-    photodiode_idx_start = np.searchsorted(rising_edges_photodiode, signal_starts, side='right')
-    photodiode_idx_end = np.searchsorted(rising_edges_photodiode, signal_ends, side='left')
-    
+    photodiode_idx_start = np.searchsorted(
+        rising_edges_photodiode, signal_starts, side="right"
+    )
+    photodiode_idx_end = np.searchsorted(
+        rising_edges_photodiode, signal_ends, side="left"
+    )
+
     frame_time = []
     time_diff = []
     photodiode_time = []
 
     for i in range(len(signal_starts)):
         # Get photodiode events within interval [start, end]
-        pd_in_window = rising_edges_photodiode[photodiode_idx_start[i]:photodiode_idx_end[i]]
-        
+        pd_in_window = rising_edges_photodiode[
+            photodiode_idx_start[i] : photodiode_idx_end[i]
+        ]
+
         if len(pd_in_window) > 0:
             dists = np.abs(pd_in_window - signal_starts[i])
             closest_idx = np.argmin(dists)
             closest_val = pd_in_window[closest_idx]
-            
+
             frame_time.append(signal_starts[i])
             photodiode_time.append(closest_val)
             time_diff.append(closest_val - signal_starts[i])
-    
-    return pd.DataFrame({
-        "frame_time": frame_time,
-        "time_diff": time_diff,
-        "photodiode_time": photodiode_time
-    })
+
+    return pd.DataFrame(
+        {
+            "frame_time": frame_time,
+            "time_diff": time_diff,
+            "photodiode_time": photodiode_time,
+        }
+    )
 
 
 def get_signals(data, threshold=0.2):
@@ -237,17 +242,15 @@ def get_signals(data, threshold=0.2):
     photodiode_time = photodiode_time[photodiode_time > 1]
 
     flip_photodiode_signal = detect_signal_polarity(photodiode_read)
-    
-    #NOTE(celia): in newer recordings, photodiode signal is sampled at 1000Hz,
+
+    # NOTE(celia): in newer recordings, photodiode signal is sampled at 1000Hz,
     # so we can use a lower sample rate to filter the signal, in older recordings
     # the photodiode signal is sampled at 50Hz, so we do not apply the filter.
     sampling_rate = int(1 // np.mean(np.diff(photodiode_time)))
-    if sampling_rate > 70: 
+    if sampling_rate > 70:
         filtered_photodiode_read = (
             filter_pulsed_signal(
-                signal=photodiode_read, 
-                sample_rate=sampling_rate, 
-                cutoff_freq=50
+                signal=photodiode_read, sample_rate=sampling_rate, cutoff_freq=50
             )
             * flip_photodiode_signal
         )
@@ -256,7 +259,7 @@ def get_signals(data, threshold=0.2):
             f"Photodiode signal sampled at {sampling_rate}, skipping filtering step."
         )
         filtered_photodiode_read = photodiode_read * flip_photodiode_signal
-    
+
     # Calculate the mean value prior to signal coming in to scale the signal and scale the trace
     filtered_mean_start = np.mean(
         filtered_photodiode_read[
