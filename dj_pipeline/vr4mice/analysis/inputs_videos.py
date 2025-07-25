@@ -4,9 +4,11 @@ import cv2
 import pandas as pd
 import pathlib
 
+from vr4mice.analysis.latency_testing import find_rising_edges
+
 BLACK_THRESHOLD = 5  # Default threshold for detecting black pixels
 CONSECUTIVE_FRAMES = 5
-SESSION_START_BUFFER = 60  # Search buffer in sec for session start detection
+SESSION_START_BUFFER = 10  # Search buffer in sec for session start detection
 
 # NOTE(celia): all recordings should be 120 fps (frame rate per second).
 
@@ -143,70 +145,82 @@ class VideoTrimmer:
         center_x = x + w // 2 - sample_center_size // 2
         center_y = y + h // 2 - sample_center_size // 2
 
-        # Only save the session start frame
-        frame_idx = session_start
-        if 0 <= frame_idx < self.total_frames:
-            self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
-            ret, frame = self.cap.read()
-            if ret:
-                # Save full frame with ROI and center region marked
-                full_frame_marked = frame.copy()
+        base_path = pathlib.Path(self.input_path).parent
+        base_name = pathlib.Path(self.input_path).stem
 
-                # Draw Visual ROI rectangle in green
-                cv2.rectangle(full_frame_marked, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        frames_to_save = {
+            "start_minus_1": session_start - 1,
+            "start": session_start,
+            "end": session_end,
+            "end_plus_1": session_end + 1,
+        }
+        output_path_start_frame = None
+        for label, frame_idx in frames_to_save.items():
+            if 0 <= frame_idx < self.total_frames:
+                self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+                ret, frame = self.cap.read()
+                if ret:
+                    marked_frame = frame.copy()
 
-                # Draw Sync ROI rectangle in blue
-                cv2.rectangle(
-                    full_frame_marked,
-                    (sync_x, sync_y),
-                    (sync_x + sync_w, sync_y + sync_h),
-                    (255, 0, 0),
-                    2,
-                )
+                    # Draw Visual ROI rectangle in green
+                    cv2.rectangle(marked_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-                # Draw center region rectangle in red
-                cv2.rectangle(
-                    full_frame_marked,
-                    (center_x, center_y),
-                    (center_x + sample_center_size, center_y + sample_center_size),
-                    (0, 0, 255),
-                    2,
-                )
+                    # Draw Sync ROI rectangle in blue
+                    cv2.rectangle(
+                        marked_frame,
+                        (sync_x, sync_y),
+                        (sync_x + sync_w, sync_y + sync_h),
+                        (255, 0, 0),
+                        2,
+                    )
 
-                # Add text labels
-                cv2.putText(
-                    full_frame_marked,
-                    "Visual ROI",
-                    (x, y - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.7,
-                    (0, 255, 0),
-                    2,
-                )
-                cv2.putText(
-                    full_frame_marked,
-                    "Sync ROI",
-                    (sync_x, sync_y - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.7,
-                    (255, 0, 0),
-                    2,
-                )
-                cv2.putText(
-                    full_frame_marked,
-                    "Center Region",
-                    (center_x, center_y - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5,
-                    (0, 0, 255),
-                    2,
-                )
+                    # Draw center region rectangle in red
+                    cv2.rectangle(
+                        marked_frame,
+                        (center_x, center_y),
+                        (center_x + sample_center_size, center_y + sample_center_size),
+                        (0, 0, 255),
+                        2,
+                    )
 
-                base_path = pathlib.Path(self.input_path).parent
-                base_name = pathlib.Path(self.input_path).stem
-                output_path = f"{base_path}/{base_name}_start_frame{frame_idx}.jpg"
-                cv2.imwrite(output_path, full_frame_marked)
-            return output_path
+                    # Add text labels
+                    cv2.putText(
+                        marked_frame,
+                        "Visual ROI",
+                        (x, y - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.7,
+                        (0, 255, 0),
+                        2,
+                    )
+                    cv2.putText(
+                        marked_frame,
+                        "Sync ROI",
+                        (sync_x - 20, sync_y - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.7,
+                        (255, 0, 0),
+                        2,
+                    )
+                    cv2.putText(
+                        marked_frame,
+                        "Center Region",
+                        (center_x, center_y - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5,
+                        (0, 0, 255),
+                        2,
+                    )
+
+                    output_path = (
+                        f"{base_path}/{base_name}_{label}_frame{frame_idx}.jpg"
+                    )
+                    cv2.imwrite(output_path, marked_frame)
+
+                    if label == "start":
+                        output_path_start_frame = output_path
+
+            return output_path_start_frame
 
     def trim_video_to_rois(
         self, session_start, session_end, visual_roi_coords, sync_roi_coords
@@ -389,26 +403,6 @@ def extract_sync_signal_from_video(video_path):
     )
 
 
-def find_edges(time, signal, threshold=0.5):
-    """Find rising and falling edges using exact logic from loop, vectorized."""
-    signal = np.asarray(signal)
-    time = np.asarray(time)
-
-    # Rising: signal[i-1] < threshold and signal[i] >= threshold
-    prev_rising = signal[:-1] < threshold
-    curr_rising = signal[1:] >= threshold
-    rising_indices = np.where(prev_rising & curr_rising)[0] + 1
-    rising_edges = time[rising_indices]
-
-    # Falling: signal[i-1] >= threshold and signal[i] < threshold
-    prev_falling = signal[:-1] >= threshold
-    curr_falling = signal[1:] < threshold
-    falling_indices = np.where(prev_falling & curr_falling)[0] + 1
-    falling_edges = time[falling_indices]
-
-    return rising_edges, falling_edges
-
-
 def sync_video_to_photodiode(video_sync_df, photodiode_df):
     """
     Synchronize video sync signal with photodiode signal.
@@ -426,18 +420,17 @@ def sync_video_to_photodiode(video_sync_df, photodiode_df):
     photodiode_timestamps = photodiode_df["time_stamp"].values
     photodiode_signal = photodiode_df["photodiode_read"].values
 
-    # Convert signals to binary
     video_binary = video_signal.astype(int)
     photodiode_binary = photodiode_signal.astype(int)
 
-    # Find edges in both signals using vectorized operations
-    photodiode_rising_edges, photodiode_falling_edges = find_edges(
+    # Find edges in both signals
+    photodiode_rising_edges = find_rising_edges(
         photodiode_timestamps, photodiode_binary
     )
     if len(photodiode_rising_edges) == 0:
         raise ValueError("No rising edges found in photodiode signal.")
 
-    video_rising_edges, video_falling_edges = find_edges(video_timestamps, video_binary)
+    video_rising_edges = find_rising_edges(video_timestamps, video_binary)
 
     if len(video_rising_edges) == 0:
         raise ValueError("No rising edges found in video signal.")
@@ -445,7 +438,7 @@ def sync_video_to_photodiode(video_sync_df, photodiode_df):
     # Use first photodiode rising edge as reference
     first_photodiode_edge = photodiode_rising_edges[0]
 
-    # Use vectorized comparison to find video edges before photodiode edge
+    # Find video edges before photodiode edge
     video_edges_before = video_rising_edges[video_rising_edges < first_photodiode_edge]
 
     if len(video_edges_before) == 0:
@@ -454,7 +447,6 @@ def sync_video_to_photodiode(video_sync_df, photodiode_df):
     corresponding_video_edge = video_edges_before[-1]
     time_offset = corresponding_video_edge - first_photodiode_edge
 
-    # Vectorized mapping using numpy operations
     photodiode_times_array = np.array(photodiode_timestamps)
     video_times_shifted = photodiode_times_array + time_offset
 
@@ -463,7 +455,6 @@ def sync_video_to_photodiode(video_sync_df, photodiode_df):
         video_times_shifted <= video_timestamps[-1]
     )
 
-    # Pre-allocate arrays for results
     num_timepoints = len(photodiode_timestamps)
     video_frame_indices = np.full(num_timepoints, np.nan)
     original_frame_indices = np.full(num_timepoints, np.nan)
@@ -498,94 +489,3 @@ def sync_video_to_photodiode(video_sync_df, photodiode_df):
         ].values
 
     return np.arange(num_timepoints), video_frame_indices, original_frame_indices
-
-
-def sync_video_to_game_time(sync_df, time_dict):
-    """
-    Map video frames to step_time intervals based on corresponding dlc_read_time.
-
-    Parameters:
-    -----------
-    sync_df : pandas.DataFrame
-        Synchronized data with columns: video_frame_index, send_time
-    time_dict : dict
-        Dictionary with keys 'dlc_read_time' and 'step_time' containing arrays of corresponding times
-
-    Returns:
-    --------
-    pandas.DataFrame
-        DataFrame with columns: step_time, dlc_read_time, send_time, video_frame
-    """
-
-    # Extract arrays from synchronized data
-    sync_send_times = sync_df["send_time"].values
-    video_frames = sync_df["original_frame_idx"].values
-
-    # Extract time arrays from dictionary
-    dict_dlc_times = np.array(time_dict["dlc_read_time"])
-    dict_step_times = np.array(time_dict["step_time"])
-
-    # Calculate step rate for tolerance
-    step_rate = (
-        1.0 / np.mean(np.diff(dict_step_times)) if len(dict_step_times) > 1 else 10.0
-    )
-
-    # Create mapping for ALL step_times
-    step_times_list = []
-    send_times_list = []
-    dlc_read_times_list = []
-    video_frames_list = []
-
-    for i, step_time in enumerate(dict_step_times):
-        step_times_list.append(step_time)
-
-        # Get corresponding dlc_read_time for this step_time
-        if len(dict_dlc_times) > 1:
-            dlc_index = i * (len(dict_dlc_times) - 1) / (len(dict_step_times) - 1)
-            dlc_index_floor = int(np.floor(dlc_index))
-            dlc_index_ceil = min(dlc_index_floor + 1, len(dict_dlc_times) - 1)
-
-            if dlc_index_floor == dlc_index_ceil:
-                corresponding_dlc_time = dict_dlc_times[dlc_index_floor]
-            else:
-                weight = dlc_index - dlc_index_floor
-                corresponding_dlc_time = (
-                    dict_dlc_times[dlc_index_floor] * (1 - weight)
-                    + dict_dlc_times[dlc_index_ceil] * weight
-                )
-        else:
-            corresponding_dlc_time = dict_dlc_times[0]
-
-        dlc_read_times_list.append(corresponding_dlc_time)
-
-        # Find video frames with send_time close to this step_time
-        time_tolerance = 1.0 / step_rate
-        time_diffs = np.abs(sync_send_times - step_time)
-        close_frames_mask = time_diffs <= time_tolerance
-
-        if np.any(close_frames_mask):
-            close_frame_indices = video_frames[close_frames_mask]
-            close_send_times = sync_send_times[close_frames_mask]
-
-            # Take the closest frame
-            closest_idx = np.argmin(time_diffs[close_frames_mask])
-            best_frame = close_frame_indices[closest_idx]
-            best_send_time = close_send_times[closest_idx]
-
-            video_frames_list.append(best_frame)
-            send_times_list.append(best_send_time)
-        else:
-            video_frames_list.append(np.nan)
-            send_times_list.append(np.nan)
-
-    # Create resampled dataset
-    resampled_data = pd.DataFrame(
-        {
-            "step_time": step_times_list,  # NOTE(celia): this is the game time
-            "dlc_read_time": dlc_read_times_list,
-            "send_time": send_times_list,  # NOTE(celia): should be the same as dlc_read_time
-            "video_frame": video_frames_list,
-        }
-    )
-
-    return resampled_data.sort_values("step_time").reset_index(drop=True)

@@ -45,7 +45,7 @@ class SignalsPhotodiodeAligned(dj.Computed):
                 raise ValueError(
                     f"Photodiode signal in {key['dataset']} is not binary, check that the photodiode was recording."
                 )
-            
+
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
         except Exception as err:
@@ -105,11 +105,15 @@ class AllLatencies(dj.Computed):
 
         try:
             logger.info(f"{key['dataset']}")
-            photodiode_df = pd.DataFrame((SignalsPhotodiodeAligned() & key).fetch(
-                "time_stamp",  "signal_read", "photodiode_read", as_dict=True
-            )[0])
+            photodiode_df = pd.DataFrame(
+                (SignalsPhotodiodeAligned() & key).fetch(
+                    "time_stamp", "signal_read", "photodiode_read", as_dict=True
+                )[0]
+            )
 
-            rising_edges_a = find_rising_edges(photodiode_df.time_stamp, photodiode_df.signal_read)
+            rising_edges_a = find_rising_edges(
+                photodiode_df.time_stamp, photodiode_df.signal_read
+            )
             rising_edges_photodiode = find_rising_edges(
                 photodiode_df.time_stamp, photodiode_df.photodiode_read
             )
@@ -130,6 +134,8 @@ class AllLatencies(dj.Computed):
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
-            
-            logger.warning(f"Can't populate {self.__class__.__name__}, key: {dataset}. Error: {err}.")
+
+            logger.warning(
+                f"Can't populate {self.__class__.__name__}, key: {dataset}. Error: {err}."
+            )
             return None
