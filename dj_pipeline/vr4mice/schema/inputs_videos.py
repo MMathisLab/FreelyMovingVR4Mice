@@ -202,76 +202,74 @@ class AlignedVideoFrame(dj.Computed):
     def make(self, key):
         from vr4mice.analysis.inputs_videos import sync_video_to_photodiode
 
-        # try:
-        video_signal = VideoSyncSignal.get_sync_df(key)
+        try:
+            video_signal = VideoSyncSignal.get_sync_df(key)
 
-        state_dict = (State() & key).fetch("step", "step_time", as_dict=True)[0]
+            state_dict = (State() & key).fetch("step", "step_time", as_dict=True)[0]
+            
+            state_df = pd.DataFrame(state_dict)
 
-        # NOTE(celia): if the photodiode signal was recorded for that session we align the video frames
-        # to the photodiode signal to dlc time to game time (this is more precise)
-        if len(SignalsPhotodiodeAligned() & key) > 0:
-            # state_dict = (State() & key).fetch(
-            #     "step", "step_time", as_dict=True
-            # )[
-            #     0
-            # ]  # NOTE(celia): dict because step_time and dlc_read_time are not the same length
+            # if len(SignalsPhotodiodeAligned() & key) > 0:
+            #     # state_dict = (State() & key).fetch(
+            #     #     "step", "step_time", as_dict=True
+            #     # )[
+            #     #     0
+            #     # ]  # NOTE(celia): dict because step_time and dlc_read_time are not the same length
 
-            photodiode_signal = pd.DataFrame(
-                (SignalsPhotodiodeAligned() & key).fetch(
-                    "time_stamp", "photodiode_read", "send_time", as_dict=True
-                )[0]
-            )
-            _, _, original_frame_idx = sync_video_to_photodiode(
-                video_signal, photodiode_signal[["time_stamp", "photodiode_read"]]
-            )
+            #     photodiode_signal = pd.DataFrame(
+            #         (SignalsPhotodiodeAligned() & key).fetch(
+            #             "time_stamp", "photodiode_read", "send_time", as_dict=True
+            #         )[0]
+            #     )
+            #     _, _, original_frame_idx = sync_video_to_photodiode(
+            #         video_signal, photodiode_signal[["time_stamp", "photodiode_read"]]
+            #     )
 
-            frames_and_dlc_aligned = pd.DataFrame(
-                {
-                    "frame_ids": original_frame_idx,
-                    "send_time": photodiode_signal["send_time"],
-                }
-            )
+            #     frames_and_dlc_aligned = pd.DataFrame(
+            #         {
+            #             "frame_ids": original_frame_idx,
+            #             "send_time": photodiode_signal["send_time"],
+            #         }
+            #     )
 
+            #     resampled_df = pd.merge_asof(
+            #         pd.DataFrame(state_dict),
+            #         frames_and_dlc_aligned,
+            #         left_on="step_time",
+            #         right_on="send_time",
+            #         direction="backward",
+            #     )
+
+            #else:
             resampled_df = pd.merge_asof(
-                pd.DataFrame(state_dict),
-                frames_and_dlc_aligned,
-                left_on="step_time",
-                right_on="send_time",
-                direction="backward",
-            )
-        # NOTE(celia): in some older sessions we don't have the photodiode signal
-        # so we align the video frames to the game time directly (this is less precise
-        # but still useful).
-        else:
-            resampled_df = pd.merge_asof(
-                pd.DataFrame(state_dict),
+                pd.DataFrame(state_df),
                 video_signal,
                 left_on="step_time",
                 right_on="timestamps",
                 direction="forward",
             )
 
-        timeinter_func = scipy.interpolate.interp1d(
-            resampled_df["frame_ids"],
-            resampled_df["step_time"],
-            bounds_error=False,
-            fill_value="extrapolate",
-        )
+            timeinter_func = scipy.interpolate.interp1d(
+                resampled_df["frame_ids"],
+                resampled_df["step_time"],
+                bounds_error=False,
+                fill_value="extrapolate",
+            )
 
-        self.insert1(
-            {
-                **key,
-                "n_steps": len(state_dict["step"]),
-                "step": state_dict["step"],
-                "step_time": np.array(list(resampled_df["step_time"].values)),
-                "frame_ids": np.array(list(resampled_df["frame_ids"].values)),
-                "interpol_func": pickle.dumps(timeinter_func),
-            }
-        )
+            self.insert1(
+                {
+                    **key,
+                    "n_steps": len(state_dict["step"]) -1,
+                    "step": state_dict["step"],
+                    "step_time": np.array(list(resampled_df["step_time"].values)),
+                    "frame_ids": np.array(list(resampled_df["frame_ids"].values)) - 7,  # NOTE(celia): we remove the first 7 frames to account for the initial delay
+                    "interpol_func": pickle.dumps(timeinter_func),
+                }
+            )
 
-        # except Exception as err:
-        #     logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
-        #     return None
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
 
     @classmethod
     def align_step_to_frames(cls, key, timepoints: list):
