@@ -140,8 +140,13 @@ class VideoTrimmer:
         center_x = x + w // 2 - sample_center_size // 2
         center_y = y + h // 2 - sample_center_size // 2
 
-        base_path = pathlib.Path(self.input_path).parent
+        base_path = pathlib.Path(self.input_path).parents[1]
         base_name = pathlib.Path(self.input_path).stem
+
+        if not (base_path / "validation_frames").exists():
+            raise FileNotFoundError(
+                f"Validation frames directory does not exist: {base_path}/validation_frames"
+            )
 
         frames_to_save = {
             "start_minus_1": session_start - 1,
@@ -208,7 +213,7 @@ class VideoTrimmer:
                     )
 
                     output_path = (
-                        f"{base_path}/{base_name}_{label}_frame{frame_idx}.jpg"
+                        f"{base_path}/validation_frames/{base_name}_{label}_frame{frame_idx}.jpg"
                     )
                     cv2.imwrite(output_path, marked_frame)
 
@@ -236,83 +241,92 @@ class VideoTrimmer:
         duration = (session_end - session_start) / self.fps
 
         # Generate output paths
-        base_name = os.path.splitext(self.input_path)[0]
+        base_path = pathlib.Path(self.input_path).parents[1]
+        base_name = pathlib.Path(self.input_path).stem
         extension = os.path.splitext(self.input_path)[1]
-        visual_output_path = f"{base_name}_visual_roi{extension}"
-        sync_output_path = f"{base_name}_sync_roi{extension}"
 
+        visual_output_path = f"{base_path}/processed_recordings/{base_name}_visual_roi{extension}"
+        sync_output_path = f"{base_path}/processed_recordings/{base_name}_sync_roi{extension}"
+
+        if not pathlib.Path(visual_output_path).parent.exists() or not pathlib.Path(sync_output_path).parent.exists():
+            raise FileNotFoundError(
+                f"Output paths do not exist: {visual_output_path}, {sync_output_path}"
+            )
+            
         # Extract ROI coordinates
         visual_x, visual_y, visual_w, visual_h = visual_roi_coords
         sync_x, sync_y, sync_w, sync_h = sync_roi_coords
 
-        try:
-            # Visual ROI command
-            visual_cmd = [
-                "ffmpeg",
-                "-y",
-                "-ss",
-                str(start_time),
-                "-i",
-                self.input_path,
-                "-t",
-                str(duration),
-                "-filter:v",
-                f"crop={visual_w}:{visual_h}:{visual_x}:{visual_y}",
-                "-c:v",
-                "libx264",
-                "-preset",
-                "ultrafast",
-                "-crf",
-                "23",
-                visual_output_path,
-            ]
+        #try:
+        # Visual ROI command
+        visual_cmd = [
+            "ffmpeg",
+            "-y",
+            "-ss",
+            str(start_time),
+            "-i",
+            self.input_path,
+            "-t",
+            str(duration),
+            "-filter:v",
+            f"crop={visual_w}:{visual_h}:{visual_x}:{visual_y}",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "ultrafast",
+            "-crf",
+            "23",
+            visual_output_path,
+        ]
 
-            # Sync ROI command
-            sync_cmd = [
-                "ffmpeg",
-                "-y",
-                "-ss",
-                str(start_time),
-                "-i",
-                self.input_path,
-                "-t",
-                str(duration),
-                "-filter:v",
-                f"crop={sync_w}:{sync_h}:{sync_x}:{sync_y}",
-                "-c:v",
-                "libx264",
-                "-preset",
-                "ultrafast",
-                "-crf",
-                "23",
-                sync_output_path,
-            ]
+        # Sync ROI command
+        sync_cmd = [
+            "ffmpeg",
+            "-y",
+            "-ss",
+            str(start_time),
+            "-i",
+            self.input_path,
+            "-t",
+            str(duration),
+            "-filter:v",
+            f"crop={sync_w}:{sync_h}:{sync_x}:{sync_y}",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "ultrafast",
+            "-crf",
+            "23",
+            sync_output_path,
+        ]
 
-            # Run both commands in parallel
-            process1 = subprocess.Popen(
-                visual_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        # Run both commands in parallel
+        process1 = subprocess.Popen(
+            visual_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        process2 = subprocess.Popen(
+            sync_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+
+        # Wait for both to complete
+        stdout1, stderr1 = process1.communicate()
+        stdout2, stderr2 = process2.communicate()
+
+        if process1.returncode != 0:
+            raise RuntimeError(
+                f"Error processing visual ROI: {stderr1.decode()}"
             )
-            process2 = subprocess.Popen(
-                sync_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+
+        if process2.returncode != 0:
+            raise RuntimeError(
+                f"Error processing sync ROI: {stderr2.decode()}"
             )
 
-            # Wait for both to complete
-            stdout1, stderr1 = process1.communicate()
-            stdout2, stderr2 = process2.communicate()
+        return True, visual_output_path, sync_output_path
 
-            if process1.returncode != 0:
-                print(f"Visual ROI error: {stderr1.decode()}")
-                return False
-
-            if process2.returncode != 0:
-                print(f"Sync ROI error: {stderr2.decode()}")
-                return False
-
-            return True, visual_output_path, sync_output_path
-
-        except Exception as e:
-            print(f"Error: {e}")
-            return False
+        # except Exception as e:
+        #     print(f"Error during video trimming: {e}")
+        #     return False, visual_output_path, sync_output_path
 
     def auto_trim_video(
         self, visual_roi_coords, sync_roi_coords, sample_center_size=20
@@ -340,8 +354,8 @@ class VideoTrimmer:
         )
 
         if not success:
-            print("Trimming failed!")
-            return None, None
+            ("Trimming failed!")
+            return None, None, None, None, None
 
         return (
             visual_output_path,

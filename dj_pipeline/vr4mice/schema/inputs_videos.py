@@ -31,9 +31,9 @@ class RawVideo(dj.Imported):
     """
 
     # NOTE(celia): to update the default path when we put the videos onto the server
-    def make(self, key, base_path: str = "/app/vr4mice/videos/full_videos/full"):
+    def make(self, key, base_path: str = "/vr4mice_screen_recordings"):
         dataset = key["dataset"]
-        video_path = f"{base_path}/{dataset}.mkv"
+        video_path = f"{base_path}/raw_screen_recordings/{dataset}.mkv"
 
         try:
             if not pathlib.Path(video_path).exists():
@@ -66,34 +66,34 @@ class ProcessedVideo(dj.Computed):
 
         # Define ROIs
         # The visual ROI should correspond the bottom right screen of the OBS video
-        visual_roi = (0, 570, 930, 510)
+        visual_roi = (0, 570, 925, 510)
         # NOTE(celia) 2x2 pixel of the ROI for lighter files
         # The sync ROI is 30 x 30 pixels in the top left corner of bottom left
         # screen on the OBS video
         sync_roi = (1895, 580, 2, 2)
 
-        try:
-            trimmer = VideoTrimmer(video_path, session_start_buffer=10)
+        #try:
+        trimmer = VideoTrimmer(video_path, session_start_buffer=10)
 
-            visual_video_path, sync_video_path, validation_path, start, end = (
-                trimmer.auto_trim_video(visual_roi, sync_roi, sample_center_size=20)
-            )
+        visual_video_path, sync_video_path, validation_path, start, end = (
+            trimmer.auto_trim_video(visual_roi, sync_roi, sample_center_size=20)
+        )
 
-            self.insert1(
-                {
-                    **key,
-                    "visual_video_path": visual_video_path,
-                    "sync_video_path": sync_video_path,
-                    "img_validation_path": validation_path,
-                    "start_frame": start,
-                    "end_frame": end,
-                    "visual_roi": visual_roi,
-                    "sync_roi": sync_roi,
-                }
-            )
-        except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
-            return None
+        self.insert1(
+            {
+                **key,
+                "visual_video_path": visual_video_path,
+                "sync_video_path": sync_video_path,
+                "img_validation_path": validation_path,
+                "start_frame": start,
+                "end_frame": end,
+                "visual_roi": visual_roi,
+                "sync_roi": sync_roi,
+            }
+        )
+        # except Exception as err:
+        #     logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+        #     return None
 
     def get_visual_frame(self, key, frame_index: int):
         """Return the frame at `frame_index` from the visual video."""
@@ -206,43 +206,9 @@ class AlignedVideoFrame(dj.Computed):
             video_signal = VideoSyncSignal.get_sync_df(key)
 
             state_dict = (State() & key).fetch("step", "step_time", as_dict=True)[0]
-            
-            state_df = pd.DataFrame(state_dict)
 
-            # if len(SignalsPhotodiodeAligned() & key) > 0:
-            #     # state_dict = (State() & key).fetch(
-            #     #     "step", "step_time", as_dict=True
-            #     # )[
-            #     #     0
-            #     # ]  # NOTE(celia): dict because step_time and dlc_read_time are not the same length
-
-            #     photodiode_signal = pd.DataFrame(
-            #         (SignalsPhotodiodeAligned() & key).fetch(
-            #             "time_stamp", "photodiode_read", "send_time", as_dict=True
-            #         )[0]
-            #     )
-            #     _, _, original_frame_idx = sync_video_to_photodiode(
-            #         video_signal, photodiode_signal[["time_stamp", "photodiode_read"]]
-            #     )
-
-            #     frames_and_dlc_aligned = pd.DataFrame(
-            #         {
-            #             "frame_ids": original_frame_idx,
-            #             "send_time": photodiode_signal["send_time"],
-            #         }
-            #     )
-
-            #     resampled_df = pd.merge_asof(
-            #         pd.DataFrame(state_dict),
-            #         frames_and_dlc_aligned,
-            #         left_on="step_time",
-            #         right_on="send_time",
-            #         direction="backward",
-            #     )
-
-            #else:
             resampled_df = pd.merge_asof(
-                pd.DataFrame(state_df),
+                pd.DataFrame(state_dict),
                 video_signal,
                 left_on="step_time",
                 right_on="timestamps",
