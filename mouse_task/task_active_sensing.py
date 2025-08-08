@@ -33,42 +33,41 @@ class ActiveSensingTask(UnityTask):
     It inherits from UnityTask and GuiTask from the `teensyexp` module.
 
     Attributes:
-
-    teensy: Teensy object, instance of teensy class that controls the teensy microcontroller.
-    monitor: Not used.
-    write_video: Boolean, default is `False`. If `True`, video output will be recorded.
-    fps: Float, frames per second for recorded video (default is `60.0`, **currently not used**).
-    session_label: List, contains the name of the task type (This will change depending on which training task is imported`).
-    epochs: List, contains the number of epochs (or trials) (default is `[250]`).
-    epoch_labels: List, contains epoch labels or names of the blocks, Single teardrop is default and highlights that only one tear drop is shown to the animal.
-    config_file_path: Path object, path to the configuration **.json** file (see `helpers.py` for more information).
-    reward_size: Integer, This specifies how may ms the water valve should be open for. This should be adjusted such that the reward given is approximately **3µL** (default is `100`).
-    cropped_image: List, contains the dimensions of the cropped image (default is `[0, 530, 0, 510]` - [left, right, top, bottom]).
-    unity_arena_size: List, contains the dimensions of the Unity arena (default is `[-9, 9, -10, -2]` - [left, right, top, bottom]).
-    r_report_box: List, contains the dimensions of the right report box (default is `[5, 10, -4, -2]` - [left, right, top, bottom]).
-    l_report_box: List, contains the dimensions of the left report box (default is `[-10, -5, -4, -2]` - [left, right, top, bottom]).
-    start_box: List, contains the dimensions of the start box and its angle (default is `[-4, 4, -7, -3, 80]` - [left, right, top, bottom]).
-    rotate_camera: Integer, rotation angle of the camera (default is `90`). This needs to be adjusted to your rig and then not changed.
-    prop_obj_on_Left: Float, probability of the OOI being on the left side (default is `0.5`). This parameter is used if the block length is set to 1, if the block length is > 1 then prob block coherence is used.
-    prob_block_coherence: Float, this is the probability that the OOI will appear on the same side as the block. ie if the block was a left block and the prob_block_coherence was 1 then it would appear on the left (default is 0.5). This parameter is only used if the block length is greater that 1.
-    mouse_report_delay: Float, mouse report delay default is `0`.
-    slit_size: List, this is a list of numbers [min_slit_size, max_slit_size, number_of_slit_sizes] ie. [10,20,5] would give a range of 5 slit sizes with 10 being the minimum and 20 being the max. If you want to pass a custom number on multiple slit sizes you can pass this in as a list of numbers ie [12,8,6,5,3] as long as the len of that list if > 3
-    slit_depth: Float, this parameter controls the depth or thickness of the walls (default = 0.2). 
-    target_selection: Integer, this parameter selects what object for the OOI (`0.` = white cube, `1.` = black cube, `2.` = teardrop grey, `3.` = pacman grey, `4.` = teardrop black, `5.` = pacman black, `6.` = teardrop white, `7.` = pacman white,`8.`= zebra teardrop, `9.`= zebra ball, `10.`=white ball, `11.`=light gray zebra teardrop, `12.` = dark gray zebra teardrop )
-    distractor_selection: Integer, this parameter selects what object for the distractor (`0.` = white cube, `1.` = black cube, `2.` = teardrop grey, `3.` = pacman grey, `4.` = teardrop black, `5.` = pacman black, `6.` = teardrop white, `7.` = pacman white,`8.`= zebra teardrop, `9.`= zebra ball, `10.`=white ball, `11.`=light gray zebra teardrop, `12.` = dark gray zebra teardrop )
-    occlusion_type: Integer, allows the user to select the type of occlusion that they want to use. (`0` = no occlusion, `1` = slit occlusion, `2` = central wall), default is no occlusion.
-    camera_type: Integer, allows the user to select between on (Camera_type = `0`) and off axis camera (Camera_type = `1`) modes.
-    target_spread: Float, specifies the distance between the targets.
-    target_rotation: Float, altering this parameter causes the tips of the targets to be rotated inward making them easier for the animal to see.
-    target_size: Integer, specifies the size of the targets i recommend using size `1` for the teardrop and double teardrop.
-    target_height: Float, specifies the height at which the targets are spawned.
-    block_length: Float, specifies how many rewards the mouse has to get correct before the OOI switches sides. To enforce this make sure that you have the prop_object_on left parameter set to `1.0`. If prob_object_on_left is set to `.5` then this block length parameter has no effect as there is a 50% chance of the object appearing on the each side.
-    start_box_delay: Float, specifies the time that the animal needs to spend in the start box under the velocity threshold.
-    velocity_threshold: Float, the animal must be below this value in the start box for a trial to be initiated.
-    distractor: Integer, specifies whether the distractor is present or not. (`0` = no distractor, `1` = distractor)
-    grey_screen_active: Integer, specifies whether to show the grey ITI screen or not (`0` = no grey screen, `1` = grey screen)
-    target_distance: Integer, specifies the distance of the targets in y.
-    use_dlc: Bool, specifies whether to use the dlc socket or not, this is mainly used for debugging, it should be set to true for the task to run.
+        teensy: Teensy object, instance of teensy class that controls the teensy microcontroller.
+        monitor: Not used.
+        write_video: Boolean, default is `False`. If `True`, video output will be recorded.
+        fps: Float, frames per second for recorded video (default is `60.0`, **currently not used**).
+        session_label: List, contains the name of the task type (This will change depending on which training task is imported`).
+        epochs: List, contains the number of epochs (or trials) (default is `[250]`).
+        epoch_labels: List, contains epoch labels or names of the blocks, Single teardrop is default and highlights that only one tear drop is shown to the animal.
+        config_file_path: Path object, path to the configuration **.json** file (see `helpers.py` for more information).
+        reward_size: Integer, This specifies how may ms the water valve should be open for. This should be adjusted such that the reward given is approximately **3µL** (default is `100`).
+        cropped_image: List, contains the dimensions of the cropped image (default is `[0, 530, 0, 510]` - [left, right, top, bottom]).
+        unity_arena_size: List, contains the dimensions of the Unity arena (default is `[-9, 9, -10, -2]` - [left, right, top, bottom]).
+        r_report_box: List, contains the dimensions of the right report box (default is `[5, 10, -4, -2]` - [left, right, top, bottom]).
+        l_report_box: List, contains the dimensions of the left report box (default is `[-10, -5, -4, -2]` - [left, right, top, bottom]).
+        start_box: List, contains the dimensions of the start box and its angle (default is `[-4, 4, -7, -3, 80]` - [left, right, top, bottom]).
+        rotate_camera: Integer, rotation angle of the camera (default is `90`). This needs to be adjusted to your rig and then not changed.
+        prop_obj_on_Left: Float, probability of the OOI being on the left side (default is `0.5`). This parameter is used if the block length is set to 1, if the block length is > 1 then prob block coherence is used.
+        prob_block_coherence: Float, this is the probability that the OOI will appear on the same side as the block. ie if the block was a left block and the prob_block_coherence was 1 then it would appear on the left (default is 0.5). This parameter is only used if the block length is greater that 1.
+        mouse_report_delay: Float, mouse report delay default is `0`.
+        slit_size: List, this is a list of numbers [min_slit_size, max_slit_size, number_of_slit_sizes] ie. [10,20,5] would give a range of 5 slit sizes with 10 being the minimum and 20 being the max. If you want to pass a custom number on multiple slit sizes you can pass this in as a list of numbers ie [12,8,6,5,3] as long as the len of that list if > 3
+        slit_depth: Float, this parameter controls the depth or thickness of the walls (default = 0.2). 
+        target_selection: Integer, this parameter selects what object for the OOI (`0.` = white cube, `1.` = black cube, `2.` = teardrop grey, `3.` = pacman grey, `4.` = teardrop black, `5.` = pacman black, `6.` = teardrop white, `7.` = pacman white,`8.`= zebra teardrop, `9.`= zebra ball, `10.`=white ball, `11.`=light gray zebra teardrop, `12.` = dark gray zebra teardrop )
+        distractor_selection: Integer, this parameter selects what object for the distractor (`0.` = white cube, `1.` = black cube, `2.` = teardrop grey, `3.` = pacman grey, `4.` = teardrop black, `5.` = pacman black, `6.` = teardrop white, `7.` = pacman white,`8.`= zebra teardrop, `9.`= zebra ball, `10.`=white ball, `11.`=light gray zebra teardrop, `12.` = dark gray zebra teardrop )
+        occlusion_type: Integer, allows the user to select the type of occlusion that they want to use. (`0` = no occlusion, `1` = slit occlusion, `2` = central wall), default is no occlusion.
+        camera_type: Integer, allows the user to select between on (Camera_type = `0`) and off axis camera (Camera_type = `1`) modes.
+        target_spread: Float, specifies the distance between the targets.
+        target_rotation: Float, altering this parameter causes the tips of the targets to be rotated inward making them easier for the animal to see.
+        target_size: Integer, specifies the size of the targets i recommend using size `1` for the teardrop and double teardrop.
+        target_height: Float, specifies the height at which the targets are spawned.
+        block_length: Float, specifies how many rewards the mouse has to get correct before the OOI switches sides. To enforce this make sure that you have the prop_object_on left parameter set to `1.0`. If prob_object_on_left is set to `.5` then this block length parameter has no effect as there is a 50% chance of the object appearing on the each side.
+        start_box_delay: Float, specifies the time that the animal needs to spend in the start box under the velocity threshold.
+        velocity_threshold: Float, the animal must be below this value in the start box for a trial to be initiated.
+        distractor: Integer, specifies whether the distractor is present or not. (`0` = no distractor, `1` = distractor)
+        grey_screen_active: Integer, specifies whether to show the grey ITI screen or not (`0` = no grey screen, `1` = grey screen)
+        target_distance: Integer, specifies the distance of the targets in y.
+        use_dlc: Bool, specifies whether to use the dlc socket or not, this is mainly used for debugging, it should be set to true for the task to run.
     """
 
     def __init__(
@@ -178,7 +177,6 @@ class ActiveSensingTask(UnityTask):
         self.prob_block_coherence = prob_block_coherence
 
         self.block_Left = np.random.choice([0.0, 1.0], p=[0.5, 0.5])
-        print("block_left", self.block_Left)
 
         if self.block_Left == 0.0:
             print("Right block")
@@ -191,8 +189,6 @@ class ActiveSensingTask(UnityTask):
             self.object_on_left = np.random.choice(
                 [0.0, 1.0], p=[1 - self.prob_block_coherence, self.prob_block_coherence]
             )
-
-        print("object_on_left: ", self.object_on_left)
 
         self.block_length = block_length
         self.distractor = distractor
@@ -282,7 +278,6 @@ class ActiveSensingTask(UnityTask):
             output = np.array([x, z, self.degrees, photodiode_intensity])
             self.previous = output
         else:
-            # print("missed dlc frame")
             time.sleep(0)
             output = self.previous
         return output.reshape((1, -1))
@@ -302,9 +297,7 @@ class ActiveSensingTask(UnityTask):
             self.block_sampler()
 
         this_prob_obj_left = self.prob_obj_on_left
-        print("prob left", this_prob_obj_left)
         this_slit_size = np.random.choice(self.slit_sizes)
-        print("slit_size", this_slit_size)
         this_slit_depth = self.get_epoch_value("slit_depth")
         this_target_spread = self.get_epoch_value("target_spread")
         this_target_height = self.get_epoch_value("target_height")
@@ -331,7 +324,6 @@ class ActiveSensingTask(UnityTask):
         self.channel.set_float_parameter("occlusion_type", this_occlusion_type)
         self.channel.set_float_parameter("targetsZpos", this_target_distance)
         self.channel.set_float_parameter("target_rotation", this_target_rotation)
-        print("this occ_type: ", this_occlusion_type)
 
         # set properties for start box, left report box and right report box
         self.channel.set_float_parameter("L_box_x_min", self.l_report_box[0])
@@ -363,12 +355,10 @@ class ActiveSensingTask(UnityTask):
         self.trial_distractor_selection.append(this_distractor_selection)
         self.trial_target_selection.append(this_target_selection)
         self.trial_occlusion_type.append(this_occlusion_type)
-        print(self.trial_occlusion_type)
         self.trial_target_distance.append(this_target_distance)
         self.trial_target_rotation.append(this_target_rotation)
         self.trial_reward_size.append(self.reward_size)
         self.trial_prob_obj_on_left.append(self.prob_obj_on_left)
-        # super().reset_environment()
 
     def get_action(self):
         """
@@ -393,11 +383,9 @@ class ActiveSensingTask(UnityTask):
 
             if self.state[7] > 0:
                 print("___ Rewarded - left ___")
-                print(self.reward_size)
                 self.teensy.write("l_water", [self.reward_size[0]])
             else:
                 print("___ Rewarded - right ___")
-                print(self.reward_size)
                 self.teensy.write("r_water", [self.reward_size[0]])
             self.n_rewards += 1
 
@@ -405,7 +393,6 @@ class ActiveSensingTask(UnityTask):
         self.object_on_left = np.random.choice(
             [0.0, 1.0], p=[1 - self.prob_obj_on_left, self.prob_obj_on_left]
         )
-        print("object on left", self.object_on_left)
 
     def block_sampler(self):
         if self.correct == self.block_length:
@@ -422,7 +409,6 @@ class ActiveSensingTask(UnityTask):
             self.object_on_left = np.random.choice(
                 [0.0, 1.0], p=[1 - self.prob_block_coherence, self.prob_block_coherence]
             )
-        print("object on left", self.object_on_left)
         
     def get_slit_sizes(self, slit_sizes_list: list):
         """ Create a vector of slit sizes which can be passed to the uniform random sampler in the set.channel() function.

@@ -35,10 +35,7 @@ class UnityTask(Task):
         epoch_trials=True,
     ):
         """
-        class constructor
-
         Args:
-
             teensy(Teensy object): instance of teensy class
             env(str): the path to the Unity game executable
             agent_group(int): indicator of the group of the agent to be controlled, should almost always be left as the default (0)
@@ -80,11 +77,12 @@ class UnityTask(Task):
         self.channel_dict = {}
 
     def start(self):
-        """
-        method tp start unity game: initializes UnityEnvironment, extracts agents, set up state observations,
+        """Start unity game.
+        
+        Initializes UnityEnvironment, extracts agents, set up state observations,
         use parent's start() call to notify teensy
         """
-        ### start unity game ###
+        # Start Unity game
         self.set_channel()
 
         self.env = UnityEnvironment(
@@ -98,8 +96,7 @@ class UnityTask(Task):
         self.agent = list(self.env.behavior_specs)[0]
         self.agent_spec = self.env.behavior_specs[self.agent]
 
-        ### set up state observations and video (if necessary) ###
-
+        # Set up state observations and video (if necessary)
         obs_shapes = [obs_spec.shape for obs_spec in self.agent_spec.observation_specs]
         obs_dim = [len(shape) for shape in obs_shapes]
         self.vec_obs_ind = np.where(np.array(obs_dim) == 1)[0][0]
@@ -115,26 +112,7 @@ class UnityTask(Task):
         self.state = decision_steps.obs[self.vec_obs_ind]
         self.episode = 1
 
-        # - - - - - - - - - - - PREVIOUS VERSION - - - - - - - - - - - #
-        # self.agent = self.env.get_agent_groups()[self.agent_group]
-        # self.agent_spec = self.env.get_agent_group_spec(self.agent)
-
-        # obs_dim = [len(shape) for shape in self.agent_spec.observation_shapes]
-        # self.vec_obs_ind = np.where([d == 1 for d in obs_dim])[0][0]
-        # self.vis_obs_ind = np.where([d == 3 for d in obs_dim])[0]
-        # self.vis_obs_ind = self.vis_obs_ind[0] if len(self.vis_obs_ind) > 0 else None
-        # if self.vis_obs_ind:
-        #     vis_obs_shape = np.array(self.agent_spec.observation_shapes)[
-        #         self.vis_obs_ind
-        #     ]
-        #     # self.vid_writer = self.create_vid_writer(vis_obs_shape, fps) if write_video and vis_obs_shape else None
-
-        # step_result = self.get_step_result()
-        # self.state = step_result.obs[self.vec_obs_ind]
-        # self.episode = 1
-        # - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - #
-
-        ### start teensy ###
+        # Start Teensy
         super().start()
 
     def as_list(self, val):
@@ -144,10 +122,11 @@ class UnityTask(Task):
         return val if type(val) is list else [val]
 
     def get_epoch_value(self, name):
-        """
-        getter to get the epoch
+        """Get the epoch
+        
         Args:
             name(str): name of the attribute to extract
+        
         Returns:
             value of attribute that corresponds to the epoch or last one known
 
@@ -174,17 +153,11 @@ class UnityTask(Task):
         )
 
     def get_step_result(self):
-        """
-        Getters for step from env agent.
+        """Get the step from env agent.
+        
         Returns:
             step (DecisionSteps or TerminalSteps)
         """
-        # - - - - - - - - - - - PREVIOUS VERSION - - - - - - - - - - - #
-        # batch_result = self.env.get_step_result(self.agent)
-        # step_result = batch_result.get_agent_step_result(self.agent_num)
-        # return step_result
-        # - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - #
-
         # Retrieve DecisionSteps and TerminalSteps for the specified agent group
         decision_steps, terminal_steps = self.env.get_steps(self.agent)
 
@@ -204,11 +177,7 @@ class UnityTask(Task):
         """
         getters for state
         """
-        # - - - - - - - - - - - PREVIOUS VERSION - - - - - - - - - - - #
-        # step_result = self.env.get_step_result(self.agent)
-        # - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - #
-
-        # could it be just self.get_step_result().obs?
+        #NOTE(leo): could it be just self.get_step_result().obs?
         return self.get_step_result().obs[self.vec_obs_ind]
 
     def set_channel(self):
@@ -234,11 +203,6 @@ class UnityTask(Task):
         """
         Getter for actions
         """
-        # - - - - - - - - - - - PREVIOUS VERSION - - - - - - - - - - - #
-        # dtype = np.float32 if self.agent_spec.action_type == "continuous" else np.int32
-        # return np.zeros(self.agent_spec.action_size, dtype=dtype)
-        # - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - #
-
         # Determine action type and create a zero array of the appropriate type
         if self.agent_spec.action_spec.is_continuous():
             dtype = np.float32
@@ -291,18 +255,18 @@ class UnityTask(Task):
         self.step_vec.append(self.step)  # frame
         self.time_vec.append(self.cur_time)  # time for each frame
 
-        ### get action ###
+        # Get action
         self.action = self.get_action()  # mouse's moves
         self.action_vec.append(self.action)
 
-        ### take step in environment ###
+        # Take step in environment
         action_tuple = ActionTuple()
         action_tuple.add_continuous(self.action.reshape(1, -1))
         self.env.set_actions(self.agent, action_tuple)
 
         self.env.step()  # unity env++
 
-        ### get observations ###
+        # Get observations
         step_result = self.get_step_result()
         if hasattr(self, "vid_writer"):
             self.vid_writer.write(step_result.obs[self.vis_obs_ind])
@@ -315,13 +279,13 @@ class UnityTask(Task):
         self.terminal_vec.append(self.terminal)
         self.check_reward()
 
-        ### get info ###
+        # Get information about the agent
         self.state = step_result.obs[self.vec_obs_ind]
         info = self.get_info()
 
         self.state_vec.append(self.state)  # all info about the agent (ex. position)
 
-        ### check reset, epochs, and condition to end session; update state ###
+        # Check reset, epochs, and condition to end session; update state
         if self.terminal:
             self.episode += 1
             if (self.epoch_trials) & (self.episode > self.epochs[self.epoch]):
@@ -371,9 +335,9 @@ class UnityTask(Task):
         return data_dict
 
     def stop(self):
-        """
-        stop the task: send stop message to teensy via parent's call
-        close the unity env
+        """Stop the task
+
+        Send stop message to teensy via parent's call and close the unity env
         """
         super().stop()
         self.env.close()
