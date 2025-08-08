@@ -8,6 +8,7 @@ from vr4mice.analysis.latency_testing import find_rising_edges
 
 # NOTE(celia): all recordings should be 120 fps (frame rate per second).
 
+
 class VideoTrimmer:
     def __init__(
         self,
@@ -212,9 +213,7 @@ class VideoTrimmer:
                         2,
                     )
 
-                    output_path = (
-                        f"{base_path}/validation_frames/{base_name}_{label}_frame{frame_idx}.jpg"
-                    )
+                    output_path = f"{base_path}/validation_frames/{base_name}_{label}_frame{frame_idx}.jpg"
                     cv2.imwrite(output_path, marked_frame)
 
                     if label == "start":
@@ -245,19 +244,26 @@ class VideoTrimmer:
         base_name = pathlib.Path(self.input_path).stem
         extension = os.path.splitext(self.input_path)[1]
 
-        visual_output_path = f"{base_path}/processed_recordings/{base_name}_visual_roi{extension}"
-        sync_output_path = f"{base_path}/processed_recordings/{base_name}_sync_roi{extension}"
+        visual_output_path = (
+            f"{base_path}/processed_recordings/{base_name}_visual_roi{extension}"
+        )
+        sync_output_path = (
+            f"{base_path}/processed_recordings/{base_name}_sync_roi{extension}"
+        )
 
-        if not pathlib.Path(visual_output_path).parent.exists() or not pathlib.Path(sync_output_path).parent.exists():
+        if (
+            not pathlib.Path(visual_output_path).parent.exists()
+            or not pathlib.Path(sync_output_path).parent.exists()
+        ):
             raise FileNotFoundError(
                 f"Output paths do not exist: {visual_output_path}, {sync_output_path}"
             )
-            
+
         # Extract ROI coordinates
         visual_x, visual_y, visual_w, visual_h = visual_roi_coords
         sync_x, sync_y, sync_w, sync_h = sync_roi_coords
 
-        #try:
+        # try:
         # Visual ROI command
         visual_cmd = [
             "ffmpeg",
@@ -313,14 +319,10 @@ class VideoTrimmer:
         stdout2, stderr2 = process2.communicate()
 
         if process1.returncode != 0:
-            raise RuntimeError(
-                f"Error processing visual ROI: {stderr1.decode()}"
-            )
+            raise RuntimeError(f"Error processing visual ROI: {stderr1.decode()}")
 
         if process2.returncode != 0:
-            raise RuntimeError(
-                f"Error processing sync ROI: {stderr2.decode()}"
-            )
+            raise RuntimeError(f"Error processing sync ROI: {stderr2.decode()}")
 
         return True, visual_output_path, sync_output_path
 

@@ -72,7 +72,7 @@ class ProcessedVideo(dj.Computed):
         # screen on the OBS video
         sync_roi = (1895, 580, 2, 2)
 
-        #try:
+        # try:
         trimmer = VideoTrimmer(video_path, session_start_buffer=10)
 
         visual_video_path, sync_video_path, validation_path, start, end = (
@@ -225,10 +225,11 @@ class AlignedVideoFrame(dj.Computed):
             self.insert1(
                 {
                     **key,
-                    "n_steps": len(state_dict["step"]) -1,
+                    "n_steps": len(state_dict["step"]) - 1,
                     "step": state_dict["step"],
                     "step_time": np.array(list(resampled_df["step_time"].values)),
-                    "frame_ids": np.array(list(resampled_df["frame_ids"].values)) - 7,  # NOTE(celia): we remove the first 7 frames to account for the initial delay
+                    # NOTE(celia): we remove the first 7 frames to account for the initial delay
+                    "frame_ids": np.array(list(resampled_df["frame_ids"].values)) - 7,
                     "interpol_func": pickle.dumps(timeinter_func),
                 }
             )
