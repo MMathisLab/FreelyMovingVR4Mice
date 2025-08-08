@@ -4,58 +4,21 @@ The FreelyMovingVR4Mice repository contains main **vr4mice** package (src code: 
 
 _**Note:**_ _The following installation assumes you have already installed on your system the `conda` package manager. If you haven't, please follow the official installation process for Windows [here](https://docs.conda.io/projects/conda/en/stable/) (check [this](https://docs.anaconda.com/miniconda/) for more details)._
 
-Create a new conda environment with local pip:
+Create and activate a new conda environment with local pip:
 
  ```bash
- conda create --name name_of_env python=3.10.12 pip
+ conda create -n <name-of-env> python=3.10.12 && conda activate <name-of-env>
  ```
 
- ```bash
- conda activate name_of_env
- ```
-
-Download our [forked ml-agents repository](https://github.com/AdaptiveMotorControlLab/ml-agents.git) from **AdaptiveMotorControlLab** (_the `--branch release_21_fix` option will switch to the tag of the latest stable "fixed" release, which currently is **21** and is the one we use. Omitting that will get the main branch_):
-
-- Clone the repository:
-
+ ```{hint}
+ As an example, with `vr4mice_env` as the environment name, the above command would become as follows:
   ```bash
-  git clone --branch release_21_fix https://github.com/AdaptiveMotorControlLab/ml-agents.git
+  conda create -n vr4mice_env python=3.10.12 && conda activate vr4mice_env
   ```
 
-  ```bash
-  cd ml-agents/
-  ```
+Now, it is necessary to clone the **FreelyMovingVR4Mice** repository and install the **vr4mice** package that comes with it:
 
-<!-- - Inside this main directory, find the `ml-agents-envs/` sub-directory and open, with any text editor, the `setup.py` file found within it. Near the end of the file, find the list of required dependencies and modify the `numpy` version: change it from `"numpy==1.21.2"` to `"numpy==1.23.3"` then save. When that is done, run the following two commands in order: -->
-
-- Then, run the following two commands in order:
-
-  ```bash
-  python -m pip install ./ml-agents-envs
-  ```
-
-  ```bash
-  python -m pip install ./ml-agents
-  ```
-
-- To check the installation was successful, run the following command:
-
-  ```bash
-  mlagents-learn -h
-  ```
-
-  This should print-out the **help** manual on how to use the `mlagents-learn` command.\
-  >_Note: you can ignore WARNINGS related to PyTorch_
-
-Finally go "up" one level (back to the location where you cloned the previous repository) and download the **vr4mice** source code:
-
-- To return to previous folder from the command line you can run:
-
-  ```bash
-  cd ..
-  ```
-
-- Clone the FreelyMovingVR4Mice repository:
+- To clone the **FreelyMovingVR4Mice** repository:
 
   ```bash
   git clone https://github.com/MMathisLab/FreelyMovingVR4Mice.git
@@ -65,21 +28,21 @@ Finally go "up" one level (back to the location where you cloned the previous re
   cd FreelyMovingVR4Mice
   ```
 
-- Choose a specific **branch**, if needed, by running:
+- To choose a specific **branch** other than `main` or `master` (if needed):
 
   ```bash
-  git checkout branch_name
+  git checkout <name-of-the-branch>
   ```
 
-  > By default, the `main` branch  will be used.
+  > _When cloning a GitHub repository, the default branch will usually be the `main` (or `master`)._
 
-- Install the **vr4mice** package  (_use `pip install -e .` if package is under development_):
+- To install the **vr4mice** package  (_use `pip install -e .` instead if planning to actively develop the package and modify the source code_):
 
   ```bash
   pip install .
   ```
 
-- To check everything installed successfully (assuming no **ERRORS** were displayed in the process), try to run the following in your conda environment:
+To check everything installed successfully (assuming no **ERRORS** were displayed in the process), try to run the following in your conda environment:
 
   ```bash
   vr4mice
