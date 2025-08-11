@@ -7,6 +7,7 @@ using Unity.MLAgents.Actuators;
 //using UnityEngine.UIElements;
 using UnityEngine.UI;
 using System.Diagnostics;
+using System;
 
 
 public class Mouse_move : Agent
@@ -52,6 +53,15 @@ public class Mouse_move : Agent
 	public float TT_box_z_max;
 	public float TT_box_angle;
 	public Vector3 prevPos = new Vector3(0f, 0f, 0f);
+
+	[Tooltip("Maximum units per second agent can move")]
+	public float maxMoveSpeed = 5f;
+	[Tooltip("Maximum degrees per second agent can rotate")]
+	public float maxRotationSpeed = 90f;
+
+	float start_x;
+	float start_z;
+	float start_angle;
 	public float speed;
 	public float distractor;
 	public bool targets_visable = false;
@@ -59,7 +69,7 @@ public class Mouse_move : Agent
 	public float photodiode_change_value;
 	public Image sync;
 	Stopwatch stopwatch;
-    float lastFrameTime;
+	float lastFrameTime;
 
 
 	// Start is called before the first frame update
@@ -69,14 +79,22 @@ public class Mouse_move : Agent
 		plane.GetComponent<Target_spawner>().DestroyTargets();
 		rBody = GetComponent<Rigidbody>();
 		ITIScreenOff();
+
 		stopwatch = new Stopwatch();
-        stopwatch.Start();
-        lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
+		stopwatch.Start();
+		lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
 	}
 
 	public override void OnEpisodeBegin()
 	{
 		SetResetParams();
+
+		// Resetting agent position to default
+		transform.position = new Vector3(start_x, 0.5f, start_z);
+		transform.eulerAngles = new Vector3(0.0f, start_angle, 0.0f);
+
+		rBody.velocity = Vector3.zero;
+		rBody.angularVelocity = Vector3.zero;
 
 		plane.GetComponent<Target_spawner>().DestroyTargets();
 		mouse_can_report = false;
@@ -85,18 +103,14 @@ public class Mouse_move : Agent
 
 		if (distractor == 0.0f)
 		{
-			UnityEngine.Debug.Log("no distractor");
 			plane.GetComponent<Target_spawner>().Spawn();
 			spawned = 1f;
 		}
 		if (distractor == 1.0f)
 		{
-			UnityEngine.Debug.Log("distractor");
 			plane.GetComponent<Target_spawner>().Spawn_distractor();
 			spawned = 1f;
 		}
-
-
 
 		totalEpisodeTime = 0;
 
@@ -104,40 +118,37 @@ public class Mouse_move : Agent
 		L_box_delay = 0f;
 		R_box_delay = 0f;
 
-      ITIScreenOff();
-      ITI = false;
+		ITIScreenOff();
+		ITI = false;
 
-      if (plane.GetComponent<Target_spawner>().occlusion_type > 0f){
-      		plane.GetComponent<Target_spawner>().walls_reset();
-	  }
+		if (plane.GetComponent<Target_spawner>().occlusion_type > 0f)
+		{
+			plane.GetComponent<Target_spawner>().walls_reset();
+		}
 
 		stopwatch.Restart();
-        lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
-
-		//this.transform.position = new Vector3(0, 0.5f, -6);
+		lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
 	}
 
 	float GetDeltaTime()
-    {
-        float currentTime = (float)stopwatch.Elapsed.TotalSeconds;
-        float deltaTime = currentTime - lastFrameTime;
-        lastFrameTime = currentTime;
-        return deltaTime;
-    }
+	{
+		// float currentTime = (float)stopwatch.Elapsed.TotalSeconds;
+		// float deltaTime = currentTime - lastFrameTime;
+		// lastFrameTime = currentTime;
+		// return deltaTime;
+		return Time.fixedDeltaTime;
+	}
 
 	private void ITIScreenOff()
 	{
 		foreach (GameObject can in ITI_screen)
 		{
-			// UnityEngine.Debug.Log(can);
 			can.SetActive(false);
-
 		}
 	}
 
 	private void ITIScreenOn()
 	{
-		//UnityEngine.Debug.Log("turn on");
 		foreach (GameObject can in ITI_screen)
 		{
 			can.SetActive(true);
@@ -159,37 +170,45 @@ public class Mouse_move : Agent
 			targets_visable = true;
 		}
 
-		float x = actions.ContinuousActions[0];
-		float z = actions.ContinuousActions[1];
-		float head_angle = actions.ContinuousActions[2];
+		// 1) Read raw actions
+		float dx = actions.ContinuousActions[0];
+		float dz = actions.ContinuousActions[1];
+		float da = actions.ContinuousActions[2];
 		photodiode_change_value = actions.ContinuousActions[3];
 
+		UnityEngine.Debug.Log($"[DEBUG] Position before action: {transform.position.x}, {transform.position.z}, {transform.eulerAngles.y}");
+		UnityEngine.Debug.Log($"[DEBUG] Action received dx: {dx}, dz: {dz}, da: {da}");
+		UnityEngine.Debug.Log($"[DEBUG] Delta time computed: {deltaTime}");
 
-		this.transform.position = new Vector3(x, 0.5f, z);
-		this.transform.eulerAngles = new Vector3(0.0f, head_angle, 0.0f);
-		Vector3 currVel = (this.transform.position - prevPos) / deltaTime;
+		// 2) Incremental head rotation (do this first)
+		float deltaHead = da * maxRotationSpeed * deltaTime;
+		Quaternion targetRot = Quaternion.Euler(0f, transform.eulerAngles.y + deltaHead, 0f);
+		rBody.MoveRotation(targetRot);
+
+		// 3) Compute movement delta & apply (after rotation)
+		Vector3 step = new Vector3(dx, 0f, dz) * maxMoveSpeed * deltaTime;
+		Vector3 newPos = transform.position + step;
+		newPos.x = Mathf.Clamp(newPos.x, -9f, 9f);
+		newPos.z = Mathf.Clamp(newPos.z, -10f, -2f);
+		rBody.MovePosition(newPos);
+
+		// 4) Compute speed for observations
+		Vector3 currVel = (newPos - prevPos) / deltaTime;
+
 		speed = currVel.magnitude;
-		prevPos = this.transform.position;
-		//UnityEngine.Debug.Log(speed);
+		prevPos = newPos;
 
 		mouseInRight_box = agentInBox(R_box_x_min, R_box_x_max, R_box_z_min, R_box_z_max, false);
-
 		mouseInLeft_box = agentInBox(L_box_x_min, L_box_x_max, L_box_z_min, L_box_z_max, false);
 
 		if (mouse_can_report)
 		{
-			//UnityEngine.Debug.Log("mouse can report");
 			MouseReported(deltaTime);
 			if (mouse_report_correct == true)
 			{
-				//UnityEngine.Debug.Log("mouse report correct");
-
 				thisReward = 1f;
 				mouse_report_correct = false;
 				mouse_can_report = false;
-				UnityEngine.Debug.Log("rewarded");
-
-
 			}
 
 		}
@@ -198,14 +217,9 @@ public class Mouse_move : Agent
 		mouse_can_report_trigger();
 
 		// Trigger ITI either - ITI can be timed or next episode can start when the agent looks back at the screen in a frontal box
-
 		triggerGreyScreen_agentTriggerd(deltaTime);
 
-
-
 		SetReward(thisReward);
-		//UnityEngine.Debug.Log(thisReward);
-
 	}
 
 
@@ -229,10 +243,24 @@ public class Mouse_move : Agent
 
 	public override void Heuristic(in ActionBuffers actionsOut)
 	{
-		ActionSegment<float> continuousActionsOut = actionsOut.ContinuousActions;
-		continuousActionsOut[0] = this.transform.position.x;
-		continuousActionsOut[1] = this.transform.position.z;
-		continuousActionsOut[2] = this.transform.eulerAngles.y;
+		var continuousActionsOut = actionsOut.ContinuousActions;
+
+		// 1) Head: Horizontal axis → turn left/right
+		//    Raw in [-1,1], zero means "no turn"
+		float rawHead = Input.GetAxis("Horizontal");
+		continuousActionsOut[2] = rawHead;
+
+		// 2) Movement: Vertical axis → forward/back, relative to current heading
+		//    Raw in [-1,1], zero means "no move"
+		float moveInput = Input.GetAxis("Vertical");
+		float yawRad = transform.eulerAngles.y * Mathf.Deg2Rad;
+		float rawX = Mathf.Sin(yawRad) * moveInput;
+		float rawZ = Mathf.Cos(yawRad) * moveInput;
+		continuousActionsOut[0] = rawX;
+		continuousActionsOut[1] = rawZ;
+
+		// 3) Photodiode: keep at zero unless you want manual control
+		continuousActionsOut[3] = 0f;
 	}
 
 
@@ -265,12 +293,9 @@ public class Mouse_move : Agent
 	{
 		if (ITI == true)
 		{
-			//UnityEngine.Debug.Log("ITI_triggered");
-			//UnityEngine.Debug.Log("ITI_triggered by agent triggered function");
 			inITItimer += deltaTime;
 			if (ITIGreyScreen == 1f)
 			{
-				UnityEngine.Debug.Log("grey screen");
 				ITIScreenOn();
 			}
 
@@ -279,11 +304,7 @@ public class Mouse_move : Agent
 			{
 				if (speed < velocity_threshold)
 				{
-					//UnityEngine.Debug.Log(speed);
 					start_box_delay += deltaTime;
-					//UnityEngine.Debug.Log(deltaTime);
-					//UnityEngine.Debug.Log("delta_time");
-					//UnityEngine.Debug.Log(Time.deltaTime);
 					if (start_box_delay > box_delay)
 					{
 						EndEpisode();
@@ -346,7 +367,6 @@ public class Mouse_move : Agent
 	{
 		if (mouseInLeft_box)
 		{
-			//UnityEngine.Debug.Log("mouse in left box");
 			L_box_delay += deltaTime;
 		}
 		else
@@ -356,7 +376,6 @@ public class Mouse_move : Agent
 
 		if (mouseInRight_box)
 		{
-			//UnityEngine.Debug.Log("mouse in right box");
 			R_box_delay += deltaTime;
 		}
 		else
@@ -391,7 +410,7 @@ public class Mouse_move : Agent
 	void SetResetParams()
 	{
 
-		// resetParams = Academy.Instance.FloatProperties;
+		UnityEngine.Debug.Log($"[DEBUG] Resetting environment...");
 		var environmentParameters = Academy.Instance.EnvironmentParameters;
 
 		mouseReportDelay = environmentParameters.GetWithDefault("mouseReportDelay", 5f);
@@ -417,9 +436,9 @@ public class Mouse_move : Agent
 
 		ITIGreyScreen = environmentParameters.GetWithDefault("Grey_screen_active", 0f);
 
+		start_x = environmentParameters.GetWithDefault("start_x", 0f);
+		start_z = environmentParameters.GetWithDefault("start_z", -8f);
+		start_angle = environmentParameters.GetWithDefault("start_angle", 0f);
 	}
-
-
-
 }
 
