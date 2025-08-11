@@ -11,9 +11,9 @@ import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 
+import time
 import pathlib
 import numpy as np
-import time
 
 from mouse_task.helpers import process_config
 
@@ -53,7 +53,7 @@ class ActiveSensingTask(UnityTask):
     prob_block_coherence: Float, this is the probability that the OOI will appear on the same side as the block. ie if the block was a left block and the prob_block_coherence was 1 then it would appear on the left (default is 0.5). This parameter is only used if the block length is greater that 1.
     mouse_report_delay: Float, mouse report delay default is `0`.
     slit_size: List, this is a list of numbers [min_slit_size, max_slit_size, number_of_slit_sizes] ie. [10,20,5] would give a range of 5 slit sizes with 10 being the minimum and 20 being the max. If you want to pass a custom number on multiple slit sizes you can pass this in as a list of numbers ie [12,8,6,5,3] as long as the len of that list if > 3
-    slit_depth: Float, this parameter controls the depth or thickness of the walls (default = 0.2). 
+    slit_depth: Float, this parameter controls the depth or thickness of the walls (default = 0.2).
     target_selection: Integer, this parameter selects what object for the OOI (`0.` = white cube, `1.` = black cube, `2.` = teardrop grey, `3.` = pacman grey, `4.` = teardrop black, `5.` = pacman black, `6.` = teardrop white, `7.` = pacman white,`8.`= zebra teardrop, `9.`= zebra ball, `10.`=white ball, `11.`=light gray zebra teardrop, `12.` = dark gray zebra teardrop )
     distractor_selection: Integer, this parameter selects what object for the distractor (`0.` = white cube, `1.` = black cube, `2.` = teardrop grey, `3.` = pacman grey, `4.` = teardrop black, `5.` = pacman black, `6.` = teardrop white, `7.` = pacman white,`8.`= zebra teardrop, `9.`= zebra ball, `10.`=white ball, `11.`=light gray zebra teardrop, `12.` = dark gray zebra teardrop )
     occlusion_type: Integer, allows the user to select the type of occlusion that they want to use. (`0` = no occlusion, `1` = slit occlusion, `2` = central wall), default is no occlusion.
@@ -126,7 +126,6 @@ class ActiveSensingTask(UnityTask):
         config_dict = process_config(config_file_path)
 
         if config_dict is None:
-            # Error messages are showed on process_config() function level
             print("config not found!")
             return
 
@@ -153,15 +152,16 @@ class ActiveSensingTask(UnityTask):
         self.start_box_delay = start_box_delay
         self.velocity_threshold = velocity_threshold
 
-        self.previous = np.array([9, -5, 0, 0,], dtype=np.float16,).reshape(1, -1)
+        self.previous = np.array(
+            [0, -5, 0, 0],
+            dtype=np.float16,
+        ).reshape(1, -1)
 
-        # Game trial parameters
-        # add to class and enforce list structure
+        # Game trial parameters add to class and enforce list structure
         self.reward_size = self.as_list(reward_size)
         self.slit_size = slit_size
         slit_sizes_list = self.as_list(slit_size)
         self.slit_sizes = self.get_slit_sizes(slit_sizes_list)
-
         self.slit_depth = self.as_list(slit_depth)
         self.slit_depth_param = slit_depth
         self.epoch_labels = self.as_list(epoch_labels)
@@ -173,26 +173,19 @@ class ActiveSensingTask(UnityTask):
         self.target_rotation = self.as_list(target_rotation)
         self.target_rotation_param = target_rotation
         self.mouse_report_delay_param = mouse_report_delay
-
         self.prob_obj_on_left = prob_obj_on_left
         self.prob_block_coherence = prob_block_coherence
-
         self.block_Left = np.random.choice([0.0, 1.0], p=[0.5, 0.5])
-        print("block_left", self.block_Left)
 
         if self.block_Left == 0.0:
-            print("Right block")
             self.object_on_left = np.random.choice(
                 [0.0, 1.0], p=[self.prob_block_coherence, 1 - self.prob_block_coherence]
             )
 
         else:
-            print("Left block")
             self.object_on_left = np.random.choice(
                 [0.0, 1.0], p=[1 - self.prob_block_coherence, self.prob_block_coherence]
             )
-
-        print("object_on_left: ", self.object_on_left)
 
         self.block_length = block_length
         self.distractor = distractor
@@ -208,7 +201,6 @@ class ActiveSensingTask(UnityTask):
         self.target_distance_param = target_distance
         self.use_dlc = use_dlc
         self.epoch_param = epochs
-
         self.n_rewards = 0
 
         # Create empty vectors to keep track of game parameters per trial
@@ -224,16 +216,12 @@ class ActiveSensingTask(UnityTask):
         self.trial_occlusion_type = []
         self.trial_target_distance = []
         self.trial_target_rotation = []
-
         self.dlc_read_time = []
         self.dlc_x = []
         self.dlc_y = []
         self.dlc_heading = []
         self.dlc_time_step = []
         self.trial_mouse_report_delay = []
-
-        # self.set_channel()
-        # self.reset_environment()
 
     def _get_dlc_on_frame(self):
         """
@@ -243,7 +231,7 @@ class ActiveSensingTask(UnityTask):
         This is run on every frame after the dlc processor is initialized.
         """
 
-        # run DLC on every frame to be given as input to the agent
+        # Run DLC on every frame to be given as input to the agent
         this_read = self.dlcClient.read()
 
         if this_read != None:
@@ -267,7 +255,7 @@ class ActiveSensingTask(UnityTask):
             self.dlc_heading.append(head_angle)
             self.dlc_read_time.append(this_read["time"])
 
-            # interp mouse pixel space into arena space
+            # Interpolate mouse pixel space into arena space
             x = np.interp(
                 x,
                 [self.cropped_image[0], self.cropped_image[1]],
@@ -282,7 +270,6 @@ class ActiveSensingTask(UnityTask):
             output = np.array([x, z, self.degrees, photodiode_intensity])
             self.previous = output
         else:
-            # print("missed dlc frame")
             time.sleep(0)
             output = self.previous
         return output.reshape((1, -1))
@@ -302,9 +289,7 @@ class ActiveSensingTask(UnityTask):
             self.block_sampler()
 
         this_prob_obj_left = self.prob_obj_on_left
-        print("prob left", this_prob_obj_left)
         this_slit_size = np.random.choice(self.slit_sizes)
-        print("slit_size", this_slit_size)
         this_slit_depth = self.get_epoch_value("slit_depth")
         this_target_spread = self.get_epoch_value("target_spread")
         this_target_height = self.get_epoch_value("target_height")
@@ -331,9 +316,8 @@ class ActiveSensingTask(UnityTask):
         self.channel.set_float_parameter("occlusion_type", this_occlusion_type)
         self.channel.set_float_parameter("targetsZpos", this_target_distance)
         self.channel.set_float_parameter("target_rotation", this_target_rotation)
-        print("this occ_type: ", this_occlusion_type)
 
-        # set properties for start box, left report box and right report box
+        # Set properties for start box, left report box and right report box
         self.channel.set_float_parameter("L_box_x_min", self.l_report_box[0])
         self.channel.set_float_parameter("L_box_x_max", self.l_report_box[1])
         self.channel.set_float_parameter("L_box_z_min", self.l_report_box[2])
@@ -349,11 +333,12 @@ class ActiveSensingTask(UnityTask):
         self.channel.set_float_parameter("TT_box_z_min", self.start_box[2])
         self.channel.set_float_parameter("TT_box_z_max", self.start_box[3])
         self.channel.set_float_parameter("TT_box_angle", self.start_box[4])
+
         self.channel.set_float_parameter("distractor", self.distractor)
         self.channel.set_float_parameter("targetSize", self.target_size)
         self.channel.set_float_parameter("Grey_screen_active", self.grey_screen_active)
 
-        # add trial parameters to trial vectors so that we can save them to the log file
+        # Add trial parameters to trial vectors so that we can save them to the log file
         self.trial_epoch_labels.append(self.get_epoch_value("epoch_labels"))
         self.trial_slit_size.append(this_slit_size)
         self.trial_slit_depth.append(this_slit_depth)
@@ -363,12 +348,10 @@ class ActiveSensingTask(UnityTask):
         self.trial_distractor_selection.append(this_distractor_selection)
         self.trial_target_selection.append(this_target_selection)
         self.trial_occlusion_type.append(this_occlusion_type)
-        print(self.trial_occlusion_type)
         self.trial_target_distance.append(this_target_distance)
         self.trial_target_rotation.append(this_target_rotation)
         self.trial_reward_size.append(self.reward_size)
         self.trial_prob_obj_on_left.append(self.prob_obj_on_left)
-        # super().reset_environment()
 
     def get_action(self):
         """
@@ -393,11 +376,9 @@ class ActiveSensingTask(UnityTask):
 
             if self.state[7] > 0:
                 print("___ Rewarded - left ___")
-                print(self.reward_size)
                 self.teensy.write("l_water", [self.reward_size[0]])
             else:
                 print("___ Rewarded - right ___")
-                print(self.reward_size)
                 self.teensy.write("r_water", [self.reward_size[0]])
             self.n_rewards += 1
 
@@ -405,7 +386,6 @@ class ActiveSensingTask(UnityTask):
         self.object_on_left = np.random.choice(
             [0.0, 1.0], p=[1 - self.prob_obj_on_left, self.prob_obj_on_left]
         )
-        print("object on left", self.object_on_left)
 
     def block_sampler(self):
         if self.correct == self.block_length:
@@ -422,39 +402,39 @@ class ActiveSensingTask(UnityTask):
             self.object_on_left = np.random.choice(
                 [0.0, 1.0], p=[1 - self.prob_block_coherence, self.prob_block_coherence]
             )
-        print("object on left", self.object_on_left)
-        
+
     def get_slit_sizes(self, slit_sizes_list: list):
-        """ Create a vector of slit sizes which can be passed to the uniform random sampler in the set.channel() function.
-        
-        Args: 
+        """Create a vector of slit sizes which can be passed to the uniform random sampler in the set.channel() function.
+
+        Args:
             slit_sizes_list: List, of numbers [min_slit_size, max_slit_size, number_of_slit_sizes] ie. [10,20,5] would give
             a range of 5 slit sizes with 10 being the minimum and 20 being the max.
-            If you want to pass a custom number on multiple slit sizes you can pass this in as a 
+            If you want to pass a custom number on multiple slit sizes you can pass this in as a
             list of numbers ie [12,8,6,5,3] as long as the len of that list if > 3.
-        
-        Returns: 
+
+        Returns:
             np.array, of slit sizes to be sampled from.
         """
- 
+
         if len(slit_sizes_list) == 0:
             raise ValueError("slit_sizes_list cannot be empty.")
-    
+
         if len(slit_sizes_list) < 3:
             raise ValueError("slit_sizes_list must have at least 3 elements.")
-     
+
         for x in slit_sizes_list:
             if not isinstance(x, (int, float)):
-                raise TypeError(f"All elements in slit_sizes_list must be numeric, got {x} which is a {type(x)}.")
-        
+                raise TypeError(
+                    f"All elements in slit_sizes_list must be numeric, got {x} which is a {type(x)}."
+                )
+
         if len(slit_sizes_list) == 3:
-            data = np.linspace(slit_sizes_list[0], slit_sizes_list[1], int(slit_sizes_list[2]))
-            print(f"3 elements found in slit size list: using linspace function, here are your occluder sizes: {data}")
+            data = np.linspace(
+                slit_sizes_list[0], slit_sizes_list[1], int(slit_sizes_list[2])
+            )
         else:
             data = np.array(slit_sizes_list)
-            print(f"{len(slit_sizes_list)} elements found, using the slit size list explicitly, here are you occluder sizes: {data}")
         return data
-            
 
     def reset_environment(self):
         """
