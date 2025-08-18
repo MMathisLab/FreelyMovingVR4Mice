@@ -106,7 +106,7 @@ class MyProcessor_socket(Processor):
         else:
             #curr_signal = (np.sign(np.sin(5*np.pi*time.time()))+1)/2
             curr_signal = np.round((np.sin((self.curr_time*freq)) + 1)/ 4,4)
-        return(curr_signal)
+        return curr_signal
     
     def flip_every_frame(self, curr_time, st, delay):
         if (curr_time - st) < delay:
