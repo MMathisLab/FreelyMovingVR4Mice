@@ -90,7 +90,6 @@ class dlc_inference_w_pd(Processor):
 
         self.center_x.append(vals[0])
         self.center_y.append(vals[1])
-        # print("center_y: ", vals [1], ", center_x: ", vals [0])
         self.heading_direction.append(vals[2])
         self.head_angle.append(vals[3])
         self.time_stamp.append(self.curr_time)
@@ -120,7 +119,6 @@ class dlc_inference_w_pd(Processor):
             curr_signal = 0
         else:
             curr_signal = (np.sign(np.sin(freq * np.pi * time.time())) + 1) / 2
-            # print(curr_signal)
             # self.curr_signal = (np.sin((self.curr_step) * .1) + 1) / 2
         return curr_signal
 
@@ -130,7 +128,6 @@ class dlc_inference_w_pd(Processor):
         else:
             # curr_signal = (np.sign(np.sin(5*np.pi*time.time()))+1)/2
             curr_signal = np.round((np.sin((self.curr_time * freq)) + 1) / 4, 4)
-            # print(curr_signal)
         return curr_signal
 
     def flip_every_frame(self, curr_time, st, delay):
