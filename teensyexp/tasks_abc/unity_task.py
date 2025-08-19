@@ -180,8 +180,6 @@ class UnityTask(Task):
         """
         getters for state
         """
-
-        # could it be just self.get_step_result().obs?
         return self.get_step_result().obs[self.vec_obs_ind]
 
     def set_channel(self):

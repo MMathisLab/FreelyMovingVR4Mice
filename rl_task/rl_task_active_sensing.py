@@ -1,5 +1,6 @@
 import time
 import pickle
+import random
 import numpy as np
 
 from typing import List
@@ -7,13 +8,14 @@ from pathlib import Path
 from mlagents_envs.environment import UnityEnvironment, ActionTuple
 from unittest.mock import patch
 
-from teensy.fake_teensy import FakeTeensy
+from rl_task.fake_teensy import FakeTeensy
 from mouse_task.task_active_sensing import ActiveSensingTask
 
 
 class ActiveSensingTaskRL(ActiveSensingTask):
     def __init__(
         self,
+        env_path: Path | None,
         teensy: FakeTeensy,
         session_label: List[str],
         config_file_path: Path,
@@ -49,10 +51,26 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         grey_screen_active: float,
         target_distance: float,
         use_dlc: bool = False,
+        batchmode: bool = True,
+        base_port: int = 5004,
+        worker_id: int = 0,
     ):
+
+        self.angle_in_degrees = True
+        self.max_lin_speed = 300  # mm / s
+        self.max_ang_speed = np.pi  # rad / s
+        self.dt = 1 / fps
+        self.default_virtual_state = np.array(
+            [cropped_image[1] // 2, cropped_image[3] // 4, 0]
+        )
+
+        self.batchmode = batchmode
+        self.base_port = base_port
+        self.worker_id = worker_id
+
         with patch(
             "mouse_task.task_active_sensing.process_config",
-            return_value={"ar_env_unity_absolute_path": ""},
+            return_value={"ar_env_unity_absolute_path": env_path},
         ):
             super().__init__(
                 teensy,
@@ -93,33 +111,38 @@ class ActiveSensingTaskRL(ActiveSensingTask):
             )
 
     def start(self):
-        # Start tracking time
         self.start_time = time.time()
 
-        # Start unity game
         self.set_channel()
 
+        if self.env_path is None:
+            print("[INFO] Waiting for Unity editor to connect...")
+
         self.env = UnityEnvironment(
-            file_name=None,
-            base_port=5004,
-            worker_id=0,
-            # additional_args=["-batchmode"],
+            file_name=self.env_path,
+            base_port=self.base_port,
+            worker_id=self.worker_id,
+            additional_args=["-batchmode"] if self.batchmode else [],
             side_channels=[self.channel],
         )
 
+        if self.env_path is None:
+            print("[INFO] Editor connected successfully!")
+
         self.env.reset()
+
         self.agent = list(self.env.behavior_specs)[0]
         self.agent_spec = self.env.behavior_specs[self.agent]
 
-        # Retrieve the action space and observation space of the agent
+        # Retrieve the action and observation spaces of the agent
         self.action_space = self.agent_spec.action_spec
         self.observation_space = self.agent_spec.observation_specs
 
-        print(f"[DEBUG] Agent information")
-        print(f"[DEBUG]   * Action space : {self.action_space}")
-        print(f"[DEUBG]   * Observation space : {self.observation_space}")
+        # print(f"[DEBUG] Agent information")
+        # print(f"[DEBUG]   * Action space : {self.action_space}")
+        # print(f"[DEUBG]   * Observation space : {self.observation_space}")
 
-        # Set up state observations and video (if necessary)
+        # Set up state observations
         obs_shapes = [obs_spec.shape for obs_spec in self.agent_spec.observation_specs]
         obs_dim = [len(shape) for shape in obs_shapes]
         self.vec_obs_ind = np.where(np.array(obs_dim) == 1)[0][0]
@@ -134,22 +157,69 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         self.state = decision_steps.obs[self.vec_obs_ind][0]
         self.vis_state = decision_steps.obs[self.vis_obs_ind]
         self.episode = 1
+        self.ep_length = 0
+
+        self.virtual_state = self.default_virtual_state
+
+    def _wrap_angle(self, a):
+        return (a + np.pi) % (2 * np.pi) - np.pi
+
+    def _change_space(self, x, z, space1, space2):
+        # Interpolate input coordinates from space 1 to space 2
+        v_x0, v_x1, v_z0, v_z1 = space1
+        u_x0, u_x1, u_z0, u_z1 = space2
+
+        x_v, z_v = x, z
+
+        x_u = np.interp(x_v, [v_x0, v_x1], [u_x0, u_x1])
+        z_u = np.interp(z_v, [v_z0, v_z1], [u_z0, u_z1])
+
+        return np.array([x_u, z_u])
 
     def transform_action(self, action):
-        raw_move, raw_turn = action
-        current_heading = np.deg2rad(self.state[2])
+        # Implement navigation kinematics to send Unity next absolute position
 
-        dx = raw_move * np.sin(current_heading)
-        dz = raw_move * np.cos(current_heading)
+        dt = self.dt
+        move, turn = action
 
-        print(f"[DEBUG]   * Transformed action : {dx, dz, raw_turn}")
-        return np.array([dx, dz, raw_turn, 0], dtype=np.float32)
+        # Unpack current virtual state
+        x, z, a = self.virtual_state
+
+        v = move * self.max_lin_speed
+        omega = turn * self.max_ang_speed
+
+        da = omega * dt
+        theta = a + da
+        dx = v * dt * np.sin(theta)
+        dz = v * dt * np.cos(theta) * 2
+
+        # print(f"[DEBUG] Displacement deltas : {dx}, {dz}, {da}")
+
+        x_new = x + dx
+        z_new = z + dz
+        a_new = a + da
+
+        # Clamp to virtual arena bounds
+        vx0, vx1, vz0, vz1 = self.cropped_image
+        virtual_x = float(np.clip(x_new, vx0, vx1))
+        virtual_z = float(np.clip(z_new, vz0, vz1))
+
+        self.virtual_state = (virtual_x, virtual_z, a_new)
+
+        unity_x, unity_z = self._change_space(
+            virtual_x,
+            virtual_z,
+            space1=self.cropped_image,
+            space2=self.unity_arena_size,
+        )
+
+        # Persist and format output angle
+        a_out = np.degrees(a_new) if self.angle_in_degrees else a_new
+        return np.array([unity_x, unity_z, a_out, 0.0], dtype=np.float32)
 
     def loop(self, action):
-        print(f"[DEBUG] Action received : {action}")
-        print(f"[DEBUG]   * State before step : {np.round(self.state, 2)}")
-
         self.step += 1
+        self.ep_length += 1
         self.cur_time = time.time() - self.start_time
 
         self.episode_vec.append(self.episode)  # trial
@@ -164,7 +234,6 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         action_tuple.add_continuous(self.action.reshape(1, -1))
         self.env.set_actions(self.agent, action_tuple)
 
-        # Unity env++
         self.env.step()
 
         # Get observations
@@ -181,8 +250,6 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         self.state = step_result.obs[self.vec_obs_ind]
         self.vis_state = step_result.obs[self.vis_obs_ind]
         info = self.get_info()
-
-        print(f"[DEBUG]   * State after step : {np.round(self.state, 2)}")
 
         self.state_vec.append(self.state)
 
@@ -243,6 +310,9 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         self.channel.set_float_parameter("targetSize", self.target_size)
         self.channel.set_float_parameter("Grey_screen_active", self.grey_screen_active)
 
+        # Setting the Unity env to be in RL mode
+        self.channel.set_float_parameter("RL_training", 1)
+
         # Add trial parameters to trial vectors so that we can save them to the log file
         self.trial_epoch_labels.append(self.get_epoch_value("epoch_labels"))
         self.trial_slit_size.append(this_slit_size)
@@ -257,11 +327,6 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         self.trial_target_rotation.append(this_target_rotation)
         self.trial_reward_size.append(self.reward_size)
         self.trial_prob_obj_on_left.append(self.prob_obj_on_left)
-
-        # Setting the restart position of the agent
-        self.channel.set_float_parameter("start_x", 0)
-        self.channel.set_float_parameter("start_z", -8)
-        self.channel.set_float_parameter("start_angle", 0)
 
     def get_info(self):
         pos = (
@@ -283,7 +348,8 @@ class ActiveSensingTaskRL(ActiveSensingTask):
 
         return {
             "epoch": self.epoch_labels[self.epoch],
-            "episode": self.episode,
+            "episode_num": self.episode,
+            "episode": {"r": self.ep_reward, "l": self.ep_length},
             "position": pos,
             "h_angle": h_angle,
             "degrees": self.degrees,
@@ -301,16 +367,16 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         self.env.reset()
         decision_steps, _ = self.env.get_steps(self.agent)
         self.ep_reward = 0
+        self.ep_length = 0
         self.episode_start_time = self.cur_time
         self.state = decision_steps[self.agent_num].obs[self.vec_obs_ind]
         self.vis_state = decision_steps[self.agent_num].obs[self.vis_obs_ind]
-        return decision_steps[self.agent_num].obs, self.get_info()
+        self.virtual_state = self.default_virtual_state
+        self.loop(action=np.array([0.0, 0.0]))
+        return decision_steps[self.agent_num].obs[self.vis_obs_ind], self.get_info()
 
     def reset(self, seed=None):
         if seed is not None:
-            import random
-
-            print(f"[DEBUG] Setting random seed : {seed}")
             np.random.seed(seed)
             random.seed(seed)
         return self.reset_environment()

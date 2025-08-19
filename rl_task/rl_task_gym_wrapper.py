@@ -1,21 +1,30 @@
-import random
 import numpy as np
 import gymnasium as gym
+
 from gymnasium import spaces
-from teensy.fake_teensy import FakeTeensy
-from rl_task_active_sensing import ActiveSensingTaskRL
+from rl_task.fake_teensy import FakeTeensy
+from rl_task.rl_task_active_sensing import ActiveSensingTaskRL
 
 
 class MouseTaskToGymWrapper(gym.Env):
-    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
+    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 50}
 
-    def __init__(self, env_path, render_mode=None):
+    def __init__(
+        self,
+        env_path,
+        fps,
+        render_mode=None,
+        base_port=5004,
+        worker_id=0,
+        batchmode=True,
+    ):
         self.task = ActiveSensingTaskRL(
+            env_path=env_path,
             teensy=FakeTeensy(),
             monitor=None,
             write_video=False,
-            fps=60.0,
-            session_label=["ar_discrim"],
+            fps=fps,
+            session_label=["rl_ar_discrim"],
             epochs=[250],
             epoch_labels=["dual_teardrop"],
             config_file_path=None,
@@ -46,6 +55,9 @@ class MouseTaskToGymWrapper(gym.Env):
             grey_screen_active=0.0,
             target_distance=3.0,
             use_dlc=False,
+            base_port=base_port,
+            worker_id=worker_id,
+            batchmode=batchmode,
         )
         self.task.start()
 
@@ -70,18 +82,19 @@ class MouseTaskToGymWrapper(gym.Env):
     def _get_info(self):
         return self.task.get_info()
 
+    def _to_uint8(self, obs: np.ndarray):
+        if obs.dtype == np.uint8 and obs.min() >= 0 and obs.max() <= 255:
+            return obs
+        return (255.0 * obs).astype(np.uint8)
+
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
         obs, info = self.task.reset(seed=seed)
-
-        # Transform to observation uint8 obervation space
-        obs = (255.0 * obs[self.task.vis_obs_ind]).astype(np.uint8)
-        return obs, info  # Gymnasium API
+        return self._to_uint8(obs), info  # Gymnasium API
 
     def step(self, action):
         observation, reward, terminated, truncation, info = self.task.loop(action)
-        print(f"[DEBUG] Observation type : {type(observation)}")
-        return observation, reward, terminated, truncation, info
+        return self._to_uint8(observation), reward, terminated, truncation, info
 
     def render(self, mode="human"):
         # return self.unity.render(mode=mode)
