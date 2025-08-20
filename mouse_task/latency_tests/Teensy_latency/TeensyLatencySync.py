@@ -4,6 +4,7 @@ import time
 import serial
 from collections import deque
 
+#TODO replace printing with logging
 
 class TeensyLatency():
     def __init__(self, com, baudrate):
