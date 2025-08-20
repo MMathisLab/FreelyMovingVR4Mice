@@ -82,7 +82,7 @@ class dlc_inference_w_pd(Processor):
             signal_type=self.signal_type,
         )
 
-        self.curr_step + self.curr_step + 1
+        self.curr_step = self.curr_step + 1 
 
         heading = atan2(body_axis[1], body_axis[0])
         heading = degrees(heading)
