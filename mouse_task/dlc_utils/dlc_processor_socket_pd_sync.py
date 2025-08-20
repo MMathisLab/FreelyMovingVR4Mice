@@ -5,12 +5,15 @@ from multiprocessing.connection import Listener
 import pickle
 import time
 from collections import deque
-from latency_tests.Teensy_latency.TeensyLatency import TeensyLatency
+from latency_tests.Teensy_latency.TeensyLatencySync import TeensyLatency
 import warnings
 import numpy as np
 from dlclive import Processor
 from math import sqrt, acos, atan2, copysign, pi, degrees
 
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 class dlc_inference_w_pd(Processor):
     def __init__(
@@ -47,9 +50,10 @@ class dlc_inference_w_pd(Processor):
         self.signal_freq = freq
         self.use_teensy = use_teensy
         self.previous = np.array([0,0])
+        self.logger = logging.getLogger("DLC_processor")
         if self.use_teensy == 1:
             self.teensy = TeensyLatency(com, baudrate=baudrate)
-            print("using_teensy")
+            self.logger.info("Using Teensy")
 
     def process(self, pose, **kwargs):
         # print(pose.keys())
@@ -156,16 +160,16 @@ class dlc_inference_w_pd(Processor):
                     )
                 save_code = 1
             except Exception as e:
-                warnings.warn(f"Proc file was not saved, an exception occurred: {e}")
+                self.logger.error(f"Proc file was not saved, an exception occurred: {e}", exc_info=True)
 
                 save_code = -1
         return save_code
 
     def save_latency_data(self):
         if self.use_teensy == 1:
-            print("closing serial connection to teensy")
+            self.logger.info("Closing serial connection to Teensy")
             self.teensy.close_serial()
-  
+
         save_dict = dict()
         save_dict["start_time"] = np.array(self.start_time)
         save_dict["frame_time"] = np.array(self.frame_time)
