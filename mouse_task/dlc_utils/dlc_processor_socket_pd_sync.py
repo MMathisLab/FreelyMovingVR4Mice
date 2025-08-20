@@ -26,13 +26,13 @@ class dlc_inference_w_pd(Processor):
         use_teensy=1,
     ):
         super().__init__()
+        self.logger = logging.getLogger("DLC_processor")
         # self.queue = queue
 
         self.address = ("localhost", 6000)  # family is deduced to be 'AF_INET'
         self.listener = Listener(self.address, authkey=b"secret password")
         self.conn = self.listener.accept()
-        print("connection accepted from", self.listener.last_accepted)
-
+        self.logger.info("Connection accepted from %s", self.listener.last_accepted)
         self.center_x = deque()
         self.center_y = deque()
         self.heading_direction = deque()
@@ -50,7 +50,7 @@ class dlc_inference_w_pd(Processor):
         self.signal_freq = freq
         self.use_teensy = use_teensy
         self.previous = np.array([0,0])
-        self.logger = logging.getLogger("DLC_processor")
+        
         if self.use_teensy == 1:
             self.teensy = TeensyLatency(com, baudrate=baudrate)
             self.logger.info("Using Teensy")
