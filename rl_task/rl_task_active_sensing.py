@@ -188,6 +188,9 @@ class ActiveSensingTaskRL(ActiveSensingTask):
 
         dt = self.dt
         move, turn = action
+        
+		# rescaling "move" action to [0, 1] so that it cannot move backwards
+        move = (move + 1) / 2
 
         # Unpack current virtual state
         x, z, a = self.virtual_state
