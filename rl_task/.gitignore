@@ -1,3 +1,6 @@
 AR_build/
+models/
+logs/
+wandb/
 
 .env
