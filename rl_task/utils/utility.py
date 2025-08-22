@@ -16,6 +16,10 @@ def make_env(
     seed: int = 42,
     batchmode: bool = True,
     time_horizon: int | None = None,
+    save_data: bool = False,
+	pos_reward_size: float = 1.0,
+	neg_reward_size: float = 0.0,
+	step_penalty_size: float = 0.0,
 ):
     """
     Create a Unity-based Gym environment, optionally vectorized for parallelism.
@@ -48,8 +52,10 @@ def make_env(
                 worker_id=worker_id,
                 worker_seed=worker_seed,
                 batchmode=batchmode,
-                reward_size=5,
-                punishment_size=-0.01,
+                save_data=save_data,
+				pos_reward_size=pos_reward_size,
+				neg_reward_size=neg_reward_size,
+				step_penalty_size=step_penalty_size,
             )
 
             # env = VecTransposeImage(env)
