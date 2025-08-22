@@ -11,18 +11,19 @@ from utils.feature_extractor import Extractor
 ENV_PATH = "/app/rl_task/AR_build/augmented_reality.x86_64"
 MODEL_SAVE_DIR = "/app/rl_task/models"
 CHECKPOINT_PATH = "/app/rl_task/models/PPO_AugmentedReality_20250822_1330/model.zip"
+LOAD_CHECKPOINT = False
 
 config = {
     "algorithm": "PPO",
     "policy_type": "CnnPolicy",
     "n_steps": 2048,
-    "batch_size": 64, # try 128?
+    "batch_size": 128,  # 64 / 128 ?
     "n_epochs": 5,
-    "gamma": .995,
-    "clip_range": 0.3,
-    "ent_coef": 0.01,
-    "use_sde": True,
-    "total_timesteps": 500_000,
+    "gamma": 0.995,
+    "clip_range": 0.2,
+    "ent_coef": 0.01,  # exploration stimulus
+    "use_sde": False,
+    "total_timesteps": 600_000,
     "env_name": "AugmentedReality",
     "time_horizon": 300,
     "pos_reward_size": 2,
@@ -33,7 +34,11 @@ config = {
 
 if __name__ == "__main__":
     # Start a virtual display
-    display = Display(visible=0, size=(600, 300))
+    display = Display(
+        backend="xvfb",
+        visible=False,
+        size=(520, 260),
+    )
     display.start()
 
     load_dotenv(dotenv_path="/app/rl_task/.env")  # reads .env into os.environ
@@ -66,8 +71,8 @@ if __name__ == "__main__":
         features_extractor_class=Extractor,
         features_extractor_kwargs=dict(pretrained=True, freeze_backbone=True),
     )
-    
-    if os.path.exists(CHECKPOINT_PATH):
+
+    if LOAD_CHECKPOINT and os.path.exists(CHECKPOINT_PATH):
         print(f"[DEBUG] Loading checkpoint from {CHECKPOINT_PATH} ...")
         model = PPO.load(
             CHECKPOINT_PATH,

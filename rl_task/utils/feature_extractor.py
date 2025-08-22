@@ -33,26 +33,23 @@ class Extractor(BaseFeaturesExtractor):
             for p in backbone.parameters():
                 p.requires_grad = False
 
-        # 2) Extract everything up to the 'flatten' node
+        # 2) Extract last conv block features
         self.body = create_feature_extractor(
-            backbone, return_nodes={"flatten": "features"}
+            backbone, return_nodes={"features.12": "features"}
         )
 
-        # 3) Figure out feature dimension by a dry run
+        # 3) Dry run to extract shape
         with torch.no_grad():
             # a single dummy batch
             C, H, W = observation_space.shape
             dummy = torch.zeros(1, C, H, W)
             out = self.body(dummy)
-        self._features_dim = out["features"].shape[1]
+            self._features_dim = out["features"].shape[1]
 
-        # size = observation_space.shape[1]  # 256 since obs_space.shape == (3, 256, 256)
-        self.preprocess = T.Compose(
-            [
-                # T.Resize(224),
-                # T.CenterCrop(224),
-                T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ]
+        # 4) Preprocess
+        self.preprocess = T.Normalize(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225],
         )
 
     def forward(self, observations: torch.Tensor) -> torch.Tensor:
@@ -60,9 +57,12 @@ class Extractor(BaseFeaturesExtractor):
         observations: uint8 or float tensor with shape (batch, C, H, W), values in [0–255] or [0–1]
         returns: (batch, features_dim)
         """
+        if observations.dtype == torch.uint8:
+            observations = observations.float() / 255.0
+
         x = self.preprocess(observations)
         feats = self.body(x)["features"]
-        return feats
+        return feats.view(feats.size(0), -1)  # flatten to (batch, feature_dim)
 
     @property
     def features_dim(self) -> int:
