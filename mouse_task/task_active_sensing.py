@@ -375,10 +375,10 @@ class ActiveSensingTask(UnityTask):
             self.correct += 1
 
             if self.state[7] > 0:
-                print("___ Rewarded - left ___")
+                # print("___ Rewarded - left ___")
                 self.teensy.write("l_water", [self.reward_size[0]])
             else:
-                print("___ Rewarded - right ___")
+                # print("___ Rewarded - right ___")
                 self.teensy.write("r_water", [self.reward_size[0]])
             self.n_rewards += 1
 

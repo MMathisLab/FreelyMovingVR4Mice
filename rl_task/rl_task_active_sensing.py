@@ -54,6 +54,9 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         batchmode: bool = True,
         base_port: int = 5004,
         worker_id: int = 0,
+        save_data: bool = False,
+        neg_reward_size: float = 0,
+        step_penalty_size: float = 0,
     ):
 
         self.angle_in_degrees = True
@@ -67,6 +70,10 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         self.batchmode = batchmode
         self.base_port = base_port
         self.worker_id = worker_id
+
+        self.save_data = save_data
+        self.neg_reward_size = neg_reward_size
+        self.step_penalty_size = step_penalty_size
 
         with patch(
             "mouse_task.task_active_sensing.process_config",
@@ -222,6 +229,16 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         self.ep_length += 1
         self.cur_time = time.time() - self.start_time
 
+        # # Compute dt between two loop calls to adapt kinematics accordingly
+        # if not hasattr(self, "_last_loop_time"):
+        #     self._last_loop_time = self.cur_time
+        # dt = self.cur_time - self._last_loop_time
+        # if dt <= 0:
+        #     dt = self.dt
+        # self.dt = dt
+        # self._last_loop_time = self.cur_time
+        # print("instant fps:", 1 / dt)
+
         self.episode_vec.append(self.episode)  # trial
         self.step_vec.append(self.step)  # frame
         self.time_vec.append(self.cur_time)  # time for each frame
@@ -312,6 +329,9 @@ class ActiveSensingTaskRL(ActiveSensingTask):
 
         # Setting the Unity env to be in RL mode
         self.channel.set_float_parameter("RL_training", 1)
+        self.channel.set_float_parameter("RL_pos_reward_size", self.reward_size[0])
+        self.channel.set_float_parameter("RL_neg_reward_size", self.neg_reward_size)
+        self.channel.set_float_parameter("RL_step_penalty_size", self.step_penalty_size)
 
         # Add trial parameters to trial vectors so that we can save them to the log file
         self.trial_epoch_labels.append(self.get_epoch_value("epoch_labels"))
@@ -363,17 +383,24 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         }
 
     def reset_environment(self):
+        info = self.get_info()
+
         self.set_channel()
         self.env.reset()
-        decision_steps, _ = self.env.get_steps(self.agent)
+
         self.ep_reward = 0
         self.ep_length = 0
         self.episode_start_time = self.cur_time
+
+        decision_steps, _ = self.env.get_steps(self.agent)
         self.state = decision_steps[self.agent_num].obs[self.vec_obs_ind]
         self.vis_state = decision_steps[self.agent_num].obs[self.vis_obs_ind]
         self.virtual_state = self.default_virtual_state
+
+        # Send an null action to reset agent to default position
         self.loop(action=np.array([0.0, 0.0]))
-        return decision_steps[self.agent_num].obs[self.vis_obs_ind], self.get_info()
+
+        return self.vis_state, info
 
     def reset(self, seed=None):
         if seed is not None:
@@ -383,5 +410,7 @@ class ActiveSensingTaskRL(ActiveSensingTask):
 
     def stop(self):
         self.env.close()
-        data_to_save = self.get_data()
-        pickle.dump(data_to_save, open("./rl_task_data.pkl", "wb"))
+
+        if self.save_data:
+            data_to_save = self.get_data()
+            pickle.dump(data_to_save, open("/app/rl_task_data.pkl", "wb"))

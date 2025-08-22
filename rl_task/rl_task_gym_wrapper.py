@@ -16,19 +16,25 @@ class MouseTaskToGymWrapper(gym.Env):
         render_mode=None,
         base_port=5004,
         worker_id=0,
+        worker_seed=None,
         batchmode=True,
+        pos_reward_size=1,
+        neg_reward_size=0,
+        step_penalty_size=0,
     ):
+
+        self.worker_seed = worker_seed
         self.task = ActiveSensingTaskRL(
             env_path=env_path,
             teensy=FakeTeensy(),
             monitor=None,
             write_video=False,
             fps=fps,
-            session_label=["rl_ar_discrim"],
+            session_label=["rl_ar_discrim_multi_occluders"],
             epochs=[250],
             epoch_labels=["dual_teardrop"],
             config_file_path=None,
-            reward_size=100,
+            reward_size=pos_reward_size,
             cropped_image=[0, 530, 0, 510],
             unity_arena_size=[-9, 9, -10, -2],
             r_report_box=[5, 10, -4, -2],
@@ -38,26 +44,28 @@ class MouseTaskToGymWrapper(gym.Env):
             prob_obj_on_left=0.5,
             prob_block_coherence=0.5,
             mouse_report_delay=0.0,
-            slit_size=[4.0, 10.0, 2],
-            slit_depth=0.2,
-            target_selection=6.0,
-            distractor_selection=4.0,
-            occlusion_type=0.0,
+            slit_size=[15.0, 10.78, 7.75, 5.57, 4.0],
+            slit_depth=0.02,
+            target_selection=13.0,
+            distractor_selection=6.0,
+            occlusion_type=1.0,
             camera_type=1.0,
-            target_spread=4.0,
-            target_rotation=0,
+            target_spread=3.0,
+            target_rotation=15,
             target_size=2.0,
             target_height=3.0,
             block_length=1.0,
             start_box_delay=0.25,
-            velocity_threshold=10.0,
+            velocity_threshold=20.0,
             distractor=1.0,
             grey_screen_active=0.0,
-            target_distance=3.0,
+            target_distance=4.0,
             use_dlc=False,
             base_port=base_port,
             worker_id=worker_id,
             batchmode=batchmode,
+            neg_reward_size=neg_reward_size,
+            step_penalty_size=step_penalty_size,
         )
         self.task.start()
 
@@ -88,8 +96,9 @@ class MouseTaskToGymWrapper(gym.Env):
         return (255.0 * obs).astype(np.uint8)
 
     def reset(self, *, seed=None, options=None):
-        super().reset(seed=seed)
-        obs, info = self.task.reset(seed=seed)
+        s = seed if self.worker_seed is None else self.worker_seed
+        super().reset(seed=s)
+        obs, info = self.task.reset(seed=s)
         return self._to_uint8(obs), info  # Gymnasium API
 
     def step(self, action):

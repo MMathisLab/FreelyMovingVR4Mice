@@ -1,14 +1,15 @@
 import os
 import torch
+
 from stable_baselines3 import PPO
+from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.vec_env import DummyVecEnv
+from gymnasium.wrappers import TimeLimit
 
-# from utility import make_env
-# from feature_extractor import Extractor
+from utils.feature_extractor import Extractor
+from rl_task_gym_wrapper import MouseTaskToGymWrapper
 
-
-# ENV_PATH = "/app/environments/chaser/single/chaser_single.x86_64"
-# ENV_PATH = "/app/environments/roller/roller.x86_64"
-ENV_PATH = None
+ENV_PATH = "AR_build/macOS/augmented_reality.app"
 MODEL_SAVE_DIR = "rl_task/models"
 
 config = {
@@ -18,19 +19,29 @@ config = {
     "batch_size": 64,
     "n_epochs": 10,
     "total_timesteps": 500_000,
-    "env_name": "RollerAgent",
-    "num_envs": 16,
+    "env_name": "AugmentedReality",
+    "num_envs": 1,
 }
 
 if __name__ == "__main__":
     os.makedirs(MODEL_SAVE_DIR, exist_ok=True)
 
-    env = make_env(
+    # env = make_env(
+    #     env_path=ENV_PATH,
+    #     num_envs=config["num_envs"],
+    #     seed=42,
+    #     time_horizon=64,
+    # )
+
+    env = MouseTaskToGymWrapper(
         env_path=ENV_PATH,
-        num_envs=config["num_envs"],
-        seed=42,
-        time_horizon=64,
+        fps=50,
+        base_port=5005,
+        worker_id=0,
+        batchmode=True,
     )
+    env = TimeLimit(env, max_episode_steps=300)
+    env = DummyVecEnv([lambda: Monitor(env=env)])
 
     policy_kwargs = dict(
         optimizer_class=torch.optim.Adam,

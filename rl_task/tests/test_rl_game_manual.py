@@ -1,6 +1,8 @@
 import time
 import numpy as np
 
+from gymnasium.wrappers import TimeLimit
+
 from rl_task.rl_task_gym_wrapper import MouseTaskToGymWrapper
 
 
@@ -81,12 +83,39 @@ def _to_rgb_uint8(img: np.ndarray) -> np.ndarray:
     return arr
 
 
+def _center_crop_rgb(rgb: np.ndarray, size: int = 224) -> np.ndarray:
+    """Center-crop to size x size. If the image is smaller, pad with black."""
+    h, w, _ = rgb.shape
+    ch, cw = min(size, h), min(size, w)
+    y0 = (h - ch) // 2
+    x0 = (w - cw) // 2
+    cropped = rgb[y0 : y0 + ch, x0 : x0 + cw]
+
+    # Pad to exact size if needed (when original < 224 on some axis)
+    pad_h = size - ch
+    pad_w = size - cw
+    if pad_h > 0 or pad_w > 0:
+        top = pad_h // 2
+        bottom = pad_h - top
+        left = pad_w // 2
+        right = pad_w - left
+        cropped = np.pad(
+            cropped,
+            ((top, bottom), (left, right), (0, 0)),
+            mode="constant",
+            constant_values=0,
+        )
+    return cropped
+
+
 def obs_to_surface(pygame, win, obs, _cache={}):
     """Convert obs to a pygame.Surface scaled to window size; returns None if no image."""
     img = _first_image_like(obs)
     if img is None:
         return None
     rgb = _to_rgb_uint8(img)
+
+    # rgb = _center_crop_rgb(rgb, 224)
     ih, iw = rgb.shape[0], rgb.shape[1]
 
     # cache base surface by image size
@@ -111,12 +140,18 @@ def obs_to_surface(pygame, win, obs, _cache={}):
 def main():
     # Env
     env = MouseTaskToGymWrapper(
-        env_path="/Users/subnaulitus/Documents/EPFL/GitHub_Repos/FreelyMovingVR4Mice/rl_task/AR_build/augmented_reality.app",
+        # env_path="/Users/subnaulitus/Documents/EPFL/GitHub_Repos/FreelyMovingVR4Mice/rl_task/AR_build/macOS/augmented_reality.app",
+        env_path=None,
         fps=60,
-        base_port=5005,
+        base_port=5004,
         worker_id=0,
         batchmode=True,
+        pos_reward_size=2.0,
+        neg_reward_size=3.0,
+        step_penalty_size=0.1,
     )
+    env = TimeLimit(env, max_episode_steps=400)
+
     obs, info = env.reset(seed=42)
 
     # Initialize window (resize to first obs if available)
@@ -143,7 +178,7 @@ def main():
                     running = False
 
             action = get_action_from_keys(pygame, 1.0, 1.0)
-            obs, _, terminated, truncated, _ = env.step(action)
+            obs, _, terminated, truncated, info = env.step(action)
             steps_done += 1
 
             # Render visual observation
@@ -158,6 +193,8 @@ def main():
 
             if terminated or truncated:
                 obs, info = env.reset()
+                print(f"[INFO] Episode length : {info['episode']['l']}")
+                print(f"[INFO] Episode reward : {info['episode']['r']}")
 
             # FPS tracking
             now = time.perf_counter()
