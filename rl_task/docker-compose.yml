@@ -1,0 +1,55 @@
+services:
+  trainer:
+    image: ${USER}_rl-project-ar:1.0
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      additional_contexts:
+        mlagents: ${MLAGENTS_PATH}
+        vr4mice: ${VR4MICE_PATH}
+    volumes:
+      - ${VR4MICE_PATH}:/app:rw
+    tty: true
+    stdin_open: true
+    deploy:
+      resources:
+        limits:
+          cpus: '16'
+          memory: 30G
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ '0' ]
+              capabilities: [ gpu ]
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  developer:
+    image: ${USER}_rl-project-ar:1.0
+    container_name: user_${USER}_AR_developer
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      additional_contexts:
+        mlagents: ${MLAGENTS_PATH}
+        vr4mice: ${VR4MICE_PATH}
+    volumes:
+      - ${VR4MICE_PATH}:/app
+    tty: true
+    stdin_open: true
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ "0" ]
+              capabilities: [ "gpu" ]
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
