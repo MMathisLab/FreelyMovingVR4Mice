@@ -10,8 +10,8 @@ from utils.utility import make_env
 
 ENV_PATH = "rl_task/AR_build/augmented_reality.x86_64"
 ENV_PATH = None
-MODEL_PATH = "rl_task/models/PPO_AugmentedReality8_20250821_1549"
-N_EPISODES = 7
+MODEL_PATH = "rl_task/models/PPO_AugmentedReality_20250822_1942"
+N_EPISODES = 5
 MAX_EPISODE_LEN = 300
 DETERMINISTIC = False  # set True if you want greedy actions
 
@@ -24,11 +24,12 @@ def eval():
         worker_id=0,
         worker_seed=None,
         batchmode=False,
-        pos_reward_size=1,
-        neg_reward_size=1,
-        step_penalty_size=-0.0005,
+        save_data=False,
+        pos_reward_size=2,
+        neg_reward_size=2,
+        step_penalty_size=0.01,
     )
-    env = TimeLimit(env, max_episode_steps=300)
+    env = TimeLimit(env, max_episode_steps=MAX_EPISODE_LEN)
     model = PPO.load(
         MODEL_PATH,
         env=env,
