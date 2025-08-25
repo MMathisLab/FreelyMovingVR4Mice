@@ -309,6 +309,7 @@ MonoBehaviour:
   mouse_can_report: 0
   ITI_timed: 0
   mouse_report_correct: 0
+  mouse_report_wrong: 0
   mouseReportDelay: 5
   mouseInLeft_box: 0
   mouseInRight_box: 0
@@ -380,8 +381,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Camera: {fileID: 1009796777}
   m_SensorName: Eyes
-  m_Width: 512
-  m_Height: 256
+  m_Width: 400
+  m_Height: 225
   m_Grayscale: 0
   m_ObservationType: 0
   m_RuntimeCameraEnable: 1
