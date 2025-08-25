@@ -55,8 +55,6 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         base_port: int = 5004,
         worker_id: int = 0,
         save_data: bool = False,
-        neg_reward_size: float = 0,
-        step_penalty_size: float = 0,
     ):
 
         self.angle_in_degrees = True
@@ -72,8 +70,6 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         self.worker_id = worker_id
 
         self.save_data = save_data
-        self.neg_reward_size = neg_reward_size
-        self.step_penalty_size = step_penalty_size
 
         with patch(
             "mouse_task.task_active_sensing.process_config",
@@ -176,10 +172,8 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         v_x0, v_x1, v_z0, v_z1 = space1
         u_x0, u_x1, u_z0, u_z1 = space2
 
-        x_v, z_v = x, z
-
-        x_u = np.interp(x_v, [v_x0, v_x1], [u_x0, u_x1])
-        z_u = np.interp(z_v, [v_z0, v_z1], [u_z0, u_z1])
+        x_u = np.interp(x, [v_x0, v_x1], [u_x0, u_x1])
+        z_u = np.interp(z, [v_z0, v_z1], [u_z0, u_z1])
 
         return np.array([x_u, z_u])
 
@@ -188,8 +182,8 @@ class ActiveSensingTaskRL(ActiveSensingTask):
 
         dt = self.dt
         move, turn = action
-        
-		# rescaling "move" action to [0, 1] so that it cannot move backwards
+
+        # rescaling "move" action to [0, 1] so that it cannot move backwards
         move = (move + 1) / 2
 
         # Unpack current virtual state
@@ -200,10 +194,13 @@ class ActiveSensingTaskRL(ActiveSensingTask):
 
         da = omega * dt
         theta = a + da
-        dx = v * dt * np.sin(theta)
-        dz = v * dt * np.cos(theta) * 2
 
-        # print(f"[DEBUG] Displacement deltas : {dx}, {dz}, {da}")
+        ux0, ux1, uz0, uz1 = self.unity_arena_size
+        unity_width = ux1 - ux0
+        unity_length = uz1 - uz0
+
+        dx = v * dt * np.sin(theta)
+        dz = v * dt * np.cos(theta) * unity_width / unity_length
 
         x_new = x + dx
         z_new = z + dz
@@ -232,20 +229,11 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         self.ep_length += 1
         self.cur_time = time.time() - self.start_time
 
-        # # Compute dt between two loop calls to adapt kinematics accordingly
-        # if not hasattr(self, "_last_loop_time"):
-        #     self._last_loop_time = self.cur_time
-        # dt = self.cur_time - self._last_loop_time
-        # if dt <= 0:
-        #     dt = self.dt
-        # self.dt = dt
-        # self._last_loop_time = self.cur_time
-        # print("instant fps:", 1 / dt)
-
         self.episode_vec.append(self.episode)  # trial
         self.step_vec.append(self.step)  # frame
         self.time_vec.append(self.cur_time)  # time for each frame
 
+        # Select action
         self.action = self.transform_action(action)
         self.action_vec.append(self.action)
 
@@ -266,12 +254,14 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         self.terminal_vec.append(self.terminal)
         self.check_reward()
 
-        # Get info
+        # Get state and info
         self.state = step_result.obs[self.vec_obs_ind]
-        self.vis_state = step_result.obs[self.vis_obs_ind]
-        info = self.get_info()
-
         self.state_vec.append(self.state)
+        print(self.vis_state.shape)
+
+        self.vis_state = step_result.obs[self.vis_obs_ind]
+
+        info = self.get_info()
 
         return self.vis_state, self.reward, self.terminal, False, info
 
@@ -332,9 +322,9 @@ class ActiveSensingTaskRL(ActiveSensingTask):
 
         # Setting the Unity env to be in RL mode
         self.channel.set_float_parameter("RL_training", 1)
-        self.channel.set_float_parameter("RL_pos_reward_size", self.reward_size[0])
-        self.channel.set_float_parameter("RL_neg_reward_size", self.neg_reward_size)
-        self.channel.set_float_parameter("RL_step_penalty_size", self.step_penalty_size)
+        # self.channel.set_float_parameter("RL_pos_reward_size", self.reward_size[0])
+        # self.channel.set_float_parameter("RL_neg_reward_size", self.neg_reward_size)
+        # self.channel.set_float_parameter("RL_step_penalty_size", self.step_penalty_size)
 
         # Add trial parameters to trial vectors so that we can save them to the log file
         self.trial_epoch_labels.append(self.get_epoch_value("epoch_labels"))
@@ -385,6 +375,24 @@ class ActiveSensingTaskRL(ActiveSensingTask):
             "start_box_delay": start_box_delay,
         }
 
+    def sample_start_state(self):
+        # Uniformly sample starting position coordinates within the self.start_box
+
+        # Sample (x, z) in Unity coordinates
+        x_min, x_max, z_min, z_max, _ = self.start_box
+        x = np.random.uniform(x_min, x_max)
+        z = np.random.uniform(z_min, z_max)
+
+        # Uniformly sample head angle between -pi/4 and +pi/4 radians
+        theta = np.random.uniform(-np.pi / 4, np.pi / 4)
+
+        # Interpolate to cropped_image pixel space
+        px, py = self._change_space(
+            x, z, space1=self.unity_arena_size, space2=self.cropped_image
+        )
+
+        return np.array([px, py, theta])
+
     def reset_environment(self):
         info = self.get_info()
 
@@ -398,7 +406,7 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         decision_steps, _ = self.env.get_steps(self.agent)
         self.state = decision_steps[self.agent_num].obs[self.vec_obs_ind]
         self.vis_state = decision_steps[self.agent_num].obs[self.vis_obs_ind]
-        self.virtual_state = self.default_virtual_state
+        self.virtual_state = self.sample_start_state()
 
         # Send an null action to reset agent to default position
         self.loop(action=np.array([0.0, 0.0]))

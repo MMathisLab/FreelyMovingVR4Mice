@@ -25,6 +25,7 @@ public class Mouse_move : Agent
 	private float inITItimer;
 	public bool ITI_timed = false;
 	public bool mouse_report_correct = false;
+	public bool mouse_report_wrong = false;
 	public float mouseReportDelay;
 	public bool mouseInLeft_box = false;
 	public bool mouseInRight_box = false;
@@ -140,7 +141,7 @@ public class Mouse_move : Agent
 
 	public override void OnActionReceived(ActionBuffers actions)
 	{
-		float thisReward = -0.02f;
+		float thisReward = 0f;
 		float deltaTime = GetDeltaTime();
 		totalEpisodeTime += deltaTime;
 
@@ -168,21 +169,29 @@ public class Mouse_move : Agent
 		if (mouse_can_report)
 		{
 			MouseReported(deltaTime);
-			if (mouse_report_correct == true)
+			if (mouse_report_correct)
 			{
-				thisReward = 5f;
+				thisReward = 1f;
 				mouse_report_correct = false;
 				mouse_can_report = false;
+				SetReward(thisReward);
+			}
+			if (mouse_report_wrong)
+			{
+				thisReward = -1f;
+				mouse_report_wrong = false;
+				mouse_can_report = false;
+				SetReward(thisReward);
 			}
 		}
 
 		//EpisdoeTimeOut();
 		mouse_can_report_trigger();
 
-		SetReward(thisReward);
-
 		// Trigger ITI either - ITI can be timed or next episode can start when the agent looks back at the screen in a frontal box
 		triggerGreyScreen_agentTriggerd(deltaTime);
+
+		// SetReward(thisReward);
 	}
 
 
@@ -339,6 +348,7 @@ public class Mouse_move : Agent
 			if (((plane.GetComponent<Target_spawner>().green_on_left == true) & (mouseInLeft_box == true)) | ((plane.GetComponent<Target_spawner>().green_on_left == false) & (mouseInRight_box == true)))
 			{
 				mouse_report_correct = true;
+				mouse_report_wrong = !mouse_report_correct;
 				plane.GetComponent<Target_spawner>().DestroyTargets();
 				mouse_can_report = false;
 				ITI = true;
@@ -346,6 +356,7 @@ public class Mouse_move : Agent
 			else
 			{
 				mouse_report_correct = false;
+				mouse_report_wrong = !mouse_report_correct;
 				plane.GetComponent<Target_spawner>().DestroyTargets();
 				mouse_can_report = false;
 				ITI = true;

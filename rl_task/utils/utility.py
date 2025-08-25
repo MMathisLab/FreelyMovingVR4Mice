@@ -17,9 +17,9 @@ def make_env(
     batchmode: bool = True,
     time_horizon: int | None = None,
     save_data: bool = False,
-	pos_reward_size: float = 1.0,
-	neg_reward_size: float = 0.0,
-	step_penalty_size: float = 0.0,
+    pos_reward_size: float = 1.0,
+    neg_reward_size: float = 0.0,
+    step_penalty_size: float = 0.0,
 ):
     """
     Create a Unity-based Gym environment, optionally vectorized for parallelism.
@@ -53,9 +53,9 @@ def make_env(
                 worker_seed=worker_seed,
                 batchmode=batchmode,
                 save_data=save_data,
-				pos_reward_size=pos_reward_size,
-				neg_reward_size=neg_reward_size,
-				step_penalty_size=step_penalty_size,
+                pos_reward_size=pos_reward_size,
+                neg_reward_size=neg_reward_size,
+                step_penalty_size=step_penalty_size,
             )
 
             # env = VecTransposeImage(env)
@@ -100,5 +100,5 @@ def save_visual_obs(obs: np.ndarray, name: str = ""):
         if obs.dtype != np.uint8:
             obs = np.clip(obs, 0, 255).astype(np.uint8)
         img = Image.fromarray(obs)
-        img.save(f"/app/images/{name}_obs.png")
+        img.save(f"{name}_obs.png")
         print(f"[INFO] Saved first_obs image to {name}_obs.png")

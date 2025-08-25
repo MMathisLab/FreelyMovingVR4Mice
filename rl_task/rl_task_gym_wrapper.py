@@ -12,7 +12,7 @@ class MouseTaskToGymWrapper(gym.Env):
     def __init__(
         self,
         env_path,
-        fps,
+        fps=50,
         render_mode=None,
         base_port=5004,
         worker_id=0,
@@ -25,6 +25,9 @@ class MouseTaskToGymWrapper(gym.Env):
     ):
 
         self.worker_seed = worker_seed
+        self.pos_reward_size = pos_reward_size
+        self.neg_reward_size = neg_reward_size
+        self.step_penalty_size = step_penalty_size
         self.task = ActiveSensingTaskRL(
             env_path=env_path,
             teensy=FakeTeensy(),
@@ -38,8 +41,10 @@ class MouseTaskToGymWrapper(gym.Env):
             reward_size=pos_reward_size,
             cropped_image=[0, 530, 0, 510],
             unity_arena_size=[-9, 9, -10, -2],
-            r_report_box=[5, 10, -4, -2],
-            l_report_box=[-10, -5, -4, -2],
+            # r_report_box=[5, 10, -4, -2],
+            r_report_box=[7, 9, -3.5, -2],
+            # l_report_box=[-10, -5, -4, -2],
+            l_report_box=[-9, -7, -3.5, -2],
             start_box=[-4, 4, -9, -5, 90],
             rotate_camera=90.0,
             prob_obj_on_left=0.5,
@@ -66,8 +71,6 @@ class MouseTaskToGymWrapper(gym.Env):
             worker_id=worker_id,
             batchmode=batchmode,
             save_data=save_data,
-            neg_reward_size=neg_reward_size,
-            step_penalty_size=step_penalty_size,
         )
         self.task.start()
 
@@ -105,7 +108,16 @@ class MouseTaskToGymWrapper(gym.Env):
 
     def step(self, action):
         observation, reward, terminated, truncation, info = self.task.loop(action)
-        return self._to_uint8(observation), reward, terminated, truncation, info
+
+        true_reward = 0
+        if reward == 1:
+            true_reward = self.pos_reward_size
+        if reward == -1:
+            true_reward = self.neg_reward_size
+        if reward == 0:
+            true_reward = self.step_penalty_size
+
+        return self._to_uint8(observation), true_reward, terminated, truncation, info
 
     def render(self, mode="human"):
         # return self.unity.render(mode=mode)

@@ -142,13 +142,13 @@ def main():
     env = MouseTaskToGymWrapper(
         # env_path="/Users/subnaulitus/Documents/EPFL/GitHub_Repos/FreelyMovingVR4Mice/rl_task/AR_build/macOS/augmented_reality.app",
         env_path=None,
-        fps=60,
+        fps=50,
         base_port=5004,
         worker_id=0,
         batchmode=True,
         pos_reward_size=2.0,
-        neg_reward_size=3.0,
-        step_penalty_size=0.1,
+        neg_reward_size=2.0,
+        step_penalty_size=0.01,
     )
     env = TimeLimit(env, max_episode_steps=400)
 

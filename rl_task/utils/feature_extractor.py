@@ -35,7 +35,7 @@ class Extractor(BaseFeaturesExtractor):
 
         # 2) Extract last conv block features
         self.body = create_feature_extractor(
-            backbone, return_nodes={"features.12": "features"}
+            backbone, return_nodes={"flatten": "features"}
         )
 
         # 3) Dry run to extract shape
@@ -62,7 +62,7 @@ class Extractor(BaseFeaturesExtractor):
 
         x = self.preprocess(observations)
         feats = self.body(x)["features"]
-        return feats.view(feats.size(0), -1)  # flatten to (batch, feature_dim)
+        return feats
 
     @property
     def features_dim(self) -> int:
