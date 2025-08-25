@@ -11,8 +11,8 @@ from utils.utility import make_env
 ENV_PATH = "rl_task/AR_build/augmented_reality.x86_64"
 ENV_PATH = None
 MODEL_PATH = "rl_task/models/PPO_AugmentedReality_20250822_1942"
-N_EPISODES = 5
-MAX_EPISODE_LEN = 300
+N_EPS = 5
+MAX_EP_LEN = 120
 DETERMINISTIC = False  # set True if you want greedy actions
 
 
@@ -28,8 +28,8 @@ def eval():
         pos_reward_size=2,
         neg_reward_size=2,
         step_penalty_size=0.01,
+        max_episode_steps=MAX_EP_LEN,
     )
-    env = TimeLimit(env, max_episode_steps=MAX_EPISODE_LEN)
     model = PPO.load(
         MODEL_PATH,
         env=env,
@@ -44,7 +44,7 @@ def eval():
     ep_lengths = []
 
     try:
-        for ep in range(N_EPISODES):
+        for ep in range(N_EPS):
             obs, info = env.reset()
             done = False
             ep_ret = 0.0
@@ -60,7 +60,7 @@ def eval():
                 ep_len += 1
 
                 # cap by our own max length (independent of Unity MaxStep)
-                if ep_len >= MAX_EPISODE_LEN:
+                if ep_len >= MAX_EP_LEN:
                     truncated = True
 
                 done = bool(terminated or truncated)
@@ -73,7 +73,7 @@ def eval():
         std_r = float(np.std(ep_returns)) if ep_returns else 0.0
         mean_len = float(np.mean(ep_lengths)) if ep_lengths else 0.0
 
-        print(f"\nMean reward over {N_EPISODES} episodes: {mean_r:.2f} ± {std_r:.2f}")
+        print(f"\nMean reward over {N_EPS} episodes: {mean_r:.2f} ± {std_r:.2f}")
         print(f"Mean episode length: {mean_len:.1f} steps")
 
     finally:

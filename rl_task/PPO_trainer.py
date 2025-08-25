@@ -67,6 +67,7 @@ if __name__ == "__main__":
         pos_reward_size=config["pos_reward_size"],
         neg_reward_size=config["neg_reward_size"],
         step_penalty_size=config["step_penalty_size"],
+        max_episode_steps=130,
     )
 
     policy_kwargs = dict(

@@ -15,11 +15,11 @@ def make_env(
     base_port: int = 5005,
     seed: int = 42,
     batchmode: bool = True,
-    time_horizon: int | None = None,
     save_data: bool = False,
     pos_reward_size: float = 1.0,
     neg_reward_size: float = 0.0,
     step_penalty_size: float = 0.0,
+    max_episode_steps: int | None = None,
 ):
     """
     Create a Unity-based Gym environment, optionally vectorized for parallelism.
@@ -56,13 +56,9 @@ def make_env(
                 pos_reward_size=pos_reward_size,
                 neg_reward_size=neg_reward_size,
                 step_penalty_size=step_penalty_size,
+                max_episode_steps=max_episode_steps,
             )
 
-            # env = VecTransposeImage(env)
-
-            # enforce max‑episode‑length
-            if time_horizon is not None:
-                env = TimeLimit(env, max_episode_steps=time_horizon)
             return Monitor(env)
 
         return _thunk

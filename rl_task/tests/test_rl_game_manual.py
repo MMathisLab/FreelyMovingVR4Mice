@@ -149,8 +149,8 @@ def main():
         pos_reward_size=2.0,
         neg_reward_size=2.0,
         step_penalty_size=0.01,
+        max_episode_steps=120,
     )
-    env = TimeLimit(env, max_episode_steps=400)
 
     obs, info = env.reset(seed=42)
 
@@ -192,9 +192,11 @@ def main():
                 pygame.display.flip()
 
             if terminated or truncated:
-                obs, info = env.reset()
+                print(f"terminated : {terminated}")
+                print(f"truncated : {truncated}")
                 print(f"[INFO] Episode length : {info['episode']['l']}")
                 print(f"[INFO] Episode reward : {info['episode']['r']}")
+                obs, info = env.reset()
 
             # FPS tracking
             now = time.perf_counter()

@@ -22,6 +22,7 @@ class MouseTaskToGymWrapper(gym.Env):
         pos_reward_size=1,
         neg_reward_size=0,
         step_penalty_size=0,
+        max_episode_steps=None,
     ):
 
         self.worker_seed = worker_seed
@@ -42,9 +43,9 @@ class MouseTaskToGymWrapper(gym.Env):
             cropped_image=[0, 530, 0, 510],
             unity_arena_size=[-9, 9, -10, -2],
             # r_report_box=[5, 10, -4, -2],
-            r_report_box=[7, 9, -3.5, -2],
+            r_report_box=[7, 10, -3.5, -1],
             # l_report_box=[-10, -5, -4, -2],
-            l_report_box=[-9, -7, -3.5, -2],
+            l_report_box=[-10, -7, -3.5, -1],
             start_box=[-4, 4, -9, -5, 90],
             rotate_camera=90.0,
             prob_obj_on_left=0.5,
@@ -82,10 +83,13 @@ class MouseTaskToGymWrapper(gym.Env):
         self.observation_space = spaces.Box(
             low=0, high=255, shape=(C, H, W), dtype=np.uint8
         )
-        
+
         # Defining parameters to track
         self.episode_reward = 0.0
         self.episode_length = 0
+
+        # Defining time horizon
+        self.max_episode_steps = max_episode_steps
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
@@ -108,14 +112,14 @@ class MouseTaskToGymWrapper(gym.Env):
         s = seed if self.worker_seed is None else self.worker_seed
         super().reset(seed=s)
         obs, _ = self.task.reset(seed=s)
-        
+
         self.episode_reward = 0.0
         self.episode_length = 0
-        
+
         return self._to_uint8(obs), {}  # Gymnasium API
 
     def step(self, action):
-        observation, reward, terminated, truncated, _ = self.task.loop(action)
+        observation, reward, terminated, _ = self.task.loop(action)
 
         true_reward = 0
         if reward == 1:
@@ -124,17 +128,25 @@ class MouseTaskToGymWrapper(gym.Env):
             true_reward = -self.neg_reward_size
         if reward == 0:
             true_reward = -self.step_penalty_size
-            
+
         self.episode_reward += true_reward
         self.episode_length += 1
-            
+
+        truncated = False
         info = {}
 
-        if terminated or truncated:
+        if terminated:
             info["episode"] = {
                 "r": self.episode_reward,
                 "l": self.episode_length,
             }
+        elif self.max_episode_steps is not None:
+            if self.episode_length >= self.max_episode_steps:
+                truncated = True
+                info["episode"] = {
+                    "r": self.episode_reward,
+                    "l": self.episode_length,
+                }
 
         return self._to_uint8(observation), true_reward, terminated, truncated, info
 

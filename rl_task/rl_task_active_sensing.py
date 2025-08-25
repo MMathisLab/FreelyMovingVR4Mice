@@ -263,7 +263,7 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         # info = self.get_info()
         info = {}
 
-        return self.vis_state, self.reward, self.terminal, False, info
+        return self.vis_state, self.reward, self.terminal, info
 
     def set_channel(self):
         if self.block_length == 1:
