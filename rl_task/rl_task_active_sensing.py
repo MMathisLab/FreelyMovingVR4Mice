@@ -257,11 +257,11 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         # Get state and info
         self.state = step_result.obs[self.vec_obs_ind]
         self.state_vec.append(self.state)
-        print(self.vis_state.shape)
 
         self.vis_state = step_result.obs[self.vis_obs_ind]
 
-        info = self.get_info()
+        # info = self.get_info()
+        info = {}
 
         return self.vis_state, self.reward, self.terminal, False, info
 
@@ -341,40 +341,6 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         self.trial_reward_size.append(self.reward_size)
         self.trial_prob_obj_on_left.append(self.prob_obj_on_left)
 
-    def get_info(self):
-        pos = (
-            None
-            if self.state is None
-            else "%0.3f, %0.3f" % (self.state[0], self.state[1])
-        )
-        h_angle = None if self.state is None else "%0.2f" % (self.state[2])
-        velocity = None if self.state is None else "%0.2f" % (self.state[9])
-        in_left_box = None if self.state is None else "%0.2f" % (self.state[7])
-        in_right_box = None if self.state is None else "%0.2f" % (self.state[8])
-        start_box_delay = None if self.state is None else "%0.2f" % (self.state[12])
-        photodiode_state = None if self.state is None else "%0.2f" % (self.state[11])
-        accuracy = (
-            0.0
-            if self.episode == 0
-            else "%0.2f" % (float(self.n_rewards) / self.episode)
-        )
-
-        return {
-            "epoch": self.epoch_labels[self.epoch],
-            "episode_num": self.episode,
-            "episode": {"r": self.ep_reward, "l": self.ep_length},
-            "position": pos,
-            "h_angle": h_angle,
-            "degrees": self.degrees,
-            "rewards": self.n_rewards,
-            "accuracy": accuracy,
-            "velocity": velocity,
-            "in_left_box": in_left_box,
-            "in_right_box": in_right_box,
-            "photodiode": photodiode_state,
-            "start_box_delay": start_box_delay,
-        }
-
     def sample_start_state(self):
         # Uniformly sample starting position coordinates within the self.start_box
 
@@ -394,7 +360,8 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         return np.array([px, py, theta])
 
     def reset_environment(self):
-        info = self.get_info()
+        # info = self.get_info()
+        info = {}
 
         self.set_channel()
         self.env.reset()

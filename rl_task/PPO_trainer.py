@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from wandb.integration.sb3 import WandbCallback
 from pyvirtualdisplay import Display
 from stable_baselines3 import PPO
+from stable_baselines3.common.utils import get_linear_fn
 from dotenv import load_dotenv
 
 from utils.utility import make_env
@@ -16,20 +17,23 @@ LOAD_CHECKPOINT = False
 config = {
     "algorithm": "PPO",
     "policy_type": "CnnPolicy",
-    "n_steps": 2048,
-    "batch_size": 128,  # 64 / 128 ?
-    "n_epochs": 5,
+    "learning_rate": get_linear_fn(start=3e-4, end=1e-5, end_fraction=1.0),
+    "n_steps": 1536,
+    "batch_size": 192,
+    "n_epochs": 4,
     "gamma": 0.995,
-    "clip_range": 0.2,
-    "ent_coef": 0.01,  # exploration stimulus
+    "gae_lambda": 0.97,
+    "clip_range": 0.15,
+    "target_kl": 0.03,
+    "ent_coef": 0.02,
     "use_sde": False,
-    "total_timesteps": 600_000,
+    "total_timesteps": 800_000,
     "env_name": "AugmentedReality",
     "time_horizon": 300,
     "pos_reward_size": 2,
     "neg_reward_size": 2,
     "step_penalty_size": 0.01,
-    "num_envs": 4,
+    "num_envs": 6,
 }
 
 if __name__ == "__main__":
@@ -37,7 +41,7 @@ if __name__ == "__main__":
     display = Display(
         backend="xvfb",
         visible=False,
-        size=(520, 260),
+        size=(420, 245),
     )
     display.start()
 
@@ -89,12 +93,15 @@ if __name__ == "__main__":
         print("[DEBUG] No checkpoint found, starting fresh...")
         model = PPO(
             env=env,
+            learning_rate=config["learning_rate"],
             policy=config["policy_type"],
             n_steps=config["n_steps"] // config["num_envs"],
             batch_size=config["batch_size"],
             n_epochs=config["n_epochs"],
             gamma=config["gamma"],
+            gae_lambda=config["gae_lambda"],
             clip_range=config["clip_range"],
+            target_kl=config["target_kl"],
             ent_coef=config["ent_coef"],
             use_sde=config["use_sde"],
             policy_kwargs=policy_kwargs,

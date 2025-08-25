@@ -82,6 +82,10 @@ class MouseTaskToGymWrapper(gym.Env):
         self.observation_space = spaces.Box(
             low=0, high=255, shape=(C, H, W), dtype=np.uint8
         )
+        
+        # Defining parameters to track
+        self.episode_reward = 0.0
+        self.episode_length = 0
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
@@ -103,21 +107,36 @@ class MouseTaskToGymWrapper(gym.Env):
     def reset(self, *, seed=None, options=None):
         s = seed if self.worker_seed is None else self.worker_seed
         super().reset(seed=s)
-        obs, info = self.task.reset(seed=s)
-        return self._to_uint8(obs), info  # Gymnasium API
+        obs, _ = self.task.reset(seed=s)
+        
+        self.episode_reward = 0.0
+        self.episode_length = 0
+        
+        return self._to_uint8(obs), {}  # Gymnasium API
 
     def step(self, action):
-        observation, reward, terminated, truncation, info = self.task.loop(action)
+        observation, reward, terminated, truncated, _ = self.task.loop(action)
 
         true_reward = 0
         if reward == 1:
             true_reward = self.pos_reward_size
         if reward == -1:
-            true_reward = self.neg_reward_size
+            true_reward = -self.neg_reward_size
         if reward == 0:
-            true_reward = self.step_penalty_size
+            true_reward = -self.step_penalty_size
+            
+        self.episode_reward += true_reward
+        self.episode_length += 1
+            
+        info = {}
 
-        return self._to_uint8(observation), true_reward, terminated, truncation, info
+        if terminated or truncated:
+            info["episode"] = {
+                "r": self.episode_reward,
+                "l": self.episode_length,
+            }
+
+        return self._to_uint8(observation), true_reward, terminated, truncated, info
 
     def render(self, mode="human"):
         # return self.unity.render(mode=mode)
