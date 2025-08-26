@@ -3,7 +3,7 @@ import numpy as np
 from PIL import Image
 from mlagents_envs.environment import UnityEnvironment
 from gymnasium.wrappers import TimeLimit
-from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecFrameStack
 from stable_baselines3.common.monitor import Monitor
 
 from rl_task.rl_task_gym_wrapper import MouseTaskToGymWrapper
@@ -30,6 +30,12 @@ def make_env(
         base_port (int, optional): Base port for Unity communication. Each environment instance will increment this port. Defaults to 5005.
         seed (int, optional): Random seed for reproducibility. Each environment will use seed + worker_id. Defaults to 42.
         batchmode (bool, optional): Whether to run Unity in batch mode (no graphics). Defaults to True.
+        save_data (bool, optional): Whether to save the step-wise agent information as a .pkl file at the end of training
+        pos_reward_size (float, optional): Size of positive reward to give agent for correct execution.
+        neg_reward_size (float, optional): Size of negative reward to give agent for wrong execution.
+        step_penalty_size (float, optional): Size of penalty to give agent at each step. Used to encourage the agent to solve the task.
+        max_episode_steps (int, optional): Maximum number of steps before each episode is truncated. Acts as an episode time limit.
+        frame_stack_size (int, optional): Number of frames (i.e. visual observations) to give the policy at each step. Acts as a sort of "memory".
 
     Returns:
         gym.Env: A Gym-compatible environment. If num_envs > 1, returns a SubprocVecEnv for parallel execution; otherwise, returns a DummyVecEnv.
@@ -47,7 +53,7 @@ def make_env(
             worker_seed = None if seed is None else seed + worker_id
             env = MouseTaskToGymWrapper(
                 env_path=env_path,
-                fps=40,
+                fps=50,
                 base_port=base_port,
                 worker_id=worker_id,
                 worker_seed=worker_seed,
@@ -65,9 +71,11 @@ def make_env(
 
     env_fns = [make_thunk(i) for i in range(num_envs)]
     if num_envs > 1:
-        return SubprocVecEnv(env_fns)
+        env = SubprocVecEnv(env_fns)
     else:
-        return DummyVecEnv(env_fns)
+        env = DummyVecEnv(env_fns)
+
+    return env
 
 
 def save_visual_obs(obs: np.ndarray, name: str = ""):
