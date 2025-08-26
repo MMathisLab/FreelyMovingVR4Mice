@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from stable_baselines3 import PPO
+from sb3_contrib import RecurrentPPO
 from gymnasium.wrappers import TimeLimit
 
 from rl_task.rl_task_gym_wrapper import MouseTaskToGymWrapper
@@ -10,10 +11,11 @@ from utils.utility import make_env
 
 ENV_PATH = "rl_task/AR_build/augmented_reality.x86_64"
 ENV_PATH = None
-MODEL_PATH = "rl_task/models/PPO_AugmentedReality_20250822_1942"
+MODEL_PATH = "rl_task/models/RecurrentPPO_AugmentedReality_20250825_1959"
 N_EPS = 5
 MAX_EP_LEN = 120
-DETERMINISTIC = False  # set True if you want greedy actions
+DETERMINISTIC = False
+ALGO = RecurrentPPO if "recurrentppo" in MODEL_PATH.lower() else PPO
 
 
 def eval():
@@ -30,7 +32,7 @@ def eval():
         step_penalty_size=0.01,
         max_episode_steps=MAX_EP_LEN,
     )
-    model = PPO.load(
+    model = ALGO.load(
         MODEL_PATH,
         env=env,
         custom_objects={
