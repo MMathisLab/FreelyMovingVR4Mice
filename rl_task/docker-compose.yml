@@ -15,7 +15,7 @@ services:
       resources:
         limits:
           cpus: '16'
-          memory: 16G
+          memory: 12G
         reservations:
           devices:
             - driver: nvidia
