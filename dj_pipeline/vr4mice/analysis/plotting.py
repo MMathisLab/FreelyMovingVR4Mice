@@ -937,7 +937,7 @@ def pairplot_average_decision_point(
     counts = df.groupby(groupby_cols, as_index=False).mean(numeric_only=True)
 
     if label_parameter == "y":
-        counts["count"] = np.abs(counts[label_parameter] - 27)
+        counts["count"] = np.abs(counts[label_parameter] - 27) # distance to screen is distance to border + 1cm
     elif label_parameter in ["heading_dir", "head_angle", "velocity_x"]:
         counts["count"] = np.abs(counts[label_parameter])
     else:

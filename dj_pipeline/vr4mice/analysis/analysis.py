@@ -248,7 +248,7 @@ def create_data_frame(
     key: dict,
     iti: bool = True,
     first_n_samples: int = 3,
-    spatial_ybins: List[int] = [-27, 27, 75],
+    spatial_ybins: List[int] = [-26, 26, 75],
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Create main dataframe for analysis.
 
@@ -324,7 +324,7 @@ def create_data_frame(
         unity_arena_size_x_min=9,
         unity_arena_size_z_max=-10,
         unity_arena_size_z_min=-2,
-        physical_arena_size=27,
+        physical_arena_size=26, # physical arena is 52x52
     )
 
     df["x"] = np.interp(

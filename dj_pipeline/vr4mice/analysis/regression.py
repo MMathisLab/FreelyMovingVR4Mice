@@ -237,8 +237,8 @@ def plot_decision_points_on_trajectory(
         ax = fig.add_subplot(gs[0, 0])
 
     plotting.plot_all_boxes(ax=ax, box_df=box_df)
-    ax.set_xlim(-27, 27)
-    ax.set_ylim(-27, 27)
+    ax.set_xlim(-26, 26)
+    ax.set_ylim(-26, 26)
 
     for idx_trial, trial in df.groupby("trial"):
         if idx_trial in trials:
