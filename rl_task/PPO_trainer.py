@@ -8,8 +8,8 @@ from stable_baselines3.common.utils import set_random_seed
 
 from dotenv import load_dotenv
 
-from utils.utility import make_env
-from utils.vanilla_extractor2 import CustomExtractor
+from utils.env_factory import make_env
+from utils.vanilla_extractor import CustomExtractor
 
 GPU_ID = 0
 ENV_PATH = "/app/rl_task/AR_build/augmented_reality.x86_64"
