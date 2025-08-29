@@ -4,6 +4,7 @@ import gymnasium as gym
 from gymnasium import spaces
 from rl_task.fake_teensy import FakeTeensy
 from rl_task.rl_task_active_sensing import ActiveSensingTaskRL
+from rl_task.config.config import load_config
 
 
 class MouseTaskToGymWrapper(gym.Env):
@@ -12,6 +13,7 @@ class MouseTaskToGymWrapper(gym.Env):
     def __init__(
         self,
         env_path,
+        task_config,
         fps=50,
         render_mode=None,
         base_port=5004,
@@ -29,50 +31,18 @@ class MouseTaskToGymWrapper(gym.Env):
         self.pos_reward_size = pos_reward_size
         self.neg_reward_size = neg_reward_size
         self.step_penalty_size = step_penalty_size
-        self.task = ActiveSensingTaskRL(
+        self.cfg = load_config(
+            preset_name=task_config,
+            yaml_path="/app/rl_task/config/rl_experiments.yaml",
             env_path=env_path,
             teensy=FakeTeensy(),
-            monitor=None,
-            write_video=False,
             fps=fps,
-            session_label=["rl_ar_discrim_multi_occluders"],
-            epochs=[250],
-            epoch_labels=["dual_teardrop"],
-            config_file_path=None,
-            reward_size=pos_reward_size,
-            cropped_image=[0, 530, 0, 510],
-            unity_arena_size=[-9, 9, -10, -2],
-            # r_report_box=[5, 10, -4, -2],
-            r_report_box=[7, 10, -3.5, -1],
-            # l_report_box=[-10, -5, -4, -2],
-            l_report_box=[-10, -7, -3.5, -1],
-            start_box=[-4, 4, -9, -5, 90],
-            rotate_camera=90.0,
-            prob_obj_on_left=0.5,
-            prob_block_coherence=0.5,
-            mouse_report_delay=0.0,
-            slit_size=[15.0, 10.78, 7.75, 5.57, 4.0],
-            slit_depth=0.02,
-            target_selection=6.0,
-            distractor_selection=4.0,
-            occlusion_type=0.0,
-            camera_type=1.0,
-            target_spread=4.0,
-            target_rotation=0.0,
-            target_size=2.0,
-            target_height=3.0,
-            block_length=1.0,
-            start_box_delay=0.25,
-            velocity_threshold=20.0,
-            distractor=1.0,
-            grey_screen_active=0.0,
-            target_distance=3.0,
-            use_dlc=False,
             base_port=base_port,
             worker_id=worker_id,
             batchmode=batchmode,
             save_data=save_data,
         )
+        self.task = ActiveSensingTaskRL(**self.cfg.as_kwargs())
         self.task.start()
 
         # Define action space
@@ -116,7 +86,7 @@ class MouseTaskToGymWrapper(gym.Env):
         self.episode_reward = 0.0
         self.episode_length = 0
 
-        return self._to_uint8(obs), {}  # Gymnasium API
+        return self._to_uint8(obs), {}
 
     def step(self, action):
         observation, reward, terminated, _ = self.task.loop(action)
@@ -151,7 +121,6 @@ class MouseTaskToGymWrapper(gym.Env):
         return self._to_uint8(observation), true_reward, terminated, truncated, info
 
     def render(self, mode="human"):
-        # return self.unity.render(mode=mode)
         pass
 
     def close(self):

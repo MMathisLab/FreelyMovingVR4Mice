@@ -1,16 +1,15 @@
 import numpy as np
 
 from PIL import Image
-from mlagents_envs.environment import UnityEnvironment
-from gymnasium.wrappers import TimeLimit
-from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecFrameStack
-from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecMonitor
 
 from rl_task.rl_task_gym_wrapper import MouseTaskToGymWrapper
 
 
 def make_env(
     env_path: str,
+    task_config: str,
+    fps: int = 50,
     num_envs: int = 1,
     base_port: int = 5005,
     seed: int = 42,
@@ -53,7 +52,8 @@ def make_env(
             worker_seed = None if seed is None else seed + worker_id
             env = MouseTaskToGymWrapper(
                 env_path=env_path,
-                fps=50,
+                task_config=task_config,
+                fps=fps,
                 base_port=base_port,
                 worker_id=worker_id,
                 worker_seed=worker_seed,
@@ -65,44 +65,14 @@ def make_env(
                 max_episode_steps=max_episode_steps,
             )
 
-            return Monitor(env)
+            return env
 
         return _thunk
 
     env_fns = [make_thunk(i) for i in range(num_envs)]
     if num_envs > 1:
-        env = SubprocVecEnv(env_fns)
+        env = SubprocVecEnv(env_fns, start_method="spawn")
     else:
         env = DummyVecEnv(env_fns)
 
-    return env
-
-
-def save_visual_obs(obs: np.ndarray, name: str = ""):
-    """
-    Save a visual observation (image) to disk as a PNG file.
-
-    Args:
-        obs (np.ndarray): The observation array, which may be batched or unbatched,
-            and may be channel-first or channel-last. Handles both single and multiple
-            observations (e.g., from vectorized environments).
-
-    The function processes the observation to ensure it is in the correct format
-    (removing batch dimension, converting to channel-last, and ensuring uint8 type)
-    before saving it as './obs/obs.png'.
-    """
-    if isinstance(obs, tuple) or isinstance(obs, list):
-        obs = obs[0]
-    if obs is not None:
-        # Remove batch dimension if present
-        if len(obs.shape) == 4:
-            obs = obs[0]
-        # If channel first, convert to channel last
-        if obs.shape[0] in [1, 3] and obs.shape[-1] not in [1, 3]:
-            obs = np.transpose(obs, (1, 2, 0))
-        # Convert to uint8 if needed
-        if obs.dtype != np.uint8:
-            obs = np.clip(obs, 0, 255).astype(np.uint8)
-        img = Image.fromarray(obs)
-        img.save(f"{name}_obs.png")
-        print(f"[INFO] Saved first_obs image to {name}_obs.png")
+    return VecMonitor(env)

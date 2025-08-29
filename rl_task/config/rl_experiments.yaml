@@ -1,0 +1,124 @@
+defaults:
+  write_video: false
+  reward_size: 100
+  cropped_image: [0, 530, 0, 510]
+  unity_arena_size: [-9, 9, -10, -2]
+  r_report_box: [7, 10, -3.5, -1]
+  l_report_box: [-10, -7, -3.5, -1]
+  start_box: [-4, 4, -9, -5, 90]
+  rotate_camera: 90.0
+  prob_obj_on_left: 0.5
+  prob_block_coherence: 0.5
+  mouse_report_delay: 0.0
+  slit_size: [4.0, 10.0, 2.0]
+  slit_depth: 0.2
+  target_selection: 6.0
+  distractor_selection: 4.0
+  occlusion_type: 0.0
+  camera_type: 1.0
+  target_spread: 4.0
+  target_rotation: 0.0
+  target_size: 2.0
+  target_height: 3.0
+  block_length: 1.0
+  start_box_delay: 0.25
+  velocity_threshold: 10.0
+  distractor: 1.0
+  grey_screen_active: 0.0
+  target_distance: 3.0
+  use_dlc: false
+  session_label: ["default_session"]
+  epochs: [250]
+  epoch_labels: ["default_epoch"]
+
+presets:
+
+  # --- Contrast discrimination ---
+  contrast_discrim:
+    session_label: ["ar_discrim"]
+    epoch_labels: ["dual_teardrop"]
+    slit_size: [4.0, 10.0, 2]
+    slit_depth: 0.2
+    target_selection: 6.0
+    distractor_selection: 4.0
+    occlusion_type: 0.0
+    target_spread: 4.0
+    target_rotation: 0.0
+    distractor: 1.0
+    velocity_threshold: 10.0
+    target_distance: 3.0
+
+  # --- Contrast discrimination occluders ---
+  contrast_discrim_occluders:
+    session_label: ["ar_discrim_occluders"]
+    epoch_labels: ["dual_teardrop"]
+    slit_size: [4.3, 12.0, 2]
+    slit_depth: 0.2
+    target_selection: 6.0
+    distractor_selection: 4.0
+    occlusion_type: 1.0
+    target_spread: 4.0
+    target_rotation: 0.0
+    distractor: 1.0
+    velocity_threshold: 10.0
+    target_distance: 3.0
+  
+  # --- Contrast discrimination multioccluders ---
+  contrast_discrim_multi_occluders:
+    session_label: ["ar_discrim_multi_occluders"]
+    epoch_labels: ["dual_teardrop"]
+    slit_size: [12.0, 8.48, 6.0, 4.2, 3.0]
+    slit_depth: 0.2
+    target_selection: 6.0
+    distractor_selection: 4.0
+    occlusion_type: 1.0
+    target_spread: 4.0
+    target_rotation: 0.0
+    distractor: 1.0
+    velocity_threshold: 10.0
+    target_distance: 3.0
+
+  # --- Shape discrimination ---
+  shape_discrim:
+    session_label: ["ar_shape_discrimination"]
+    epoch_labels: ["pacman_vs_teardrop"]
+    slit_size: [4.0, 4.0, 1]
+    slit_depth: 0.02
+    target_selection: 13.0
+    distractor_selection: 6.0
+    occlusion_type: 0.0
+    target_spread: 3.0
+    target_rotation: 15.0
+    distractor: 1.0
+    velocity_threshold: 5.0
+    target_distance: 4.0
+
+  # --- Shape discrimination occluders ---
+  shape_discrim_occluders:
+    session_label: ["ar_shape_discrim_occluders"]
+    epoch_labels: ["pacman_vs_teardrop"]
+    slit_size: [8.0, 15.0, 2]
+    slit_depth: 0.02
+    target_selection: 13.0
+    distractor_selection: 6.0
+    occlusion_type: 1.0
+    target_spread: 3.0
+    target_rotation: 15.0
+    distractor: 1.0
+    velocity_threshold: 5.0
+    target_distance: 3.5
+
+  # --- Shape discrimination multioccluders ---
+  shape_discrim_multi_occluders:
+    session_label: ["ar_shape_discrim_multi_occluders"]
+    epoch_labels: ["pacman_vs_teardrop"]
+    slit_size: [15.0, 10.78, 7.75, 5.57, 4.0]
+    slit_depth: 0.02
+    target_selection: 13.0
+    distractor_selection: 6.0
+    occlusion_type: 1.0
+    target_spread: 3.0
+    target_rotation: 15.0
+    distractor: 1.0
+    velocity_threshold: 5.0
+    target_distance: 4.0

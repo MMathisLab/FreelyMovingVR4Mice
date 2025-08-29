@@ -4,9 +4,7 @@ import numpy as np
 
 from stable_baselines3 import PPO
 from sb3_contrib import RecurrentPPO
-from gymnasium.wrappers import TimeLimit
 
-from rl_task.rl_task_gym_wrapper import MouseTaskToGymWrapper
 from utils.utility import make_env
 
 ENV_PATH = "rl_task/AR_build/augmented_reality.x86_64"
@@ -19,14 +17,12 @@ ALGO = RecurrentPPO if "recurrentppo" in MODEL_PATH.lower() else PPO
 
 
 def eval():
-    env = MouseTaskToGymWrapper(
+    env = make_env(
         env_path=ENV_PATH,
         fps=50,
+        num_envs=1,
         base_port=5004,
-        worker_id=0,
-        worker_seed=None,
-        batchmode=False,
-        save_data=False,
+        seed=None,
         pos_reward_size=2,
         neg_reward_size=2,
         step_penalty_size=0.01,
