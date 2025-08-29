@@ -19,7 +19,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: [ "0" ]
+              device_ids: [ "0", "1" ]
               capabilities: [ "gpu" ]
     security_opt:
       - no-new-privileges:true
@@ -47,7 +47,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: [ "0" ]
+              device_ids: [ "0", "1" ]
               capabilities: [ "gpu" ]
     security_opt:
       - no-new-privileges:true
