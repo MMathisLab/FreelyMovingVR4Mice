@@ -1,14 +1,10 @@
-import os
 import torch
 import torch.nn as nn
 import torchvision.transforms as T
 
-from dotenv import load_dotenv
 from torchvision.models import mobilenet_v3_small, MobileNet_V3_Small_Weights
 from torchvision.models.feature_extraction import create_feature_extractor
 from gymnasium import spaces
-
-# from transformers import AutoImageProcessor, AutoModel
 
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 

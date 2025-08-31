@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class ActiveSensingConfig(BaseModel):
-    env_path: str
+    env_path: str | None
     teensy: object
     fps: int
     base_port: int

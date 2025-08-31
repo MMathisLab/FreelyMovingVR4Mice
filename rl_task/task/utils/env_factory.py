@@ -3,7 +3,7 @@ import numpy as np
 from PIL import Image
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecMonitor
 
-from rl_task.rl_task_gym_wrapper import MouseTaskToGymWrapper
+from rl_task.task.envs.rl_task_gym_wrapper import MouseTaskToGymWrapper
 
 
 def make_env(

@@ -2,8 +2,8 @@ import numpy as np
 import gymnasium as gym
 
 from gymnasium import spaces
-from rl_task.fake_teensy import FakeTeensy
-from rl_task.rl_task_active_sensing import ActiveSensingTaskRL
+from rl_task.task.utils.fake_teensy import FakeTeensy
+from rl_task.task.envs.rl_task_active_sensing import ActiveSensingTaskRL
 from rl_task.config.config import load_config
 
 

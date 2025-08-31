@@ -14,7 +14,6 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '16'
           memory: 12G
         reservations:
           devices:

@@ -8,7 +8,7 @@ from pathlib import Path
 from mlagents_envs.environment import UnityEnvironment, ActionTuple
 from unittest.mock import patch
 
-from rl_task.fake_teensy import FakeTeensy
+from rl_task.task.utils.fake_teensy import FakeTeensy
 from mouse_task.task_active_sensing import ActiveSensingTask
 
 

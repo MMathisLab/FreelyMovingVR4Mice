@@ -1,6 +1,11 @@
 import os, wandb, torch
 from datetime import datetime, timedelta
 from wandb.integration.sb3 import WandbCallback
+from stable_baselines3.common.callbacks import (
+    EvalCallback,
+    StopTrainingOnNoModelImprovement,
+    CallbackList,
+)
 from pyvirtualdisplay import Display
 
 from sb3_contrib.ppo_recurrent import RecurrentPPO
@@ -8,13 +13,13 @@ from stable_baselines3.common.utils import set_random_seed
 
 from dotenv import load_dotenv
 
-from utils.env_factory import make_env
-from utils.vanilla_extractor import CustomExtractor
+from rl_task.task.utils.env_factory import make_env
+from rl_task.task.extractors.custom_extractors import CustomExtractor, VanillaExtractor
+from rl_task.task.training.callbacks import MultiMetricEvalCallback
 
-GPU_ID = 0
+GPU_ID = 1
 ENV_PATH = "/app/rl_task/AR_build/augmented_reality.x86_64"
 MODEL_SAVE_DIR = "/app/rl_task/models"
-VECNORM_SAVE = os.path.join(MODEL_SAVE_DIR, "vecnorm_stats.pkl")
 LOAD_CHECKPOINT = False
 CHECKPOINT_PATH = (
     "/app/rl_task/models/RecurrentPPO_AugmentedReality_20250822_1330/model.zip"
@@ -27,31 +32,31 @@ config = dict(
     algorithm="RecurrentPPO",
     policy_type="CnnLstmPolicy",
     # model / policy
-    net_arch=dict(pi=[256, 256, 128], vf=[256, 256, 128]),
-    activation_fn=torch.nn.ReLU,
-    lstm_hidden_size=256,
+    net_arch=dict(pi=[512, 384, 256], vf=[512, 384, 256]),
+    activation_fn=torch.nn.SiLU,
+    lstm_hidden_size=200,
     n_lstm_layers=1,
     shared_lstm=False,
     enable_critic_lstm=True,
     normalize_images=True,  # SB3 scales to [0,1]
     # rollout / optimization
-    num_envs=5,
+    num_envs=8,
     n_steps=256,
-    batch_size=95,
-    n_epochs=4,
-    learning_rate=1e-4,
+    batch_size=100,
+    n_epochs=3,
+    learning_rate=3e-5,
     gamma=0.99,
     gae_lambda=0.97,
-    clip_range=0.2,
-    ent_coef=0.005,
+    clip_range=0.15,
+    ent_coef=0.01,
     vf_coef=0.5,
     max_grad_norm=0.5,
-    target_kl=None,
+    target_kl=0.03,
     use_sde=False,
     # training budget
-    total_timesteps=1_000_000,
+    total_timesteps=5_000_000,
     max_episode_steps=150,
-    # reward shaping (passed into env factory)
+    # reward shaping
     pos_reward_size=1.5,
     neg_reward_size=1.5,
     step_penalty_size=0.01,
@@ -78,11 +83,25 @@ if __name__ == "__main__":
         save_code=True,
     )
 
+    # Training environment
     env = make_env(
         env_path=ENV_PATH,
         task_config=config["task_config"],
         num_envs=config["num_envs"],
-        seed=None,
+        seed=config["seed"],
+        pos_reward_size=config["pos_reward_size"],
+        neg_reward_size=config["neg_reward_size"],
+        step_penalty_size=config["step_penalty_size"],
+        max_episode_steps=config["max_episode_steps"],
+    )
+
+    # Evaluation environment
+    eval_env = make_env(
+        env_path=ENV_PATH,
+        task_config=config["task_config"],
+        num_envs=1,
+        base_port=5005 + config["num_envs"],
+        seed=config["seed"] + 10_000,  # held-out seed
         pos_reward_size=config["pos_reward_size"],
         neg_reward_size=config["neg_reward_size"],
         step_penalty_size=config["step_penalty_size"],
@@ -91,7 +110,7 @@ if __name__ == "__main__":
 
     policy_kwargs = dict(
         optimizer_class=torch.optim.Adam,
-        features_extractor_class=CustomExtractor,
+        features_extractor_class=VanillaExtractor,
         net_arch=config["net_arch"],
         activation_fn=config["activation_fn"],
         lstm_hidden_size=config["lstm_hidden_size"],
@@ -139,14 +158,42 @@ if __name__ == "__main__":
             seed=config["seed"],
         )
 
+    # Evaluation frequency every 4 rollouts
+    eval_freq_steps = int(4 * config["n_steps"] * config["num_envs"])
+
+    # Early stopping if no new best for N evals
+    no_improv_cb = StopTrainingOnNoModelImprovement(
+        max_no_improvement_evals=10,  # patience
+        min_evals=5,
+        verbose=1,
+    )
+
+    eval_cb = EvalCallback(
+        eval_env=eval_env,
+        best_model_save_path=os.path.join(MODEL_SAVE_DIR, name, "best"),
+        log_path=os.path.join(MODEL_SAVE_DIR, name, "eval"),
+        eval_freq=eval_freq_steps,
+        n_eval_episodes=20,
+        deterministic=True,
+        render=False,
+        callback_after_eval=no_improv_cb,
+    )
+
+    cb = CallbackList(
+        [
+            WandbCallback(
+                model_save_path=os.path.join(MODEL_SAVE_DIR, name),
+                model_save_freq=2_000,
+                verbose=2,
+            ),
+            eval_cb,
+        ]
+    )
+
     print(f"[INFO] Starting training on {config['num_envs']} environment(s)...")
     model.learn(
         total_timesteps=config["total_timesteps"],
-        callback=WandbCallback(
-            model_save_path=os.path.join(MODEL_SAVE_DIR, name),
-            model_save_freq=2_000,
-            verbose=2,
-        ),
+        callback=cb,
         progress_bar=True,
         log_interval=1,
     )
