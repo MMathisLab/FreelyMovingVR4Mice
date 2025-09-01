@@ -140,6 +140,7 @@ def main():
     env = MouseTaskToGymWrapper(
         # env_path="/Users/subnaulitus/Documents/EPFL/GitHub_Repos/FreelyMovingVR4Mice/rl_task/AR_build/macOS/augmented_reality.app",
         env_path=None,
+        task_config="shape_discrim",
         fps=50,
         base_port=5004,
         worker_id=0,
