@@ -1,9 +1,7 @@
 import time
 import numpy as np
 
-from gymnasium.wrappers import TimeLimit
-
-from rl_task.rl_task_gym_wrapper import MouseTaskToGymWrapper
+from rl_task.task.envs.rl_task_gym_wrapper import MouseTaskToGymWrapper
 
 
 def init_keyboard(win_size=(640, 480)):
@@ -146,10 +144,10 @@ def main():
         base_port=5004,
         worker_id=0,
         batchmode=True,
-        pos_reward_size=2.0,
-        neg_reward_size=2.0,
+        pos_reward_size=1.5,
+        neg_reward_size=1.5,
         step_penalty_size=0.01,
-        max_episode_steps=120,
+        max_episode_steps=500,
     )
 
     obs, info = env.reset(seed=42)
