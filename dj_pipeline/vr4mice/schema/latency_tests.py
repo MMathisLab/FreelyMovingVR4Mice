@@ -1,13 +1,12 @@
-from pathlib import Path
-from typing import List, Optional
+import numpy as np
+import pandas as pd
 
 import datajoint as dj
-import pandas as pd
-import numpy as np
+from vr4mice.analysis.latency_testing import (find_rising_edges, get_latency,
+                                              get_signals)
 from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
-from vr4mice.analysis.latency_testing import get_signals, find_rising_edges, get_latency
 
 schema_name = "latency_tests"
 schema = get_schema(schema_name, locals())
@@ -61,7 +60,6 @@ class SignalsPhotodiodeAligned(dj.Computed):
     @classmethod
     def get_photodiode_df(cls, key: dict) -> pd.DataFrame:
         data = (cls & key).fetch1()
-        import pandas as pd
 
         return pd.DataFrame(
             {"send_time": data["send_time"], "signal_read": data["signal_read"]}
@@ -70,7 +68,6 @@ class SignalsPhotodiodeAligned(dj.Computed):
     @classmethod
     def get_dlc_df(cls, key: dict) -> pd.DataFrame:
         data = (cls & key).fetch1()
-        import pandas as pd
 
         return pd.DataFrame(
             {
@@ -94,6 +91,7 @@ class AllLatencies(dj.Computed):
     """
 
     def make(self, key):
+        
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
