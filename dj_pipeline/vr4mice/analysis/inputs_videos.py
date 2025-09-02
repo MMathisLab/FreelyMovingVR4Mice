@@ -1,8 +1,9 @@
 import os
-import numpy as np
-import cv2
-import pandas as pd
 import pathlib
+
+import cv2
+import numpy as np
+import pandas as pd
 
 from vr4mice.analysis.latency_testing import find_rising_edges
 
