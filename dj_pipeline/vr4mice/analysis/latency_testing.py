@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import scipy.signal
+
 from vr4mice.utils.logger import Logger
 
 logger = Logger.get_logger()

@@ -7,11 +7,11 @@ import pathlib
 import pickle
 from typing import Tuple
 
+import cv2
+import datajoint as dj
 import numpy as np
 import scipy.interpolate
 
-import cv2
-import datajoint as dj
 from vr4mice.schema.vr4mice import Dataset, State
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
@@ -71,7 +71,7 @@ class ProcessedVideo(dj.Computed):
         """
         Args:
             visual_roi: (x, y, wx, wy) with x and y the positions of the start of the roi
-                and wx and wy the widths of the roi. The visual ROI should correspond the 
+                and wx and wy the widths of the roi. The visual ROI should correspond the
                 bottom right screen of the OBS video
             sync_roi: (x, y, wx, wy) with x and y the positions of the start of the roi
                 and wx and wy the widths of the roi. The sync ROI is 2 x 2 pixels in the
@@ -84,9 +84,13 @@ class ProcessedVideo(dj.Computed):
         try:
             trimmer = VideoTrimmer(video_path, session_start_buffer=10)
 
-            visual_video_path, sync_video_path, validation_path, start, end = trimmer.auto_trim_video(
-                visual_roi, sync_roi, sample_center_size=20
-            )
+            (
+                visual_video_path,
+                sync_video_path,
+                validation_path,
+                start,
+                end,
+            ) = trimmer.auto_trim_video(visual_roi, sync_roi, sample_center_size=20)
 
             self.insert1(
                 {
@@ -150,7 +154,8 @@ class VideoSyncSignal(dj.Computed):
     """
 
     def make(self, key):
-        from vr4mice.analysis.inputs_videos import extract_sync_signal_from_video
+        from vr4mice.analysis.inputs_videos import \
+            extract_sync_signal_from_video
 
         try:
             sync_path = (ProcessedVideo & key).fetch1("sync_video_path")
@@ -209,8 +214,9 @@ class AlignedVideoFrame(dj.Computed):
     """
 
     def make(self, key):
-        from vr4mice.analysis.inputs_videos import sync_video_to_photodiode
         import pandas as pd
+
+        from vr4mice.analysis.inputs_videos import sync_video_to_photodiode
 
         try:
             video_signal = VideoSyncSignal.get_sync_df(key)

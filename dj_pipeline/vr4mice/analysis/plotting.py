@@ -1,18 +1,16 @@
 from typing import List, Optional, Tuple
 
-import matplotlib as mpl
 import matplotlib.collections
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D  # For custom legend handles
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
 from matplotlib.collections import PathCollection
+from matplotlib.lines import Line2D  # For custom legend handles
 from matplotlib.transforms import Affine2D
 from scipy.interpolate import CubicSpline
-from scipy.stats import ttest_rel, ttest_ind
 
 """
 Color codes:
@@ -689,7 +687,7 @@ def plot_rate(
         for i in counts.aperture.unique():
             for j in counts.aperture.unique():
                 if i < j:
-                    stat = ttest_rel(
+                    stat = stats.ttest_rel(
                         counts[counts["aperture"] == i]["count"],
                         counts[counts["aperture"] == j]["count"],
                     )
