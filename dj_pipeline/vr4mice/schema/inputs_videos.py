@@ -2,18 +2,17 @@
 Latency testing tables should be imported before this.
 """
 
+import os
+import pathlib
+import pickle
 from typing import Tuple
 
-import pathlib
-import cv2
-import datajoint as dj
 import numpy as np
 import scipy.interpolate
-import pickle
-import os
 
-from vr4mice.schema.vr4mice import State, Dataset
-from vr4mice.schema.latency_tests import SignalsPhotodiodeAligned
+import cv2
+import datajoint as dj
+from vr4mice.schema.vr4mice import Dataset, State
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
 
