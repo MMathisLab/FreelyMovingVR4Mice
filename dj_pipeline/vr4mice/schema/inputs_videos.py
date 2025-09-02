@@ -2,10 +2,11 @@
 Latency testing tables should be imported before this.
 """
 
+from typing import Tuple
+
 import pathlib
 import cv2
 import datajoint as dj
-import pandas as pd
 import numpy as np
 import scipy.interpolate
 import pickle
@@ -32,14 +33,17 @@ class RawVideo(dj.Imported):
 
     # NOTE(celia): to update the default path when we put the videos onto the server
     def make(self, key, base_path: str = "/vr4mice_screen_recordings"):
-        dataset = key["dataset"]
-        video_path = f"{base_path}/raw_screen_recordings/{dataset}.mkv"
+        from vr4mice.actions.populate_rig import get_files_paths
+
+        logger.info(f"{key['dataset']}")
+        paths = get_files_paths(key["dataset"])
+        video_filepath = f"{paths['screen_recording_output']['dst']}/{paths['screen_recording_output']['filename']}"
 
         try:
-            if not pathlib.Path(video_path).exists():
-                raise FileNotFoundError(f"Video file not found: {video_path}")
+            if not pathlib.Path(video_filepath).exists():
+                raise FileNotFoundError(f"Video file not found: {video_filepath}")
 
-            self.insert1({**key, "video_path": video_path})
+            self.insert1({**key, "video_path": video_filepath})
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
@@ -53,47 +57,53 @@ class ProcessedVideo(dj.Computed):
     visual_video_path: varchar(255)
     sync_video_path: varchar(255)
     img_validation_path: varchar(255)
-    start_frame: float
-    end_frame: float
+    start_frame: int
+    end_frame: int
     visual_roi: blob
     sync_roi: blob
     """
 
-    def make(self, key):
+    def make(
+        self,
+        key,
+        visual_roi: Tuple[int] = (0, 570, 925, 510),
+        sync_roi: Tuple[int] = (1895, 580, 2, 2),
+    ):
+        """
+        Args:
+            visual_roi: (x, y, wx, wy) with x and y the positions of the start of the roi
+                and wx and wy the widths of the roi. The visual ROI should correspond the 
+                bottom right screen of the OBS video
+            sync_roi: (x, y, wx, wy) with x and y the positions of the start of the roi
+                and wx and wy the widths of the roi. The sync ROI is 2 x 2 pixels in the
+                top left corner of bottom left screen on the OBS video
+        """
         from vr4mice.analysis.inputs_videos import VideoTrimmer
 
         video_path = (RawVideo & key).fetch1("video_path")
 
-        # Define ROIs
-        # The visual ROI should correspond the bottom right screen of the OBS video
-        visual_roi = (0, 570, 925, 510)
-        # NOTE(celia) 2x2 pixel of the ROI for lighter files
-        # The sync ROI is 30 x 30 pixels in the top left corner of bottom left
-        # screen on the OBS video
-        sync_roi = (1895, 580, 2, 2)
+        try:
+            trimmer = VideoTrimmer(video_path, session_start_buffer=10)
 
-        # try:
-        trimmer = VideoTrimmer(video_path, session_start_buffer=10)
+            visual_video_path, sync_video_path, validation_path, start, end = trimmer.auto_trim_video(
+                visual_roi, sync_roi, sample_center_size=20
+            )
 
-        visual_video_path, sync_video_path, validation_path, start, end = (
-            trimmer.auto_trim_video(visual_roi, sync_roi, sample_center_size=20)
-        )
-
-        self.insert1(
-            {
-                **key,
-                "visual_video_path": visual_video_path,
-                "sync_video_path": sync_video_path,
-                "img_validation_path": validation_path,
-                "start_frame": start,
-                "end_frame": end,
-                "visual_roi": visual_roi,
-                "sync_roi": sync_roi,
-            }
-        )
-        # except Exception as err:
-        #     logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
-        #     return None
+            self.insert1(
+                {
+                    **key,
+                    "visual_video_path": visual_video_path,
+                    "sync_video_path": sync_video_path,
+                    "img_validation_path": validation_path,
+                    "start_frame": start,
+                    "end_frame": end,
+                    "visual_roi": visual_roi,
+                    "sync_roi": sync_roi,
+                }
+            )
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
 
     def get_visual_frame(self, key, frame_index: int):
         """Return the frame at `frame_index` from the visual video."""
@@ -201,6 +211,7 @@ class AlignedVideoFrame(dj.Computed):
 
     def make(self, key):
         from vr4mice.analysis.inputs_videos import sync_video_to_photodiode
+        import pandas as pd
 
         try:
             video_signal = VideoSyncSignal.get_sync_df(key)

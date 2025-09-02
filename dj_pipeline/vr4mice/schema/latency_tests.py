@@ -64,10 +64,7 @@ class SignalsPhotodiodeAligned(dj.Computed):
         import pandas as pd
 
         return pd.DataFrame(
-            {
-                "send_time": data["send_time"],
-                "signal_read": data["signal_read"],
-            }
+            {"send_time": data["send_time"], "signal_read": data["signal_read"]}
         )
 
     @classmethod
