@@ -18,7 +18,7 @@ class MyProcessor_socket(Processor):
         self.address = ('localhost', 6000)     # family is deduced to be 'AF_INET'
         self.listener =  Listener(self.address, authkey=b'secret password')
         self.conn = self.listener.accept()
-        print('connection accepted from', self.listener.last_accepted)
+        print('Connection accepted from', self.listener.last_accepted)
         
         self.center_x = deque()
         self.center_y = deque()
@@ -40,8 +40,8 @@ class MyProcessor_socket(Processor):
     def process(self, pose, **kwargs):
         xy = pose[:, :2]
         conf = pose[:, 2]
-        head_xy = xy [[0, 1, 2, 3, 4, 5, 6, 26],:]
-        head_conf =  conf [[0, 1, 2, 3, 4, 5, 6, 26]]
+        head_xy = xy[[0, 1, 2, 3, 4, 5, 6, 26],:]
+        head_conf = conf[[0, 1, 2, 3, 4, 5, 6, 26]]
         center = np.average(head_xy, axis=0, weights=head_conf)
         body_axis = xy[7] - xy[13]  # tail_base -> neck
         body_axis /= sqrt(np.sum(body_axis ** 2))
@@ -67,20 +67,18 @@ class MyProcessor_socket(Processor):
 
         vals = *center, heading % (360), head_angle, self.curr_signal
         
-        self.center_x.append(vals [0])
-        self.center_y.append(vals [1])
-        #print("center_y: ", vals [1], ", center_x: ", vals [0])
-        self.heading_direction.append(vals [2])
-        self.head_angle.append(vals [3])
+        self.center_x.append(vals[0])
+        self.center_y.append(vals[1])
+        self.heading_direction.append(vals[2])
+        self.head_angle.append(vals[3])
 
         self.time_stamp.append(self.curr_time)
         self.step.append(self.curr_step)
         self.signal.append(self.curr_signal)
-        self.frame_time.append(kwargs ["frame_time"])
-       # self.pose_time.append(kwargs ["pose_time"])
-        
-        self.conn.send([time.time(), vals [0], vals [1], vals [2], vals [3], vals [4]])
-     
+        self.frame_time.append(kwargs["frame_time"])
+
+        self.conn.send([time.time(), vals[0], vals[1], vals[2], vals[3], vals[4]])
+
         return pose
     
 
@@ -99,7 +97,6 @@ class MyProcessor_socket(Processor):
             curr_signal = 0
         else:
             curr_signal = (np.sign(np.sin(freq*np.pi*time.time()))+1)/2
-            #print(curr_signal)
             #self.curr_signal = (np.sin((self.curr_step) * .1) + 1) / 2
         return(curr_signal)      
 
@@ -109,8 +106,7 @@ class MyProcessor_socket(Processor):
         else:
             #curr_signal = (np.sign(np.sin(5*np.pi*time.time()))+1)/2
             curr_signal = np.round((np.sin((self.curr_time*freq)) + 1)/ 4,4)
-            #print(curr_signal)
-        return(curr_signal)
+        return curr_signal
     
     def flip_every_frame(self, curr_time, st, delay):
         if (curr_time - st) < delay:
@@ -126,11 +122,11 @@ class MyProcessor_socket(Processor):
     def save(self, file=None):
         save_code = 0
         if file:
-            print(file)
+            print("file:", file)
             try:
                 save_dict = self.save_latency_data()
-                print(save_dict)
-               
+                print("save_dict:", save_dict)
+
                 pickle.dump(
                     save_dict,
                     open(file, "wb"),
