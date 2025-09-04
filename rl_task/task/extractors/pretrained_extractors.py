@@ -1,3 +1,10 @@
+"""Pretrained visual backbones adapted as SB3 feature extractors.
+
+Currently includes a MobileNetV3-Small based extractor that returns the
+flattened feature vector from its last convolutional block. Intended for
+freezing and reuse in RL policies.
+"""
+
 import torch
 import torch.nn as nn
 import torchvision.transforms as T

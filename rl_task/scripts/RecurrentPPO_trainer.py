@@ -1,3 +1,9 @@
+"""Train a RecurrentPPO agent on the Unity Active Sensing task.
+
+This script wires up vectorized environments, a visual feature extractor,
+evaluation callbacks, W&B logging, and optional checkpoint loading.
+"""
+
 import os, wandb, torch
 from datetime import datetime, timedelta
 from wandb.integration.sb3 import WandbCallback
@@ -9,57 +15,82 @@ from stable_baselines3.common.callbacks import (
 from pyvirtualdisplay import Display
 
 from sb3_contrib.ppo_recurrent import RecurrentPPO
-from stable_baselines3.common.utils import set_random_seed
 
 from dotenv import load_dotenv
 
 from rl_task.task.utils.env_factory import make_env
-from rl_task.task.extractors.custom_extractors import CustomExtractor, VanillaExtractor
-from rl_task.task.training.callbacks import MultiMetricEvalCallback
-
-GPU_ID = 1
-ENV_PATH = "/app/rl_task/AR_build/augmented_reality.x86_64"
-MODEL_SAVE_DIR = "/app/rl_task/models"
-LOAD_CHECKPOINT = False
-CHECKPOINT_PATH = (
-    "/app/rl_task/models/RecurrentPPO_AugmentedReality_20250822_1330/model.zip"
+from rl_task.task.extractors.custom_extractors import (
+    CustomExtractor,
+    VanillaExtractor,
+    DepthwiseExtractor,
 )
 
+GPU_ID = 1
+ENV_PATH = os.getenv("UNITY_ENV_PATH", "/app/rl_task/AR_build/augmented_reality.x86_64")
+MODEL_SAVE_DIR = os.getenv("MODEL_DIR", "/app/rl_task/models")
+CHECKPOINT_PATH = os.getenv(
+    "CHECKPOINT_DIR",
+    "/app/rl_task/models/RecurrentPPO_AugmentedReality_20250901_1426/final_model/model.zip",
+)
+LOAD_CHECKPOINT = os.getenv("LOAD_CHECKPOINT", True)
+
 config = dict(
-    seed=42,
+    seed=None,
     env_name="AugmentedReality",
-    task_config="shape_discrim",
     algorithm="RecurrentPPO",
-    policy_type="CnnLstmPolicy",
-    # model / policy
-    net_arch=dict(pi=[512, 384, 256], vf=[512, 384, 256]),
-    activation_fn=torch.nn.SiLU,
-    lstm_hidden_size=200,
-    n_lstm_layers=1,
-    shared_lstm=False,
-    enable_critic_lstm=True,
-    normalize_images=True,  # SB3 scales to [0,1]
+    # environment
+    env_kwargs=dict(
+        task_config="shape_discrim_multi_occluders",
+        pos_reward_size=1.5,
+        neg_reward_size=1.5,
+        trunc_penalty_size=1.5,
+        step_penalty_size=0.0,
+        max_episode_steps=220,
+    ),
     # rollout / optimization
-    num_envs=8,
-    n_steps=256,
-    batch_size=100,
-    n_epochs=3,
-    learning_rate=3e-5,
-    gamma=0.99,
-    gae_lambda=0.97,
-    clip_range=0.15,
-    ent_coef=0.01,
-    vf_coef=0.5,
-    max_grad_norm=0.5,
-    target_kl=0.03,
-    use_sde=False,
+    algo_kwargs=dict(
+        policy="CnnLstmPolicy",
+        learning_rate=3e-5,
+        n_steps=256,
+        batch_size=96,
+        n_epochs=3,
+        gamma=0.99,
+        gae_lambda=0.97,
+        clip_range=0.15,
+        ent_coef=0.01,
+        vf_coef=0.5,
+        max_grad_norm=0.5,
+        target_kl=0.03,
+        use_sde=False,
+    ),
+    # policy
+    policy_kwargs=dict(
+        optimizer_class=torch.optim.Adam,
+        features_extractor_class=DepthwiseExtractor,
+        share_features_extractor=True,
+        features_extractor_kwargs=dict(
+            features_dim=400,
+            base_channels=24,
+            use_depthwise=True,
+            pool_out=(12, 8),
+            head_channels=32,
+            mlp_hidden=(1024, 512),
+        ),
+        net_arch=dict(
+            pi=[400, 300, 200],
+            vf=[400, 300, 200],
+        ),
+        activation_fn=torch.nn.SiLU,
+        ortho_init=True,
+        lstm_hidden_size=200,
+        n_lstm_layers=1,
+        shared_lstm=False,
+        enable_critic_lstm=True,
+        normalize_images=True,  # SB3 input images to [0,1]
+    ),
     # training budget
+    num_envs=8,
     total_timesteps=5_000_000,
-    max_episode_steps=150,
-    # reward shaping
-    pos_reward_size=1.5,
-    neg_reward_size=1.5,
-    step_penalty_size=0.01,
 )
 
 
@@ -70,7 +101,6 @@ if __name__ == "__main__":
     load_dotenv(dotenv_path="/app/rl_task/.env")
     wandb.login()
     os.makedirs(MODEL_SAVE_DIR, exist_ok=True)
-    set_random_seed(config["seed"])
 
     now = (datetime.now() + timedelta(hours=2)).strftime("%Y%m%d_%H%M")
     name = f"RecurrentPPO_{config['env_name']}_{now}"
@@ -83,41 +113,19 @@ if __name__ == "__main__":
         save_code=True,
     )
 
-    # Training environment
+    # Training
     env = make_env(
         env_path=ENV_PATH,
-        task_config=config["task_config"],
         num_envs=config["num_envs"],
-        seed=config["seed"],
-        pos_reward_size=config["pos_reward_size"],
-        neg_reward_size=config["neg_reward_size"],
-        step_penalty_size=config["step_penalty_size"],
-        max_episode_steps=config["max_episode_steps"],
+        **config["env_kwargs"],
     )
 
-    # Evaluation environment
+    # Evaluation
     eval_env = make_env(
         env_path=ENV_PATH,
-        task_config=config["task_config"],
         num_envs=1,
-        base_port=5005 + config["num_envs"],
-        seed=config["seed"] + 10_000,  # held-out seed
-        pos_reward_size=config["pos_reward_size"],
-        neg_reward_size=config["neg_reward_size"],
-        step_penalty_size=config["step_penalty_size"],
-        max_episode_steps=config["max_episode_steps"],
-    )
-
-    policy_kwargs = dict(
-        optimizer_class=torch.optim.Adam,
-        features_extractor_class=VanillaExtractor,
-        net_arch=config["net_arch"],
-        activation_fn=config["activation_fn"],
-        lstm_hidden_size=config["lstm_hidden_size"],
-        n_lstm_layers=config["n_lstm_layers"],
-        shared_lstm=config["shared_lstm"],
-        enable_critic_lstm=config["enable_critic_lstm"],
-        normalize_images=config["normalize_images"],
+        base_port=5004 + config["num_envs"],
+        **config["env_kwargs"],
     )
 
     device = f"cuda:{GPU_ID}" if torch.cuda.is_available() else "cpu"
@@ -138,20 +146,8 @@ if __name__ == "__main__":
         print("[INFO] No checkpoint found, starting fresh...")
         model = RecurrentPPO(
             env=env,
-            policy=config["policy_type"],
-            learning_rate=config["learning_rate"],
-            n_steps=config["n_steps"],
-            batch_size=config["batch_size"],
-            n_epochs=config["n_epochs"],
-            gamma=config["gamma"],
-            gae_lambda=config["gae_lambda"],
-            clip_range=config["clip_range"],
-            ent_coef=config["ent_coef"],
-            vf_coef=config["vf_coef"],
-            max_grad_norm=config["max_grad_norm"],
-            target_kl=config["target_kl"],
-            use_sde=config["use_sde"],
-            policy_kwargs=policy_kwargs,
+            **config["algo_kwargs"],
+            policy_kwargs=config["policy_kwargs"],
             verbose=1,
             tensorboard_log=f"/app/rl_task/logs/{run.id}",
             device=device,
@@ -162,12 +158,6 @@ if __name__ == "__main__":
     eval_freq_steps = int(4 * config["n_steps"] * config["num_envs"])
 
     # Early stopping if no new best for N evals
-    no_improv_cb = StopTrainingOnNoModelImprovement(
-        max_no_improvement_evals=10,  # patience
-        min_evals=5,
-        verbose=1,
-    )
-
     eval_cb = EvalCallback(
         eval_env=eval_env,
         best_model_save_path=os.path.join(MODEL_SAVE_DIR, name, "best"),
@@ -176,7 +166,11 @@ if __name__ == "__main__":
         n_eval_episodes=20,
         deterministic=True,
         render=False,
-        callback_after_eval=no_improv_cb,
+        callback_after_eval=StopTrainingOnNoModelImprovement(
+            max_no_improvement_evals=10,  # patience
+            min_evals=5,
+            verbose=1,
+        ),
     )
 
     cb = CallbackList(
@@ -190,18 +184,31 @@ if __name__ == "__main__":
         ]
     )
 
-    print(f"[INFO] Starting training on {config['num_envs']} environment(s)...")
-    model.learn(
-        total_timesteps=config["total_timesteps"],
-        callback=cb,
-        progress_bar=True,
-        log_interval=1,
-    )
+    try:
+        print(f"[INFO] Starting training on {config['num_envs']} environment(s)...")
+        model.learn(
+            total_timesteps=config["total_timesteps"],
+            callback=cb,
+            progress_bar=True,
+            log_interval=1,
+        )
+    except:
+        print("\n[INFO] Training interrupted. Saving current model...")
 
-    # Save final model
-    final_path = os.path.join(MODEL_SAVE_DIR, name, "final_model")
-    os.makedirs(final_path, exist_ok=True)
-    model.save(os.path.join(final_path, "model.zip"))
+        # save interrupted model
+        interrupted_path = os.path.join(MODEL_SAVE_DIR, name, "interrupted_model")
+        os.makedirs(interrupted_path, exist_ok=True)
+        model.save(os.path.join(interrupted_path, "model.zip"))
+    finally:
+        # always cleanup
+        print("[INFO] Cleaning up...")
+        env.close()
+        eval_env.close()
+        run.finish()
+        display.stop()
 
-    run.finish()
-    display.stop()
+        # save final (or interrupted) model
+        final_path = os.path.join(MODEL_SAVE_DIR, name, "final_model")
+        os.makedirs(final_path, exist_ok=True)
+        model.save(os.path.join(final_path, "model.zip"))
+        print(f"[INFO] Model saved to {final_path}")

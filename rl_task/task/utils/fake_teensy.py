@@ -1,7 +1,12 @@
+"""Test stub for the Teensy microcontroller interface.
+
+This class mimics the methods of the real Teensy integration used in the
+Unity task code so that the RL training stack can run without hardware.
+"""
+
+
 class FakeTeensy(object):
-    """
-    class representing a fake teensy microcontroller
-    """
+    """Minimal no-op stand-in for a Teensy device."""
 
     def __init__(self, serial_port=None, baudrate=None, inputs=None, outputs=None):
         pass

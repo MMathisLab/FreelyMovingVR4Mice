@@ -1,9 +1,22 @@
+"""Configuration helpers for the Unity Active Sensing RL task.
+
+This module defines a typed Pydantic model (``ActiveSensingConfig``) that
+captures the parameters required to launch and control the Unity environment,
+and a convenience loader (``load_config``) that merges defaults, named presets
+from a YAML file, and caller-provided overrides.
+"""
+
 import yaml
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
 class ActiveSensingConfig(BaseModel):
+    """Typed config object used to start the Unity task.
+
+    The fields mirror keys in ``rl_task/config/rl_experiments.yaml`` and are
+    passed to the underlying task facade. See that file for typical presets.
+    """
     env_path: str | None
     teensy: object
     fps: int
@@ -47,10 +60,21 @@ class ActiveSensingConfig(BaseModel):
     use_dlc: bool = False
 
     def as_kwargs(self) -> dict:
+        """Return the configuration as a plain ``dict`` for easy unpacking."""
         return self.model_dump()
 
 
 def load_config(preset_name: str, yaml_path: str, **overrides) -> ActiveSensingConfig:
+    """Load, merge, and validate a configuration preset.
+
+    Args:
+        preset_name: Key under ``presets`` in the YAML file.
+        yaml_path: Path to the YAML file with ``defaults`` and ``presets``.
+        **overrides: Arbitrary key-value pairs that take precedence.
+
+    Returns:
+        ActiveSensingConfig: The merged and validated configuration.
+    """
     with open(yaml_path, "r") as f:
         cfg = yaml.safe_load(f)
 

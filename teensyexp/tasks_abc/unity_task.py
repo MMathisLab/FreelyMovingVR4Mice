@@ -26,6 +26,8 @@ class UnityTask(Task):
         self,
         teensy,
         env,
+        worker_id=0,
+        base_port=5004,
         agent_group=0,
         monitor=1,
         fullscreen=1,
@@ -55,6 +57,8 @@ class UnityTask(Task):
         super().__init__(teensy)
 
         self.env_path = env
+        self.worker_id = worker_id
+        self.base_port = base_port
         self.display_args = ["-monitor", str(monitor), "-fullscreen", str(fullscreen)]
         self.agent_group = agent_group
         self.agent_num = 0
@@ -89,7 +93,8 @@ class UnityTask(Task):
 
         self.env = UnityEnvironment(
             file_name=self.env_path,
-            base_port=5004,
+            worker_id=self.worker_id,
+            base_port=self.base_port,
             additional_args=self.display_args,
             side_channels=[self.channel],
         )
@@ -104,9 +109,9 @@ class UnityTask(Task):
         obs_dim = [len(shape) for shape in obs_shapes]
         self.vec_obs_ind = np.where(np.array(obs_dim) == 1)[0][0]
         self.vis_obs_inds = np.where(np.array(obs_dim) == 3)[0]
-        vis_obs_ind = self.vis_obs_inds[0] if len(self.vis_obs_inds) > 0 else None
-        if vis_obs_ind is not None:
-            vis_obs_shape = np.array(obs_shapes)[vis_obs_ind]
+        self.vis_obs_ind = self.vis_obs_inds[0] if len(self.vis_obs_inds) > 0 else None
+        if self.vis_obs_ind is not None:
+            self.vis_obs_shape = np.array(obs_shapes, dtype=object)[self.vis_obs_ind]
             # Uncomment the following line and define create_vid_writer if video writing is needed
             # self.vid_writer = self.create_vid_writer(vis_obs_shape, fps) if write_video else None
 
@@ -178,13 +183,13 @@ class UnityTask(Task):
 
     def get_state(self):
         """
-        getters for state
+        Getter for state
         """
         return self.get_step_result().obs[self.vec_obs_ind]
 
     def set_channel(self):
         """
-        inherited from parent class interface
+        Inherited from parent class interface
         """
         pass
 
@@ -286,13 +291,18 @@ class UnityTask(Task):
 
         self.state_vec.append(self.state)  # all info about the agent (ex. position)
 
-        ### check reset, epochs, and condition to end session; update state ###
+        continue_session = self._check_end_session()
+
+        return continue_session, info
+
+    def _check_end_session(self):
+        """check reset, epochs, and condition to end session; update state"""
         if self.terminal:
             self.episode += 1
             if (self.epoch_trials) & (self.episode > self.epochs[self.epoch]):
                 self.epoch += 1
                 if self.epoch > len(self.epochs) - 1:
-                    return False, info
+                    return False
             self.reset_environment()
             self.terminal = False
 
@@ -301,9 +311,9 @@ class UnityTask(Task):
         ):
             self.epoch += 1
             if self.epoch > len(self.epochs) - 1:
-                return False, info
+                return False
 
-        return True, info
+        return True
 
     def get_info(self):
         """

@@ -1,29 +1,30 @@
-from typing import Type, List
+"""Custom visual feature extractors for Stable-Baselines3 policies.
+
+Includes:
+- CustomExtractor: simple 3-layer CNN + 3-layer MLP producing features_dim.
+- VanillaExtractor: deeper CNN with GroupNorm and MLP head.
+- DepthwiseExtractor: depthwise-separable CNN stem + adaptive pool + MLP.
+"""
+
+from typing import Type, List, Optional, Dict, Sequence
 
 import torch as th
 import torch.nn as nn
-import torchvision.transforms as T
-
-from gymnasium import spaces
-from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
-from typing import Type, Optional, Dict, Sequence
-import torch as th
-import torch.nn as nn
 from gymnasium import spaces
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
 
-def ortho_init(m, gain=1.0):
+def _ortho_init(m: nn.Module, gain: float = 1.0):
     if isinstance(m, (nn.Conv2d, nn.Linear)):
-        nn.init.orthogonal_(m.weight, gain=float(gain))
+        nn.init.orthogonal_(m.weight, float(gain))
         if m.bias is not None:
             nn.init.constant_(m.bias, 0.0)
 
 
 class CustomExtractor(BaseFeaturesExtractor):
-    """
-    CNN feature extractor for visual observations.
-    Produces a flat feature vector for SB3.
+    """3-layer CNN followed by a 3-layer MLP to features_dim.
+
+    Validates provided layer sizes and initializes weights orthogonally.
     """
 
     def __init__(
@@ -45,9 +46,9 @@ class CustomExtractor(BaseFeaturesExtractor):
             raise TypeError("All elements in cnn_layers must be integers")
 
         if not isinstance(mlp_layers, list):
-            raise TypeError("mlp_layers must be a list of 2 integers")
-        if len(mlp_layers) != 2:
-            raise ValueError("mlp_layers must contain exactly 2 integers")
+            raise TypeError("mlp_layers must be a list of 3 integers")
+        if len(mlp_layers) != 3:
+            raise ValueError("mlp_layers must contain exactly 3 integers")
         if not all(isinstance(x, int) for x in mlp_layers):
             raise TypeError("All elements in mlp_layers must be integers")
 
@@ -64,8 +65,8 @@ class CustomExtractor(BaseFeaturesExtractor):
             cnn_activation_fn(),
             nn.Flatten(),
         )
-        self.cnn_gain = nn.init.calculate_gain(cnn_activation_fn)
-        self.cnn.apply(lambda m: ortho_init(m, gain=self.cnn_gain))
+        self.cnn_gain = _calc_gain(cnn_activation_fn)
+        self.cnn.apply(lambda m: _ortho_init(m, gain=self.cnn_gain))
 
         # Probe CNN output dim
         with th.no_grad():
@@ -83,8 +84,8 @@ class CustomExtractor(BaseFeaturesExtractor):
             mlp_activation_fn(),
             nn.Linear(layer3, features_dim),
         )
-        self.mlp_gain = nn.init.calculate_gain(mlp_activation_fn)
-        self.mlp.apply(lambda m: ortho_init(m, gain=self.mlp_gain))
+        self.mlp_gain = _calc_gain(mlp_activation_fn)
+        self.mlp.apply(lambda m: _ortho_init(m, gain=self.mlp_gain))
 
         self._features_dim = features_dim
 
@@ -117,13 +118,6 @@ def _gn_groups(C: int) -> int:
         if C % g == 0:
             return g
     return 1
-
-
-def _ortho_init(m: nn.Module, gain: float = 1.0):
-    if isinstance(m, (nn.Conv2d, nn.Linear)):
-        nn.init.orthogonal_(m.weight, gain)
-        if m.bias is not None:
-            nn.init.constant_(m.bias, 0.0)
 
 
 class VanillaExtractor(BaseFeaturesExtractor):
@@ -191,4 +185,102 @@ class VanillaExtractor(BaseFeaturesExtractor):
     def forward(self, obs: th.Tensor) -> th.Tensor:
         x = self.flatten(self.backbone(obs))  # (B, flat_dim)
         x = self.mlp(x)  # (B, out_dim)
+        return x
+
+
+class DepthwiseExtractor(BaseFeaturesExtractor):
+    """
+    Depthwise-separable CNN -> Adaptive Pool -> Flatten (~2-3k) -> 3-layer MLP -> features_dim.
+
+    Args:
+      features_dim: final output size returned to the policy (e.g., 400).
+      base_channels: width of the CNN stem (keeps it light).
+      use_depthwise: use depthwise+pointwise convs for efficiency.
+      pool_out: (H, W) output of AdaptiveAvgPool2d; controls flattened size.
+      head_channels: channels after the last 1x1 conv before pooling; also controls flattened size.
+      mlp_hidden: 2-tuple for the 3-layer MLP (h1, h2).
+
+    Notes:
+      - Flattened size ~= head_channels * pool_out[0] * pool_out[1].
+      - With (head_channels=32, pool_out=(12, 8)) -> 32*12*8 = 3072 features into MLP.
+      - Uses BN after each conv; conv biases are disabled.
+    """
+
+    def __init__(
+        self,
+        observation_space: spaces.Box,
+        features_dim: int = 400,
+        base_channels: int = 32,
+        use_depthwise: bool = True,
+        pool_out: tuple[int, int] = (12, 8),
+        head_channels: int = 32,
+        mlp_hidden: tuple[int, int] = (1024, 512),
+    ):
+        assert isinstance(observation_space, spaces.Box)
+        super().__init__(observation_space, features_dim)
+
+        C, H, W = observation_space.shape
+        Act = nn.SiLU
+
+        def conv3x3(cin, cout, stride=1, depthwise=False):
+            if depthwise:
+                return nn.Sequential(
+                    nn.Conv2d(
+                        cin, cin, 3, stride=stride, padding=1, groups=cin, bias=False
+                    ),
+                    nn.BatchNorm2d(cin),
+                    Act(),
+                    nn.Conv2d(cin, cout, 1, bias=False),
+                    nn.BatchNorm2d(cout),
+                    Act(),
+                )
+            else:
+                return nn.Sequential(
+                    nn.Conv2d(cin, cout, 3, stride=stride, padding=1, bias=False),
+                    nn.BatchNorm2d(cout),
+                    Act(),
+                )
+
+        c1, c2, c3, c4 = (
+            base_channels,
+            base_channels * 2,
+            base_channels * 4,
+            base_channels * 4,
+        )
+
+        # /8 backbone: strides 2,2,2,1
+        self.backbone = nn.Sequential(
+            conv3x3(C, c1, stride=2, depthwise=use_depthwise),  # /2
+            conv3x3(c1, c2, stride=2, depthwise=use_depthwise),  # /4
+            conv3x3(c2, c3, stride=2, depthwise=use_depthwise),  # /8
+            conv3x3(c3, c4, stride=1, depthwise=use_depthwise),  # keep /8
+        )
+
+        # 1x1 head to control channel count before pooling
+        self.head1x1 = nn.Sequential(
+            nn.Conv2d(c4, head_channels, 1, bias=False),
+            nn.BatchNorm2d(head_channels),
+            Act(),
+        )
+
+        # Fix spatial size -> controls flattened length
+        self.pool_small = nn.AdaptiveAvgPool2d(pool_out)
+
+        # Compute flattened size and build 3-layer MLP to compress to features_dim
+        flat_dim = head_channels * pool_out[0] * pool_out[1]
+        h1, h2 = mlp_hidden
+        self.mlp = nn.Sequential(
+            nn.Linear(flat_dim, h1),
+            Act(),
+            nn.Linear(h1, h2),
+            Act(),
+            nn.Linear(h2, features_dim),
+        )
+
+    def forward(self, x: th.Tensor) -> th.Tensor:
+        x = self.backbone(x)
+        x = self.head1x1(x)
+        x = self.pool_small(x)
+        x = th.flatten(x, 1)  # ~2–3k depending on head_channels * pool_out
+        x = self.mlp(x)  # -> [B, features_dim]
         return x

@@ -1,3 +1,9 @@
+"""Simple on-policy episode rollouts for trained models.
+
+Loads a PPO or RecurrentPPO checkpoint and evaluates several episodes in the
+Unity Active Sensing environment, printing summary statistics.
+"""
+
 from __future__ import annotations
 
 import numpy as np
@@ -17,6 +23,7 @@ ALGO = RecurrentPPO if "recurrentppo" in MODEL_PATH.lower() else PPO
 
 
 def eval():
+    """Run N_EPS episodes and print mean return/length."""
     env = env = MouseTaskToGymWrapper(
         env_path=ENV_PATH,
         task_config="shape_discrim",
