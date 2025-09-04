@@ -1,5 +1,5 @@
 # ---- Config ----
-PROJECT ?= user_leo_ar_rl_proj
+PROJECT ?= ar_rl_proj
 COMPOSE := docker compose -p $(PROJECT)
 
 BUILD_ARGS := \
@@ -63,6 +63,11 @@ stop:
 ps:
 	@$(COMPOSE) ps
 
+
+stats:
+	@$(COMPOSE) stats
+
+
 logs:
 	@if [ -n "$(service)" ]; then \
 		$(COMPOSE) logs -f --tail=200 $(service); \
@@ -70,22 +75,20 @@ logs:
 		$(COMPOSE) logs -f --tail=200; \
 	fi
 
-# ---- Exec / Run / Bash ----
-# Use `exec` to run inside an existing container (good for scaled trainers).
-exec:
-	@if [ -z "$(service)" ]; then echo "Usage: make exec service=trainer|developer [INDEX=1] SCRIPT=foo.py"; exit 1; fi
-	@if [ -z "$(SCRIPT)" ]; then echo "Please set SCRIPT=... (relative to /app/scripts)"; exit 1; fi
-	@if [ "$(service)" = "trainer" ]; then \
-		$(COMPOSE) exec --index $(INDEX) $(service) bash -lc 'python3 scripts/$(SCRIPT)'; \
-	else \
-		$(COMPOSE) exec $(service) bash -lc 'python3 scripts/$(SCRIPT)'; \
-	fi
-
-# Use `run` for a fresh, ephemeral container (not tied to an existing replica).
+# ----  Run / Bash ----
 run:
-	@if [ -z "$(service)" ]; then echo "Usage: make run service=trainer|developer SCRIPT=foo.py"; exit 1; fi
-	@if [ -z "$(SCRIPT)" ]; then echo "Please set SCRIPT=... (relative to /app/scripts)"; exit 1; fi
-	@$(COMPOSE) run --rm $(service) bash -lc 'python3 scripts/$(SCRIPT)'
+	@if [ "$(script)" = "" ]; then \
+		echo "Please specify a script with 'make run service=developer script=scripts/PPO_trainer.py'"; \
+		exit 1; \
+	fi; \
+	if [ "$(service)" != "trainer" ] && [ "$(service)" != "developer" ]; then \
+		echo "Invalid service. Use 'trainer' or 'developer'."; \
+		exit 1; \
+	fi; \
+	docker compose exec -d --index $(INDEX) $(service) bash -lc "python3 scripts/$(script)"
+
+train:
+	@$(MAKE) run service=$(service) script=$(script)
 
 # Open a shell; for trainer, choose replica with INDEX
 bash:
@@ -103,7 +106,3 @@ attach:
 	else \
 		$(COMPOSE) attach $(service); \
 	fi
-
-stats:
-	@$(COMPOSE) stats
-

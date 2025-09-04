@@ -4,11 +4,8 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-      additional_contexts:
-        mlagents: ${MLAGENTS_PATH}
-        vr4mice: ${VR4MICE_PATH}
     volumes:
-      - ${VR4MICE_PATH}:/app:rw
+      - ./:/app:rw
     tty: true
     stdin_open: true
     deploy:
@@ -32,10 +29,8 @@ services:
       context: .
       dockerfile: ./Dockerfile
       additional_contexts:
-        mlagents: ${MLAGENTS_PATH}
-        vr4mice: ${VR4MICE_PATH}
     volumes:
-      - ${VR4MICE_PATH}:/app
+      - ./:/app
     tty: true
     stdin_open: true
     deploy:

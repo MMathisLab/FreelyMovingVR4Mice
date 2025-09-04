@@ -15,9 +15,9 @@ from rl_task.task.envs.rl_task_gym_wrapper import MouseTaskToGymWrapper
 
 ENV_PATH = "rl_task/AR_build/augmented_reality.x86_64"
 ENV_PATH = None
-MODEL_PATH = "rl_task/models/RecurrentPPO_AugmentedReality_20250825_1959"
-N_EPS = 5
-MAX_EP_LEN = 120
+MODEL_PATH = "rl_task/models/RecurrentPPO_AugmentedReality_20250901_1722_final"
+N_EPS = 10
+MAX_EP_LEN = 220
 DETERMINISTIC = False
 ALGO = RecurrentPPO if "recurrentppo" in MODEL_PATH.lower() else PPO
 
@@ -26,16 +26,16 @@ def eval():
     """Run N_EPS episodes and print mean return/length."""
     env = env = MouseTaskToGymWrapper(
         env_path=ENV_PATH,
-        task_config="shape_discrim",
+        task_config="shape_discrim_multi_occluders",
         fps=50,
         base_port=5004,
         worker_id=0,
-        worker_seed=None,
         batchmode=False,
         save_data=False,
         pos_reward_size=1.5,
         neg_reward_size=1.5,
-        step_penalty_size=0.01,
+        step_penalty_size=0,
+        trunc_penalty_size=1.5,
         max_episode_steps=MAX_EP_LEN,
     )
     model = ALGO.load(
