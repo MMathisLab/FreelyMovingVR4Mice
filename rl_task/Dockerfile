@@ -13,14 +13,9 @@ RUN apt-get update -yy \
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
 
 COPY ./requirements.txt .
-COPY --from=mlagents . /ml-agents/
-# COPY --from=vr4mice . /vr4mice/
+
 # RUN pip3 install --upgrade pip 
-RUN pip3 install --no-cache-dir -r requirements.txt \
-	&& pip uninstall -y tensorflow keras tensorflow-io-gcs-filesystem \
-	&& pip install /ml-agents/ml-agents-envs/ \
-	# && pip install -e /vr4mice/ \
-	&& rm -rf /ml-agents
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 ARG user_name
 ARG uid
