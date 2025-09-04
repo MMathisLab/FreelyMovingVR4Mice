@@ -1,6 +1,6 @@
 """Unity Active Sensing task compatibility layer for RL usage.
 
-This extends the base ``ActiveSensingTask`` to provide an interface compatible 
+This extends the base ``ActiveSensingTask`` to provide an interface compatible
 with the Gymnasium environment structure and common RL training loops:
 
 - Starts/stops the Unity player with configurable ports/worker ids.
@@ -34,7 +34,7 @@ class ActiveSensingTaskRL(ActiveSensingTask):
     def __init__(
         self,
         env_path: Path | None,
-        teensy: FakeTeensy(),
+        teensy: FakeTeensy,
         session_label: List[str],
         config_file_path: Path,
         monitor: bool | None,
