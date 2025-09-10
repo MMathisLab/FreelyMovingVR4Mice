@@ -78,6 +78,21 @@ presets:
     velocity_threshold: 10.0
     target_distance: 3.0
 
+  # --- Shape detection ---
+  shape_detect:
+    session_label: ["ar_shape_detection"]
+    epoch_labels: ["pacman"]
+    slit_size: [4.0, 4.0, 1]
+    slit_depth: 0.02
+    target_selection: 13.0
+    distractor_selection: 6.0
+    occlusion_type: 0.0
+    target_spread: 3.0
+    target_rotation: 15.0
+    distractor: 0.0
+    velocity_threshold: 5.0
+    target_distance: 4.0
+
   # --- Shape discrimination ---
   shape_discrim:
     session_label: ["ar_shape_discrimination"]
