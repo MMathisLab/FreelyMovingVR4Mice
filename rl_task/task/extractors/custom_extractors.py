@@ -1,8 +1,9 @@
 """Custom visual feature extractors for Stable-Baselines3 policies.
 
 Includes:
-- CustomExtractor: simple 3-layer CNN + 3-layer MLP producing features_dim.
-- VanillaExtractor: deeper CNN with GroupNorm and MLP head.
+- CnnMlpExtractor: simple 3-layer CNN + 3-layer MLP producing features_dim.
+    - Inspiration: http://arxiv.org/abs/2505.12278
+- CnnExtractor: deeper CNN with GroupNorm and MLP head.
 - DepthwiseExtractor: depthwise-separable CNN stem + adaptive pool + MLP.
 """
 
@@ -21,7 +22,7 @@ def _ortho_init(m: nn.Module, gain: float = 1.0):
             nn.init.constant_(m.bias, 0.0)
 
 
-class CustomExtractor(BaseFeaturesExtractor):
+class CnnMlpExtractor(BaseFeaturesExtractor):
     """3-layer CNN followed by a 3-layer MLP to features_dim.
 
     Validates provided layer sizes and initializes weights orthogonally.
@@ -120,7 +121,7 @@ def _gn_groups(C: int) -> int:
     return 1
 
 
-class VanillaExtractor(BaseFeaturesExtractor):
+class CnnExtractor(BaseFeaturesExtractor):
     def __init__(
         self,
         observation_space: spaces.Box,

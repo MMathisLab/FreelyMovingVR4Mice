@@ -68,6 +68,10 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         distractor: float,
         grey_screen_active: float,
         target_distance: float,
+
+        # RL / Unity process specific args to create vector envs
+        # where each instance needs its own port/worker_id and all
+        # should run in batchmode without needing dlc tracking.
         use_dlc: bool = False,
         batchmode: bool = True,
         base_port: int = 5004,
@@ -76,8 +80,12 @@ class ActiveSensingTaskRL(ActiveSensingTask):
     ):
 
         self.angle_in_degrees = True
+
+        # Empirical upper bounds based on both visual inspection and
+        # on analysis of real behavioral data of mice performing the task.
         self.max_lin_speed = 300  # mm / s
         self.max_ang_speed = np.pi  # rad / s
+
         self.dt = 1 / fps
         self.default_virtual_state = np.array(
             [cropped_image[1] // 2, cropped_image[3] // 4, 0]
@@ -143,6 +151,10 @@ class ActiveSensingTaskRL(ActiveSensingTask):
 
         decision_steps, _ = self.env.get_steps(self.agent)
         self.vis_state = decision_steps.obs[self.vis_obs_ind]
+
+        # Define the default agent virtual state to be the center of the cropped image.
+        # The agent is able to freely move within a virtual arena that has the same size
+        # as the cropped image from the camera feed used for dlc tracking.
         self.virtual_state = self.default_virtual_state
 
     def _wrap_angle(self, a: float) -> float:
@@ -176,6 +188,8 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         move, turn = action
 
         # rescaling "move" action to [0, 1] so that it cannot move backwards
+        # Choice made to account for the fact that mice in the real task
+        # rarely move backwards.
         move = (move + 1) / 2
 
         # Unpack current virtual state

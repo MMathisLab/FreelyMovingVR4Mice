@@ -44,22 +44,22 @@ class MouseTaskToGymWrapper(gym.Env):
         max_episode_steps: Truncate episodes locally after this many steps.
     """
 
-    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 50}
+    metadata = {"render_modes": [], "render_fps": 50}
 
     def __init__(
         self,
         env_path,
         task_config,
-        fps=50,
+        fps=metadata["render_fps"],
         base_port=5004,
         worker_id=0,
         batchmode=True,
         save_data=False,
-        pos_reward_size=1,
-        neg_reward_size=0,
-        trunc_penalty_size=0,
-        step_penalty_size=0,
-        max_episode_steps=None,
+        pos_reward_size=1.5,
+        neg_reward_size=1.5,
+        trunc_penalty_size=1.5,
+        step_penalty_size=0.0,
+        max_episode_steps=800,
     ):
         self.pos_reward_size = pos_reward_size
         self.neg_reward_size = neg_reward_size
@@ -67,7 +67,6 @@ class MouseTaskToGymWrapper(gym.Env):
         self.step_penalty_size = step_penalty_size
         self.cfg = load_config(
             preset_name=task_config,
-            yaml_path="/app/rl_task/config/rl_experiments.yaml",
             env_path=env_path,
             teensy=FakeTeensy(),
             fps=fps,
@@ -166,7 +165,7 @@ class MouseTaskToGymWrapper(gym.Env):
 
         return self._to_uint8(observation), reward, terminated, truncated, info
 
-    def render(self, mode="human"):
+    def render(self, mode=None):
         pass
 
     def close(self):

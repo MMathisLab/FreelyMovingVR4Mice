@@ -24,8 +24,8 @@ public class Mouse_move : Agent
 	public bool mouse_can_report = false;
 	private float inITItimer;
 	public bool ITI_timed = false;
+	public bool mouse_reported = false;
 	public bool mouse_report_correct = false;
-	public bool mouse_report_wrong = false;
 	public float mouseReportDelay;
 	public bool mouseInLeft_box = false;
 	public bool mouseInRight_box = false;
@@ -62,6 +62,8 @@ public class Mouse_move : Agent
 	Stopwatch stopwatch;
 	float lastFrameTime;
 
+	// Binary flag to determine whether task is being run in a reinforcement learning 
+	// context or within the behavioral mouse task. 0 = mouse task | 1 = rl task
 	public float RL_training;
 
 
@@ -141,7 +143,6 @@ public class Mouse_move : Agent
 
 	public override void OnActionReceived(ActionBuffers actions)
 	{
-		float thisReward = 0f;
 		float deltaTime = GetDeltaTime();
 		totalEpisodeTime += deltaTime;
 
@@ -166,22 +167,19 @@ public class Mouse_move : Agent
 		mouseInRight_box = agentInBox(R_box_x_min, R_box_x_max, R_box_z_min, R_box_z_max, false);
 		mouseInLeft_box = agentInBox(L_box_x_min, L_box_x_max, L_box_z_min, L_box_z_max, false);
 
+		float thisReward = 0f;
+
 		if (mouse_can_report)
 		{
 			MouseReported(deltaTime);
-			if (mouse_report_correct)
+			if (mouse_reported)
 			{
-				thisReward = 1f;
+				if (mouse_report_correct) thisReward = 1f;
+				else if (RL_training == 1f) thisReward = -1f;
+
 				mouse_report_correct = false;
 				mouse_can_report = false;
-				SetReward(thisReward);
-			}
-			if (mouse_report_wrong)
-			{
-				thisReward = -1f;
-				mouse_report_wrong = false;
-				mouse_can_report = false;
-				SetReward(thisReward);
+				mouse_reported = false;
 			}
 		}
 
@@ -191,7 +189,8 @@ public class Mouse_move : Agent
 		// Trigger ITI either - ITI can be timed or next episode can start when the agent looks back at the screen in a frontal box
 		triggerGreyScreen_agentTriggerd(deltaTime);
 
-		// SetReward(thisReward);
+		// Setting reward for current step
+		SetReward(thisReward);
 	}
 
 
@@ -220,7 +219,6 @@ public class Mouse_move : Agent
 		continuousActionsOut[1] = this.transform.position.z;
 		continuousActionsOut[2] = this.transform.eulerAngles.y;
 	}
-
 
 	// void EpisdoeTimeOut()
 	// {
@@ -343,12 +341,14 @@ public class Mouse_move : Agent
 			R_box_delay = 0f;
 		}
 
+		// Check if mouse can report. Wait for delays...
 		if ((L_box_delay > report_box_delay) | (R_box_delay > report_box_delay))
 		{
-			if (((plane.GetComponent<Target_spawner>().green_on_left == true) & (mouseInLeft_box == true)) | ((plane.GetComponent<Target_spawner>().green_on_left == false) & (mouseInRight_box == true)))
+			// Check if mouse reported correctly or not
+			if ((plane.GetComponent<Target_spawner>().green_on_left & mouseInLeft_box) | ((!plane.GetComponent<Target_spawner>().green_on_left) & mouseInRight_box))
 			{
 				mouse_report_correct = true;
-				mouse_report_wrong = !mouse_report_correct;
+				mouse_reported = true;
 				plane.GetComponent<Target_spawner>().DestroyTargets();
 				mouse_can_report = false;
 				ITI = true;
@@ -356,7 +356,7 @@ public class Mouse_move : Agent
 			else
 			{
 				mouse_report_correct = false;
-				mouse_report_wrong = !mouse_report_correct;
+				mouse_reported = true;
 				plane.GetComponent<Target_spawner>().DestroyTargets();
 				mouse_can_report = false;
 				ITI = true;
@@ -394,6 +394,7 @@ public class Mouse_move : Agent
 
 		ITIGreyScreen = environmentParameters.GetWithDefault("Grey_screen_active", 0f);
 
+		// Retrieve whether the rl task is running or not
 		RL_training = environmentParameters.GetWithDefault("RL_training", 0f);
 	}
 }

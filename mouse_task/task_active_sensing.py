@@ -79,7 +79,7 @@ class ActiveSensingTask(UnityTask):
         monitor: Optional[bool],
         write_video: bool,
         fps: float,
-        epochs: int,
+        epochs: List[int],
         epoch_labels: List[str],
         reward_size: int,
         cropped_image: List[int],

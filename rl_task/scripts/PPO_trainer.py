@@ -5,8 +5,10 @@ Weights & Biases logging with optional checkpoint loading.
 """
 
 import os, wandb, torch
+
+from pathlib import Path
 from datetime import datetime, timedelta
-from pyvirtualdisplay import Display
+from pyvirtualdisplay.display import Display
 from wandb.integration.sb3 import WandbCallback
 from stable_baselines3.common.callbacks import (
     EvalCallback,
@@ -19,10 +21,11 @@ from stable_baselines3.common.utils import set_random_seed
 
 from dotenv import load_dotenv
 
-from utils.env_factory import make_env
-from utils.vanilla_extractor import CustomExtractor
+from rl_task.task.utils.env_factory import make_env
+from rl_task.task.extractors.custom_extractors import CnnMlpExtractor
 
-load_dotenv(dotenv_path="/app/rl_task/.env")  # reads .env into os.environ
+_rltask = Path(__file__).resolve().parent.parent
+load_dotenv(dotenv_path=_rltask / ".env")
 
 GPU_ID = 0
 ENV_PATH = os.getenv("UNITY_ENV_PATH", "/app/rl_task/AR_build/augmented_reality.x86_64")

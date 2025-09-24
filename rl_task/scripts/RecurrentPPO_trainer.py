@@ -1,10 +1,15 @@
 """Train a RecurrentPPO agent on the Unity Active Sensing task.
 
+The choice for RecurrentPPO is inspired by the following paper: 
+*   http://arxiv.org/abs/2505.12278
+
 This script wires up vectorized environments, a visual feature extractor,
 evaluation callbacks, W&B logging, and optional checkpoint loading.
 """
 
 import os, wandb, torch
+
+from pathlib import Path
 from datetime import datetime, timedelta
 from wandb.integration.sb3 import WandbCallback
 from stable_baselines3.common.callbacks import (
@@ -12,7 +17,7 @@ from stable_baselines3.common.callbacks import (
     StopTrainingOnNoModelImprovement,
     CallbackList,
 )
-from pyvirtualdisplay import Display
+from pyvirtualdisplay.display import Display
 
 from sb3_contrib.ppo_recurrent import RecurrentPPO
 
@@ -20,10 +25,13 @@ from dotenv import load_dotenv
 
 from rl_task.task.utils.env_factory import make_env
 from rl_task.task.extractors.custom_extractors import (
-    CustomExtractor,
-    VanillaExtractor,
+    CnnMlpExtractor,
+    CnnExtractor,
     DepthwiseExtractor,
 )
+
+_rltask = Path(__file__).resolve().parent.parent
+load_dotenv(dotenv_path=_rltask / ".env")
 
 GPU_ID = 1
 ENV_PATH = os.getenv("UNITY_ENV_PATH", "/app/rl_task/AR_build/augmented_reality.x86_64")
@@ -98,7 +106,6 @@ if __name__ == "__main__":
     display = Display(backend="xvfb", visible=False, size=(420, 245))
     display.start()
 
-    load_dotenv(dotenv_path="/app/rl_task/.env")
     wandb.login()
     os.makedirs(MODEL_SAVE_DIR, exist_ok=True)
 

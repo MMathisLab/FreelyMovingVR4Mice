@@ -1,6 +1,6 @@
 # RL Task (Active Sensing) — Docker + Makefile Guide
 
-This folder contains the reinforcement learning stack for training agents on the Unity “Active Sensing” task. It includes:
+This folder contains the reinforcement learning stack for training agents on the Unity `Active Sensing` task. It includes:
 
 - Dockerfile and Compose setup for a reproducible, GPU-enabled environment
 - A Makefile with convenience targets to build, run, and manage containers
@@ -21,7 +21,7 @@ This folder contains the reinforcement learning stack for training agents on the
   - `envs/rl_task_active_sensing.py`: RL‑friendly facade over the active sensing task process
   - `envs/rl_task_gym_wrapper.py`: Gymnasium adapter with reward shaping and episode tracking
   - `utils/env_factory.py`: Builds Dummy/Subproc vectorized envs + `VecMonitor`
-  - `extractors/`: SB3 feature extractors (vanilla and depthwise convs, MobileNetV3, …)
+  - `extractors/`: SB3-compatible feature extractors
 - `config/`: Config presets and loader
   - `rl_experiments.yaml`: Defaults and named presets (e.g. `shape_discrim`, `*_occluders`)
   - `config.py`: Typed config + `load_config(...)` merger

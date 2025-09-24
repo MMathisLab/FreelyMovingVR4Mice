@@ -7,6 +7,7 @@ from a YAML file, and caller-provided overrides.
 """
 
 import yaml
+from pathlib import Path
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
@@ -64,17 +65,19 @@ class ActiveSensingConfig(BaseModel):
         return self.model_dump()
 
 
-def load_config(preset_name: str, yaml_path: str, **overrides) -> ActiveSensingConfig:
+def load_config(preset_name: str, **overrides) -> ActiveSensingConfig:
     """Load, merge, and validate a configuration preset.
 
     Args:
         preset_name: Key under ``presets`` in the YAML file.
-        yaml_path: Path to the YAML file with ``defaults`` and ``presets``.
         **overrides: Arbitrary key-value pairs that take precedence.
 
     Returns:
         ActiveSensingConfig: The merged and validated configuration.
     """
+    # Retrieve .yaml config file in same folder
+    yaml_path = Path(__file__).resolve().parent / "rl_experiments.yaml"
+
     with open(yaml_path, "r") as f:
         cfg = yaml.safe_load(f)
 

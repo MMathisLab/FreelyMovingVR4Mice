@@ -6,15 +6,20 @@ for which the game is designed using the [Unity ML-Agents Platform]
 import os
 import sys
 import time
+import cv2
 import numpy as np
+
+from typing import List, Optional
+
 from mlagents_envs.environment import ActionTuple
 from mlagents_envs.environment import UnityEnvironment
 from mlagents_envs.side_channel.float_properties_channel import FloatPropertiesChannel
 from mlagents_envs.side_channel.environment_parameters_channel import (
     EnvironmentParametersChannel,
 )
-import cv2
+from teensyexp.teensy import Teensy
 from teensyexp.tasks_abc.task import Task
+
 
 
 class UnityTask(Task):
@@ -24,17 +29,17 @@ class UnityTask(Task):
 
     def __init__(
         self,
-        teensy,
-        env,
-        worker_id=0,
-        base_port=5004,
-        agent_group=0,
-        monitor=1,
-        fullscreen=1,
-        write_video=False,
-        fps=60.0,
-        epochs=[1e5],
-        epoch_trials=True,
+        teensy: Teensy,
+        env: str,
+        worker_id: int = 0,
+        base_port: int = 5004,
+        agent_group: int = 0,
+        monitor: int = 1,
+        fullscreen: int = 1,
+        write_video: bool = False,
+        fps: float = 60.0,
+        epochs: List[int] = [1e5],
+        epoch_trials: bool = True,
     ):
         """
         class constructor
