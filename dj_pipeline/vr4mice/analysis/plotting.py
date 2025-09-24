@@ -753,6 +753,9 @@ def plot_rate(
         else:
             counts = pd.DataFrame(counts.reset_index())
     counts = counts.rename(columns={"trial": "count"})
+    
+    if plot_bias: 
+        counts["count"] = 2 * counts["count"] - 1  # to have it between -1 and 1
 
     if plot_bias:
         counts["count"] = 2 * counts["count"] - 1  # to have it between -1 and 1
