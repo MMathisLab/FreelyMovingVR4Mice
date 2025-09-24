@@ -753,8 +753,8 @@ def plot_rate(
         else:
             counts = pd.DataFrame(counts.reset_index())
     counts = counts.rename(columns={"trial": "count"})
-    
-    if plot_bias: 
+
+    if plot_bias:
         counts["count"] = 2 * counts["count"] - 1  # to have it between -1 and 1
 
     _plot_bar_counts(
@@ -780,8 +780,12 @@ def plot_rate(
         )
         for i in counts.aperture.unique():
             if plot_bias:
-                t_null, p_null = stats.ttest_1samp(counts[counts["aperture"] == i]["count"], 0)
-            t_null, p_null = stats.ttest_1samp(counts[counts["aperture"] == i]["count"], 0)
+                t_null, p_null = stats.ttest_1samp(
+                    counts[counts["aperture"] == i]["count"], 0
+                )
+            t_null, p_null = stats.ttest_1samp(
+                counts[counts["aperture"] == i]["count"], 0
+            )
             print(f"{i} vs chance 0: t={t_null:.2f}, p={p_null:.3f}")
 
             for j in counts.aperture.unique():
