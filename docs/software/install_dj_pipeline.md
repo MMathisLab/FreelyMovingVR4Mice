@@ -93,7 +93,7 @@
    from vr4mice.schema import vr4mice
    vr4mice.Dataset()
   ```
-   > **Note: **
+   > **Note:**
    > If the subfolder name is different (not `/data/data` but `/data/rawdata` for example, change the path in `run.py` script).
 
 10. **To populate analysis**, run:
