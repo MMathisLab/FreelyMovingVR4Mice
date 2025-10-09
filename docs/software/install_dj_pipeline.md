@@ -10,7 +10,7 @@
    - *For Linux/Mac,* execute the command `make run_gui` from the `gui_transfer/` folder root.
    - *For Windows,* adjust the paths in the provided batch file.
 
-## DataJoint database user remote access via Jupiter Notebook
+## DataJoint database user remote access via Jupyter Notebook
 1. Ensure that `jupyter-notebook` is installed, `vr4mice` repository is loaded, and `base_schemas` is pip-installed.
 2. Update information in the `env.py` file (IP of server, user name and password provided by administrator).
 3. From working `vr4mice` directory start Jupyter Notebook and create a new Python3 page.
