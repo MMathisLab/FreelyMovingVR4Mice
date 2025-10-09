@@ -12,7 +12,6 @@ import seaborn as sns
 from matplotlib.collections import PathCollection
 from matplotlib.transforms import Affine2D
 from scipy.interpolate import CubicSpline
-from scipy.stats import ttest_rel, ttest_ind
 
 """
 Color codes:
@@ -21,7 +20,7 @@ Color codes:
     - center box: blue: '#009B9E'
     
     - SET1 colormap for the apertures, 
-    4.3 = '#EC8788', 12 = '#96B9D6'
+    4.3 = '#E41A1C', 12 = '#437FB5'
 """
 
 colors_choice = ["#5C0A72", "#FD672C"]
@@ -695,6 +694,7 @@ def plot_rate(
     per_mouse: bool = False,
     per_lab: bool = False,
     alpha: float = 0.5,
+    plot_bias: bool = False,
     ax: Optional[matplotlib.axes.Axes] = None,
     cmap: str = "Set1",
 ):
@@ -707,7 +707,11 @@ def plot_rate(
         df (pd.DataFrame): DataFrame containing the data to plot.
         label_x (str): Name of the column
         per_aperture (bool, optional): If True, plot per aperture. Default is False.
+        per_mouse (bool, optional): If True, plot per mouse. Default is False.
+        per_lab (bool, optional): If True, plot per lab. Default is False.
         alpha (float, optional): Alpha transparency for the plot. Default is 0.5.
+        plot_bias (bool, optional): If True, plot the bias (2*rate - 1). Default is False.
+            Used for the choice rate to choice bias.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
         cmap (str, optional): Color map for the plot. Default is "Set1".
     """
@@ -750,6 +754,9 @@ def plot_rate(
             counts = pd.DataFrame(counts.reset_index())
     counts = counts.rename(columns={"trial": "count"})
 
+    if plot_bias:
+        counts["count"] = 2 * counts["count"] - 1  # to have it between -1 and 1
+
     _plot_bar_counts(
         counts=counts,
         label_x="aperture" if per_aperture else None,
@@ -763,7 +770,7 @@ def plot_rate(
     ax.set_xlim(-0.5, num_aperture - 0.5)
 
     if per_aperture:
-        stats = pd.DataFrame(
+        stats_tests = pd.DataFrame(
             zip(
                 counts.groupby("aperture")["count"].mean(),
                 counts.groupby("aperture")["count"].sem(),
@@ -772,18 +779,28 @@ def plot_rate(
             index=counts.groupby("aperture")["count"].mean().index,
         )
         for i in counts.aperture.unique():
+            if plot_bias:
+                t_null, p_null = stats.ttest_1samp(
+                    counts[counts["aperture"] == i]["count"], 0
+                )
+            t_null, p_null = stats.ttest_1samp(
+                counts[counts["aperture"] == i]["count"], 0
+            )
+            print(f"{i} vs chance 0: t={t_null:.2f}, p={p_null:.3f}")
+
             for j in counts.aperture.unique():
                 if i < j:
-                    stat = ttest_rel(
+                    stat = stats.ttest_rel(
                         counts[counts["aperture"] == i]["count"],
                         counts[counts["aperture"] == j]["count"],
                     )
                     print(f"{i}-{j}: {stat}")
 
     else:
-        stats = (counts["count"].mean(), counts["count"].sem())
+        stats_tests = (counts["count"].mean(), counts["count"].sem())
 
-    print(stats)
+    print(stats_tests)
+    return counts
 
 
 def plot_rewards(
