@@ -1,0 +1,259 @@
+# VR4Mice DataJoint Pipeline
+
+## Quick Intro & Resources to DataJoint
+
+DataJoint is an open-source data management framework designed for scientific workflows, especially in neuroscience and experimental biology. It provides a relational data model and tools for building, querying, and maintaining complex data pipelines. DataJoint enables modular, reproducible, scalable, and collaborative data analysis by organizing data into well-defined tables and automating dependencies between processing steps.
+
+> **DataJoint Table Types**
+> 
+> DataJoint organizes data into several table types, each serving a specific role in a scientific data pipeline:
+> 
+> - **Manual Tables (`dj.Manual`)**: Populated by users or external systems. Used for raw data, experiment metadata, or any information entered manually.
+> - **Imported Tables (`dj.Imported`)**: Populated by automated scripts that import data from external sources or files. Used for data acquired from instruments or external analysis.
+> - **Computed Tables (`dj.Computed`)**: Populated by automated computations based on upstream tables. Used for analysis, processing, and derived results.
+> - **Lookup Tables (`dj.Lookup`)**: Contain reference information, such as lists of hardware, experimental conditions, or other constants.
+
+**Useful Links:**
+- [DataJoint Documentation](https://docs.datajoint.org/)
+- [DataJoint GitHub](https://github.com/datajoint/datajoint)
+
+## Repository Structure and Roles
+### Key components
+
+1. **Graphical User Interface (GUI)** for metadata and data transfer.
+2. **VR4mice DataJoint pipeline** including table definitions, as well as external schemas for experiments and mice.
+3. **Data fetching and population.**
+4. **System/Docker**: Uses docker-compose for deployment. *Please ensure that `docker-compose` is installed and that your user is added in the Docker group.*
+
+### Codebase overview
+
+1. The **`base_schemas/min_base/`** directory contains minimal `exp` and `mice` schema definitions that are required for correct data fetching and population for the GUI dropdown menu.
+2. The **`docker/client directory/`** includes the Dockerfile used to build the client's image in `docker-compose.yml`, which contains the necessary environment for interacting with the DataJoint database. Any new Dockerfiles with specific environments for data analysis should be added here.
+3. The **`gui_transfer/`** folder contains all GUI-related information. Only this folder, as well as Python 3 and PyQt5, are needed to build the GUI on a rig computer.
+4. The **`run/`** folder includes Bash scripts that can be run directly from the shell to launch a specific action on the database via Docker Compose service. For example, `docker-compose exec app python3 scripts/minimal_run.py`.
+5. The **`scripts/`** folder includes all scripts for interacting with the database. Each script always has a database connection part and a scenario to execute, and the simplest script only includes a connection. Scripts can be called via Bash run or via IPython, for example, `%run scripts/minimal_run.py` (assuming IPython is launched in the Docker via `docker-compose exec app ipython`).
+6. The **`vr4mice/`** folder contains the core of the pipeline, including `vr4mice` schema (table definitions) and actions (which build the scenarios in scripts).
+7. The **`Makefile`** provides a shortcut for calling commands.
+8. The **`docker-compose.yml`** file contains all Docker definitions, including the database Docker and client. New services can be added if a different configuration is needed. Volumes that correspond to the locations on the drive where all data will be stored are defined here.
+
+![Untitled presentation(4)](https://user-images.githubusercontent.com/43879378/234044336-e7693e02-e8de-4000-9dd0-1716a80002db.jpg)
+
+## Tables in the `vr4mice/schema` Pipeline
+
+```{image} ../../docs/images/vr4mice-erd.png
+:alt: vr4mice_erd
+:class: bg-primary mb-1
+:align: center
+```
+
+### `base.py`
+
+```python
+class Base(dj.Computed)
+```
+Core experiment computed table.
+
+### `base_analysis.py`
+
+```python
+class DataFrame(dj.Computed)
+```
+**Depends on:** `vr4mice.Dataset`  
+Main analysis dataframe including trial data, position (x,y), velocity, acceleration, choices, rewards, and behavioral metrics. Runs `create_data_frame(key)` to get the data into a `pd.DataFrame`.
+
+```python
+class BoxDataFrame(dj.Computed)
+```
+**Depends on:** `DataFrame`  
+Box and reward zone coordinates, angles, and boundaries for left/right/target boxes using `get_box_df()`.
+
+```python
+class SummaryPlots(dj.Computed)
+```
+**Depends on:** `vr4mice.Dataset`, `DataFrame`, `BoxDataFrame`  
+Generates and stores summary plots for each dataset using `vr4mice_summary_plots()`.
+
+```python
+class GitCommit(dj.Computed)
+```
+**Depends on:** `DataFrame`  
+Git commit hash and changed files for reproducibility tracking.
+
+```python
+class TrackingSummaryPlots(dj.Computed)
+```
+Summary plots for tracking data analysis.
+
+### `dlc.py`
+
+```python
+class DLCProcessor(dj.Imported)
+```
+**Depends on:** `vr4mice.DLC`  
+**Imports:** DeepLabCut pose estimation results from external files.
+
+```python
+class DLCKptsDf(dj.Computed)
+```
+**Depends on:** `DLCProcessor`  
+Processes DLC keypoints into structured dataframes.
+
+```python
+class SyncDLCKptsDf(dj.Computed)
+```
+**Depends on:** `DLCKptsDf`  
+Synchronizes DLC keypoints with experiment timing and events.
+
+```python
+class OfflineKinematics(dj.Computed)
+```
+**Depends on:** `SyncDLCKptsDf`  
+Offline kinematics analysis from synchronized DLC pose data.
+
+### `interpolated_trajectories.py`
+
+```python
+class InterpolatedTrials(dj.Computed)
+```
+Interpolated trial trajectories for smooth motion analysis.
+
+```python
+class MeanXYTrajectory(dj.Computed)
+```
+**Depends on:** `InterpolatedTrials`  
+Mean XY trajectories averaged across multiple trials.
+
+```python
+class YBinnedXYTrajectory(dj.Computed)
+```
+**Depends on:** `InterpolatedTrials`  
+Y-axis binned XY trajectories for spatial analysis.
+
+```python
+class MeanVelocities(dj.Computed)
+```
+**Depends on:** `InterpolatedTrials`  
+Mean velocities computed from interpolated trial data.
+
+### `latency_tests.py`
+
+```python
+class SignalsPhotodiodeAligned(dj.Computed)
+```
+**Depends on:** `vr4mice.SignalsPhotodiode`  
+Signals aligned to photodiode events for timing analysis.
+
+```python
+class AllLatencies(dj.Computed)
+```
+**Depends on:** `SignalsPhotodiodeAligned`  
+All measured latencies from photodiode signal alignment.
+
+### `session_metrics.py`
+
+```python
+class SessionMetrics(dj.Computed)
+```
+Session-level performance metrics and statistics.
+
+```python
+class TrialMetrics(dj.Computed)
+```
+Individual trial-level metrics and behavioral measures.
+
+### `vr4mice.py`
+
+```python
+class Camera(dj.Lookup)
+```
+**Reference table:** Camera hardware definitions and configurations.
+
+```python
+class Dataset(dj.Manual)
+```
+**Manual entry:** Dataset metadata containing most raw experimental data.
+
+```python
+class FailedSession(dj.Manual)
+```
+**Manual entry:** Tracks failed sessions and error logging.
+
+```python
+class Labels(dj.Lookup)
+```
+**Reference table:** Label definitions for experimental conditions.
+
+```python
+class Groups(dj.Manual)
+```
+**Manual entry:** Experimental group assignments and metadata.
+
+```python
+class Labs(dj.Lookup)
+```
+**Reference table:** Laboratory information and configurations.
+
+```python
+class Collab(dj.Computed)
+```
+Collaboration and sharing information.
+
+```python
+class Video(dj.Manual)
+```
+**Manual entry:** Video file metadata and paths.
+
+```python
+class ModelName(dj.Lookup)
+```
+**Reference table:** Model name definitions for analysis pipelines.
+
+```python
+class DLC(dj.Manual)
+```
+**Manual entry:** DeepLabCut model metadata and configurations.
+
+```python
+class MouseState(dj.Manual)
+```
+**Manual entry:** Mouse behavioral state information.
+
+```python
+class State(dj.Manual)
+```
+**Manual entry:** General experimental state information.
+
+```python
+class Metadata(dj.Manual)
+```
+**Manual entry:** General experimental metadata.
+
+```python
+class SignalsPhotodiode(dj.Computed)
+```
+Photodiode signal processing and timing data.
+
+```python
+class GuiParams(dj.Manual)
+```
+**Manual entry:** GUI parameter settings and configurations.
+
+```python
+class TrainingPhaseType(dj.Lookup)
+```
+**Reference table:** Training phase type definitions.
+
+```python
+class DatasetType(dj.Computed)
+```
+Dataset type classification and information.
+
+```python
+class Box(dj.Manual)
+```
+**Manual entry:** Experimental box metadata and configurations.
+
+```python
+class Object(dj.Lookup)
+```
+**Reference table:** Object definitions used in experiments.
