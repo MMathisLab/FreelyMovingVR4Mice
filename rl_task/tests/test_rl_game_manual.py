@@ -81,31 +81,6 @@ def _to_rgb_uint8(img: np.ndarray) -> np.ndarray:
     return arr
 
 
-def _center_crop_rgb(rgb: np.ndarray, size: int = 224) -> np.ndarray:
-    """Center-crop to size x size. If the image is smaller, pad with black."""
-    h, w, _ = rgb.shape
-    ch, cw = min(size, h), min(size, w)
-    y0 = (h - ch) // 2
-    x0 = (w - cw) // 2
-    cropped = rgb[y0 : y0 + ch, x0 : x0 + cw]
-
-    # Pad to exact size if needed (when original < 224 on some axis)
-    pad_h = size - ch
-    pad_w = size - cw
-    if pad_h > 0 or pad_w > 0:
-        top = pad_h // 2
-        bottom = pad_h - top
-        left = pad_w // 2
-        right = pad_w - left
-        cropped = np.pad(
-            cropped,
-            ((top, bottom), (left, right), (0, 0)),
-            mode="constant",
-            constant_values=0,
-        )
-    return cropped
-
-
 def obs_to_surface(pygame, win, obs, _cache={}):
     """Convert obs to a pygame.Surface scaled to window size; returns None if no image."""
     img = _first_image_like(obs)

@@ -13,8 +13,7 @@ from sb3_contrib import RecurrentPPO
 
 from rl_task.task.envs.rl_task_gym_wrapper import MouseTaskToGymWrapper
 
-ENV_PATH = "path/to/build.x86_64"  # or None to connect to editor
-ENV_PATH = None
+ENV_PATH = None # to connect to Unity Editor or e.g. "path/to/build.x86_64" for standalone build
 MODEL_PATH = "path/to/model.zip"
 N_EPS = 10
 MAX_EP_LEN = 220

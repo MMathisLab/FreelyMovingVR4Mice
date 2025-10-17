@@ -35,6 +35,7 @@ CHECKPOINT_PATH = os.getenv(
 )
 LOAD_CHECKPOINT = os.getenv("LOAD_CHECKPOINT", False)
 
+# Training configuration parameters
 config = dict(
     seed=None,
     env_name="AugmentedReality",
