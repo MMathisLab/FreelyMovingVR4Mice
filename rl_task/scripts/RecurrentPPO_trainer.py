@@ -108,8 +108,6 @@ if __name__ == "__main__":
 
     wandb.login()
     os.makedirs(MODEL_SAVE_DIR, exist_ok=True)
-    if config["seed"] is not None:
-        set_random_seed(config["seed"])
 
     now = (datetime.now() + timedelta(hours=2)).strftime("%Y%m%d_%H%M")
     name = f"RecurrentPPO_{config['env_name']}_{now}"
@@ -163,6 +161,11 @@ if __name__ == "__main__":
             device=device,
             seed=config["seed"],
         )
+
+    # Set random seed for reproducibility
+    if config["seed"] is not None:
+        print(f"[INFO] Setting random seed... [{config['seed']}]")
+        model.set_random_seed(config["seed"])
 
     # Evaluation frequency every 4 rollouts
     eval_freq_steps = int(4 * config["algo_kwargs"]["n_steps"] * config["num_envs"])
