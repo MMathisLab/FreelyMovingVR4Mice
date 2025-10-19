@@ -37,7 +37,7 @@ GPU_ID = 1
 ENV_PATH = os.getenv("UNITY_ENV_PATH", "/app/rl_task/AR_build/augmented_reality.x86_64")
 MODEL_SAVE_DIR = os.getenv("MODEL_DIR", "/app/rl_task/models")
 CHECKPOINT_PATH = os.getenv(
-    "CHECKPOINT_DIR",
+    "CHECKPOINT_PATH",
     "/app/rl_task/models/RecurrentPPO_AugmentedReality_20250901_1426/final_model/model.zip",
 )
 LOAD_CHECKPOINT = os.getenv("LOAD_CHECKPOINT", True)
@@ -108,6 +108,8 @@ if __name__ == "__main__":
 
     wandb.login()
     os.makedirs(MODEL_SAVE_DIR, exist_ok=True)
+    if config["seed"] is not None:
+        set_random_seed(config["seed"])
 
     now = (datetime.now() + timedelta(hours=2)).strftime("%Y%m%d_%H%M")
     name = f"RecurrentPPO_{config['env_name']}_{now}"
@@ -118,6 +120,7 @@ if __name__ == "__main__":
         config=config,
         sync_tensorboard=True,
         save_code=True,
+        dir="/app/rl_task/",
     )
 
     # Training
@@ -162,7 +165,7 @@ if __name__ == "__main__":
         )
 
     # Evaluation frequency every 4 rollouts
-    eval_freq_steps = int(4 * config["n_steps"] * config["num_envs"])
+    eval_freq_steps = int(4 * config["algo_kwargs"]["n_steps"] * config["num_envs"])
 
     # Early stopping if no new best for N evals
     eval_cb = EvalCallback(
@@ -207,15 +210,32 @@ if __name__ == "__main__":
         os.makedirs(interrupted_path, exist_ok=True)
         model.save(os.path.join(interrupted_path, "model.zip"))
     finally:
+        def safe_call(obj, method: str, name: str):
+            """Call obj.method() if it exists; never raise."""
+            try:
+                if obj is None:
+                    return
+                fn = getattr(obj, method, None)
+                if callable(fn):
+                    fn()
+            except Exception as e:
+                print(f"[WARN] {name} failed: {e!r}")
+
         # always cleanup
         print("[INFO] Cleaning up...")
-        env.close()
-        eval_env.close()
-        run.finish()
-        display.stop()
+        safe_call(env, "close", "env.close")
+        safe_call(eval_env, "close", "eval_env.close")
+        safe_call(run, "finish", "wandb.run.finish")
+        safe_call(display, "stop", "display.stop")
 
         # save final (or interrupted) model
-        final_path = os.path.join(MODEL_SAVE_DIR, name, "final_model")
-        os.makedirs(final_path, exist_ok=True)
-        model.save(os.path.join(final_path, "model.zip"))
-        print(f"[INFO] Model saved to {final_path}")
+        try:
+            final_path = Path(MODEL_SAVE_DIR) / name / "final_model"
+            final_path.mkdir(parents=True, exist_ok=True)
+            if model is not None:
+                model.save(final_path / "model.zip")
+                print(f"[INFO] Model saved to {final_path}")
+            else:
+                print("[WARN] model is None; skipping save")
+        except Exception as e:
+            print(f"[ERROR] Failed to save model: {e!r}")

@@ -14,7 +14,6 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
 
 COPY ./requirements.txt .
 
-# RUN pip3 install --upgrade pip 
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 ARG user_name
@@ -24,10 +23,6 @@ ARG gid
 RUN mkdir /app /logs
 RUN groupadd -g ${gid} ${user_name} \
 	&& useradd -m -u ${uid} -g ${gid} ${user_name}
-
-COPY AR_build/ /app/environments/
-COPY .env /app/.env
-RUN find /app/environments/ -type f -name "*.x86_64" -exec chmod +x {} \;
 
 RUN chown -R ${uid}:${gid} /home /app /logs
 

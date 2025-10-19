@@ -31,12 +31,13 @@ class UnityTask(Task):
         self,
         teensy: Teensy,
         env: str,
-        worker_id: int = 0,
-        base_port: int = 5004,
         agent_group: int = 0,
         monitor: int = 1,
         fullscreen: int = 1,
         write_video: bool = False,
+        batchmode: bool = False,
+        base_port: int = 5004,
+        worker_id: int = 0,
         fps: float = 60.0,
         epochs: List[int] = [1e5],
         epoch_trials: bool = True,
@@ -62,9 +63,13 @@ class UnityTask(Task):
         super().__init__(teensy)
 
         self.env_path = env
-        self.worker_id = worker_id
+        self.batchmode = batchmode
         self.base_port = base_port
-        self.display_args = ["-monitor", str(monitor), "-fullscreen", str(fullscreen)]
+        self.worker_id = worker_id
+        if self.batchmode:
+            self.display_args = ["-batchmode"]
+        else:
+            self.display_args = ["-monitor", str(monitor), "-fullscreen", str(fullscreen)]
         self.agent_group = agent_group
         self.agent_num = 0
         self.channel = EnvironmentParametersChannel()
@@ -98,8 +103,8 @@ class UnityTask(Task):
 
         self.env = UnityEnvironment(
             file_name=self.env_path,
-            worker_id=self.worker_id,
             base_port=self.base_port,
+            worker_id=self.worker_id,
             additional_args=self.display_args,
             side_channels=[self.channel],
         )

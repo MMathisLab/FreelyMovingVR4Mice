@@ -108,6 +108,13 @@ class ActiveSensingTask(UnityTask):
         grey_screen_active: float,
         target_distance: float,
         use_dlc: bool,
+
+        # RL / Unity process specific args to create vector envs
+        # where each instance needs its own port/worker_id and all
+        # should run in batchmode without needing dlc tracking.
+        batchmode: bool = False,
+        base_port: int = 5004,
+        worker_id: int = 0,
     ):
 
         # Initialized in init_DLC_live()
@@ -136,6 +143,9 @@ class ActiveSensingTask(UnityTask):
             env=env_path,
             monitor=monitor,
             write_video=write_video,
+            batchmode=batchmode,
+            base_port=base_port,
+            worker_id=worker_id,
             fps=fps,
             epochs=epochs,
             epoch_trials=True,

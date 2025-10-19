@@ -7,9 +7,9 @@ BUILD_ARGS := \
 	--build-arg gid=$(shell id -g) \
 	--build-arg user_name=$(shell id -un)
 
-N ?= 1           # number of trainer replicas to run with `make up`
-INDEX ?= 1       # trainer replica index for exec/bash (1..N)
-SCRIPT ?=        # e.g. SCRIPT=PPO_trainer.py
+N ?= 1          				# number of trainer replicas to run with `make up`
+INDEX ?= 1       				# trainer replica index for exec/bash (1..N)
+SCRIPT ?= PPO_trainer.py       	# e.g. SCRIPT=PPO_trainer.py
 
 # ---- Phony targets ----
 .PHONY: help build build_nc up scale down stop ps logs exec run bash
@@ -30,20 +30,15 @@ help:
 
 # ---- Build ----
 build:
-	@if [ -n "$(service)" ]; then \
-		$(COMPOSE) build $(BUILD_ARGS) $(service); \
-	else \
-		$(COMPOSE) build $(BUILD_ARGS); \
-	fi
-
+	$(COMPOSE) build $(BUILD_ARGS) trainer; \
 build_nc:
-	@$(COMPOSE) build $(BUILD_ARGS) --no-cache
+	$(COMPOSE) build $(BUILD_ARGS) --no-cache trainer; \
 
-# ---- Up / Scale ----
+# ---- Up / Down ----
 start:
-	@if [ "$(service)" = "trainer" ]; then \
+	@if [ "$(SERVICE)" = "trainer" ]; then \
 		$(COMPOSE) up -d --scale trainer=$(N) trainer; \
-	elif [ "$(service)" = "developer" ]; then \
+	elif [ "$(SERVICE)" = "developer" ]; then \
 		$(COMPOSE) up -d developer; \
 	else \
 		$(COMPOSE) up -d --scale trainer=$(N) trainer developer; \
@@ -54,11 +49,11 @@ scale:
 	@$(COMPOSE) up -d --scale trainer=$(N) trainer
 
 terminate:
-	@$(COMPOSE) down
+	@$(COMPOSE) down --volumes --remove-orphans
 
 stop:
-	@if [ -z "$(service)" ]; then echo "Usage: make stop service=trainer|developer"; exit 1; fi
-	@$(COMPOSE) stop $(service)
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make stop SERVICE=trainer|developer"; exit 1; fi
+	@$(COMPOSE) stop $(SERVICE)
 
 ps:
 	@$(COMPOSE) ps
@@ -69,40 +64,75 @@ stats:
 
 
 logs:
-	@if [ -n "$(service)" ]; then \
-		$(COMPOSE) logs -f --tail=200 $(service); \
+	@if [ -n "$(SERVICE)" ]; then \
+		$(COMPOSE) logs -f --tail=200 $(SERVICE); \
 	else \
 		$(COMPOSE) logs -f --tail=200; \
 	fi
 
 # ----  Run / Bash ----
-run:
-	@if [ "$(script)" = "" ]; then \
-		echo "Please specify a script with 'make run service=developer script=scripts/PPO_trainer.py'"; \
-		exit 1; \
-	fi; \
-	if [ "$(service)" != "trainer" ] && [ "$(service)" != "developer" ]; then \
-		echo "Invalid service. Use 'trainer' or 'developer'."; \
-		exit 1; \
-	fi; \
-	docker compose exec -d --index $(INDEX) $(service) bash -lc "python3 scripts/$(script)"
 
-train:
-	@$(MAKE) run service=$(service) script=$(script)
-
-# Open a shell; for trainer, choose replica with INDEX
-bash:
-	@if [ -z "$(service)" ]; then echo "Usage: make bash service=trainer|developer [INDEX=1]"; exit 1; fi
-	@if [ "$(service)" = "trainer" ]; then \
-		$(COMPOSE) exec --index $(INDEX) $(service) bash; \
+# Execute a test script inside an existing selected service container.
+# Note: Only the 'trainer' service supports multiple replicas and '--index'.
+run_test:
+	@if [ "$(SERVICE)" = "trainer" ]; then \
+		$(COMPOSE) exec -T --index $(INDEX) $(SERVICE) sh -lc pwd; \
+		$(COMPOSE) exec -T --index $(INDEX) $(SERVICE) sh -lc "python3 rl_task/tests/test.py"; \
+	elif [ "$(SERVICE)" = "developer" ]; then \
+		$(COMPOSE) exec -T $(SERVICE) sh -lc pwd; \
+		$(COMPOSE) exec -T $(SERVICE) sh -lc "python3 rl_task/tests/test.py"; \
 	else \
-		$(COMPOSE) exec $(service) bash; \
+		echo "Unknown service: '$(SERVICE)' (expected 'trainer' or 'developer')"; \
+		exit 2; \
+	fi; \
+
+# Execute a chosen script inside an existing selected service container.
+# Note: Only the 'trainer' service supports multiple replicas and '--index'.
+run:
+	@if [ "$(SCRIPT)" = "" ]; then \
+		echo "Please specify a script, e.g. 'make run SERVICE=developer SCRIPT=PPO_trainer.py'"; \
+		exit 1; \
+	fi; \
+
+	@if [ "$(SERVICE)" = "trainer" ]; then \
+		$(COMPOSE) exec -T --index $(INDEX) $(SERVICE) sh -lc pwd; \
+		$(COMPOSE) exec -T --index $(INDEX) $(SERVICE) sh -lc "python3 rl_task/scripts/$(SCRIPT)"; \
+	elif [ "$(SERVICE)" = "developer" ]; then \
+		$(COMPOSE) exec -T $(SERVICE) sh -lc pwd; \
+		$(COMPOSE) exec -T $(SERVICE) sh -lc "python3 rl_task/scripts/$(SCRIPT)"; \
+	else \
+		echo "Unknown service: '$(service)' (expected 'trainer' or 'developer')"; \
+		exit 2; \
+	fi; \
+	
+# Open a shell; for trainer, choose replica with INDEX.
+# Note: Only the 'trainer' service supports multiple replicas and '--index'.
+bash:
+	@if [ -z "$(SERVICE)" ]; then \
+		echo "Usage: make bash SERVICE=trainer|developer [INDEX=1] (trainer only)"; \
+		exit 1; \
+	fi
+	@if [ "$(SERVICE)" = "trainer" ]; then \
+		$(COMPOSE) exec --index $(INDEX) trainer bash || $(COMPOSE) exec --index $(INDEX) trainer sh; \
+	elif [ "$(SERVICE)" = "developer" ]; then \
+		$(COMPOSE) exec developer bash || $(COMPOSE) exec developer sh; \
+	else \
+		echo "Unknown service: '$(SERVICE)' (expected 'trainer' or 'developer')"; \
+		exit 2; \
 	fi
 
+# Open an interactive session; for trainer, choose replica with INDEX.
+# Note: Only the 'trainer' service supports multiple replicas and '--index'.
 attach:
-	@if [ -z "$(service)" ]; then echo "Usage: make attach service=trainer|developer [INDEX=1]"; exit 1; fi
-	@if [ "$(service)" = "trainer" ]; then \
-		$(COMPOSE) attach --index $(INDEX) $(service); \
+	@if [ -z "$(SERVICE)" ]; then \
+		echo "Usage: make attach SERVICE=trainer|developer [INDEX=1] (trainer only)"; \
+		exit 1; \
+	fi
+	@if [ "$(SERVICE)" = "trainer" ]; then \
+		$(COMPOSE) attach --index $(INDEX) $(SERVICE); \
+	elif [ "$(SERVICE)" = "developer" ]; then \
+		$(COMPOSE) attach $(SERVICE); \
 	else \
-		$(COMPOSE) attach $(service); \
+		echo "Unknown service: '$(SERVICE)' (expected 'trainer' or 'developer')"; \
+		exit 2; \
 	fi

@@ -91,12 +91,9 @@ class ActiveSensingTaskRL(ActiveSensingTask):
             [cropped_image[1] // 2, cropped_image[3] // 4, 0]
         )
 
-        self.batchmode = batchmode
-        self.worker_id = worker_id
-        self.base_port = base_port
-
         self.save_data = save_data
 
+        # Patching the config processing to inject the Unity env path
         with patch(
             "mouse_task.task_active_sensing.process_config",
             return_value={"ar_env_unity_absolute_path": env_path},
@@ -137,6 +134,9 @@ class ActiveSensingTaskRL(ActiveSensingTask):
                 grey_screen_active,
                 target_distance,
                 use_dlc,
+                batchmode,
+                base_port,
+                worker_id,
             )
 
     def start(self):
@@ -158,6 +158,7 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         self.virtual_state = self.default_virtual_state
 
     def _wrap_angle(self, a: float) -> float:
+        """Wrap angle to [-pi, pi] range."""
         return (a + np.pi) % (2 * np.pi) - np.pi
 
     def _change_space(

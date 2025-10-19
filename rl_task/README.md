@@ -8,13 +8,51 @@ This folder contains the reinforcement learning stack for training agents on the
 - A Compatibility wrapper around the active sensing class, yielding a new `ActiveSensingTaskRL` class
 - A Gymnasium wrapper around the rl task allowing training of reinforcement learning agents using common libraries and frameworks such as `stable baselines 3`, `RLlib`, and `CleanRL`
 
+## Prerequisites
+
+- Docker and Docker Compose
+- NVIDIA GPU + drivers and `nvidia-container-toolkit` installed (for GPU training)
+- Unity build present at `rl_task/AR_build/augmented_reality.x86_64`
+
+## Required Environment Variables
+
+Place runtime settings used by the scripts in `rl_task/.env`:
+
+- `VR4MICE_PATH=/path/to/FreelyMovingVR4Mice` (used as mounted volume for container to have access to all necessary components)
+- `UNITY_ENV_PATH=/app/rl_task/AR_build/augmented_reality.x86_64` (default used in scripts)
+- `MODEL_DIR=/app/rl_task/models`
+- `CHECKPOINT_PATH=/app/rl_task/models/.../model.zip` (if resuming)
+- `LOAD_CHECKPOINT=true|false`
+- Optional: `WANDB_API_KEY=<your-key>` (or run `wandb login` inside the container)
+
+Disclaimer: the above paths are relative the container's file structure.
+
+Your `.env` file inside the `rl_task/` directory should look something like the following:
+
+```
+# .env
+
+VR4MICE_PATH=...      # path to the FreelyMovingVR4Mice repo
+UNITY_ENV_PATH=...    # path to the Unity executable
+MODEL_DIR=...         # location where to save model checkpoints
+CHECKPOINT_PATH=...   # location of checkpoint from which to resume training
+LOAD_CHECKPOINT=...   # whether to load a checkpoint or start fresh
+WANDB_API_KEY=...     # allows easier integration with wandb
+```
+
+Notes:
+
+- When running via Compose, `/app` is a bind mount of `VR4MICE_PATH`, so model outputs under `/app/rl_task/models` persist on the host.
+- Ensure the Unity executable has the executable bit set (`chmod +x`).
+
+
 ## Contents
 
 - `Dockerfile`: CUDA‑based image with Python, PyTorch, SB3, and dependencies
 - `docker-compose.yaml`: Two services — `trainer` (heavier GPU training) and `developer` (light, interactive work)
 - `Makefile`: Shortcuts for build, start/stop, scaling, logs, and launching scripts
 - `requirements.txt`: Python dependencies for the RL stack
-- `AR_build/`: Unity build folder; expected to contain `augmented_reality.x86_64`
+- `AR_build/`: Unity build folder; expected to contain `augmented_reality.x86_64` [*]
 - `scripts/`: Entry points for training and evaluation
   - `PPO_trainer.py`, `RecurrentPPO_trainer.py`, `inference.py`
 - `task/`: Python package
@@ -25,36 +63,19 @@ This folder contains the reinforcement learning stack for training agents on the
 - `config/`: Config presets and loader
   - `rl_experiments.yaml`: Defaults and named presets (e.g. `shape_discrim`, `*_occluders`)
   - `config.py`: Typed config + `load_config(...)` merger
-- `models/`: Output directory for saved models and eval logs
+- `models/`: Output directory for saved models and evaluation `.npz` files [*]
+- `logs/` : Output directory for training logs [*]
 
-## Prerequisites
-
-- Docker and Docker Compose
-- NVIDIA GPU + drivers and `nvidia-container-toolkit` installed (for GPU training)
-- Unity build present at `rl_task/AR_build/augmented_reality.x86_64`
-
-## Required Environment Variables
-
-Place runtime settings used by the scripts in `rl_task/.env` (copied into the image as `/app/.env` and read at runtime):
-
-- `UNITY_ENV_PATH=/app/rl_task/AR_build/augmented_reality.x86_64` (default used in scripts)
-- `MODEL_DIR=/app/rl_task/models`
-- `CHECKPOINT_DIR=/app/rl_task/models/.../model.zip` (if resuming)
-- `LOAD_CHECKPOINT=true|false`
-- Optional: `WANDB_API_KEY=<your-key>` (or run `wandb login` inside the container)
-
-Notes:
-
-- When running via Compose, `/app` is a bind mount of `VR4MICE_PATH`, so model outputs under `/app/rl_task/models` persist on the host.
-- Ensure the Unity executable has the executable bit set (`chmod +x`), especially when running outside the Docker build context.
+[*] : Need to be added by the user. Not available by default.
 
 ## Build the Image
 
 The Makefile wraps Docker Compose and injects your user/uid/gid for correct file permissions inside containers.
 
-- Build all services: `make build`
-- Build a single service: `make build service=trainer` or `service=developer`
+- Build services: `make build`
 - Build without cache: `make build_nc`
+
+Note: both of the above commands only build the `trainer` service since the `developer` relies on the same Dockerfile.
 
 Under the hood this runs: `docker compose -p <project> build` with build args:
 
@@ -63,7 +84,8 @@ Under the hood this runs: `docker compose -p <project> build` with build args:
 ## Run Containers
 
 - Start both services (default): `make start`
-- Start with N trainer replicas: `make start N=2`
+  - Start with N trainer replicas: `make start N=2`
+
 - Start a specific service:
   - `make start service=trainer N=3`
   - `make start service=developer`
@@ -78,19 +100,24 @@ Useful management commands:
 
 ## Run Training and Evaluation
 
+Execute a test run inside a running service:
+
+- `make run_test service=trainer INDEX=...`
+- `make run_test service=developer`
+
 Run inside an existing container (good when you have scaled replicas):
 
-- `make run service=trainer INDEX=1 SCRIPT=PPO_trainer.py`
-- `make run service=trainer INDEX=2 SCRIPT=inference.py`
+- `make run service=trainer INDEX=... SCRIPT=...`
+- `make run service=trainer SCRIPT=...`
+
+Note: the scripts available to the above two commands are the ones located at `rl_task/scripts/` only. Script lookup base is `/app/scripts`, so pass just the filename via `SCRIPT=...`.
 
 Open a shell in a running container:
 
 - `make bash service=developer`
-- `make bash service=trainer INDEX=1`
+- `make bash service=trainer INDEX=...`
 
-Script lookup base is `/app/scripts`, so pass just the filename via `SCRIPT=...`.
-
-## What the Scripts Do
+## Available scripts
 
 - `scripts/PPO_trainer.py`: Trains a PPO agent using Stable‑Baselines3 on the Unity task. Creates vectorized envs via `utils/env_factory.make_env`, logs to W&B, and saves checkpoints under `MODEL_DIR`.
 - `scripts/RecurrentPPO_trainer.py`: Same workflow using `sb3_contrib.RecurrentPPO` with custom visual feature extractors defined in `task/extractors`.
@@ -122,6 +149,7 @@ Each trainer reads `/app/rl_task/.env` and uses presets from `config/rl_experime
 - `UNITY_ENV_PATH=/app/rl_task/AR_build/augmented_reality.x86_64`
 - `MODEL_DIR=/app/rl_task/models`
 - `LOAD_CHECKPOINT=false`
+- `VR4MICE_PATH=/host/path/to/FreelyMovingVR4Mice/repository`
 
 2) Build and start:
 
@@ -130,8 +158,6 @@ Each trainer reads `/app/rl_task/.env` and uses presets from `config/rl_experime
 
 3) Launch training:
 
-- `make exec service=trainer SCRIPT=PPO_trainer.py`
-or
 - `make run service=trainer INDEX=1 script=PPO_trainer.py`
 
 4) Models and eval logs appear under `rl_task/models/` on the host.

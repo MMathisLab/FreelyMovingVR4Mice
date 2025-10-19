@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     volumes:
-      - ./:/app:rw
+      - ${VR4MICE_PATH}:/app
     tty: true
     stdin_open: true
     deploy:
@@ -14,8 +14,9 @@ services:
           memory: 12G
         reservations:
           devices:
+            # Gives access to all available GPUs
             - driver: nvidia
-              device_ids: [ "0", "1" ]
+              count: all
               capabilities: [ "gpu" ]
     security_opt:
       - no-new-privileges:true
@@ -28,9 +29,8 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-      additional_contexts:
     volumes:
-      - ./:/app
+      - ${VR4MICE_PATH}:/app
     tty: true
     stdin_open: true
     deploy:
@@ -40,8 +40,9 @@ services:
           memory: 4G
         reservations:
           devices:
+            # Gives access to all available GPUs
             - driver: nvidia
-              device_ids: [ "0", "1" ]
+              count: all
               capabilities: [ "gpu" ]
     security_opt:
       - no-new-privileges:true

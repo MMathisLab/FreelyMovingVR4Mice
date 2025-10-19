@@ -44,6 +44,7 @@ class MouseTaskToGymWrapper(gym.Env):
         max_episode_steps: Truncate episodes locally after this many steps.
     """
 
+    # Gym metadata: rendering not yet supported
     metadata = {"render_modes": [], "render_fps": 50}
 
     def __init__(
@@ -70,9 +71,9 @@ class MouseTaskToGymWrapper(gym.Env):
             env_path=env_path,
             teensy=FakeTeensy(),
             fps=fps,
+            batchmode=batchmode,
             base_port=base_port,
             worker_id=worker_id,
-            batchmode=batchmode,
             save_data=save_data,
         )
         self.task = ActiveSensingTaskRL(**self.cfg.as_kwargs())
@@ -112,6 +113,7 @@ class MouseTaskToGymWrapper(gym.Env):
         return (255.0 * obs).astype(np.uint8)
 
     def reset(self, *, seed=None, options=None):
+        """Reset the Unity environment and episode tracking variables."""
         super().reset(seed=seed)
         obs, _ = self.task.reset(seed=seed)
 
@@ -166,7 +168,9 @@ class MouseTaskToGymWrapper(gym.Env):
         return self._to_uint8(observation), reward, terminated, truncated, info
 
     def render(self, mode=None):
+        """Dummy render method to comply with Gym API."""
         pass
 
     def close(self):
+        """Stop the task and close the Unity environment."""
         self.task.stop()

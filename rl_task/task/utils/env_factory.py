@@ -37,7 +37,7 @@ def make_env(
         task_config (str): Preset name from ``rl_task/config/rl_experiments.yaml``. Examples:
             "contrast_discrim", "shape_discrim_occluders", etc.
         num_envs (int, optional): Number of parallel environments to create. Defaults to 1.
-        base_port (int, optional): Base port for Unity communication. Each environment instance will increment this port. Defaults to 5005.
+        base_port (int, optional): Base port for Unity communication. Each environment instance will increment this port. Defaults to 5004.
         batchmode (bool, optional): Whether to run Unity in batch mode (no graphics). Defaults to True.
         save_data (bool, optional): Whether to save the step-wise agent information as a .pkl file at the end of training
         pos_reward_size (float, optional): Size of positive reward to give agent for correct execution.

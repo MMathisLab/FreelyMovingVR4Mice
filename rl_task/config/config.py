@@ -8,8 +8,9 @@ from a YAML file, and caller-provided overrides.
 
 import yaml
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Any
 from pydantic import BaseModel, Field
+from pydantic import ConfigDict, field_validator
 
 
 class ActiveSensingConfig(BaseModel):
@@ -18,8 +19,9 @@ class ActiveSensingConfig(BaseModel):
     The fields mirror keys in ``rl_task/config/rl_experiments.yaml`` and are
     passed to the underlying task facade. See that file for typical presets.
     """
-    env_path: str | None
-    teensy: object
+    # Core runtime params (required)
+    env_path: Optional[str] = None
+    teensy: Any
     fps: int
     base_port: int
     worker_id: int
@@ -59,6 +61,18 @@ class ActiveSensingConfig(BaseModel):
     grey_screen_active: float = 0.0
     target_distance: float = 4.0
     use_dlc: bool = False
+    
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        extra='forbid',
+    )
+
+    @field_validator('prob_obj_on_left', 'prob_block_coherence')
+    @classmethod
+    def _prob_in_unit_interval(cls, v: float) -> float:
+        if not (0.0 <= v <= 1.0):
+            raise ValueError("probabilities must be in [0, 1]")
+        return v
 
     def as_kwargs(self) -> dict:
         """Return the configuration as a plain ``dict`` for easy unpacking."""
@@ -77,15 +91,15 @@ def load_config(preset_name: str, **overrides) -> ActiveSensingConfig:
     """
     # Retrieve .yaml config file in same folder
     yaml_path = Path(__file__).resolve().parent / "rl_experiments.yaml"
-
     with open(yaml_path, "r") as f:
-        cfg = yaml.safe_load(f)
+        cfg = yaml.safe_load(f) or {}
 
-    base = cfg.get("defaults", {})
-    presets = cfg.get("presets", {})
+    base = cfg.get("defaults", {}) or {}
+    presets = cfg.get("presets", {}) or {}
     if preset_name not in presets:
         raise KeyError(
-            f"Preset '{preset_name}' not found in {yaml_path}. Available: {list(presets)}"
+            f"Preset '{preset_name}' not found in {yaml_path}. "
+            f"Available: {list(presets)}"
         )
 
     merged = {**base, **presets[preset_name], **overrides}
