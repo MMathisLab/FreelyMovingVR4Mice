@@ -1,0 +1,1159 @@
+_current_progress_remaining:
+    value: 1
+_custom_logger:
+    value: "False"
+_episode_num:
+    value: 0
+_last_episode_starts:
+    value: '[ True  True  True  True  True  True]'
+_last_obs:
+    value: |-
+        [[[[ 60  60  60 ...  62  62  62]
+           [ 60  60  60 ...  62  62  62]
+           [ 60  60  60 ...  62  62  62]
+           ...
+           [175 179 182 ... 165 164 164]
+           [183 179 175 ... 170 175 178]
+           [168 164 160 ... 166 168 170]]
+
+          [[ 61  61  61 ...  63  63  63]
+           [ 61  61  61 ...  63  63  64]
+           [ 61  61  61 ...  64  64  64]
+           ...
+           [154 157 160 ... 146 143 144]
+           [160 157 154 ... 151 157 161]
+           [147 144 140 ... 149 150 152]]
+
+          [[ 65  65  65 ...  67  67  67]
+           [ 65  65  65 ...  67  67  67]
+           [ 65  65  65 ...  67  67  67]
+           ...
+           [127 128 129 ... 132 131 131]
+           [129 127 126 ... 138 143 147]
+           [121 118 115 ... 134 136 138]]]
+
+
+         [[[ 62  62  62 ...  60  60  60]
+           [ 62  62  62 ...  60  60  60]
+           [ 62  62  62 ...  60  60  60]
+           ...
+           [181 177 172 ... 156 160 163]
+           [157 148 141 ... 153 155 156]
+           [142 139 142 ... 146 148 150]]
+
+          [[ 63  63  63 ...  61  61  61]
+           [ 63  63  63 ...  61  61  61]
+           [ 64  64  63 ...  62  62  62]
+           ...
+           [163 158 154 ... 133 138 143]
+           [138 129 122 ... 130 132 133]
+           [119 116 119 ... 121 124 126]]
+
+          [[ 67  67  67 ...  65  65  65]
+           [ 67  67  67 ...  65  65  65]
+           [ 67  67  67 ...  65  65  65]
+           ...
+           [141 139 137 ... 115 120 125]
+           [124 116 109 ... 112 113 115]
+           [104 100 103 ... 102 105 108]]]
+
+
+         [[[ 65  65  64 ...  60  60  60]
+           [ 65  65  65 ...  60  60  61]
+           [ 65  65  65 ...  61  61  61]
+           ...
+           [145 145 148 ... 180 185 191]
+           [143 146 149 ... 186 178 170]
+           [148 150 150 ... 171 177 181]]
+
+          [[ 66  66  66 ...  62  62  62]
+           [ 66  66  66 ...  62  62  62]
+           [ 67  67  67 ...  62  62  62]
+           ...
+           [124 125 128 ... 161 170 179]
+           [123 126 129 ... 168 157 145]
+           [128 129 129 ... 147 154 161]]
+
+          [[ 70  70  70 ...  65  65  66]
+           [ 71  70  70 ...  66  66  66]
+           [ 71  71  71 ...  66  66  66]
+           ...
+           [107 107 110 ... 141 150 161]
+           [107 109 112 ... 148 136 122]
+           [110 112 112 ... 125 132 140]]]
+
+
+         [[[ 59  59  59 ...  64  64  64]
+           [ 59  59  59 ...  64  64  65]
+           [ 59  59  59 ...  65  65  65]
+           ...
+           [170 173 175 ... 182 179 172]
+           [173 171 168 ... 184 184 185]
+           [171 170 170 ... 183 183 183]]
+
+          [[ 60  60  60 ...  66  66  66]
+           [ 60  60  60 ...  66  66  66]
+           [ 61  60  60 ...  66  66  66]
+           ...
+           [153 157 160 ... 158 154 147]
+           [158 154 150 ... 159 161 161]
+           [154 154 152 ... 158 159 159]]
+
+          [[ 64  64  64 ...  70  70  70]
+           [ 64  64  64 ...  70  70  70]
+           [ 64  64  64 ...  70  70  70]
+           ...
+           [130 135 139 ... 138 132 125]
+           [136 131 126 ... 139 140 141]
+           [131 131 129 ... 134 135 137]]]
+
+
+         [[[ 65  65  65 ...  62  62  62]
+           [ 65  65  65 ...  62  62  62]
+           [ 65  65  65 ...  62  62  62]
+           ...
+           [164 167 172 ... 162 158 159]
+           [165 175 180 ... 180 177 172]
+           [180 180 178 ... 181 181 182]]
+
+          [[ 66  66  66 ...  63  63  63]
+           [ 67  66  66 ...  63  64  64]
+           [ 67  67  67 ...  64  64  64]
+           ...
+           [142 144 148 ... 143 138 139]
+           [141 151 155 ... 168 163 157]
+           [157 156 154 ... 169 170 171]]
+
+          [[ 70  70  70 ...  67  67  67]
+           [ 71  71  70 ...  67  67  67]
+           [ 71  71  71 ...  67  67  68]
+           ...
+           [125 126 128 ... 123 118 119]
+           [122 129 132 ... 150 145 138]
+           [136 134 131 ... 152 153 154]]]
+
+
+         [[[ 62  61  61 ...  65  65  65]
+           [ 62  62  61 ...  65  65  65]
+           [ 62  62  62 ...  65  65  65]
+           ...
+           [169 169 171 ... 136 144 150]
+           [182 177 173 ... 150 151 152]
+           [165 161 159 ... 156 158 161]]
+
+          [[ 63  63  63 ...  66  66  66]
+           [ 63  63  63 ...  66  67  67]
+           [ 63  63  63 ...  67  67  67]
+           ...
+           [151 151 154 ... 105 112 119]
+           [166 161 156 ... 118 120 122]
+           [146 142 138 ... 130 132 134]]
+
+          [[ 67  67  67 ...  70  70  70]
+           [ 67  67  67 ...  70  71  71]
+           [ 67  67  67 ...  71  71  71]
+           ...
+           [131 131 134 ...  94 100 105]
+           [148 142 137 ... 105 106 108]
+           [127 124 120 ... 115 116 118]]]]
+_last_original_obs:
+    value: None
+_logger:
+    value: <stable_baselines3.common.logger.Logger object at 0x74e7851bbc70>
+_n_updates:
+    value: 0
+_num_timesteps_at_start:
+    value: 0
+_stats_window_size:
+    value: 100
+_total_timesteps:
+    value: 800000
+_vec_normalize_env:
+    value: None
+_wandb:
+    value:
+        cli_version: 0.21.0
+        code_path: code/rl_task/PPO_trainer.py
+        e:
+            f1pzjmp95rrlphonueh5445bnudujx34:
+                codePath: rl_task/PPO_trainer.py
+                codePathLocal: PPO_trainer.py
+                cpu_count: 24
+                cpu_count_logical: 48
+                cudaVersion: "12.4"
+                disk:
+                    /:
+                        total: "1967317549056"
+                        used: "1616201674752"
+                email: leo.bruneau@epfl.ch
+                executable: /usr/bin/python
+                git:
+                    commit: e8ba0d3113ccde424acf6c90ef85e0dee26dcc01
+                    remote: https://github.com/MMathisLab/FreelyMovingVR4Mice.git
+                gpu: NVIDIA GeForce RTX 4090
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Ada
+                      cudaCores: 16384
+                      memoryTotal: "25757220864"
+                      name: NVIDIA GeForce RTX 4090
+                      uuid: GPU-51a5cc45-3d65-5c1a-f38c-9ef8610dfe72
+                host: efab529006ed
+                memory:
+                    total: "134542024704"
+                os: Linux-6.8.0-49-generic-x86_64-with-glibc2.35
+                program: /app/rl_task/PPO_trainer.py
+                python: CPython 3.10.12
+                root: /app/rl_task
+                startedAt: "2025-08-25T13:17:06.285511Z"
+                writerId: f1pzjmp95rrlphonueh5445bnudujx34
+        m: []
+        python_version: 3.10.12
+        t:
+            "1":
+                - 1
+                - 41
+            "2":
+                - 1
+                - 41
+            "3":
+                - 2
+                - 3
+                - 13
+                - 16
+                - 22
+                - 35
+            "4": 3.10.12
+            "5": 0.21.0
+            "12": 0.21.0
+            "13": linux-x86_64
+action_noise:
+    value: None
+action_space:
+    value: Box(-1.0, 1.0, (2,), float32)
+algo:
+    value: PPO
+algorithm:
+    value: PPO
+batch_size:
+    value: 256
+clip_range:
+    value: 0.15
+clip_range_vf:
+    value: None
+device:
+    value: cuda
+ent_coef:
+    value: 0.02
+env:
+    value: <stable_baselines3.common.vec_env.subproc_vec_env.SubprocVecEnv object at 0x74e6271f4b80>
+env_name:
+    value: AugmentedReality
+ep_info_buffer:
+    value: deque([], maxlen=100)
+ep_success_buffer:
+    value: deque([], maxlen=100)
+gae_lambda:
+    value: 0.97
+gamma:
+    value: 0.995
+learning_rate:
+    value: stable_baselines3.common.utils.get_linear_fn.<locals>.func
+lr_schedule:
+    value: <function get_schedule_fn.<locals>.<lambda> at 0x74e6333c7520>
+max_episode_steps:
+    value: 120
+max_grad_norm:
+    value: 0.5
+n_envs:
+    value: 6
+n_epochs:
+    value: 4
+n_steps:
+    value: 1536
+neg_reward_size:
+    value: 2
+normalize_advantage:
+    value: "True"
+num_envs:
+    value: 6
+num_timesteps:
+    value: 0
+observation_space:
+    value: Box(0, 255, (3, 225, 400), uint8)
+policy:
+    value: |-
+        ActorCriticCnnPolicy(
+          (features_extractor): Extractor(
+            (body): MobileNetV3(
+              (features): Module(
+                (0): Conv2dNormActivation(
+                  (0): Conv2d(3, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+                  (1): BatchNorm2d(16, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                  (2): Hardswish()
+                )
+                (1): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(16, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=16, bias=False)
+                      (1): BatchNorm2d(16, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): ReLU(inplace=True)
+                    )
+                    (1): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(16, 8, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(8, 16, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (2): Conv2dNormActivation(
+                      (0): Conv2d(16, 16, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(16, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (2): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(16, 72, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(72, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): ReLU(inplace=True)
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(72, 72, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=72, bias=False)
+                      (1): BatchNorm2d(72, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): ReLU(inplace=True)
+                    )
+                    (2): Conv2dNormActivation(
+                      (0): Conv2d(72, 24, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(24, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (3): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(24, 88, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(88, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): ReLU(inplace=True)
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(88, 88, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=88, bias=False)
+                      (1): BatchNorm2d(88, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): ReLU(inplace=True)
+                    )
+                    (2): Conv2dNormActivation(
+                      (0): Conv2d(88, 24, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(24, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (4): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(24, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(96, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(96, 96, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=96, bias=False)
+                      (1): BatchNorm2d(96, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(96, 24, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(24, 96, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(96, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(40, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (5): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(40, 240, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(240, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(240, 240, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=240, bias=False)
+                      (1): BatchNorm2d(240, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(240, 64, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(64, 240, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(240, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(40, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (6): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(40, 240, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(240, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(240, 240, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=240, bias=False)
+                      (1): BatchNorm2d(240, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(240, 64, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(64, 240, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(240, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(40, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (7): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(40, 120, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(120, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(120, 120, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=120, bias=False)
+                      (1): BatchNorm2d(120, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(120, 32, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(32, 120, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(120, 48, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(48, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (8): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(48, 144, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(144, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(144, 144, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=144, bias=False)
+                      (1): BatchNorm2d(144, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(144, 40, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(40, 144, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(144, 48, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(48, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (9): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(48, 288, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(288, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(288, 288, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=288, bias=False)
+                      (1): BatchNorm2d(288, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(288, 72, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(72, 288, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(288, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(96, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (10): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(96, 576, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(576, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(576, 576, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=576, bias=False)
+                      (1): BatchNorm2d(576, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(576, 144, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(144, 576, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(576, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(96, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (11): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(96, 576, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(576, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(576, 576, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=576, bias=False)
+                      (1): BatchNorm2d(576, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(576, 144, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(144, 576, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(576, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(96, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (12): Conv2dNormActivation(
+                  (0): Conv2d(96, 576, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                  (1): BatchNorm2d(576, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                  (2): Hardswish()
+                )
+              )
+              (avgpool): AdaptiveAvgPool2d(output_size=1)
+            )
+            (preprocess): Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+          )
+          (pi_features_extractor): Extractor(
+            (body): MobileNetV3(
+              (features): Module(
+                (0): Conv2dNormActivation(
+                  (0): Conv2d(3, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+                  (1): BatchNorm2d(16, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                  (2): Hardswish()
+                )
+                (1): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(16, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=16, bias=False)
+                      (1): BatchNorm2d(16, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): ReLU(inplace=True)
+                    )
+                    (1): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(16, 8, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(8, 16, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (2): Conv2dNormActivation(
+                      (0): Conv2d(16, 16, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(16, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (2): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(16, 72, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(72, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): ReLU(inplace=True)
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(72, 72, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=72, bias=False)
+                      (1): BatchNorm2d(72, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): ReLU(inplace=True)
+                    )
+                    (2): Conv2dNormActivation(
+                      (0): Conv2d(72, 24, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(24, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (3): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(24, 88, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(88, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): ReLU(inplace=True)
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(88, 88, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=88, bias=False)
+                      (1): BatchNorm2d(88, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): ReLU(inplace=True)
+                    )
+                    (2): Conv2dNormActivation(
+                      (0): Conv2d(88, 24, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(24, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (4): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(24, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(96, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(96, 96, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=96, bias=False)
+                      (1): BatchNorm2d(96, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(96, 24, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(24, 96, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(96, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(40, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (5): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(40, 240, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(240, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(240, 240, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=240, bias=False)
+                      (1): BatchNorm2d(240, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(240, 64, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(64, 240, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(240, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(40, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (6): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(40, 240, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(240, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(240, 240, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=240, bias=False)
+                      (1): BatchNorm2d(240, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(240, 64, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(64, 240, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(240, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(40, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (7): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(40, 120, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(120, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(120, 120, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=120, bias=False)
+                      (1): BatchNorm2d(120, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(120, 32, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(32, 120, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(120, 48, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(48, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (8): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(48, 144, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(144, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(144, 144, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=144, bias=False)
+                      (1): BatchNorm2d(144, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(144, 40, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(40, 144, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(144, 48, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(48, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (9): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(48, 288, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(288, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(288, 288, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=288, bias=False)
+                      (1): BatchNorm2d(288, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(288, 72, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(72, 288, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(288, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(96, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (10): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(96, 576, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(576, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(576, 576, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=576, bias=False)
+                      (1): BatchNorm2d(576, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(576, 144, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(144, 576, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(576, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(96, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (11): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(96, 576, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(576, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(576, 576, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=576, bias=False)
+                      (1): BatchNorm2d(576, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(576, 144, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(144, 576, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(576, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(96, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (12): Conv2dNormActivation(
+                  (0): Conv2d(96, 576, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                  (1): BatchNorm2d(576, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                  (2): Hardswish()
+                )
+              )
+              (avgpool): AdaptiveAvgPool2d(output_size=1)
+            )
+            (preprocess): Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+          )
+          (vf_features_extractor): Extractor(
+            (body): MobileNetV3(
+              (features): Module(
+                (0): Conv2dNormActivation(
+                  (0): Conv2d(3, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+                  (1): BatchNorm2d(16, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                  (2): Hardswish()
+                )
+                (1): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(16, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=16, bias=False)
+                      (1): BatchNorm2d(16, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): ReLU(inplace=True)
+                    )
+                    (1): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(16, 8, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(8, 16, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (2): Conv2dNormActivation(
+                      (0): Conv2d(16, 16, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(16, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (2): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(16, 72, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(72, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): ReLU(inplace=True)
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(72, 72, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=72, bias=False)
+                      (1): BatchNorm2d(72, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): ReLU(inplace=True)
+                    )
+                    (2): Conv2dNormActivation(
+                      (0): Conv2d(72, 24, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(24, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (3): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(24, 88, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(88, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): ReLU(inplace=True)
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(88, 88, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=88, bias=False)
+                      (1): BatchNorm2d(88, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): ReLU(inplace=True)
+                    )
+                    (2): Conv2dNormActivation(
+                      (0): Conv2d(88, 24, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(24, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (4): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(24, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(96, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(96, 96, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=96, bias=False)
+                      (1): BatchNorm2d(96, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(96, 24, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(24, 96, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(96, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(40, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (5): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(40, 240, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(240, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(240, 240, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=240, bias=False)
+                      (1): BatchNorm2d(240, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(240, 64, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(64, 240, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(240, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(40, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (6): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(40, 240, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(240, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(240, 240, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=240, bias=False)
+                      (1): BatchNorm2d(240, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(240, 64, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(64, 240, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(240, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(40, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (7): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(40, 120, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(120, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(120, 120, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=120, bias=False)
+                      (1): BatchNorm2d(120, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(120, 32, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(32, 120, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(120, 48, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(48, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (8): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(48, 144, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(144, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(144, 144, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=144, bias=False)
+                      (1): BatchNorm2d(144, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(144, 40, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(40, 144, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(144, 48, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(48, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (9): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(48, 288, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(288, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(288, 288, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=288, bias=False)
+                      (1): BatchNorm2d(288, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(288, 72, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(72, 288, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(288, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(96, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (10): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(96, 576, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(576, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(576, 576, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=576, bias=False)
+                      (1): BatchNorm2d(576, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(576, 144, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(144, 576, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(576, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(96, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (11): Module(
+                  (block): Module(
+                    (0): Conv2dNormActivation(
+                      (0): Conv2d(96, 576, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(576, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (1): Conv2dNormActivation(
+                      (0): Conv2d(576, 576, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=576, bias=False)
+                      (1): BatchNorm2d(576, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                      (2): Hardswish()
+                    )
+                    (2): SqueezeExcitation(
+                      (avgpool): AdaptiveAvgPool2d(output_size=1)
+                      (fc1): Conv2d(576, 144, kernel_size=(1, 1), stride=(1, 1))
+                      (fc2): Conv2d(144, 576, kernel_size=(1, 1), stride=(1, 1))
+                      (activation): ReLU()
+                      (scale_activation): Hardsigmoid()
+                    )
+                    (3): Conv2dNormActivation(
+                      (0): Conv2d(576, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                      (1): BatchNorm2d(96, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                    )
+                  )
+                )
+                (12): Conv2dNormActivation(
+                  (0): Conv2d(96, 576, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                  (1): BatchNorm2d(576, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+                  (2): Hardswish()
+                )
+              )
+              (avgpool): AdaptiveAvgPool2d(output_size=1)
+            )
+            (preprocess): Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+          )
+          (mlp_extractor): MlpExtractor(
+            (policy_net): Sequential(
+              (0): Linear(in_features=576, out_features=256, bias=True)
+              (1): Tanh()
+              (2): Linear(in_features=256, out_features=128, bias=True)
+              (3): Tanh()
+            )
+            (value_net): Sequential(
+              (0): Linear(in_features=576, out_features=512, bias=True)
+              (1): Tanh()
+              (2): Linear(in_features=512, out_features=256, bias=True)
+              (3): Tanh()
+            )
+          )
+          (action_net): Linear(in_features=128, out_features=2, bias=True)
+          (value_net): Linear(in_features=256, out_features=1, bias=True)
+        )
+policy_class:
+    value: <class 'stable_baselines3.common.policies.ActorCriticCnnPolicy'>
+policy_kwargs:
+    value: '{''optimizer_class'': <class ''torch.optim.adam.Adam''>, ''features_extractor_class'': <class ''utils.feature_extractor.Extractor''>, ''features_extractor_kwargs'': {''pretrained'': True, ''freeze_backbone'': True}, ''net_arch'': {''pi'': [256, 128], ''vf'': [512, 256]}}'
+policy_type:
+    value: CnnPolicy
+pos_reward_size:
+    value: 2
+rollout_buffer:
+    value: <stable_baselines3.common.buffers.RolloutBuffer object at 0x74e6271f4220>
+rollout_buffer_class:
+    value: <class 'stable_baselines3.common.buffers.RolloutBuffer'>
+rollout_buffer_kwargs:
+    value: '{}'
+sde_sample_freq:
+    value: -1
+seed:
+    value: None
+start_time:
+    value: 1756127835757467237
+step_penalty_size:
+    value: 0.01
+target_kl:
+    value: 0.03
+tensorboard_log:
+    value: /app/rl_task/logs/iyh45mpo
+total_timesteps:
+    value: 800000
+use_sde:
+    value: false
+verbose:
+    value: 1
+vf_coef:
+    value: 0.5

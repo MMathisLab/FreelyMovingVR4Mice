@@ -1,0 +1,289 @@
+{
+  "env": {
+    "value": "<stable_baselines3.common.vec_env.vec_monitor.VecMonitor object at 0x7af74d078970>"
+  },
+  "algo": {
+    "value": "RecurrentPPO"
+  },
+  "seed": {
+    "value": 42
+  },
+  "gamma": {
+    "value": 0.99
+  },
+  "_wandb": {
+    "value": {
+      "e": {
+        "tk9oe3uxsx0mu1vmauwb37f01s4lx38o": {
+          "os": "Linux-6.8.0-49-generic-x86_64-with-glibc2.35",
+          "git": {
+            "commit": "d41c1ab2c751440398014977c20076563df7b2d4",
+            "remote": "https://github.com/MMathisLab/FreelyMovingVR4Mice.git"
+          },
+          "gpu": "NVIDIA GeForce RTX 4090",
+          "disk": {
+            "/": {
+              "used": "1786723434496",
+              "total": "1967317549056"
+            }
+          },
+          "host": "4510029770a7",
+          "root": "/app/rl_task",
+          "email": "leo.bruneau@epfl.ch",
+          "memory": {
+            "total": "134542024704"
+          },
+          "python": "CPython 3.10.12",
+          "program": "/app/rl_task/RecurrentPPO_trainer.py",
+          "codePath": "rl_task/RecurrentPPO_trainer.py",
+          "writerId": "tk9oe3uxsx0mu1vmauwb37f01s4lx38o",
+          "cpu_count": 24,
+          "gpu_count": 2,
+          "startedAt": "2025-08-31T08:51:28.961861Z",
+          "executable": "/usr/bin/python",
+          "gpu_nvidia": [
+            {
+              "name": "NVIDIA GeForce RTX 4090",
+              "uuid": "GPU-51a5cc45-3d65-5c1a-f38c-9ef8610dfe72",
+              "cudaCores": 16384,
+              "memoryTotal": "25757220864",
+              "architecture": "Ada"
+            },
+            {
+              "name": "NVIDIA GeForce RTX 4090",
+              "uuid": "GPU-a66177d1-7bfa-3255-305d-fd81e605b836",
+              "cudaCores": 16384,
+              "memoryTotal": "25757220864",
+              "architecture": "Ada"
+            }
+          ],
+          "cudaVersion": "12.4",
+          "codePathLocal": "RecurrentPPO_trainer.py",
+          "cpu_count_logical": 48
+        }
+      },
+      "m": [],
+      "t": {
+        "1": [
+          1,
+          41
+        ],
+        "2": [
+          1,
+          41
+        ],
+        "3": [
+          3,
+          13,
+          16,
+          22,
+          35
+        ],
+        "4": "3.10.12",
+        "5": "0.21.0",
+        "12": "0.21.0",
+        "13": "linux-x86_64"
+      },
+      "code_path": "code/rl_task/RecurrentPPO_trainer.py",
+      "cli_version": "0.21.0",
+      "python_version": "3.10.12"
+    }
+  },
+  "device": {
+    "value": "cuda:1"
+  },
+  "n_envs": {
+    "value": 10
+  },
+  "policy": {
+    "value": "RecurrentActorCriticCnnPolicy(\n  (features_extractor): VanillaExtractor(\n    (backbone): Sequential(\n      (0): Sequential(\n        (0): Conv2d(3, 32, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2))\n        (1): GroupNorm(32, 32, eps=1e-05, affine=True)\n        (2): SiLU()\n      )\n      (1): Sequential(\n        (0): Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))\n        (1): GroupNorm(32, 64, eps=1e-05, affine=True)\n        (2): SiLU()\n      )\n      (2): Sequential(\n        (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))\n        (1): GroupNorm(32, 128, eps=1e-05, affine=True)\n        (2): SiLU()\n      )\n      (3): Sequential(\n        (0): Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))\n        (1): GroupNorm(32, 256, eps=1e-05, affine=True)\n        (2): SiLU()\n      )\n    )\n    (flatten): Flatten(start_dim=1, end_dim=-1)\n    (mlp): Sequential(\n      (0): Linear(in_features=96000, out_features=1024, bias=True)\n      (1): SiLU()\n      (2): Linear(in_features=1024, out_features=1024, bias=True)\n      (3): SiLU()\n      (4): Linear(in_features=1024, out_features=1024, bias=True)\n    )\n  )\n  (pi_features_extractor): VanillaExtractor(\n    (backbone): Sequential(\n      (0): Sequential(\n        (0): Conv2d(3, 32, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2))\n        (1): GroupNorm(32, 32, eps=1e-05, affine=True)\n        (2): SiLU()\n      )\n      (1): Sequential(\n        (0): Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))\n        (1): GroupNorm(32, 64, eps=1e-05, affine=True)\n        (2): SiLU()\n      )\n      (2): Sequential(\n        (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))\n        (1): GroupNorm(32, 128, eps=1e-05, affine=True)\n        (2): SiLU()\n      )\n      (3): Sequential(\n        (0): Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))\n        (1): GroupNorm(32, 256, eps=1e-05, affine=True)\n        (2): SiLU()\n      )\n    )\n    (flatten): Flatten(start_dim=1, end_dim=-1)\n    (mlp): Sequential(\n      (0): Linear(in_features=96000, out_features=1024, bias=True)\n      (1): SiLU()\n      (2): Linear(in_features=1024, out_features=1024, bias=True)\n      (3): SiLU()\n      (4): Linear(in_features=1024, out_features=1024, bias=True)\n    )\n  )\n  (vf_features_extractor): VanillaExtractor(\n    (backbone): Sequential(\n      (0): Sequential(\n        (0): Conv2d(3, 32, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2))\n        (1): GroupNorm(32, 32, eps=1e-05, affine=True)\n        (2): SiLU()\n      )\n      (1): Sequential(\n        (0): Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))\n        (1): GroupNorm(32, 64, eps=1e-05, affine=True)\n        (2): SiLU()\n      )\n      (2): Sequential(\n        (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))\n        (1): GroupNorm(32, 128, eps=1e-05, affine=True)\n        (2): SiLU()\n      )\n      (3): Sequential(\n        (0): Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))\n        (1): GroupNorm(32, 256, eps=1e-05, affine=True)\n        (2): SiLU()\n      )\n    )\n    (flatten): Flatten(start_dim=1, end_dim=-1)\n    (mlp): Sequential(\n      (0): Linear(in_features=96000, out_features=1024, bias=True)\n      (1): SiLU()\n      (2): Linear(in_features=1024, out_features=1024, bias=True)\n      (3): SiLU()\n      (4): Linear(in_features=1024, out_features=1024, bias=True)\n    )\n  )\n  (mlp_extractor): MlpExtractor(\n    (policy_net): Sequential(\n      (0): Linear(in_features=200, out_features=512, bias=True)\n      (1): SiLU()\n      (2): Linear(in_features=512, out_features=384, bias=True)\n      (3): SiLU()\n      (4): Linear(in_features=384, out_features=256, bias=True)\n      (5): SiLU()\n    )\n    (value_net): Sequential(\n      (0): Linear(in_features=200, out_features=512, bias=True)\n      (1): SiLU()\n      (2): Linear(in_features=512, out_features=384, bias=True)\n      (3): SiLU()\n      (4): Linear(in_features=384, out_features=256, bias=True)\n      (5): SiLU()\n    )\n  )\n  (action_net): Linear(in_features=256, out_features=2, bias=True)\n  (value_net): Linear(in_features=256, out_features=1, bias=True)\n  (lstm_actor): LSTM(1024, 200)\n  (lstm_critic): LSTM(1024, 200)\n)"
+  },
+  "_logger": {
+    "value": "<stable_baselines3.common.logger.Logger object at 0x7af74cfbed40>"
+  },
+  "n_steps": {
+    "value": 256
+  },
+  "use_sde": {
+    "value": false
+  },
+  "verbose": {
+    "value": 1
+  },
+  "vf_coef": {
+    "value": 0.5
+  },
+  "ent_coef": {
+    "value": 0.005
+  },
+  "env_name": {
+    "value": "AugmentedReality"
+  },
+  "n_epochs": {
+    "value": 4
+  },
+  "net_arch": {
+    "value": {
+      "pi": [
+        512,
+        384,
+        256
+      ],
+      "vf": [
+        512,
+        384,
+        256
+      ]
+    }
+  },
+  "num_envs": {
+    "value": 10
+  },
+  "_last_obs": {
+    "value": "[[[[ 62  62  62 ... 153 153 153]\n   [ 62  62  62 ... 153 153 153]\n   [ 62  62  62 ... 153 153 153]\n   ...\n   [173 177 177 ... 155 154 152]\n   [177 177 177 ... 157 158 159]\n   [176 176 176 ... 157 158 158]]\n\n  [[ 63  63  63 ... 153 153 153]\n   [ 63  63  63 ... 153 153 153]\n   [ 64  64  63 ... 153 153 153]\n   ...\n   [139 143 143 ... 136 135 132]\n   [143 142 142 ... 137 140 140]\n   [142 142 142 ... 136 138 139]]\n\n  [[ 67  67  67 ... 153 153 153]\n   [ 67  67  67 ... 153 153 153]\n   [ 67  67  67 ... 153 153 153]\n   ...\n   [114 117 117 ... 117 116 114]\n   [117 116 116 ... 117 120 121]\n   [116 116 116 ... 116 117 118]]]\n\n\n [[[ 59  59  59 ...  64  64  64]\n   [ 59  59  59 ...  64  64  65]\n   [ 59  59  59 ...  65  65  65]\n   ...\n   [178 178 178 ... 183 183 184]\n   [180 180 179 ... 169 172 176]\n   [172 167 164 ... 174 170 167]]\n\n  [[ 60  60  60 ...  66  66  66]\n   [ 60  60  60 ...  66  66  66]\n   [ 61  61  61 ...  66  66  66]\n   ...\n   [154 154 154 ... 160 160 161]\n   [156 156 155 ... 143 147 152]\n   [146 140 137 ... 151 145 140]]\n\n  [[ 64  64  64 ...  70  70  70]\n   [ 64  64  64 ...  70  70  70]\n   [ 64  64  64 ...  70  70  70]\n   ...\n   [130 130 130 ... 140 141 141]\n   [132 132 131 ... 121 126 131]\n   [121 114 110 ... 131 125 119]]]\n\n\n [[[153 153 153 ...  62  62  62]\n   [153 153 153 ...  62  62  63]\n   [153 153 153 ...  63  63  63]\n   ...\n   [179 176 174 ... 181 184 183]\n   [175 179 183 ... 170 173 177]\n   [180 176 172 ... 165 171 176]]\n\n  [[153 153 153 ...  64  64  64]\n   [153 153 153 ...  64  64  64]\n   [153 153 153 ...  64  64  64]\n   ...\n   [161 157 154 ... 155 158 157]\n   [156 160 165 ... 150 153 156]\n   [161 157 152 ... 144 150 156]]\n\n  [[153 153 153 ...  68  68  68]\n   [153 153 153 ...  68  68  68]\n   [153 153 153 ...  68  68  68]\n   ...\n   [145 142 138 ... 138 140 138]\n   [139 143 147 ... 133 136 139]\n   [142 138 134 ... 128 133 138]]]\n\n\n ...\n\n\n [[[ 64  64  64 ...  60  60  60]\n   [ 65  65  64 ...  60  60  60]\n   [ 65  65  65 ...  60  60  60]\n   ...\n   [167 167 168 ... 188 184 182]\n   [161 164 168 ... 182 182 183]\n   [168 167 166 ... 184 183 183]]\n\n  [[ 66  66  66 ...  61  61  62]\n   [ 66  66  66 ...  61  62  62]\n   [ 66  66  66 ...  62  62  62]\n   ...\n   [146 146 148 ... 173 168 166]\n   [136 141 145 ... 166 167 167]\n   [144 141 139 ... 168 168 167]]\n\n  [[ 70  70  70 ...  65  65  65]\n   [ 70  70  70 ...  65  65  65]\n   [ 71  70  70 ...  65  65  66]\n   ...\n   [126 127 128 ... 156 152 149]\n   [116 122 126 ... 149 150 150]\n   [126 124 122 ... 146 145 145]]]\n\n\n [[[ 60  60  60 ...  62  62  62]\n   [ 60  60  60 ...  62  62  62]\n   [ 60  60  60 ...  62  62  62]\n   ...\n   [165 163 163 ... 159 158 157]\n   [162 159 159 ... 164 162 160]\n   [163 163 160 ... 163 161 162]]\n\n  [[ 61  61  61 ...  63  63  63]\n   [ 61  61  61 ...  63  63  63]\n   [ 62  61  61 ...  63  64  64]\n   ...\n   [148 146 146 ... 136 135 135]\n   [145 141 141 ... 140 137 135]\n   [145 145 143 ... 138 136 137]]\n\n  [[ 65  65  65 ...  67  67  67]\n   [ 65  65  65 ...  67  67  67]\n   [ 65  65  65 ...  67  67  67]\n   ...\n   [128 126 126 ... 118 119 121]\n   [125 121 121 ... 119 116 116]\n   [125 125 123 ... 117 115 115]]]\n\n\n [[[ 62  62  62 ...  60  60  60]\n   [ 63  63  63 ...  60  60  60]\n   [ 63  63  63 ...  60  60  60]\n   ...\n   [180 179 179 ... 176 179 182]\n   [179 178 178 ... 165 167 168]\n   [178 177 176 ... 165 162 159]]\n\n  [[ 64  64  64 ...  61  61  61]\n   [ 64  64  64 ...  61  61  61]\n   [ 64  64  64 ...  61  61  61]\n   ...\n   [169 166 164 ... 157 162 166]\n   [165 163 161 ... 142 144 147]\n   [163 160 157 ... 142 138 134]]\n\n  [[ 68  68  68 ...  65  65  65]\n   [ 68  68  68 ...  65  65  65]\n   [ 68  68  68 ...  65  65  65]\n   ...\n   [152 146 141 ... 141 147 152]\n   [144 140 137 ... 124 126 128]\n   [140 134 128 ... 123 119 114]]]]"
+  },
+  "algorithm": {
+    "value": "RecurrentPPO"
+  },
+  "target_kl": {
+    "value": null
+  },
+  "_n_updates": {
+    "value": 0
+  },
+  "batch_size": {
+    "value": 100
+  },
+  "clip_range": {
+    "value": 0.2
+  },
+  "gae_lambda": {
+    "value": 0.97
+  },
+  "start_time": {
+    "value": 1756630302150984000
+  },
+  "lr_schedule": {
+    "value": "FloatSchedule(ConstantSchedule(val=0.0001))"
+  },
+  "policy_type": {
+    "value": "CnnLstmPolicy"
+  },
+  "shared_lstm": {
+    "value": false
+  },
+  "task_config": {
+    "value": "shape_discrim"
+  },
+  "_episode_num": {
+    "value": 0
+  },
+  "action_noise": {
+    "value": "None"
+  },
+  "action_space": {
+    "value": "Box(-1.0, 1.0, (2,), float32)"
+  },
+  "policy_class": {
+    "value": "<class 'sb3_contrib.common.recurrent.policies.RecurrentActorCriticCnnPolicy'>"
+  },
+  "activation_fn": {
+    "value": "torch.nn.modules.activation.SiLU"
+  },
+  "clip_range_vf": {
+    "value": "None"
+  },
+  "learning_rate": {
+    "value": 0.0001
+  },
+  "max_grad_norm": {
+    "value": 0.5
+  },
+  "n_lstm_layers": {
+    "value": 1
+  },
+  "num_timesteps": {
+    "value": 0
+  },
+  "policy_kwargs": {
+    "value": "{'optimizer_class': <class 'torch.optim.adam.Adam'>, 'features_extractor_class': <class 'utils.gap_extractor.VanillaExtractor'>, 'net_arch': {'pi': [512, 384, 256], 'vf': [512, 384, 256]}, 'activation_fn': <class 'torch.nn.modules.activation.SiLU'>, 'lstm_hidden_size': 200, 'n_lstm_layers': 1, 'shared_lstm': False, 'enable_critic_lstm': True, 'normalize_images': True}"
+  },
+  "_custom_logger": {
+    "value": "False"
+  },
+  "ep_info_buffer": {
+    "value": "deque([], maxlen=100)"
+  },
+  "rollout_buffer": {
+    "value": "<sb3_contrib.common.recurrent.buffers.RecurrentRolloutBuffer object at 0x7af74cfbe5c0>"
+  },
+  "neg_reward_size": {
+    "value": 1.5
+  },
+  "pos_reward_size": {
+    "value": 1.5
+  },
+  "sde_sample_freq": {
+    "value": -1
+  },
+  "tensorboard_log": {
+    "value": "/app/rl_task/logs/3xqilakg"
+  },
+  "total_timesteps": {
+    "value": 2000000
+  },
+  "_total_timesteps": {
+    "value": 2000000
+  },
+  "lstm_hidden_size": {
+    "value": 200
+  },
+  "normalize_images": {
+    "value": true
+  },
+  "_last_lstm_states": {
+    "value": "RNNStates(pi=(tensor([[[0., 0., 0.,  ..., 0., 0., 0.],\n         [0., 0., 0.,  ..., 0., 0., 0.],\n         [0., 0., 0.,  ..., 0., 0., 0.],\n         ...,\n         [0., 0., 0.,  ..., 0., 0., 0.],\n         [0., 0., 0.,  ..., 0., 0., 0.],\n         [0., 0., 0.,  ..., 0., 0., 0.]]], device='cuda:1'), tensor([[[0., 0., 0.,  ..., 0., 0., 0.],\n         [0., 0., 0.,  ..., 0., 0., 0.],\n         [0., 0., 0.,  ..., 0., 0., 0.],\n         ...,\n         [0., 0., 0.,  ..., 0., 0., 0.],\n         [0., 0., 0.,  ..., 0., 0., 0.],\n         [0., 0., 0.,  ..., 0., 0., 0.]]], device='cuda:1')), vf=(tensor([[[0., 0., 0.,  ..., 0., 0., 0.],\n         [0., 0., 0.,  ..., 0., 0., 0.],\n         [0., 0., 0.,  ..., 0., 0., 0.],\n         ...,\n         [0., 0., 0.,  ..., 0., 0., 0.],\n         [0., 0., 0.,  ..., 0., 0., 0.],\n         [0., 0., 0.,  ..., 0., 0., 0.]]], device='cuda:1'), tensor([[[0., 0., 0.,  ..., 0., 0., 0.],\n         [0., 0., 0.,  ..., 0., 0., 0.],\n         [0., 0., 0.,  ..., 0., 0., 0.],\n         ...,\n         [0., 0., 0.,  ..., 0., 0., 0.],\n         [0., 0., 0.,  ..., 0., 0., 0.],\n         [0., 0., 0.,  ..., 0., 0., 0.]]], device='cuda:1')))"
+  },
+  "ep_success_buffer": {
+    "value": "deque([], maxlen=100)"
+  },
+  "max_episode_steps": {
+    "value": 150
+  },
+  "observation_space": {
+    "value": "Box(0, 255, (3, 225, 400), uint8)"
+  },
+  "step_penalty_size": {
+    "value": 0.01
+  },
+  "_last_original_obs": {
+    "value": "None"
+  },
+  "_stats_window_size": {
+    "value": 100
+  },
+  "_vec_normalize_env": {
+    "value": "None"
+  },
+  "enable_critic_lstm": {
+    "value": true
+  },
+  "normalize_advantage": {
+    "value": "True"
+  },
+  "_last_episode_starts": {
+    "value": "[ True  True  True  True  True  True  True  True  True  True]"
+  },
+  "rollout_buffer_class": {
+    "value": "None"
+  },
+  "rollout_buffer_kwargs": {
+    "value": "{}"
+  },
+  "_num_timesteps_at_start": {
+    "value": 0
+  },
+  "_current_progress_remaining": {
+    "value": 1
+  }
+}

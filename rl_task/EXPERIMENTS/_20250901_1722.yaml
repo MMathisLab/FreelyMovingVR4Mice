@@ -1,0 +1,571 @@
+_current_progress_remaining:
+    value: 0.9213568
+_custom_logger:
+    value: "False"
+_episode_num:
+    value: 0
+_last_episode_starts:
+    value: '[ True  True  True  True  True  True  True  True]'
+_last_lstm_states:
+    value: |-
+        RNNStates(pi=(tensor([[[0., 0., 0.,  ..., 0., 0., 0.],
+                 [0., 0., 0.,  ..., 0., 0., 0.],
+                 [0., 0., 0.,  ..., 0., 0., 0.],
+                 ...,
+                 [0., 0., 0.,  ..., 0., 0., 0.],
+                 [0., 0., 0.,  ..., 0., 0., 0.],
+                 [0., 0., 0.,  ..., 0., 0., 0.]]], device='cuda:1'), tensor([[[0., 0., 0.,  ..., 0., 0., 0.],
+                 [0., 0., 0.,  ..., 0., 0., 0.],
+                 [0., 0., 0.,  ..., 0., 0., 0.],
+                 ...,
+                 [0., 0., 0.,  ..., 0., 0., 0.],
+                 [0., 0., 0.,  ..., 0., 0., 0.],
+                 [0., 0., 0.,  ..., 0., 0., 0.]]], device='cuda:1')), vf=(tensor([[[0., 0., 0.,  ..., 0., 0., 0.],
+                 [0., 0., 0.,  ..., 0., 0., 0.],
+                 [0., 0., 0.,  ..., 0., 0., 0.],
+                 ...,
+                 [0., 0., 0.,  ..., 0., 0., 0.],
+                 [0., 0., 0.,  ..., 0., 0., 0.],
+                 [0., 0., 0.,  ..., 0., 0., 0.]]], device='cuda:1'), tensor([[[0., 0., 0.,  ..., 0., 0., 0.],
+                 [0., 0., 0.,  ..., 0., 0., 0.],
+                 [0., 0., 0.,  ..., 0., 0., 0.],
+                 ...,
+                 [0., 0., 0.,  ..., 0., 0., 0.],
+                 [0., 0., 0.,  ..., 0., 0., 0.],
+                 [0., 0., 0.,  ..., 0., 0., 0.]]], device='cuda:1')))
+_last_obs:
+    value: |-
+        [[[[ 65  65  65 ...  61  61  61]
+           [ 65  65  65 ...  61  61  61]
+           [ 66  66  65 ...  61  61  61]
+           ...
+           [137 140 144 ... 153 143 128]
+           [144 146 149 ... 157 154 148]
+           [149 150 150 ... 149 159 154]]
+
+          [[ 67  67  67 ...  62  62  62]
+           [ 67  67  67 ...  62  63  63]
+           [ 67  67  67 ...  63  63  63]
+           ...
+           [112 116 120 ... 131 120 105]
+           [119 122 123 ... 138 133 126]
+           [124 125 124 ... 130 141 135]]
+
+          [[ 71  71  71 ...  66  66  66]
+           [ 71  71  71 ...  66  66  66]
+           [ 71  71  71 ...  66  67  67]
+           ...
+           [ 90  94  98 ... 114 104  87]
+           [ 97  97  96 ... 118 115 107]
+           [ 96  96  96 ... 106 120 115]]]
+
+
+         [[[ 64  64  64 ...  60  60  60]
+           [ 64  64  64 ...  60  61  61]
+           [ 64  64  64 ...  61  61  61]
+           ...
+           [178 179 176 ... 144 144 141]
+           [174 171 167 ... 152 149 147]
+           [163 153 144 ... 139 154 155]]
+
+          [[ 66  65  65 ...  62  62  62]
+           [ 66  66  65 ...  62  62  62]
+           [ 66  66  66 ...  62  62  62]
+           ...
+           [154 154 153 ... 110 110 108]
+           [152 151 147 ... 119 115 113]
+           [142 131 120 ... 109 123 122]]
+
+          [[ 70  69  69 ...  65  65  66]
+           [ 70  70  69 ...  66  66  66]
+           [ 70  70  70 ...  66  66  66]
+           ...
+           [126 126 126 ...  83  83  82]
+           [126 126 123 ...  90  86  84]
+           [119 107  95 ...  84  94  92]]]
+
+
+         [[[ 61  61  61 ...  59  60  60]
+           [ 62  62  61 ...  60  60  60]
+           [ 62  62  62 ...  60  60  60]
+           ...
+           [166 165 165 ... 151 157 161]
+           [165 165 165 ... 152 142 142]
+           [165 165 165 ... 151 155 156]]
+
+          [[ 63  63  63 ...  61  61  61]
+           [ 63  63  63 ...  61  61  61]
+           [ 63  63  63 ...  61  61  61]
+           ...
+           [145 145 145 ... 121 127 132]
+           [145 145 145 ... 118 106 109]
+           [145 145 145 ... 117 121 123]]
+
+          [[ 67  67  66 ...  64  65  65]
+           [ 67  67  67 ...  65  65  65]
+           [ 67  67  67 ...  65  65  65]
+           ...
+           [121 120 120 ...  95 102 107]
+           [120 120 120 ...  94  82  84]
+           [120 120 120 ...  92  98  99]]]
+
+
+         ...
+
+
+         [[[ 60  60  60 ...  63  63  63]
+           [ 60  60  60 ...  63  63  63]
+           [ 60  60  60 ...  63  63  63]
+           ...
+           [164 165 150 ... 129 125 132]
+           [151 123 118 ... 138 134 129]
+           [120 112 130 ... 147 142 138]]
+
+          [[ 61  61  61 ...  64  64  64]
+           [ 61  61  61 ...  64  64  65]
+           [ 62  62  61 ...  64  65  65]
+           ...
+           [135 142 127 ... 107 102 111]
+           [128  95  89 ... 115 110 107]
+           [ 91  81 104 ... 122 118 114]]
+
+          [[ 65  65  65 ...  68  68  68]
+           [ 65  65  65 ...  68  68  68]
+           [ 65  65  65 ...  68  69  69]
+           ...
+           [112 121 108 ...  85  82  90]
+           [109  76  70 ...  91  88  85]
+           [ 72  62  85 ...  97  94  91]]]
+
+
+         [[[ 62  62  62 ...  70  70  70]
+           [ 62  62  62 ...  70  70  71]
+           [ 63  63  62 ...  70  71  71]
+           ...
+           [146 137 143 ... 172 173 173]
+           [142 146 151 ... 169 172 173]
+           [148 153 155 ... 161 162 166]]
+
+          [[ 64  64  63 ...  72  72  72]
+           [ 64  64  64 ...  72  72  72]
+           [ 64  64  64 ...  72  72  72]
+           ...
+           [107  97 103 ... 152 155 156]
+           [102 107 113 ... 146 150 152]
+           [110 116 118 ... 138 140 143]]
+
+          [[ 67  67  67 ...  76  76  76]
+           [ 68  68  67 ...  76  76  77]
+           [ 68  68  68 ...  76  77  77]
+           ...
+           [ 77  64  70 ... 127 132 134]
+           [ 69  74  80 ... 118 122 126]
+           [ 76  83  85 ... 109 111 114]]]
+
+
+         [[[153 153 153 ...  59  59  60]
+           [153 153 153 ...  60  60  60]
+           [153 153 153 ...  60  60  60]
+           ...
+           [147 152 152 ... 155 149 145]
+           [151 144 137 ... 169 161 154]
+           [133 128 124 ... 169 170 169]]
+
+          [[153 153 153 ...  61  61  61]
+           [153 153 153 ...  61  61  61]
+           [153 153 153 ...  61  61  61]
+           ...
+           [123 128 128 ... 125 118 113]
+           [127 120 113 ... 142 133 124]
+           [107 102  98 ... 142 143 142]]
+
+          [[153 153 153 ...  64  65  65]
+           [153 153 153 ...  65  65  65]
+           [153 153 153 ...  65  65  65]
+           ...
+           [101 106 106 ... 102  96  92]
+           [105  99  93 ... 117 109 101]
+           [ 89  84  80 ... 116 117 117]]]]
+_last_original_obs:
+    value: None
+_logger:
+    value: <stable_baselines3.common.logger.Logger object at 0x70d79a742e60>
+_n_updates:
+    value: 573
+_num_timesteps_at_start:
+    value: 0
+_stats_window_size:
+    value: 100
+_total_timesteps:
+    value: 5000000
+_vec_normalize_env:
+    value: None
+_wandb:
+    value:
+        cli_version: 0.21.0
+        code_path: code/rl_task/scripts/RecurrentPPO_trainer.py
+        e:
+            ichrlmehcnyuovbmo65b5c5obq7enjzf:
+                codePath: rl_task/scripts/RecurrentPPO_trainer.py
+                codePathLocal: scripts/RecurrentPPO_trainer.py
+                cpu_count: 24
+                cpu_count_logical: 48
+                cudaVersion: "12.4"
+                disk:
+                    /:
+                        total: "1967317549056"
+                        used: "1801571827712"
+                email: leo.bruneau@epfl.ch
+                executable: /usr/bin/python
+                git:
+                    commit: e6fe8341b2d54d45e6d87e15a133a1df79e9be3a
+                    remote: https://github.com/MMathisLab/FreelyMovingVR4Mice.git
+                gpu: NVIDIA GeForce RTX 4090
+                gpu_count: 2
+                gpu_nvidia:
+                    - architecture: Ada
+                      cudaCores: 16384
+                      memoryTotal: "25757220864"
+                      name: NVIDIA GeForce RTX 4090
+                      uuid: GPU-51a5cc45-3d65-5c1a-f38c-9ef8610dfe72
+                    - architecture: Ada
+                      cudaCores: 16384
+                      memoryTotal: "25757220864"
+                      name: NVIDIA GeForce RTX 4090
+                      uuid: GPU-a66177d1-7bfa-3255-305d-fd81e605b836
+                host: 743a617f82e1
+                memory:
+                    total: "134542024704"
+                os: Linux-6.8.0-49-generic-x86_64-with-glibc2.35
+                program: /app/rl_task/scripts/RecurrentPPO_trainer.py
+                python: CPython 3.10.12
+                root: /app/rl_task
+                startedAt: "2025-09-01T15:22:37.889341Z"
+                writerId: ichrlmehcnyuovbmo65b5c5obq7enjzf
+        m: []
+        python_version: 3.10.12
+        t:
+            "1":
+                - 1
+                - 41
+            "2":
+                - 1
+                - 41
+            "3":
+                - 2
+                - 3
+                - 13
+                - 16
+                - 22
+                - 35
+            "4": 3.10.12
+            "5": 0.21.0
+            "12": 0.21.0
+            "13": linux-x86_64
+action_noise:
+    value: None
+action_space:
+    value: Box(-1.0, 1.0, (2,), float32)
+activation_fn:
+    value: torch.nn.modules.activation.SiLU
+algo:
+    value: RecurrentPPO
+algorithm:
+    value: RecurrentPPO
+batch_size:
+    value: 96
+clip_range:
+    value: 0.15
+clip_range_vf:
+    value: None
+device:
+    value: cuda:1
+enable_critic_lstm:
+    value: true
+ent_coef:
+    value: 0.01
+env:
+    value: <stable_baselines3.common.vec_env.vec_monitor.VecMonitor object at 0x70d79bb03e50>
+env_name:
+    value: AugmentedReality
+ep_info_buffer:
+    value: deque([], maxlen=100)
+ep_success_buffer:
+    value: deque([], maxlen=100)
+features_extractor_class:
+    value: rl_task.task.extractors.custom_extractors.DepthwiseExtractor
+features_extractor_kwargs:
+    value:
+        base_channels: 24
+        features_dim: 400
+        head_channels: 32
+        mlp_hidden:
+            - 1024
+            - 512
+        pool_out:
+            - 12
+            - 8
+        use_depthwise: true
+gae_lambda:
+    value: 0.97
+gamma:
+    value: 0.99
+learning_rate:
+    value: 3e-05
+lr_schedule:
+    value: FloatSchedule(ConstantSchedule(val=3e-05))
+lstm_hidden_size:
+    value: 200
+max_episode_steps:
+    value: 220
+max_grad_norm:
+    value: 0.5
+n_envs:
+    value: 8
+n_epochs:
+    value: 3
+n_lstm_layers:
+    value: 1
+n_steps:
+    value: 256
+neg_reward_size:
+    value: 1.5
+net_arch:
+    value:
+        pi:
+            - 400
+            - 300
+            - 200
+        vf:
+            - 400
+            - 300
+            - 200
+normalize_advantage:
+    value: "True"
+normalize_images:
+    value: true
+num_envs:
+    value: 8
+num_timesteps:
+    value: 0
+observation_space:
+    value: Box(0, 255, (3, 225, 400), uint8)
+optimizer_class:
+    value: torch.optim.adam.Adam
+ortho_init:
+    value: true
+policy:
+    value: |-
+        RecurrentActorCriticCnnPolicy(
+          (features_extractor): DepthwiseExtractor(
+            (backbone): Sequential(
+              (0): Sequential(
+                (0): Conv2d(3, 3, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=3, bias=False)
+                (1): BatchNorm2d(3, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (2): SiLU()
+                (3): Conv2d(3, 24, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (4): BatchNorm2d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (5): SiLU()
+              )
+              (1): Sequential(
+                (0): Conv2d(24, 24, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=24, bias=False)
+                (1): BatchNorm2d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (2): SiLU()
+                (3): Conv2d(24, 48, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (4): BatchNorm2d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (5): SiLU()
+              )
+              (2): Sequential(
+                (0): Conv2d(48, 48, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=48, bias=False)
+                (1): BatchNorm2d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (2): SiLU()
+                (3): Conv2d(48, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (4): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (5): SiLU()
+              )
+              (3): Sequential(
+                (0): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=96, bias=False)
+                (1): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (2): SiLU()
+                (3): Conv2d(96, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (4): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (5): SiLU()
+              )
+            )
+            (head1x1): Sequential(
+              (0): Conv2d(96, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): SiLU()
+            )
+            (pool_small): AdaptiveAvgPool2d(output_size=(12, 8))
+            (mlp): Sequential(
+              (0): Linear(in_features=3072, out_features=1024, bias=True)
+              (1): SiLU()
+              (2): Linear(in_features=1024, out_features=512, bias=True)
+              (3): SiLU()
+              (4): Linear(in_features=512, out_features=400, bias=True)
+            )
+          )
+          (pi_features_extractor): DepthwiseExtractor(
+            (backbone): Sequential(
+              (0): Sequential(
+                (0): Conv2d(3, 3, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=3, bias=False)
+                (1): BatchNorm2d(3, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (2): SiLU()
+                (3): Conv2d(3, 24, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (4): BatchNorm2d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (5): SiLU()
+              )
+              (1): Sequential(
+                (0): Conv2d(24, 24, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=24, bias=False)
+                (1): BatchNorm2d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (2): SiLU()
+                (3): Conv2d(24, 48, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (4): BatchNorm2d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (5): SiLU()
+              )
+              (2): Sequential(
+                (0): Conv2d(48, 48, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=48, bias=False)
+                (1): BatchNorm2d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (2): SiLU()
+                (3): Conv2d(48, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (4): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (5): SiLU()
+              )
+              (3): Sequential(
+                (0): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=96, bias=False)
+                (1): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (2): SiLU()
+                (3): Conv2d(96, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (4): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (5): SiLU()
+              )
+            )
+            (head1x1): Sequential(
+              (0): Conv2d(96, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): SiLU()
+            )
+            (pool_small): AdaptiveAvgPool2d(output_size=(12, 8))
+            (mlp): Sequential(
+              (0): Linear(in_features=3072, out_features=1024, bias=True)
+              (1): SiLU()
+              (2): Linear(in_features=1024, out_features=512, bias=True)
+              (3): SiLU()
+              (4): Linear(in_features=512, out_features=400, bias=True)
+            )
+          )
+          (vf_features_extractor): DepthwiseExtractor(
+            (backbone): Sequential(
+              (0): Sequential(
+                (0): Conv2d(3, 3, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=3, bias=False)
+                (1): BatchNorm2d(3, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (2): SiLU()
+                (3): Conv2d(3, 24, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (4): BatchNorm2d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (5): SiLU()
+              )
+              (1): Sequential(
+                (0): Conv2d(24, 24, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=24, bias=False)
+                (1): BatchNorm2d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (2): SiLU()
+                (3): Conv2d(24, 48, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (4): BatchNorm2d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (5): SiLU()
+              )
+              (2): Sequential(
+                (0): Conv2d(48, 48, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=48, bias=False)
+                (1): BatchNorm2d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (2): SiLU()
+                (3): Conv2d(48, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (4): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (5): SiLU()
+              )
+              (3): Sequential(
+                (0): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=96, bias=False)
+                (1): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (2): SiLU()
+                (3): Conv2d(96, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (4): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                (5): SiLU()
+              )
+            )
+            (head1x1): Sequential(
+              (0): Conv2d(96, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): SiLU()
+            )
+            (pool_small): AdaptiveAvgPool2d(output_size=(12, 8))
+            (mlp): Sequential(
+              (0): Linear(in_features=3072, out_features=1024, bias=True)
+              (1): SiLU()
+              (2): Linear(in_features=1024, out_features=512, bias=True)
+              (3): SiLU()
+              (4): Linear(in_features=512, out_features=400, bias=True)
+            )
+          )
+          (mlp_extractor): MlpExtractor(
+            (policy_net): Sequential(
+              (0): Linear(in_features=200, out_features=400, bias=True)
+              (1): SiLU()
+              (2): Linear(in_features=400, out_features=300, bias=True)
+              (3): SiLU()
+              (4): Linear(in_features=300, out_features=200, bias=True)
+              (5): SiLU()
+            )
+            (value_net): Sequential(
+              (0): Linear(in_features=200, out_features=400, bias=True)
+              (1): SiLU()
+              (2): Linear(in_features=400, out_features=300, bias=True)
+              (3): SiLU()
+              (4): Linear(in_features=300, out_features=200, bias=True)
+              (5): SiLU()
+            )
+          )
+          (action_net): Linear(in_features=200, out_features=2, bias=True)
+          (value_net): Linear(in_features=200, out_features=1, bias=True)
+          (lstm_actor): LSTM(400, 200)
+          (lstm_critic): LSTM(400, 200)
+        )
+policy_class:
+    value: <class 'sb3_contrib.common.recurrent.policies.RecurrentActorCriticCnnPolicy'>
+policy_kwargs:
+    value: '{''optimizer_class'': <class ''torch.optim.adam.Adam''>, ''features_extractor_class'': <class ''rl_task.task.extractors.custom_extractors.DepthwiseExtractor''>, ''share_features_extractor'': True, ''features_extractor_kwargs'': {''features_dim'': 400, ''base_channels'': 24, ''use_depthwise'': True, ''pool_out'': (12, 8), ''head_channels'': 32, ''mlp_hidden'': (1024, 512)}, ''net_arch'': {''pi'': [400, 300, 200], ''vf'': [400, 300, 200]}, ''activation_fn'': <class ''torch.nn.modules.activation.SiLU''>, ''lstm_hidden_size'': 200, ''n_lstm_layers'': 1, ''shared_lstm'': False, ''enable_critic_lstm'': True, ''normalize_images'': True}'
+policy_type:
+    value: CnnLstmPolicy
+pos_reward_size:
+    value: 1.5
+rollout_buffer:
+    value: <sb3_contrib.common.recurrent.buffers.RecurrentRolloutBuffer object at 0x70d79a743250>
+rollout_buffer_class:
+    value: None
+rollout_buffer_kwargs:
+    value: '{}'
+sde_sample_freq:
+    value: -1
+seed:
+    value: null
+share_features_extractor:
+    value: true
+shared_lstm:
+    value: false
+start_time:
+    value: 1756740174082272174
+step_penalty_size:
+    value: 0
+target_kl:
+    value: 0.03
+task_config:
+    value: shape_discrim_multi_occluders
+tensorboard_log:
+    value: /app/rl_task/logs/dq0y60p5
+total_timesteps:
+    value: 5000000
+trunc_penalty_size:
+    value: 1.5
+use_sde:
+    value: false
+verbose:
+    value: 1
+vf_coef:
+    value: 0.5
