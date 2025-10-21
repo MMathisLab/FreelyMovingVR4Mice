@@ -29,7 +29,7 @@ The following list presents the main experiments performed during the project in
 |22|_20250831_1051|RecurrentPPO|untrained 4-layer CNN with GroupNorm and final GAP + LSTM[200] (not shared) + value_net[512,384,256], policy_net[512,384,256]|225x400|shape discrimination (no occluders)|1.1247002|38.53|+1.5, -1.5, -0.01|x|
 |23|_20250901_1143|RecurrentPPO|untrained 4-layer CNN with GroupNorm and 3-layer MLP + LSTM[100] (not sharde) + value_net[384,256], policy_net[384,256]|225x400|shape discrimination (no occluders)|1.5|37.45|+1.5, -1.5, -1.5 (time-out penalty), -0 (step penalty)|fast learning and good performance|
 |24|_20250901_1426|RecurrentPPO|DepthWiseExtractor with 3-layer MLP + LSTM[200] (not shared) + value_net[400,300,200], policy_net[400,300,200]|225x400|shape discrimination (no occluders)|1.5|51.65|same|best performance so far|
-|25|_20250901_1722|RecurrentPPO|DepthWiseExtractor with 3-layer MLP + LSTM[200] (not shared) + value_net[400,300,200], policy_net[400,300,200]|225x400|shape discrimination (with occluders)|1.35|61.25|same|best performance so far|
+|25|_20250901_1722|RecurrentPPO|DepthWiseExtractor with 3-layer MLP + LSTM[200] (not shared) + value_net[400,300,200], policy_net[400,300,200]|225x400|shape discrimination (with occluders)|1.35|61.25|same|best performance so far. This model is `_20250901_1426` but "finetuned" on task with occluders (i.e. Curriculum Learning)|
 
 ⚠️ <b>Major change</b>:
 - Randomized starting position and starting head angle (in [-45, +45] deg).
