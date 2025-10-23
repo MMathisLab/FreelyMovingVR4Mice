@@ -248,7 +248,7 @@ def plot_decision_points_on_trajectory(
             )
 
             if decision_point is not None:
-                mpl.rcParams["lines.markersize"] = 8
+                mpl.rcParams["lines.markersize"] = 5
                 ax.scatter(
                     decision_point[decision_point["trial"] == idx_trial]["x"],
                     decision_point[decision_point["trial"] == idx_trial]["y"],
