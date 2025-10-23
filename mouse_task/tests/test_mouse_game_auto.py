@@ -116,18 +116,30 @@ class TestPositionCoordinates(unittest.TestCase):
         )
         spec = env.behavior_specs[behavior_name]
 
-        # Check that agent has a single observation
+        # Check that agent has two observation
+        # First is visual observation, second is vector observation
         self.assertEqual(
             len(spec.observation_specs),
-            1,
+            2,
         )
+
+        vis_obs_ind = 0
+        vec_obs_ind = 1
+
+        # Verify the shape of the visual observation
+        self.assertEqual(
+            len(spec.observation_specs[vis_obs_ind].shape),
+            3,
+        )
+        
         # Check the size of the vector observation
         self.assertEqual(
-            spec.observation_specs[0].shape,
+            spec.observation_specs[vec_obs_ind].shape,
             (13,),
         )
+
         # Check the type of the observation (i.e. VectorSensor)
-        self.assertTrue("VectorSensor" in spec.observation_specs[0].name)
+        self.assertTrue("VectorSensor" in spec.observation_specs[vec_obs_ind].name)
 
         # Check there are 4 continuous actions (i.e. x, y, head_angle and photodiode)
         self.assertGreater(spec.action_spec.continuous_size, 0)
