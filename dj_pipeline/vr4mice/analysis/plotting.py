@@ -1055,8 +1055,6 @@ def pairplot_average_decision_point(
         counts["count"] = np.abs(counts[label_parameter])
     else:
         counts["count"] = counts[label_parameter]
-    # counts = pd.DataFrame(counts.reset_index())
-    # counts.aperture = counts.aperture.round(2).astype(str)
 
     if per_lab:
         counts = pd.DataFrame(
