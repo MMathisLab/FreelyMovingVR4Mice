@@ -28,6 +28,8 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
     "dlc": process DeepLabCut data: populate dlc tables
     "update": sync missing data in existing tables
     "sync_days": synchronize days in the dataset (process raw .npy files)
+    "interp": interpolate trajectories and compute kinematics
+    "latency": compute latencies based on photodiode signals
 """
 
 

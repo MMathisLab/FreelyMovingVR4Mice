@@ -37,7 +37,7 @@ def style():
             "ytick.labelcolor": font_color,
             "ytick.labelsize": font_size,
             "font.weight": "regular",
-            "svg.fonttype": "none",
+            # "svg.fonttype": "none",
         }
     )
 
@@ -54,7 +54,9 @@ def _resample_data_frame(
         (~df.columns.isin(categorical_columns)) & (~df.columns.isin(binary_columns))
     ]
 
-    t = f"{resampling_period_ms}ms"  # old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
+    t = (
+        f"{resampling_period_ms}ms"
+    )  # old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
 
     df["time"] = pd.to_datetime(df["step_time"], unit="s")
     categorical_resampled = (
