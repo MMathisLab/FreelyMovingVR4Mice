@@ -168,7 +168,7 @@ class TeensyExperimentGUI(object):
         """
         setup = self.setup if setup is None else setup
         setup_name = self.setup_name.get() if setup_name is None else setup_name  # gui interaction
-        json.dump(setup, open(self.get_setup_file_name(setup_name), 'w'))  # stores in gui file
+        json.dump(setup, open(self.get_setup_file_name(setup_name), 'w'),indent=4)  # stores in gui file
         if notify:
             messagebox.showinfo("Config Saved", "Configuration file has been saved.", parent=self.window)
 
@@ -978,6 +978,7 @@ def main():
     exp = TeensyExperimentGUI()
     exp.run_experiment()
 
-
+if __name__ == "__main__":
+    main()
 #__name__ == '__main__'
 #main()

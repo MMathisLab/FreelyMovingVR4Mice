@@ -12,10 +12,10 @@ class TeensyLatency():
         self.com = com
         self.baudrate = baudrate
         self.logger = logging.getLogger("TeensyLatency")
-        self.input_data = deque()
-        self.input_data_time = deque()
-        self.input_data_teensy_time = deque()
-        self.input_data_ttl = deque()
+        self.input_data = list()
+        self.input_data_time = list()
+        self.input_data_teensy_time = list()
+        self.input_data_ttl = list()
         self.reading_teensy = True
         self.stop_event = threading.Event()
         self.start_read_buffer()
@@ -40,8 +40,7 @@ class TeensyLatency():
             saves the time of start
         """
         self.ser = serial.Serial(self.com, self.baudrate)
-        self.start_read_time = time.time()
-        self.reading = False #True
+        self.start_read_time = time.time()        
         threading.Thread(target=self.read_on_thread, daemon=True).start()
         self.logger.debug(f"Started reading from Teensy on {self.com} at {self.baudrate} baud.")
 

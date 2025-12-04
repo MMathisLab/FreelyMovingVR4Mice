@@ -179,8 +179,8 @@ class dlc_inference_w_pd(Processor):
         if self.use_teensy == 1:
             save_dict["photodiode_read"] = np.array(self.teensy.input_data)
             save_dict["photodiode_time"] = np.array(self.teensy.input_data_time)
-            save_dict["ttl_read"] = np.array(self.teensy.input_data_ttl)
-            save_dict["teensy_time"] = np.array(self.teensy.input_data_teensy_time)
+            save_dict["ttl_read"] = np.array(getattr(self.teensy, "input_data_ttl", []))
+            save_dict["teensy_time"] = np.array(getattr(self.teensy, "input_data_teensy_time", []))
         save_dict["x_pos"] = np.array(self.center_x)
         save_dict["y_pos"] = np.array(self.center_y)
         save_dict["heading_direction"] = np.array(self.heading_direction)
