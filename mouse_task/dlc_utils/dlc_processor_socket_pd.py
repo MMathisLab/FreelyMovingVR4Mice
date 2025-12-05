@@ -1,29 +1,27 @@
-import numpy as np
-
-
-from multiprocessing.connection import Listener
 import pickle
 import time
-from collections import deque
-from latency_tests.Teensy_latency.TeensyLatency import TeensyLatency
 import warnings
+from collections import deque
+from math import acos, atan2, copysign, degrees, pi, sqrt
+from multiprocessing.connection import Listener
+
 import numpy as np
-from dlclive import Processor
-from math import sqrt, acos, atan2, copysign, pi, degrees
+
+from latency_tests.Teensy_latency.TeensyLatency import TeensyLatency
+from mouse_task.dlc_utils.processor_with_signal import ProcessorWithSignal
 
 
-class dlc_inference_w_pd(Processor):
+class dlc_inference_w_pd(ProcessorWithSignal):
     def __init__(
         self,
         com="COM3",
         baudrate=9600,
         signal_delay=10,
-        signal_type="pulse",
+        signal_type="pulse_geo",
         freq=5,
         use_teensy=1,
     ):
-        super().__init__()
-        # self.queue = queue
+        super().__init__(signal_delay=signal_delay, signal_type=signal_type, freq=freq)
 
         self.address = ("localhost", 6000)  # family is deduced to be 'AF_INET'
         self.listener = Listener(self.address, authkey=b"secret password")
@@ -40,13 +38,8 @@ class dlc_inference_w_pd(Processor):
         self.frame_time = deque()
         self.pose_time = deque()
         self.curr_step = 0
-        self.curr_signal = 0
-        self.start_time = time.time()
-        self.signal_type = signal_type
-        self.signal_delay = signal_delay
-        self.signal_freq = freq
         self.use_teensy = use_teensy
-        self.previous = np.array([0,0])
+        self.previous = np.array([0, 0])
         if self.use_teensy == 1:
             self.teensy = TeensyLatency(com, baudrate=baudrate)
             print("using_teensy")
@@ -57,15 +50,15 @@ class dlc_inference_w_pd(Processor):
         conf = pose[:, 2]
         head_xy = xy[[0, 1, 2, 3, 4, 5, 6, 26], :]
         head_conf = conf[[0, 1, 2, 3, 4, 5, 6, 26]]
-        
+
         if np.mean(head_conf) < 0.6:
             center = self.previous
         else:
             center = np.average(head_xy, axis=0, weights=head_conf)
         body_axis = xy[7] - xy[13]  # tail_base -> neck
-        body_axis /= sqrt(np.sum(body_axis ** 2))
+        body_axis /= sqrt(np.sum(body_axis**2))
         head_axis = xy[0] - xy[7]  # neck -> nose
-        head_axis /= sqrt(np.sum(head_axis ** 2))
+        head_axis /= sqrt(np.sum(head_axis**2))
         cross = body_axis[0] * head_axis[1] - head_axis[0] * body_axis[1]
         sign = copysign(1, cross)  # Positive when looking left
         try:
@@ -79,10 +72,9 @@ class dlc_inference_w_pd(Processor):
             st=self.start_time,
             freq=self.signal_freq,
             delay=self.signal_delay,
-            signal_type=self.signal_type,
         )
 
-        self.curr_step + self.curr_step + 1
+        self.curr_step = self.curr_step + 1
 
         heading = atan2(body_axis[1], body_axis[0])
         heading = degrees(heading)
@@ -101,56 +93,17 @@ class dlc_inference_w_pd(Processor):
         self.previous = center
         return pose
 
-    def get_signal(self, signal_type, curr_time, st, freq, delay):
-        if signal_type == "pulse":
-            curr_signal = self.get_nhz_pulse(
-                curr_time=curr_time, st=st, freq=freq, delay=delay
-            )
-        if signal_type == "sin":
-            curr_signal = self.get_sin_wave(
-                curr_time=curr_time, st=st, freq=freq, delay=delay
-            )
-        if signal_type == "flip":
-            curr_signal = self.flip_every_frame(curr_time=curr_time, st=st, delay=delay)
-        return curr_signal
-
-    def get_nhz_pulse(self, curr_time, st, freq, delay):
-        if (curr_time - st) < delay:
-            curr_signal = 0
-        else:
-            curr_signal = (np.sign(np.sin(freq * np.pi * time.time())) + 1) / 2
-            # self.curr_signal = (np.sin((self.curr_step) * .1) + 1) / 2
-        return curr_signal
-
-    def get_sin_wave(self, curr_time, st, delay, freq):
-        if (curr_time - st) < delay:
-            curr_signal = 0
-        else:
-            # curr_signal = (np.sign(np.sin(5*np.pi*time.time()))+1)/2
-            curr_signal = np.round((np.sin((self.curr_time * freq)) + 1) / 4, 4)
-        return curr_signal
-
-    def flip_every_frame(self, curr_time, st, delay):
-        if (curr_time - st) < delay:
-            curr_signal = 0
-        else:
-            if self.curr_signal == 0:
-                curr_signal = 1
-            else:
-                curr_signal = 0
-        return curr_signal
-
     def save(self, file=None):
         save_code = 0
         if file:
-            
+
             try:
                 save_dict = self.save_latency_data()
-                
 
                 pickle.dump(
-                        save_dict, open(file, "wb"),
-                    )
+                    save_dict,
+                    open(file, "wb"),
+                )
                 save_code = 1
             except Exception as e:
                 warnings.warn(f"Proc file was not saved, an exception occurred: {e}")
@@ -162,7 +115,7 @@ class dlc_inference_w_pd(Processor):
         if self.use_teensy == 1:
             print("closing serial connection to teensy")
             self.teensy.close_serial()
-  
+
         save_dict = dict()
         save_dict["start_time"] = np.array(self.start_time)
         save_dict["frame_time"] = np.array(self.frame_time)
