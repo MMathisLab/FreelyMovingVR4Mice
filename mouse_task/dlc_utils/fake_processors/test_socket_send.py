@@ -11,7 +11,7 @@ from math import sqrt, acos, atan2, copysign, pi, degrees
 class MyProcessor_socket:
     def __init__(
         self,
-        save_file_path="/Users/thomassainsbury/Documents/Mathis_lab/Mathis_lab_code/FreelyMovingVR4Mice/mouse_task/tests/",
+        save_file_path="../../tests/",
     ):
         super().__init__()
 
