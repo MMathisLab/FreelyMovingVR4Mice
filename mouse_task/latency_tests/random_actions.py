@@ -210,12 +210,11 @@ class SendRandomActions:
 
 
 # Close the environment
-if __name__ == "__main__":
-    game = SendRandomActions(
-        env_name=env_name,
-        signal_type="sin",
-        use_teensy=True,
-        loop_time=60,
-        sleep_time=0.02,
-    )
-    game.save_data()
+game = SendRandomActions(
+    env_name=env_name,
+    signal_type="sin",
+    use_teensy=True,
+    loop_time=60,
+    sleep_time=0.02,
+)
+game.save_data()
