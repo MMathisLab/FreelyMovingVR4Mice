@@ -1,5 +1,6 @@
 import pickle
 import time
+import warnings
 from collections import deque
 from math import acos, atan2, copysign, degrees, pi, sqrt
 from multiprocessing.connection import Listener
@@ -38,11 +39,14 @@ class MyProcessor_socket(ProcessorWithSignal):
         conf = pose[:, 2]
         head_xy = xy[[0, 1, 2, 3, 4, 5, 6, 26], :]
         head_conf = conf[[0, 1, 2, 3, 4, 5, 6, 26]]
-        center = np.average(head_xy, axis=0, weights=head_conf)
-        body_axis = xy[7] - xy[13]  # tail_base -> neck
-        body_axis /= sqrt(np.sum(body_axis**2))
-        head_axis = xy[0] - xy[7]  # neck -> nose
-        head_axis /= sqrt(np.sum(head_axis**2))
+
+        if np.mean(head_conf) < 0.6:
+            center = self.previous
+        else:
+            center = np.average(head_xy, axis=0, weights=head_conf)
+
+        body_axis /= sqrt(np.sum((xy[7] - xy[13]) ** 2))  # tail_base -> neck
+        head_axis /= sqrt(np.sum((xy[0] - xy[7]) ** 2))  # neck -> nose
         cross = body_axis[0] * head_axis[1] - head_axis[0] * body_axis[1]
         sign = copysign(1, cross)  # Positive when looking left
         try:
@@ -76,16 +80,14 @@ class MyProcessor_socket(ProcessorWithSignal):
         self.frame_time.append(kwargs["frame_time"])
 
         self.conn.send([time.time(), vals[0], vals[1], vals[2], vals[3], vals[4]])
-
+        self.previous = center
         return pose
 
     def save(self, file: Optional[str] = None) -> int:
         save_code = 0
         if file:
-            print("file:", file)
             try:
                 save_dict = self.save_latency_data()
-                print("save_dict:", save_dict)
 
                 pickle.dump(
                     save_dict,
@@ -93,6 +95,8 @@ class MyProcessor_socket(ProcessorWithSignal):
                 )
                 save_code = 1
             except Exception:
+                warnings.warn(f"Proc file was not saved, an exception occurred: {e}")
+
                 save_code = -1
         return save_code
 

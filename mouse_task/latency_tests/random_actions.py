@@ -1,14 +1,13 @@
-from mlagents_envs.environment import UnityEnvironment
+from collections import deque
+import json
+import time
+
+import numpy as np
+from mlagents_envs.environment import ActionTuple, UnityEnvironment
 from mlagents_envs.side_channel.engine_configuration_channel import (
     EngineConfigurationChannel,
 )
-import time
-import numpy as np
-from mlagents_envs.environment import ActionTuple, BaseEnv
 from mouse_task.tests.Teensy_latency.TeensyLatency import TeensyLatency
-from collections import deque
-from mouse_task.helpers import process_config
-import json
 
 # Define your environment path
 config_file_path = "../task_config.json"
@@ -17,7 +16,7 @@ with open(config_file_path) as task_config_file:
 env_name = config_dict["ar_env_unity_absolute_path"]
 
 
-class SendRandomActions:
+class SendActions:
     def __init__(
         self,
         env_name=config_dict,
@@ -28,6 +27,7 @@ class SendRandomActions:
         signal_type="pulse_geo",
         com="COM3",
         baudrate=9600,
+        random_seed=1,
     ):
         self.env = UnityEnvironment(file_name=env_name, seed=1, side_channels=[])
         self.channel = EngineConfigurationChannel()
@@ -53,9 +53,8 @@ class SendRandomActions:
             ):
                 print(f"Action number {action} has {branch_size} different options")
 
-        # Define your action space (this will depend on your specific environment)
-        # Example: Assuming a discrete action space with 3 possible actions
         self.num_actions = 4
+        self.rng = np.random.default_rng(random_seed)
         self.st = time.time()
         self.curr_signal = 0
 
@@ -69,6 +68,7 @@ class SendRandomActions:
         self.episode_rewards = 0  # For the tracked_agent
         self.signal_delay_time = signal_delay_time
         self.signal_type = signal_type
+        self.next_jitter_toggle = self.st + signal_delay_time
         if use_teensy is True:
             self.teensy = TeensyLatency(com, baudrate=baudrate)
             print("using_teensy")
@@ -78,6 +78,7 @@ class SendRandomActions:
         self.curr_step = 0
         self.signal = deque()
         self.step = deque()
+        self.actions = deque()
         self.reading_teensy = True
         self.loop(loop_time=loop_time, sleep_time=sleep_time)
 
@@ -85,7 +86,7 @@ class SendRandomActions:
         if (curr_time - st) < self.signal_delay_time:
             self.curr_signal = 0
         else:
-            self.curr_signal = (np.sign(np.sin(freq * np.pi * time.time())) + 1) / 2
+            self.curr_signal = (np.sign(np.sin(freq * np.pi * curr_time)) + 1) / 2
         return self.curr_signal
 
     def get_sin_wave(self, curr_time, st):
@@ -126,69 +127,92 @@ class SendRandomActions:
             # Calculate next toggle time with jitter
             half_period = 0.5 / max(freq, 1e-6)
             p = min(0.999, max(1e-6, base_unit * max(freq, 1e-6)))
-            extra = np.random.geometric(p) * base_unit  # jitter duration (s)
+            extra = self.rng.geometric(p) * base_unit  # jitter duration (s)
             extra = min(extra, max_extra)  # cap long tails
             self.next_jitter_toggle = curr_time + half_period + extra
 
         return self.curr_signal
 
+    def build_action_tuple(self, curr_time: float) -> ActionTuple:
+        """Generate a deterministic ActionTuple for latency probing."""
+        size = self.spec.action_spec.continuous_size
+        if size < 1:
+            raise ValueError("Environment has no continuous action dimensions")
+
+        action_array = np.zeros((1, size), dtype=np.float32)
+
+        # Deterministic probe values to make latency measurements reproducible
+        base = [np.sin(curr_time * 0.5) * 9.0, -9.0, 0.0, self.curr_signal]
+        for i in range(min(len(base), size)):
+            action_array[0, i] = base[i]
+
+        action_tuple = ActionTuple()
+        action_tuple.add_continuous(action_array)
+        return action_tuple
+
     def loop(self, loop_time=20, sleep_time=0):
-        while (time.time() - self.st) < loop_time:
-            # Track the first agent we see if not tracking
-            # Note : len(decision_steps) = [number of agents that requested a decision]
-            if self.tracked_agent == -1 and len(self.decision_steps) >= 1:
-                self.tracked_agent = self.decision_steps.agent_id[0]
+        try:
+            while (time.time() - self.st) < loop_time:
+                # Track the first agent we see if not tracking
+                # Note : len(decision_steps) = [number of agents that requested a decision]
+                if self.tracked_agent == -1 and len(self.decision_steps) >= 1:
+                    self.tracked_agent = self.decision_steps.agent_id[0]
 
-            # Generate an action for all agents
-            self.action = self.spec.action_spec.random_action(len(self.decision_steps))
-            curr_time = time.time()
-            if self.signal_type == "pulse":
-                self.curr_signal = self.get_nhz_pulse(
-                    curr_time=curr_time, st=self.st, freq=5
+                curr_time = time.time()
+                if self.signal_type == "pulse":
+                    self.curr_signal = self.get_nhz_pulse(
+                        curr_time=curr_time, st=self.st, freq=5
+                    )
+                if self.signal_type == "sin":
+                    self.curr_signal = self.get_sin_wave(
+                        curr_time=curr_time, st=self.st
+                    )
+                if self.signal_type == "flip":
+                    self.curr_signal = self.flip_every_frame(
+                        curr_time=curr_time, st=self.st
+                    )
+                if self.signal_type == "pulse_geo":
+                    self.curr_signal = self.get_nhz_pulse_jittered(
+                        curr_time=curr_time,
+                        st=self.st,
+                        freq=5,
+                        delay=self.signal_delay_time,
+                    )
+
+                action_tuple = self.build_action_tuple(curr_time)
+                self.env.set_actions(self.behavior_name, action_tuple)
+
+                # Log for post-run validation
+                if action_tuple.continuous is not None:
+                    self.actions.append(action_tuple.continuous.copy())
+                self.signal.append(self.curr_signal)
+                self.step.append(self.curr_step)
+                self.time_stamp.append(curr_time)
+                self.curr_step += 1
+
+                # Move the simulation forward
+                self.env.step()
+                time.sleep(sleep_time)
+
+                # Get the new simulation results
+                self.decision_steps, self.terminal_steps = self.env.get_steps(
+                    self.behavior_name
                 )
-            if self.signal_type == "sin":
-                self.curr_signal = self.get_sin_wave(curr_time=curr_time, st=self.st)
-            if self.signal_type == "flip":
-                self.curr_signal = self.flip_every_frame(
-                    curr_time=curr_time, st=self.st
-                )
-            if self.signal_type == "pulse_geo":
-                self.curr_signal = self.get_nhz_pulse_jittered(
-                    curr_time=curr_time,
-                    st=self.st,
-                    freq=5,
-                    delay=self.signal_delay_time,
-                )
-            random_action = np.array(
-                [np.sin(curr_time * 0.5) * 9, -9.0, 0.0, self.curr_signal],
-                dtype=np.float16,
-            ).reshape(1, -1)
-
-            action_tuple = ActionTuple()
-            action_tuple.add_continuous(random_action)
-            self.env.set_actions(self.behavior_name, action_tuple)
-            self.signal.append(self.curr_signal)
-            self.step.append(self.curr_step)
-            self.time_stamp.append(curr_time)
-
-            # Move the simulation forward
-            self.env.step()
-            time.sleep(sleep_time)
-
-            # Get the new simulation results
-            self.decision_steps, self.terminal_steps = self.env.get_steps(
-                self.behavior_name
-            )
-            if (
-                self.tracked_agent in self.decision_steps
-            ):  # The agent requested a decision
-                self.episode_rewards += self.decision_steps[self.tracked_agent].reward
-            if (
-                self.tracked_agent in self.terminal_steps
-            ):  # The agent terminated its episode
-                self.episode_rewards += self.terminal_steps[self.tracked_agent].reward
-                done = True
-        self.env.close()
+                if (
+                    self.tracked_agent in self.decision_steps
+                ):  # The agent requested a decision
+                    self.episode_rewards += self.decision_steps[
+                        self.tracked_agent
+                    ].reward
+                if (
+                    self.tracked_agent in self.terminal_steps
+                ):  # The agent terminated its episode
+                    self.episode_rewards += self.terminal_steps[
+                        self.tracked_agent
+                    ].reward
+                    done = True
+        finally:
+            self.env.close()
 
     def save_data(self):
         save_dict = dict()
@@ -196,6 +220,8 @@ class SendRandomActions:
         save_dict["time_stamp"] = np.array(self.time_stamp)
         save_dict["step"] = np.array(self.step)
         save_dict["signal"] = np.array(self.signal)
+        if len(self.actions) > 0:
+            save_dict["actions"] = np.array(self.actions)
         if self.use_teensy is True:
             if len(self.teensy.input_data) != len(self.teensy.input_data_time):
                 input_time = np.array(self.teensy.input_data_time[:-1])
@@ -210,7 +236,7 @@ class SendRandomActions:
 
 
 # Close the environment
-game = SendRandomActions(
+game = SendActions(
     env_name=env_name,
     signal_type="sin",
     use_teensy=True,

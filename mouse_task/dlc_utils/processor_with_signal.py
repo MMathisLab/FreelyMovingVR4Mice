@@ -9,7 +9,7 @@ from dlclive import Processor
 
 class ProcessorWithSignal(Processor):
     """Base DLC processor with configurable TTL signal generation.
-    
+
     Supports multiple signal types:
     - "pulse": Periodic square wave at specified frequency
     - "pulse_geo": Periodic square wave with geometric jitter on each half-period
@@ -21,13 +21,13 @@ class ProcessorWithSignal(Processor):
         self, signal_delay: float = 10, signal_type: str = "pulse_geo", freq: float = 5
     ) -> None:
         super().__init__()
-        
+
         self.curr_signal: float = 0  # latest TTL value
         self.start_time: float = time.time()
         self.signal_type: str = signal_type
         self.signal_delay: float = signal_delay
         self.signal_freq: float = freq
-        
+
         # State for periodic TTL with geometric jitter (pulse_geo)
         self.next_jitter_toggle: float = self.start_time + self.signal_delay
 
@@ -57,13 +57,13 @@ class ProcessorWithSignal(Processor):
         self, curr_time: float, st: float, freq: float, delay: float
     ) -> float:
         """Generate periodic square wave at specified frequency.
-        
+
         Args:
             curr_time: Current wall-clock time
             st: Start time (when recording began)
             freq: Frequency in Hz
             delay: Initial delay before signal starts
-            
+
         Returns:
             0 or 1 (TTL signal value)
         """
@@ -71,7 +71,7 @@ class ProcessorWithSignal(Processor):
             curr_signal = 0
         else:
             # Square wave via sign of sine: mapped to {0,1}
-            curr_signal = (np.sign(np.sin(freq * np.pi * time.time())) + 1) / 2
+            curr_signal = (np.sign(np.sin(freq * np.pi * curr_time)) + 1) / 2
         return curr_signal
 
     def get_nhz_pulse_jittered(
@@ -98,7 +98,7 @@ class ProcessorWithSignal(Processor):
 
         Returns:
             0 or 1 (TTL signal value)
-            
+
         Note:
             At default freq=5Hz: half-period=100ms, mean jitter~50ms, capped at 500ms,
             giving an effective rate of ~4Hz.
@@ -110,7 +110,7 @@ class ProcessorWithSignal(Processor):
         if curr_time >= self.next_jitter_toggle:
             # Flip TTL state
             self.curr_signal = 1 - self.curr_signal
-            
+
             # Calculate next toggle time with jitter
             half_period = 0.5 / max(freq, 1e-6)
             p = min(0.999, max(1e-6, base_unit * max(freq, 1e-6)))
@@ -124,13 +124,13 @@ class ProcessorWithSignal(Processor):
         self, curr_time: float, st: float, delay: float, freq: float
     ) -> float:
         """Generate low-amplitude sine wave (0 to 0.5 range).
-        
+
         Args:
             curr_time: Current wall-clock time
             st: Start time (when recording began)
             delay: Initial delay before signal starts
             freq: Frequency in Hz
-            
+
         Returns:
             Value between 0 and 0.5
         """
@@ -142,12 +142,12 @@ class ProcessorWithSignal(Processor):
 
     def flip_every_frame(self, curr_time: float, st: float, delay: float) -> float:
         """Toggle signal between 0 and 1 every frame.
-        
+
         Args:
             curr_time: Current wall-clock time
             st: Start time (when recording began)
             delay: Initial delay before signal starts
-            
+
         Returns:
             0 or 1 (opposite of previous value)
         """
