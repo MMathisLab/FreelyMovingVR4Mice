@@ -1,39 +1,43 @@
 format: jb-book
 root: docs/vr4mice_overview
 parts:
-- caption: Hardware, Building the rig
+- caption: Hardware - Building the rig
   chapters:
   - file: docs/Rig_building/Parts_list
   - file: docs/Rig_building/building_the_box
   - file: docs/Rig_building/Building_the_cage
   - file: docs/Rig_building/Monitor_Luminance_Measurement
-- caption: Software, Installation of vr4mice and config file setup
-  chapters:
-  - file: docs/Installation/installSumUp
-  - file: docs/Installation/Config_file_setup
-  - file: docs/Installation/Run_a_session
-  - file: docs/Installation/create_desktop_icon
-- caption: Software, Unity Games
-  chapters:
-  - file: docs/Unity_games/AR_Game
-  - file: docs/Unity_games/update_Unity_Game
-  - file: docs/Unity_games/build_Unity_Game
-  - file: docs/Unity_games/Adding_new_objects
-- caption: Software, Tests
-  chapters:
-  - file: docs/software/mouse_task_test.md
-- caption: Software Control, Teensy setup
+- caption: Hardware - Teensy Setup
   chapters:
   - file: docs/Rig_building/Teensy_box_design
   - file: docs/Rig_building/teensy_config
   - file: docs/Rig_building/writing_a_teensy_sketch
   - file: docs/Rig_building/Water_Valve_Calibration
   - file: docs/Rig_building/Photodiode_circuit
-- caption: Dev, Software package Documentation
+- caption: Software Installation - vr4mice & Config File Setup
+  chapters:
+  - file: docs/Installation/installSumUp
+  - file: docs/Installation/Config_file_setup
+  - file: docs/Installation/Run_a_session
+  - file: docs/Installation/create_desktop_icon
+- caption: Software - Unity Games
+  chapters:
+  - file: docs/Unity_games/AR_Game
+  - file: docs/Unity_games/update_Unity_Game
+  - file: docs/Unity_games/build_Unity_Game
+  - file: docs/Unity_games/Adding_new_objects
+- caption: Software - DataJoint
+  chapters:
+  - file: docs/software/datajoint.md
+  - file: docs/software/install_dj_pipeline.md
+- caption: Software - Tests
+  chapters:
+  - file: docs/software/mouse_task_test.md
+- caption: Dev - Software package Documentation
   chapters:
   - file: docs/VisualDiscrim
   - file: docs/dlc_processor
-- caption: Experiments, Training protocol and parameters
+- caption: Experiments - Training protocol and parameters
   chapters:
   - file: docs/training_protocols/training_protocol
   - file: docs/training_protocols/contrast_discrimination_training_parameters
