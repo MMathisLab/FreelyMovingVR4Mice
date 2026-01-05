@@ -1,9 +1,8 @@
+import datajoint as dj
 import numpy as np
 import pandas as pd
 
-import datajoint as dj
-from vr4mice.analysis.latency_testing import (find_rising_edges, get_latency,
-                                              get_signals)
+from vr4mice.analysis.latency_testing import find_rising_edges, get_latency, get_signals
 from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
@@ -91,7 +90,6 @@ class AllLatencies(dj.Computed):
     """
 
     def make(self, key):
-        
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"

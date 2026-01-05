@@ -1,15 +1,14 @@
 from typing import List, Optional, Tuple
 
-import matplotlib as mpl
 import matplotlib.collections
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D  # For custom legend handles
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
 from matplotlib.collections import PathCollection
+from matplotlib.lines import Line2D  # For custom legend handles
 from matplotlib.transforms import Affine2D
 from scipy.interpolate import CubicSpline
 
