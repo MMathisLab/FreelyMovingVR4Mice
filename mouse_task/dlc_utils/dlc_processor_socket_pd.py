@@ -40,6 +40,8 @@ class dlc_inference_w_pd(MyProcessor_socket):
         save_dict["time_stamp"] = np.array(self.time_stamp)
         save_dict["step"] = np.array(self.step)
         save_dict["signal"] = np.array(self.signal)
+        save_dict["signal_type"] = self.signal_type
+        save_dict["signal_delay"] = self.signal_delay
 
         if self.use_teensy == 1:
             save_dict["photodiode_read"] = np.array(self.teensy.input_data)
@@ -49,4 +51,5 @@ class dlc_inference_w_pd(MyProcessor_socket):
         save_dict["y_pos"] = np.array(self.center_y)
         save_dict["heading_direction"] = np.array(self.heading_direction)
         save_dict["head_angle"] = np.array(self.head_angle)
+        
         return save_dict

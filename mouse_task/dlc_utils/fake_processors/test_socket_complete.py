@@ -111,12 +111,7 @@ class SocketSender(ProcessorWithSignal):
         self.curr_time = time.time()
 
         # Get signal
-        self.curr_signal = self.get_signal(
-            curr_time=self.curr_time,
-            st=self.start_time,
-            freq=self.signal_freq,
-            delay=self.signal_delay,
-        )
+        self.curr_signal = self.get_signal(curr_time=self.curr_time)
 
         # Send via socket
         if self.conn:

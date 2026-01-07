@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import scipy.signal
-
 from vr4mice.utils.logger import Logger
 
 logger = Logger.get_logger()
@@ -10,7 +9,7 @@ logger = Logger.get_logger()
 def check_data(data: dict):
     """
     Check that photodiode and generated signals are both in the dictionary
-    
+
     Args:
         data (dict): Dictionary containing the photodiode and generated signal data.
 

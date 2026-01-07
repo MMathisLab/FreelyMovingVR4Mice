@@ -20,6 +20,12 @@ class ProcessorWithSignal(Processor):
     def __init__(
         self, signal_delay: float = 10, signal_type: str = "pulse_geo", freq: float = 5
     ) -> None:
+        """
+        Args:
+            signal_delay: Initial delay (seconds) before signal starts
+            signal_type: Type of signal to generate ("pulse", "pulse_geo", "sin", "flip")
+            freq: Frequency in Hz for periodic signals
+        """
         super().__init__()
 
         self.curr_signal: float = 0  # latest TTL value
@@ -31,55 +37,45 @@ class ProcessorWithSignal(Processor):
         # State for periodic TTL with geometric jitter (pulse_geo)
         self.next_jitter_toggle: float = self.start_time + self.signal_delay
 
-    def get_signal(
-        self, curr_time: float, st: float, freq: float, delay: float
-    ) -> float:
-        """Route to the appropriate signal generator based on signal_type."""
+    def get_signal(self, curr_time: float) -> float:
+        """Route to the appropriate signal generator based on ``signal_type``.
+
+        Args:
+            curr_time: Wall-clock time (seconds).
+        """
+        if curr_time is None:
+            raise ValueError("curr_time is required")
+        t = curr_time
         if self.signal_type == "pulse":
-            curr_signal = self.get_nhz_pulse(
-                curr_time=curr_time, st=st, freq=freq, delay=delay
-            )
+            return self.get_nhz_pulse(curr_time=t)
         elif self.signal_type == "sin":
-            curr_signal = self.get_sin_wave(
-                curr_time=curr_time, st=st, freq=freq, delay=delay
-            )
+            return self.get_sin_wave(curr_time=t)
         elif self.signal_type == "flip":
-            curr_signal = self.flip_every_frame(curr_time=curr_time, st=st, delay=delay)
+            return self.flip_every_frame(curr_time=t)
         elif self.signal_type == "pulse_geo":
-            curr_signal = self.get_nhz_pulse_jittered(
-                curr_time=curr_time, st=st, freq=freq, delay=delay
-            )
+            return self.get_nhz_pulse_jittered(curr_time=t)
         else:
             raise ValueError(f"Unknown signal_type: {self.signal_type}")
-        return curr_signal
 
-    def get_nhz_pulse(
-        self, curr_time: float, st: float, freq: float, delay: float
-    ) -> float:
+    def get_nhz_pulse(self, curr_time: float) -> float:
         """Generate periodic square wave at specified frequency.
 
         Args:
             curr_time: Current wall-clock time
-            st: Start time (when recording began)
-            freq: Frequency in Hz
-            delay: Initial delay before signal starts
 
         Returns:
             0 or 1 (TTL signal value)
         """
-        if (curr_time - st) < delay:
+        if (curr_time - self.start_time) < self.signal_delay:
             curr_signal = 0
         else:
             # Square wave via sign of sine: mapped to {0,1}
-            curr_signal = (np.sign(np.sin(freq * np.pi * curr_time)) + 1) / 2
+            curr_signal = (np.sign(np.sin(self.signal_freq * np.pi * curr_time)) + 1) / 2
         return curr_signal
 
     def get_nhz_pulse_jittered(
         self,
         curr_time: float,
-        st: float,
-        freq: float,
-        delay: float,
         max_extra: float = 0.5,
         base_unit: float = 0.005,
     ) -> float:
@@ -103,7 +99,7 @@ class ProcessorWithSignal(Processor):
             At default freq=5Hz: half-period=100ms, mean jitter~50ms, capped at 500ms,
             giving an effective rate of ~4Hz.
         """
-        if (curr_time - st) < delay:
+        if (curr_time - self.start_time) < self.signal_delay:
             return 0
 
         # Flip state and reschedule when toggle time is reached
@@ -112,46 +108,39 @@ class ProcessorWithSignal(Processor):
             self.curr_signal = 1 - self.curr_signal
 
             # Calculate next toggle time with jitter
-            half_period = 0.5 / max(freq, 1e-6)
-            p = min(0.999, max(1e-6, base_unit * max(freq, 1e-6)))
+            half_period = 0.5 / max(self.signal_freq, 1e-6)
+            p = min(0.999, max(1e-6, base_unit * max(self.signal_freq, 1e-6)))
             extra = np.random.geometric(p) * base_unit  # jitter duration (s)
             extra = min(extra, max_extra)  # cap long tails
             self.next_jitter_toggle = curr_time + half_period + extra
 
         return self.curr_signal
 
-    def get_sin_wave(
-        self, curr_time: float, st: float, delay: float, freq: float
-    ) -> float:
+    def get_sin_wave(self, curr_time: float) -> float:
         """Generate low-amplitude sine wave (0 to 0.5 range).
 
         Args:
             curr_time: Current wall-clock time
-            st: Start time (when recording began)
-            delay: Initial delay before signal starts
-            freq: Frequency in Hz
 
         Returns:
             Value between 0 and 0.5
         """
-        if (curr_time - st) < delay:
+        if (curr_time - self.start_time) < self.signal_delay:
             curr_signal = 0
         else:
-            curr_signal = np.round((np.sin((curr_time * freq)) + 1) / 4, 4)
+            curr_signal = np.round((np.sin((curr_time * self.signal_freq)) + 1) / 4, 4)
         return curr_signal
 
-    def flip_every_frame(self, curr_time: float, st: float, delay: float) -> float:
+    def flip_every_frame(self, curr_time: float) -> float:
         """Toggle signal between 0 and 1 every frame.
 
         Args:
             curr_time: Current wall-clock time
-            st: Start time (when recording began)
-            delay: Initial delay before signal starts
 
         Returns:
             0 or 1 (opposite of previous value)
         """
-        if (curr_time - st) < delay:
+        if (curr_time - self.start_time) < self.signal_delay:
             curr_signal = 0
         else:
             curr_signal = 1 - self.curr_signal

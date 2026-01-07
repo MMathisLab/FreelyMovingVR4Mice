@@ -55,12 +55,7 @@ class MyProcessor_socket(ProcessorWithSignal):
             head_angle = 0
 
         self.curr_time = time.time()  # wall-clock timestamp for this frame
-        self.curr_signal = self.get_signal(
-            curr_time=self.curr_time,
-            st=self.start_time,
-            freq=self.signal_freq,
-            delay=self.signal_delay,
-        )
+        self.curr_signal = self.get_signal(curr_time=self.curr_time)
 
         self.curr_step = self.curr_step + 1
 
@@ -94,7 +89,7 @@ class MyProcessor_socket(ProcessorWithSignal):
                     open(file, "wb"),
                 )
                 save_code = 1
-            except Exception:
+            except Exception as e:
                 warnings.warn(f"Proc file was not saved, an exception occurred: {e}")
 
                 save_code = -1
