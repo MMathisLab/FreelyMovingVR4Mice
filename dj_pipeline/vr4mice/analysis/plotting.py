@@ -1,5 +1,6 @@
 from typing import List, Optional, Tuple
 
+import matplotlib as mpl
 import matplotlib.collections
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,6 +11,7 @@ import seaborn as sns
 from matplotlib.collections import PathCollection
 from matplotlib.lines import Line2D  # For custom legend handles
 from matplotlib.transforms import Affine2D
+from mpl_toolkits.mplot3d import Axes3D
 from scipy.interpolate import CubicSpline
 
 """
@@ -382,6 +384,176 @@ def plot_session(
     return ax
 
 
+def plot_session_3d(
+    df: pd.DataFrame,
+    box_df: pd.DataFrame,
+    trial_ids: Optional[List[int]] = None,
+    ax: Optional[mpl.axes.Axes] = None,
+    label_x: str = "x",
+    label_y: str = "y",
+    color_by_choice: bool = True,
+    color_by_aperture: bool = False,
+    decision_points: Optional[pd.DataFrame] = None,
+):
+    """Plot multiple trial trajectories in 3D space with time component.
+
+    Args:
+        df: DataFrame containing the trajectory data.
+        box_df: DataFrame containing the box data.
+        trial_ids: List of specific trials to plot. If None, plots all trials.
+        ax: Optional matplotlib 3D axes to plot on.
+        label_x: Label for x-axis (default "x").
+        label_y: Label for y-axis (default "y").
+        color_by_choice: If True, color by left/right choice (purple/orange). Default True.
+        color_by_aperture: If True, color by aperture. Takes precedence over color_by_choice. Default False.
+        decision_points: Optional DataFrame with columns 'trial', 'x', 'y', 'trial_length' 
+            indicating decision point coordinates and time for each trial.
+
+    Returns:
+        The 3D axes object with the plot.
+    """
+    if len(df.dataset.unique()) > 1:
+        raise ValueError(
+            f"Only one dataset should be provided, {len(df.dataset.unique())} were provided."
+        )
+
+    # Select specific trials or all trials
+    if trial_ids is None:
+        trial_ids = sorted(df["trial"].unique())
+    elif not isinstance(trial_ids, (list, np.ndarray)):
+        trial_ids = [trial_ids]
+
+    if ax is None:
+        fig = plt.figure(figsize=(14, 8))
+        ax = fig.add_subplot(111, projection="3d")
+
+    # Get max time across all trials for box placement
+    # Time will be normalized to 0-1 range
+    max_time = 1.0
+
+    # Get box coordinates
+    tt_coords = plot_box_rectangle(box_df, box_label="tt", coords=True)
+    l_coords = plot_box_rectangle(box_df, box_label="l", coords=True)
+    r_coords = plot_box_rectangle(box_df, box_label="r", coords=True)
+
+    # Plot start box (tt) at first timestep (time=0)
+    tt_x_min, tt_z_min = tt_coords[0]
+    tt_width, tt_height = tt_coords[1], tt_coords[2]
+    
+    # Draw start box corners at time=0
+    box_corners_time = np.array([0, 0, 0, 0, 0])
+    box_x = np.array([tt_x_min, tt_x_min + tt_width, tt_x_min + tt_width, tt_x_min, tt_x_min])
+    box_y = np.array([tt_z_min, tt_z_min, tt_z_min + tt_height, tt_z_min + tt_height, tt_z_min])
+    ax.plot(box_corners_time, box_x, box_y, color="#009B9E", linewidth=3, label="Start Box (tt)")
+
+    # Plot left box at last timestep
+    l_x_min, l_z_min = l_coords[0]
+    l_width, l_height = l_coords[1], l_coords[2]
+    
+    box_corners_time_last = np.array([max_time, max_time, max_time, max_time, max_time])
+    box_x_l = np.array([l_x_min, l_x_min + l_width, l_x_min + l_width, l_x_min, l_x_min])
+    box_y_l = np.array([l_z_min, l_z_min, l_z_min + l_height, l_z_min + l_height, l_z_min])
+    ax.plot(box_corners_time_last, box_x_l, box_y_l, color="#5C0A72", linewidth=3, label="Left Box (l)")
+
+    # Plot right box at last timestep
+    r_x_min, r_z_min = r_coords[0]
+    r_width, r_height = r_coords[1], r_coords[2]
+    
+    box_x_r = np.array([r_x_min, r_x_min + r_width, r_x_min + r_width, r_x_min, r_x_min])
+    box_y_r = np.array([r_z_min, r_z_min, r_z_min + r_height, r_z_min + r_height, r_z_min])
+    ax.plot(box_corners_time_last, box_x_r, box_y_r, color="#FD672C", linewidth=3, label="Right Box (r)")
+
+    # Plot each trial
+    for trial_id in trial_ids:
+        trial_data = df[df["trial"] == trial_id]
+
+        if trial_data.empty:
+            continue
+
+        # Extract coordinates
+        x = trial_data[label_x].values
+        y = trial_data[label_y].values
+        time = trial_data.index.values
+
+        # Normalize time to 0-1 range
+        time = time - time[0]
+        if len(time) > 1 and time[-1] > 0:
+            time = time / time[-1]
+
+        # Determine color based on aperture or choice
+        if color_by_aperture and "aperture" in trial_data.columns:
+            aperture_val = trial_data["aperture"].iloc[0]
+            # Get unique apertures and assign colors
+            unique_apertures = sorted(df["aperture"].unique())
+            aperture_idx = unique_apertures.index(aperture_val)
+            color = colors_aperture[aperture_idx] if aperture_idx < len(colors_aperture) else colors_aperture[0]
+            choice_label = f"Aperture {aperture_val:.1f}"
+        elif color_by_choice and "trial_left_choice" in trial_data.columns:
+            left_choice = trial_data["trial_left_choice"].iloc[0]
+            color = colors_choice[0] if left_choice == 1 else colors_choice[1]
+            choice_label = "Left" if left_choice == 1 else "Right"
+        else:
+            color = "gray"
+            choice_label = "Unknown"
+
+        # Plot trajectory (time as x-axis, left to right)
+        ax.plot(
+            time,
+            x,
+            y,
+            color=color,
+            linewidth=2,
+            alpha=0.7,
+            label=f"Trial {trial_id} ({choice_label})",
+        )
+
+        # Plot start position
+        ax.scatter(
+            [time[0]], [x[0]], [y[0]], c=["#2250C8"], s=30, marker="o", alpha=0.8, zorder=5
+        )
+        
+        # Plot last position
+        ax.scatter(
+            [time[-1]], [x[-1]], [y[-1]], c=["#B52916"], s=30, marker="o", alpha=0.8, zorder=6
+        )
+
+    # Plot decision points if provided
+    if decision_points is not None:
+        for trial_id in trial_ids:
+            trial_decision = decision_points[decision_points["trial"] == trial_id]
+            if not trial_decision.empty:
+                # Get decision point coordinates
+                dec_x = trial_decision["x"].values[0]
+                dec_y = trial_decision["y"].values[0]
+                dec_time = trial_decision["trial_length"].values[0]
+                
+                # Plot decision point as a larger marker
+                ax.scatter(
+                    [dec_time], [dec_x], [dec_y], 
+                    c="deeppink", s=40, marker="o",
+                    alpha=1, zorder=10
+                )
+
+    # Labels and formatting
+    ax.set_xlabel("Trial progression", labelpad=40)
+    ax.set_ylabel(label_x, labelpad=10)
+    ax.set_zlabel(label_y, labelpad=10)
+
+    # Set box aspect ratio to make time axis longer (time, x, y aspect ratios)
+    ax.set_box_aspect([4, 1, 1])
+    ax.view_init(elev=10, azim=30)
+    
+    # Invert time axis
+    ax.invert_xaxis()
+    
+    # Remove grid
+    ax.grid(False)
+
+    ax.set_title(f"{df.dataset.unique()[0]} - {len(trial_ids)} Trials")
+
+    return ax
+
+
 #### Trial counts
 
 
@@ -433,11 +605,11 @@ def _plot_bar_counts(
             color="black",
             errorbar="se",
             # palette=["grey"] * counts["mouse_name"].nunique() if per_mouse else ["grey"] * counts["lab_id"].nunique() if per_lab else None,
-            palette=["grey"] * counts["mouse_name"].nunique()
-            if per_mouse
-            else colors_labs
-            if per_lab
-            else None,
+            palette=(
+                ["grey"] * counts["mouse_name"].nunique()
+                if per_mouse
+                else colors_labs if per_lab else None
+            ),
             err_style=None if per_mouse or per_lab else "bars",
             linewidth=1 if per_mouse else 2,
             zorder=3,
@@ -752,8 +924,8 @@ def plot_rate(
         else:
             counts = pd.DataFrame(counts.reset_index())
     counts = counts.rename(columns={"trial": "count"})
-    
-    if plot_bias: 
+
+    if plot_bias:
         counts["count"] = 2 * counts["count"] - 1  # to have it between -1 and 1
 
     if plot_bias:
@@ -911,9 +1083,7 @@ def plot_time_to_reward(
         cmap = (
             colors_aperture
             if label_x == "aperture"
-            else colors_rewarded
-            if label_x == "trial_rewarded"
-            else colors_choice
+            else colors_rewarded if label_x == "trial_rewarded" else colors_choice
         )
 
     def _time_to_reward_box(group):
