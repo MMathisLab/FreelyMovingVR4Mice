@@ -275,7 +275,18 @@ class AlignedVideoFrame(dj.Computed):
 
     @classmethod
     def align_step_to_frames(cls, key, timepoints: list):
-        rec = (cls & key).fetch1("frame_ids", "n_steps")
+        """
+        Given a list of timepoints (in seconds), return the corresponding video frame indices.
+        If a timepoint is out of bounds, return None for that timepoint.
+        
+        Args:
+            key: dict, key to identify the AlignedVideoFrame entry
+            timepoints: list of float, timepoints in seconds to align to video frames
+        
+        Returns:
+            list of int or None: corresponding video frame indices for each timepoint
+        """
+        rec = (cls & key).fetch1()
         frame_ids = rec["frame_ids"]
         n_steps = rec["n_steps"]
         for idx in timepoints:

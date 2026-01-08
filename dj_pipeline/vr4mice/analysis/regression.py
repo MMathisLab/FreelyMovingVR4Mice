@@ -8,6 +8,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import sklearn
+import sklearn.linear_model
 import sklearn.model_selection
 import sklearn.preprocessing
 
@@ -52,6 +53,7 @@ def predict_decision(
     per_mouse: bool = True,
     max_iter: int = 100,
     scale_data: bool = True,
+    random_state: Optional[int] = None,
 ) -> Tuple[pd.DataFrame, npt.NDArray]:
     """Predict the animal's decision based on the `label` data, through a logistic regression.
 
@@ -87,7 +89,7 @@ def predict_decision(
         data = data.reshape(-1, 1)
     pred = np.empty((data.shape[0], 2))
     scores = np.empty((data.shape[0]))
-    model = sklearn.linear_model.LogisticRegression(max_iter=max_iter)
+    model = sklearn.linear_model.LogisticRegression(max_iter=max_iter, random_state=random_state)
 
     if scale_data:
         data = sklearn.preprocessing.StandardScaler().fit_transform(data)
@@ -108,7 +110,7 @@ def predict_decision(
             coefs[i] = np.concatenate([[model.intercept_[0]], model.coef_[0]])
 
     else:
-        kf = sklearn.model_selection.KFold(n_splits=n_splits)
+        kf = sklearn.model_selection.KFold(n_splits=n_splits, random_state=random_state, shuffle=True)
         for i, (train_index, test_index) in enumerate(kf.split(data)):
             model.fit(data[train_index], labels[train_index])
             pred[test_index] = model.predict_proba(data[test_index])

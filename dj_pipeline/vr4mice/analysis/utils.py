@@ -313,23 +313,20 @@ def get_data_from_list(data_set_list, game_columns, dlc_columns=None):
     return big_df.reset_index(drop=True)
 
 
-def dual_occluder_inclusion_criteria(
+def apply_inclusion_criteria(
     data: pd.DataFrame,
-    threshold_wide: Optional[float] = 0.7,
-    threshold_drop: Optional[float] = 0.3,
+    task_type: str,
     return_excluded: Optional[bool] = False,
 ) -> pd.DataFrame:
-    """get all datasets that survive the inclusion criteria
-
-    This function calculates performance parameters and returns those datasets
+    """Get all datasets that survive the inclusion criteria
+    
+    This function calculates performance parameters and returns the datasets
     that survive the inclusion criteria
-
+    
     Args:
         data (pd.DataFrame): a dataframe, containing multiple datasets
-        threshold_wide (float): the minimum reward success for the wide occlusion
-        threshold drop (float): the maximum reward drop between wide and narrow occluders
+        task_type (str): type of occluder task, either 'dual_occluder' or 'multi_occluder'
     """
-
     reward_table = data.groupby(["dataset", "aperture", "trial"], as_index=False)[
         "trial_rewarded"
     ].mean()
@@ -338,55 +335,28 @@ def dual_occluder_inclusion_criteria(
     ].mean()
     pivoted_reward = reward_table.pivot(index="dataset", columns="aperture")
 
-    pivoted_reward["reward_drop"] = (
-        pivoted_reward[("trial_rewarded", 12.0)]
-        - pivoted_reward[("trial_rewarded", 4.3)]
-    )
-    reward_table = pivoted_reward
-    pivoted_reward = pivoted_reward[
-        (pivoted_reward[("trial_rewarded", 12.0)] > threshold_wide)
-    ]
-    pivoted_reward = pivoted_reward[abs(pivoted_reward.reward_drop) < threshold_drop]
-
-    print(
-        "Excluded datasets: ",
-        data[data.dataset.isin(pivoted_reward.index) == 0].dataset.unique(),
-    )
-    if return_excluded:
-        filtered_data = data[data.dataset.isin(pivoted_reward.index) == 0]
+    reward_threshold_range = 0.7
+    if task_type == 'dual_occluder':
+        pivoted_reward["reward_drop"] = (
+            pivoted_reward[("trial_rewarded", 12.0)]
+            - pivoted_reward[("trial_rewarded", 4.3)]
+        )
+        reward_threshold_min = 0.3
+    elif task_type == 'multi_occluder':
+        pivoted_reward["reward_drop"] = (
+            pivoted_reward[("trial_rewarded", 12.0)]
+            - pivoted_reward[("trial_rewarded", 3.0)]
+        )
+        reward_threshold_min = 0.25
     else:
-        filtered_data = data[data.dataset.isin(pivoted_reward.index)]
-    return filtered_data, reward_table
+        raise ValueError(f"Unknown task_type: {task_type}. Must be either 'dual_occluder' or 'multi_occluder'.")
 
-
-def multi_occluder_inclusion_criteria(
-    data: pd.DataFrame,
-    threshold_wide: Optional[float] = 0.7,
-    threshold_drop: Optional[float] = 0.3,
-    return_excluded: Optional[bool] = False,
-):
-    reward_table = data.groupby(["dataset", "aperture", "trial"], as_index=False)[
-        "trial_rewarded"
-    ].mean()
-    reward_table = reward_table.groupby(["dataset", "aperture"], as_index=False)[
-        "trial_rewarded"
-    ].mean()
-    pivoted_reward = reward_table.pivot(index="dataset", columns="aperture")
-
-    pivoted_reward["reward_drop"] = (
-        pivoted_reward[("trial_rewarded", 12.0)]
-        - pivoted_reward[("trial_rewarded", 3.0)]
-    )
     reward_table = pivoted_reward
     pivoted_reward = pivoted_reward[
-        (pivoted_reward[("trial_rewarded", 12.0)] > threshold_wide)
+        (pivoted_reward[("trial_rewarded", 12.0)] > reward_threshold_range)
     ]
-    pivoted_reward = pivoted_reward[abs(pivoted_reward.reward_drop) < threshold_drop]
+    pivoted_reward = pivoted_reward[abs(pivoted_reward.reward_drop) < reward_threshold_min]
 
-    print(
-        "Excluded datasets: ",
-        data[data.dataset.isin(pivoted_reward.index) == 0].dataset.unique(),
-    )
     if return_excluded:
         filtered_data = data[data.dataset.isin(pivoted_reward.index) == 0]
     else:
