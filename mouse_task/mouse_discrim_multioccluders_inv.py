@@ -8,7 +8,6 @@ os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 
 import pathlib
-import time as time
 
 from mouse_task.task_active_sensing import ActiveSensingTask
 
@@ -23,8 +22,8 @@ class InvDiscrimMultiOccludersTask(ActiveSensingTask):
 
     """
     Discrimination task with multiple occluders.
-    
-    Sampled from a log space these are [12.0, 8.48, 6.0, 4.24, 3].
+
+    Sampled from a log space these are [12.0, 8.48, 6.0, 4.2, 3].
     Black teardrop as target, white teardrop as distractor.
     """
 

@@ -20,7 +20,7 @@ config_path = current_dir.joinpath(config_name)  # default class constructor inp
 class InvDetectionNoVelThrTask(ActiveSensingTask):
     """
     Inverse Detection task without velocity threshold to initiate the trials.
-    
+
     Black teardrop as target, no velocity threshold.
     """
 
@@ -42,7 +42,7 @@ class InvDetectionNoVelThrTask(ActiveSensingTask):
         start_box=[-4, 4, -9, -5, 90],
         rotate_camera=90.0,
         prob_obj_on_left=0.5,
-        prob_block_coherence = 0.5,
+        prob_block_coherence=0.5,
         mouse_report_delay=0.0,
         slit_size=[4.0, 4.0, 1],
         slit_depth=0.2,
