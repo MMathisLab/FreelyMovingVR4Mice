@@ -46,7 +46,7 @@ class InvDiscrimMultiOccludersTask(ActiveSensingTask):
         start_box=[-4, 4, -9, -5, 90],
         rotate_camera=90.0,
         prob_obj_on_left=0.5,
-        prob_block_coherence =0.5,
+        prob_block_coherence=0.5,
         mouse_report_delay=0.0,
         slit_size=[12.0, 8.48, 6., 4.2, 3],
         slit_depth=0.2,
