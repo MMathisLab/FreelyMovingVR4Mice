@@ -21,7 +21,6 @@ config_path = current_dir.joinpath(config_name)  # default class constructor inp
 class InvDiscrimTask(ActiveSensingTask):
     """
     Discrimination task (without occluders).
-    
     Black teardrop as target, white teardrop as distractor.
     """
 
