@@ -11,7 +11,6 @@ import seaborn as sns
 from matplotlib.collections import PathCollection
 from matplotlib.lines import Line2D  # For custom legend handles
 from matplotlib.transforms import Affine2D
-from mpl_toolkits.mplot3d import Axes3D
 from scipy.interpolate import CubicSpline
 
 """
@@ -406,7 +405,7 @@ def plot_session_3d(
         label_y: Label for y-axis (default "y").
         color_by_choice: If True, color by left/right choice (purple/orange). Default True.
         color_by_aperture: If True, color by aperture. Takes precedence over color_by_choice. Default False.
-        decision_points: Optional DataFrame with columns 'trial', 'x', 'y', 'trial_length' 
+        decision_points: Optional DataFrame with columns 'trial', 'x', 'y', 'trial_length'
             indicating decision point coordinates and time for each trial.
 
     Returns:
@@ -439,29 +438,62 @@ def plot_session_3d(
     # Plot start box (tt) at first timestep (time=0)
     tt_x_min, tt_z_min = tt_coords[0]
     tt_width, tt_height = tt_coords[1], tt_coords[2]
-    
+
     # Draw start box corners at time=0
     box_corners_time = np.array([0, 0, 0, 0, 0])
-    box_x = np.array([tt_x_min, tt_x_min + tt_width, tt_x_min + tt_width, tt_x_min, tt_x_min])
-    box_y = np.array([tt_z_min, tt_z_min, tt_z_min + tt_height, tt_z_min + tt_height, tt_z_min])
-    ax.plot(box_corners_time, box_x, box_y, color="#009B9E", linewidth=3, label="Start Box (tt)")
+    box_x = np.array(
+        [tt_x_min, tt_x_min + tt_width, tt_x_min + tt_width, tt_x_min, tt_x_min]
+    )
+    box_y = np.array(
+        [tt_z_min, tt_z_min, tt_z_min + tt_height, tt_z_min + tt_height, tt_z_min]
+    )
+    ax.plot(
+        box_corners_time,
+        box_x,
+        box_y,
+        color="#009B9E",
+        linewidth=3,
+        label="Start Box (tt)",
+    )
 
     # Plot left box at last timestep
     l_x_min, l_z_min = l_coords[0]
     l_width, l_height = l_coords[1], l_coords[2]
-    
+
     box_corners_time_last = np.array([max_time, max_time, max_time, max_time, max_time])
-    box_x_l = np.array([l_x_min, l_x_min + l_width, l_x_min + l_width, l_x_min, l_x_min])
-    box_y_l = np.array([l_z_min, l_z_min, l_z_min + l_height, l_z_min + l_height, l_z_min])
-    ax.plot(box_corners_time_last, box_x_l, box_y_l, color="#5C0A72", linewidth=3, label="Left Box (l)")
+    box_x_l = np.array(
+        [l_x_min, l_x_min + l_width, l_x_min + l_width, l_x_min, l_x_min]
+    )
+    box_y_l = np.array(
+        [l_z_min, l_z_min, l_z_min + l_height, l_z_min + l_height, l_z_min]
+    )
+    ax.plot(
+        box_corners_time_last,
+        box_x_l,
+        box_y_l,
+        color="#5C0A72",
+        linewidth=3,
+        label="Left Box (l)",
+    )
 
     # Plot right box at last timestep
     r_x_min, r_z_min = r_coords[0]
     r_width, r_height = r_coords[1], r_coords[2]
-    
-    box_x_r = np.array([r_x_min, r_x_min + r_width, r_x_min + r_width, r_x_min, r_x_min])
-    box_y_r = np.array([r_z_min, r_z_min, r_z_min + r_height, r_z_min + r_height, r_z_min])
-    ax.plot(box_corners_time_last, box_x_r, box_y_r, color="#FD672C", linewidth=3, label="Right Box (r)")
+
+    box_x_r = np.array(
+        [r_x_min, r_x_min + r_width, r_x_min + r_width, r_x_min, r_x_min]
+    )
+    box_y_r = np.array(
+        [r_z_min, r_z_min, r_z_min + r_height, r_z_min + r_height, r_z_min]
+    )
+    ax.plot(
+        box_corners_time_last,
+        box_x_r,
+        box_y_r,
+        color="#FD672C",
+        linewidth=3,
+        label="Right Box (r)",
+    )
 
     # Plot each trial
     for trial_id in trial_ids:
@@ -486,7 +518,11 @@ def plot_session_3d(
             # Get unique apertures and assign colors
             unique_apertures = sorted(df["aperture"].unique())
             aperture_idx = unique_apertures.index(aperture_val)
-            color = colors_aperture[aperture_idx] if aperture_idx < len(colors_aperture) else colors_aperture[0]
+            color = (
+                colors_aperture[aperture_idx]
+                if aperture_idx < len(colors_aperture)
+                else colors_aperture[0]
+            )
             choice_label = f"Aperture {aperture_val:.1f}"
         elif color_by_choice and "trial_left_choice" in trial_data.columns:
             left_choice = trial_data["trial_left_choice"].iloc[0]
@@ -509,12 +545,26 @@ def plot_session_3d(
 
         # Plot start position
         ax.scatter(
-            [time[0]], [x[0]], [y[0]], c=["#2250C8"], s=30, marker="o", alpha=0.8, zorder=5
+            [time[0]],
+            [x[0]],
+            [y[0]],
+            c=["#2250C8"],
+            s=30,
+            marker="o",
+            alpha=0.8,
+            zorder=5,
         )
-        
+
         # Plot last position
         ax.scatter(
-            [time[-1]], [x[-1]], [y[-1]], c=["#B52916"], s=30, marker="o", alpha=0.8, zorder=6
+            [time[-1]],
+            [x[-1]],
+            [y[-1]],
+            c=["#B52916"],
+            s=30,
+            marker="o",
+            alpha=0.8,
+            zorder=6,
         )
 
     # Plot decision points if provided
@@ -526,12 +576,17 @@ def plot_session_3d(
                 dec_x = trial_decision["x"].values[0]
                 dec_y = trial_decision["y"].values[0]
                 dec_time = trial_decision["trial_length"].values[0]
-                
+
                 # Plot decision point as a larger marker
                 ax.scatter(
-                    [dec_time], [dec_x], [dec_y], 
-                    c="deeppink", s=40, marker="o",
-                    alpha=1, zorder=10
+                    [dec_time],
+                    [dec_x],
+                    [dec_y],
+                    c="deeppink",
+                    s=40,
+                    marker="o",
+                    alpha=1,
+                    zorder=10,
                 )
 
     # Labels and formatting
@@ -542,10 +597,10 @@ def plot_session_3d(
     # Set box aspect ratio to make time axis longer (time, x, y aspect ratios)
     ax.set_box_aspect([4, 1, 1])
     ax.view_init(elev=10, azim=30)
-    
+
     # Invert time axis
     ax.invert_xaxis()
-    
+
     # Remove grid
     ax.grid(False)
 
@@ -565,6 +620,7 @@ def _plot_bar_counts(
     per_lab: bool = False,
     alpha: float = 0.3,
     ax: Optional[matplotlib.axes.Axes] = None,
+    color_sessions_by_lab: bool = True,
 ):
     """Plot bar or line counts with optional color mapping.
 
@@ -574,6 +630,8 @@ def _plot_bar_counts(
         cmap (str): Color map for the plot.
         alpha (float, optional): Alpha transparency for the plot. Default is 0.5.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
+        color_sessions_by_lab (bool, optional): If True and per_lab=True, color individual
+            session points by lab color. If False, use grey. Default is True.
     """
 
     if label_x is None:
@@ -596,6 +654,11 @@ def _plot_bar_counts(
         fig, ax = plt.subplots(1, 1, figsize=figsize)
 
     if isinstance(label_x, str):
+        # Create explicit lab palette if per_lab
+        if per_lab and "lab_id" in counts.columns:
+            unique_labs = sorted(counts["lab_id"].unique())
+            lab_palette = {lab: colors_labs[i] for i, lab in enumerate(unique_labs)}
+
         sns.lineplot(
             data=counts,
             x=label_x,
@@ -604,11 +667,10 @@ def _plot_bar_counts(
             alpha=0.7 if per_mouse else 1,
             color="black",
             errorbar="se",
-            # palette=["grey"] * counts["mouse_name"].nunique() if per_mouse else ["grey"] * counts["lab_id"].nunique() if per_lab else None,
             palette=(
                 ["grey"] * counts["mouse_name"].nunique()
                 if per_mouse
-                else colors_labs if per_lab else None
+                else lab_palette if per_lab else None
             ),
             err_style=None if per_mouse or per_lab else "bars",
             linewidth=1 if per_mouse else 2,
@@ -648,19 +710,23 @@ def _plot_bar_counts(
             )  # individual lines
 
         if per_lab:
+            grouped_data = counts.groupby(["aperture", "lab_id"], as_index=False)[
+                "count"
+            ].mean()
+            unique_labs = sorted(grouped_data["lab_id"].unique())
+            lab_palette = {lab: colors_labs[i] for i, lab in enumerate(unique_labs)}
+
             sns.scatterplot(
-                data=counts.groupby(["aperture", "lab_id"], as_index=False)[
-                    "count"
-                ].mean(),
+                data=grouped_data,
                 x=label_x,
                 y="count",
                 alpha=0.7,
-                palette=colors_labs,
+                palette=lab_palette,
                 zorder=4,
                 hue="lab_id",
                 ax=ax,
                 s=50,
-            )  # per mouse scatter
+            )  # per lab scatter
 
     else:
         sns.barplot(
@@ -677,18 +743,39 @@ def _plot_bar_counts(
         ax.set_xlabel("")
         ax.set_xticklabels([])
 
-    sns.scatterplot(
-        data=counts,
-        x=label_x,
-        y="count",
-        alpha=alpha if per_mouse or per_lab else 1,
-        hue=label_x,
-        palette=["grey"] * len(counts["count"]) if per_mouse or per_lab else color_map,
-        s=25 if per_mouse or per_lab else 50,
-        ax=ax,
-        legend=False,
-        zorder=2,
-    )
+    # Plot individual session points
+    if per_lab and color_sessions_by_lab and "lab_id" in counts.columns:
+        # Color by lab
+        unique_labs = sorted(counts["lab_id"].unique())
+        lab_palette = {lab: colors_labs[i] for i, lab in enumerate(unique_labs)}
+        sns.scatterplot(
+            data=counts,
+            x=label_x,
+            y="count",
+            alpha=alpha,
+            hue="lab_id",
+            palette=lab_palette,
+            s=25,
+            ax=ax,
+            legend=False,
+            zorder=2,
+        )
+    else:
+        # Use grey or color_map for other cases
+        sns.scatterplot(
+            data=counts,
+            x=label_x,
+            y="count",
+            alpha=alpha if per_mouse or per_lab else 1,
+            hue=label_x,
+            palette=(
+                ["grey"] * len(counts["count"]) if per_mouse or per_lab else color_map
+            ),
+            s=25 if per_mouse or per_lab else 50,
+            ax=ax,
+            legend=False,
+            zorder=2,
+        )
 
     if per_mouse:
         # Compute means and standard errors
@@ -720,9 +807,7 @@ def _plot_bar_counts(
             fmt="none",  # No connecting line, only error bars
             ecolor="black",
             elinewidth=1.5,
-            # capsize=4,
-            # capthick=1.5,
-            zorder=100,  # Set very high to ensure it's on top
+            zorder=100,
         )
 
     if per_lab:
@@ -755,8 +840,6 @@ def _plot_bar_counts(
             fmt="none",  # No connecting line, only error bars
             ecolor="black",
             elinewidth=1.5,
-            # capsize=4,
-            # capthick=1.5,
             zorder=100,  # Set very high to ensure it's on top
         )
 
@@ -764,8 +847,154 @@ def _plot_bar_counts(
         ax.legend([], [], frameon=False)
 
 
+def _plot_bias_horizontal(
+    counts: pd.DataFrame,
+    label_x: str,
+    per_mouse: bool = False,
+    per_lab: bool = False,
+    alpha: float = 0.3,
+    ax: Optional[matplotlib.axes.Axes] = None,
+    cmap: str = "Set1",
+    color_sessions_by_lab: bool = True,
+):
+    """Plot bias as horizontal bars with session means per condition.
+
+    Args:
+        counts (pd.DataFrame): DataFrame containing bias data with 'count' column.
+        label_x (str): Column label for the categories (e.g., "aperture").
+        per_mouse (bool, optional): If True, plot per mouse. Default is False.
+        per_lab (bool, optional): If True, plot per lab. Default is False.
+        alpha (float, optional): Alpha transparency for individual points. Default is 0.3.
+        ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
+        cmap (str, optional): Color map for the plot. Default is "Set1".
+        color_sessions_by_lab (bool, optional): If True and per_lab=True, color individual
+            session points by lab color. If False, use grey. Default is True.
+    """
+    if label_x == "aperture":
+        unique_labels = counts[label_x].astype(float).sort_values().astype(str).unique()
+    else:
+        unique_labels = counts[label_x].sort_values().unique()
+
+    figsize = (5, int(2 * len(unique_labels)))
+    cmap_colors = sns.color_palette(cmap, len(unique_labels))
+    color_map = {label: cmap_colors[i] for i, label in enumerate(unique_labels)}
+
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=figsize)
+
+    # Plot individual session points
+    if per_lab and color_sessions_by_lab and "lab_id" in counts.columns:
+        # Color individual sessions by lab
+        # Create explicit lab_id to color mapping
+        unique_labs = sorted(counts["lab_id"].unique())
+        lab_palette = {lab: colors_labs[i] for i, lab in enumerate(unique_labs)}
+
+        sns.scatterplot(
+            data=counts,
+            x="count",
+            y=label_x,
+            alpha=alpha,
+            hue="lab_id",
+            palette=lab_palette,
+            s=50,
+            ax=ax,
+            legend=False,
+            zorder=2,
+        )
+    else:
+        # Use grey for individual sessions
+        sns.scatterplot(
+            data=counts,
+            x="count",
+            y=label_x,
+            alpha=alpha,
+            s=50,
+            ax=ax,
+            legend=False,
+            zorder=2,
+            color="grey",
+        )
+
+    # Compute and plot means
+    if per_mouse and "mouse_name" in counts.columns:
+        grouped_counts = counts.groupby([label_x, "mouse_name"], as_index=False)[
+            "count"
+        ].mean()
+
+        # Plot per-group means as smaller points
+        sns.scatterplot(
+            data=grouped_counts,
+            x="count",
+            y=label_x,
+            alpha=0.7,
+            s=80,
+            ax=ax,
+            legend=False,
+            zorder=3,
+            hue=label_x if label_x == "aperture" else label_x,
+            palette=color_map,
+        )
+
+        # Compute overall means
+        means = grouped_counts.groupby(label_x)["count"].mean()
+        errors = grouped_counts.groupby(label_x)["count"].sem()
+    elif per_lab and "lab_id" in counts.columns:
+        grouped_counts = counts.groupby([label_x, "lab_id"], as_index=False)[
+            "count"
+        ].mean()
+
+        # Create explicit lab_id to color mapping
+        unique_labs = sorted(grouped_counts["lab_id"].unique())
+        lab_palette = {lab: colors_labs[i] for i, lab in enumerate(unique_labs)}
+
+        # Plot per-lab means as colored points
+        sns.scatterplot(
+            data=grouped_counts,
+            x="count",
+            y=label_x,
+            alpha=0.7,
+            palette=lab_palette,
+            hue="lab_id",
+            s=80,
+            ax=ax,
+            legend=False,
+            zorder=3,
+        )
+
+        # Compute overall means
+        means = grouped_counts.groupby(label_x)["count"].mean()
+        errors = grouped_counts.groupby(label_x)["count"].sem()
+    else:
+        means = counts.groupby(label_x)["count"].mean()
+        errors = counts.groupby(label_x)["count"].sem()
+
+    # Plot overall means with error bars
+    y_positions = range(len(means.index))
+    ax.scatter(
+        means.values,
+        y_positions,
+        color="black",
+        s=70,
+        marker="o",
+        zorder=5,
+    )
+
+    ax.errorbar(
+        x=means.values,
+        y=y_positions,
+        xerr=errors.values,
+        fmt="none",
+        ecolor="black",
+        elinewidth=2,
+        capsize=5,
+        capthick=2,
+        zorder=4,
+    )
+    return ax
+
+
 def plot_trial_count(
-    df,  # TODO(celia): provide correct columns directly?
+    df,
     per_aperture: bool = False,
     alpha: float = 0.5,
     per_mouse: bool = False,
@@ -855,11 +1084,10 @@ def plot_trial_count(
             df.groupby(["dataset"]).trial.nunique().mean(),
             df.groupby(["dataset"]).trial.nunique().sem(),
         )
-    # print(stats)
 
 
 def plot_rate(
-    df,  # TODO(celia): provide correct columns directly?
+    df,
     label_x: str,
     per_aperture: bool = False,
     per_mouse: bool = False,
@@ -868,6 +1096,7 @@ def plot_rate(
     plot_bias: bool = False,
     ax: Optional[matplotlib.axes.Axes] = None,
     cmap: str = "Set1",
+    color_sessions_by_lab: bool = True,
 ):
     """Plot the rate for a given `label_x` column per session or per aperture.
 
@@ -885,6 +1114,8 @@ def plot_rate(
             Used for the choice rate to choice bias.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
         cmap (str, optional): Color map for the plot. Default is "Set1".
+        color_sessions_by_lab (bool, optional): If True and per_lab=True with plot_bias=True,
+            color individual session points by lab. If False, use grey. Default is True.
     """
 
     num_aperture = len(df.aperture.unique())
@@ -927,23 +1158,30 @@ def plot_rate(
 
     if plot_bias:
         counts["count"] = 2 * counts["count"] - 1  # to have it between -1 and 1
+        _plot_bias_horizontal(
+            counts=counts,
+            label_x="aperture" if per_aperture else None,
+            per_mouse=per_mouse,
+            per_lab=per_lab,
+            alpha=alpha,
+            ax=ax,
+            cmap=cmap,
+            color_sessions_by_lab=color_sessions_by_lab,
+        )
+    else:
+        _plot_bar_counts(
+            counts=counts,
+            label_x="aperture" if per_aperture else None,
+            per_lab=per_lab,
+            alpha=alpha,
+            per_mouse=per_mouse,
+            ax=ax,
+            cmap=cmap,
+            color_sessions_by_lab=color_sessions_by_lab,
+        )
+        ax.set_xlim(-0.5, num_aperture - 0.5)
 
-    if plot_bias:
-        counts["count"] = 2 * counts["count"] - 1  # to have it between -1 and 1
-
-    _plot_bar_counts(
-        counts=counts,
-        label_x="aperture" if per_aperture else None,
-        per_lab=per_lab,
-        alpha=alpha,
-        per_mouse=per_mouse,
-        ax=ax,
-        cmap=cmap,
-    )
-
-    ax.set_xlim(-0.5, num_aperture - 0.5)
-
-    if per_aperture:
+    if per_aperture and not plot_bias:
         stats_tests = pd.DataFrame(
             zip(
                 counts.groupby("aperture")["count"].mean(),
@@ -952,11 +1190,8 @@ def plot_rate(
             columns=["mean", "sem"],
             index=counts.groupby("aperture")["count"].mean().index,
         )
+
         for i in counts.aperture.unique():
-            if plot_bias:
-                t_null, p_null = stats.ttest_1samp(
-                    counts[counts["aperture"] == i]["count"], 0
-                )
             t_null, p_null = stats.ttest_1samp(
                 counts[counts["aperture"] == i]["count"], 0
             )
@@ -973,12 +1208,13 @@ def plot_rate(
     else:
         stats_tests = (counts["count"].mean(), counts["count"].sem())
 
-    print(stats_tests)
+    if not plot_bias:
+        print(stats_tests)
     return counts
 
 
 def plot_rewards(
-    df,  # TODO(celia): provide correct columns directly?
+    df,
     per_aperture: bool = False,
     per_lab: bool = False,
     per_mouse: bool = False,
@@ -1433,7 +1669,6 @@ def plot_init_position_histogram(
     Args:
         df : pandas.DataFrame
             DataFrame containing the trial data with columns 'dataset', 'trial', 'trial_init_x', and 'trial_init_y'.
-            The DataFrame should contain data from only one dataset.
 
         box_df : pandas.DataFrame
             DataFrame containing the boundary values for the box.
@@ -1451,17 +1686,12 @@ def plot_init_position_histogram(
             The maximum value for the color scale. Values above this will be clipped to vmax (default is 10).
 
     """
-    if len(df.dataset.unique()) > 1:
-        raise ValueError(
-            f"Only one dataset should be provided, {len(df.dataset.unique())} were provided."
-        )
-
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=(5, 5))
 
-    hist, xedges, yedges, img = ax.hist2d(
-        df.groupby(["trial"]).first().trial_init_x,
-        df.groupby(["trial"]).first().trial_init_y,
+    hist, _, _, img = ax.hist2d(
+        df.groupby(["dataset", "trial"]).first().trial_init_x,
+        df.groupby(["dataset", "trial"]).first().trial_init_y,
         bins=bins,
         cmap=cmap,
         range=[
@@ -2115,14 +2345,6 @@ def plot_training_phases(
         ax.axhline(0.5, linestyle="dashed", color="black", alpha=0.5)
         ax.axhline(0.70, linestyle="dashed", color="red", alpha=0.3)
 
-    # Improve legend if hue is used
-    # if hue:
-    #     ax.legend(
-    #         title=hue.replace("_", " ").title(),
-    #         bbox_to_anchor=(1.05, 1),
-    #         loc="upper left",
-    #     )
-
     return ax
 
 
@@ -2179,12 +2401,14 @@ def plot_mean_xy_trajectory(
         style_var = "aperture"
         style_values = apertures
 
-    line_styles = ["-", "--", ":", "-."]
+    line_styles = ["-", (0, (5, 5)), ":", "-."]
     styles = {
         val: line_styles[i % len(line_styles)] for i, val in enumerate(style_values)
     }
 
     fig, ax = plt.subplots(figsize=(5, 5))
+
+    plt.axvline(x=0, ymax=0.95, color="black", linestyle="--", linewidth=1)
 
     group_vars = [color_var, style_var]
     for (color_val, style_val), data in df.groupby(group_vars):
@@ -2228,12 +2452,9 @@ def plot_mean_xy_trajectory(
             )
         )
 
-    ax.legend(handles=legend_elements, loc="lower right")
     ax.grid(False)
     ax.set_xlim(-18, 18)
     ax.set_ylim(0, 23)
-    ax.vlines(x=-15, ymin=2, ymax=7, color="black", linewidth=2)
-    ax.hlines(y=2, xmin=-15, xmax=-5, color="black", linewidth=2)
     plt.axis("off")
 
     return fig, ax

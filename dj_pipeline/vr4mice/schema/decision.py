@@ -1,9 +1,10 @@
 """
-Schemes related to the regression model and decision point analysis.
+Schema related to the regression model and decision point analysis.
 """
 
 import datajoint as dj
 import pandas as pd
+import numpy as np
 
 from vr4mice.analysis import regression
 
@@ -71,13 +72,118 @@ class ValidGroup(dj.Computed):
 
 
 @schema
+class Label(dj.Lookup):
+    definition = """
+    label_key : varchar(32)    # internal short name (e.g., 'velocity_x')
+    ---
+    clean_name : varchar(64)   # display name (e.g., 'x velocity')
+    """
+    contents = [
+        ("x", "x position"),
+        ("y", "y position"),
+        ("velocity_x", "x velocity"),
+        ("velocity_y", "y velocity"),
+        ("heading_dir_sin", "sin(running direction)"),
+        ("heading_dir_cos", "cos(running direction)"),
+        ("head_angle_sin", "sin(head-body angle)"),
+        ("head_angle_cos", "cos(head-body angle)"),
+        ("trial_tortuosity", "Trial tortuosity"),
+        ("trial_rewarded", "Trial rewarded"),
+        ("trial_length", "Trial progression"),
+        ("trial_init_x", "Trial initial x position"),
+        ("trial_init_y", "Trial initial y position"),
+        ("trial_history", "Previous trial choice"),
+    ]
+
+
+@schema
 class LabelSet(dj.Lookup):
     definition = """
-    label_id : int          # unique ID for the label set
+    label_set_id : int
     ---
-    label_name : varchar(32)   # name of the label set
-    labels : longblob       # the actual y-vector
+    label_set_name : varchar(64)
     """
+
+    class Member(dj.Part):
+        definition = """
+        -> master             # Links to label_set_id
+        -> Label              # Links to label_key in the Label table
+        """
+
+    @classmethod
+    def fill(cls):
+        custom_sets = {
+            1: ("Kinematics only", ["x", "y", "velocity_x", "velocity_y"]),
+            2: ("Position + Reward", ["x", "y", "trial_rewarded"]),
+            3: ("Velocity only", ["velocity_x", "velocity_y"]),
+            4: (
+                "sin & cos only",
+                [
+                    "heading_dir_sin",
+                    "heading_dir_cos",
+                    "head_angle_sin",
+                    "head_angle_cos",
+                ],
+            ),
+            5: (
+                "Baseline",
+                [
+                    "x",
+                    "y",
+                    "velocity_x",
+                    "velocity_y",
+                    "heading_dir_sin",
+                    "heading_dir_cos",
+                    "head_angle_sin",
+                    "head_angle_cos",
+                    "trial_tortuosity",
+                    "trial_rewarded",
+                    "trial_length",
+                ],
+            ),
+            6: (
+                "All",
+                [
+                    "x",
+                    "y",
+                    "velocity_x",
+                    "velocity_y",
+                    "heading_dir_sin",
+                    "heading_dir_cos",
+                    "head_angle_sin",
+                    "head_angle_cos",
+                    "trial_tortuosity",
+                    "trial_rewarded",
+                    "trial_length",
+                    "trial_init_x",
+                    "trial_init_y",
+                    "trial_history",
+                ],
+            ),
+            7: (
+                "Best on baseline",
+                [
+                    "x",
+                    "velocity_x",
+                    "heading_dir_sin",
+                    "head_angle_sin",
+                    "trial_rewarded",
+                ],
+            ),
+            8: ("History only", ["trial_history"]),
+            9: ("Initial position only", ["trial_init_x", "trial_init_y"]),
+        }
+
+        for set_id, (name, labels) in custom_sets.items():
+            cls.insert1(
+                {"label_set_id": set_id, "label_set_name": name}, skip_duplicates=True
+            )
+
+            # The 'label_key' here must exist in the Label table contents
+            member_entries = [
+                {"label_set_id": set_id, "label_key": lbl} for lbl in labels
+            ]
+            cls.Member.insert(member_entries, skip_duplicates=True)
 
 
 @schema
@@ -88,6 +194,9 @@ class ModelParams(dj.Lookup):
     max_iter : int          # maximum number of iterations for logistic regression
     scale_data : bool       # whether to scale data before training
     """
+    contents = [
+        (1, 100, True),
+    ]
 
 
 @schema
@@ -97,6 +206,10 @@ class TaskType(dj.Lookup):
     ---
     description : varchar(255)   # description of the task type
     """
+    contents = [
+        ("dual_occl", "Dual occluder discrimination task"),
+        ("multi_occl", "Multi occluder discrimination task"),
+    ]
 
 
 @schema
@@ -112,6 +225,8 @@ class PredictionModel(dj.Computed):
     n_sessions : int            # number of sessions included
     sessions : longblob         # list of session dataset names
     random_state : int          # random state used for reproducibility
+    mean_accuracy : float       # mean accuracy across sessions
+    bic : float                 # Bayesian Information Criterion for the model
     """
 
     class SessionPrediction(dj.Part):
@@ -123,17 +238,18 @@ class PredictionModel(dj.Computed):
         mean_accuracy : float          # mean accuracy for this session
         mean_proba_left: float         # mean predicted probability for left choice
         trial : longblob               # trial numbers
+        trial_length: longblob         # trial progression
         proba_left : longblob          # predicted probabilities for left choice
         accuracy : longblob            # per-trial accuracy values
+        trial_left_choice : longblob   # ground truth left choice
+        bic : longblob                 # Bayesian Information Criterion per timestep
         """
 
     def make(self, key):
         try:
-            from vr4mice.schema.vr4mice import Dataset
-
             # Get label set and model params
-            label_set = (LabelSet & key).fetch1("labels")
-            params = (ModelParams & key).fetch1()
+            label_set = list((LabelSet.Member & key).fetch("label_key"))
+            params = (ModelParams & key).fetch(as_dict=True)[0]
             task_type = (TaskType & key).fetch1("task_type")
 
             sessions_list = list((ValidGroup & f"{task_type}=1").fetch("dataset"))
@@ -141,25 +257,37 @@ class PredictionModel(dj.Computed):
             # This takes a while to fetch because we need to fetch data from all sessions
             dataset_list = []
             for d in sessions_list:
-                try:
-                    if len(InterpolatedTrials() & f'dataset = "{d}"') > 0:
-                        dataset_list.append(
-                            pd.DataFrame(
-                                (InterpolatedTrials() & f'dataset = "{d}"').fetch(
-                                    as_dict=True
-                                )[0]
-                            )
+                if len(InterpolatedTrials() & f'dataset = "{d}"') > 0:
+                    dataset_list.append(
+                        pd.DataFrame(
+                            (InterpolatedTrials() & f'dataset = "{d}"').fetch(
+                                as_dict=True
+                            )[0]
                         )
-                    else:
-                        print("Dataset missing")
-                except Exception as err:
-                    print(err, " Dataset missing")
+                    )
+                else:
+                    print("Dataset missing")
 
             interpolated_df = pd.concat(dataset_list)
             interpolated_df["mouse_name"] = interpolated_df.dataset.str.split("_").str[
                 0
             ]
             interpolated_df["aperture"] = interpolated_df["aperture"].astype(float)
+
+            if "trial_init_x" in label_set:
+                interpolated_df["trial_init_x"] = interpolated_df.groupby(
+                    ["dataset", "trial"]
+                )["x"].transform("first")
+
+            if "trial_init_y" in label_set:
+                interpolated_df["trial_init_y"] = interpolated_df.groupby(
+                    ["dataset", "trial"]
+                )["y"].transform("first")
+
+            if "trial_history" in label_set:
+                interpolated_df["trial_history"] = interpolated_df.groupby(
+                    ["dataset", "trial"]
+                )["trial_left_choice"].transform(lambda x: x.shift(1).fillna(0))
 
             random_state = 42
 
@@ -173,6 +301,27 @@ class PredictionModel(dj.Computed):
                 random_state=random_state,
             )
 
+            # Aggregate predictions per trial for BIC calculation (use mean probability per trial)
+            df_model_per_trial = (
+                df_model.groupby(["dataset", "trial"])
+                .agg(
+                    {
+                        "proba_left": "mean",
+                        "accuracy": "mean",
+                        "trial_left_choice": "first",
+                        "accuracy": "first",
+                        "trial_length": "first",
+                    }
+                )
+                .reset_index()
+            )
+
+            # Across all sessions BIC
+            bic = regression.compute_bic(
+                df_model_per_trial["proba_left"].values.reshape(-1, 1),
+                df_model_per_trial["trial_left_choice"].values,
+            )
+
             self.insert1(
                 {
                     **key,
@@ -180,12 +329,27 @@ class PredictionModel(dj.Computed):
                     "n_sessions": len(sessions_list),
                     "sessions": sessions_list,
                     "random_state": random_state,
+                    "mean_accuracy": float(df_model_per_trial["accuracy"].mean()),
+                    "bic": bic,
                 }
             )
 
             # Insert per-session predictions
             for dataset in df_model["dataset"].unique():
                 dataset_trials = df_model[df_model["dataset"] == dataset]
+
+                bic_per_timestep = np.full(len(dataset_trials), np.nan)
+                for trial in dataset_trials["trial"].unique():
+                    trial_df = dataset_trials[dataset_trials["trial"] == trial]
+
+                    # Compute BIC per timestep using sliding window
+                    bic_values = regression.compute_bic_sliding_window(
+                        trial_df["proba_left"].values.reshape(-1, 1),
+                        trial_df["trial_left_choice"].values,
+                        window_size=10,
+                    )
+                    bic_per_timestep[trial_df.index] = bic_values
+
                 self.SessionPrediction.insert1(
                     {
                         **key,
@@ -194,13 +358,30 @@ class PredictionModel(dj.Computed):
                         "mean_accuracy": float(dataset_trials["accuracy"].mean()),
                         "mean_proba_left": float(dataset_trials["proba_left"].mean()),
                         "trial": dataset_trials["trial"].values,
+                        "trial_length": dataset_trials["trial_length"].values,
+                        "trial_left_choice": dataset_trials["trial_left_choice"].values,
                         "proba_left": dataset_trials["proba_left"].values,
                         "accuracy": dataset_trials["accuracy"].values,
+                        "bic": bic_per_timestep,
                     }
                 )
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
+
+
+@schema
+class DecisionThreshold(dj.Lookup):
+    """Lookup table for different uncertainty thresholds to define decision points."""
+
+    definition = """
+    threshold_uncertainty : varchar(10)    # uncertainty threshold used to define decision point
+    ---
+    description : varchar(255)             # description of the threshold
+    """
+    contents = [
+        ("0.3", "Threshold at 0.3 uncertainty"),
+    ]
 
 
 @schema
@@ -210,7 +391,9 @@ class DecisionPoints(dj.Computed):
     definition = """
     -> PredictionModel
     -> InterpolatedTrials
+    -> DecisionThreshold
     ---
+    threshold_uncertainty: float    # uncertainty threshold used to define decision point
     trial: longblob                 # trial corresponding to the timestamp
     proba_left: longblob            # pred proba of the regression on decision side
     aperture: longblob              # occlusion size for the corresponding trial
@@ -222,38 +405,51 @@ class DecisionPoints(dj.Computed):
     """
 
     def make(self, key):
-        #try:
-        predictions_df = pd.DataFrame(
-            (PredictionModel.SessionPrediction & key).fetch(
-                "trial", "proba_left", as_dict=True
-            )[0]
-        )
-        
-        trial_df = pd.DataFrame((InterpolatedTrials() & key).fetch(
-            "dataset", "trial_left_choice", 
-            "x", "y", "trial_rewarded", 
-            "aperture", "trial_length", 
-            as_dict=True)[0])
+        try:
+            threshold_uncertainty = float(
+                (DecisionThreshold & key).fetch1("threshold_uncertainty")
+            )
 
-        merged_df = pd.merge(predictions_df, trial_df, left_index=True, right_index=True)
-        
-        decision_points = regression.find_decision_point(
-            merged_df, threshold_uncertainty=0.3
-        )
-        
-        row = {
-            **key,
-            "trial": decision_points["trial"].to_numpy(),
-            "proba_left": decision_points["proba_left"].to_numpy(),
-            "aperture": decision_points["aperture"].to_numpy(),
-            "trial_left_choice": decision_points["trial_left_choice"].to_numpy(),
-            "trial_rewarded": decision_points["trial_rewarded"].to_numpy(),
-            "trial_length": decision_points["trial_length"].to_numpy(),
-            "x": decision_points["x"].to_numpy(),
-            "y": decision_points["y"].to_numpy(),
-        }
-        self.insert1(row)
-            
-        # except Exception as err:
-        #     logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
-        #     return None
+            predictions_df = pd.DataFrame(
+                (PredictionModel.SessionPrediction & key).fetch(
+                    "dataset", "trial", "proba_left", "trial_length", as_dict=True
+                )[0]
+            )
+
+            trial_df = pd.DataFrame(
+                (InterpolatedTrials() & key).fetch(
+                    "dataset",
+                    "trial_left_choice",
+                    "x",
+                    "y",
+                    "trial_rewarded",
+                    "aperture",
+                    "trial_length",
+                    "trial",
+                    as_dict=True,
+                )[0]
+            )
+
+            merged_df = pd.merge(
+                predictions_df, trial_df, on=["dataset", "trial", "trial_length"]
+            )
+
+            decision_points = regression.find_decision_point(
+                merged_df, threshold_uncertainty=threshold_uncertainty
+            )
+
+            row = {
+                **key,
+                "trial": decision_points["trial"].to_numpy(),
+                "proba_left": decision_points["proba_left"].to_numpy(),
+                "aperture": decision_points["aperture"].to_numpy(),
+                "trial_left_choice": decision_points["trial_left_choice"].to_numpy(),
+                "trial_rewarded": decision_points["trial_rewarded"].to_numpy(),
+                "trial_length": decision_points["trial_length"].to_numpy(),
+                "x": decision_points["x"].to_numpy(),
+                "y": decision_points["y"].to_numpy(),
+            }
+            self.insert1(row)
+        except Exception as err:
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None

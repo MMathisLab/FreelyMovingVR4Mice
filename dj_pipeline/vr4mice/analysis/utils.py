@@ -129,9 +129,6 @@ def interpolate(
 
 
 def interpolate_j_shaped(big_df, box_df, n_points=100):
-    # big_df["norm_x"] = big_df.groupby(["dataset", "trial"], as_index=False)["x"].transform(
-    #         lambda x: x - np.mean(x.iloc[:3])
-    #     )
 
     big_df["optimal_p"] = analysis.get_optimal_p(big_df)
     big_df["local_tortuosity"] = analysis.get_local_tortuosity(big_df, window_size=1)
@@ -139,8 +136,6 @@ def interpolate_j_shaped(big_df, box_df, n_points=100):
     big_df["distance_to_choice"] = analysis.get_distance_to_choice(big_df, box_df)
 
     columns = [
-        # "norm_y",
-        # "norm_x",
         "heading_dir",
         "head_angle",
         "trial_tortuosity",
@@ -319,10 +314,10 @@ def apply_inclusion_criteria(
     return_excluded: Optional[bool] = False,
 ) -> pd.DataFrame:
     """Get all datasets that survive the inclusion criteria
-    
+
     This function calculates performance parameters and returns the datasets
     that survive the inclusion criteria
-    
+
     Args:
         data (pd.DataFrame): a dataframe, containing multiple datasets
         task_type (str): type of occluder task, either 'dual_occluder' or 'multi_occluder'
@@ -335,27 +330,31 @@ def apply_inclusion_criteria(
     ].mean()
     pivoted_reward = reward_table.pivot(index="dataset", columns="aperture")
 
-    reward_threshold_range = 0.7
-    if task_type == 'dual_occluder':
+    min_wide_reward = 0.7
+    if task_type == "dual_occluder":
+        # Calculate reward drop between wide and narrow occluder
         pivoted_reward["reward_drop"] = (
             pivoted_reward[("trial_rewarded", 12.0)]
             - pivoted_reward[("trial_rewarded", 4.3)]
         )
-        reward_threshold_min = 0.3
-    elif task_type == 'multi_occluder':
+        max_reward_drop = 0.3
+    elif task_type == "multi_occluder":
+        # Calculate reward drop between larger and smaller occluder
         pivoted_reward["reward_drop"] = (
             pivoted_reward[("trial_rewarded", 12.0)]
             - pivoted_reward[("trial_rewarded", 3.0)]
         )
-        reward_threshold_min = 0.25
+        max_reward_drop = 0.25
     else:
-        raise ValueError(f"Unknown task_type: {task_type}. Must be either 'dual_occluder' or 'multi_occluder'.")
+        raise ValueError(
+            f"Unknown task_type: {task_type}. Must be either 'dual_occluder' or 'multi_occluder'."
+        )
 
     reward_table = pivoted_reward
     pivoted_reward = pivoted_reward[
-        (pivoted_reward[("trial_rewarded", 12.0)] > reward_threshold_range)
+        (pivoted_reward[("trial_rewarded", 12.0)] > min_wide_reward)
     ]
-    pivoted_reward = pivoted_reward[abs(pivoted_reward.reward_drop) < reward_threshold_min]
+    pivoted_reward = pivoted_reward[abs(pivoted_reward.reward_drop) < max_reward_drop]
 
     if return_excluded:
         filtered_data = data[data.dataset.isin(pivoted_reward.index) == 0]
