@@ -73,3 +73,8 @@ config_path.json
 vr4mice/cfg/*
 *git_commit*
 *dj_pipline/user_*
+
+# Virtual environments
+venv/
+.venv/
+env/
