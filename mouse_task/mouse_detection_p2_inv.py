@@ -8,7 +8,6 @@ os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 
 import pathlib
-import time as time
 
 from mouse_task.task_active_sensing import ActiveSensingTask
 
@@ -23,7 +22,7 @@ class InvDetectionVelThrTask(ActiveSensingTask):
 
     """
     Detection task with velocity threshold to initiate the trials.
-    
+
     Black teardrop as target, with velocity threshold.
     """
 

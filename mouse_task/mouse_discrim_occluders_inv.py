@@ -8,7 +8,6 @@ os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 
 import pathlib
-import time as time
 
 from mouse_task.task_active_sensing import ActiveSensingTask
 
@@ -21,7 +20,7 @@ config_path = current_dir.joinpath(config_name)  # default class constructor inp
 class InvDiscrimOccludersTask(ActiveSensingTask):
     """
     Discrimination task with occluders on.
-    
+
     Black teardrop as target, white teardrop as distractor.
     """
 
