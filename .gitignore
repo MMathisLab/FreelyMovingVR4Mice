@@ -74,5 +74,7 @@ vr4mice/cfg/*
 *git_commit*
 *dj_pipline/user_*
 
-# Test data (download separately - see README)
-test_data/
+# Virtual environments
+venv/
+.venv/
+env/
