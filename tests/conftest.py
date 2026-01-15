@@ -6,9 +6,18 @@ Dataset key: Nightingale_2024-08-16_1
 """
 
 import json
+import os
 import pickle
 import sys
 from pathlib import Path
+
+# ==============================================================================
+# Environment Variables (must be set before importing modules that use them)
+# ==============================================================================
+
+# Set required environment variables for populate_rig module
+os.environ.setdefault("IMG_SRC", "Imagingsource")
+os.environ.setdefault("GUI", "false")
 
 import numpy as np
 import pandas as pd
@@ -28,11 +37,58 @@ TEST_DATA_DIR = PROJECT_ROOT / "test_data" / "Celia_Set_14012026"
 # Add module paths to sys.path for imports
 ANALYSIS_PATH = SCENE_ROOT / "dj_pipeline" / "vr4mice" / "analysis"
 ACTIONS_PATH = SCENE_ROOT / "dj_pipeline" / "vr4mice" / "actions"
+BASE_SCHEMAS_PATH = SCENE_ROOT / "dj_pipeline" / "base" / "base_min_schemas"
+BASE_ACTIONS_PATH = SCENE_ROOT / "dj_pipeline" / "base" / "base_actions"
 
-if str(ANALYSIS_PATH) not in sys.path:
-    sys.path.insert(0, str(ANALYSIS_PATH))
-if str(ACTIONS_PATH) not in sys.path:
-    sys.path.insert(0, str(ACTIONS_PATH))
+for path in [ANALYSIS_PATH, ACTIONS_PATH, BASE_SCHEMAS_PATH, BASE_ACTIONS_PATH]:
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+# ==============================================================================
+# Mock DataJoint-dependent modules before they're imported
+# ==============================================================================
+from unittest.mock import MagicMock
+
+# Mock the database-dependent modules to prevent connection attempts
+mock_mice = MagicMock()
+mock_schemas = MagicMock()
+mock_schemas.mice = mock_mice
+mock_base_schemas = MagicMock()
+mock_base_schemas.schemas = mock_schemas
+
+# Mock vr4mice.utils.logger
+mock_logger = MagicMock()
+mock_logger.Logger.get_logger.return_value = MagicMock()
+
+# Mock vr4mice package structure
+mock_vr4mice = MagicMock()
+mock_vr4mice.utils = MagicMock()
+mock_vr4mice.utils.logger = mock_logger
+
+# Mock vr4mice.actions subpackage for populate_rig
+mock_keys2tables_base = MagicMock()
+mock_keys2tables_base.base = {}
+mock_keys2tables_vr4mice = MagicMock()
+mock_keys2tables_vr4mice.vr4mice = {}
+mock_vr4mice.actions = MagicMock()
+mock_vr4mice.actions.keys2tables_base = mock_keys2tables_base
+mock_vr4mice.actions.keys2tables_vr4mice = mock_keys2tables_vr4mice
+
+# Mock vr4mice.schema (dj_schema)
+mock_dj_schema = MagicMock()
+mock_vr4mice.schema = mock_dj_schema
+
+# Apply mocks to sys.modules before any imports
+sys.modules['base_schemas'] = mock_base_schemas
+sys.modules['base_schemas.schemas'] = mock_schemas
+sys.modules['base_schemas.schemas.mice'] = mock_mice
+sys.modules['vr4mice'] = mock_vr4mice
+sys.modules['vr4mice.utils'] = mock_vr4mice.utils
+sys.modules['vr4mice.utils.logger'] = mock_logger
+sys.modules['vr4mice.actions'] = mock_vr4mice.actions
+sys.modules['vr4mice.actions.keys2tables_base'] = mock_keys2tables_base
+sys.modules['vr4mice.actions.keys2tables_vr4mice'] = mock_keys2tables_vr4mice
+sys.modules['vr4mice.schema'] = mock_dj_schema
 
 # Dataset identifiers
 DATASET_NAME = "Nightingale_2024-08-16_1"
