@@ -7,6 +7,7 @@ Dataset key: Nightingale_2024-08-16_1
 
 import json
 import pickle
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -21,7 +22,17 @@ import pytest
 # conftest.py is at scene-migration/scene/tests/conftest.py
 # So: parent=tests/, parent.parent=scene/, parent.parent.parent=scene-migration/
 PROJECT_ROOT = Path(__file__).parent.parent.parent
+SCENE_ROOT = Path(__file__).parent.parent  # scene/ directory
 TEST_DATA_DIR = PROJECT_ROOT / "test_data" / "Celia_Set_14012026"
+
+# Add module paths to sys.path for imports
+ANALYSIS_PATH = SCENE_ROOT / "dj_pipeline" / "vr4mice" / "analysis"
+ACTIONS_PATH = SCENE_ROOT / "dj_pipeline" / "vr4mice" / "actions"
+
+if str(ANALYSIS_PATH) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_PATH))
+if str(ACTIONS_PATH) not in sys.path:
+    sys.path.insert(0, str(ACTIONS_PATH))
 
 # Dataset identifiers
 DATASET_NAME = "Nightingale_2024-08-16_1"
