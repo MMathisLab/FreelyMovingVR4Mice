@@ -576,6 +576,7 @@ def plot_session_3d(
                 dec_x = trial_decision["x"].values[0]
                 dec_y = trial_decision["y"].values[0]
                 dec_time = trial_decision["trial_length"].values[0]
+                print("Decision Time:", dec_time)
 
                 # Plot decision point as a larger marker
                 ax.scatter(
@@ -594,6 +595,10 @@ def plot_session_3d(
     ax.set_ylabel(label_x, labelpad=10)
     ax.set_zlabel(label_y, labelpad=10)
 
+    # Set tick labels to only show -20, 0, and 20
+    ax.set_yticks([-20, 0, 20])
+    ax.set_zticks([-20, 0, 20])
+
     # Set box aspect ratio to make time axis longer (time, x, y aspect ratios)
     ax.set_box_aspect([4, 1, 1])
     ax.view_init(elev=10, azim=30)
@@ -607,9 +612,6 @@ def plot_session_3d(
     ax.set_title(f"{df.dataset.unique()[0]} - {len(trial_ids)} Trials")
 
     return ax
-
-
-#### Trial counts
 
 
 def _plot_bar_counts(
@@ -655,7 +657,11 @@ def _plot_bar_counts(
 
     if isinstance(label_x, str):
         # Create explicit lab palette if per_lab
-        if per_lab and "lab_id" in counts.columns:
+        if per_lab:
+            if not "lab_id" in counts.columns:
+                raise ValueError(
+                    "per_lab is True but 'lab_id' column not in counts DataFrame."
+                )
             unique_labs = sorted(counts["lab_id"].unique())
             lab_palette = {lab: colors_labs[i] for i, lab in enumerate(unique_labs)}
 
@@ -1158,6 +1164,7 @@ def plot_rate(
 
     if plot_bias:
         counts["count"] = 2 * counts["count"] - 1  # to have it between -1 and 1
+        print(counts[counts["count"] > 0.5].dataset.tolist())
         _plot_bias_horizontal(
             counts=counts,
             label_x="aperture" if per_aperture else None,
@@ -1182,34 +1189,68 @@ def plot_rate(
         ax.set_xlim(-0.5, num_aperture - 0.5)
 
     if per_aperture and not plot_bias:
+        data_for_stats = counts
+        if per_mouse:
+            data_for_stats = counts.groupby(["mouse_name", "aperture"], as_index=False)[
+                "count"
+            ].mean()
+
         stats_tests = pd.DataFrame(
             zip(
-                counts.groupby("aperture")["count"].mean(),
-                counts.groupby("aperture")["count"].sem(),
+                data_for_stats.groupby("aperture")["count"].mean(),
+                data_for_stats.groupby("aperture")["count"].sem(),
             ),
             columns=["mean", "sem"],
-            index=counts.groupby("aperture")["count"].mean().index,
+            index=data_for_stats.groupby("aperture")["count"].mean().index,
         )
 
-        for i in counts.aperture.unique():
+        for i in data_for_stats.aperture.unique():
             t_null, p_null = stats.ttest_1samp(
-                counts[counts["aperture"] == i]["count"], 0
+                data_for_stats[data_for_stats["aperture"] == i]["count"], 0
             )
             print(f"{i} vs chance 0: t={t_null:.2f}, p={p_null:.3f}")
 
-            for j in counts.aperture.unique():
+            for j in data_for_stats.aperture.unique():
                 if i < j:
-                    stat = stats.ttest_rel(
-                        counts[counts["aperture"] == i]["count"],
-                        counts[counts["aperture"] == j]["count"],
-                    )
-                    print(f"{i}-{j}: {stat}")
+                    if per_mouse:
+                        pairs = data_for_stats.pivot(
+                            index="mouse_name", columns="aperture", values="count"
+                        )
+                        if (i in pairs.columns) and (j in pairs.columns):
+                            a = pairs[i]
+                            b = pairs[j]
+                            mask = a.notna() & b.notna()
+                            stat = stats.ttest_rel(a[mask], b[mask])
+                            print(f"{i}-{j} (paired across mice): {stat}")
+                    else:
+                        stat = stats.ttest_rel(
+                            counts[counts["aperture"] == i]["count"],
+                            counts[counts["aperture"] == j]["count"],
+                        )
+                        print(f"{i}-{j}: {stat}")
 
     else:
-        stats_tests = (counts["count"].mean(), counts["count"].sem())
+        data_for_stats = counts
+        if per_mouse and "mouse_name" in counts.columns:
+            if "aperture" in counts.columns:
+                data_for_stats = counts.groupby(
+                    ["mouse_name", "aperture"], as_index=False
+                )["count"].mean()
+            else:
+                data_for_stats = counts.groupby(["mouse_name"], as_index=False)[
+                    "count"
+                ].mean()
 
-    if not plot_bias:
-        print(stats_tests)
+        if "aperture" in data_for_stats.columns:
+            for i in data_for_stats.aperture.unique():
+                t_null, p_null = stats.ttest_1samp(
+                    data_for_stats[data_for_stats["aperture"] == i]["count"], 0
+                )
+                print(f"{i} vs chance 0: t={t_null:.2f}, p={p_null:.3f}")
+
+                mean_i = data_for_stats[data_for_stats["aperture"] == i]["count"].mean()
+                sem_i = data_for_stats[data_for_stats["aperture"] == i]["count"].sem()
+                print(f"{i}: mean={mean_i:.3f} ± {sem_i:.3f}")
     return counts
 
 
@@ -1270,24 +1311,16 @@ def plot_rewards(
     ax.set_ylabel("Success rate")
 
     if per_aperture:
-        ax.hlines(
-            xmin=-0.25,
-            xmax=num_aperture - 0.75,
-            y=0.7,
-            color="purple",
-            linestyles="dashed",
-        )
         stats = pd.DataFrame(
             zip(
                 counts.groupby("aperture")["count"].mean(),
-                counts.groupby("aperture")["count"].std(),
+                counts.groupby("aperture")["count"].sem(),
             ),
             columns=["mean", "sem"],
             index=counts.groupby("aperture")["count"].mean().index,
         )
     else:
         stats = (counts["count"].mean(), counts["count"].std())
-        ax.hlines(xmin=-0.5, xmax=0.5, y=0.7, color="purple", linestyles="dashed")
     return counts
 
 
@@ -1489,6 +1522,7 @@ def pairplot_average_decision_point(
     else:
         ax.set_xlabel("Occluder")
 
+    stats_results = []
     for i in counts.aperture.unique():
         for j in counts.aperture.unique():
             if i < j:
@@ -1497,6 +1531,12 @@ def pairplot_average_decision_point(
                     counts[counts["aperture"] == j][label_parameter],
                 )
                 print(f"{i}-{j}: {stat}")
+                print(
+                    counts[counts["aperture"] == j][label_parameter].mean()
+                    - counts[counts["aperture"] == i][label_parameter].mean()
+                )
+                stats_results.append((i, j, stat.statistic, stat.pvalue))
+    return counts, stats_results
 
 
 ### TORTUOSITY / DURATION
@@ -1574,9 +1614,6 @@ def plot_tortuosity_duration_distribution(
     return ax
 
 
-### PARAMETERS IN TRAJECTORY
-
-
 def _plot_parameter_on_trial_traj(
     trial,
     vrange: Tuple[int],
@@ -1650,9 +1687,6 @@ def plot_parameter_on_session_traj(
         )
 
 
-### INIT POSITION
-
-
 def plot_init_position_histogram(
     df: pd.DataFrame,
     box_df: pd.DataFrame,
@@ -1710,450 +1744,138 @@ def plot_init_position_histogram(
     return hist
 
 
-### CLUSTERING
-def plot_clustering(
-    df: pd.DataFrame,
-    embedding: npt.NDArray,
-    colors=["Set1", "cool", "cool", "viridis", "Set1"],
-    axes_labels=[
-        "trial_L_choice",
-        "trial_init_x",
-        "trial_init_y",
-        "trial_tortuosity",
-        "aperture",
-    ],
-    method_name="PC",
-):
-    """Plot the results of the clustering used to compute standard_embedding and color per labels.
+def plot_rolling_reward(df, ax=None, rolling_window=15, per_aperture=False):
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=(10, 3))
 
-    Args:
-        embedding: the latent components computed with the dimensionality reduction
-            algorithm of the users choice (see in `clustering.py`).
-        colors: List of colormap, associated to each labels.
-        axes_labels: List of names of each labels.
+    if per_aperture:
+        group = ["aperture", "trial"]
+    else:
+        group = "trial"
 
-    Returns:
-        The figure with `len(labels)` axes.
-    """
-    # Compute labels
-    labels = []
-    for label in axes_labels:
-        labels.append(df.groupby(["dataset", "trial"])[label].apply("first").values)
-
-    # Create the figure
-    fig, axes = plt.subplots(1, len(labels), figsize=(int(5 * len(labels)), 5))
-    axes = axes.flatten()
-
-    for i in range(len(labels)):
-        scatter = axes[i].scatter(
-            embedding[:, 0], embedding[:, 1], c=labels[i], s=0.3, cmap=colors[i]
+    if "reward" in df.columns:
+        rewarded = df.groupby(group)["reward"].max().reset_index()
+    elif "trial_rewarded" in df.columns:
+        rewarded = df.groupby(group)["trial_rewarded"].max().reset_index()
+        rewarded = rewarded.rename(columns={"trial_rewarded": "reward"})
+    else:
+        raise ValueError(
+            "DataFrame must contain either 'reward' or 'trial_rewarded' column."
         )
 
-        axes[i].set_title(axes_labels[i])
-        axes[i].set_xlabel(f"{method_name}1")
-        axes[i].set_ylabel(f"{method_name}2")
+    rewarded["rolling_reward"] = rewarded.reward.rolling(
+        rolling_window, min_periods=1, win_type="gaussian", center=True
+    ).mean(std=3)
 
-        # Add a colorbar
-        if not axes_labels[i] in ["trial_L_choice", "aperture"]:
-            cbar = plt.colorbar(scatter, ax=axes[i])
-            # cbar.set_label(axes_labels[i])
-
-    plt.tight_layout(pad=1.5)
-
-
-### DEPRECATED (from analysis)
-
-
-def _plot_rewards(rewarded, ax):  # NOTE(celia): deprecated, replace by plot_rewards()
-    """
-    Plots the mean reward and the mean reward rate for each of the target locations.
-    Args:
-        rewarded (pandas.DataFrame): The DataFrame containing the data to be plotted (df["rewarded"])
-        ax (list): A list of three axes to be used for the subplots.
-    Returns:
-        None
-    """
-
-    ax[0].bar("reward", np.mean(rewarded.reward), color="#284553")
-    ax[0].set_ylim(0, 1)
-    ax[0].set_xlim(-1, 1)
-    ax[0].set_ylabel("Prob.")
-    ax[0].set_title("Rewarded")
-    sns.barplot(
-        data=rewarded,
-        x="object_on_left",
-        y="reward",
-        ax=ax[1],
-        palette=["#FD672C", "#5C0A72"],
-    )
-    ax[1].set_ylim(0, 1)
-    ax[1].set_ylabel("Prob.")
-    ax[1].set_xlabel("Object location")
-    ax[1].set_xticks([0.0, 1.0], ["R", "L"])
-
-    ax[2].bar(rewarded.trial, rewarded.reward, color="grey")
-
-    # PLOT
-    ax[2].plot(
-        rewarded.reward.rolling(
-            15, min_periods=1, win_type="gaussian", center=True
-        ).mean(std=3),
-        color="#B52916",
-        linewidth=3,
-    )
-    ax[2].set_ylabel("Rewarded")
-
-
-def plot_rolling_reward(df, ax):
-
-    rewarded = df.groupby("trial")["reward"].max().reset_index()
     ax.bar(rewarded.trial, rewarded.reward, color="grey")
-
-    ax.plot(
-        rewarded.reward.rolling(
-            15, min_periods=1, win_type="gaussian", center=True
-        ).mean(std=3),
-        color="#B52916",
+    sns.lineplot(
+        data=rewarded,
+        x="trial",
+        y="rolling_reward",
+        hue="aperture" if per_aperture else None,
+        palette=(
+            colors_aperture[1] + colors_aperture[0] if per_aperture else ["#B52916"]
+        ),
         linewidth=3,
+        ax=ax,
     )
     ax.set_ylabel("Rewarded")
+    ax.set_xlabel("Trial")
 
 
-def _plot_choices(
-    choices, ax
-):  # NOTE(celia): deprecated, replaced by plot_trial_counts()
-    """
-    Plots mean choices and mean target location for each trial.
-    Args:
-        choices: A DataFrame containing choice information (df["choices"])
-        ax: A numpy array of axis objects to plot on.
-    Returns:
-        None
-    """
+def plot_rolling_variable(df, label, ax=None, rolling_window=15, per_aperture=False):
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=(10, 3))
 
-    ax[0].bar("P(Left)", np.mean(choices.trial_left_choice), color="#284553")
-    ax[0].set_ylim(0, 1)
-    ax[0].set_xlim(-1, 1)
-    ax[0].set_title("Choices")
-    ax[0].set_ylabel("Prob.")
-    ax[1].bar("P(Left)", np.mean(choices.object_on_left), color="#284553")
-    ax[1].set_ylim(0, 1)
-    ax[1].set_xlim(-1, 1)
-    ax[1].set_title("Target location")
-    ax[1].set_ylabel("Prob.")
+    if per_aperture:
+        group = ["aperture", "trial"]
+    else:
+        group = "trial"
 
-
-def _time_to_rewards(df):
-    """Calculate the time it takes for the animal to enter the box.
-
-    This is for rewarded vs unrewarded trials and left and right choices.
-
-    Args:
-        df: pandas.DataFrame containing the data
-        ax: a list of two matplotlib axes to plot the results
-
-    Returns:
-        box_entries
-    """
-
-    box_entries = (
-        df[(df.mouse_in_R == 1.0) | (df.mouse_in_L == 1.0)]
-        .groupby("trial", as_index=False)
-        .first()
-    )
-    box_entries["rewarded"] = df.groupby(["trial"], as_index=False).max()["reward"]
-
-    return box_entries
-
-
-def _plot_time_to_rewards(
-    box_entries, ax
-):  # NOTE(celia): deprecated, replaced by plot_time_to_rewards()
-    """Plot the time it takes for the animal to enter the box.
-
-    This is for rewarded vs unrewarded trials and left and right choices.
-
-    Args:
-        box_entries: pandas.DataFrame containing the data df["box_entries"]
-        ax: a list of two matplotlib axes to plot the results
-
-    """
-    cat1 = box_entries[box_entries["trial_rewarded"] == 1.0]
-    cat2 = box_entries[box_entries["trial_rewarded"] == 0.0]
-
-    p_value = stats.ttest_ind(
-        np.log(cat1["trial_step_time"]), np.log(cat2["trial_step_time"])
-    )[1]
-
-    g = sns.stripplot(
-        data=box_entries,
-        x="trial_rewarded",
-        y="trial_step_time",
-        palette=["#284553", "#B52916"],
-        hue="trial_rewarded",
-        ax=ax[0],
-        alpha=0.7,
-        legend=False,
-        zorder=1,
+    df_grouped = df.groupby(group)[label].mean().reset_index()
+    df_grouped["rolling_" + label] = (
+        df_grouped[label]
+        .rolling(rolling_window, min_periods=1, win_type="gaussian", center=True)
+        .mean(std=3)
     )
 
-    sns.pointplot(
-        data=box_entries,
-        x="trial_rewarded",
-        y="trial_step_time",
-        estimator=np.mean,
-        markers="D",
-        scale=1,
-        color="black",
-        ax=ax[0],
-        join=False,
-    )
-    g.set_yscale("log")
-    g.set_title("Time to report")
-    g.set_ylabel("log(Seconds)")
-    g.set_xlabel("Reward")
-    g.set_xticks([0.0, 1.0], ["incorrect", "correct"], rotation=45, fontsize=10)
-    g.annotate(
-        "p={p_value:.3f}",
-        xy=(0.75, 0.95),
-        xycoords="axes fraction",
-        fontsize=12,
-        color="black",
-    )
+    df_grouped.sort_values(by="aperture", inplace=True)
 
-    cat1 = box_entries[box_entries["mouse_in_left"] == 1.0]
-    cat2 = box_entries[box_entries["mouse_in_left"] == 0.0]
-    p_value = stats.ttest_ind(
-        np.log(cat1["trial_step_time"]), np.log(cat2["trial_step_time"])
-    )[1]
-
-    box_entries = box_entries[box_entries.trial_rewarded == 1.0]
-    p = sns.stripplot(
-        data=box_entries,
-        x="mouse_in_left",
-        y="trial_step_time",
-        palette=["#FD672C", "#5C0A72"],
-        hue="mouse_in_left",
-        ax=ax[1],
-        alpha=0.7,
-        legend=False,
-        zorder=1,
-    )
-
-    sns.pointplot(
-        data=box_entries,
-        x="mouse_in_L",
-        y="trial_step_time",
-        estimator=np.mean,
-        markers="D",
-        scale=1,
-        color="black",
-        ax=ax[1],
-        join=False,
-    )
-    p.set_yscale("log")
-    p.set_title("Time to Report")
-    p.set_ylabel("log(Seconds)")
-    p.set_xlabel("Choice (rewarded)")
-    p.set_xticks([0.0, 1.0], ["R", "L"])
-    p.annotate(
-        "p={p_value:.3f}",
-        xy=(0.75, 0.95),
-        xycoords="axes fraction",
-        fontsize=12,
-        color="black",
-    )
-
-
-def _plot_heading_direction(
-    df, ax
-):  # NOTE(celia): deprecated, replaced by a simple sns.lineplot (see figures_analysis)
-    """
-    Plots the interpolated heading direction of the mouse.
-    [no DJ]
-    Args:
-        df (pandas.DataFrame): Input data frame.
-        ax (matplotlib.axes.Axes): Axes object to use for the plot.
-
-    Returns:
-        None.
-    """
-
-    int_df = interpolate_trials_cubic_spline(df, 200)  # FETCH
-    g = sns.lineplot(
-        data=int_df,
-        x="index",
-        y="heading_dir",
-        hue="choice_L",
-        style="trial_reward",
-        palette=["#FD672C", "#5C0A72"],
+    ax.bar(df_grouped.trial, df_grouped[label], color="grey")
+    sns.lineplot(
+        data=df_grouped,
+        x="trial",
+        y="rolling_" + label,
+        hue="aperture" if per_aperture else None,
+        palette=(
+            [colors_aperture[1], colors_aperture[0]] if per_aperture else ["#B52916"]
+        ),
+        linewidth=3,
         ax=ax,
-        style_order=int_df["trial_reward"].sort_values(ascending=False).unique(),
+    )
+    ax.set_ylabel(label)
+    ax.set_xlabel("Trial")
+
+
+def plot_rolling_aperture_diff(df, label, ax=None, rolling_window=15, color="#B52916"):
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=(10, 3))
+
+    # Group by trial and aperture to get raw means
+    df_grouped = df.groupby(["trial", "aperture"])[label].mean().reset_index()
+
+    # Pivot so each aperture has its own column (trials without a specific aperture will be NaN)
+    df_pivot = df_grouped.pivot(index="trial", columns="aperture", values=label)
+    apertures = df_pivot.columns
+
+    # Compute rolling mean for each column independently
+    # This interpolates/smooths over the gaps where that aperture wasn't present
+    df_rolling = df_pivot.rolling(
+        rolling_window, min_periods=1, win_type="gaussian", center=True
+    ).mean(std=3)
+
+    # Compute the difference between the smoothed series
+    diff_col = f"diff_{label}"
+    df_rolling[diff_col] = df_rolling[apertures[1]] - df_rolling[apertures[0]]
+
+    ax.axhline(0, color="black", linestyle="--", alpha=0.5)
+
+    sns.lineplot(
+        data=df_rolling,
+        x=df_rolling.index,
+        y=diff_col,
+        color=color,
+        linewidth=3,
+        ax=ax,
     )
 
-    choice_legend = plt.legend(
-        handles=g.get_lines()[:2],
-        labels=["Correct", "Incorrect"],
-        title="Right",
-        loc="center right",
-        bbox_to_anchor=(1, 0.7),
-        fontsize=6,
-    )
-    reward_legend = plt.legend(
-        handles=g.get_lines()[2:],
-        labels=["Correct", "Incorrect"],
-        title="Left",
-        loc="center right",
-        bbox_to_anchor=(1, 0.4),
-        fontsize=6,
-    )
-
-    # Add the custom legends to the plot
-    ax.add_artist(choice_legend)
-    ax.add_artist(reward_legend)
-    ax.set_xlabel("Trial length (interpolated)")
-    ax.set_ylabel("Heading angle")
+    ax.set_ylabel(f"$\Delta$ Rolling {label}")
+    ax.set_xlabel("Trial")
+    ax.set_title(f"{apertures[1]} minus {apertures[0]}")
 
 
-def _plot_trial_velocities(
-    df, ax
-):  # NOTE(celia): deprecated, replaced by a simple sns.lineplot (see figures_analysis)
-    """
-    Plots the interpolated velocity for each trial.
-    [no DJ]
-    Args:
-        df (pandas.DataFrame): DataFrame containing trial data.
-        ax (matplotlib.axes.Axes): Axes object to plot the data.
-
-    Returns:
-        None.
-    """
-
-    int_df = interpolate_trials_cubic_spline(df, 200)
-    g = sns.lineplot(
-        data=int_df,
-        x="index",
-        y="velocity",
-        hue="trial_reward",
-        palette=["#284553", "#B52916"],
-        ax=ax[0],
-    )
-    g.set_xlabel("Trial length (interpolated)")
-    g.set_ylabel("Velocity (cm/S)")
-
-    handles, labels = ax[0].get_legend_handles_labels()
-    ax[0].legend(
-        handles=handles,
-        labels=["Incorrect", "Correct"],
-        title="rewarded",
-        loc="upper right",
-    )
-
-    p = sns.lineplot(
-        data=int_df,
-        x="index",
-        y="velocity",
-        hue="choice_L",
-        palette=["#FD672C", "#5C0A72"],
-        ax=ax[1],
-    )
-    p.set_xlabel("Trial length (interpolated)")
-    p.set_ylabel("Velocity (cm/S)")
-    handles, labels = ax[1].get_legend_handles_labels()
-    ax[1].legend(handles=handles, labels=["R", "L"], title="choice", loc="upper right")
-
-
-def _plot_all_trajectories(
-    df, box_df, ax
-):  # NOTE(celia): deprecated, replaced by plot_session()
-    """
-    Plot all the trajectories.
-    Args:
-        df (pandas.DataFrame): DataFrame containing the data to plot.
-        box_df (pandas.DataFrame): DataFrame containing the box data to plot.
-        ax (matplotlib.axes._subplots.AxesSubplot): Axes object to plot the data onto.
-    Returns:
-        None
-    """
-    for i in range(1, np.max(df.trial)):
-        # PLOT
-        ax.plot(
-            df.x[(df.trial == i)],
-            df.y[(df.trial == i)],
-            c="black",
-            alpha=0.2,
-            linewidth=2,
-        )
-    first = df.groupby("trial").first()
-    ax.scatter(first.x, first.y, c="#2250C8", alpha=1, s=30, zorder=100)
-    rewards = np.where(df["reward"] > 0)[0]
-    R_choices = np.where(df["reward"] > 0)[0]
-    trial_start = np.diff(df["trial"])
-    ax.scatter(
-        df.x.iloc[rewards], df.y.iloc[rewards], c="#B52916", alpha=0.7, s=30, zorder=100
-    )
-    plot_all_boxes(box_df=box_df, ax=ax)
-    ax.set_xlim(-28, 28)
-    ax.set_ylim(-28, 28)
-    ax.set_xlabel("X pos (cm)")
-    ax.set_ylabel("Y pos (cm)")
-
-
-def _plot_rewarded_trial_trajectories(
-    df, box_df, ax
-):  # NOTE(celia): deprecated, replaced by plot_session() and specific data
-    """
-    Plot trajectories for rewarded trials for the right target and the left target - RR and LR are data frames.
-    Args:
-        df (pandas DataFrame): The data to plot.
-        box_df (pandas DataFrame): DataFrame containing the position and size of the boxes.
-        ax (list of matplotlib Axes): The axes to plot on.
-
-    Returns:
-        None
-    """
-    df = df.groupby("trial", as_index=False).apply(lambda group: group.iloc[1:, :])
-
-    rewarded = df.groupby(["trial"], as_index=False).max()
-
-    RR = df[
-        (df.trial.isin(rewarded.trial[rewarded.reward == 1.0]))
-        & (df.trial.isin(rewarded.trial[rewarded.object_on_left == 0.0]))
-    ]
-    LR = df[
-        (df.trial.isin(rewarded.trial[rewarded.reward == 1.0]))
-        & (df.trial.isin(rewarded.trial[rewarded.object_on_left == 1.0]))
-    ]
-
-    _plot_all_trajectories(RR, box_df, ax=ax[0])
-    _plot_all_trajectories(LR, box_df, ax=ax[1])
-
-    ax[0].set_title("Right rewarded")
-    plot_all_boxes(box_df=box_df, ax=ax[0])
-
-    ax[1].set_title("Left rewarded")
-    plot_all_boxes(box_df=box_df, ax=ax[1])
-
-    ax[0].set_xlim(-28, 28)
-    ax[0].set_ylim(-28, 28)
-
-    ax[1].set_xlim(-28, 28)
-    ax[1].set_ylim(-28, 28)
-
-
-def plot_choices_by_trial(df, ax):
-    """Plots choices per trial on a roling window.
+def plot_choices_by_trial(df, ax=None):
+    """Plots choices per trial on a rolling window.
 
     Args:
         df (pandas.DataFrame): The dataframe containing the data.
         ax (matplotlib.axes._subplots.AxesSubplot): The subplot axes.
 
     """
+    if ax is None:
+        fig, ax = plt.subplots()
 
     df = df.groupby("trial", as_index=False).apply(lambda group: group.iloc[1:, :])
-    rewarded = df[df.reward == 1.0]
+
+    if "reward" in df.columns:
+        rewarded = df[df.reward == 1.0]
+    else:
+        rewarded = df[df.trial_rewarded == 1.0]
+        rewarded = rewarded.rename(columns={"trial_rewarded": "reward"})
+
     last = df.groupby(["trial"], as_index=False).last()
 
+    # choice plot
     ax.plot(
         last.trial,
         last.trial_left_choice.rolling(
@@ -2162,7 +1884,10 @@ def plot_choices_by_trial(df, ax):
         c="black",
         linewidth=3,
     )
+    # choice scatter
     ax.scatter(last.trial, last.trial_left_choice, c="black", alpha=0.3)
+
+    # rewarded left choice scatter
     ax.scatter(
         rewarded.trial[(rewarded.reward == 1.0) & (rewarded.trial_left_choice == 1.0)],
         rewarded.trial_left_choice[
@@ -2170,92 +1895,16 @@ def plot_choices_by_trial(df, ax):
         ],
         c=colors_choice[0],
     )
+    # rewarded right choice scatter
     ax.scatter(
-        rewarded.trial[(rewarded.reward == 1.0) & (rewarded.trial_right_choice == 1.0)],
+        rewarded.trial[(rewarded.reward == 1.0) & (rewarded.trial_left_choice == 0.0)],
         rewarded.trial_left_choice[
-            (rewarded.reward == 1.0) & rewarded.trial_right_choice == 1.0
+            (rewarded.reward == 1.0) & rewarded.trial_left_choice == 0.0
         ],
         c=colors_choice[1],
     )
     ax.set_xlabel("Trials")
     ax.set_ylabel("Choice (1 = Left)")
-
-
-def interpolate_trials_cubic_spline(
-    df, num_points, column_trial="trial", column_velocity="velocity"
-):  # NOTE(celia): deprecated, replaced by utils.interpolate(), this was actually wrong (we integrate with time now)
-    """
-    Interpolates velocity and heading direction variables for each trial.
-    [DJ trialInterpolated table], note: check keys of the output for interpolated_df attributes
-    note-2: Group the data frame by the trial column
-
-    Args:
-        df: pandas DataFrame containing the data to be interpolated.
-        num_points (int): the number of points to interpolate.
-        column_trial (str): name of the column containing trial information.
-        column_velocity (str): name of the column containing velocity information.
-
-    Returns:
-        pandas DataFrame containing the interpolated data.
-    """
-
-    grouped = df.groupby(column_trial)
-
-    # Initialize an empty data frame to store the interpolated data
-    interpolated_df = pd.DataFrame(
-        columns=[
-            column_trial,
-            "index",
-            column_velocity,
-            "heading_dir",
-            "trial_reward",
-            "choice_R",
-            "choice_L",
-        ]
-    )
-
-    # Iterate through the groups (trials)
-    for trial, group in grouped:
-        # Create a new index for interpolation
-        new_index = np.linspace(group.index.min(), group.index.max(), num_points)
-
-        # Perform cubic spline interpolation on the velocity data
-        cs = CubicSpline(group.index, group[column_velocity])
-        interpolated_velocity = cs(new_index)
-        cs = CubicSpline(group.index, group["trial_step_fraction"])
-        interpolated_trial_step_fraction = cs(new_index)
-        cs = CubicSpline(group.index, group["head_dir"])
-        head_dir = cs(new_index)
-
-        trial_reward = np.repeat(
-            np.max(df.reward[group.index]), len(interpolated_velocity)
-        )
-        R_choice = np.repeat(
-            np.max(df.trial_left_choice[group.index]), len(interpolated_velocity)
-        )
-        L_choice = np.repeat(
-            np.max(df.trial_left_choice[group.index]), len(interpolated_velocity)
-        )
-
-        # Create a new data frame for the interpolated data of the current trial
-        interpolated_trial_df = pd.DataFrame(
-            {
-                column_trial: trial,
-                "index": np.linspace(0, num_points, num_points) / num_points,
-                column_velocity: interpolated_velocity,
-                "heading_dir": head_dir,
-                "trial_reward": trial_reward,
-                "choice_R": R_choice,
-                "choice_L": L_choice,
-            }
-        )
-
-        # Append the interpolated data to the final data frame
-        interpolated_df = interpolated_df.append(
-            interpolated_trial_df, ignore_index=True
-        )
-
-    return interpolated_df
 
 
 def plot_training_phases(
