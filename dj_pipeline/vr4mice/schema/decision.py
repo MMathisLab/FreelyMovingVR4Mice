@@ -39,6 +39,8 @@ class ValidGroup(dj.Computed):
             trial_df = (TrialMetrics() * (Dataset() & key)).fetch(as_dict=True)
             trial_df = pd.concat([pd.DataFrame(x) for x in trial_df])
             trial_df["aperture"] = trial_df.aperture.round(2)
+            
+            trial_df = trial_df[trial_df["dataset"] != "Lemming_2024-08-09_1"]
 
             # Exclude sessions that were not in the list
             from vr4mice.analysis.utils import apply_inclusion_criteria
@@ -343,12 +345,11 @@ class PredictionModel(dj.Computed):
                     trial_df = dataset_trials[dataset_trials["trial"] == trial]
 
                     # Compute BIC per timestep using sliding window
-                    bic_values = regression.compute_bic_sliding_window(
+                    bic_per_timestep[trial_df.index] = regression.compute_bic_sliding_window(
                         trial_df["proba_left"].values.reshape(-1, 1),
                         trial_df["trial_left_choice"].values,
                         window_size=10,
                     )
-                    bic_per_timestep[trial_df.index] = bic_values
 
                 self.SessionPrediction.insert1(
                     {
@@ -380,7 +381,17 @@ class DecisionThreshold(dj.Lookup):
     description : varchar(255)             # description of the threshold
     """
     contents = [
-        ("0.3", "Threshold at 0.3 uncertainty"),
+        ("0.0", "Threshold at 0.0 uncertainty"),
+        ("0.1", "Threshold at 0.1 uncertainty"),
+        ("0.2", "Threshold at 0.2 uncertainty"),
+        ("0.3", "Baseline threshold"),
+        ("0.4", "Threshold at 0.4 uncertainty"),
+        ("0.5", "Threshold at 0.5 uncertainty"),
+        ("0.6", "Threshold at 0.6 uncertainty"),
+        ("0.7", "Threshold at 0.7 uncertainty"),
+        ("0.8", "Threshold at 0.8 uncertainty"),
+        ("0.9", "Threshold at 0.9 uncertainty"),
+        ("1.0", "Threshold at 1.0 uncertainty"),
     ]
 
 
