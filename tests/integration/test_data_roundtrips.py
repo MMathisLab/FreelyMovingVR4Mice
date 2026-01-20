@@ -76,7 +76,7 @@ class TestDlcDataFrameRoundTrip:
             equal_nan=True
         )
 
-        # Golden Baseline: Verify sample values at specific positions
+        # Golden Master: Verify sample values at specific positions
         # Check first row values
         np.testing.assert_array_almost_equal(
             reconstructed.iloc[0].values,
@@ -103,7 +103,7 @@ class TestDlcDataFrameRoundTrip:
         )
 
     def test_df_to_dj_output_structure(self, require_nightingale_data, integration_dlc_dataframe):
-        """Golden Baseline: Verify df_to_dj output structure and sample values."""
+        """Golden Master: Verify df_to_dj output structure and sample values."""
         dlc_dataframe = integration_dlc_dataframe
         dj_format = df_to_dj(dlc_dataframe)
 
@@ -121,14 +121,14 @@ class TestDlcDataFrameRoundTrip:
         assert len(dj_format["headers"]) == dlc_dataframe.shape[1], \
             f"headers length {len(dj_format['headers'])} != column count {dlc_dataframe.shape[1]}"
 
-        # Golden Baseline: Verify first 5 headers match column tuples
+        # Golden Master: Verify first 5 headers match column tuples
         for i in range(5):
             expected_header = dlc_dataframe.columns[i]
             actual_header = dj_format["headers"][i]
             assert tuple(actual_header) == expected_header, \
                 f"Header {i} mismatch: {actual_header} != {expected_header}"
 
-        # Golden Baseline: Verify data values at corners
+        # Golden Master: Verify data values at corners
         np.testing.assert_array_almost_equal(
             dj_format["data"][0, :5],
             dlc_dataframe.iloc[0, :5].values,
@@ -208,11 +208,11 @@ class TestH5ToDataFrameRoundTrip:
             equal_nan=True
         )
 
-        # Golden Baseline: Verify h5_to_dj output structure
+        # Golden Master: Verify h5_to_dj output structure
         assert "data" in dj_format, "h5_to_dj missing 'data' key"
         assert "headers" in dj_format, "h5_to_dj missing 'headers' key"
 
-        # Golden Baseline: Verify sample values from HDF5 round-trip
+        # Golden Master: Verify sample values from HDF5 round-trip
         np.testing.assert_array_almost_equal(
             reconstructed.iloc[0].values,
             dlc_dataframe.iloc[0].values,
@@ -313,7 +313,7 @@ class TestStateArrayExtraction:
         integration_pickle_data,
         state_index_map
     ):
-        """Golden Baseline: Verify actual sample values from state extraction."""
+        """Golden Master: Verify actual sample values from state extraction."""
         pickle_data = integration_pickle_data
 
         # Extract all state arrays
@@ -322,21 +322,21 @@ class TestStateArrayExtraction:
             for key in state_index_map.keys()
         }
 
-        # Golden Baseline: Verify first 5 values of x_pos match direct indexing
+        # Golden Master: Verify first 5 values of x_pos match direct indexing
         for i in range(5):
             expected = pickle_data["state"][i][state_index_map["x_pos"]]
             actual = extracted["x_pos"][i]
             assert actual == pytest.approx(expected, rel=1e-10), \
                 f"x_pos[{i}] mismatch: {actual} != {expected}"
 
-        # Golden Baseline: Verify last 5 values of velocity match
+        # Golden Master: Verify last 5 values of velocity match
         for i in range(-5, 0):
             expected = pickle_data["state"][i][state_index_map["velocity"]]
             actual = extracted["velocity"][i]
             assert actual == pytest.approx(expected, rel=1e-10), \
                 f"velocity[{i}] mismatch: {actual} != {expected}"
 
-        # Golden Baseline: Verify statistical properties
+        # Golden Master: Verify statistical properties
         x_pos = extracted["x_pos"]
         velocity = extracted["velocity"]
 
@@ -392,7 +392,7 @@ class TestBoxCoordinateExtraction:
             assert result == pickle_data["start_box"][i]
 
     def test_box_coordinates_golden_values(self, require_nightingale_data, integration_pickle_data):
-        """Golden Baseline: Verify box coordinate extraction produces expected types and ranges."""
+        """Golden Master: Verify box coordinate extraction produces expected types and ranges."""
         pickle_data = integration_pickle_data
 
         # Build transformer with all keys to trigger new style extraction
@@ -417,20 +417,20 @@ class TestBoxCoordinateExtraction:
             for k in ["tt_box_x_min", "tt_box_x_max", "tt_box_z_min", "tt_box_z_max", "tt_box_angle"]
         ]
 
-        # Golden Baseline: Verify all values are numeric
+        # Golden Master: Verify all values are numeric
         for val in l_box_values + r_box_values + start_box_values:
             assert isinstance(val, (int, float, np.number)), \
                 f"Box coordinate should be numeric, got {type(val)}"
 
-        # Golden Baseline: Verify x_min < x_max and z_min < z_max for l_box
+        # Golden Master: Verify x_min < x_max and z_min < z_max for l_box
         assert l_box_values[0] < l_box_values[1], "l_box_x_min should be < l_box_x_max"
         assert l_box_values[2] < l_box_values[3], "l_box_z_min should be < l_box_z_max"
 
-        # Golden Baseline: Verify x_min < x_max and z_min < z_max for r_box
+        # Golden Master: Verify x_min < x_max and z_min < z_max for r_box
         assert r_box_values[0] < r_box_values[1], "r_box_x_min should be < r_box_x_max"
         assert r_box_values[2] < r_box_values[3], "r_box_z_min should be < r_box_z_max"
 
-        # Golden Baseline: Verify start_box has valid dimensions
+        # Golden Master: Verify start_box has valid dimensions
         assert start_box_values[0] <= start_box_values[1], "tt_box_x_min should be <= tt_box_x_max"
         assert start_box_values[2] <= start_box_values[3], "tt_box_z_min should be <= tt_box_z_max"
 
@@ -452,10 +452,10 @@ class TestMetadataExtraction:
             assert result == json_metadata["video_meta"][field]
 
     def test_video_meta_golden_values(self, require_nightingale_data, integration_json_metadata):
-        """Golden Baseline: Verify expected video metadata values for Nightingale dataset."""
+        """Golden Master: Verify expected video metadata values for Nightingale dataset."""
         json_metadata = integration_json_metadata
 
-        # Golden Baseline: These are the expected values from the Nightingale dataset
+        # Golden Master: These are the expected values from the Nightingale dataset
         # If these change, the test data or extraction logic has changed
         duration = get_video_meta(raw_data=json_metadata, key="duration")
         fps = get_video_meta(raw_data=json_metadata, key="fps")
@@ -474,7 +474,7 @@ class TestMetadataExtraction:
         assert width > 0 and width < 10000, f"Width {width} seems invalid"
         assert height > 0 and height < 10000, f"Height {height} seems invalid"
 
-        # Golden Baseline: Verify types are correct
+        # Golden Master: Verify types are correct
         assert isinstance(duration, (int, float)), f"Duration type {type(duration)} unexpected"
         assert isinstance(fps, (int, float)), f"FPS type {type(fps)} unexpected"
         assert isinstance(width, int), f"Width type {type(width)} should be int"
@@ -538,7 +538,7 @@ class TestDlcProcessingPipeline:
             equal_nan=True
         )
 
-        # Golden Baseline: Verify sample values survive filter->round-trip
+        # Golden Master: Verify sample values survive filter->round-trip
         np.testing.assert_array_almost_equal(
             reconstructed.iloc[0].values,
             filtered.iloc[0].values,
@@ -553,21 +553,21 @@ class TestDlcProcessingPipeline:
         )
 
     def test_filter_dlc_sample_values(self, require_nightingale_data, integration_dlc_dataframe):
-        """Golden Baseline: Verify filter_dlc produces expected output structure."""
+        """Golden Master: Verify filter_dlc produces expected output structure."""
         dlc_dataframe = integration_dlc_dataframe
 
         # Filter the data
         filtered = filter_dlc(dlc_dataframe)
 
-        # Golden Baseline: Verify shape preserved
+        # Golden Master: Verify shape preserved
         assert filtered.shape == dlc_dataframe.shape, \
             f"Shape changed from {dlc_dataframe.shape} to {filtered.shape}"
 
-        # Golden Baseline: Verify column structure preserved
+        # Golden Master: Verify column structure preserved
         assert list(filtered.columns) == list(dlc_dataframe.columns), \
             "Column structure changed after filtering"
 
-        # Golden Baseline: Verify filtering reduces NaN in x/y columns (main purpose of filter)
+        # Golden Master: Verify filtering reduces NaN in x/y columns (main purpose of filter)
         # Pick a bodypart that should have some low-confidence values filtered
         if ("nose", "x") in filtered.columns:
             original_nan_x = np.isnan(dlc_dataframe[("nose", "x")]).sum()
@@ -592,21 +592,21 @@ class TestDlcProcessingPipeline:
         require_nightingale_data,
         integration_dlc_dataframe
     ):
-        """Golden Baseline: Verify compute_head_angles output has expected columns."""
+        """Golden Master: Verify compute_head_angles output has expected columns."""
         dlc_dataframe = integration_dlc_dataframe
         result = compute_head_angles(dlc_dataframe)
 
-        # Golden Baseline: Verify expected output columns exist
+        # Golden Master: Verify expected output columns exist
         expected_columns = ["head_center_x", "head_center_y", "heading_dir", "head_angle"]
         for col in expected_columns:
             assert col in result.columns, f"Missing expected column: {col}"
 
-        # Golden Baseline: Verify output dtypes
+        # Golden Master: Verify output dtypes
         for col in expected_columns:
             assert np.issubdtype(result[col].dtype, np.floating), \
                 f"Column {col} should be floating type, got {result[col].dtype}"
 
-        # Golden Baseline: Verify angle values are in reasonable range
+        # Golden Master: Verify angle values are in reasonable range
         # heading_dir should be in degrees (-180 to 180 or 0 to 360)
         heading_dir = result["heading_dir"].dropna()
         if len(heading_dir) > 0:
