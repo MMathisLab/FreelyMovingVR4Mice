@@ -78,3 +78,11 @@ vr4mice/cfg/*
 venv/
 .venv/
 env/
+
+# Test configuration (local overrides)
+.env.test.local
+
+# Test artifacts
+tests/.coverage
+tests/logs/
+tests/fixtures/manifests/*.json
