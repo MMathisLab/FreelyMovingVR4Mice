@@ -64,6 +64,14 @@ class TestSchemaCreation:
         models = vr4mice.ModelName().fetch()
         assert len(models) > 0
 
+        # Golden Master: Verify expected lookup values exist
+        # These are the values used in the Nightingale golden dataset
+        camera_names = vr4mice.Camera.fetch("camera")
+        assert "Imagingsource" in camera_names, "Expected camera 'Imagingsource' not found"
+
+        model_names = vr4mice.ModelName.fetch("model_name")
+        assert "DLC" in model_names, "Expected model 'DLC' not found"
+
 
 # ==============================================================================
 # Dataset Population Tests
@@ -191,9 +199,29 @@ class TestMouseStatePopulation:
         result = (vr4mice.MouseState & f'dataset="{test_dataset_name}"').fetch(as_dict=True)
         assert len(result) == 1
 
-        # Verify data integrity
-        fetched_x_pos = result[0]["x_pos"]
+        # Verify data integrity - length
+        fetched_x_pos = np.array(result[0]["x_pos"])
         assert len(fetched_x_pos) == 339045  # Expected length
+
+        # Golden Master: Verify sample values from fetched data
+        # These are specific values from the Nightingale golden dataset
+        original_x_pos = np.array(get_state(raw_data=pickle_data, key="x_pos"))
+
+        # Check first 5 values match
+        np.testing.assert_array_almost_equal(
+            fetched_x_pos[:5], original_x_pos[:5], decimal=6,
+            err_msg="First 5 x_pos values don't match after DB round-trip"
+        )
+
+        # Check last 5 values match
+        np.testing.assert_array_almost_equal(
+            fetched_x_pos[-5:], original_x_pos[-5:], decimal=6,
+            err_msg="Last 5 x_pos values don't match after DB round-trip"
+        )
+
+        # Verify dtype is preserved (or compatible floating type)
+        assert np.issubdtype(fetched_x_pos.dtype, np.floating), \
+            f"fetched x_pos should be floating type, got {fetched_x_pos.dtype}"
 
     def test_mousestate_data_roundtrip(self, dj_config, pickle_data, test_dataset_name):
         """Test that MouseState data survives database round-trip."""
@@ -208,9 +236,9 @@ class TestMouseStatePopulation:
             "session_label": "test",
         }, skip_duplicates=True)
 
-        # Original data
-        original_x_pos = get_state(raw_data=pickle_data, key="x_pos")
-        original_velocity = get_state(raw_data=pickle_data, key="velocity")
+        # Original data (convert to numpy arrays for later comparison)
+        original_x_pos = np.array(get_state(raw_data=pickle_data, key="x_pos"))
+        original_velocity = np.array(get_state(raw_data=pickle_data, key="velocity"))
 
         # Insert MouseState
         vr4mice.MouseState.insert1({
@@ -234,8 +262,32 @@ class TestMouseStatePopulation:
         fetched_x_pos = np.array(result["x_pos"])
         fetched_velocity = np.array(result["velocity"])
 
-        assert np.allclose(fetched_x_pos, original_x_pos, equal_nan=True)
-        assert np.allclose(fetched_velocity, original_velocity, equal_nan=True)
+        # Golden Master: Full array comparison
+        assert np.allclose(fetched_x_pos, original_x_pos, equal_nan=True), \
+            "x_pos arrays don't match after round-trip"
+        assert np.allclose(fetched_velocity, original_velocity, equal_nan=True), \
+            "velocity arrays don't match after round-trip"
+
+        # Golden Master: Verify shapes preserved
+        assert fetched_x_pos.shape == original_x_pos.shape, \
+            f"x_pos shape mismatch: {fetched_x_pos.shape} vs {original_x_pos.shape}"
+        assert fetched_velocity.shape == original_velocity.shape, \
+            f"velocity shape mismatch: {fetched_velocity.shape} vs {original_velocity.shape}"
+
+        # Golden Master: Verify dtypes preserved (or compatible)
+        # Note: DB may return different but compatible dtype, so check values instead
+        assert np.issubdtype(fetched_x_pos.dtype, np.floating), \
+            f"x_pos dtype should be floating, got {fetched_x_pos.dtype}"
+        assert np.issubdtype(fetched_velocity.dtype, np.floating), \
+            f"velocity dtype should be floating, got {fetched_velocity.dtype}"
+
+        # Golden Master: Verify statistical properties preserved
+        assert np.nanmean(fetched_x_pos) == pytest.approx(np.nanmean(original_x_pos), rel=1e-6), \
+            "x_pos mean changed after round-trip"
+        assert np.nanstd(fetched_x_pos) == pytest.approx(np.nanstd(original_x_pos), rel=1e-6), \
+            "x_pos std changed after round-trip"
+        assert np.nanmean(fetched_velocity) == pytest.approx(np.nanmean(original_velocity), rel=1e-6), \
+            "velocity mean changed after round-trip"
 
 
 # ==============================================================================
@@ -401,6 +453,47 @@ class TestFullPipeline:
         assert len(vr4mice.MouseState()) == 1
         assert len(vr4mice.State()) == 1
 
-        # Verify data integrity
+        # Verify data integrity - length
         state_result = vr4mice.State.fetch1()
         assert len(state_result["episode"]) == 339045
+
+        # Golden Master: Verify State table round-trip preserves values
+        # Compare episode array
+        fetched_episode = np.array(state_result["episode"])
+        original_episode = pickle_data["episode"]
+        np.testing.assert_array_equal(
+            fetched_episode[:10], original_episode[:10],
+            err_msg="First 10 episode values don't match"
+        )
+        np.testing.assert_array_equal(
+            fetched_episode[-10:], original_episode[-10:],
+            err_msg="Last 10 episode values don't match"
+        )
+
+        # Compare step_time array
+        fetched_step_time = np.array(state_result["step_time"])
+        original_step_time = pickle_data["step_time"]
+        np.testing.assert_array_almost_equal(
+            fetched_step_time[:10], original_step_time[:10], decimal=6,
+            err_msg="First 10 step_time values don't match"
+        )
+
+        # Compare reward array
+        fetched_reward = np.array(state_result["reward"])
+        original_reward = pickle_data["reward"]
+        np.testing.assert_array_almost_equal(
+            fetched_reward[:10], original_reward[:10], decimal=6,
+            err_msg="First 10 reward values don't match"
+        )
+
+        # Verify MouseState round-trip
+        mousestate_result = vr4mice.MouseState.fetch1()
+        fetched_x_pos = np.array(mousestate_result["x_pos"])
+        original_x_pos = np.array(get_state(raw_data=pickle_data, key="x_pos"))
+
+        assert fetched_x_pos.shape == original_x_pos.shape, \
+            f"MouseState x_pos shape mismatch: {fetched_x_pos.shape} vs {original_x_pos.shape}"
+        np.testing.assert_array_almost_equal(
+            fetched_x_pos[:10], original_x_pos[:10], decimal=6,
+            err_msg="MouseState x_pos first 10 values don't match"
+        )
