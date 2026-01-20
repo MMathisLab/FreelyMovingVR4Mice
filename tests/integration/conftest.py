@@ -238,7 +238,6 @@ def dj_config(mysql_container):
     dj.config["database.password"] = "simple"
     dj.config["database.misc.schema_prefix"] = "test_"
     dj.config["database.misc.create_tables"] = True
-    dj.config["enable_python_native_blobs"] = True
     dj.config["safemode"] = False  # Allow dropping schemas in tests
 
     # Test connection
