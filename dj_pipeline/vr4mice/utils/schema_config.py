@@ -1,4 +1,7 @@
+import os
+
 import datajoint as dj
+
 
 def connect_to_database(user, prefix="", create_tables=True, storage="/storage"):
     """
@@ -32,8 +35,8 @@ def connect_to_database(user, prefix="", create_tables=True, storage="/storage")
     #     },
     # }
 
-    dj.config['database.database_prefix'] = prefix
-    dj.config['database.create_tables'] = create_tables
+    dj.config["database.misc.schema_prefix"] = prefix
+    dj.config["database.misc.create_tables"] = create_tables
 
     dj.config["database.host"] = user.host
     dj.config["database.user"] = user.name
@@ -62,7 +65,7 @@ def get_schema(name, _locals):
     - The schema name is generated using SchemaConfig.get_schema_key(name).
     """
 
-    return dj.Schema(
+    return dj.schema(
         SchemaConfig.get_schema_key(name),
         _locals,
         create_tables=SchemaConfig.create_tables(),
@@ -75,9 +78,9 @@ class SchemaConfig:
 
     Methods:
     - get_schema_key(key): Returns the schema key for a given key,
-        using the database prefix defined in dj.config["database.database_prefix"].
-    - create_tables(): Returns the value of dj.config["database.create_tables"],
-        which determines whether the schema object will create tables on the database if they don't already exist.
+        using the schema prefix defined in dj.config["database.misc.schema_prefix"].
+    - create_tables(): Returns the value of dj.config["database.misc.create_tables"],
+    which determines whether the schema object will create tables on the database if they don't already exist.
 
     Notes:
     - This class assumes that DataJoint has already been imported and configured.
@@ -89,8 +92,9 @@ class SchemaConfig:
 
     @staticmethod
     def get_schema_key(key):
-        return str(dj.config['database.database_prefix']) + str(key)
+        prefix = dj.config["database.misc.schema_prefix"]
+        return str(prefix) + str(key)
 
     @staticmethod
     def create_tables():
-        return dj.config['database.create_tables']
+        return dj.config["database.misc.create_tables"]

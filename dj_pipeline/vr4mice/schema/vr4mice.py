@@ -1,7 +1,4 @@
-"""Core VR4Mice schema tables for datasets, metadata, and raw signals."""
-
 import os
-
 import datajoint as dj
 import numpy as np
 
@@ -46,57 +43,41 @@ class Dataset(dj.Manual):
 
     def get_keys(self, folder="/data/processed"):
         keys = []
-        dataset_keys = Dataset().fetch("dataset", as_dict=True)
-        camera_keys = Camera().fetch("camera", as_dict=True)
+        dataset_keys = Dataset().proj("dataset").to_dicts()
+        camera_keys = Camera().proj("camera").to_dicts()
         for dk in dataset_keys:
             for ck in camera_keys:
                 keys.append({**dk, **ck})
         return keys
 
     def populate(self):
-        """Populate Dataset by iterating all dataset/camera keys."""
         keys = self.get_keys()
         for key in keys:
             self.make(key)
 
     def make(self, key):
-        """Insert a Video row from file paths resolved for a dataset."""
         from vr4mice.actions.populate_rig import get_files_paths
 
-        if FailedSession.should_skip(key, self.__class__.__name__, logger):
-            return
-
-        try:
-            logger.info(f"{key['dataset']}")
-            paths = get_files_paths(key["dataset"])
-            video_filepath = (
-                f"{paths['video_path']['dst']}/{paths['video_path']['filename']}"
-            )
-            timestamp_filepath = (
-                f"{paths['camera_path']['dst']}/{paths['camera_path']['filename']}"
-            )
-            video_meta = paths["video_meta"]
-            data = {
-                "doe": paths["doe"],
-                "video_filepath": video_filepath,
-                "timestamp_filepath": timestamp_filepath,
-            }
-            data = {**key, **data, **video_meta}
-            Video().insert1(data, skip_duplicates=True)
-        except Exception as err:
-            dataset = key.get("dataset") if isinstance(key, dict) else None
-            if dataset:
-                FailedSession().add_entry(
-                    f"{dataset}", f"{self.__class__.__name__}", str(err)
-                )
-            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
-            logger.warning(err)
+        logger.info(f"{key['dataset']}")
+        paths = get_files_paths(key["dataset"])
+        video_filepath = (
+            f"{paths['video_path']['dst']}/{paths['video_path']['filename']}"
+        )
+        timestamp_filepath = (
+            f"{paths['camera_path']['dst']}/{paths['camera_path']['filename']}"
+        )
+        video_meta = paths["video_meta"]
+        data = {
+            "doe": paths["doe"],
+            "video_filepath": video_filepath,
+            "timestamp_filepath": timestamp_filepath,
+        }
+        data = {**key, **data, **video_meta}
+        Video().insert1(data, skip_duplicates=True)
 
 
 @schema
 class FailedSession(dj.Manual):
-    """Tracks dataset/table pairs that failed during populate/compute."""
-
     definition = """
     # Keys that failed under populate
     -> Dataset
@@ -106,7 +87,6 @@ class FailedSession(dj.Manual):
     """
 
     def add_entry(self, dataset_key, table_name, error_message, skip_duplicates=True):
-        """Insert a failed-session record for a dataset and table."""
         self.insert1(
             {
                 "dataset": dataset_key,
@@ -115,48 +95,6 @@ class FailedSession(dj.Manual):
             },
             skip_duplicates=skip_duplicates,
         )
-
-    @classmethod
-    def should_skip(cls, key, table_name, logger=None) -> bool:
-        """Return True if dataset is in FailedSession; optionally log a warning."""
-        dataset = None
-        if isinstance(key, dict):
-            dataset = key.get("dataset")
-        else:
-            dataset = key
-
-        if not dataset:
-            return False
-
-        failed = cls() & {"dataset": dataset}
-        if failed:
-            if logger:
-                failed_rows = failed.fetch(
-                    "failed_table_name", "error_message", as_dict=True
-                )
-                table_rows = [
-                    row
-                    for row in failed_rows
-                    if row.get("failed_table_name") == table_name
-                ]
-                target_rows = table_rows if table_rows else failed_rows
-                error_msg = None
-                if target_rows:
-                    error_msg = target_rows[-1].get("error_message")
-                short_error = None
-                if error_msg:
-                    short_error = (
-                        (error_msg[:160] + "...") if len(error_msg) > 160 else error_msg
-                    )
-                if short_error:
-                    logger.warning(
-                        f"skip {table_name} {dataset} (FailedSession: {short_error})"
-                    )
-                else:
-                    logger.warning(f"skip {table_name} {dataset} (FailedSession)")
-            return True
-
-        return False
 
 
 @schema
@@ -232,13 +170,9 @@ class Collab(dj.Computed):
     """
 
     def make(self, key, lab=os.environ["DJ_LAB"]):
-        """Insert a Collab row linking a dataset to the configured lab."""
-        if FailedSession.should_skip(key, self.__class__.__name__, logger):
-            return
-
         try:
             lab = f"lab='{lab}'"
-            idx = (Labs() & lab).fetch("idx", as_dict=True)[0]
+            idx = (Labs() & lab).proj("idx").to_dicts()[0]
             data = {**key, **idx}
             self.insert1(data)
         except Exception as err:
@@ -260,7 +194,7 @@ class Video(dj.Manual):
 
     definition = """
     -> Dataset
-    -> Camera
+    -> Camera    
     doe: date  # YYYY-MM-DD
     ---  
     duration=NULL: int
@@ -275,25 +209,20 @@ class Video(dj.Manual):
 
     def get_keys(self):
         keys = []
-        dataset_keys = Dataset().fetch("dataset", as_dict=True)
-        camera_keys = Camera().fetch("camera", as_dict=True)
+        dataset_keys = Dataset().proj("dataset").to_dicts()
+        camera_keys = Camera().proj("camera").to_dicts()
         for dk in dataset_keys:
             for ck in camera_keys:
                 keys.append({**dk, **ck})
         return keys
 
     def populate(self):
-        """Populate Video by iterating all dataset/camera keys."""
         keys = self.get_keys()
         for key in keys:
             self.make(key)
 
     def make(self, key):
-        """Insert a Video row from rig files for a dataset."""
         from vr4mice.actions.populate_rig import get_files_paths
-
-        if FailedSession.should_skip(key, self.__class__.__name__, logger):
-            return
 
         try:
             logger.info(f"{key['dataset']}")
@@ -358,25 +287,20 @@ class DLC(dj.Manual):
 
     def get_keys(self):
         keys = []
-        video_keys = Video().fetch("dataset", "camera", "doe", as_dict=True)
-        model_name = ModelName().fetch("model_name", as_dict=True)
+        video_keys = Video().proj("dataset", "camera", "doe").to_dicts()
+        model_name = ModelName().proj("model_name").to_dicts()
         for vk in video_keys:
             for mn in model_name:
                 keys.append({**vk, **mn})
         return keys
 
     def populate(self):
-        """Populate DLC by iterating all dataset/camera/model keys."""
         keys = self.get_keys()
         for key in keys:
             self.make(key)
 
     def make(self, key):
-        """Insert a DLC row using keypoints and processed paths."""
         from vr4mice.actions.populate_rig import get_files_paths
-
-        if FailedSession.should_skip(key, self.__class__.__name__, logger):
-            return
 
         try:
             logger.info(f"{key['dataset']}")
@@ -434,8 +358,8 @@ class MouseState(dj.Manual):  # variable State
 class State(dj.Manual):
     """
     State definition table:
-    - Stores trial related information
-    - Fetched from teensy output pickle file
+    stores trial related information  @todo(thomas)
+    fetched from teensy output pickle file
     """
 
     definition = """
@@ -461,17 +385,19 @@ class State(dj.Manual):
 class Metadata(dj.Manual):
     """
     Metadata definition table:
-    - Stores metadata: unity parameters
-    - Fetched from teensy output pickle file
+    stores metadata @todo(thomas)
+    fetched from teensy output pickle file
     """
+
+    # unity params
 
     definition = """
     -> Dataset
-    ---
+    ---    
     obj_on_left=NULL: <blob>         # the object of interest is one the left
     slit_size: <blob>                # The size of the slit that the mouse has to look through
     slit_depth=NULL: <blob>          # the depth of the slit # TO DEPRECATE ?
-    trial_slit_depth: <blob>         #
+    trial_slit_depth: <blob>         # 
     block_labels: <blob>
     targets_height=NULL: <blob>            # the distance between the targets # TO DEPRECTAE
     target_from_midline=NULL: <blob>       # the distance between the targets and the ground   (500*floats) # TO DEPRECATE ?
@@ -492,22 +418,17 @@ class SignalsPhotodiode(dj.Computed):
     -> Dataset
     ---
     start_time: <blob>
-    photodiode_time: <blob>         # timestamp of the photodiode signal
-    photodiode_read: <blob>         # value of the photodiode signal
-    generated_frame_time: <blob>    # timestamp of frame relative to the generated signal
-    generated_send_time: <blob>     # time that the signal gets sent from the dlc processor
-    generated_signal: <blob>        # the signal that is generated by the dlc processor
-    signal_type=NULL: varchar(32)   # type of signal generated (e.g., 'pulse', 'pulse_geo')
-    signal_delay=NULL: float        # delay between signal generation and photodiode response (seconds)
+    photodiode_time: <blob> # timestamp of the photodiode signal
+    photodiode_read: <blob> # value of the photodiode signal
+    generated_frame_time: <blob> # timestamp of frame relative to the generated signal
+    generated_send_time: <blob> # time that the signal gets sent from the dlc processor
+    generated_signal: <blob> # the signal that is generated by the dlc processor
     """
+    key_source = Dataset()  # & "dataset LIKE '%Latency%'"
 
     def make(self, key):
-        """Compute photodiode-aligned signals for a dataset."""
         from vr4mice.actions.populate_rig import get_files_paths
         from vr4mice.analysis.latency_testing import check_data
-
-        if FailedSession.should_skip(key, self.__class__.__name__, logger):
-            return
 
         if self & key:
             logger.info(
@@ -521,7 +442,6 @@ class SignalsPhotodiode(dj.Computed):
             proc_filepath = (
                 f"{paths['proc_path']['dst']}/{paths['proc_path']['filename']}"
             )
-            logger.info(f"proc_filepath: {proc_filepath}")
             if os.path.exists(proc_filepath):
                 photodiode_data = np.load(proc_filepath, allow_pickle=True)
                 if check_data(photodiode_data):
@@ -532,15 +452,10 @@ class SignalsPhotodiode(dj.Computed):
                         "generated_frame_time": photodiode_data["frame_time"],
                         "generated_send_time": photodiode_data["time_stamp"],
                         "generated_signal": photodiode_data["signal"],
-                        "signal_type": photodiode_data.get("signal_type", None),
-                        "signal_delay": photodiode_data.get("signal_delay", None),
                     }
                     self.insert1({**key, **data}, allow_direct_insert=True)
-                else:
-                    logger.warning(f"Photodiode data check failed for {key['dataset']}")
-                    return
             else:
-                logger.warning(f"PROC file not found: {key['dataset']}")
+                logger.warning(f"No photodiode data found for {key['dataset']}")
                 return
 
         except Exception as err:
@@ -622,10 +537,6 @@ class DatasetType(dj.Computed):
     """
 
     def make(self, key):  # TODO(mary): refactor to a separate compact function
-        """Assign a dataset to a training phase based on metadata and state."""
-        if FailedSession.should_skip(key, self.__class__.__name__, logger):
-            return
-
         try:
             undefined = False
             distractor = (GuiParams & key).fetch1("distractor")
@@ -670,7 +581,7 @@ class DatasetType(dj.Computed):
                             f"test_discrimination_{slit_size_number}_slit_sizes"
                         )
                         var = f"training_phase='{phase_type}'"
-                        ret = (TrainingPhaseType() & var).fetch(as_dict=True)
+                        ret = (TrainingPhaseType() & var).to_dicts()
                         if not ret:
                             idx = TrainingPhaseType.get_next_index()
                             data = {"idx": idx, "training_phase": phase_type}

@@ -294,9 +294,9 @@ def get_data_from_list(data_set_list, game_columns, dlc_columns=None):
         split_d = d["dataset"].split("_")
         logger.info(split_d)
         data_set_name = d["dataset"]
-        training_stage = (vr4mice.Dataset() & f"dataset = '{data_set_name}'").fetch(
+        training_stage = (vr4mice.Dataset() & f"dataset = '{data_set_name}'").fetch1(
             "session_label"
-        )[0]
+        )
 
         df = base_analysis.DataFrame().get_data(
             key=d,
