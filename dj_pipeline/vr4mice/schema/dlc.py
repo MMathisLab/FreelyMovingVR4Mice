@@ -21,17 +21,17 @@ class DLCProcessor(dj.Imported):
     definition = """
     -> vr4mice.DLC
     ---
-    start_time=NULL: longblob
-    frame_time=NULL: longblob
-    time_stamp=NULL: longblob
-    step=NULL: longblob
-    signal=NULL: longblob
-    photodiode_read=NULL: longblob
-    photodiode_time=NULL: longblob
-    x_pos: longblob
-    y_pos: longblob
-    heading_direction: longblob
-    head_angle: longblob
+    start_time=NULL: <blob>
+    frame_time=NULL: <blob>
+    time_stamp=NULL: <blob>
+    step=NULL: <blob>
+    signal=NULL: <blob>
+    photodiode_read=NULL: <blob>
+    photodiode_time=NULL: <blob>
+    x_pos: <blob>
+    y_pos: <blob>
+    heading_direction: <blob>
+    head_angle: <blob>
     """
 
     def make(self, key):
@@ -79,8 +79,8 @@ class DLCKptsDf(dj.Computed):
     definition = """
     -> vr4mice.DLC
     ---
-    data: longblob
-    headers : blob
+    data: <blob>
+    headers : <blob>
     scorer=NULL: varchar(256)
     """
 
@@ -141,8 +141,8 @@ class SyncDLCKptsDf(dj.Computed):
     definition = """
     -> DLCKptsDf
     ---
-    data: longblob
-    headers : blob
+    data: <blob>
+    headers : <blob>
     scorer=NULL: varchar(256)
     """
 
@@ -213,13 +213,13 @@ class OfflineKinematics(dj.Computed):
     definition = """
     -> SyncDLCKptsDf
     ---
-    head_center_x: longblob # the center of the mouse head in x at each frame
-    head_center_y: longblob # the center of the mouse head in y at each frame
-    heading_dir: longblob # the direction of the mouses body (tail base to neck) relative to the main screen 
-    head_angle: longblob # the angle of the head relative to heading_dir
-    pose_time: longblob # the time that the pose was inferred
-    step_time: longblob # the time of the frame in game time
-    step: longblob # the nearest game step to the dlc frame
+    head_center_x: <blob> # the center of the mouse head in x at each frame
+    head_center_y: <blob> # the center of the mouse head in y at each frame
+    heading_dir: <blob> # the direction of the mouses body (tail base to neck) relative to the main screen 
+    head_angle: <blob> # the angle of the head relative to heading_dir
+    pose_time: <blob> # the time that the pose was inferred
+    step_time: <blob> # the time of the frame in game time
+    step: <blob> # the nearest game step to the dlc frame
     """
 
     def make(self, key: dict):
@@ -273,9 +273,9 @@ class OfflineKinematics(dj.Computed):
         try:
             if self & key:
                 if columns:
-                    data = (self & key).fetch(*columns, as_dict=True)[0]
+                    data = (self & key).proj(*columns).to_dicts()[0]
                 else:
-                    data = (self & key).fetch(as_dict=True)[0]
+                    data = (self & key).to_dicts()[0]
                 return pd.DataFrame(data)
             else:
                 return False
