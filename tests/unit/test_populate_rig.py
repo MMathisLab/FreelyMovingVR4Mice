@@ -664,15 +664,15 @@ class TestPopulateRig:
 
         with patch("populate_rig.dj_schema") as mock_schema:
             # Simulate dataset ALREADY in database
-            mock_schema.vr4mice.Dataset.return_value.__and__.return_value.fetch.return_value = [
+            mock_schema.vr4mice.Dataset.return_value.__and__.return_value.to_dicts.return_value = [
                 {"dataset": "ExistingMouse_2024-01-01_1"}
             ]
 
             # Run should complete without populating
             populate_rig(path=str(tmp_path), gui="false")
 
-            # Dataset.fetch should have been called to check existence
-            mock_schema.vr4mice.Dataset.return_value.__and__.return_value.fetch.assert_called()
+            # Dataset.to_dicts should have been called to check existence
+            mock_schema.vr4mice.Dataset.return_value.__and__.return_value.to_dicts.assert_called()
 
     def test_populate_rig_handles_empty_directory(self, tmp_path):
         """populate_rig should handle empty directories gracefully."""
@@ -689,7 +689,7 @@ class TestPopulateRig:
             pickle.dump(sample_pickle_data, f)
 
         with patch("populate_rig.dj_schema") as mock_schema:
-            mock_schema.vr4mice.Dataset.return_value.__and__.return_value.fetch.return_value = []
+            mock_schema.vr4mice.Dataset.return_value.__and__.return_value.to_dicts.return_value = []
 
             # In GUI mode, should return False when npy is missing
             with patch.dict(os.environ, {"GUI": "true"}):

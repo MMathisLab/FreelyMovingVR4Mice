@@ -37,7 +37,6 @@ def connect_to_database(user, prefix="", create_tables=True, storage="/storage")
 
     dj.config["database.misc.schema_prefix"] = prefix
     dj.config["database.misc.create_tables"] = create_tables
-    dj.config["enable_python_native_blobs"] = True
 
     dj.config["database.host"] = user.host
     dj.config["database.user"] = user.name

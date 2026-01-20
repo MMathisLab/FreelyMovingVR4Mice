@@ -145,7 +145,7 @@ def vr4mice_summary_plots(
 
     # NOTE(tom): ensure that if the occluder is not displayed (as in training data) that there are no
     # multiple apertures (ie multiple occlusion might be defined but not used)
-    if (GuiParams() & key).fetch("occlusion_type_param") == 0.0:
+    if (GuiParams() & key).fetch1("occlusion_type_param") == 0.0:
         df["aperture"] = 0
 
     num_apertures = len(df.aperture.unique())

@@ -505,7 +505,7 @@ def get_box_df(
         pd.DataFrame: A DataFrame containing the adjusted box dimensions in physical space and
             the mean reward positions for the left and right reward boxes.
     """
-    box_df = pd.DataFrame((vr4mice.Box & key).fetch())
+    box_df = (vr4mice.Box & key).to_pandas()
 
     for col in box_df.columns:
         for index, value in box_df[col].items():
