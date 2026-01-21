@@ -312,6 +312,7 @@ def apply_inclusion_criteria(
     data: pd.DataFrame,
     task_type: str,
     return_excluded: Optional[bool] = False,
+    consider_reward_drop: Optional[bool] = True,
 ) -> pd.DataFrame:
     """Get all datasets that survive the inclusion criteria
 
@@ -321,6 +322,8 @@ def apply_inclusion_criteria(
     Args:
         data (pd.DataFrame): a dataframe, containing multiple datasets
         task_type (str): type of occluder task, either 'dual_occluder' or 'multi_occluder'
+        return_excluded (bool, optional): whether to return the excluded datasets instead of the included ones. Default is False.
+        consider_reward_drop (bool, optional): whether to consider reward drop as an inclusion criteria. Default is True.
     """
     reward_table = data.groupby(["dataset", "aperture", "trial"], as_index=False)[
         "trial_rewarded"
@@ -331,20 +334,19 @@ def apply_inclusion_criteria(
     pivoted_reward = reward_table.pivot(index="dataset", columns="aperture")
 
     min_wide_reward = 0.7
+    max_reward_drop = 0.25
     if task_type == "dual_occluder":
         # Calculate reward drop between wide and narrow occluder
         pivoted_reward["reward_drop"] = (
             pivoted_reward[("trial_rewarded", 12.0)]
             - pivoted_reward[("trial_rewarded", 4.3)]
         )
-        max_reward_drop = 0.3
     elif task_type == "multi_occluder":
         # Calculate reward drop between larger and smaller occluder
         pivoted_reward["reward_drop"] = (
             pivoted_reward[("trial_rewarded", 12.0)]
             - pivoted_reward[("trial_rewarded", 3.0)]
         )
-        max_reward_drop = 0.25
     else:
         raise ValueError(
             f"Unknown task_type: {task_type}. Must be either 'dual_occluder' or 'multi_occluder'."
@@ -354,7 +356,8 @@ def apply_inclusion_criteria(
     pivoted_reward = pivoted_reward[
         (pivoted_reward[("trial_rewarded", 12.0)] > min_wide_reward)
     ]
-    pivoted_reward = pivoted_reward[abs(pivoted_reward.reward_drop) < max_reward_drop]
+    if consider_reward_drop:
+        pivoted_reward = pivoted_reward[abs(pivoted_reward.reward_drop) < max_reward_drop]
 
     if return_excluded:
         filtered_data = data[data.dataset.isin(pivoted_reward.index) == 0]

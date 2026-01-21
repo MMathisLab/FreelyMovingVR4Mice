@@ -570,6 +570,7 @@ def plot_session_3d(
     # Plot decision points if provided
     if decision_points is not None:
         for trial_id in trial_ids:
+            # This is already on normalized time scale
             trial_decision = decision_points[decision_points["trial"] == trial_id]
             if not trial_decision.empty:
                 # Get decision point coordinates
@@ -1164,7 +1165,6 @@ def plot_rate(
 
     if plot_bias:
         counts["count"] = 2 * counts["count"] - 1  # to have it between -1 and 1
-        print(counts[counts["count"] > 0.5].dataset.tolist())
         _plot_bias_horizontal(
             counts=counts,
             label_x="aperture" if per_aperture else None,
@@ -1190,10 +1190,6 @@ def plot_rate(
 
     if per_aperture and not plot_bias:
         data_for_stats = counts
-        if per_mouse:
-            data_for_stats = counts.groupby(["mouse_name", "aperture"], as_index=False)[
-                "count"
-            ].mean()
 
         stats_tests = pd.DataFrame(
             zip(
@@ -1205,29 +1201,16 @@ def plot_rate(
         )
 
         for i in data_for_stats.aperture.unique():
-            t_null, p_null = stats.ttest_1samp(
-                data_for_stats[data_for_stats["aperture"] == i]["count"], 0
-            )
-            print(f"{i} vs chance 0: t={t_null:.2f}, p={p_null:.3f}")
-
             for j in data_for_stats.aperture.unique():
                 if i < j:
-                    if per_mouse:
-                        pairs = data_for_stats.pivot(
-                            index="mouse_name", columns="aperture", values="count"
-                        )
-                        if (i in pairs.columns) and (j in pairs.columns):
-                            a = pairs[i]
-                            b = pairs[j]
-                            mask = a.notna() & b.notna()
-                            stat = stats.ttest_rel(a[mask], b[mask])
-                            print(f"{i}-{j} (paired across mice): {stat}")
-                    else:
-                        stat = stats.ttest_rel(
-                            counts[counts["aperture"] == i]["count"],
-                            counts[counts["aperture"] == j]["count"],
-                        )
-                        print(f"{i}-{j}: {stat}")
+                    stat = stats.ttest_rel(
+                        counts[counts["aperture"] == i]["count"],
+                        counts[counts["aperture"] == j]["count"],
+                    )
+                    print(f"{i}-{j}: {stat}")
+            mean = counts[counts["aperture"] == i]["count"].mean()
+            sem = counts[counts["aperture"] == i]["count"].sem()
+            print(f"mean: {mean}, sem: {sem}")
 
     else:
         data_for_stats = counts
@@ -1531,11 +1514,12 @@ def pairplot_average_decision_point(
                     counts[counts["aperture"] == j][label_parameter],
                 )
                 print(f"{i}-{j}: {stat}")
-                print(
+                print(" mean difference: ",
                     counts[counts["aperture"] == j][label_parameter].mean()
                     - counts[counts["aperture"] == i][label_parameter].mean()
                 )
                 stats_results.append((i, j, stat.statistic, stat.pvalue))
+        print(f"mean: {counts[counts['aperture'] == i][label_parameter].mean()} +/- {stats.sem(counts[counts['aperture'] == i][label_parameter])}")
     return counts, stats_results
 
 

@@ -268,7 +268,7 @@ class PredictionModel(dj.Computed):
                         )
                     )
                 else:
-                    print("Dataset missing")
+                    raise ValueError(f"InterpolatedTrials missing for {d}")
 
             interpolated_df = pd.concat(dataset_list)
             interpolated_df["mouse_name"] = interpolated_df.dataset.str.split("_").str[

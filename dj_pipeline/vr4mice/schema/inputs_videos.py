@@ -277,7 +277,9 @@ class AlignedVideoFrame(dj.Computed):
     def align_step_to_frames(cls, key, timepoints: list):
         """
         Given a list of timepoints (in seconds), return the corresponding video frame indices.
-        If a timepoint is out of bounds, return None for that timepoint.
+        
+        If any timepoint is out of bounds (less than 0 or greater than or equal to the number
+        of steps), a ValueError is raised.
         
         Args:
             key: dict, key to identify the AlignedVideoFrame entry
