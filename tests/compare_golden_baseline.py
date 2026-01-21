@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 """
-Golden Master Comparison Script for DataJoint 2.0 Migration.
+Golden Baseline Comparison Script for DataJoint 2.0 Migration.
 
 This script compares post-migration outputs with pre-migration baseline data
-stored in the golden_master/ directory.
+stored in the golden_baseline/ directory.
 
 Usage:
     cd scene/tests
-    python compare_golden_master.py
+    python compare_golden_baseline.py
 
 The script will:
-1. Load baseline data from golden_master/
+1. Load baseline data from golden_baseline/
 2. Regenerate current state from test data (if available)
 3. Compare data structures, sample values, and test results
 4. Report any differences found
@@ -33,7 +33,7 @@ import pandas as pd
 # ==============================================================================
 
 TESTS_DIR = Path(__file__).parent
-GOLDEN_MASTER_DIR = TESTS_DIR / "golden_master"
+GOLDEN_BASELINE_DIR = TESTS_DIR / "golden_baseline"
 PROJECT_ROOT = TESTS_DIR.parent.parent
 TEST_DATA_DIR = PROJECT_ROOT / "test_data" / "Celia_Set_14012026"
 
@@ -46,7 +46,7 @@ CAMERA_PREFIX = "Imagingsource"
 # ==============================================================================
 
 def load_baseline():
-    """Load all baseline files from golden_master directory."""
+    """Load all baseline files from golden_baseline directory."""
     baseline = {}
 
     files = [
@@ -57,7 +57,7 @@ def load_baseline():
     ]
 
     for filename in files:
-        filepath = GOLDEN_MASTER_DIR / filename
+        filepath = GOLDEN_BASELINE_DIR / filename
         if filepath.exists():
             with open(filepath) as f:
                 key = filename.replace(".json", "")
@@ -451,10 +451,10 @@ def compare_test_results(baseline_tests, current_tests):
 def main():
     """Run the golden master comparison."""
     print("=" * 70)
-    print("Golden Master Comparison")
+    print("Golden Baseline Comparison")
     print("=" * 70)
     print(f"Timestamp: {datetime.now().isoformat()}")
-    print(f"Golden Master Dir: {GOLDEN_MASTER_DIR}")
+    print(f"Golden Baseline Dir: {GOLDEN_BASELINE_DIR}")
     print(f"Test Data Dir: {TEST_DATA_DIR}")
     print()
 
