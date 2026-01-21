@@ -64,7 +64,7 @@ class TestSchemaCreation:
         models = vr4mice.ModelName().fetch()
         assert len(models) > 0
 
-        # Golden Master: Verify expected lookup values exist
+        # Golden Baseline: Verify expected lookup values exist
         # These are the values used in the Nightingale golden dataset
         camera_names = vr4mice.Camera.fetch("camera")
         assert "Imagingsource" in camera_names, "Expected camera 'Imagingsource' not found"
@@ -203,7 +203,7 @@ class TestMouseStatePopulation:
         fetched_x_pos = np.array(result[0]["x_pos"])
         assert len(fetched_x_pos) == 339045  # Expected length
 
-        # Golden Master: Verify sample values from fetched data
+        # Golden Baseline: Verify sample values from fetched data
         # These are specific values from the Nightingale golden dataset
         original_x_pos = np.array(get_state(raw_data=pickle_data, key="x_pos"))
 
@@ -262,26 +262,26 @@ class TestMouseStatePopulation:
         fetched_x_pos = np.array(result["x_pos"])
         fetched_velocity = np.array(result["velocity"])
 
-        # Golden Master: Full array comparison
+        # Golden Baseline: Full array comparison
         assert np.allclose(fetched_x_pos, original_x_pos, equal_nan=True), \
             "x_pos arrays don't match after round-trip"
         assert np.allclose(fetched_velocity, original_velocity, equal_nan=True), \
             "velocity arrays don't match after round-trip"
 
-        # Golden Master: Verify shapes preserved
+        # Golden Baseline: Verify shapes preserved
         assert fetched_x_pos.shape == original_x_pos.shape, \
             f"x_pos shape mismatch: {fetched_x_pos.shape} vs {original_x_pos.shape}"
         assert fetched_velocity.shape == original_velocity.shape, \
             f"velocity shape mismatch: {fetched_velocity.shape} vs {original_velocity.shape}"
 
-        # Golden Master: Verify dtypes preserved (or compatible)
+        # Golden Baseline: Verify dtypes preserved (or compatible)
         # Note: DB may return different but compatible dtype, so check values instead
         assert np.issubdtype(fetched_x_pos.dtype, np.floating), \
             f"x_pos dtype should be floating, got {fetched_x_pos.dtype}"
         assert np.issubdtype(fetched_velocity.dtype, np.floating), \
             f"velocity dtype should be floating, got {fetched_velocity.dtype}"
 
-        # Golden Master: Verify statistical properties preserved
+        # Golden Baseline: Verify statistical properties preserved
         assert np.nanmean(fetched_x_pos) == pytest.approx(np.nanmean(original_x_pos), rel=1e-6), \
             "x_pos mean changed after round-trip"
         assert np.nanstd(fetched_x_pos) == pytest.approx(np.nanstd(original_x_pos), rel=1e-6), \
@@ -457,7 +457,7 @@ class TestFullPipeline:
         state_result = vr4mice.State.fetch1()
         assert len(state_result["episode"]) == 339045
 
-        # Golden Master: Verify State table round-trip preserves values
+        # Golden Baseline: Verify State table round-trip preserves values
         # Compare episode array
         fetched_episode = np.array(state_result["episode"])
         original_episode = pickle_data["episode"]

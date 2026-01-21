@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Golden Master Capture Script for DJ 2.0 Migration
+Golden Baseline Capture Script for DJ 2.0 Migration
 
 Captures the current test outputs and data structures BEFORE migration
 so we can verify the migration didn't break anything.
@@ -11,10 +11,10 @@ After migration to DJ 2.0, run again and compare outputs.
 Usage:
     cd scene/tests
     source ../venv/bin/activate
-    python capture_golden_master.py
+    python capture_golden_baseline.py
 
 Output:
-    golden_master/
+    golden_baseline/
         test_results.json      - Pass/fail for each test
         data_structures.json   - Shapes, dtypes, column names
         sample_values.json     - Small sample of actual values
@@ -39,7 +39,7 @@ import pandas as pd
 
 SCRIPT_DIR = Path(__file__).parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
-GOLDEN_MASTER_DIR = SCRIPT_DIR / "golden_master"
+GOLDEN_BASELINE_DIR = SCRIPT_DIR / "golden_baseline"
 
 # Test data location
 TEST_DATA_DIR = PROJECT_ROOT / "test_data" / "Celia_Set_14012026"
@@ -52,8 +52,8 @@ CAMERA_PREFIX = "Imagingsource"
 # ==============================================================================
 
 def ensure_output_dir():
-    """Create golden_master directory if it doesn't exist."""
-    GOLDEN_MASTER_DIR.mkdir(parents=True, exist_ok=True)
+    """Create golden_baseline directory if it doesn't exist."""
+    GOLDEN_BASELINE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def get_git_commit():
@@ -135,8 +135,8 @@ def numpy_to_json(obj: Any) -> Any:
 
 
 def save_json(data: dict, filename: str):
-    """Save data to JSON file in golden_master directory."""
-    filepath = GOLDEN_MASTER_DIR / filename
+    """Save data to JSON file in golden_baseline directory."""
+    filepath = GOLDEN_BASELINE_DIR / filename
     with open(filepath, "w") as f:
         json.dump(data, f, indent=2, default=str)
     print(f"  Saved: {filepath}")
@@ -720,7 +720,7 @@ def print_summary(metadata: dict, test_results: dict, structures: dict, samples:
     print("CAPTURE SUMMARY")
     print("=" * 60)
 
-    print(f"\nOutput directory: {GOLDEN_MASTER_DIR}")
+    print(f"\nOutput directory: {GOLDEN_BASELINE_DIR}")
     print(f"DataJoint version: {metadata['datajoint_version']}")
     print(f"Git commit: {metadata['git_commit']} ({metadata['git_branch']})")
 
@@ -755,7 +755,7 @@ def print_summary(metadata: dict, test_results: dict, structures: dict, samples:
 
     print("\nFiles created:")
     for filename in ["capture_metadata.json", "test_results.json", "data_structures.json", "sample_values.json"]:
-        filepath = GOLDEN_MASTER_DIR / filename
+        filepath = GOLDEN_BASELINE_DIR / filename
         if filepath.exists():
             size = filepath.stat().st_size
             print(f"  {filename}: {size:,} bytes")
@@ -765,7 +765,7 @@ def print_summary(metadata: dict, test_results: dict, structures: dict, samples:
     print("=" * 60)
     print("\nTo verify after migration:")
     print("  1. Run this script again with DJ 2.0 installed")
-    print("  2. Compare the outputs in golden_master/")
+    print("  2. Compare the outputs in golden_baseline/")
     print("  3. Use 'diff' or a comparison tool to check for changes")
 
 
