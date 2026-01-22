@@ -2,7 +2,7 @@
 """
 Validate DJ 2.x Migration
 
-This script validates that the DJ 0.x -> DJ 2.x migration was successful by:
+This script validates that the DJ 1.x -> DJ 2.x migration was successful by:
 1. Connecting to the migrated database (with DJ 2.0)
 2. Fetching all blob data from tables
 3. Comparing fetched data against original Nightingale golden dataset files
@@ -122,7 +122,6 @@ def get_state(raw_data, key):
 def configure_datajoint():
     """Configure DataJoint connection from environment variables."""
     import datajoint as dj
-    from vr4mice.utils import schema_config
 
     host = os.environ.get("DJ_HOST", "localhost")
     port = os.environ.get("DJ_PORT", "3306")
@@ -132,11 +131,8 @@ def configure_datajoint():
     dj.config["database.host"] = f"{host}:{port}"
     dj.config["database.user"] = user
     dj.config["database.password"] = password
+    dj.config["database.misc.schema_prefix"] = SCHEMA_PREFIX
     dj.config["safemode"] = False
-
-    # Configure schema prefix (DJ 2.0 compatible - uses module variables)
-    schema_config._schema_prefix = SCHEMA_PREFIX
-    schema_config._create_tables = True
 
     return dj
 
