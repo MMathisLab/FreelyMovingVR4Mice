@@ -108,7 +108,7 @@ def analyze_schema(dj, schema_name):
         print("Make sure you're using DataJoint 2.x")
         sys.exit(1)
 
-    schema = dj.Schema(schema_name)
+    schema = dj.schema(schema_name)
     analysis = analyze_columns(schema)
 
     return {
@@ -137,7 +137,7 @@ def migrate_schema(dj, schema_name, dry_run=True):
         print("Make sure you're using DataJoint 2.x")
         sys.exit(1)
 
-    schema = dj.Schema(schema_name)
+    schema = dj.schema(schema_name)
 
     if dry_run:
         print(f"\n[DRY RUN] Analyzing schema: {schema_name}")
