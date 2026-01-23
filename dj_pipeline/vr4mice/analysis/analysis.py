@@ -282,7 +282,7 @@ def create_data_frame(
     slit_size = np.array(
         (vr4mice.Metadata & key).fetch1("slit_size")
     )  # TODO: check type-s
-    trial = (vr4mice.State & key).fetch("episode")  # change of name
+    trial = (vr4mice.State & key).to_arrays("episode")  # change of name
     trial = np.array(np.array(trial)[0], dtype=np.int32)
 
     aperture = slit_size[trial - 1]  # TODO check type-s

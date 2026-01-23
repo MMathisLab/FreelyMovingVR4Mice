@@ -114,7 +114,7 @@ class MeanXYTrajectory(dj.Computed):
         try:
             if len(InterpolatedTrials & key) > 0:
                 df = pd.DataFrame(
-                    (InterpolatedTrials() & key).fetch(
+                    (InterpolatedTrials() & key).proj(
                         "dataset",
                         "aperture",
                         "trial",
@@ -122,8 +122,7 @@ class MeanXYTrajectory(dj.Computed):
                         "trial_length",
                         "x",
                         "y",
-                        as_dict=True,
-                    )[0]
+                    ).to_dicts()[0]
                 )
 
                 mean_df = mean_xy_trajectory(
@@ -171,15 +170,14 @@ class YBinnedXYTrajectory(dj.Computed):
         try:
             if len(InterpolatedTrials & key) > 0:
                 df = pd.DataFrame(
-                    (InterpolatedTrials() & key).fetch(
+                    (InterpolatedTrials() & key).proj(
                         "aperture",
                         "trial",
                         "trial_length",
                         "x",
                         "flip_one_side",
                         "y",
-                        as_dict=True,
-                    )[0]
+                    ).to_dicts()[0]
                 )
                 df["x_flipped"] = df.x * df.flip_one_side
                 mean_df = mean_xy_trajectory(
@@ -228,15 +226,14 @@ class MeanVelocities(dj.Computed):
         try:
             if len(InterpolatedTrials & key) > 0:
                 df = pd.DataFrame(
-                    (InterpolatedTrials() & key).fetch(
+                    (InterpolatedTrials() & key).proj(
                         "aperture",
                         "trial_length",
                         "velocity",
                         "velocity_x",
                         "velocity_y",
                         "velocity_x_fliped",
-                        as_dict=True,
-                    )[0]
+                    ).to_dicts()[0]
                 )
                 mean_df = df.groupby(["aperture", "trial_length"], as_index=False).mean(
                     numeric_only=True

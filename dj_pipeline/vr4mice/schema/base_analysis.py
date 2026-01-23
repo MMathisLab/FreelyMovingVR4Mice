@@ -142,7 +142,7 @@ class DataFrame(dj.Computed):
     def get_unity_arena_size(self, key: dict) -> dict:
         try:
             if self & key:
-                return (self & key).fetch("interpolation")[0]
+                return (self & key).to_arrays("interpolation")[0]
             else:
                 return False
         except Exception as err:
@@ -157,7 +157,7 @@ class DataFrame(dj.Computed):
 
         try:
             dfs = []
-            keys = self.fetch("dataset")
+            keys = self.to_arrays("dataset")
             for key in keys:
                 key = f"dataset='{key}'"
                 data = self.get_data(key, columns)
@@ -284,7 +284,7 @@ class BoxDataFrame(dj.Computed):
         try:
 
             dfs = []
-            keys = self.fetch("dataset")
+            keys = self.to_arrays("dataset")
             for key in keys:
                 key = f"dataset='{key}'"
                 data = self.get_data(key, columns)
@@ -414,7 +414,7 @@ def insert_send_email(key, tuple_, table, filename, send=False):
     toaddr = []
     try:
         for name in ["thomas", "mathislab", "yang"]:
-            user_email = (exp.Experimenter & {"experimenter_name": name}).fetch("mail")[
+            user_email = (exp.Experimenter & {"experimenter_name": name}).to_arrays("mail")[
                 0
             ]
             if user_email:
@@ -423,7 +423,7 @@ def insert_send_email(key, tuple_, table, filename, send=False):
         if len(exp.Session() & key) > 0:
             user = (exp.Session() & key).proj("experimenter_name").to_dicts()[0]
             if len(user) > 0:
-                addr = (exp.Experimenter & user).fetch("mail")[0]
+                addr = (exp.Experimenter & user).to_arrays("mail")[0]
                 if addr and addr not in toaddr:
                     toaddr.append(addr)
 

@@ -111,9 +111,9 @@ class Labels(dj.Lookup):
 
     @classmethod
     def get_next_idx(cls):
-        if not cls.fetch("idx"):
+        if len(cls) == 0:
             return 0
-        current_max = cls.fetch("idx").max()
+        current_max = cls.to_arrays("idx").max()
         return current_max + 1 if current_max is not None else 0
 
 
@@ -127,14 +127,14 @@ class Groups(dj.Manual):
     def add(self, dataset, label):
         try:
             key = f"dataset='{dataset}'"
-            a = (Dataset & key).fetch()
-            if a.size == 0:
+            a = (Dataset & key).to_dicts()
+            if len(a) == 0:
                 logger.warning(
                     f"No Dataset entry found for {dataset}: can't populate {self.__class__.__name__} table."
                 )
                 return
             key = f"label='{label}'"
-            label_idx = (Labels & key).fetch("idx")[0]
+            label_idx = (Labels & key).to_arrays("idx")[0]
 
             if label_idx is None:
                 label_idx = Labels().get_next_idx()
@@ -524,7 +524,7 @@ class TrainingPhaseType(dj.Lookup):
 
     @classmethod
     def get_next_index(cls):
-        current_max = cls.fetch("idx").max()
+        current_max = cls.to_arrays("idx").max()
         return current_max + 1 if current_max is not None else 0
 
 
