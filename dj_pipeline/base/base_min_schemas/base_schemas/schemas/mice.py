@@ -10,7 +10,7 @@ import PIL.Image
 import datajoint as dj
 from base_schemas.utils import datastore
 
-schema = dj.schema("mice", locals(), create_tables=True)
+schema = dj.Schema("mice", locals(), create_tables=True)
 
 
 @schema
@@ -67,7 +67,7 @@ class Mouse(dj.Manual):
 
         from . import exp
 
-        daysOfExperiments = (exp.Session() & self).fetch("doe")
+        daysOfExperiments = (exp.Session() & self).to_arrays("doe")
         if len(daysOfExperiments) > 0:
             startDate = min(daysOfExperiments)
         else:
@@ -124,7 +124,7 @@ class Mouse(dj.Manual):
 
         from . import exp
 
-        sessionNumbers = (exp.Session() & self).fetch("session_increment")
+        sessionNumbers = (exp.Session() & self).to_arrays("session_increment")
         if len(sessionNumbers) > 0:
             return max(sessionNumbers) + 1
         else:

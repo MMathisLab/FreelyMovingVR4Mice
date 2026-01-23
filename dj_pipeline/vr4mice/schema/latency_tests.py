@@ -19,14 +19,14 @@ class SignalsPhotodiodeAligned(dj.Computed):
     definition = """
     -> vr4mice.SignalsPhotodiode
     ---
-    time_stamp: longblob    # time stamp of the interpolated of the generated and photodiode signal   
-    send_time: longblob     # time stamp of the interpolated of the generated signal
-    frame_to_socket_time: longblob # time difference between the frame and the signal send time
-    signal_read: longblob       # value of the generated signal
-    photodiode_read: longblob   # value of the photodiode signal
-    photodiode_raw_scaled: longblob         # scaled value of the photodiode signal
-    filtered_photodiode_scaled: longblob    # filtered value of the photodiode signal
-    threshold: longblob                     # threshold value of the photodiode signal
+    time_stamp: <blob>    # time stamp of the interpolated of the generated and photodiode signal   
+    send_time: <blob>     # time stamp of the interpolated of the generated signal
+    frame_to_socket_time: <blob> # time difference between the frame and the signal send time
+    signal_read: <blob>       # value of the generated signal
+    photodiode_read: <blob>   # value of the photodiode signal
+    photodiode_raw_scaled: <blob>         # scaled value of the photodiode signal
+    filtered_photodiode_scaled: <blob>    # filtered value of the photodiode signal
+    threshold: <blob>                     # threshold value of the photodiode signal
     """
 
     def make(self, key):
@@ -37,7 +37,7 @@ class SignalsPhotodiodeAligned(dj.Computed):
             return
 
         try:
-            data = (vr4mice.SignalsPhotodiode() & key).fetch(as_dict=True)[0]
+            data = (vr4mice.SignalsPhotodiode() & key).to_dicts()[0]
             data = get_signals(data).to_dict()
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
@@ -57,10 +57,10 @@ class AllLatencies(dj.Computed):
     definition = """
     -> SignalsPhotodiodeAligned
     ---
-    frame_time: longblob    # time stamp of the interpolated of the generated frame time
-    time_diff: longblob     # time differences between the generated signal and the photodiode signal's rising edge
-    photodiode_time: longblob   # time stamp of the interpolated of the photodiode signal's rising edge
-    frame_to_socket: longblob   # time difference between the frame and the signal send time
+    frame_time: <blob>    # time stamp of the interpolated of the generated frame time
+    time_diff: <blob>     # time differences between the generated signal and the photodiode signal's rising edge
+    photodiode_time: <blob>   # time stamp of the interpolated of the photodiode signal's rising edge
+    frame_to_socket: <blob>   # time difference between the frame and the signal send time
     """
 
     def make(self, key):
@@ -71,16 +71,16 @@ class AllLatencies(dj.Computed):
             return
 
         try:
-            df = pd.DataFrame((SignalsPhotodiodeAligned() & key).fetch(as_dict=True)[0])
+            df = pd.DataFrame((SignalsPhotodiodeAligned() & key).to_dicts()[0])
             rising_edges_a = find_rising_edges(df.time_stamp, df.signal_read)
             rising_edges_photodiode = find_rising_edges(
                 df.time_stamp, df.photodiode_read
             )
             latencies = get_latency(rising_edges_a, rising_edges_photodiode)
 
-            raw_data = (vr4mice.SignalsPhotodiode() & key).fetch(
-                "generated_frame_time", "generated_send_time", as_dict=True
-            )[0]
+            raw_data = (vr4mice.SignalsPhotodiode() & key).proj(
+                "generated_frame_time", "generated_send_time"
+            ).to_dicts()[0]
             latencies["frame_to_socket"] = np.mean(
                 raw_data["generated_send_time"][100:]
                 - raw_data["generated_frame_time"][100:]

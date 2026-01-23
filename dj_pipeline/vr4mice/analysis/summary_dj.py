@@ -151,7 +151,7 @@ def vr4mice_summary_plots(
     df["head_dir"] = ((df.head_dir) + 180) % 360 - 180
 
     # ensure that if the occluder is not displayed (as in training data) that there are no multiple apertures
-    if (GuiParams() & key).fetch("occlusion_type_param") == 0.0:
+    if (GuiParams() & key).fetch1("occlusion_type_param") == 0.0:
         df["aperture"] = 0
 
     num_apertures = len(df.aperture.unique())
