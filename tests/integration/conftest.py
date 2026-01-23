@@ -227,6 +227,7 @@ def dj_config(mysql_container):
             del sys.modules[_mod]
 
     import datajoint as dj
+    from vr4mice.utils import schema_config
 
     # Get connection details from container
     host = mysql_container.get_container_host_ip()
@@ -236,9 +237,11 @@ def dj_config(mysql_container):
     dj.config["database.host"] = f"{host}:{port}"
     dj.config["database.user"] = "root"
     dj.config["database.password"] = "simple"
-    dj.config["database.misc.schema_prefix"] = "test_"
-    dj.config["database.misc.create_tables"] = True
     dj.config["safemode"] = False  # Allow dropping schemas in tests
+
+    # Configure schema prefix (DJ 2.0 compatible - uses module variables)
+    schema_config._schema_prefix = "test_"
+    schema_config._create_tables = True
 
     # Test connection
     conn = dj.conn()
@@ -250,7 +253,7 @@ def dj_config(mysql_container):
         schemas = dj.list_schemas()
         for schema_name in schemas:
             if schema_name.startswith("test_"):
-                schema = dj.schema(schema_name)
+                schema = dj.Schema(schema_name)
                 schema.drop(force=True)
     except Exception as e:
         print(f"Warning: Could not cleanup test schemas: {e}")
@@ -270,7 +273,7 @@ def clean_schemas(dj_config):
     for schema_name in schemas:
         if schema_name.startswith("test_"):
             try:
-                schema = dj.schema(schema_name)
+                schema = dj.Schema(schema_name)
                 schema.drop(force=True)
             except Exception:
                 pass
