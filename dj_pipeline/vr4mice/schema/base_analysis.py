@@ -148,7 +148,7 @@ class DataFrame(dj.Computed):
     def get_unity_arena_size(self, key: dict) -> dict:
         try:
             if self & key:
-                return (self & key).fetch("interpolation")[0]
+                return (self & key).to_arrays("interpolation")[0]
             else:
                 return False
         except Exception as err:
@@ -163,7 +163,7 @@ class DataFrame(dj.Computed):
 
         try:
             dfs = []
-            keys = self.fetch("dataset")
+            keys = self.to_arrays("dataset")
             for key in keys:
                 key = f"dataset='{key}'"
                 data = self.get_data(key, columns)
@@ -295,7 +295,7 @@ class BoxDataFrame(dj.Computed):
         try:
 
             dfs = []
-            keys = self.fetch("dataset")
+            keys = self.to_arrays("dataset")
             for key in keys:
                 key = f"dataset='{key}'"
                 data = self.get_data(key, columns)
@@ -446,7 +446,7 @@ def insert_send_email(key, tuple_, table, filename, send=False):
                 toaddr.append(user_email)
 
         if len(exp.Session() & key) > 0:
-            user = (exp.Session() & key).proj("experimenter_name").to_dicts()[0]
+            user = (exp.Session() & key).fetch("experimenter_name", as_dict=True)[0]
             if len(user) > 0:
                 addr = (exp.Experimenter & user).fetch("mail")[0]
                 if addr and addr not in toaddr:

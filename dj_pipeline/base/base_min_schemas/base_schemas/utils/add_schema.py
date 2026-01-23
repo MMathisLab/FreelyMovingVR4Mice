@@ -28,4 +28,4 @@ def add_schema(name: str, locals_: dict) -> dj.Schema:
     if prefix is not None:
         name = f"{prefix}_{name}"
 
-    return dj.schema(name, locals_, create_tables=dj.config.get("create_tables", False))
+    return dj.Schema(name, locals_, create_tables=dj.config.get("create_tables", False))
