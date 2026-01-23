@@ -132,9 +132,9 @@ class DataFrame(dj.Computed):
         try:
             if self & key:
                 if columns:
-                    data = (self & key).proj(*columns).to_dicts()[0]
+                    data = (self & key).proj(*columns).to_dicts(limit=1)[0]
                 else:
-                    data = (self & key).to_dicts()[0]
+                    data = (self & key).to_dicts(limit=1)[0]
                 if "interpolation" in data.keys():
                     data.pop("interpolation")
                 df = pd.DataFrame(data)
@@ -148,7 +148,7 @@ class DataFrame(dj.Computed):
     def get_unity_arena_size(self, key: dict) -> dict:
         try:
             if self & key:
-                return (self & key).to_arrays("interpolation")[0]
+                return (self & key).to_arrays("interpolation", limit=1)[0]
             else:
                 return False
         except Exception as err:
