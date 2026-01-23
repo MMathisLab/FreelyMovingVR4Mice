@@ -53,9 +53,7 @@ class DLCProcessor(dj.Imported):
             if (
                 not "camera" in key or not "doe" in key
             ):  # TODO: add allow_direct_insert in arg
-                key = (vr4mice.DLC() & key).fetch(
-                    *vr4mice.DLC().primary_key, as_dict=True
-                )[0]
+                key = (vr4mice.DLC() & key).keys()[0]
 
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
@@ -101,9 +99,7 @@ class DLCKptsDf(dj.Computed):
             h5_path = (vr4mice.DLC & key).fetch1("keypoints_filepath")
             data = dlc_helpers.h5_to_dj(h5_path)
             if not "camera" in key or not "doe" in key:
-                key = (vr4mice.DLC() & key).fetch(
-                    *vr4mice.DLC().primary_key, as_dict=True
-                )[0]
+                key = (vr4mice.DLC() & key).keys()[0]
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
@@ -168,9 +164,7 @@ class SyncDLCKptsDf(dj.Computed):
             if (
                 not "camera" in key or not "doe" in key
             ):  # TODO: add allow_direct_insert in arg
-                key = (vr4mice.DLC() & key).fetch(
-                    *vr4mice.DLC().primary_key, as_dict=True
-                )[0]
+                key = (vr4mice.DLC() & key).keys()[0]
 
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
@@ -250,9 +244,7 @@ class OfflineKinematics(dj.Computed):
             if (
                 not "camera" in key or not "doe" in key
             ):  # TODO: add allow_direct_insert in arg
-                key = (vr4mice.DLC() & key).fetch(
-                    *vr4mice.DLC().primary_key, as_dict=True
-                )[0]
+                key = (vr4mice.DLC() & key).keys()[0]
 
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
