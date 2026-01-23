@@ -10,7 +10,7 @@ import PIL.Image
 import datajoint as dj
 from base_schemas.utils import datastore
 
-schema = dj.Schema("mice", locals(), create_tables=True)
+schema = dj.Schema("mice")
 
 
 @schema

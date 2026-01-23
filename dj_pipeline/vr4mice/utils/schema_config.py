@@ -2,12 +2,6 @@ import os
 
 import datajoint as dj
 
-# Module-level configuration for schema settings
-# Used instead of dj.config custom keys for DJ 2.0 compatibility
-_schema_prefix = ""
-_create_tables = True
-
-
 def connect_to_database(user, prefix="", create_tables=True, storage="/storage"):
     """
     Connects to a database using DataJoint.
@@ -40,9 +34,8 @@ def connect_to_database(user, prefix="", create_tables=True, storage="/storage")
     #     },
     # }
 
-    global _schema_prefix, _create_tables
-    _schema_prefix = prefix
-    _create_tables = create_tables
+    os.environ['DJ_SCHEMA_PREFIX'] = str(prefix)
+    os.environ['DJ_CREATE_TABLES'] = str(create_tables).lower()
 
     dj.config["database.host"] = user.host
     dj.config["database.user"] = user.name
@@ -98,8 +91,10 @@ class SchemaConfig:
 
     @staticmethod
     def get_schema_key(key):
-        return str(_schema_prefix) + str(key)
+        prefix = os.environ.get('DJ_SCHEMA_PREFIX', '')
+        return str(prefix) + str(key)
 
     @staticmethod
     def create_tables():
-        return _create_tables
+        value = os.environ.get('DJ_CREATE_TABLES', 'true')
+        return value.lower() == 'true'
