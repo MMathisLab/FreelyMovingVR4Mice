@@ -636,166 +636,189 @@ def _plot_bar_counts(
         color_sessions_by_lab (bool, optional): If True and per_lab=True, color individual
             session points by lab color. If False, use grey. Default is True.
     """
-
+    # Normalize x-axis handling; when no label_x is provided, create a dummy category
+    x_col = label_x if label_x is not None else "__group__"
     if label_x is None:
-        label_x = [str(1) for i in range(len(counts))]
-        figsize = (2, 5)
-        color_map = cmap
+        counts[x_col] = "all"
+        # Add controlled jitter for scatter
+        rng = np.random.default_rng(42)
+        counts["_x_jitter"] = rng.uniform(-0.01, 0.01, len(counts))
+        scatter_x = "_x_jitter"
     else:
-        if label_x == "aperture":
-            unique_labels = (
-                counts[label_x].astype(float).sort_values().astype(str).unique()
-            )
-        else:
-            unique_labels = counts[label_x].sort_values().unique()
+        scatter_x = x_col
 
-        figsize = (int(2 * len(unique_labels)), 5)
-        cmap = sns.color_palette(cmap, len(unique_labels))
-        color_map = {label: cmap[i] for i, label in enumerate(unique_labels)}
+    # Determine unique labels for consistent ordering and palette mapping
+    if x_col == "aperture":
+        unique_labels = counts[x_col].astype(float).sort_values().astype(str).unique()
+    else:
+        unique_labels = counts[x_col].sort_values().unique()
+
+    if per_mouse:
+        groupby_list = [x_col, "mouse_name"]
+    elif per_lab:
+        groupby_list = [x_col, "lab_id"]
+    else:
+        groupby_list = None
+
+    figsize = (max(int(2 * len(unique_labels)), 2), 5)
+    cmap_palette = (
+        sns.color_palette(cmap, len(unique_labels)) if len(unique_labels) else ["grey"]
+    )
+    color_map = {label: cmap_palette[i] for i, label in enumerate(unique_labels)}
 
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
 
-    if isinstance(label_x, str):
-        # Create explicit lab palette if per_lab
-        if per_lab:
-            if not "lab_id" in counts.columns:
-                raise ValueError(
-                    "per_lab is True but 'lab_id' column not in counts DataFrame."
-                )
-            unique_labs = sorted(counts["lab_id"].unique())
-            lab_palette = {lab: colors_labs[i] for i, lab in enumerate(unique_labs)}
-
-        sns.lineplot(
-            data=counts,
-            x=label_x,
-            y="count",
-            hue="mouse_name" if per_mouse else "lab_id" if per_lab else None,
-            alpha=0.7 if per_mouse else 1,
-            color="black",
-            errorbar="se",
-            palette=(
-                ["grey"] * counts["mouse_name"].nunique()
-                if per_mouse
-                else lab_palette if per_lab else None
-            ),
-            err_style=None if per_mouse or per_lab else "bars",
-            linewidth=1 if per_mouse else 2,
-            zorder=3,
-            ax=ax,
-        )  # mean lines per mouse or overall
-
-        if per_mouse:
-            sns.scatterplot(
-                data=counts.groupby(["aperture", "mouse_name"], as_index=False)[
-                    "count"
-                ].mean(),
-                x=label_x,
-                y="count",
-                alpha=0.7,
-                palette=color_map,
-                zorder=4,
-                hue=label_x,
-                ax=ax,
-                s=50,
-            )  # per mouse scatter
-
-        else:
-            sns.lineplot(
-                data=counts,
-                x=label_x,
-                y="count",
-                hue="dataset",
-                errorbar=None,
-                alpha=alpha,
-                color="grey",
-                palette=["grey"] * counts["dataset"].nunique(),
-                markers="o",
-                linewidth=0.5,
-                ax=ax,
-                legend=False,
-            )  # individual lines
-
-        if per_lab:
-            grouped_data = counts.groupby(["aperture", "lab_id"], as_index=False)[
-                "count"
-            ].mean()
-            unique_labs = sorted(grouped_data["lab_id"].unique())
-            lab_palette = {lab: colors_labs[i] for i, lab in enumerate(unique_labs)}
-
-            sns.scatterplot(
-                data=grouped_data,
-                x=label_x,
-                y="count",
-                alpha=0.7,
-                palette=lab_palette,
-                zorder=4,
-                hue="lab_id",
-                ax=ax,
-                s=50,
-            )  # per lab scatter
-
-    else:
-        sns.barplot(
-            data=counts,
-            x=label_x,
-            y="count",
-            hue="mouse_name" if per_mouse else "lab_id" if per_lab else None,
-            color="grey",
-            errorbar="se",
-            alpha=1,
-            ax=ax,
-            legend=False,
-        )
-        ax.set_xlabel("")
-        ax.set_xticklabels([])
-
-    # Plot individual session points
-    if per_lab and color_sessions_by_lab and "lab_id" in counts.columns:
-        # Color by lab
+    # Create explicit lab palette if per_lab
+    lab_palette = None
+    if per_lab:
+        if "lab_id" not in counts.columns:
+            raise ValueError(
+                "per_lab is True but 'lab_id' column not in counts DataFrame."
+            )
         unique_labs = sorted(counts["lab_id"].unique())
         lab_palette = {lab: colors_labs[i] for i, lab in enumerate(unique_labs)}
+
+    sns.lineplot(
+        data=counts,
+        x=x_col,
+        y="count",
+        hue="mouse_name" if per_mouse else "lab_id" if per_lab else None,
+        alpha=0.7 if per_mouse else 1,
+        color="black",
+        errorbar="se",
+        palette=(
+            ["grey"] * counts["mouse_name"].nunique()
+            if per_mouse
+            else lab_palette if per_lab else None
+        ),
+        err_style=None if per_mouse or per_lab else "bars",
+        linewidth=1 if per_mouse else 2,
+        zorder=3,
+        ax=ax,
+        legend=False,
+    )  # mean lines per mouse or overall
+
+    if per_mouse:
+        sns.scatterplot(
+            data=counts.groupby(groupby_list, as_index=False)["count"].mean(),
+            x=x_col,
+            y="count",
+            alpha=0.7,
+            palette=color_map,
+            zorder=4,
+            hue=x_col,
+            ax=ax,
+            s=50,
+            legend=False,
+        )  # per mouse scatter
+
+    else:
+        sns.lineplot(
+            data=counts,
+            x=x_col,
+            y="count",
+            hue="dataset" if "dataset" in counts.columns else None,
+            errorbar=None,
+            alpha=alpha,
+            color="grey",
+            palette=(
+                ["grey"] * counts["dataset"].nunique()
+                if "dataset" in counts.columns
+                else ["grey"]
+            ),
+            markers="o",
+            linewidth=0.5,
+            ax=ax,
+            legend=False,
+        )  # individual lines
+
+    if per_lab:
+        grouped_data = counts.groupby(groupby_list, as_index=False)["count"].mean()
+        unique_labs = sorted(grouped_data["lab_id"].unique())
+        lab_palette = {lab: colors_labs[i] for i, lab in enumerate(unique_labs)}
+
+        sns.scatterplot(
+            data=grouped_data,
+            x=x_col,
+            y="count",
+            alpha=0.7,
+            palette=lab_palette,
+            zorder=4,
+            hue="lab_id",
+            ax=ax,
+            s=50,
+            legend=False,
+        )  # per lab scatter
+
+    # Plot individual session points
+    if label_x is None:
+        # Manual jitter scatterplot when no x label provided
+        strip_hue = (
+            "lab_id"
+            if per_lab and color_sessions_by_lab and "lab_id" in counts.columns
+            else x_col
+        )
+        strip_palette = lab_palette if strip_hue == "lab_id" else color_map
         sns.scatterplot(
             data=counts,
-            x=label_x,
+            x=scatter_x,
             y="count",
-            alpha=alpha,
-            hue="lab_id",
-            palette=lab_palette,
+            hue=strip_hue,
+            palette=strip_palette,
             s=25,
+            linewidth=0,
+            alpha=alpha,
             ax=ax,
             legend=False,
             zorder=2,
         )
     else:
-        # Use grey or color_map for other cases
-        sns.scatterplot(
-            data=counts,
-            x=label_x,
-            y="count",
-            alpha=alpha if per_mouse or per_lab else 1,
-            hue=label_x,
-            palette=(
-                ["grey"] * len(counts["count"]) if per_mouse or per_lab else color_map
-            ),
-            s=25 if per_mouse or per_lab else 50,
-            ax=ax,
-            legend=False,
-            zorder=2,
-        )
+        if per_lab and color_sessions_by_lab and "lab_id" in counts.columns:
+            # Color by lab
+            unique_labs = sorted(counts["lab_id"].unique())
+            lab_palette = {lab: colors_labs[i] for i, lab in enumerate(unique_labs)}
+            sns.scatterplot(
+                data=counts,
+                x=scatter_x,
+                y="count",
+                alpha=alpha,
+                hue="lab_id",
+                palette=lab_palette,
+                s=25,
+                ax=ax,
+                legend=False,
+                zorder=2,
+            )
+        else:
+            # Use grey or color_map for other cases
+            sns.scatterplot(
+                data=counts,
+                x=scatter_x,
+                y="count",
+                alpha=alpha if per_mouse or per_lab else 1,
+                hue=x_col,
+                palette=(
+                    ["grey"] * len(counts["count"])
+                    if per_mouse or per_lab
+                    else color_map
+                ),
+                s=25 if per_mouse or per_lab else 50,
+                ax=ax,
+                legend=False,
+                zorder=2,
+            )
 
     if per_mouse:
         # Compute means and standard errors
-        grouped_counts = counts.groupby([label_x, "mouse_name"], as_index=False)[
-            "count"
-        ].mean()
-        means = grouped_counts.groupby(label_x)["count"].mean()
-        errors = grouped_counts.groupby(label_x)["count"].sem()
+        grouped_counts = counts.groupby(groupby_list, as_index=False)["count"].mean()
+        means = grouped_counts.groupby(x_col)["count"].mean()
+        errors = grouped_counts.groupby(x_col)["count"].sem()
 
         # Plot the mean line without error bars
         sns.lineplot(
             data=grouped_counts,
-            x=label_x,
+            x=x_col,
             y="count",
             errorbar=None,  # Disable seaborn error bars
             alpha=1,
@@ -817,18 +840,26 @@ def _plot_bar_counts(
             zorder=100,
         )
 
+        if label_x is None:
+            ax.scatter(
+                [0],
+                [means.iloc[0] if len(means) else 0],
+                color="black",
+                s=60,
+                zorder=120,
+                marker="o",
+            )
+
     if per_lab:
         # Compute means and standard errors
-        grouped_counts = counts.groupby([label_x, "lab_id"], as_index=False)[
-            "count"
-        ].mean()
-        means = grouped_counts.groupby(label_x)["count"].mean()
-        errors = grouped_counts.groupby(label_x)["count"].sem()
+        grouped_counts = counts.groupby(groupby_list, as_index=False)["count"].mean()
+        means = grouped_counts.groupby(x_col)["count"].mean()
+        errors = grouped_counts.groupby(x_col)["count"].sem()
 
         # Plot the mean line without error bars
         sns.lineplot(
             data=grouped_counts,
-            x=label_x,
+            x=x_col,
             y="count",
             errorbar=None,  # Disable seaborn error bars
             alpha=1,
@@ -850,8 +881,23 @@ def _plot_bar_counts(
             zorder=100,  # Set very high to ensure it's on top
         )
 
+        if label_x is None:
+            ax.scatter(
+                [0],
+                [means.iloc[0] if len(means) else 0],
+                color="black",
+                s=60,
+                zorder=120,
+                marker="o",
+            )
+
     if not per_mouse:
         ax.legend([], [], frameon=False)
+
+    # Hide x labels when the caller did not pass a label_x
+    if label_x is None:
+        ax.set_xlabel("")
+        ax.set_xticklabels([])
 
 
 def _plot_bias_horizontal(
@@ -1514,12 +1560,15 @@ def pairplot_average_decision_point(
                     counts[counts["aperture"] == j][label_parameter],
                 )
                 print(f"{i}-{j}: {stat}")
-                print(" mean difference: ",
+                print(
+                    " mean difference: ",
                     counts[counts["aperture"] == j][label_parameter].mean()
-                    - counts[counts["aperture"] == i][label_parameter].mean()
+                    - counts[counts["aperture"] == i][label_parameter].mean(),
                 )
                 stats_results.append((i, j, stat.statistic, stat.pvalue))
-        print(f"mean: {counts[counts['aperture'] == i][label_parameter].mean()} +/- {stats.sem(counts[counts['aperture'] == i][label_parameter])}")
+        print(
+            f"mean: {counts[counts['aperture'] == i][label_parameter].mean()} +/- {stats.sem(counts[counts['aperture'] == i][label_parameter])}"
+        )
     return counts, stats_results
 
 
