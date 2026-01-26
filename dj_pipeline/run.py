@@ -30,6 +30,8 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
     "sync_days": synchronize days in the dataset (process raw .npy files)
     "interp": interpolate trajectories and compute kinematics
     "latency": compute latencies based on photodiode signals
+    "inputs_videos": process input videos and extract frames
+    "decision": analyze decision-making metrics
 """
 
 
@@ -73,8 +75,10 @@ if __name__ == "__main__":
             "interp",
             "latency",
             "sync_days",
+            "inputs_videos",
+            "decision"
         ],
-        help="Mode to execute: 'connect', 'populate', 'summary', 'dlc', 'fetch', 'sync_days', 'analysis'",
+        help="Mode to execute: 'connect', 'populate', 'summary', 'dlc', 'fetch', 'sync_days', 'analysis', 'inputs_videos', 'decision'",
     )
 
     args = parser.parse_args()
@@ -147,6 +151,25 @@ if __name__ == "__main__":
         vr4mice.SignalsPhotodiode().populate()
         latency_tests.SignalsPhotodiodeAligned().populate()
         latency_tests.AllLatencies()
+        
+    elif args.mode == "inputs_videos":
+        from vr4mice.schema import inputs_videos
+
+        inputs_videos.RawVideos().populate()
+        inputs_videos.ProcessedVideos().populate()
+        inputs_videos.VideoSyncSignals().populate()
+        inputs_videos.AlignedVideoFrame().populate()
+    
+    elif args.mode == "decision":
+        from vr4mice.schema import decision
+
+        decision.ValidGroup().populate()
+        decision.Label().populate()
+        decision.LabelSet().populate()
+        decision.ModelParams().populate()
+        decision.TaskType().populate()
+        decision.PredictionModel().populate()
+        decision.DecisionThreshold().populate()
 
     elif args.mode == "fetch":  # TODO: adjust path
         from vr4mice.actions.fetch_data import fetch_data
