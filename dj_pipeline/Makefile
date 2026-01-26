@@ -2,7 +2,6 @@ git_repo :=FreelyMovingVR4Mice/dj_pipeline
 mount :=/mnt/database
 base_schemas_path="$(mount)/$(git_repo)/base_schemas"
 base_actions_path="$(mount)/$(git_repo)/base_actions"
-screen_recordings_path="mnt/neuropixel_data/vr4mice/raw_screen_recordings"
 
 cron_script_path := $(mount)/$(git_repo)/cron_script.sh
 cron_script_aws_path := $(mount)/$(git_repo)/cron_script_aws.sh
@@ -50,12 +49,10 @@ replica_restart:
 client_build:
 	#@cp -r $(base_schemas_path) . && \
 	#cp -r $(base_actions_path) . && \
-	#cp -r $(screen_recordings_path) . && \
 	
 	docker-compose build $(BUILD_ARGS) client #&& \
 	#rm -r base_schemas && \
 	#rm -r base_actions
-	#rm -r screen_recordings
 
 client_up: git_info
 	@docker-compose up -d client
