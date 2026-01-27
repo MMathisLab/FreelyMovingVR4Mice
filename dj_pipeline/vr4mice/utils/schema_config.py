@@ -32,7 +32,7 @@ def connect_to_database(user, prefix="", create_tables=True, storage="/storage")
     #     },
     # }
 
-    dj.config['database.schema_prefix'] = prefix
+    dj.config['database.database_prefix'] = prefix
     dj.config['database.create_tables'] = create_tables
 
     dj.config["database.host"] = user.host
@@ -75,7 +75,7 @@ class SchemaConfig:
 
     Methods:
     - get_schema_key(key): Returns the schema key for a given key,
-        using the schema prefix defined in dj.config["database.schema_prefix"].
+        using the database prefix defined in dj.config["database.database_prefix"].
     - create_tables(): Returns the value of dj.config["database.create_tables"],
         which determines whether the schema object will create tables on the database if they don't already exist.
 
@@ -89,7 +89,7 @@ class SchemaConfig:
 
     @staticmethod
     def get_schema_key(key):
-        return str(dj.config['database.schema_prefix']) + str(key)
+        return str(dj.config['database.database_prefix']) + str(key)
 
     @staticmethod
     def create_tables():
