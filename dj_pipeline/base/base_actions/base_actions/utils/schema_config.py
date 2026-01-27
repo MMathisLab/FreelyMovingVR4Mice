@@ -1,5 +1,3 @@
-import os
-
 import datajoint as dj
 
 
@@ -34,8 +32,8 @@ def connect_to_database(user, prefix="", create_tables=True, storage="/storage")
         # },
     }
 
-    os.environ['DJ_SCHEMA_PREFIX'] = str(prefix)
-    os.environ['DJ_CREATE_TABLES'] = str(create_tables).lower()
+    dj.config['database.schema_prefix'] = prefix
+    dj.config['database.create_tables'] = create_tables
 
     dj.config["database.host"] = user.host
     dj.config["database.user"] = user.name
@@ -77,8 +75,8 @@ class SchemaConfig:
 
     Methods:
     - get_schema_key(key): Returns the schema key for a given key,
-        using the schema prefix from DJ_SCHEMA_PREFIX environment variable.
-    - create_tables(): Returns the value of DJ_CREATE_TABLES environment variable,
+        using the schema prefix from dj.config["database.schema_prefix"].
+    - create_tables(): Returns the value of dj.config["database.create_tables"],
         which determines whether the schema object will create tables on the database.
 
     Notes:
@@ -91,10 +89,8 @@ class SchemaConfig:
 
     @staticmethod
     def get_schema_key(key):
-        prefix = os.environ.get('DJ_SCHEMA_PREFIX', '')
-        return str(prefix) + str(key)
+        return str(dj.config['database.schema_prefix']) + str(key)
 
     @staticmethod
     def create_tables():
-        value = os.environ.get('DJ_CREATE_TABLES', 'true')
-        return value.lower() == 'true'
+        return dj.config['database.create_tables']
