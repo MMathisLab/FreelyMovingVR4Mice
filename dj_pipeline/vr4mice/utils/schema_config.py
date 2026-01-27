@@ -1,12 +1,4 @@
-import os
-
 import datajoint as dj
-
-# Module-level configuration for schema settings
-# Used instead of dj.config custom keys for DJ 2.0 compatibility
-_schema_prefix = ""
-_create_tables = True
-
 
 def connect_to_database(user, prefix="", create_tables=True, storage="/storage"):
     """
@@ -40,9 +32,8 @@ def connect_to_database(user, prefix="", create_tables=True, storage="/storage")
     #     },
     # }
 
-    global _schema_prefix, _create_tables
-    _schema_prefix = prefix
-    _create_tables = create_tables
+    dj.config['database.database_prefix'] = prefix
+    dj.config['database.create_tables'] = create_tables
 
     dj.config["database.host"] = user.host
     dj.config["database.user"] = user.name
@@ -84,9 +75,9 @@ class SchemaConfig:
 
     Methods:
     - get_schema_key(key): Returns the schema key for a given key,
-        using the schema prefix defined in dj.config["database.misc.schema_prefix"].
-    - create_tables(): Returns the value of dj.config["database.misc.create_tables"],
-    which determines whether the schema object will create tables on the database if they don't already exist.
+        using the database prefix defined in dj.config["database.database_prefix"].
+    - create_tables(): Returns the value of dj.config["database.create_tables"],
+        which determines whether the schema object will create tables on the database if they don't already exist.
 
     Notes:
     - This class assumes that DataJoint has already been imported and configured.
@@ -98,8 +89,8 @@ class SchemaConfig:
 
     @staticmethod
     def get_schema_key(key):
-        return str(_schema_prefix) + str(key)
+        return str(dj.config['database.database_prefix']) + str(key)
 
     @staticmethod
     def create_tables():
-        return _create_tables
+        return dj.config['database.create_tables']
