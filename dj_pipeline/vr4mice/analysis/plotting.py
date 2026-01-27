@@ -2000,8 +2000,8 @@ def plot_training_phases(
         ax.set_ylabel(ylabel)
         sns.despine(offset=10)
 
-        if ylim:
-            ax.set_ylim(0, 1)
+        if ylim and len(ylim) == 2 and ylim[0] is not None and ylim[1] is not None and ylim[0] < ylim[1]:
+            ax.set_ylim(ylim[0], ylim[1])
 
         # Define tick positions and labels
         stage_positions = np.arange(6)
