@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from mouse_task.dlc_utils.processor_with_signal import ProcessorWithSignal
+from dlc_utils.processor_with_signal import ProcessorWithSignal
 
 
 class MyProcessor_socket(ProcessorWithSignal):

@@ -3,7 +3,7 @@ import numpy as np
 from typing import Any, Dict
 
 from latency_tests.Teensy_latency.TeensyLatency import TeensyLatency
-from mouse_task.dlc_utils.dlc_processor_socket import MyProcessor_socket
+from dlc_utils.dlc_processor_socket import MyProcessor_socket
 
 
 class dlc_inference_w_pd(MyProcessor_socket):
