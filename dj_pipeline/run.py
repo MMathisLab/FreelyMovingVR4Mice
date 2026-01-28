@@ -100,7 +100,9 @@ if __name__ == "__main__":
             move = True
 
         check_folder_existence(path)
-        # sync_days(path="/data/data")
+        # Intentionally not calling sync_days here: day synchronization should be
+        # run explicitly via the "sync_days" mode when needed, rather than on every
+        # populate run.
         populate_rig(path=path, move=move)
         vr4mice.Collab().populate()
 
