@@ -4,6 +4,7 @@ import pickle
 import time
 from collections import deque
 import numpy as np
+import os
 
 from math import sqrt, acos, atan2, copysign, pi, degrees
 
@@ -11,7 +12,7 @@ from math import sqrt, acos, atan2, copysign, pi, degrees
 class MyProcessor_socket:
     def __init__(
         self,
-        save_file_path="../../tests/",
+        save_file_path="latency_tests_results/",
     ):
         super().__init__()
 
@@ -62,6 +63,7 @@ class MyProcessor_socket:
         return self.curr_signal
 
     def save(self):
+        os.makedirs(self.save_file_path, exist_ok=True)
         save_dict = dict()
         save_dict["start_time"] = np.array(self.st)
         save_dict["time_stamp"] = np.array(self.step)

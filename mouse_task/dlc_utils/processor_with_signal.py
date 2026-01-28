@@ -70,7 +70,9 @@ class ProcessorWithSignal(Processor):
             curr_signal = 0
         else:
             # Square wave via sign of sine: mapped to {0,1}
-            curr_signal = (np.sign(np.sin(self.signal_freq * np.pi * curr_time)) + 1) / 2
+            curr_signal = (
+                np.sign(np.sin(self.signal_freq * np.pi * curr_time)) + 1
+            ) / 2
         return curr_signal
 
     def get_nhz_pulse_jittered(
@@ -86,9 +88,6 @@ class ProcessorWithSignal(Processor):
 
         Args:
             curr_time: Current wall-clock time
-            st: Start time (when recording began)
-            freq: Target frequency in Hz (actual rate will be lower due to jitter)
-            delay: Initial delay before signal starts
             max_extra: Maximum additional jitter per half-period (seconds)
             base_unit: Time resolution for geometric distribution (seconds)
 

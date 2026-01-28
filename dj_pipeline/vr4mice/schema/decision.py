@@ -39,7 +39,7 @@ class ValidGroup(dj.Computed):
             trial_df = (TrialMetrics() * (Dataset() & key)).fetch(as_dict=True)
             trial_df = pd.concat([pd.DataFrame(x) for x in trial_df])
             trial_df["aperture"] = trial_df.aperture.round(2)
-            
+
             trial_df = trial_df[trial_df["dataset"] != "Lemming_2024-08-09_1"]
 
             # Exclude sessions that were not in the list
@@ -311,7 +311,6 @@ class PredictionModel(dj.Computed):
                         "proba_left": "mean",
                         "accuracy": "mean",
                         "trial_left_choice": "first",
-                        "accuracy": "first",
                         "trial_length": "first",
                     }
                 )
@@ -338,17 +337,21 @@ class PredictionModel(dj.Computed):
 
             # Insert per-session predictions
             for dataset in df_model["dataset"].unique():
-                dataset_trials = df_model[df_model["dataset"] == dataset]
+                dataset_trials = df_model[df_model["dataset"] == dataset].reset_index(
+                    drop=True
+                )
 
                 bic_per_timestep = np.full(len(dataset_trials), np.nan)
                 for trial in dataset_trials["trial"].unique():
                     trial_df = dataset_trials[dataset_trials["trial"] == trial]
 
                     # Compute BIC per timestep using sliding window
-                    bic_per_timestep[trial_df.index] = regression.compute_bic_sliding_window(
-                        trial_df["proba_left"].values.reshape(-1, 1),
-                        trial_df["trial_left_choice"].values,
-                        window_size=10,
+                    bic_per_timestep[trial_df.index] = (
+                        regression.compute_bic_sliding_window(
+                            trial_df["proba_left"].values.reshape(-1, 1),
+                            trial_df["trial_left_choice"].values,
+                            window_size=10,
+                        )
                     )
 
                 self.SessionPrediction.insert1(
@@ -404,7 +407,6 @@ class DecisionPoints(dj.Computed):
     -> InterpolatedTrials
     -> DecisionThreshold
     ---
-    threshold_uncertainty: float    # uncertainty threshold used to define decision point
     trial: longblob                 # trial corresponding to the timestamp
     proba_left: longblob            # pred proba of the regression on decision side
     aperture: longblob              # occlusion size for the corresponding trial

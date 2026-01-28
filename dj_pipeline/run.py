@@ -155,21 +155,16 @@ if __name__ == "__main__":
     elif args.mode == "inputs_videos":
         from vr4mice.schema import inputs_videos
 
-        inputs_videos.RawVideos().populate()
-        inputs_videos.ProcessedVideos().populate()
-        inputs_videos.VideoSyncSignals().populate()
+        inputs_videos.RawVideo().populate()
+        inputs_videos.ProcessedVideo().populate()
+        inputs_videos.VideoSyncSignal().populate()
         inputs_videos.AlignedVideoFrame().populate()
     
     elif args.mode == "decision":
         from vr4mice.schema import decision
 
         decision.ValidGroup().populate()
-        decision.Label().populate()
-        decision.LabelSet().populate()
-        decision.ModelParams().populate()
-        decision.TaskType().populate()
         decision.PredictionModel().populate()
-        decision.DecisionThreshold().populate()
 
     elif args.mode == "fetch":  # TODO: adjust path
         from vr4mice.actions.fetch_data import fetch_data

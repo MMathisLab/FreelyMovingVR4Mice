@@ -5,6 +5,7 @@ from multiprocessing.connection import Listener
 import threading
 import pickle
 import time
+import os
 from teensyexp.teensy import Teensy
 import numpy as np
 from collections import deque
@@ -15,7 +16,9 @@ from math import sqrt, acos, atan2, copysign, pi, degrees
 
 
 class MyProcessor_socket:
-    def __init__(self, com="COM3", baudrate=9600, save_file_path="../../tests/"):
+    def __init__(
+        self, com="COM3", baudrate=9600, save_file_path="latency_tests_results/"
+    ):
         super().__init__()
 
         self.address = ("localhost", 6000)  # family is deduced to be 'AF_INET'
@@ -49,25 +52,22 @@ class MyProcessor_socket:
                 self.curr_signal,
             ]
         )
-        # self.time_stamp.append(time.time)
-        ## Sending data at 50Hz ##
+        # Sending data at 50Hz ##
         self.signal.append(self.curr_signal)
         self.step.append(self.curr_step)
         self.time_stamp.append(self.curr_time)
         self.curr_step = self.curr_step + 1
         time.sleep(1 / 100)
-        # print(self.st - time.time())
 
     def get_curr_signal(self):
         if (self.curr_time - self.st) < 3:
             self.curr_signal = 0
         else:
-
             self.curr_signal = (np.sign(np.sin(5 * np.pi * time.time())) + 1) / 2
-            # self.curr_signal = (np.sin((self.curr_step) * .1) + 1) / 2
         return self.curr_signal
 
     def save(self):
+        os.makedirs(self.save_file_path, exist_ok=True)
         save_dict = dict()
         save_dict["start_time"] = np.array(self.st)
         save_dict["time_stamp"] = np.array(self.time_stamp)

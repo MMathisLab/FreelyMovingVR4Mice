@@ -19,7 +19,7 @@ env_name = config_dict["ar_env_unity_absolute_path"]
 class SendActions:
     def __init__(
         self,
-        env_name=config_dict,
+        env_name=config_dict["ar_env_unity_absolute_path"],
         use_teensy=False,
         sleep_time=0,
         loop_time=20,
@@ -210,7 +210,6 @@ class SendActions:
                     self.episode_rewards += self.terminal_steps[
                         self.tracked_agent
                     ].reward
-                    done = True
         finally:
             self.env.close()
 

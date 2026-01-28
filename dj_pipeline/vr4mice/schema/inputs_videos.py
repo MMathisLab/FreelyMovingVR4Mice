@@ -157,8 +157,7 @@ class VideoSyncSignal(dj.Computed):
     """
 
     def make(self, key):
-        from vr4mice.analysis.inputs_videos import \
-            extract_sync_signal_from_video
+        from vr4mice.analysis.inputs_videos import extract_sync_signal_from_video
 
         try:
             sync_path = (ProcessedVideo & key).fetch1("sync_video_path")
@@ -220,11 +219,11 @@ class AlignedVideoFrame(dj.Computed):
     def make(self, key):
         try:
             video_signal = VideoSyncSignal.get_sync_df(key)
-            state_dict = (State() & key).fetch("step", "step_time", as_dict=True)[0]
+            state_dict = (State() & key).fetch1()
             step_times = np.array(state_dict["step_time"], dtype=float)
 
             photodiode_df = None
-            if {"photodiode_time", "photodiode_read"}.issubset(state_dict.keys()):
+            if "photodiode_time" in state_dict and "photodiode_read" in state_dict:
                 photodiode_df = pd.DataFrame(
                     {
                         "time_stamp": np.array(
@@ -238,11 +237,11 @@ class AlignedVideoFrame(dj.Computed):
 
             from vr4mice.schema.vr4mice import SignalsPhotodiode
 
-            signal_type = (
-                getattr(SignalsPhotodiode(), "signal_type", "pulse_geo")
-                if hasattr(SignalsPhotodiode(), "signal_type")
-                else "pulse"
-            )
+            # Check that SignalsPhotodiode has the attribute signal_type
+            # else default to pulse
+            signal_type = (SignalsPhotodiode & key).fetch1("signal_type")
+            if signal_type is None:
+                signal_type = "pulse"
 
             from vr4mice.analysis.inputs_videos import align_steps_to_frames
 
@@ -277,30 +276,38 @@ class AlignedVideoFrame(dj.Computed):
     def align_step_to_frames(cls, key, timepoints: list):
         """
         Given a list of timepoints (in seconds), return the corresponding video frame indices.
-        
-        If any timepoint is out of bounds (less than 0 or greater than or equal to the number
-        of steps), a ValueError is raised.
-        
+
+        If any timepoint is out of bounds (less than the minimum step_time or greater than
+        the maximum step_time), a ValueError is raised.
+
         Args:
             key: dict, key to identify the AlignedVideoFrame entry
             timepoints: list of float, timepoints in seconds to align to video frames
-        
+
         Returns:
             list of int or None: corresponding video frame indices for each timepoint
         """
         rec = (cls & key).fetch1()
         frame_ids = rec["frame_ids"]
-        n_steps = rec["n_steps"]
-        for idx in timepoints:
-            if not isinstance(idx, (int, float)):
-                raise TypeError(f"Timepoint {idx} is not a number.")
-            if idx < 0 or idx >= n_steps:
+        step_times = rec["step_time"]
+
+        # Validate timepoints are within the valid time range
+        min_time = np.min(step_times)
+        max_time = np.max(step_times)
+
+        for tp in timepoints:
+            if not isinstance(tp, (int, float)):
+                raise TypeError(f"Timepoint {tp} is not a number.")
+            if tp < min_time or tp > max_time:
                 raise ValueError(
-                    f"Timepoint {idx} is out of bounds for the number of steps."
+                    f"Timepoint {tp} is out of bounds. Valid range: [{min_time:.3f}, {max_time:.3f}] seconds."
                 )
+
         timepoints = np.array(timepoints, dtype=np.float64)
+
+        # Interpolate: step_time (seconds) → frame_ids
         interp = scipy.interpolate.interp1d(
-            np.arange(len(frame_ids)),
+            step_times,
             frame_ids,
             bounds_error=False,
             fill_value="extrapolate",

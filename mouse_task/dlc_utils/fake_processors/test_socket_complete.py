@@ -6,6 +6,7 @@ complete socket communication including latency measurement.
 Run from this directory:
     python test_socket_complete.py
 """
+
 import sys
 import time
 import threading
@@ -54,7 +55,7 @@ class SocketSender(ProcessorWithSignal):
         use_teensy: bool = False,
         com: str = "COM3",
         baudrate: int = 9600,
-        save_file_path: str = "../../tests/",
+        save_file_path: str = "latency_tests_results/",
     ):
         super().__init__(signal_delay=signal_delay, signal_type=signal_type, freq=freq)
 
@@ -263,7 +264,7 @@ def test_socket_communication(
     save_path: Optional[Path] = None,
 ) -> tuple:
     """Test complete socket communication with sender and receiver.
-    
+
     Args:
         signal_type: Type of signal (pulse, pulse_geo, sin, flip)
         freq: Signal frequency in Hz
@@ -271,7 +272,7 @@ def test_socket_communication(
         num_frames: Number of frames to send
         use_teensy: Whether to use Teensy (falls back to FakeTeensy if unavailable)
         save_results: Whether to save results to files
-    
+
     Returns:
         tuple: (sender_results, receiver_results)
     """
@@ -448,11 +449,7 @@ def test_socket_communication(
             from datetime import datetime
 
             timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            save_path = (
-                Path(__file__).parent.parent.parent
-                / "tests"
-                / f"socket_tests_{timestamp}"
-            )
+            save_path = Path("latency_tests_results") / f"socket_tests_{timestamp}"
 
         save_path.mkdir(exist_ok=True, parents=True)
 
@@ -464,7 +461,8 @@ def test_socket_communication(
         )
 
         np.save(sender_file, sender_results, allow_pickle=True)
-        pickle.dump(receiver_results, open(receiver_file, "wb"))
+        with open(receiver_file, "wb") as f:
+            pickle.dump(receiver_results, f)
 
         print(f"  Saved to {save_path.name}/")
 
@@ -483,9 +481,7 @@ def main():
 
     # Create single save path for all tests in this run
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    save_path = (
-        Path(__file__).parent.parent.parent / "tests" / f"socket_tests_{timestamp}"
-    )
+    save_path = Path("latency_tests_results") / f"socket_tests_{timestamp}"
     save_path.mkdir(exist_ok=True, parents=True)
     print(f"Saving all results to: {save_path}\n")
 
