@@ -150,8 +150,8 @@ if __name__ == "__main__":
             vr4mice.Dataset() * vr4mice.Groups() * vr4mice.Labels() & "label='ar_paper'"
         ).fetch("dataset", as_dict=True)
 
-        # session_metrics.SessionMetrics().populate(keys)
-        # session_metrics.TrialMetrics().populate(keys)
+        session_metrics.SessionMetrics().populate(keys)
+        session_metrics.TrialMetrics().populate(keys)
 
         interpolated_trajectories.InterpolatedTrials().populate(keys)
 
