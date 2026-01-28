@@ -1,13 +1,11 @@
-from pathlib import Path
-from typing import List, Optional
-
 import datajoint as dj
-import pandas as pd
 import numpy as np
+import pandas as pd
+
+from vr4mice.analysis.latency_testing import find_rising_edges, get_latency, get_signals
 from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
-from vr4mice.analysis.latency_testing import get_signals, find_rising_edges, get_latency
 
 schema_name = "latency_tests"
 schema = get_schema(schema_name, locals())
@@ -37,19 +35,47 @@ class SignalsPhotodiodeAligned(dj.Computed):
             return
 
         try:
+            logger.info(f"{key['dataset']}")
             data = (vr4mice.SignalsPhotodiode() & key).fetch(as_dict=True)[0]
             data = get_signals(data).to_dict()
+
+            if len(np.unique(np.array(list(data["photodiode_read"].values())))) != 2:
+                raise ValueError(
+                    f"Photodiode signal in {key['dataset']} is not binary, check that the photodiode was recording."
+                )
+
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
         except Exception as err:
             dataset = key["dataset"]
-
-            logger.warning(
-                f"{self.__class__.__name__} population failed: key: {key}, {err}"
-            )
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            logger.warning(err)
+
+            return None
+
+    @classmethod
+    def get_photodiode_df(cls, key: dict) -> pd.DataFrame:
+        data = (cls & key).fetch1()
+
+        return pd.DataFrame(
+            {"send_time": data["send_time"], "signal_read": data["signal_read"]}
+        )
+
+    @classmethod
+    def get_dlc_df(cls, key: dict) -> pd.DataFrame:
+        data = (cls & key).fetch1()
+
+        return pd.DataFrame(
+            {
+                "time_stamp": data["time_stamp"],
+                "photodiode_read": data["photodiode_read"],
+                "photodiode_raw_scaled": data["photodiode_raw_scaled"],
+                "filtered_photodiode_scaled": data["filtered_photodiode_scaled"],
+            }
+        )
 
 
 @schema
@@ -71,10 +97,18 @@ class AllLatencies(dj.Computed):
             return
 
         try:
-            df = pd.DataFrame((SignalsPhotodiodeAligned() & key).fetch(as_dict=True)[0])
-            rising_edges_a = find_rising_edges(df.time_stamp, df.signal_read)
+            logger.info(f"{key['dataset']}")
+            photodiode_df = pd.DataFrame(
+                (SignalsPhotodiodeAligned() & key).fetch(
+                    "time_stamp", "signal_read", "photodiode_read", as_dict=True
+                )[0]
+            )
+
+            rising_edges_a = find_rising_edges(
+                photodiode_df.time_stamp, photodiode_df.signal_read
+            )
             rising_edges_photodiode = find_rising_edges(
-                df.time_stamp, df.photodiode_read
+                photodiode_df.time_stamp, photodiode_df.photodiode_read
             )
             latencies = get_latency(rising_edges_a, rising_edges_photodiode)
 
@@ -95,4 +129,5 @@ class AllLatencies(dj.Computed):
             )
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
+
             return None

@@ -8,6 +8,8 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import sklearn
+import sklearn.linear_model
+from sklearn.metrics import log_loss
 import sklearn.model_selection
 import sklearn.preprocessing
 
@@ -24,8 +26,6 @@ model_labels = [
     "head_angle_sin",
     "head_angle_cos",
     "trial_tortuosity",
-    # "trial_duration",
-    # "aperture",
     "trial_rewarded",
     "trial_length",
 ]
@@ -52,6 +52,7 @@ def predict_decision(
     per_mouse: bool = True,
     max_iter: int = 100,
     scale_data: bool = True,
+    random_state: Optional[int] = None,
 ) -> Tuple[pd.DataFrame, npt.NDArray]:
     """Predict the animal's decision based on the `label` data, through a logistic regression.
 
@@ -63,6 +64,7 @@ def predict_decision(
             randomly across all sessions. If per_mouse, we train on
             all sessions but one, and test on the left out session.
         scale_data: If `True`, standardize the data before fitting the model.
+        random_state: Random state for reproducibility.
 
     Returns:
         The initial dataframe with an extra `pred` column, containing the probability that the
@@ -83,11 +85,13 @@ def predict_decision(
     data = df[label].values
     labels = df.trial_left_choice.values
 
-    if not isinstance(label, list):
+    if not isinstance(label, list) or not isinstance(data, np.ndarray):
         data = data.reshape(-1, 1)
     pred = np.empty((data.shape[0], 2))
     scores = np.empty((data.shape[0]))
-    model = sklearn.linear_model.LogisticRegression(max_iter=max_iter)
+    model = sklearn.linear_model.LogisticRegression(
+        max_iter=max_iter, random_state=random_state
+    )
 
     if scale_data:
         data = sklearn.preprocessing.StandardScaler().fit_transform(data)
@@ -108,17 +112,81 @@ def predict_decision(
             coefs[i] = np.concatenate([[model.intercept_[0]], model.coef_[0]])
 
     else:
-        kf = sklearn.model_selection.KFold(n_splits=n_splits)
+        coefs = np.empty((1, len(label) + 1))
+        kf = sklearn.model_selection.KFold(
+            n_splits=n_splits, random_state=random_state, shuffle=True
+        )
         for i, (train_index, test_index) in enumerate(kf.split(data)):
             model.fit(data[train_index], labels[train_index])
             pred[test_index] = model.predict_proba(data[test_index])
             scores[test_index] = model.predict(data[test_index]) == labels[test_index]
+
+        # Store final model coefficients
+        coefs[0] = np.concatenate([[model.intercept_[0]], model.coef_[0]])
 
     ret = copy.deepcopy(df)
     ret.loc[:, "accuracy"] = scores
     ret.loc[:, "proba_left"] = pred[:, 1]
 
     return ret, coefs
+
+
+def compute_bic(probs, y):
+    n = len(y)
+    k = probs.shape[1] + 1  # Predictors + Intercept
+
+    # Calculate Log-Likelihood
+    # log_loss in sklearn is the negative log-likelihood divided by n
+    # Explicitly specify both labels to handle single-label windows
+    log_likelihood = -log_loss(y, probs, normalize=False, labels=[0, 1])
+
+    # BIC Formula: ln(n)k - 2ln(L)
+    bic = np.log(n) * k - 2 * log_likelihood
+    return bic
+
+
+def compute_bic_sliding_window(probs, y, window_size=10):
+    """Compute BIC over a rolling window of timesteps.
+
+    Each window uses exactly window_size samples. For edges:
+    - At the beginning: looks forward to get window_size samples
+    - At the end: looks backward to get window_size samples
+    - In the middle: uses window_size samples centered around current timestep
+    """
+    n = len(y)
+    bic_values = np.full(n, np.nan)
+
+    if n == 0:
+        return bic_values
+
+    # For each timestep, create a window of exactly window_size samples
+    for i in range(n):
+        # Try to center the window around i
+        ideal_start = i - window_size // 2
+        ideal_end = ideal_start + window_size
+
+        # Clamp to valid bounds
+        start = max(0, ideal_start)
+        end = min(n, ideal_end)
+
+        # Adjust if we don't have enough samples - shift window to stay within bounds
+        if end - start < window_size:
+            if start == 0:  # At beginning, extend forward
+                end = min(n, window_size)
+            else:  # At end, extend backward
+                start = max(0, n - window_size)
+
+        window_probs = probs[start:end]
+        window_y = y[start:end]
+
+        # Ensure 2D for probabilities
+        window_probs = np.asarray(window_probs).reshape(len(window_probs), -1)
+
+        # Only compute if we have exactly window_size samples
+        if len(window_y) == window_size:
+            bic_values[i] = compute_bic(window_probs, window_y)
+
+    return bic_values
 
 
 def _find_decision_point_per_trial(
