@@ -51,7 +51,7 @@ def main():
             session_metrics,
             latency_tests,
             inputs_videos,
-            decision
+            decision,
         )
 
         vr4mice.Collab().populate()
@@ -79,15 +79,15 @@ def main():
 
         base_analysis.SummaryPlots().populate()
         base_analysis.TrackingSummaryPlots().populate()
-        
+
         inputs_videos.RawVideo().populate()
         inputs_videos.ProcessedVideo().populate()
         inputs_videos.VideoSyncSignal().populate()
         inputs_videos.AlignedVideoFrame().populate()
-        
+
         decision.ValidGroup().populate()
         decision.PredictionModel().populate()
-        
+
     except Exception as e:
         logger.error(f"An error occurred in populate_decision_making.populate: {e}")
 

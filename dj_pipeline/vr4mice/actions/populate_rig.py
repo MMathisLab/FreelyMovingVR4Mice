@@ -222,7 +222,7 @@ def get_files_paths(
 ):
     """
     Simulation of data from gui .npy, if it's missing
-    
+
     Args:
         dataset: The name of the dataset, formatting is {mouse_name}-{doe}-{attempt}.
         remote_src: The source path for remote files.

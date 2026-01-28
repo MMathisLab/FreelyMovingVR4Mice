@@ -76,7 +76,7 @@ if __name__ == "__main__":
             "latency",
             "sync_days",
             "inputs_videos",
-            "decision"
+            "decision",
         ],
         help="Mode to execute: 'connect', 'populate', 'summary', 'dlc', 'fetch', 'sync_days', 'analysis', 'inputs_videos', 'decision'",
     )
@@ -151,7 +151,7 @@ if __name__ == "__main__":
         vr4mice.SignalsPhotodiode().populate()
         latency_tests.SignalsPhotodiodeAligned().populate()
         latency_tests.AllLatencies()
-        
+
     elif args.mode == "inputs_videos":
         from vr4mice.schema import inputs_videos
 
@@ -159,7 +159,7 @@ if __name__ == "__main__":
         inputs_videos.ProcessedVideo().populate()
         inputs_videos.VideoSyncSignal().populate()
         inputs_videos.AlignedVideoFrame().populate()
-    
+
     elif args.mode == "decision":
         from vr4mice.schema import decision
 

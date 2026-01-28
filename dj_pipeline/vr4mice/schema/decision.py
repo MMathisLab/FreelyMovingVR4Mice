@@ -346,12 +346,12 @@ class PredictionModel(dj.Computed):
                     trial_df = dataset_trials[dataset_trials["trial"] == trial]
 
                     # Compute BIC per timestep using sliding window
-                    bic_per_timestep[trial_df.index] = (
-                        regression.compute_bic_sliding_window(
-                            trial_df["proba_left"].values.reshape(-1, 1),
-                            trial_df["trial_left_choice"].values,
-                            window_size=10,
-                        )
+                    bic_per_timestep[
+                        trial_df.index
+                    ] = regression.compute_bic_sliding_window(
+                        trial_df["proba_left"].values.reshape(-1, 1),
+                        trial_df["trial_left_choice"].values,
+                        window_size=10,
                     )
 
                 self.SessionPrediction.insert1(

@@ -357,7 +357,9 @@ def apply_inclusion_criteria(
         (pivoted_reward[("trial_rewarded", 12.0)] > min_wide_reward)
     ]
     if consider_reward_drop:
-        pivoted_reward = pivoted_reward[abs(pivoted_reward.reward_drop) < max_reward_drop]
+        pivoted_reward = pivoted_reward[
+            abs(pivoted_reward.reward_drop) < max_reward_drop
+        ]
 
     if return_excluded:
         filtered_data = data[data.dataset.isin(pivoted_reward.index) == 0]
