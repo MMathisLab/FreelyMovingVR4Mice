@@ -421,7 +421,7 @@ def insert_send_email(key, tuple_, table, filename, send=False):
                 if name.strip()
             ]
         else:
-            recipient_names = ["celia", "mathislab"]
+            recipient_names = ["mathislab"]
 
         for name in recipient_names:
             user_email = (exp.Experimenter & {"experimenter_name": name}).fetch("mail")[
