@@ -75,7 +75,9 @@ class InterpolatedTrials(dj.Computed):
                     columns=["time", "dataset", "trial_step"]
                 )
                 interpolated_df["x_flipped"] = df["x"] * df["flip_one_side"]
-                self.insert1({**key, **interpolated_df.to_dict()})
+                self.insert1(
+                    {**key, **interpolated_df.to_dict()}, allow_direct_insert=True
+                )
 
         except Exception as err:
             dataset = key["dataset"]

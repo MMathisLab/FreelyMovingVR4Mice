@@ -77,6 +77,7 @@ bash: git_info
 	@docker-compose exec client bash
 
 mysql: git_info
+	#@mysql --defaults-group-suffix=-aws_vr4mice -A
 	@mysql --defaults-group-suffix=-vr4mice -A
 
 notebook:

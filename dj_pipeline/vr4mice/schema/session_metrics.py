@@ -112,6 +112,7 @@ class TrialMetrics(dj.Computed):
     """
 
     def make(self, key):
+
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
@@ -139,7 +140,7 @@ class TrialMetrics(dj.Computed):
                     "trial_duration": mean_df.trial_duration.values,
                     "trial_jshaped": mean_df.trial_jshaped.values,
                 }
-                self.insert1({**key, **insert_dict})
+                self.insert1({**key, **insert_dict}, allow_direct_insert=True)
 
         except Exception as err:
             dataset = key["dataset"]
