@@ -413,7 +413,17 @@ def insert_send_email(key, tuple_, table, filename, send=False):
 
     toaddr = []
     try:
-        for name in ["celia"]:  # , "mathislab"]:
+        default_recipient_names = os.getenv("VR4MICE_EMAIL_RECIPIENTS")
+        if default_recipient_names:
+            recipient_names = [
+                name.strip()
+                for name in default_recipient_names.split(",")
+                if name.strip()
+            ]
+        else:
+            recipient_names = ["celia", "mathislab"]
+
+        for name in recipient_names:
             user_email = (exp.Experimenter & {"experimenter_name": name}).fetch("mail")[
                 0
             ]
