@@ -4,7 +4,6 @@ Latency testing tables should be imported before this.
 
 import os
 import pathlib
-import pickle
 from typing import Tuple
 
 import cv2
@@ -13,7 +12,7 @@ import numpy as np
 import pandas as pd
 import scipy.interpolate
 
-from vr4mice.schema.vr4mice import Dataset, State
+from vr4mice.schema.vr4mice import State
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
 
@@ -82,11 +81,10 @@ class ProcessedVideo(dj.Computed):
                 and wx and wy the widths of the roi. The sync ROI is 2 x 2 pixels in the
                 top left corner of bottom left screen on the OBS video
         """
-        from vr4mice.analysis.inputs_videos import VideoTrimmer
-
-        video_path = (RawVideo & key).fetch1("video_path")
-
         try:
+            from vr4mice.analysis.inputs_videos import VideoTrimmer
+
+            video_path = (RawVideo & key).fetch1("video_path")
             trimmer = VideoTrimmer(video_path, session_start_buffer=10)
 
             (
@@ -114,7 +112,11 @@ class ProcessedVideo(dj.Computed):
             return None
 
     def get_visual_frame(self, key, frame_index: int):
-        """Return the frame at `frame_index` from the visual video."""
+        """Return the frame at `frame_index` from the visual video.
+
+        Note: This method raises exceptions (FileNotFoundError, IOError, IndexError, RuntimeError).
+        If calling from pipeline code, wrap in try-except and log errors appropriately.
+        """
         visual_path = (self & key).fetch1("visual_video_path")
 
         if not os.path.exists(visual_path):

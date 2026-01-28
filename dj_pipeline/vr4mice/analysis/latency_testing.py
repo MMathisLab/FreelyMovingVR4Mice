@@ -13,9 +13,6 @@ def check_data(data: dict):
     Args:
         data (dict): Dictionary containing the photodiode and generated signal data.
 
-    Args:
-        data (dict): Dictionary containing the photodiode and generated signal data.
-
     Returns:
         bool: True if all checks pass, False otherwise.
     """

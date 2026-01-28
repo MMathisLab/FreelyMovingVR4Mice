@@ -2,8 +2,7 @@ import datajoint as dj
 import numpy as np
 import pandas as pd
 
-from vr4mice.analysis.latency_testing import (find_rising_edges, get_latency,
-                                              get_signals)
+from vr4mice.analysis.latency_testing import find_rising_edges, get_latency, get_signals
 from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
@@ -49,13 +48,13 @@ class SignalsPhotodiodeAligned(dj.Computed):
             self.insert1(data, allow_direct_insert=True)
         except Exception as err:
             dataset = key["dataset"]
-
-            logger.warning(
-                f"{self.__class__.__name__} population failed: key: {dataset[key]}, {err}"
-            )
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            logger.warning(err)
+
+            return None
 
     @classmethod
     def get_photodiode_df(cls, key: dict) -> pd.DataFrame:
@@ -128,8 +127,7 @@ class AllLatencies(dj.Computed):
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            logger.warning(err)
 
-            logger.warning(
-                f"Can't populate {self.__class__.__name__}, key: {dataset}. Error: {err}."
-            )
             return None

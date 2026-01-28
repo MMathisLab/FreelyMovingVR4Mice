@@ -5,9 +5,11 @@ from typing import Dict, Iterable, Optional, Tuple
 import cv2
 import numpy as np
 import pandas as pd
-from vr4mice.analysis.latency_testing import (detect_signal_polarity,
-                                              filter_pulsed_signal,
-                                              find_rising_edges)
+from vr4mice.analysis.latency_testing import (
+    detect_signal_polarity,
+    filter_pulsed_signal,
+    find_rising_edges,
+)
 
 # NOTE(celia): all recordings should be 120 fps (frame rate per second).
 
@@ -257,72 +259,72 @@ class VideoTrimmer:
         visual_x, visual_y, visual_w, visual_h = visual_roi_coords
         sync_x, sync_y, sync_w, sync_h = sync_roi_coords
 
-        # try:
-        # Visual ROI command
-        visual_cmd = [
-            "ffmpeg",
-            "-y",
-            "-ss",
-            str(start_time),
-            "-i",
-            self.input_path,
-            "-t",
-            str(duration),
-            "-filter:v",
-            f"crop={visual_w}:{visual_h}:{visual_x}:{visual_y}",
-            "-c:v",
-            "libx264",
-            "-preset",
-            "ultrafast",
-            "-crf",
-            "23",
-            visual_output_path,
-        ]
+        try:
+            # Visual ROI command
+            visual_cmd = [
+                "ffmpeg",
+                "-y",
+                "-ss",
+                str(start_time),
+                "-i",
+                self.input_path,
+                "-t",
+                str(duration),
+                "-filter:v",
+                f"crop={visual_w}:{visual_h}:{visual_x}:{visual_y}",
+                "-c:v",
+                "libx264",
+                "-preset",
+                "ultrafast",
+                "-crf",
+                "23",
+                visual_output_path,
+            ]
 
-        # Sync ROI command
-        sync_cmd = [
-            "ffmpeg",
-            "-y",
-            "-ss",
-            str(start_time),
-            "-i",
-            self.input_path,
-            "-t",
-            str(duration),
-            "-filter:v",
-            f"crop={sync_w}:{sync_h}:{sync_x}:{sync_y}",
-            "-c:v",
-            "libx264",
-            "-preset",
-            "ultrafast",
-            "-crf",
-            "23",
-            sync_output_path,
-        ]
+            # Sync ROI command
+            sync_cmd = [
+                "ffmpeg",
+                "-y",
+                "-ss",
+                str(start_time),
+                "-i",
+                self.input_path,
+                "-t",
+                str(duration),
+                "-filter:v",
+                f"crop={sync_w}:{sync_h}:{sync_x}:{sync_y}",
+                "-c:v",
+                "libx264",
+                "-preset",
+                "ultrafast",
+                "-crf",
+                "23",
+                sync_output_path,
+            ]
 
-        # Run both commands in parallel
-        process1 = subprocess.Popen(
-            visual_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        process2 = subprocess.Popen(
-            sync_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
+            # Run both commands in parallel
+            process1 = subprocess.Popen(
+                visual_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            process2 = subprocess.Popen(
+                sync_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
 
-        # Wait for both to complete
-        stdout1, stderr1 = process1.communicate()
-        stdout2, stderr2 = process2.communicate()
+            # Wait for both to complete
+            stdout1, stderr1 = process1.communicate()
+            stdout2, stderr2 = process2.communicate()
 
-        if process1.returncode != 0:
-            raise RuntimeError(f"Error processing visual ROI: {stderr1.decode()}")
+            if process1.returncode != 0:
+                raise RuntimeError(f"Error processing visual ROI: {stderr1.decode()}")
 
-        if process2.returncode != 0:
-            raise RuntimeError(f"Error processing sync ROI: {stderr2.decode()}")
+            if process2.returncode != 0:
+                raise RuntimeError(f"Error processing sync ROI: {stderr2.decode()}")
 
-        return True, visual_output_path, sync_output_path
+            return True, visual_output_path, sync_output_path
 
-        # except Exception as e:
-        #     print(f"Error during video trimming: {e}")
-        #     return False, visual_output_path, sync_output_path
+        except Exception as e:
+            print(f"Error during video trimming: {e}")
+            return False, visual_output_path, sync_output_path
 
     def auto_trim_video(
         self, visual_roi_coords, sync_roi_coords, sample_center_size=20, trimmed=True
@@ -349,12 +351,13 @@ class VideoTrimmer:
             success, visual_output_path, sync_output_path = self.trim_video_to_rois(
                 session_start, session_end, visual_roi_coords, sync_roi_coords
             )
+            if success is False:
+                raise RuntimeError("Video trimming failed")
+            # success is True, continue with trimmed paths
         else:
-            success = None
-
-        if not success:
-            ("Trimming failed!")
-            return None, None, None, None, None
+            # Skip trimming, return validation and boundaries only
+            visual_output_path = None
+            sync_output_path = None
 
         return (
             visual_output_path,
@@ -380,8 +383,6 @@ def extract_sync_signal_from_video(video_path):
 
     fps = cap.get(cv2.CAP_PROP_FPS)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     frame_ids = []
     timestamps = []
