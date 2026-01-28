@@ -31,6 +31,8 @@ colors_labs = ["#FF7F0E", "#2CA02C", "#1F77B4"]  # sorted: cris, mathis, tolias
 # NOTE(celia): to adapt if we put Niell instead of Cris back
 colors_rewarded = ["black", "red"]
 
+reward_is_binary = lambda df: set(df["reward"].unique()) == {0.0, 1.0}
+
 
 def _create_axes(
     ax: Optional[matplotlib.axes.Axes], per_aperture: bool, num_aperture: int
@@ -246,7 +248,11 @@ def plot_trajectories(
     ax.scatter(first.x, first.y, c="#2250C8", alpha=1, s=30, zorder=100)
 
     if scatter_reward:
-        rewards = np.where(df["reward"] > 0)[0]
+        if reward_is_binary(df):
+            rewards = np.where(df["reward"] > 0)[0]
+        else:
+            is_last_row = ~df.duplicated(subset=["trial"], keep="last")
+            rewards = np.where(is_last_row & (df["trial_rewarded"] == 1))[0]
 
         ax.scatter(
             df.x.iloc[rewards],
@@ -434,11 +440,11 @@ def _plot_bar_counts(
             color="black",
             errorbar="se",
             # palette=["grey"] * counts["mouse_name"].nunique() if per_mouse else ["grey"] * counts["lab_id"].nunique() if per_lab else None,
-            palette=["grey"] * counts["mouse_name"].nunique()
-            if per_mouse
-            else colors_labs
-            if per_lab
-            else None,
+            palette=(
+                ["grey"] * counts["mouse_name"].nunique()
+                if per_mouse
+                else colors_labs if per_lab else None
+            ),
             err_style=None if per_mouse or per_lab else "bars",
             linewidth=1 if per_mouse else 2,
             zorder=3,
@@ -594,7 +600,7 @@ def _plot_bar_counts(
 
 
 def plot_trial_count(
-    df,  # TODO(celia): provide correct columns directly?
+    df,
     per_aperture: bool = False,
     alpha: float = 0.5,
     per_mouse: bool = False,
@@ -656,7 +662,7 @@ def plot_trial_count(
         cmap=cmap,
     )
 
-    ax.set_ylabel("#Trials / session")
+    ax.set_ylabel("#Trials / Session")
     ax.set_xlim(-0.5, num_aperture - 0.5)
 
     if per_aperture:
@@ -753,8 +759,8 @@ def plot_rate(
         else:
             counts = pd.DataFrame(counts.reset_index())
     counts = counts.rename(columns={"trial": "count"})
-    
-    if plot_bias: 
+
+    if plot_bias:
         counts["count"] = 2 * counts["count"] - 1  # to have it between -1 and 1
 
     if plot_bias:
@@ -912,9 +918,7 @@ def plot_time_to_reward(
         cmap = (
             colors_aperture
             if label_x == "aperture"
-            else colors_rewarded
-            if label_x == "trial_rewarded"
-            else colors_choice
+            else colors_rewarded if label_x == "trial_rewarded" else colors_choice
         )
 
     def _time_to_reward_box(group):
@@ -1407,7 +1411,13 @@ def _plot_rewards(rewarded, ax):  # NOTE(celia): deprecated, replace by plot_rew
 
 def plot_rolling_reward(df, ax):
 
-    rewarded = df.groupby("trial")["reward"].max().reset_index()
+    if reward_is_binary(df):
+        # this returns 1 if the trial was rewarded, 0 otherwise
+        rewarded = df.groupby("trial")["reward"].max().reset_index()
+    else:
+        rewarded = df.groupby("trial")["trial_rewarded"].max().reset_index()
+        rewarded["reward"] = rewarded["trial_rewarded"].astype(int)
+
     ax.bar(rewarded.trial, rewarded.reward, color="grey")
 
     ax.plot(
@@ -1418,6 +1428,7 @@ def plot_rolling_reward(df, ax):
         linewidth=3,
     )
     ax.set_ylabel("Rewarded")
+    ax.set_xlabel("Trials")
 
 
 def _plot_choices(
@@ -1752,7 +1763,16 @@ def plot_choices_by_trial(df, ax):
     """
 
     df = df.groupby("trial", as_index=False).apply(lambda group: group.iloc[1:, :])
-    rewarded = df[df.reward == 1.0]
+    if reward_is_binary(df):
+        # only keep rewarded trials
+        rewarded = df[df.reward == 1.0]
+    else:
+        # keep rewarded trials
+        rewarded = df[df.trial_rewarded == 1.0]
+        # and we need the position: the reward is the last point of the trial
+        is_last_timestep = ~rewarded.duplicated(subset=["trial"], keep="last")
+        rewarded = rewarded[is_last_timestep]
+
     last = df.groupby(["trial"], as_index=False).last()
 
     ax.plot(
@@ -1763,23 +1783,26 @@ def plot_choices_by_trial(df, ax):
         c="black",
         linewidth=3,
     )
+
+    # Plot all choices
     ax.scatter(last.trial, last.trial_left_choice, c="black", alpha=0.3)
+
+    left_mask = rewarded["trial_left_choice"] == 1.0
+    right_mask = rewarded["trial_right_choice"] == 1.0
+
+    # Plot rewarded choices with different colors
     ax.scatter(
-        rewarded.trial[(rewarded.reward == 1.0) & (rewarded.trial_left_choice == 1.0)],
-        rewarded.trial_left_choice[
-            (rewarded.reward == 1.0) & rewarded.trial_left_choice == 1.0
-        ],
+        rewarded.trial[left_mask],
+        rewarded.trial_left_choice[left_mask],
         c=colors_choice[0],
     )
     ax.scatter(
-        rewarded.trial[(rewarded.reward == 1.0) & (rewarded.trial_right_choice == 1.0)],
-        rewarded.trial_left_choice[
-            (rewarded.reward == 1.0) & rewarded.trial_right_choice == 1.0
-        ],
+        rewarded.trial[right_mask],
+        rewarded.trial_left_choice[right_mask],
         c=colors_choice[1],
     )
     ax.set_xlabel("Trials")
-    ax.set_ylabel("Choice (1 = Left)")
+    ax.set_ylabel("Prob(Left Choice)")
 
 
 def interpolate_trials_cubic_spline(
