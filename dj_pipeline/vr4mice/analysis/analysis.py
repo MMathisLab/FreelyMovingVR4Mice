@@ -54,9 +54,7 @@ def _resample_data_frame(
         (~df.columns.isin(categorical_columns)) & (~df.columns.isin(binary_columns))
     ]
 
-    t = (
-        f"{resampling_period_ms}ms"
-    )  # old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
+    t = f"{resampling_period_ms}ms"  # old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
 
     df["time"] = pd.to_datetime(df["step_time"], unit="s")
     categorical_resampled = (
@@ -585,11 +583,15 @@ def mean_xy_trajectory(
     ],
     values=["x", "y"],
 ):
+    # Calculate mean
     mean_df = df.groupby(index_columns, as_index=False)[values].mean()
+
+    # Calculate SEM and STD
     mean_df[["sem_x", "sem_y"]] = df.groupby(index_columns, as_index=False)[
         values
     ].sem()[values]
     mean_df[["std_x", "std_y"]] = df.groupby(index_columns, as_index=False)[
         values
     ].std()[values]
+
     return mean_df

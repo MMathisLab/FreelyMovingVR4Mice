@@ -2,7 +2,8 @@ import datajoint as dj
 import numpy as np
 import pandas as pd
 
-from vr4mice.analysis.latency_testing import find_rising_edges, get_latency, get_signals
+from vr4mice.analysis.latency_testing import (find_rising_edges, get_latency,
+                                              get_signals)
 from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema

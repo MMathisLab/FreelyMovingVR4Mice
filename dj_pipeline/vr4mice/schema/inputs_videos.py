@@ -10,6 +10,7 @@ from typing import Tuple
 import cv2
 import datajoint as dj
 import numpy as np
+import pandas as pd
 import scipy.interpolate
 
 from vr4mice.schema.vr4mice import Dataset, State
@@ -24,10 +25,12 @@ logger = Logger.get_logger()
 
 @schema
 class RawVideo(dj.Imported):
+    """Stores the raw OBS recording path for a dataset."""
+
     definition = """
-    -> Dataset
+    -> Dataset                     # source dataset key
     ---
-    video_path: varchar(255)
+    video_path: varchar(255)       # absolute path to the raw OBS recording
     """
 
     # NOTE(celia): to update the default path when we put the videos onto the server
@@ -50,16 +53,18 @@ class RawVideo(dj.Imported):
 
 @schema
 class ProcessedVideo(dj.Computed):
+    """Stores cropped/truncated OBS videos and ROI metadata."""
+
     definition = """
-    -> RawVideo
+    -> RawVideo                    # source raw video
     ---
-    visual_video_path: varchar(255)
-    sync_video_path: varchar(255)
-    img_validation_path: varchar(255)
-    start_frame: int
-    end_frame: int
-    visual_roi: blob
-    sync_roi: blob
+    visual_video_path: varchar(255)  # cropped visual ROI video path
+    sync_video_path: varchar(255)    # cropped sync ROI video path
+    img_validation_path: varchar(255) # path to validation frame JPEGs
+    start_frame: int                # session start frame index (raw video)
+    end_frame: int                  # session end frame index (raw video)
+    visual_roi: blob                # (x,y,w,h) for visual ROI in raw video coords
+    sync_roi: blob                  # (x,y,w,h) for sync ROI in raw video coords
     """
 
     def make(
@@ -139,23 +144,20 @@ class ProcessedVideo(dj.Computed):
 
 @schema
 class VideoSyncSignal(dj.Computed):
-    """
-    Extracts binary signal from sync ROI video (from ProcessedVideo).
-    """
+    """Extracts the binary sync trace from the sync ROI video."""
 
     definition = """
-    -> ProcessedVideo
+    -> ProcessedVideo             # cropped sync ROI video
     ---
-    video_fps: float
-    total_frames: int
-    frame_ids: longblob       # array of frame indices
-    timestamps: longblob      # array of frame timestamps
-    signals: longblob         # binary sync signal (0 or 1)
+    video_fps: float              # FPS of the sync video
+    total_frames: int             # frame count of the sync video
+    frame_ids: longblob           # frame indices (0-based)
+    timestamps: longblob          # frame timestamps in seconds
+    signals: longblob             # binary sync signal per frame (0/1)
     """
 
     def make(self, key):
-        from vr4mice.analysis.inputs_videos import \
-            extract_sync_signal_from_video
+        from vr4mice.analysis.inputs_videos import extract_sync_signal_from_video
 
         try:
             sync_path = (ProcessedVideo & key).fetch1("sync_video_path")
@@ -185,8 +187,6 @@ class VideoSyncSignal(dj.Computed):
     @classmethod
     def get_sync_df(cls, key):
         data = (cls & key).fetch1()
-        import pandas as pd
-
         return pd.DataFrame(
             {
                 "frame_ids": data["frame_ids"],
@@ -198,44 +198,59 @@ class VideoSyncSignal(dj.Computed):
 
 @schema
 class AlignedVideoFrame(dj.Computed):
-    """
-    Aligns photodiode signal to video frames using sync video signal.
-    """
+    """Aligns game steps to video frames using photodiode when available; stores QA."""
 
     definition = """
-    -> VideoSyncSignal
-    -> State
+    -> VideoSyncSignal              # sync ROI signal per frame
+    -> State                        # game state (step, step_time, photodiode optional)
     ---
-    n_steps: int            # number of steps in the game
-    step: longblob          # array of step indices corresponding to game time
-    step_time: longblob       # array of step times corresponding to game time
-    frame_ids: longblob      # array of video frame indices aligned to step times
-    interpol_func: longblob     # interpolation function to align steps to video frames
+    n_steps: int                    # number of steps in the session
+    step: longblob                  # step indices
+    step_time: longblob             # step timestamps (seconds)
+    frame_ids: longblob             # aligned video frame indices for each step
+    align_path: varchar(32)         # 'photodiode' or 'fallback'
+    pair_count: float               # number of matched edges (if photodiode path)
+    rms: float                      # RMS residual of edge fit (seconds)
+    offset: float                   # fitted time offset (seconds)
+    drift: float                    # fitted drift factor
+    align_error: varchar(255)       # error text if photodiode alignment failed
     """
 
     def make(self, key):
-        import pandas as pd
-
-        from vr4mice.analysis.inputs_videos import sync_video_to_photodiode
-
         try:
             video_signal = VideoSyncSignal.get_sync_df(key)
+            state_dict = (State() & key).fetch1()
+            step_times = np.array(state_dict["step_time"], dtype=float)
 
-            state_dict = (State() & key).fetch("step", "step_time", as_dict=True)[0]
+            photodiode_df = None
+            if "photodiode_time" in state_dict and "photodiode_read" in state_dict:
+                photodiode_df = pd.DataFrame(
+                    {
+                        "time_stamp": np.array(
+                            state_dict["photodiode_time"], dtype=float
+                        ),
+                        "photodiode_read": np.array(
+                            state_dict["photodiode_read"], dtype=float
+                        ),
+                    }
+                )
 
-            resampled_df = pd.merge_asof(
-                pd.DataFrame(state_dict),
-                video_signal,
-                left_on="step_time",
-                right_on="timestamps",
-                direction="forward",
-            )
+            from vr4mice.schema.vr4mice import SignalsPhotodiode
 
-            timeinter_func = scipy.interpolate.interp1d(
-                resampled_df["frame_ids"],
-                resampled_df["step_time"],
-                bounds_error=False,
-                fill_value="extrapolate",
+            # Check that SignalsPhotodiode has the attribute signal_type
+            # else default to pulse
+            signal_type = (SignalsPhotodiode & key).fetch1("signal_type")
+            if signal_type is None:
+                signal_type = "pulse"
+
+            from vr4mice.analysis.inputs_videos import align_steps_to_frames
+
+            frames, qa = align_steps_to_frames(
+                video_sync_df=video_signal,
+                photodiode_df=photodiode_df,
+                step_times=step_times,
+                signal_type=signal_type,
+                use_photodiode=True,
             )
 
             self.insert1(
@@ -243,35 +258,58 @@ class AlignedVideoFrame(dj.Computed):
                     **key,
                     "n_steps": len(state_dict["step"]) - 1,
                     "step": state_dict["step"],
-                    "step_time": np.array(list(resampled_df["step_time"].values)),
-                    # NOTE(celia): we remove the first 7 frames to account for the initial delay
-                    "frame_ids": np.array(list(resampled_df["frame_ids"].values)) - 7,
-                    "interpol_func": pickle.dumps(timeinter_func),
+                    "step_time": step_times,
+                    "frame_ids": frames,
+                    "align_path": qa.get("path", "fallback"),
+                    "pair_count": qa.get("pair_count", np.nan),
+                    "rms": qa.get("rms", np.nan),
+                    "offset": qa.get("offset", np.nan),
+                    "drift": qa.get("drift", np.nan),
+                    "align_error": qa.get("error", ""),
                 }
             )
-
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
     @classmethod
     def align_step_to_frames(cls, key, timepoints: list):
-        """Aligns timepoints using interpolation, this should account for clock drift.
+        """
+        Given a list of timepoints (in seconds), return the corresponding video frame indices.
+
+        If any timepoint is out of bounds (less than the minimum step_time or greater than
+        the maximum step_time), a ValueError is raised.
 
         Args:
-            timepoints (list): List of timepoints to align.
-        """
-        interpol_func = pickle.loads((cls & key).fetch1("interpol_func"))
+            key: dict, key to identify the AlignedVideoFrame entry
+            timepoints: list of float, timepoints in seconds to align to video frames
 
-        for idx in timepoints:
-            if not isinstance(idx, (int, float)):
-                raise TypeError(f"Timepoint {idx} is not a number.")
-            if idx < 0 or idx >= (cls & key).fetch1("n_steps"):
+        Returns:
+            list of int or None: corresponding video frame indices for each timepoint
+        """
+        rec = (cls & key).fetch1()
+        frame_ids = rec["frame_ids"]
+        step_times = rec["step_time"]
+
+        # Validate timepoints are within the valid time range
+        min_time = np.min(step_times)
+        max_time = np.max(step_times)
+
+        for tp in timepoints:
+            if not isinstance(tp, (int, float)):
+                raise TypeError(f"Timepoint {tp} is not a number.")
+            if tp < min_time or tp > max_time:
                 raise ValueError(
-                    f"Timepoint {idx} is out of bounds for the number of steps."
+                    f"Timepoint {tp} is out of bounds. Valid range: [{min_time:.3f}, {max_time:.3f}] seconds."
                 )
 
         timepoints = np.array(timepoints, dtype=np.float64)
-        return [
-            int(tx) if not np.isnan(tx) else None for tx in interpol_func(timepoints)
-        ]
+
+        # Interpolate: step_time (seconds) → frame_ids
+        interp = scipy.interpolate.interp1d(
+            step_times,
+            frame_ids,
+            bounds_error=False,
+            fill_value="extrapolate",
+        )
+        return [int(tx) if not np.isnan(tx) else None for tx in interp(timepoints)]
