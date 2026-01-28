@@ -443,7 +443,9 @@ def _plot_bar_counts(
             palette=(
                 ["grey"] * counts["mouse_name"].nunique()
                 if per_mouse
-                else colors_labs if per_lab else None
+                else colors_labs
+                if per_lab
+                else None
             ),
             err_style=None if per_mouse or per_lab else "bars",
             linewidth=1 if per_mouse else 2,
@@ -918,7 +920,9 @@ def plot_time_to_reward(
         cmap = (
             colors_aperture
             if label_x == "aperture"
-            else colors_rewarded if label_x == "trial_rewarded" else colors_choice
+            else colors_rewarded
+            if label_x == "trial_rewarded"
+            else colors_choice
         )
 
     def _time_to_reward_box(group):

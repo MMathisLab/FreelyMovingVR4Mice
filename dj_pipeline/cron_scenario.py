@@ -37,7 +37,7 @@ def main():
 
         check_folder_existence(path)
         populate_rig(path=path, gui=os.environ["GUI"], move=move)
-    
+
     except Exception as e:
         logger.error(
             f"An error occurred in the raw data population (populate_rig): {e}"
@@ -66,7 +66,7 @@ def main():
 
         session_metrics.SessionMetrics().populate()
         session_metrics.TrialMetrics().populate()
-        
+
         interpolated_trajectories.InterpolatedTrials().populate()
         interpolated_trajectories.MeanXYTrajectory().populate()
         interpolated_trajectories.YBinnedXYTrajectory().populate()

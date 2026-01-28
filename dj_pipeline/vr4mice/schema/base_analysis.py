@@ -413,7 +413,7 @@ def insert_send_email(key, tuple_, table, filename, send=False):
 
     toaddr = []
     try:
-        for name in ["celia"]: #, "mathislab"]:
+        for name in ["celia"]:  # , "mathislab"]:
             user_email = (exp.Experimenter & {"experimenter_name": name}).fetch("mail")[
                 0
             ]

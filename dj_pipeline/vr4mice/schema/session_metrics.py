@@ -30,7 +30,7 @@ class SessionMetrics(dj.Computed):
     session_bias:               float # proportion of trials that mouse chose the left port 
     session_tortuosity:         float # session mean tortuosity
     """
-    
+
     def make(self, key):
 
         if self & key:
@@ -110,7 +110,7 @@ class TrialMetrics(dj.Computed):
     trial_duration:       longblob # trial duration in seconds
     trial_jshaped:        longblob # trial jshaped
     """
-    
+
     def make(self, key):
 
         if self & key:
