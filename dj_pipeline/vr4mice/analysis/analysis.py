@@ -583,11 +583,15 @@ def mean_xy_trajectory(
     ],
     values=["x", "y"],
 ):
+    # Calculate mean
     mean_df = df.groupby(index_columns, as_index=False)[values].mean()
+
+    # Calculate SEM and STD
     mean_df[["sem_x", "sem_y"]] = df.groupby(index_columns, as_index=False)[
         values
     ].sem()[values]
     mean_df[["std_x", "std_y"]] = df.groupby(index_columns, as_index=False)[
         values
     ].std()[values]
+
     return mean_df

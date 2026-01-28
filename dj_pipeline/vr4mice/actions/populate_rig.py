@@ -3,6 +3,7 @@ import pickle
 import re
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -21,7 +22,7 @@ logger = Logger.get_logger()
 SKIP_DUPLICATES = True
 
 
-def get_filenames(ext, path="/tmp") -> dict:
+def get_filenames(ext, path: str = "/tmp") -> dict:
     """
     Get a dictionary of filenames with the specified extensions from the given path.
 
@@ -46,7 +47,7 @@ def get_filenames(ext, path="/tmp") -> dict:
     return output
 
 
-def get_new_file(filename, path="/tmp"):
+def get_new_file(filename, path: str = "/tmp"):
     """
     Load data from a new file and return it as a dictionary.
 
@@ -214,15 +215,21 @@ def parse_date(filename):
 
 def get_files_paths(
     dataset,
-    remote_src=None,
-    local_src="/data",
-    data="/data",
-    filename=os.environ["IMG_SRC"],
+    remote_src: Optional[str] = None,
+    local_src: str = "/data",
+    data: str = "/data",
+    filename: str = os.environ["IMG_SRC"],
 ):
     """
     Simulation of data from gui .npy, if it's missing
-    # todo: add files move if one folder
-    # todo: move this function to a separate file
+
+    Args:
+        dataset: The name of the dataset, formatting is {mouse_name}-{doe}-{attempt}.
+        remote_src: The source path for remote files.
+        local_src: The source path for local files.
+        data: The data path.
+        filename: The base filename for the video files.
+
     """
     dlc_video_path = local_src + "/dlc_video"
 
@@ -257,11 +264,10 @@ def get_files_paths(
             "src": remote_src,
             "dst": local_src + data,
         },
-        "video_meta": {
-            "duration": None,
-            "fps": None,
-            "width": None,
-            "height": None,
+        "video_meta": {"duration": None, "fps": None, "width": None, "height": None},
+        "screen_recording_output": {
+            "filename": dataset + ".mkv",
+            "dst": "/vr4mice_screen_recordings/raw_screen_recordings/",
         },
         "time_stamp": None,
         "doe": parse_date(dataset),
