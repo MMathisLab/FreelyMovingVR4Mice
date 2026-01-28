@@ -71,6 +71,7 @@ if __name__ == "__main__":
             "fetch",
             "dlc",
             "interp",
+            "ar_paper",
             "latency",
             "sync_days",
         ],
@@ -99,6 +100,7 @@ if __name__ == "__main__":
             move = True
 
         check_folder_existence(path)
+        #sync_days(path="/data/data")
         populate_rig(path=path, move=move)
         vr4mice.Collab().populate()
 
@@ -132,14 +134,29 @@ if __name__ == "__main__":
 
         from vr4mice.schema import interpolated_trajectories, session_metrics
 
+        session_metrics.SessionMetrics().populate()
+        session_metrics.TrialMetrics().populate()
+        
         interpolated_trajectories.InterpolatedTrials().populate()
         interpolated_trajectories.MeanXYTrajectory().populate()
         interpolated_trajectories.YBinnedXYTrajectory().populate()
         interpolated_trajectories.MeanVelocities().populate()
 
-        session_metrics.SessionMetrics().populate()
-        session_metrics.TrialMetrics().populate()
+    elif args.mode == "ar_paper":
 
+        from vr4mice.schema import interpolated_trajectories, session_metrics, vr4mice
+        
+        keys = (vr4mice.Dataset() * vr4mice.Groups() * vr4mice.Labels() & "label='ar_paper'").fetch("dataset", as_dict=True)
+       
+        #session_metrics.SessionMetrics().populate(keys)
+        #session_metrics.TrialMetrics().populate(keys)
+        
+        interpolated_trajectories.InterpolatedTrials().populate(keys)
+    
+        interpolated_trajectories.MeanXYTrajectory().populate()
+        interpolated_trajectories.YBinnedXYTrajectory().populate()
+        interpolated_trajectories.MeanVelocities().populate()
+    
     elif args.mode == "latency":
 
         from vr4mice.schema import vr4mice, latency_tests

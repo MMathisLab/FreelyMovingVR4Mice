@@ -9,7 +9,7 @@ databases=$(mysql $group$s1_prefix $ssl -e "SHOW DATABASES;" |
 
 log "Detected databases to backup: $databases"
 
-databases=(session_metrics)
+databases=(interpolated_trajectories)
 
 #for db in "${databases[@]}"; do
 for db in $databases; do
@@ -49,6 +49,7 @@ for db in $databases; do
  #execute_command "$cmd2" "$msg"
 
 tables=$(mysql $group$s1_prefix $ssl -e "SHOW TABLES IN $db;" -s --skip-column-names)
+tables=(__y_binned_x_y_trajectory)
 	# Loop through each table
 	for table in $tables; do
 	    

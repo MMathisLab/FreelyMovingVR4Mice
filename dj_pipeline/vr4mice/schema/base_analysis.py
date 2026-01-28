@@ -359,10 +359,10 @@ class SummaryPlots(dj.Computed):
                 key = (base.Base() & key).fetch(as_dict=True)[0]
             else:
                 key = self.parse_dataset(key["dataset"])
-                insert_send_email(key, data, SummaryPlots(), full_path, send=send)
+            insert_send_email(key, data, SummaryPlots(), full_path, send=send)
 
     def parse_dataset(self, dataset):
-        pattern = r"(\d+)?_?(\d{4}-\d{2}-\d{2})_?(\d+)?(?:\.pickle)?"
+        pattern = r"(?:(?P<mouse_name>[^_]+)_)?(?P<day>\d{4}-\d{2}-\d{2})(?:_(?P<attempt>\d+))?(?:\.pickle)?$"
         match = re.match(pattern, dataset)
 
         if match:
@@ -413,7 +413,7 @@ def insert_send_email(key, tuple_, table, filename, send=False):
 
     toaddr = []
     try:
-        for name in ["thomas", "mathislab", "yang"]:
+        for name in ["celia"]: #, "mathislab"]:
             user_email = (exp.Experimenter & {"experimenter_name": name}).fetch("mail")[
                 0
             ]

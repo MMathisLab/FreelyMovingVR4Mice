@@ -37,6 +37,7 @@ def main():
 
         check_folder_existence(path)
         populate_rig(path=path, gui=os.environ["GUI"], move=move)
+    
     except Exception as e:
         logger.error(
             f"An error occurred in the raw data population (populate_rig): {e}"
@@ -63,13 +64,13 @@ def main():
         dlc.SyncDLCKptsDf().populate()
         dlc.OfflineKinematics().populate()
 
+        session_metrics.SessionMetrics().populate()
+        session_metrics.TrialMetrics().populate()
+        
         interpolated_trajectories.InterpolatedTrials().populate()
         interpolated_trajectories.MeanXYTrajectory().populate()
         interpolated_trajectories.YBinnedXYTrajectory().populate()
         interpolated_trajectories.MeanVelocities().populate()
-
-        session_metrics.SessionMetrics().populate()
-        session_metrics.TrialMetrics().populate()
 
         vr4mice.SignalsPhotodiode().populate()
         latency_tests.SignalsPhotodiodeAligned().populate()

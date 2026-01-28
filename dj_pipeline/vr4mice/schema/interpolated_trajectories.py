@@ -48,7 +48,7 @@ class InterpolatedTrials(dj.Computed):
     heading_dir_cos: longblob   # cos of the heading direction
     velocity_x_fliped: longblob # x-velocity of each trial progression point flipped
     """
-
+    
     def make(self, key):
         from vr4mice.analysis.utils import interpolate_j_shaped
 
@@ -75,7 +75,7 @@ class InterpolatedTrials(dj.Computed):
                     columns=["time", "dataset", "trial_step"]
                 )
                 interpolated_df["x_flipped"] = df["x"] * df["flip_one_side"]
-                self.insert1({**key, **interpolated_df.to_dict()})
+                self.insert1({**key, **interpolated_df.to_dict()}, allow_direct_insert=True)
 
         except Exception as err:
             dataset = key["dataset"]
