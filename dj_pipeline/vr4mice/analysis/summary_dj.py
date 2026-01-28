@@ -147,7 +147,7 @@ def vr4mice_summary_plots(
 
     df = df[df.iti == 0].copy()
 
-    # NOTE(tom): so that the head_dir is align to the screen
+    # NOTE(tom): so that the head_dir is aligned to the screen
     df["head_dir"] = ((df.head_dir) + 180) % 360 - 180
 
     # NOTE(tom): ensure that if the occluder is not displayed (as in training data) that there are no
@@ -273,6 +273,13 @@ def vr4mice_summary_plots(
         per_aperture=True if num_apertures >= 2 else False,
         ax=axes["trial_count"],
     )
+    axes["trial_count"].hlines(
+        y=125,
+        xmin=axes["trial_count"].get_xlim()[0],
+        xmax=axes["trial_count"].get_xlim()[1],
+        colors="purple",
+        linestyles="dashed",
+    )
 
     # Display the reward rate
     plotting.plot_rewards(
@@ -294,7 +301,7 @@ def vr4mice_summary_plots(
     plotting.plot_time_to_reward(
         df,
         label_x="trial_rewarded",
-        xticks=["Uncorrect", "Correct"],
+        xticks=["Incorrect", "Correct"],
         ax=axes["time_reward"],
     )
     axes["time_reward"].set_ylabel("Trial Duration / Reward")
