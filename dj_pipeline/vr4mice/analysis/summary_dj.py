@@ -1,8 +1,7 @@
 import pathlib
 import warnings
 
-from pathlib import Path
-from typing import List, Dict
+from typing import Dict
 
 
 import matplotlib.pyplot as plt
@@ -118,9 +117,6 @@ def vr4mice_summary_plots(
     """
     Generate a summary plot for a given dataset.
 
-    final results to email
-    [DJ SummaryPlot table: path?]
-
     Args:
         key (dict): A dictionary that specifies which dataset to generate a
             summary plot for.
@@ -140,10 +136,6 @@ def vr4mice_summary_plots(
 
     df = df.infer_objects()
     df["dataset"] = key["dataset"]
-
-    # if not fecthing from database the trial rewarded needs to be computed, otherwise summary plots fail
-    if database == False:
-        df.groupby(["dataset", "trial"])["reward"].transform(lambda x: x.max())
 
     df = df[df.iti == 0].copy()
 
@@ -329,10 +321,19 @@ def vr4mice_summary_plots(
         "flip_one_side",
     ]
 
+    # Filter out trials with NaN values in critical columns to avoid interpolation errors
+    cols_to_check = ["trial_right_choice", "trial_rewarded"] + columns
+    df_clean = df.dropna(subset=cols_to_check)
+
+    if len(df_clean) < len(df):
+        logger.warning(
+            f"Dropped {len(df) - len(df_clean)} rows with NaN values before interpolation"
+        )
+
     interpolated_df = utils.interpolate(
-        df,
+        df_clean,
         n_points=200,
-        value_columns=["trial_right_choice", "trial_rewarded"] + columns,
+        value_columns=cols_to_check,
     )
     interpolated_df["trial_step"] = interpolated_df.groupby(
         ["dataset", "trial"]

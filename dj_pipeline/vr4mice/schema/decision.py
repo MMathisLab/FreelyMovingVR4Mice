@@ -22,6 +22,34 @@ schema = get_schema(schema_name, locals())
 logger = Logger.get_logger()
 
 
+class TrainingGroup(dj.Lookup):
+    definition = """
+    -> Dataset
+    """
+
+
+class DualGroup(dj.Lookup):
+    definition = """
+    session_label : varchar(64)    # session label for dual occluder task
+    """
+    contents = [
+        ("ar_discrim_occluders"),
+        ("ar_shape_discrim_narrow_occluders"),
+        ("ar_discrim_occluders_inv"),
+    ]
+
+
+class MultiGroup(dj.Lookup):
+    definition = """
+    session_label : varchar(64)    # session label for multi occluder task
+    """
+    contents = [
+        ("ar_discrim_5_occluders"),
+        ("ar_shape_discrim_multi_occluders"),
+        ("ar_discrim_5_occluders_inv"),
+    ]
+
+
 @schema
 class ValidGroup(dj.Computed):
     """Define groups of mice for occluder analysis."""
@@ -34,6 +62,9 @@ class ValidGroup(dj.Computed):
     multi_occl : int     # 1 if valid for multi occluder task, 0 otherwise
     """
 
+    # key is not in TrainingGroup
+    _key_source = Dataset() - TrainingGroup()
+
     def make(self, key):
         try:
             trial_df = (TrialMetrics() * (Dataset() & key)).fetch(as_dict=True)
@@ -45,7 +76,7 @@ class ValidGroup(dj.Computed):
             # Exclude sessions that were not in the list
             from vr4mice.analysis.utils import apply_inclusion_criteria
 
-            if trial_df["session_label"].iloc[0] == "ar_discrim_occluders":
+            if trial_df["session_label"].iloc[0] in DualGroup().fetch("session_label"):
                 trial_df, _ = apply_inclusion_criteria(
                     trial_df, task_type="dual_occluder"
                 )
@@ -54,7 +85,9 @@ class ValidGroup(dj.Computed):
                     self.insert1({**key, "dual_occl": 1, "multi_occl": 0})
                 else:
                     self.insert1({**key, "dual_occl": 0, "multi_occl": 0})
-            elif trial_df["session_label"].iloc[0] == "ar_discrim_5_occluders":
+            elif trial_df["session_label"].iloc[0] in MultiGroup().fetch(
+                "session_label"
+            ):
                 trial_df, _ = apply_inclusion_criteria(
                     trial_df, task_type="multi_occluder"
                 )
@@ -63,10 +96,9 @@ class ValidGroup(dj.Computed):
                     self.insert1({**key, "dual_occl": 0, "multi_occl": 1})
                 else:
                     self.insert1({**key, "dual_occl": 0, "multi_occl": 0})
+
             else:
-                logger.warning(
-                    f"Unknown session label {trial_df['session_label'].iloc[0]} for key {key}"
-                )
+                TrainingGroup().insert1({**key})
                 return
         except Exception as err:
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")

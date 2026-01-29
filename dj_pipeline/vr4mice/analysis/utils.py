@@ -75,11 +75,22 @@ def interpolate_group(
             y_new = np.full(x_new.shape, y.iloc[0])
 
         else:
-            # Fit Cubic Spline
-            cs = scipy.interpolate.CubicSpline(x, y)
-
-            # Interpolate y values at the new x positions
-            y_new = cs(x_new)
+            # Check for NaN values and handle them
+            mask = ~np.isnan(y)
+            
+            if mask.sum() < 2:  # Need at least 2 points for interpolation
+                logger.warning(f"Column '{column}' has insufficient non-NaN values for interpolation. Filling with zeros.")
+                y_new = np.zeros(x_new.shape)
+            elif mask.sum() == len(y):
+                # No NaN values, proceed normally
+                cs = scipy.interpolate.CubicSpline(x, y)
+                y_new = cs(x_new)
+            else:
+                # Has some NaN values - interpolate only on valid points
+                x_valid = x[mask]
+                y_valid = y[mask]
+                cs = scipy.interpolate.CubicSpline(x_valid, y_valid)
+                y_new = cs(x_new)
 
         # Store the interpolated values
         interpolated_data[column] = y_new
@@ -154,11 +165,18 @@ def interpolate_j_shaped(big_df, box_df, n_points=100):
     ]
 
     j_shaped = analysis.get_jshaped_trials(big_df)
+    
+    # Filter out trials with NaN values in critical columns to avoid interpolation errors
+    cols_to_check = ["trial_left_choice"] + columns
+    j_shaped_clean = j_shaped.dropna(subset=cols_to_check)
+    
+    if len(j_shaped_clean) < len(j_shaped):
+        logger.warning(f"Dropped {len(j_shaped) - len(j_shaped_clean)} rows with NaN values before interpolation in j-shaped trials")
 
     interpolated_j_shaped = interpolate(
-        j_shaped,
+        j_shaped_clean,
         n_points=n_points,
-        value_columns=["trial_left_choice"] + columns,
+        value_columns=cols_to_check,
         interpolation_columns=["dataset", "trial"],
     )
     interpolated_j_shaped["trial_step"] = interpolated_j_shaped.groupby(
