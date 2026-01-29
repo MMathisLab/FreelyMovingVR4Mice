@@ -91,7 +91,7 @@ def main():
         decision.DecisionPoints().populate()
 
     except Exception as e:
-        logger.error(f"An error occurred in populate_decision_making.populate: {e}")
+        logger.error(f"An error occurred in cron_scenario.py populate: {e}")
 
     try:
         path = "/shared"
