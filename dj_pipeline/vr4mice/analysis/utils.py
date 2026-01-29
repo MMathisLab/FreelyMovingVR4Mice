@@ -77,9 +77,11 @@ def interpolate_group(
         else:
             # Check for NaN values and handle them
             mask = ~np.isnan(y)
-            
+
             if mask.sum() < 2:  # Need at least 2 points for interpolation
-                logger.warning(f"Column '{column}' has insufficient non-NaN values for interpolation. Filling with zeros.")
+                logger.warning(
+                    f"Column '{column}' has insufficient non-NaN values for interpolation. Filling with zeros."
+                )
                 y_new = np.zeros(x_new.shape)
             elif mask.sum() == len(y):
                 # No NaN values, proceed normally
@@ -165,13 +167,15 @@ def interpolate_j_shaped(big_df, box_df, n_points=100):
     ]
 
     j_shaped = analysis.get_jshaped_trials(big_df)
-    
+
     # Filter out trials with NaN values in critical columns to avoid interpolation errors
     cols_to_check = ["trial_left_choice"] + columns
     j_shaped_clean = j_shaped.dropna(subset=cols_to_check)
-    
+
     if len(j_shaped_clean) < len(j_shaped):
-        logger.warning(f"Dropped {len(j_shaped) - len(j_shaped_clean)} rows with NaN values before interpolation in j-shaped trials")
+        logger.warning(
+            f"Dropped {len(j_shaped) - len(j_shaped_clean)} rows with NaN values before interpolation in j-shaped trials"
+        )
 
     interpolated_j_shaped = interpolate(
         j_shaped_clean,
