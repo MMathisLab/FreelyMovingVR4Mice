@@ -122,11 +122,27 @@ class FailedSession(dj.Manual):
         failed = cls() & {"dataset": dataset}
         if failed:
             if logger:
-                failed_tables = sorted(set(failed.fetch("failed_table_name")))
-                failed_info = ", ".join(failed_tables) if failed_tables else "unknown"
-                logger.warning(
-                    f"{table_name} skipped for dataset {dataset}: found in FailedSession (failed tables: {failed_info})."
+                failed_rows = failed.fetch(
+                    "failed_table_name", "error_message", as_dict=True
                 )
+                table_rows = [
+                    row for row in failed_rows if row.get("failed_table_name") == table_name
+                ]
+                target_rows = table_rows if table_rows else failed_rows
+                error_msg = None
+                if target_rows:
+                    error_msg = target_rows[-1].get("error_message")
+                short_error = None
+                if error_msg:
+                    short_error = (error_msg[:160] + "...") if len(error_msg) > 160 else error_msg
+                if short_error:
+                    logger.warning(
+                        f"skip {table_name} {dataset} (FailedSession: {short_error})"
+                    )
+                else:
+                    logger.warning(
+                        f"skip {table_name} {dataset} (FailedSession)"
+                    )
             return True
 
         return False
