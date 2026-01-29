@@ -121,10 +121,17 @@ class FailedSession(dj.Manual):
         failed = cls() & {"dataset": dataset}
         if failed:
             if logger:
-                failed_tables = sorted(set(failed.fetch("failed_table_name")))
+                failed_rows = failed.fetch(
+                    "failed_table_name", "error_message", as_dict=True
+                )
+                failed_tables = sorted(
+                    {row["failed_table_name"] for row in failed_rows if row.get("failed_table_name")}
+                )
                 failed_info = ", ".join(failed_tables) if failed_tables else "unknown"
+                last_error = failed_rows[-1].get("error_message") if failed_rows else None
+                error_info = f" Last error: {last_error}" if last_error else ""
                 logger.warning(
-                    f"{table_name} skipped for dataset {dataset}: found in FailedSession (failed tables: {failed_info})."
+                    f"{table_name} skipped for dataset {dataset}: found in FailedSession (failed tables: {failed_info}).{error_info}"
                 )
             return True
 
