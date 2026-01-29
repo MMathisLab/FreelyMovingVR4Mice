@@ -88,6 +88,7 @@ def main():
 
         decision.ValidGroup().populate()
         decision.PredictionModel().populate()
+        decision.DecisionPoints().populate()
 
     except Exception as e:
         logger.error(f"An error occurred in populate_decision_making.populate: {e}")
