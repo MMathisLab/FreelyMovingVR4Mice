@@ -87,6 +87,7 @@ class Dataset(dj.Manual):
 @schema
 class FailedSession(dj.Manual):
     """Tracks dataset/table pairs that failed during populate/compute."""
+
     definition = """
     # Keys that failed under populate
     -> Dataset
