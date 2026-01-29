@@ -1,3 +1,5 @@
+"""Core VR4Mice schema tables for datasets, metadata, and raw signals."""
+
 import os
 
 import datajoint as dj
@@ -52,12 +54,17 @@ class Dataset(dj.Manual):
         return keys
 
     def populate(self):
+        """Populate Dataset by iterating all dataset/camera keys."""
         keys = self.get_keys()
         for key in keys:
             self.make(key)
 
     def make(self, key):
+        """Insert a Video row from file paths resolved for a dataset."""
         from vr4mice.actions.populate_rig import get_files_paths
+
+        if FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
 
         logger.info(f"{key['dataset']}")
         paths = get_files_paths(key["dataset"])
@@ -79,6 +86,8 @@ class Dataset(dj.Manual):
 
 @schema
 class FailedSession(dj.Manual):
+    """Tracks dataset/table pairs that failed during populate/compute."""
+
     definition = """
     # Keys that failed under populate
     -> Dataset
@@ -88,6 +97,7 @@ class FailedSession(dj.Manual):
     """
 
     def add_entry(self, dataset_key, table_name, error_message, skip_duplicates=True):
+        """Insert a failed-session record for a dataset and table."""
         self.insert1(
             {
                 "dataset": dataset_key,
@@ -96,6 +106,48 @@ class FailedSession(dj.Manual):
             },
             skip_duplicates=skip_duplicates,
         )
+
+    @classmethod
+    def should_skip(cls, key, table_name, logger=None) -> bool:
+        """Return True if dataset is in FailedSession; optionally log a warning."""
+        dataset = None
+        if isinstance(key, dict):
+            dataset = key.get("dataset")
+        else:
+            dataset = key
+
+        if not dataset:
+            return False
+
+        failed = cls() & {"dataset": dataset}
+        if failed:
+            if logger:
+                failed_rows = failed.fetch(
+                    "failed_table_name", "error_message", as_dict=True
+                )
+                table_rows = [
+                    row
+                    for row in failed_rows
+                    if row.get("failed_table_name") == table_name
+                ]
+                target_rows = table_rows if table_rows else failed_rows
+                error_msg = None
+                if target_rows:
+                    error_msg = target_rows[-1].get("error_message")
+                short_error = None
+                if error_msg:
+                    short_error = (
+                        (error_msg[:160] + "...") if len(error_msg) > 160 else error_msg
+                    )
+                if short_error:
+                    logger.warning(
+                        f"skip {table_name} {dataset} (FailedSession: {short_error})"
+                    )
+                else:
+                    logger.warning(f"skip {table_name} {dataset} (FailedSession)")
+            return True
+
+        return False
 
 
 @schema
@@ -171,6 +223,10 @@ class Collab(dj.Computed):
     """
 
     def make(self, key, lab=os.environ["DJ_LAB"]):
+        """Insert a Collab row linking a dataset to the configured lab."""
+        if FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         try:
             lab = f"lab='{lab}'"
             idx = (Labs() & lab).fetch("idx", as_dict=True)[0]
@@ -218,12 +274,17 @@ class Video(dj.Manual):
         return keys
 
     def populate(self):
+        """Populate Video by iterating all dataset/camera keys."""
         keys = self.get_keys()
         for key in keys:
             self.make(key)
 
     def make(self, key):
+        """Insert a Video row from rig files for a dataset."""
         from vr4mice.actions.populate_rig import get_files_paths
+
+        if FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
 
         try:
             logger.info(f"{key['dataset']}")
@@ -296,12 +357,17 @@ class DLC(dj.Manual):
         return keys
 
     def populate(self):
+        """Populate DLC by iterating all dataset/camera/model keys."""
         keys = self.get_keys()
         for key in keys:
             self.make(key)
 
     def make(self, key):
+        """Insert a DLC row using keypoints and processed paths."""
         from vr4mice.actions.populate_rig import get_files_paths
+
+        if FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
 
         try:
             logger.info(f"{key['dataset']}")
@@ -427,8 +493,12 @@ class SignalsPhotodiode(dj.Computed):
     """
 
     def make(self, key):
+        """Compute photodiode-aligned signals for a dataset."""
         from vr4mice.actions.populate_rig import get_files_paths
         from vr4mice.analysis.latency_testing import check_data
+
+        if FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
 
         if self & key:
             logger.info(
@@ -543,6 +613,10 @@ class DatasetType(dj.Computed):
     """
 
     def make(self, key):  # TODO(mary): refactor to a separate compact function
+        """Assign a dataset to a training phase based on metadata and state."""
+        if FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         try:
             undefined = False
             distractor = (GuiParams & key).fetch1("distractor")
