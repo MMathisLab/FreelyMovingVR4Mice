@@ -1,6 +1,4 @@
-"""
-Latency testing tables should be imported before this.
-"""
+"""Video input schema for sync/crop/align operations on session recordings."""
 
 import os
 import pathlib
@@ -12,6 +10,7 @@ import numpy as np
 import pandas as pd
 import scipy.interpolate
 
+from vr4mice.schema import vr4mice
 from vr4mice.schema.vr4mice import State
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
@@ -34,7 +33,11 @@ class RawVideo(dj.Imported):
 
     # NOTE(celia): to update the default path when we put the videos onto the server
     def make(self, key, base_path: str = "/vr4mice_screen_recordings"):
+        """Insert raw OBS recording path for a dataset."""
         from vr4mice.actions.populate_rig import get_files_paths
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
 
         logger.info(f"{key['dataset']}")
         paths = get_files_paths(key["dataset"])
@@ -46,6 +49,11 @@ class RawVideo(dj.Imported):
 
             self.insert1({**key, "video_path": video_filepath})
         except Exception as err:
+            dataset = key.get("dataset") if isinstance(key, dict) else None
+            if dataset:
+                vr4mice.FailedSession().add_entry(
+                    f"{dataset}", f"{self.__class__.__name__}", str(err)
+                )
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
@@ -81,6 +89,9 @@ class ProcessedVideo(dj.Computed):
                 and wx and wy the widths of the roi. The sync ROI is 2 x 2 pixels in the
                 top left corner of bottom left screen on the OBS video
         """
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         try:
             from vr4mice.analysis.inputs_videos import VideoTrimmer
 
@@ -108,6 +119,11 @@ class ProcessedVideo(dj.Computed):
                 }
             )
         except Exception as err:
+            dataset = key.get("dataset") if isinstance(key, dict) else None
+            if dataset:
+                vr4mice.FailedSession().add_entry(
+                    f"{dataset}", f"{self.__class__.__name__}", str(err)
+                )
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
@@ -159,7 +175,11 @@ class VideoSyncSignal(dj.Computed):
     """
 
     def make(self, key):
+        """Extract and store the sync signal trace from the sync ROI video."""
         from vr4mice.analysis.inputs_videos import extract_sync_signal_from_video
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
 
         try:
             sync_path = (ProcessedVideo & key).fetch1("sync_video_path")
@@ -183,6 +203,11 @@ class VideoSyncSignal(dj.Computed):
                 }
             )
         except Exception as err:
+            dataset = key.get("dataset") if isinstance(key, dict) else None
+            if dataset:
+                vr4mice.FailedSession().add_entry(
+                    f"{dataset}", f"{self.__class__.__name__}", str(err)
+                )
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
@@ -219,6 +244,10 @@ class AlignedVideoFrame(dj.Computed):
     """
 
     def make(self, key):
+        """Align game steps to video frames and store alignment QA."""
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         try:
             video_signal = VideoSyncSignal.get_sync_df(key)
             state_dict = (State() & key).fetch1()
@@ -271,6 +300,11 @@ class AlignedVideoFrame(dj.Computed):
                 }
             )
         except Exception as err:
+            dataset = key.get("dataset") if isinstance(key, dict) else None
+            if dataset:
+                vr4mice.FailedSession().add_entry(
+                    f"{dataset}", f"{self.__class__.__name__}", str(err)
+                )
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 

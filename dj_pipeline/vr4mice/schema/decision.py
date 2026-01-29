@@ -1,6 +1,4 @@
-"""
-Schema related to the regression model and decision point analysis.
-"""
+"""Decision analysis schema for regression models and decision points."""
 
 import datajoint as dj
 import pandas as pd
@@ -8,6 +6,7 @@ import numpy as np
 
 from vr4mice.analysis import regression
 
+from vr4mice.schema import vr4mice
 from vr4mice.schema.vr4mice import Dataset
 from vr4mice.schema.session_metrics import TrialMetrics
 from vr4mice.schema.interpolated_trajectories import InterpolatedTrials
@@ -35,6 +34,10 @@ class ValidGroup(dj.Computed):
     """
 
     def make(self, key):
+        """Mark datasets that meet inclusion criteria for occluder tasks."""
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         try:
             trial_df = (TrialMetrics() * (Dataset() & key)).fetch(as_dict=True)
             trial_df = pd.concat([pd.DataFrame(x) for x in trial_df])
@@ -69,6 +72,11 @@ class ValidGroup(dj.Computed):
                 )
                 return
         except Exception as err:
+            dataset = key.get("dataset") if isinstance(key, dict) else None
+            if dataset:
+                vr4mice.FailedSession().add_entry(
+                    f"{dataset}", f"{self.__class__.__name__}", str(err)
+                )
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
@@ -248,6 +256,10 @@ class PredictionModel(dj.Computed):
         """
 
     def make(self, key):
+        """Train regression model and store per-session predictions."""
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         try:
             # Get label set and model params
             label_set = list((LabelSet.Member & key).fetch("label_key"))
@@ -370,6 +382,11 @@ class PredictionModel(dj.Computed):
                     }
                 )
         except Exception as err:
+            dataset = key.get("dataset") if isinstance(key, dict) else None
+            if dataset:
+                vr4mice.FailedSession().add_entry(
+                    f"{dataset}", f"{self.__class__.__name__}", str(err)
+                )
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
@@ -418,6 +435,10 @@ class DecisionPoints(dj.Computed):
     """
 
     def make(self, key):
+        """Compute decision points from model predictions and trials."""
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         try:
             threshold_uncertainty = float(
                 (DecisionThreshold & key).fetch1("threshold_uncertainty")
@@ -464,5 +485,10 @@ class DecisionPoints(dj.Computed):
             }
             self.insert1(row)
         except Exception as err:
+            dataset = key.get("dataset") if isinstance(key, dict) else None
+            if dataset:
+                vr4mice.FailedSession().add_entry(
+                    f"{dataset}", f"{self.__class__.__name__}", str(err)
+                )
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None

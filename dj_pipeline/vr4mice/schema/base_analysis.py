@@ -1,3 +1,5 @@
+"""Analysis schema tables built on top of core VR4Mice datasets."""
+
 import subprocess
 import os
 import re
@@ -91,12 +93,16 @@ class DataFrame(dj.Computed):
     """
 
     def make(self, key):
+        """Build and insert the analysis DataFrame for a dataset."""
         from vr4mice.analysis.analysis import create_data_frame
 
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
+            return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
         try:
@@ -231,6 +237,7 @@ class BoxDataFrame(dj.Computed):
     """
 
     def make(self, key):
+        """Compute and store per-dataset box geometry derived from trials."""
         from vr4mice.analysis.analysis import get_box_df
 
         if self & key:
@@ -238,6 +245,10 @@ class BoxDataFrame(dj.Computed):
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         try:
             if len(DataFrame & key) > 0:
                 df = DataFrame().get_data(key)
@@ -333,6 +344,9 @@ class SummaryPlots(dj.Computed):
             )
             return
 
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         if (DataFrame & key) and (BoxDataFrame & key):
             try:
                 full_path = vr4mice_summary_plots(
@@ -408,6 +422,7 @@ class SummaryPlots(dj.Computed):
 
 
 def insert_send_email(key, tuple_, table, filename, send=False):
+    """Insert summary plots row and optionally email recipients."""
 
     from base_schemas.schemas import exp, mice
 
@@ -446,19 +461,25 @@ def insert_send_email(key, tuple_, table, filename, send=False):
         logger.info(f"Summary plots populated successfully for {key}")
         if send:
             logger.info(f"Sending email now for {key}")
-            email(key, toaddr, filename, error=False, message=None)
+            try:
+                email(key, toaddr, filename, error=False, message=None)
+            except Exception as email_err:
+                logger.warning(f"Failed to send summary email for {key}: {email_err}")
         else:
             logger.info(f"Send flag is false for {key}. No email.")
 
     except Exception as err:
-        dataset = key["dataset"]
-        vr4mice.FailedSession().add_entry(
-            f"{dataset}", f"{self.__class__.__name__}", str(err)
-        )
-        err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
-        logger.warning(err)
+        table_name = table.__class__.__name__ if table is not None else "UnknownTable"
+        dataset = key.get("dataset") if isinstance(key, dict) else None
+        if dataset:
+            vr4mice.FailedSession().add_entry(f"{dataset}", f"{table_name}", str(err))
+        err_msg = f"Can't populate {table_name}, key: {key}. Error: {err}."
+        logger.warning(err_msg)
         if send:
-            email(key, toaddr, None, error=True, message=err)
+            try:
+                email(key, toaddr, None, error=True, message=err_msg)
+            except Exception as email_err:
+                logger.warning(f"Failed to send error email for {key}: {email_err}")
 
 
 @schema
@@ -472,12 +493,17 @@ class GitCommit(dj.Computed):
     """
 
     def make(self, key):
+        """Store git commit metadata for the current analysis run."""
 
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         try:
             ret = parse_git_commit_file()
             data = {**key, **ret}
@@ -493,6 +519,7 @@ class GitCommit(dj.Computed):
 
 
 def parse_git_commit_file(filename="git_commit"):  # TODO(mary): move to helpers
+    """Parse a git commit file into hash and modified file list."""
     commit_hash = None
     modified_files = []
 
@@ -535,6 +562,9 @@ class TrackingSummaryPlots(dj.Computed):
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
+            return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
         if dlc.DLCKptsDf & key:
