@@ -485,19 +485,38 @@ class DecisionPoints(dj.Computed):
                 )[0]
             )
 
+            trial_fields = [
+                "dataset",
+                "trial_left_choice",
+                "x",
+                "y",
+                "aperture",
+                "trial_length",
+                "trial",
+            ]
+            if "trial_rewarded" in InterpolatedTrials.heading.names:
+                trial_fields.append("trial_rewarded")
             trial_df = pd.DataFrame(
-                (InterpolatedTrials() & key).fetch(
-                    "dataset",
-                    "trial_left_choice",
-                    "x",
-                    "y",
-                    "trial_rewarded",
-                    "aperture",
-                    "trial_length",
-                    "trial",
-                    as_dict=True,
-                )[0]
+                (InterpolatedTrials() & key).fetch(*trial_fields, as_dict=True)[0]
             )
+            if "trial_rewarded" not in trial_df.columns:
+                from vr4mice.schema import base_analysis
+
+                df = base_analysis.DataFrame().get_data(key, ["trial", "reward"])
+                rewarded = base_analysis.DataFrame().get_rewarded(key=key)
+                if df is False or df is None or rewarded is False or rewarded is None:
+                    raise ValueError(
+                        "Missing DataFrame data needed to compute trial_rewarded."
+                    )
+                rewarded_map = (
+                    pd.DataFrame({"trial": df["trial"], "trial_rewarded": rewarded})
+                    .groupby("trial")["trial_rewarded"]
+                    .max()
+                    .to_dict()
+                )
+                trial_df["trial_rewarded"] = np.array(
+                    [rewarded_map.get(int(t), 0) for t in trial_df["trial"]]
+                )
 
             merged_df = pd.merge(
                 predictions_df, trial_df, on=["dataset", "trial", "trial_length"]
