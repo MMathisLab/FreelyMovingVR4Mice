@@ -271,7 +271,9 @@ if __name__ == "__main__":
     elif args.mode == "decision":
         from vr4mice.schema import decision
 
-        run_step("decision.ValidGroup.populate", lambda: decision.ValidGroup().populate())
+        run_step(
+            "decision.ValidGroup.populate", lambda: decision.ValidGroup().populate()
+        )
         run_step(
             "decision.PredictionModel.populate",
             lambda: decision.PredictionModel().populate(),
