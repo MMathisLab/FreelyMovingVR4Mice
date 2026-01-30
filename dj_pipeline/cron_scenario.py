@@ -44,7 +44,10 @@ def main():
 
     run_step(
         "populate_rig",
-        lambda: (check_folder_existence(path), populate_rig(path=path, gui=os.environ["GUI"], move=move)),
+        lambda: (
+            check_folder_existence(path),
+            populate_rig(path=path, gui=os.environ["GUI"], move=move),
+        ),
     )
 
     from vr4mice.schema import (
@@ -58,7 +61,10 @@ def main():
         decision,
     )
 
-    run_step("create_summary_plots_dir", lambda: create_folder_if_not_exist("/data/summary_plots"))
+    run_step(
+        "create_summary_plots_dir",
+        lambda: create_folder_if_not_exist("/data/summary_plots"),
+    )
 
     run_step("vr4mice.Collab.populate", lambda: vr4mice.Collab().populate())
     run_step("base_analysis.DataFrame.populate", base_analysis.DataFrame.populate)
@@ -68,10 +74,18 @@ def main():
     run_step("dlc.DLCProcessor.populate", lambda: dlc.DLCProcessor().populate())
     run_step("dlc.DLCKptsDf.populate", lambda: dlc.DLCKptsDf().populate())
     run_step("dlc.SyncDLCKptsDf.populate", lambda: dlc.SyncDLCKptsDf().populate())
-    run_step("dlc.OfflineKinematics.populate", lambda: dlc.OfflineKinematics().populate())
+    run_step(
+        "dlc.OfflineKinematics.populate", lambda: dlc.OfflineKinematics().populate()
+    )
 
-    run_step("session_metrics.SessionMetrics.populate", lambda: session_metrics.SessionMetrics().populate())
-    run_step("session_metrics.TrialMetrics.populate", lambda: session_metrics.TrialMetrics().populate())
+    run_step(
+        "session_metrics.SessionMetrics.populate",
+        lambda: session_metrics.SessionMetrics().populate(),
+    )
+    run_step(
+        "session_metrics.TrialMetrics.populate",
+        lambda: session_metrics.TrialMetrics().populate(),
+    )
 
     run_step(
         "interpolated_trajectories.InterpolatedTrials.populate",
@@ -90,30 +104,56 @@ def main():
         lambda: interpolated_trajectories.MeanVelocities().populate(),
     )
 
-    run_step("vr4mice.SignalsPhotodiode.populate", lambda: vr4mice.SignalsPhotodiode().populate())
+    run_step(
+        "vr4mice.SignalsPhotodiode.populate",
+        lambda: vr4mice.SignalsPhotodiode().populate(),
+    )
     run_step(
         "latency_tests.SignalsPhotodiodeAligned.populate",
         lambda: latency_tests.SignalsPhotodiodeAligned().populate(),
     )
-    run_step("latency_tests.AllLatencies.populate", lambda: latency_tests.AllLatencies().populate())
+    run_step(
+        "latency_tests.AllLatencies.populate",
+        lambda: latency_tests.AllLatencies().populate(),
+    )
 
-    run_step("base_analysis.SummaryPlots.populate", lambda: base_analysis.SummaryPlots().populate())
+    run_step(
+        "base_analysis.SummaryPlots.populate",
+        lambda: base_analysis.SummaryPlots().populate(),
+    )
     run_step(
         "base_analysis.TrackingSummaryPlots.populate",
         lambda: base_analysis.TrackingSummaryPlots().populate(),
     )
 
-    run_step("inputs_videos.RawVideo.populate", lambda: inputs_videos.RawVideo().populate())
-    run_step("inputs_videos.ProcessedVideo.populate", lambda: inputs_videos.ProcessedVideo().populate())
-    run_step("inputs_videos.VideoSyncSignal.populate", lambda: inputs_videos.VideoSyncSignal().populate())
-    run_step("inputs_videos.AlignedVideoFrame.populate", lambda: inputs_videos.AlignedVideoFrame().populate())
+    run_step(
+        "inputs_videos.RawVideo.populate", lambda: inputs_videos.RawVideo().populate()
+    )
+    run_step(
+        "inputs_videos.ProcessedVideo.populate",
+        lambda: inputs_videos.ProcessedVideo().populate(),
+    )
+    run_step(
+        "inputs_videos.VideoSyncSignal.populate",
+        lambda: inputs_videos.VideoSyncSignal().populate(),
+    )
+    run_step(
+        "inputs_videos.AlignedVideoFrame.populate",
+        lambda: inputs_videos.AlignedVideoFrame().populate(),
+    )
 
     run_step("decision.ValidGroup.populate", lambda: decision.ValidGroup().populate())
-    run_step("decision.PredictionModel.populate", lambda: decision.PredictionModel().populate())
+    run_step(
+        "decision.PredictionModel.populate",
+        lambda: decision.PredictionModel().populate(),
+    )
 
     run_step(
         "fetch_data",
-        lambda: (check_folder_existence("/shared"), fetch_data(dst="/shared/gui_menu.npy")),
+        lambda: (
+            check_folder_existence("/shared"),
+            fetch_data(dst="/shared/gui_menu.npy"),
+        ),
     )
 
 
