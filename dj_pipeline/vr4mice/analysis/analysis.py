@@ -107,7 +107,7 @@ def get_rewarded(df: pd.DataFrame) -> pd.Series:
     elif "trial" in df.columns:
         groupby = ["trial"]
     else:
-        raise ValueError("DataFrame must contain either 'dataset' or 'trial' columns.")
+        raise ValueError("DataFrame must contain at least a 'trial' column.")
     return df.groupby(groupby)["reward"].transform(lambda x: x.max())
 
 

@@ -1876,9 +1876,10 @@ def plot_rolling_reward(df, ax=None, rolling_window=15, per_aperture=False):
         rewarded["aperture"].nunique() if "aperture" in rewarded.columns else 1
     )
 
+    # Less trials per aperture, smaller rolling window
     if num_apertures >= 2:
         rolling_window /= 2
-        rolling_window = int(rolling_window)
+    rolling_window = max(int(rolling_window), 5)
 
     # Sort by aperture if per_aperture for consistent color palette
     if per_aperture and num_apertures > 1:
