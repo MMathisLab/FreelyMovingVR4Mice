@@ -21,12 +21,14 @@ schema = get_schema(schema_name, locals())
 logger = Logger.get_logger()
 
 
+@schema
 class TrainingGroup(dj.Lookup):
     definition = """
     -> Dataset
     """
 
 
+@schema
 class DualGroup(dj.Lookup):
     definition = """
     session_label : varchar(64)    # session label for dual occluder task
@@ -38,6 +40,7 @@ class DualGroup(dj.Lookup):
     ]
 
 
+@schema
 class MultiGroup(dj.Lookup):
     definition = """
     session_label : varchar(64)    # session label for multi occluder task
