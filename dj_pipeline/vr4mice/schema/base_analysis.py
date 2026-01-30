@@ -134,17 +134,31 @@ class DataFrame(dj.Computed):
     ) -> Optional[pd.DataFrame]:
         try:
             if self & key:
-                requested_columns = list(columns) if columns else None
+                if columns is None:
+                    requested_columns = None
+                elif isinstance(columns, list):
+                    requested_columns = columns.copy()
+                else:
+                    requested_columns = list(columns)
                 needs_trial_rewarded = (
                     requested_columns is not None
                     and "trial_rewarded" in requested_columns
                 )
                 if requested_columns:
-                    fetch_columns = requested_columns.copy()
-                    if "trial_rewarded" in fetch_columns:
-                        fetch_columns.remove("trial_rewarded")
+                    fetch_columns = [
+                        col for col in requested_columns if col != "trial_rewarded"
+                    ]
                     if needs_trial_rewarded:
-                        for col in ["dataset", "trial", "reward"]:
+                        required_cols = ["dataset", "trial", "reward"]
+                        existing_cols = set(self.heading.names)
+                        missing_cols = [c for c in required_cols if c not in existing_cols]
+                        if missing_cols:
+                            logger.warning(
+                                f"{self.__class__.__name__}: cannot compute 'trial_rewarded' "
+                                f"for key {key} because required columns are missing: {missing_cols}"
+                            )
+                            return None
+                        for col in required_cols:
                             if col not in fetch_columns:
                                 fetch_columns.append(col)
                     data = (self & key).fetch(*fetch_columns, as_dict=True)[0]
