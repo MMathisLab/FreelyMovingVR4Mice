@@ -120,7 +120,7 @@ make client_down
 #### DataJoint database user remote access via Jupyter Notebook (tested with Python 3.9.5):
 1. Assuming that Jupyter Notebook and DataJoint are installed, "vr4mice" repository is loaded, and "base_schemas" are pip-installed:  
    ```bash
-   pip install notebook datajoint==0.12.5b1
+   pip install notebook datajoint==0.14.0  # later versions enforce CamelCase for class names
    pip install base/base_actions/
    pip install base/base_min_schemas/
    ```
