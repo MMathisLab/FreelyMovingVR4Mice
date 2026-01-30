@@ -73,6 +73,7 @@ def fetch_data(key: Dict, database: bool):
         from vr4mice.analysis import analysis
 
         df, unity_to_physical_arena_size = analysis.create_data_frame(key, iti=False)
+        df["trial_rewarded"] = analysis.get_rewarded(df)
         box_df_output = analysis.get_box_df(
             key, df, unity_to_physical_arena_size=unity_to_physical_arena_size
         )

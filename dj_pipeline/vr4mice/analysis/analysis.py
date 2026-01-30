@@ -374,7 +374,6 @@ def create_data_frame(
         lambda x: x - np.mean(x.iloc[:first_n_samples])
     )
 
-    df["trial_rewarded"] = get_rewarded(df)
     if not iti:
         df = df[df.iti == 0.0]
 
