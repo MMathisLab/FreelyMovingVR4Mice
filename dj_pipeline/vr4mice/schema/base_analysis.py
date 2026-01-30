@@ -140,11 +140,8 @@ class DataFrame(dj.Computed):
                     requested_columns = columns.copy()
                 else:
                     requested_columns = list(columns)
-                needs_trial_rewarded = (
-                    requested_columns is not None
-                    and "trial_rewarded" in requested_columns
-                )
                 if requested_columns:
+                    needs_trial_rewarded = "trial_rewarded" in requested_columns
                     fetch_columns = [
                         col for col in requested_columns if col != "trial_rewarded"
                     ]

@@ -504,7 +504,9 @@ class DecisionPoints(dj.Computed):
 
                 df = base_analysis.DataFrame().get_data(key, ["trial", "reward"])
                 rewarded = base_analysis.DataFrame().get_rewarded(key=key)
-                if df is False or df is None or rewarded is False or rewarded is None:
+                if not isinstance(df, pd.DataFrame) or not isinstance(
+                    rewarded, pd.Series
+                ):
                     raise ValueError(
                         "Missing DataFrame data needed to compute trial_rewarded."
                     )
