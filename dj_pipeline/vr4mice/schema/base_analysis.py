@@ -287,6 +287,11 @@ class BoxDataFrame(dj.Computed):
         try:
             if len(DataFrame & key) > 0:
                 df = DataFrame().get_data(key)
+                if df is False or df is None:
+                    logger.warning(
+                        f"{self.__class__.__name__}: DataFrame missing for {key}, skipping."
+                    )
+                    return None
                 unity_to_physical_arena_size = DataFrame().get_unity_arena_size(key)
                 box_df = get_box_df(
                     key, df, unity_to_physical_arena_size=unity_to_physical_arena_size
