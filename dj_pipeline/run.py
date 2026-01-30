@@ -55,6 +55,15 @@ def check_folder_existence(folder_path):
         logger.info(f"Folder '{folder_path}' exists.")
 
 
+def run_step(name, func):
+    logger.info(f"[run] start {name}")
+    try:
+        func()
+        logger.info(f"[run] done {name}")
+    except Exception:
+        logger.exception(f"[run] failed {name}")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Script to handle AWS or local execution."
@@ -107,8 +116,11 @@ if __name__ == "__main__":
         # Intentionally not calling sync_days here: day synchronization should be
         # run explicitly via the "sync_days" mode when needed, rather than on every
         # populate run.
-        populate_rig(path=path, move=move)
-        vr4mice.Collab().populate()
+        run_step(
+            "populate_rig",
+            lambda: populate_rig(path=path, move=move),
+        )
+        run_step("vr4mice.Collab.populate", lambda: vr4mice.Collab().populate())
 
     elif args.mode == "analysis":
         from vr4mice.schema import base_analysis, base
@@ -116,37 +128,73 @@ if __name__ == "__main__":
         # NOTE: populate has to be run before
 
         create_folder_if_not_exist("/data/summary_plots")
-        base_analysis.DataFrame.populate()
-        base_analysis.BoxDataFrame().populate()
-        base_analysis.GitCommit().populate()
+        run_step("base_analysis.DataFrame.populate", base_analysis.DataFrame.populate)
+        run_step(
+            "base_analysis.BoxDataFrame.populate",
+            lambda: base_analysis.BoxDataFrame().populate(),
+        )
+        run_step(
+            "base_analysis.GitCommit.populate",
+            lambda: base_analysis.GitCommit().populate(),
+        )
 
     elif args.mode == "summary":
         from vr4mice.schema import base_analysis
 
-        base_analysis.SummaryPlots().populate()
-        base_analysis.TrackingSummaryPlots().populate()
+        run_step(
+            "base_analysis.SummaryPlots.populate",
+            lambda: base_analysis.SummaryPlots().populate(),
+        )
+        run_step(
+            "base_analysis.TrackingSummaryPlots.populate",
+            lambda: base_analysis.TrackingSummaryPlots().populate(),
+        )
 
     elif args.mode == "dlc":
         # NOTE: populate and analysis have to be run before
         from vr4mice.schema import dlc
 
         create_folder_if_not_exist("/data/summary_plots")
-        dlc.DLCProcessor().populate()
-        dlc.DLCKptsDf().populate()
-        dlc.SyncDLCKptsDf().populate()
-        dlc.OfflineKinematics().populate()
+        run_step("dlc.DLCProcessor.populate", lambda: dlc.DLCProcessor().populate())
+        run_step("dlc.DLCKptsDf.populate", lambda: dlc.DLCKptsDf().populate())
+        run_step(
+            "dlc.SyncDLCKptsDf.populate",
+            lambda: dlc.SyncDLCKptsDf().populate(),
+        )
+        run_step(
+            "dlc.OfflineKinematics.populate",
+            lambda: dlc.OfflineKinematics().populate(),
+        )
 
     elif args.mode == "interp":
 
         from vr4mice.schema import interpolated_trajectories, session_metrics
 
-        session_metrics.SessionMetrics().populate()
-        session_metrics.TrialMetrics().populate()
+        run_step(
+            "session_metrics.SessionMetrics.populate",
+            lambda: session_metrics.SessionMetrics().populate(),
+        )
+        run_step(
+            "session_metrics.TrialMetrics.populate",
+            lambda: session_metrics.TrialMetrics().populate(),
+        )
 
-        interpolated_trajectories.InterpolatedTrials().populate()
-        interpolated_trajectories.MeanXYTrajectory().populate()
-        interpolated_trajectories.YBinnedXYTrajectory().populate()
-        interpolated_trajectories.MeanVelocities().populate()
+        run_step(
+            "interpolated_trajectories.InterpolatedTrials.populate",
+            lambda: interpolated_trajectories.InterpolatedTrials().populate(),
+        )
+        run_step(
+            "interpolated_trajectories.MeanXYTrajectory.populate",
+            lambda: interpolated_trajectories.MeanXYTrajectory().populate(),
+        )
+        run_step(
+            "interpolated_trajectories.YBinnedXYTrajectory.populate",
+            lambda: interpolated_trajectories.YBinnedXYTrajectory().populate(),
+        )
+        run_step(
+            "interpolated_trajectories.MeanVelocities.populate",
+            lambda: interpolated_trajectories.MeanVelocities().populate(),
+        )
 
     elif args.mode == "ar_paper":
 
@@ -156,37 +204,82 @@ if __name__ == "__main__":
             vr4mice.Dataset() * vr4mice.Groups() * vr4mice.Labels() & "label='ar_paper'"
         ).fetch("dataset", as_dict=True)
 
-        session_metrics.SessionMetrics().populate(keys)
-        session_metrics.TrialMetrics().populate(keys)
+        run_step(
+            "session_metrics.SessionMetrics.populate(ar_paper)",
+            lambda: session_metrics.SessionMetrics().populate(keys),
+        )
+        run_step(
+            "session_metrics.TrialMetrics.populate(ar_paper)",
+            lambda: session_metrics.TrialMetrics().populate(keys),
+        )
 
-        interpolated_trajectories.InterpolatedTrials().populate(keys)
+        run_step(
+            "interpolated_trajectories.InterpolatedTrials.populate(ar_paper)",
+            lambda: interpolated_trajectories.InterpolatedTrials().populate(keys),
+        )
 
-        interpolated_trajectories.MeanXYTrajectory().populate()
-        interpolated_trajectories.YBinnedXYTrajectory().populate()
-        interpolated_trajectories.MeanVelocities().populate()
+        run_step(
+            "interpolated_trajectories.MeanXYTrajectory.populate",
+            lambda: interpolated_trajectories.MeanXYTrajectory().populate(),
+        )
+        run_step(
+            "interpolated_trajectories.YBinnedXYTrajectory.populate",
+            lambda: interpolated_trajectories.YBinnedXYTrajectory().populate(),
+        )
+        run_step(
+            "interpolated_trajectories.MeanVelocities.populate",
+            lambda: interpolated_trajectories.MeanVelocities().populate(),
+        )
 
     elif args.mode == "latency":
 
         from vr4mice.schema import vr4mice, latency_tests
 
-        vr4mice.SignalsPhotodiode().populate()
-        latency_tests.SignalsPhotodiodeAligned().populate()
-        latency_tests.AllLatencies()
+        run_step(
+            "vr4mice.SignalsPhotodiode.populate",
+            lambda: vr4mice.SignalsPhotodiode().populate(),
+        )
+        run_step(
+            "latency_tests.SignalsPhotodiodeAligned.populate",
+            lambda: latency_tests.SignalsPhotodiodeAligned().populate(),
+        )
+        run_step(
+            "latency_tests.AllLatencies.populate",
+            lambda: latency_tests.AllLatencies().populate(),
+        )
 
     elif args.mode == "inputs_videos":
         from vr4mice.schema import inputs_videos
 
-        inputs_videos.RawVideo().populate()
-        inputs_videos.ProcessedVideo().populate()
-        inputs_videos.VideoSyncSignal().populate()
-        inputs_videos.AlignedVideoFrame().populate()
+        run_step(
+            "inputs_videos.RawVideo.populate",
+            lambda: inputs_videos.RawVideo().populate(),
+        )
+        run_step(
+            "inputs_videos.ProcessedVideo.populate",
+            lambda: inputs_videos.ProcessedVideo().populate(),
+        )
+        run_step(
+            "inputs_videos.VideoSyncSignal.populate",
+            lambda: inputs_videos.VideoSyncSignal().populate(),
+        )
+        run_step(
+            "inputs_videos.AlignedVideoFrame.populate",
+            lambda: inputs_videos.AlignedVideoFrame().populate(),
+        )
 
     elif args.mode == "decision":
         from vr4mice.schema import decision
 
-        decision.ValidGroup().populate()
-        decision.PredictionModel().populate()
-        decision.DecisionPoints().populate()
+        run_step("decision.ValidGroup.populate", lambda: decision.ValidGroup().populate())
+        run_step(
+            "decision.PredictionModel.populate",
+            lambda: decision.PredictionModel().populate(),
+        )
+        run_step(
+            "decision.DecisionPoints.populate",
+            lambda: decision.DecisionPoints().populate(),
+        )
 
     elif args.mode == "fetch":  # TODO: adjust path
         from vr4mice.actions.fetch_data import fetch_data
