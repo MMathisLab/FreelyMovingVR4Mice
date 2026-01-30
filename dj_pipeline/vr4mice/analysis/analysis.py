@@ -102,8 +102,13 @@ def get_rewarded(df: pd.DataFrame) -> pd.Series:
         A pandas.Series with 1 if the trial to which the timepoint
         belongs to is rewarded and 0 else.
     """
-
-    return df.groupby(["dataset", "trial"])["reward"].transform(lambda x: x.max())
+    if "dataset" in df.columns and "trial" in df.columns:
+        groupby = ["dataset", "trial"]
+    elif "trial" in df.columns:
+        groupby = ["trial"]
+    else:
+        raise ValueError("DataFrame must contain either 'dataset' or 'trial' columns.")
+    return df.groupby(groupby)["reward"].transform(lambda x: x.max())
 
 
 def get_distance_to_choice(df: pd.DataFrame, box_df: pd.DataFrame) -> pd.Series:
@@ -368,6 +373,8 @@ def create_data_frame(
     df["norm_y"] = df.groupby("trial", as_index=False)["y"].transform(
         lambda x: x - np.mean(x.iloc[:first_n_samples])
     )
+
+    df["trial_rewarded"] = get_rewarded(df)
     if not iti:
         df = df[df.iti == 0.0]
 
@@ -472,7 +479,10 @@ def create_data_frame(
     df.trial = df.trial.astype(int)
     df.aperture = df.aperture.round(2)
 
-    df = df.drop(columns=["first", "last"])
+    # Drop temporary columns only if they exist (only created when iti=True)
+    cols_to_drop = [col for col in ["first", "last"] if col in df.columns]
+    if cols_to_drop:
+        df = df.drop(columns=cols_to_drop)
 
     return df, unity_to_physical_arena_size
 
