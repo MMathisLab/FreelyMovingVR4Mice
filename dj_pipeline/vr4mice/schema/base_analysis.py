@@ -131,13 +131,31 @@ class DataFrame(dj.Computed):
     ) -> Optional[pd.DataFrame]:
         try:
             if self & key:
-                if columns:
-                    data = (self & key).fetch(*columns, as_dict=True)[0]
+                requested_columns = list(columns) if columns else None
+                needs_trial_rewarded = (
+                    requested_columns is not None
+                    and "trial_rewarded" in requested_columns
+                )
+                if requested_columns:
+                    fetch_columns = requested_columns.copy()
+                    if "trial_rewarded" in fetch_columns:
+                        fetch_columns.remove("trial_rewarded")
+                    if needs_trial_rewarded:
+                        for col in ["dataset", "trial", "reward"]:
+                            if col not in fetch_columns:
+                                fetch_columns.append(col)
+                    data = (self & key).fetch(*fetch_columns, as_dict=True)[0]
                 else:
                     data = (self & key).fetch(as_dict=True)[0]
                 if "interpolation" in data.keys():
                     data.pop("interpolation")
                 df = pd.DataFrame(data)
+                if needs_trial_rewarded:
+                    from vr4mice.analysis.analysis import get_rewarded
+
+                    df["trial_rewarded"] = get_rewarded(df)
+                if requested_columns:
+                    df = df[requested_columns]
                 return df
             else:
                 return False
