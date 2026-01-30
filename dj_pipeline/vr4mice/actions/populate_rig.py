@@ -1,6 +1,7 @@
 import os
 import pickle
 import re
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -169,9 +170,9 @@ def populate(
                 raw_data=raw_data,
                 key=a,
                 transformer=schema["transformer"],
-                srcf="/data",
-                dstf="processed",
-                move=True,
+                srcf=srcf,
+                dstf=dstf,
+                move=move,
             )
         else:  # dj_def-orientated
             label = a
@@ -314,6 +315,21 @@ def populate_rig(
 
     dir_list = get_filenames(ext, path)
 
+    def move_dataset_files(dataset_name: str, base_path: str, dst_folder: str) -> None:
+        dst_path = os.path.join(base_path, dst_folder)
+        os.makedirs(dst_path, exist_ok=True)
+        moved = False
+        for ext in [".pickle", ".npy"]:
+            filename = f"{dataset_name}{ext}"
+            src = os.path.join(base_path, filename)
+            if os.path.exists(src):
+                shutil.move(src, os.path.join(dst_path, filename))
+                moved = True
+        if moved:
+            logger.info(f"Moved raw files for {dataset_name} to {dst_path}")
+        else:
+            logger.info(f"No raw files found to move for {dataset_name}")
+
     if ".pickle" in dir_list.keys():
 
         for pickle_file in dir_list[".pickle"]:
@@ -324,7 +340,9 @@ def populate_rig(
 
                 if (dj_schema.vr4mice.Dataset() & key).fetch(as_dict=True):
                     logger.info(f"{key} is already in the database, skip.")
-                    # break
+                    if move:
+                        move_dataset_files(dataset, path, dstf)
+                    continue
                 else:
                     logger.info(f"{key} not yet in the database, continue.")
 
@@ -379,9 +397,9 @@ def populate_rig(
                                     attributes,
                                     raw_data,
                                     schema=schema,
-                                    srcf="/data",
-                                    dstf="processed",
-                                    move=True,
+                                    srcf=srcf,
+                                    dstf=dstf,
+                                    move=move,
                                 )
 
             except Exception as e:
@@ -413,9 +431,9 @@ def populate_rig(
                                 attributes,
                                 raw_data,
                                 schema=schema,
-                                srcf="/data",
-                                dstf="processed",
-                                move=True,
+                                srcf=srcf,
+                                dstf=dstf,
+                                move=move,
                             )
             except Exception as e:
                 logger.warning(f"Population of raw data failed for {npy_file}: {e}")
