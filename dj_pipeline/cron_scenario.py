@@ -143,10 +143,8 @@ def main():
     )
 
     run_step("decision.ValidGroup.populate", lambda: decision.ValidGroup().populate())
-    run_step(
-        "decision.PredictionModel.populate",
-        lambda: decision.PredictionModel().populate(),
-    )
+    run_step("decision.PredictionModel.populate", lambda: decision.PredictionModel().populate())
+    run_step("decision.DecisionPoints.populate", lambda: decision.DecisionPoints().populate())
 
     run_step(
         "fetch_data",
