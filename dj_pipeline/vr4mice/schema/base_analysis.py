@@ -113,6 +113,9 @@ class DataFrame(dj.Computed):
             # TODO: add test that data keys are the same with columns names
             # if not in... alert
 
+            allowed = set(self.heading.names)
+            data = {k: v for k, v in data.items() if k in allowed}
+
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
