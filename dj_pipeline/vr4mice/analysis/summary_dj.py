@@ -217,7 +217,7 @@ def vr4mice_summary_plots(
         y="x",
         hue="trial_right_choice" if num_apertures <= 2 else "aperture",
         palette=plotting.colors_choice if num_apertures <= 2 else "viridis",
-        style=None if num_apertures <= 2 else "trial_right_choice",
+        style="aperture" if num_apertures <= 2 else "trial_right_choice",
         errorbar="se",
         ax=axes["j_mean"],
     )
@@ -279,6 +279,13 @@ def vr4mice_summary_plots(
         per_aperture=True if num_apertures >= 2 else False,
         ax=axes["rewards"],
     )
+    axes["rewards"].hlines(
+        0.7,
+        xmin=axes["rewards"].get_xlim()[0],
+        xmax=axes["rewards"].get_xlim()[1],
+        colors="purple",
+        linestyles="dashed",
+    )
 
     # Display the time to reward
     # 1: per aperture
@@ -321,19 +328,10 @@ def vr4mice_summary_plots(
         "flip_one_side",
     ]
 
-    # Filter out trials with NaN values in critical columns to avoid interpolation errors
-    cols_to_check = ["trial_right_choice", "trial_rewarded"] + columns
-    df_clean = df.dropna(subset=cols_to_check)
-
-    if len(df_clean) < len(df):
-        logger.warning(
-            f"Dropped {len(df) - len(df_clean)} rows with NaN values before interpolation"
-        )
-
     interpolated_df = utils.interpolate(
-        df_clean,
+        df,
         n_points=200,
-        value_columns=cols_to_check,
+        value_columns=["trial_right_choice", "trial_rewarded"] + columns,
     )
     interpolated_df["trial_step"] = interpolated_df.groupby(
         ["dataset", "trial"]
@@ -402,10 +400,14 @@ def vr4mice_summary_plots(
         ax=axes["j_rate"],
     )
     axes["j_rate"].set_ylabel("J-shaped trials rate")
-    axes["j_rate"].set_ylim([0, 1])
+    axes["j_rate"].set_ylim([0, 1.1])
 
     # Display rolling reward and choice
-    plotting.plot_rolling_reward(df, ax=axes["rolling_reward"])
+    plotting.plot_rolling_reward(
+        df,
+        ax=axes["rolling_reward"],
+        per_aperture=True if num_apertures >= 2 else False,
+    )
     plotting.plot_choices_by_trial(df, ax=axes["choices_by_trial"])
 
     if database:

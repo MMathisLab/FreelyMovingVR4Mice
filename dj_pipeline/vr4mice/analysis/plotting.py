@@ -675,6 +675,62 @@ def _plot_bar_counts(
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
 
+    show_boxplot = (
+        counts is not None
+        and not per_mouse
+        and not per_lab
+        and counts["dataset"].nunique() == 1
+    )
+
+    if show_boxplot:
+        # Use color palette for multiple categories, otherwise grey
+        if len(unique_labels) > 1:
+            bar_palette = color_map
+            sns.barplot(
+                data=counts,
+                x=x_col,
+                y="count",
+                order=unique_labels,
+                hue=x_col,
+                palette=bar_palette,
+                width=0.5,
+                ax=ax,
+                zorder=1,
+                alpha=0.4,
+                legend=False,
+            )
+        else:
+            sns.barplot(
+                data=counts,
+                x=x_col,
+                y="count",
+                order=unique_labels,
+                color="lightgrey",
+                width=0.4,
+                ax=ax,
+                zorder=1,
+                alpha=0.5,
+            )
+
+        sns.pointplot(
+            data=counts,
+            x=x_col,
+            y="count",
+            order=unique_labels,
+            estimator=np.mean,
+            errorbar=None,
+            color="black",
+            markers="o",
+            linestyles="-",
+            ax=ax,
+            zorder=2,
+        )
+        if label_x is None:
+            mean_value = counts["count"].mean()
+            ax.set_xlabel(f"Mean: {mean_value:.3f}")
+            ax.set_xticklabels([])
+        return
+
     # Create explicit lab palette if per_lab
     lab_palette = None
     if per_lab:
@@ -1420,7 +1476,13 @@ def plot_time_to_reward(
     mean_counts = counts.groupby(["dataset", label_x], as_index=False)["count"].mean()
 
     mean_counts[label_x] = mean_counts[label_x].astype(str)
-    _plot_bar_counts(counts=mean_counts, label_x=label_x, alpha=alpha, ax=ax, cmap=cmap)
+    _plot_bar_counts(
+        counts=mean_counts,
+        label_x=label_x,
+        alpha=alpha,
+        ax=ax,
+        cmap=cmap,
+    )
 
     counts[label_x] = counts[label_x].astype(str)
     sns.stripplot(
@@ -1684,7 +1746,6 @@ def _plot_parameter_on_trial_traj(
     segments = np.concatenate([points[:-1], points[1:]], axis=1)
 
     lc = matplotlib.collections.LineCollection(segments, cmap=cmap, alpha=alpha)
-    # lc.set_norm(plt.Normalize(vmin=vrange[0], vmax=vrange[1]))
     lc.set_array(trial[label_parameter])
     lc.set_linewidth(1)
 
@@ -1796,20 +1857,46 @@ def plot_rolling_reward(df, ax=None, rolling_window=15, per_aperture=False):
     else:
         group = "trial"
 
-    if "reward" in df.columns:
-        # this returns 1 if the trial was rewarded, 0 otherwise
-        rewarded = df.groupby(group)["reward"].max().reset_index()
-    elif "trial_rewarded" in df.columns:
+    if "trial_rewarded" in df.columns:
         rewarded = df.groupby(group)["trial_rewarded"].max().reset_index()
         rewarded["reward"] = rewarded["trial_rewarded"].astype(int)
+    elif "reward" in df.columns:
+        # this returns 1 if the trial was rewarded, 0 otherwise
+        rewarded = df.groupby(group)["reward"].max().reset_index()
+        rewarded["reward"] = rewarded["reward"].astype(int)
     else:
         raise ValueError(
             "DataFrame must contain either 'reward' or 'trial_rewarded' column."
         )
 
-    rewarded["rolling_reward"] = rewarded.reward.rolling(
-        rolling_window, min_periods=1, win_type="gaussian", center=True
-    ).mean(std=3)
+    rewarded = rewarded.sort_values(by=["trial"])
+
+    # Check if there's only one aperture
+    num_apertures = (
+        rewarded["aperture"].nunique() if "aperture" in rewarded.columns else 1
+    )
+
+    # Less trials per aperture, smaller rolling window
+    if num_apertures >= 2:
+        rolling_window /= 2
+    rolling_window = max(int(rolling_window), 5)
+
+    # Sort by aperture if per_aperture for consistent color palette
+    if per_aperture and num_apertures > 1:
+        rewarded = rewarded.sort_values(by=["aperture", "trial"])
+
+    if per_aperture and num_apertures > 1:
+        rewarded["rolling_reward"] = (
+            rewarded.groupby("aperture")["reward"]
+            .rolling(rolling_window, min_periods=1, win_type="gaussian", center=True)
+            .mean(std=3)
+            .reset_index(level=0, drop=True)
+        )
+    else:
+        # Single aperture or per_aperture=False: compute rolling without grouping
+        rewarded["rolling_reward"] = rewarded.reward.rolling(
+            rolling_window, min_periods=1, win_type="gaussian", center=True
+        ).mean(std=3)
 
     ax.bar(rewarded.trial, rewarded.reward, color="grey")
     sns.lineplot(
@@ -1817,9 +1904,7 @@ def plot_rolling_reward(df, ax=None, rolling_window=15, per_aperture=False):
         x="trial",
         y="rolling_reward",
         hue="aperture" if per_aperture else None,
-        palette=(
-            colors_aperture[1] + colors_aperture[0] if per_aperture else ["#B52916"]
-        ),
+        palette=(colors_aperture if per_aperture else ["#B52916"]),
         linewidth=3,
         ax=ax,
     )
@@ -1851,9 +1936,7 @@ def plot_rolling_variable(df, label, ax=None, rolling_window=15, per_aperture=Fa
         x="trial",
         y="rolling_" + label,
         hue="aperture" if per_aperture else None,
-        palette=(
-            [colors_aperture[1], colors_aperture[0]] if per_aperture else ["#B52916"]
-        ),
+        palette=(colors_aperture if per_aperture else ["#B52916"]),
         linewidth=3,
         ax=ax,
     )
