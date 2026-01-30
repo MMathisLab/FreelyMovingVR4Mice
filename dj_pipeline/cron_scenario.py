@@ -142,7 +142,15 @@ def main():
         lambda: inputs_videos.AlignedVideoFrame().populate(),
     )
 
-    run_step("decision.ValidGroup.populate", lambda: decision.ValidGroup().populate())
+    run_step(
+        "decision.ExperimentMember.populate",
+        lambda: decision.ExperimentMember().populate(),
+    )
+    run_step(
+        "decision.InclusionStatus.populate",
+        lambda: decision.InclusionStatus().populate(),
+    )
+    run_step("decision.LabelSet.fill", lambda: decision.LabelSet.fill())
     run_step(
         "decision.PredictionModel.populate",
         lambda: decision.PredictionModel().populate(),
