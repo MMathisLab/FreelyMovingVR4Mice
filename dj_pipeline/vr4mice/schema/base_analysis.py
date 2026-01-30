@@ -151,7 +151,9 @@ class DataFrame(dj.Computed):
                     if needs_trial_rewarded:
                         required_cols = ["dataset", "trial", "reward"]
                         existing_cols = set(self.heading.names)
-                        missing_cols = [c for c in required_cols if c not in existing_cols]
+                        missing_cols = [
+                            c for c in required_cols if c not in existing_cols
+                        ]
                         if missing_cols:
                             logger.warning(
                                 f"{self.__class__.__name__}: cannot compute 'trial_rewarded' "
