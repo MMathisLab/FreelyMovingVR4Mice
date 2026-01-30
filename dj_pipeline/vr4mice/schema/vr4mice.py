@@ -66,22 +66,31 @@ class Dataset(dj.Manual):
         if FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
-        logger.info(f"{key['dataset']}")
-        paths = get_files_paths(key["dataset"])
-        video_filepath = (
-            f"{paths['video_path']['dst']}/{paths['video_path']['filename']}"
-        )
-        timestamp_filepath = (
-            f"{paths['camera_path']['dst']}/{paths['camera_path']['filename']}"
-        )
-        video_meta = paths["video_meta"]
-        data = {
-            "doe": paths["doe"],
-            "video_filepath": video_filepath,
-            "timestamp_filepath": timestamp_filepath,
-        }
-        data = {**key, **data, **video_meta}
-        Video().insert1(data, skip_duplicates=True)
+        try:
+            logger.info(f"{key['dataset']}")
+            paths = get_files_paths(key["dataset"])
+            video_filepath = (
+                f"{paths['video_path']['dst']}/{paths['video_path']['filename']}"
+            )
+            timestamp_filepath = (
+                f"{paths['camera_path']['dst']}/{paths['camera_path']['filename']}"
+            )
+            video_meta = paths["video_meta"]
+            data = {
+                "doe": paths["doe"],
+                "video_filepath": video_filepath,
+                "timestamp_filepath": timestamp_filepath,
+            }
+            data = {**key, **data, **video_meta}
+            Video().insert1(data, skip_duplicates=True)
+        except Exception as err:
+            dataset = key.get("dataset") if isinstance(key, dict) else None
+            if dataset:
+                FailedSession().add_entry(
+                    f"{dataset}", f"{self.__class__.__name__}", str(err)
+                )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            logger.warning(err)
 
 
 @schema

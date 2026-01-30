@@ -567,23 +567,32 @@ class TrackingSummaryPlots(dj.Computed):
         if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
-        if dlc.DLCKptsDf & key:
-            full_path = plot_keypoints_summary(key, save_path="/data/summary_plots")
-        else:
-            logger.warning(
-                "Populate first DLC DLCKptsDf for "
-                + str(key)
-                + "; call DLCKptsDf.populate();"
-            )
-            return False
-
-        if send:
-            data = {**key, **{"filename": full_path}}
-            if base.Base() & key:
-                key = (base.Base() & key).fetch(as_dict=True)[0]
+        try:
+            if dlc.DLCKptsDf & key:
+                full_path = plot_keypoints_summary(key, save_path="/data/summary_plots")
             else:
-                key = self.parse_dataset(key["dataset"])
-                insert_send_email(key, data, SummaryPlots(), full_path, send=send)
+                logger.warning(
+                    "Populate first DLC DLCKptsDf for "
+                    + str(key)
+                    + "; call DLCKptsDf.populate();"
+                )
+                return False
+
+            if send:
+                data = {**key, **{"filename": full_path}}
+                if base.Base() & key:
+                    key = (base.Base() & key).fetch(as_dict=True)[0]
+                else:
+                    key = self.parse_dataset(key["dataset"])
+                    insert_send_email(key, data, SummaryPlots(), full_path, send=send)
+        except Exception as err:
+            dataset = key.get("dataset") if isinstance(key, dict) else None
+            if dataset:
+                vr4mice.FailedSession().add_entry(
+                    f"{dataset}", f"{self.__class__.__name__}", str(err)
+                )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            logger.warning(err)
 
     def parse_dataset(self, dataset):
         pattern = r"(\d+)?_?(\d{4}-\d{2}-\d{2})_?(\d+)?(?:\.pickle)?"

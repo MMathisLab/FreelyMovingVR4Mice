@@ -27,78 +27,137 @@ def main():
     )
     args = parser.parse_args()
 
-    try:
-        if args.aws:
-            path = "/data/processed"
-            move = False
-        else:
-            path = "/data/data"
-            move = True
+    def run_step(name, func):
+        logger.info(f"[cron] start {name}")
+        try:
+            func()
+            logger.info(f"[cron] done {name}")
+        except Exception:
+            logger.exception(f"[cron] failed {name}")
 
-        check_folder_existence(path)
-        populate_rig(path=path, gui=os.environ["GUI"], move=move)
+    if args.aws:
+        path = "/data/processed"
+        move = False
+    else:
+        path = "/data/data"
+        move = True
 
-    except Exception as e:
-        logger.error(
-            f"An error occurred in the raw data population (populate_rig): {e}"
-        )
+    run_step(
+        "populate_rig",
+        lambda: (
+            check_folder_existence(path),
+            populate_rig(path=path, gui=os.environ["GUI"], move=move),
+        ),
+    )
 
-    try:
-        from vr4mice.schema import (
-            base_analysis,
-            dlc,
-            vr4mice,
-            interpolated_trajectories,
-            session_metrics,
-            latency_tests,
-            inputs_videos,
-            decision,
-        )
+    from vr4mice.schema import (
+        base_analysis,
+        dlc,
+        vr4mice,
+        interpolated_trajectories,
+        session_metrics,
+        latency_tests,
+        inputs_videos,
+        decision,
+    )
 
-        vr4mice.Collab().populate()
-        create_folder_if_not_exist("/data/summary_plots")
-        base_analysis.DataFrame.populate()
-        base_analysis.BoxDataFrame.populate()
-        base_analysis.GitCommit().populate()
+    run_step(
+        "create_summary_plots_dir",
+        lambda: create_folder_if_not_exist("/data/summary_plots"),
+    )
 
-        dlc.DLCProcessor().populate()
-        dlc.DLCKptsDf().populate()
-        dlc.SyncDLCKptsDf().populate()
-        dlc.OfflineKinematics().populate()
+    run_step("vr4mice.Collab.populate", lambda: vr4mice.Collab().populate())
+    run_step("base_analysis.DataFrame.populate", base_analysis.DataFrame.populate)
+    run_step("base_analysis.BoxDataFrame.populate", base_analysis.BoxDataFrame.populate)
+    run_step("base_analysis.GitCommit.populate", base_analysis.GitCommit.populate)
 
-        session_metrics.SessionMetrics().populate()
-        session_metrics.TrialMetrics().populate()
+    run_step("dlc.DLCProcessor.populate", lambda: dlc.DLCProcessor().populate())
+    run_step("dlc.DLCKptsDf.populate", lambda: dlc.DLCKptsDf().populate())
+    run_step("dlc.SyncDLCKptsDf.populate", lambda: dlc.SyncDLCKptsDf().populate())
+    run_step(
+        "dlc.OfflineKinematics.populate", lambda: dlc.OfflineKinematics().populate()
+    )
 
-        interpolated_trajectories.InterpolatedTrials().populate()
-        interpolated_trajectories.MeanXYTrajectory().populate()
-        interpolated_trajectories.YBinnedXYTrajectory().populate()
-        interpolated_trajectories.MeanVelocities().populate()
+    run_step(
+        "session_metrics.SessionMetrics.populate",
+        lambda: session_metrics.SessionMetrics().populate(),
+    )
+    run_step(
+        "session_metrics.TrialMetrics.populate",
+        lambda: session_metrics.TrialMetrics().populate(),
+    )
 
-        vr4mice.SignalsPhotodiode().populate()
-        latency_tests.SignalsPhotodiodeAligned().populate()
-        latency_tests.AllLatencies()
+    run_step(
+        "interpolated_trajectories.InterpolatedTrials.populate",
+        lambda: interpolated_trajectories.InterpolatedTrials().populate(),
+    )
+    run_step(
+        "interpolated_trajectories.MeanXYTrajectory.populate",
+        lambda: interpolated_trajectories.MeanXYTrajectory().populate(),
+    )
+    run_step(
+        "interpolated_trajectories.YBinnedXYTrajectory.populate",
+        lambda: interpolated_trajectories.YBinnedXYTrajectory().populate(),
+    )
+    run_step(
+        "interpolated_trajectories.MeanVelocities.populate",
+        lambda: interpolated_trajectories.MeanVelocities().populate(),
+    )
 
-        base_analysis.SummaryPlots().populate()
-        base_analysis.TrackingSummaryPlots().populate()
+    run_step(
+        "vr4mice.SignalsPhotodiode.populate",
+        lambda: vr4mice.SignalsPhotodiode().populate(),
+    )
+    run_step(
+        "latency_tests.SignalsPhotodiodeAligned.populate",
+        lambda: latency_tests.SignalsPhotodiodeAligned().populate(),
+    )
+    run_step(
+        "latency_tests.AllLatencies.populate",
+        lambda: latency_tests.AllLatencies().populate(),
+    )
 
-        inputs_videos.RawVideo().populate()
-        inputs_videos.ProcessedVideo().populate()
-        inputs_videos.VideoSyncSignal().populate()
-        inputs_videos.AlignedVideoFrame().populate()
+    run_step(
+        "base_analysis.SummaryPlots.populate",
+        lambda: base_analysis.SummaryPlots().populate(),
+    )
+    run_step(
+        "base_analysis.TrackingSummaryPlots.populate",
+        lambda: base_analysis.TrackingSummaryPlots().populate(),
+    )
 
-        decision.ValidGroup().populate()
-        decision.PredictionModel().populate()
-        decision.DecisionPoints().populate()
+    run_step(
+        "inputs_videos.RawVideo.populate", lambda: inputs_videos.RawVideo().populate()
+    )
+    run_step(
+        "inputs_videos.ProcessedVideo.populate",
+        lambda: inputs_videos.ProcessedVideo().populate(),
+    )
+    run_step(
+        "inputs_videos.VideoSyncSignal.populate",
+        lambda: inputs_videos.VideoSyncSignal().populate(),
+    )
+    run_step(
+        "inputs_videos.AlignedVideoFrame.populate",
+        lambda: inputs_videos.AlignedVideoFrame().populate(),
+    )
 
-    except Exception as e:
-        logger.error(f"An error occurred in cron_scenario.py populate: {e}")
+    run_step("decision.ValidGroup.populate", lambda: decision.ValidGroup().populate())
+    run_step(
+        "decision.PredictionModel.populate",
+        lambda: decision.PredictionModel().populate(),
+    )
+    run_step(
+        "decision.DecisionPoints.populate", lambda: decision.DecisionPoints().populate()
+    )
 
-    try:
-        path = "/shared"
-        check_folder_existence(path)
-        fetch_data(dst="/shared/gui_menu.npy")
-    except Exception as e:
-        logger.error(f"An error occurred in fetch_data: {e}")
+    run_step(
+        "fetch_data",
+        lambda: (
+            check_folder_existence("/shared"),
+            fetch_data(dst="/shared/gui_menu.npy"),
+        ),
+    )
 
 
 if __name__ == "__main__":

@@ -344,7 +344,7 @@ def populate_rig(
                                 f"Attention: .npy file from GUI was not found for {dataset}; \
                                 As .npy files from gui were expected (gui flag is {gui}) the population will be aborted."
                             )
-                            return False
+                            continue
 
                         logger.info(
                             f"Attention: .npy file from GUI was not found for {dataset}; \
@@ -389,30 +389,33 @@ def populate_rig(
 
     elif ".npy" in dir_list.keys():  # case no pickle
         for npy_file in dir_list[".npy"]:
-            raw_data_npy, dataset = get_new_file(npy_file, path)
-            raw_data_npy["rig_id"] = 12
-            raw_data_npy["license"] = "N/A"
-            files_info = get_files_paths(
-                dataset=dataset, remote_src=None, local_src="/data", data=path
-            )  # paths correspond to docker env
-            raw_data = {**files_info, **raw_data_npy}
-            schemas = [base]
+            try:
+                raw_data_npy, dataset = get_new_file(npy_file, path)
+                raw_data_npy["rig_id"] = 12
+                raw_data_npy["license"] = "N/A"
+                files_info = get_files_paths(
+                    dataset=dataset, remote_src=None, local_src="/data", data=path
+                )  # paths correspond to docker env
+                raw_data = {**files_info, **raw_data_npy}
+                schemas = [base]
 
-            for schema in schemas:
-                for table_name, attributes in schema[
-                    "tables"
-                ].items():  # get attributes
-                    flag, none_vals = check_keys(
-                        attributes, raw_data, table_name, schema=schema
-                    )
-                    if flag:
-                        raw_data = {**raw_data, **none_vals}
-                        populate(
-                            table_name,
-                            attributes,
-                            raw_data,
-                            schema=schema,
-                            srcf="/data",
-                            dstf="processed",
-                            move=True,
+                for schema in schemas:
+                    for table_name, attributes in schema[
+                        "tables"
+                    ].items():  # get attributes
+                        flag, none_vals = check_keys(
+                            attributes, raw_data, table_name, schema=schema
                         )
+                        if flag:
+                            raw_data = {**raw_data, **none_vals}
+                            populate(
+                                table_name,
+                                attributes,
+                                raw_data,
+                                schema=schema,
+                                srcf="/data",
+                                dstf="processed",
+                                move=True,
+                            )
+            except Exception as e:
+                logger.warning(f"Population of raw data failed for {npy_file}: {e}")
