@@ -37,15 +37,15 @@ class Base(dj.Computed):
 
             if mice.Mouse() & mouse_key:
                 pk = mice.Mouse().primary_key
-                mouse = (mice.Mouse() & mouse_key).proj(*pk).to_dicts()[0]
+                mouse = (mice.Mouse() & mouse_key).fetch(*pk, as_dict=True)[0]
 
             session_key = {"doe": data["date"], "attempt": data["attempt"]}
 
             if exp.Session() & mouse_key & session_key:
                 pk = exp.Session().primary_key
-                session = (exp.Session() & mouse_key & session_key).proj(
-                    *pk
-                ).to_dicts()[0]
+                session = (exp.Session() & mouse_key & session_key).fetch(
+                    *pk, as_dict=True
+                )[0]
             else:
                 logger.warning(f"{self.__class__.__name__} no Session entry for {key}.")
                 return

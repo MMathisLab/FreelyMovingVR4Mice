@@ -57,19 +57,19 @@ class TestSchemaCreation:
         from vr4mice.schema import vr4mice
 
         # Camera lookup should have default contents
-        cameras = vr4mice.Camera().to_dicts()
+        cameras = vr4mice.Camera().fetch()
         assert len(cameras) > 0
 
         # ModelName lookup should have default contents
-        models = vr4mice.ModelName().to_dicts()
+        models = vr4mice.ModelName().fetch()
         assert len(models) > 0
 
-        # Golden Baseline: Verify expected lookup values exist
+        # Golden Master: Verify expected lookup values exist
         # These are the values used in the Nightingale golden dataset
-        camera_names = [c["camera"] for c in vr4mice.Camera().to_dicts()]
+        camera_names = vr4mice.Camera().fetch("camera")
         assert "Imagingsource" in camera_names, "Expected camera 'Imagingsource' not found"
 
-        model_names = [m["model_name"] for m in vr4mice.ModelName().to_dicts()]
+        model_names = vr4mice.ModelName().fetch("model_name")
         assert "DLC" in model_names, "Expected model 'DLC' not found"
 
 
@@ -125,7 +125,7 @@ class TestDatasetPopulation:
         vr4mice.Dataset.insert1(entry, skip_duplicates=True)
 
         # Verify insertion
-        result = (vr4mice.Dataset & f'dataset="{dataset_name}"').to_dicts()
+        result = (vr4mice.Dataset & f'dataset="{dataset_name}"').fetch(as_dict=True)
         assert len(result) == 1
         assert result[0]["dataset"] == dataset_name
 
@@ -145,7 +145,7 @@ class TestDatasetPopulation:
         vr4mice.Dataset.insert1(entry, skip_duplicates=True)
 
         # Fetch all datasets
-        datasets = [d["dataset"] for d in vr4mice.Dataset().to_dicts()]
+        datasets = vr4mice.Dataset().fetch("dataset")
         assert dataset_name in datasets
 
 
@@ -196,14 +196,14 @@ class TestMouseStatePopulation:
         vr4mice.MouseState.insert1(mouse_state_entry, skip_duplicates=True)
 
         # Verify
-        result = (vr4mice.MouseState & f'dataset="{test_dataset_name}"').to_dicts()
+        result = (vr4mice.MouseState & f'dataset="{test_dataset_name}"').fetch(as_dict=True)
         assert len(result) == 1
 
         # Verify data integrity - length
         fetched_x_pos = np.array(result[0]["x_pos"])
         assert len(fetched_x_pos) == 339045  # Expected length
 
-        # Golden Baseline: Verify sample values from fetched data
+        # Golden Master: Verify sample values from fetched data
         # These are specific values from the Nightingale golden dataset
         original_x_pos = np.array(get_state(raw_data=pickle_data, key="x_pos"))
 
@@ -326,7 +326,7 @@ class TestVideoPopulation:
         vr4mice.Video.insert1(video_entry, skip_duplicates=True)
 
         # Verify
-        result = (vr4mice.Video & f'dataset="{test_dataset_name}"').to_dicts()
+        result = (vr4mice.Video & f'dataset="{test_dataset_name}"').fetch(as_dict=True)
         assert len(result) == 1
         assert result[0]["fps"] == 100
 
@@ -370,7 +370,7 @@ class TestDLCPopulation:
         vr4mice.DLC.insert1(dlc_entry, skip_duplicates=True)
 
         # Verify
-        result = (vr4mice.DLC & f'dataset="{test_dataset_name}"').to_dicts()
+        result = (vr4mice.DLC & f'dataset="{test_dataset_name}"').fetch(as_dict=True)
         assert len(result) == 1
 
 
