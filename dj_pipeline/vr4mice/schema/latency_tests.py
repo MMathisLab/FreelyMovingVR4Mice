@@ -122,9 +122,9 @@ class AllLatencies(dj.Computed):
             )
             latencies = get_latency(rising_edges_a, rising_edges_photodiode)
 
-            raw_data = (vr4mice.SignalsPhotodiode() & key).proj(
-                "generated_frame_time", "generated_send_time"
-            ).to_dicts()[0]
+            raw_data = (vr4mice.SignalsPhotodiode() & key).fetch(
+                "generated_frame_time", "generated_send_time", as_dict=True
+            )[0]
             latencies["frame_to_socket"] = np.mean(
                 raw_data["generated_send_time"][100:]
                 - raw_data["generated_frame_time"][100:]

@@ -285,7 +285,7 @@ def create_data_frame(
     slit_size = np.array(
         (vr4mice.Metadata & key).fetch1("slit_size")
     )  # TODO: check type-s
-    trial = (vr4mice.State & key).to_arrays("episode")  # change of name
+    trial = (vr4mice.State & key).fetch("episode")  # change of name
     trial = np.array(np.array(trial)[0], dtype=np.int32)
 
     aperture = slit_size[trial - 1]  # TODO check type-s
@@ -505,7 +505,7 @@ def get_box_df(
         pd.DataFrame: A DataFrame containing the adjusted box dimensions in physical space and
             the mean reward positions for the left and right reward boxes.
     """
-    box_df = (vr4mice.Box & key).to_pandas()
+    box_df = pd.DataFrame((vr4mice.Box & key).fetch())
 
     for col in box_df.columns:
         for index, value in box_df[col].items():
