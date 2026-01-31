@@ -316,7 +316,7 @@ def populate_rig(
                 raw_data_pickle, dataset = get_new_file(pickle_file, path)
                 key = f'dataset="{dataset}"'
 
-                if (dj_schema.vr4mice.Dataset() & key).to_dicts():
+                if (dj_schema.vr4mice.Dataset() & key).fetch(as_dict=True):
                     logger.info(f"{key} is already in the database, skip.")
                     # break
                 else:

@@ -43,8 +43,8 @@ class Dataset(dj.Manual):
 
     def get_keys(self, folder="/data/processed"):
         keys = []
-        dataset_keys = Dataset().proj("dataset").to_dicts()
-        camera_keys = Camera().proj("camera").to_dicts()
+        dataset_keys = Dataset().fetch("dataset", as_dict=True)
+        camera_keys = Camera().fetch("camera", as_dict=True)
         for dk in dataset_keys:
             for ck in camera_keys:
                 keys.append({**dk, **ck})
@@ -111,9 +111,9 @@ class Labels(dj.Lookup):
 
     @classmethod
     def get_next_idx(cls):
-        if len(cls) == 0:
+        if not cls.fetch("idx"):
             return 0
-        current_max = cls.to_arrays("idx").max()
+        current_max = cls.fetch("idx").max()
         return current_max + 1 if current_max is not None else 0
 
 
@@ -127,14 +127,14 @@ class Groups(dj.Manual):
     def add(self, dataset, label):
         try:
             key = f"dataset='{dataset}'"
-            a = (Dataset & key).to_dicts()
-            if len(a) == 0:
+            a = (Dataset & key).fetch()
+            if a.size == 0:
                 logger.warning(
                     f"No Dataset entry found for {dataset}: can't populate {self.__class__.__name__} table."
                 )
                 return
             key = f"label='{label}'"
-            label_idx = (Labels & key).to_arrays("idx")[0]
+            label_idx = (Labels & key).fetch("idx")[0]
 
             if label_idx is None:
                 label_idx = Labels().get_next_idx()
@@ -172,7 +172,7 @@ class Collab(dj.Computed):
     def make(self, key, lab=os.environ["DJ_LAB"]):
         try:
             lab = f"lab='{lab}'"
-            idx = (Labs() & lab).proj("idx").to_dicts()[0]
+            idx = (Labs() & lab).fetch("idx", as_dict=True)[0]
             data = {**key, **idx}
             self.insert1(data)
         except Exception as err:
@@ -209,8 +209,8 @@ class Video(dj.Manual):
 
     def get_keys(self):
         keys = []
-        dataset_keys = Dataset().proj("dataset").to_dicts()
-        camera_keys = Camera().proj("camera").to_dicts()
+        dataset_keys = Dataset().fetch("dataset", as_dict=True)
+        camera_keys = Camera().fetch("camera", as_dict=True)
         for dk in dataset_keys:
             for ck in camera_keys:
                 keys.append({**dk, **ck})
@@ -287,8 +287,8 @@ class DLC(dj.Manual):
 
     def get_keys(self):
         keys = []
-        video_keys = Video().proj("dataset", "camera", "doe").to_dicts()
-        model_name = ModelName().proj("model_name").to_dicts()
+        video_keys = Video().fetch("dataset", "camera", "doe", as_dict=True)
+        model_name = ModelName().fetch("model_name", as_dict=True)
         for vk in video_keys:
             for mn in model_name:
                 keys.append({**vk, **mn})
@@ -524,7 +524,7 @@ class TrainingPhaseType(dj.Lookup):
 
     @classmethod
     def get_next_index(cls):
-        current_max = cls.to_arrays("idx").max()
+        current_max = cls.fetch("idx").max()
         return current_max + 1 if current_max is not None else 0
 
 
@@ -581,7 +581,7 @@ class DatasetType(dj.Computed):
                             f"test_discrimination_{slit_size_number}_slit_sizes"
                         )
                         var = f"training_phase='{phase_type}'"
-                        ret = (TrainingPhaseType() & var).to_dicts()
+                        ret = (TrainingPhaseType() & var).fetch(as_dict=True)
                         if not ret:
                             idx = TrainingPhaseType.get_next_index()
                             data = {"idx": idx, "training_phase": phase_type}
