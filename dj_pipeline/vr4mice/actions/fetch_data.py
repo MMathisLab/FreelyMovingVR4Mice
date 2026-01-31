@@ -31,7 +31,7 @@ def _create_mice_dict(all_mice: dict) -> dict:
         mice_dict[mouse_name] = mouse_d
 
         surgery_type = list(
-            (mice.Surgery() & 'mouse_name = "%s"' % mouse_d["mouse_name"]).to_arrays(
+            (mice.Surgery() & 'mouse_name = "%s"' % mouse_d["mouse_name"]).fetch(
                 "surgery_type"
             )
         )
@@ -48,7 +48,7 @@ def _create_mice_dict(all_mice: dict) -> dict:
             last_session = (exp.Session() & mouse) & "session_increment = %d" % (
                 session_incr - 1
             )
-            last_exp = last_session.to_arrays("doe")[0]
+            last_exp = last_session.fetch("doe")[0]
 
         mice_dict[mouse_name]["start_date"] = start_date
         mice_dict[mouse_name]["day"] = curr_day
@@ -83,28 +83,34 @@ def fetch_tables() -> dict:
 
     # todo: optimize menu generation to avoid constant fetching of same data
     """
-    all_mice = (mice.Mouse() - mice.Sacrificed() - mice.Breed()).to_dicts()
+    all_mice = (mice.Mouse() - mice.Sacrificed() - mice.Breed()).fetch(as_dict=True)
 
     return {
         # 'Mouse': all_mice,
         "MouseDict": _create_mice_dict(all_mice),
-        "experimenter_name": list(exp.Experimenter().to_arrays("experimenter_name")),
-        "Anesthesia": exp.Anesthesia().to_dicts(),  # LT
-        "Rig": exp.Rig().to_dicts(),  # LT
-        "OptogeneticsRegion": exp.OptogeneticsRegion().to_dicts(),  # LT
-        "OptogeneticsTiming": exp.OptogeneticsTiming().to_dicts(),  # LT
-        "OptogeneticsVariant": exp.OptogeneticsVariant().to_dicts(),  # LT
-        "opto_name": list(exp.Optogenetics().to_arrays("opto_name")),
+        "experimenter_name": list(exp.Experimenter().fetch("experimenter_name")),
+        "Anesthesia": exp.Anesthesia().fetch(as_dict=True),  # LT
+        "Rig": exp.Rig().fetch(as_dict=True),  # LT
+        "OptogeneticsRegion": exp.OptogeneticsRegion().fetch(as_dict=True),  # LT
+        "OptogeneticsTiming": exp.OptogeneticsTiming().fetch(as_dict=True),  # LT
+        "OptogeneticsVariant": exp.OptogeneticsVariant().fetch(as_dict=True),  # LT
+        "opto_name": list(exp.Optogenetics().fetch("opto_name")),
         # 'force_field_name': list(exp.ForceField().fetch('force_field_name')),
         # 'strength': list(exp.ForceField().fetch('strength')),
-        "Task": exp.Task().to_dicts(),
+        "Task": exp.Task().fetch(as_dict=True),
         "task_type": exp.Task().get_pipeline_task_names("ar"),
         # 'Joystick': list(exp.Joystick().fetch('joystick_name')),
         # 'surgery_type': list(mice.SurgeryType().fetch('surgery_type')),
-        "MouseLicensing": mice.MouseLicensingGeneva().to_dicts(),  # LT
-        "MouseScoreSheet_BodyCondition": mice.MouseScoreSheet_BodyCondition().to_dicts(),  # LT
-        "MouseScoreSheet_GeneralAssay": mice.MouseScoreSheet_GeneralAssay().to_dicts(),  # LT
-        "MouseScoreSheet_HousingAssesment": mice.MouseScoreSheet_HousingAssesment().to_dicts(),  # LT
+        "MouseLicensing": mice.MouseLicensingGeneva().fetch(as_dict=True),  # LT
+        "MouseScoreSheet_BodyCondition": mice.MouseScoreSheet_BodyCondition().fetch(
+            as_dict=True
+        ),  # LT
+        "MouseScoreSheet_GeneralAssay": mice.MouseScoreSheet_GeneralAssay().fetch(
+            as_dict=True
+        ),  # LT
+        "MouseScoreSheet_HousingAssesment": mice.MouseScoreSheet_HousingAssesment().fetch(
+            as_dict=True
+        ),  # LT
         "timestamp": datetime.datetime.now(),
     }
 

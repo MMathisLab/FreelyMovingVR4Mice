@@ -127,11 +127,11 @@ def sync_keypoint_table(
 
     # Get time indexes from the game dataframe and the start time for session
     game_step_times = pd.DataFrame(
-        (base_analysis.DataFrame() & dataset_key).proj(
-            "step_time", "step", "time_elapsed", "trial"
-        ).to_dicts()[0]
+        (base_analysis.DataFrame() & dataset_key).fetch(
+            "step_time", "step", "time_elapsed", "trial", as_dict=True
+        )[0]
     )
-    start_time = (vr4mice.State() & dataset_key).fetch1("start_time")
+    start_time = (vr4mice.State() & dataset_key).fetch("start_time")[0]
     game_step_times["start_time"] = start_time
 
     # Fetch the keypoint table and then sychronise with the game timesteps
