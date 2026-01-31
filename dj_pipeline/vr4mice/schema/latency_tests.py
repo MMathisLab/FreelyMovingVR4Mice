@@ -37,7 +37,7 @@ class SignalsPhotodiodeAligned(dj.Computed):
             return
 
         try:
-            data = (vr4mice.SignalsPhotodiode() & key).to_dicts()[0]
+            data = (vr4mice.SignalsPhotodiode() & key).fetch(as_dict=True)[0]
             data = get_signals(data).to_dict()
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
@@ -71,16 +71,16 @@ class AllLatencies(dj.Computed):
             return
 
         try:
-            df = pd.DataFrame((SignalsPhotodiodeAligned() & key).to_dicts()[0])
+            df = pd.DataFrame((SignalsPhotodiodeAligned() & key).fetch(as_dict=True)[0])
             rising_edges_a = find_rising_edges(df.time_stamp, df.signal_read)
             rising_edges_photodiode = find_rising_edges(
                 df.time_stamp, df.photodiode_read
             )
             latencies = get_latency(rising_edges_a, rising_edges_photodiode)
 
-            raw_data = (vr4mice.SignalsPhotodiode() & key).proj(
-                "generated_frame_time", "generated_send_time"
-            ).to_dicts()[0]
+            raw_data = (vr4mice.SignalsPhotodiode() & key).fetch(
+                "generated_frame_time", "generated_send_time", as_dict=True
+            )[0]
             latencies["frame_to_socket"] = np.mean(
                 raw_data["generated_send_time"][100:]
                 - raw_data["generated_frame_time"][100:]

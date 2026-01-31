@@ -126,9 +126,9 @@ class DataFrame(dj.Computed):
         try:
             if self & key:
                 if columns:
-                    data = (self & key).proj(*columns).to_dicts(limit=1)[0]
+                    data = (self & key).fetch(*columns, as_dict=True)[0]
                 else:
-                    data = (self & key).to_dicts(limit=1)[0]
+                    data = (self & key).fetch(as_dict=True)[0]
                 if "interpolation" in data.keys():
                     data.pop("interpolation")
                 df = pd.DataFrame(data)
@@ -142,7 +142,7 @@ class DataFrame(dj.Computed):
     def get_unity_arena_size(self, key: dict) -> dict:
         try:
             if self & key:
-                return (self & key).to_arrays("interpolation", limit=1)[0]
+                return (self & key).fetch("interpolation")[0]
             else:
                 return False
         except Exception as err:
@@ -157,7 +157,7 @@ class DataFrame(dj.Computed):
 
         try:
             dfs = []
-            keys = self.to_arrays("dataset")
+            keys = self.fetch("dataset")
             for key in keys:
                 key = f"dataset='{key}'"
                 data = self.get_data(key, columns)
@@ -267,9 +267,9 @@ class BoxDataFrame(dj.Computed):
         try:
             if self & key:
                 if columns:
-                    data = (self & key).proj(*columns).to_dicts()
+                    data = (self & key).fetch(*columns, as_dict=True)
                 else:
-                    data = (self & key).to_dicts()
+                    data = (self & key).fetch(as_dict=True)
                 df = pd.DataFrame(data)
                 return df
             return False
@@ -284,7 +284,7 @@ class BoxDataFrame(dj.Computed):
         try:
 
             dfs = []
-            keys = self.to_arrays("dataset")
+            keys = self.fetch("dataset")
             for key in keys:
                 key = f"dataset='{key}'"
                 data = self.get_data(key, columns)
@@ -356,7 +356,7 @@ class SummaryPlots(dj.Computed):
         if send:
             data = {**key, **{"filename": full_path}}
             if base.Base() & key:
-                key = (base.Base() & key).to_dicts()[0]
+                key = (base.Base() & key).fetch(as_dict=True)[0]
             else:
                 key = self.parse_dataset(key["dataset"])
                 insert_send_email(key, data, SummaryPlots(), full_path, send=send)
@@ -381,7 +381,7 @@ class SummaryPlots(dj.Computed):
 
         name = key["dataset"]
         if base.Base() & key:
-            session_info = (base.Base() & key).to_dicts()[0]
+            session_info = (base.Base() & key).fetch(as_dict=True)[0]
             if len(session_info) > 0:
                 name = f'{session_info["mouse_name"]}_day{session_info["day"]}_attempt{session_info["attempt"]}'
 
@@ -414,16 +414,16 @@ def insert_send_email(key, tuple_, table, filename, send=False):
     toaddr = []
     try:
         for name in ["thomas", "mathislab", "yang"]:
-            user_email = (exp.Experimenter & {"experimenter_name": name}).to_arrays("mail")[
+            user_email = (exp.Experimenter & {"experimenter_name": name}).fetch("mail")[
                 0
             ]
             if user_email:
                 toaddr.append(user_email)
 
         if len(exp.Session() & key) > 0:
-            user = (exp.Session() & key).proj("experimenter_name").to_dicts()[0]
+            user = (exp.Session() & key).fetch("experimenter_name", as_dict=True)[0]
             if len(user) > 0:
-                addr = (exp.Experimenter & user).to_arrays("mail")[0]
+                addr = (exp.Experimenter & user).fetch("mail")[0]
                 if addr and addr not in toaddr:
                     toaddr.append(addr)
 
@@ -540,7 +540,7 @@ class TrackingSummaryPlots(dj.Computed):
         if send:
             data = {**key, **{"filename": full_path}}
             if base.Base() & key:
-                key = (base.Base() & key).to_dicts()[0]
+                key = (base.Base() & key).fetch(as_dict=True)[0]
             else:
                 key = self.parse_dataset(key["dataset"])
                 insert_send_email(key, data, SummaryPlots(), full_path, send=send)

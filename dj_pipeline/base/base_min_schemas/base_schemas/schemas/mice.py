@@ -67,7 +67,7 @@ class Mouse(dj.Manual):
 
         from . import exp
 
-        daysOfExperiments = (exp.Session() & self).to_arrays("doe")
+        daysOfExperiments = (exp.Session() & self).fetch("doe")
         if len(daysOfExperiments) > 0:
             startDate = min(daysOfExperiments)
         else:
@@ -124,7 +124,7 @@ class Mouse(dj.Manual):
 
         from . import exp
 
-        sessionNumbers = (exp.Session() & self).to_arrays("session_increment")
+        sessionNumbers = (exp.Session() & self).fetch("session_increment")
         if len(sessionNumbers) > 0:
             return max(sessionNumbers) + 1
         else:
