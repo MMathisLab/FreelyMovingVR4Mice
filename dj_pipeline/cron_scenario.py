@@ -127,22 +127,6 @@ def main():
     )
 
     run_step(
-        "inputs_videos.RawVideo.populate", lambda: inputs_videos.RawVideo().populate()
-    )
-    run_step(
-        "inputs_videos.ProcessedVideo.populate",
-        lambda: inputs_videos.ProcessedVideo().populate(),
-    )
-    run_step(
-        "inputs_videos.VideoSyncSignal.populate",
-        lambda: inputs_videos.VideoSyncSignal().populate(),
-    )
-    run_step(
-        "inputs_videos.AlignedVideoFrame.populate",
-        lambda: inputs_videos.AlignedVideoFrame().populate(),
-    )
-
-    run_step(
         "decision.ExperimentMember.populate",
         lambda: decision.ExperimentMember().populate(),
     )
@@ -157,6 +141,22 @@ def main():
     )
     run_step(
         "decision.DecisionPoints.populate", lambda: decision.DecisionPoints().populate()
+    )
+
+    run_step(
+        "inputs_videos.RawVideo.populate", lambda: inputs_videos.RawVideo().populate()
+    )
+    run_step(
+        "inputs_videos.ProcessedVideo.populate",
+        lambda: inputs_videos.ProcessedVideo().populate(),
+    )
+    run_step(
+        "inputs_videos.VideoSyncSignal.populate",
+        lambda: inputs_videos.VideoSyncSignal().populate(),
+    )
+    run_step(
+        "inputs_videos.AlignedVideoFrame.populate",
+        lambda: inputs_videos.AlignedVideoFrame().populate(),
     )
 
     run_step(
