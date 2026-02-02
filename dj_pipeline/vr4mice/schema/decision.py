@@ -142,7 +142,10 @@ class InclusionStatus(dj.Computed):
             # in the Groups() table, but this table was not consistently populated for all datasets
             # so we exclude these datasets in this hardcoded way for now
             # We could also drop the Groups table entirely if it's not used elsewhere
-            if session_label == "ar_discrim_occluders" or session_label == "ar_discrim_5_occluders":
+            if (
+                session_label == "ar_discrim_occluders"
+                or session_label == "ar_discrim_5_occluders"
+            ):
                 tables = TrialMetrics() * vr4mice.Groups() * (Dataset() & key)
             else:
                 tables = TrialMetrics() * (Dataset() & key)
@@ -156,7 +159,7 @@ class InclusionStatus(dj.Computed):
             trial_df = pd.concat([pd.DataFrame(x) for x in trial_df])
             trial_df["aperture"] = trial_df["aperture"].round(2)
 
-            #NOTE(celia): This is handled with the Groups table now, but kept if we decide to drop it
+            # NOTE(celia): This is handled with the Groups table now, but kept if we decide to drop it
             # trial_df = trial_df[trial_df["dataset"] != "Lemming_2024-08-09_1"]
 
             from vr4mice.analysis.utils import apply_inclusion_criteria
