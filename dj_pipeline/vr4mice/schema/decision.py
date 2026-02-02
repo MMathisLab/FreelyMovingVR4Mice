@@ -47,6 +47,7 @@ class SessionLabel(dj.Lookup):
         ("ar_shape_detection_no_velthr", "shape_pacman_target", "training"),
         ("ar_shape_detection_velthr", "shape_pacman_target", "training"),
         ("ar_shape_discrimination", "shape_pacman_target", "training"),
+        # NOTE(celia): 2-stage occlusion for this task, first one is still training
         ("ar_shape_discrim_occluders", "shape_pacman_target", "training"),
         ("ar_shape_discrim_narrow_occluders", "shape_pacman_target", "dual_occlusion"),
         ("ar_shape_discrim_multi_occluders", "shape_pacman_target", "multi_occlusion"),
@@ -92,30 +93,43 @@ class ExperimentMember(dj.Imported):
     """
 
     def make(self, key):
-        # Get session label for this dataset
-        session_label = (Dataset & key).fetch1("session_label")
+        try:
+            session_label = (Dataset & key).fetch1("session_label")
 
-        # Look up the mapping for this session label
-        label_info = (SessionLabel & {"session_label": session_label}).fetch(
-            as_dict=True
-        )
-
-        if not label_info:
-            logger.warning(
-                f"Session label '{session_label}' for dataset '{key['dataset']}' not found in SessionLabel table"
+            label_info = (SessionLabel & {"session_label": session_label}).fetch(
+                as_dict=True
             )
-            return
 
-        label_info = label_info[0]
+            if not label_info:
+                logger.warning(
+                    f"Session label '{session_label}' for dataset '{key['dataset']}' not found in SessionLabel table"
+                )
+                return
 
-        self.insert1(
-            {
-                "dataset": key["dataset"],
-                "set_name": label_info["set_name"],
-                "stage_name": label_info["stage_name"],
-                "session_label": session_label,
-            }
-        )
+            if len(label_info) > 1:
+                logger.warning(
+                    f"Multiple entries found for session label '{session_label}' in SessionLabel table"
+                )
+                return
+
+            label_info = label_info[0]
+
+            self.insert1(
+                {
+                    "dataset": key["dataset"],
+                    "set_name": label_info["set_name"],
+                    "stage_name": label_info["stage_name"],
+                    "session_label": session_label,
+                }
+            )
+        except Exception as err:
+            dataset = key.get("dataset") if isinstance(key, dict) else None
+            if dataset:
+                vr4mice.FailedSession().add_entry(
+                    f"{dataset}", f"{self.__class__.__name__}", str(err)
+                )
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
 
 
 @schema
@@ -152,7 +166,7 @@ class InclusionStatus(dj.Computed):
 
             trial_df = tables.fetch(as_dict=True)
 
-            if trial_df == []:
+            if not trial_df:
                 self.insert1({**key, "included": False})
                 return
 
@@ -347,7 +361,7 @@ class PredictionModel(dj.Computed):
             # Get included datasets for this experiment set and stage
             # Join with ExperimentMember to filter by set_name and stage_name
             sessions_list = list(
-                (InclusionStatus * ExperimentMember & key & "included=1").fetch(
+                (InclusionStatus * ExperimentMember & key & {"included": 1}).fetch(
                     "dataset"
                 )
             )

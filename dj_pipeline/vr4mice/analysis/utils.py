@@ -360,7 +360,8 @@ def apply_inclusion_criteria(
 
     if len(aperture_values) < 2:
         raise ValueError(
-            f"Not enough occluder sizes found to apply inclusion criteria."
+            f"Not enough occluder sizes found to apply inclusion criteria. "
+            f"Found {len(aperture_values)}, need at least 2."
         )
 
     narrowest_aperture = min(aperture_values)
