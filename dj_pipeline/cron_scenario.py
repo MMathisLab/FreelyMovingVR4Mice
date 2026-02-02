@@ -127,6 +127,23 @@ def main():
     )
 
     run_step(
+        "decision.ExperimentMember.populate",
+        lambda: decision.ExperimentMember().populate(),
+    )
+    run_step(
+        "decision.InclusionStatus.populate",
+        lambda: decision.InclusionStatus().populate(),
+    )
+    run_step("decision.LabelSet.fill", lambda: decision.LabelSet.fill())
+    run_step(
+        "decision.PredictionModel.populate",
+        lambda: decision.PredictionModel().populate(),
+    )
+    run_step(
+        "decision.DecisionPoints.populate", lambda: decision.DecisionPoints().populate()
+    )
+
+    run_step(
         "inputs_videos.RawVideo.populate", lambda: inputs_videos.RawVideo().populate()
     )
     run_step(
@@ -140,15 +157,6 @@ def main():
     run_step(
         "inputs_videos.AlignedVideoFrame.populate",
         lambda: inputs_videos.AlignedVideoFrame().populate(),
-    )
-
-    run_step("decision.ValidGroup.populate", lambda: decision.ValidGroup().populate())
-    run_step(
-        "decision.PredictionModel.populate",
-        lambda: decision.PredictionModel().populate(),
-    )
-    run_step(
-        "decision.DecisionPoints.populate", lambda: decision.DecisionPoints().populate()
     )
 
     run_step(

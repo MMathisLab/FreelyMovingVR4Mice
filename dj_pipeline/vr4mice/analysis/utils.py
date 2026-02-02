@@ -332,7 +332,6 @@ def get_data_from_list(data_set_list, game_columns, dlc_columns=None):
 
 def apply_inclusion_criteria(
     data: pd.DataFrame,
-    task_type: str,
     return_excluded: Optional[bool] = False,
     consider_reward_drop: Optional[bool] = True,
 ) -> pd.DataFrame:
@@ -343,7 +342,6 @@ def apply_inclusion_criteria(
 
     Args:
         data (pd.DataFrame): a dataframe, containing multiple datasets
-        task_type (str): type of occluder task, either 'dual_occluder' or 'multi_occluder'
         return_excluded (bool, optional): whether to return the excluded datasets instead of the included ones. Default is False.
         consider_reward_drop (bool, optional): whether to consider reward drop as an inclusion criteria. Default is True.
     """
@@ -355,28 +353,32 @@ def apply_inclusion_criteria(
     ].mean()
     pivoted_reward = reward_table.pivot(index="dataset", columns="aperture")
 
+    # Extract aperture values from the MultiIndex columns (second level)
+    aperture_values = [
+        col[1] for col in pivoted_reward.columns if col[0] == "trial_rewarded"
+    ]
+
+    if len(aperture_values) < 2:
+        raise ValueError(
+            f"Not enough occluder sizes found to apply inclusion criteria. "
+            f"Found {len(aperture_values)}, need at least 2."
+        )
+
+    narrowest_aperture = min(aperture_values)
+    widest_aperture = max(aperture_values)
+
     min_wide_reward = 0.7
     max_reward_drop = 0.25
-    if task_type == "dual_occluder":
-        # Calculate reward drop between wide and narrow occluder
-        pivoted_reward["reward_drop"] = (
-            pivoted_reward[("trial_rewarded", 12.0)]
-            - pivoted_reward[("trial_rewarded", 4.3)]
-        )
-    elif task_type == "multi_occluder":
-        # Calculate reward drop between larger and smaller occluder
-        pivoted_reward["reward_drop"] = (
-            pivoted_reward[("trial_rewarded", 12.0)]
-            - pivoted_reward[("trial_rewarded", 3.0)]
-        )
-    else:
-        raise ValueError(
-            f"Unknown task_type: {task_type}. Must be either 'dual_occluder' or 'multi_occluder'."
-        )
+
+    # Calculate reward drop between widest and narrowest occluder
+    pivoted_reward["reward_drop"] = (
+        pivoted_reward[("trial_rewarded", widest_aperture)]
+        - pivoted_reward[("trial_rewarded", narrowest_aperture)]
+    )
 
     reward_table = pivoted_reward
     pivoted_reward = pivoted_reward[
-        (pivoted_reward[("trial_rewarded", 12.0)] > min_wide_reward)
+        (pivoted_reward[("trial_rewarded", widest_aperture)] > min_wide_reward)
     ]
     if consider_reward_drop:
         pivoted_reward = pivoted_reward[

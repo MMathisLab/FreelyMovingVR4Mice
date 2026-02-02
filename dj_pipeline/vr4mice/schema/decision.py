@@ -22,90 +22,165 @@ logger = Logger.get_logger()
 
 
 @schema
-class TrainingGroup(dj.Lookup):
+class SessionLabel(dj.Lookup):
     definition = """
-    -> Dataset
-    """
-
-
-@schema
-class DualGroup(dj.Lookup):
-    definition = """
-    session_label : varchar(64)    # session label for dual occluder task
-    """
-    contents = [
-        ("ar_discrim_occluders"),
-        ("ar_shape_discrim_narrow_occluders"),
-        ("ar_discrim_occluders_inv"),
-    ]
-
-
-@schema
-class MultiGroup(dj.Lookup):
-    definition = """
-    session_label : varchar(64)    # session label for multi occluder task
-    """
-    contents = [
-        ("ar_discrim_5_occluders"),
-        ("ar_shape_discrim_multi_occluders"),
-        ("ar_discrim_5_occluders_inv"),
-    ]
-
-
-@schema
-class ValidGroup(dj.Computed):
-    """Define groups of mice for occluder analysis."""
-
-    definition = """
-    -> Dataset
-    -> TrialMetrics
+    session_label : varchar(64)
     ---
-    dual_occl : int     # 1 if valid for dual occluder task, 0 otherwise
-    multi_occl : int     # 1 if valid for multi occluder task, 0 otherwise
+    set_name : varchar(64)
+    stage_name : varchar(32)
     """
 
-    # key is not in TrainingGroup
-    _key_source = Dataset() - TrainingGroup()
+    contents = [
+        # Contrast task with white target
+        ("ar_detection_no_velthr", "contrast_white_target", "training"),
+        ("ar_detection_velthr", "contrast_white_target", "training"),
+        ("ar_discrim", "contrast_white_target", "training"),
+        ("ar_discrim_occluders", "contrast_white_target", "dual_occlusion"),
+        ("ar_discrim_5_occluders", "contrast_white_target", "multi_occlusion"),
+        # Contrast task with black target
+        ("ar_det_no_velthr_inv", "contrast_black_target", "training"),
+        ("ar_detection_velthr_inv", "contrast_black_target", "training"),
+        ("ar_discrim_inv", "contrast_black_target", "training"),
+        ("ar_discrim_occluders_inv", "contrast_black_target", "dual_occlusion"),
+        ("ar_discrim_5_occluders_inv", "contrast_black_target", "multi_occlusion"),
+        # Shape task with pacman target
+        ("ar_shape_detection_no_velthr", "shape_pacman_target", "training"),
+        ("ar_shape_detection_velthr", "shape_pacman_target", "training"),
+        ("ar_shape_discrimination", "shape_pacman_target", "training"),
+        # NOTE(celia): 2-stage occlusion for this task, first one is still training
+        ("ar_shape_discrim_occluders", "shape_pacman_target", "training"),
+        ("ar_shape_discrim_narrow_occluders", "shape_pacman_target", "dual_occlusion"),
+        ("ar_shape_discrim_multi_occluders", "shape_pacman_target", "multi_occlusion"),
+    ]
+
+
+@schema
+class ExperimentSet(dj.Lookup):
+    definition = """
+    set_name : varchar(64)
+    ---
+    description : varchar(255)
+    """
+    contents = [
+        ("contrast_white_target", "Contrast task, white target"),
+        ("contrast_black_target", "Contrast task, black target"),
+        ("shape_pacman_target", "Shape task, pacman target"),
+    ]
+
+
+@schema
+class ExperimentStage(dj.Lookup):
+    definition = """
+    stage_name : varchar(32)
+    ---
+    description : varchar(255)
+    """
+    contents = [
+        ("training", "Training sessions"),
+        ("dual_occlusion", "Dual occluder sessions"),
+        ("multi_occlusion", "Multi occluder sessions"),
+    ]
+
+
+@schema
+class ExperimentMember(dj.Imported):
+    definition = """
+    -> Dataset
+    ---
+    -> ExperimentSet
+    -> ExperimentStage
+    -> SessionLabel
+    """
 
     def make(self, key):
-        """Mark datasets that meet inclusion criteria for occluder tasks."""
-        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
-            return
-
         try:
-            trial_df = (TrialMetrics() * (Dataset() & key)).fetch(as_dict=True)
+            session_label = (Dataset & key).fetch1("session_label")
+
+            label_info = (SessionLabel & {"session_label": session_label}).fetch(
+                as_dict=True
+            )
+
+            if not label_info:
+                logger.warning(
+                    f"Session label '{session_label}' for dataset '{key['dataset']}' not found in SessionLabel table"
+                )
+                return
+
+            if len(label_info) > 1:
+                logger.warning(
+                    f"Multiple entries found for session label '{session_label}' in SessionLabel table"
+                )
+                return
+
+            label_info = label_info[0]
+
+            self.insert1(
+                {
+                    "dataset": key["dataset"],
+                    "set_name": label_info["set_name"],
+                    "stage_name": label_info["stage_name"],
+                    "session_label": session_label,
+                }
+            )
+        except Exception as err:
+            dataset = key.get("dataset") if isinstance(key, dict) else None
+            if dataset:
+                vr4mice.FailedSession().add_entry(
+                    f"{dataset}", f"{self.__class__.__name__}", str(err)
+                )
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            return None
+
+
+@schema
+class InclusionStatus(dj.Computed):
+    """Inclusion status per dataset and experiment set role."""
+
+    definition = """
+    -> ExperimentMember
+    ---
+    included : boolean
+    """
+
+    def make(self, key):
+        try:
+            # Get stage_name from ExperimentMember
+            stage_name = (ExperimentMember & key).fetch1("stage_name")
+            session_label = (ExperimentMember & key).fetch1("session_label")
+
+            if stage_name == "training":
+                self.insert1({**key, "included": False})
+                return
+
+            # NOTE(celia): this is a fix to exclude datasets that were not manually added by tom
+            # in the Groups() table, but this table was not consistently populated for all datasets
+            # so we exclude these datasets in this hardcoded way for now
+            # We could also drop the Groups table entirely if it's not used elsewhere
+            if (
+                session_label == "ar_discrim_occluders"
+                or session_label == "ar_discrim_5_occluders"
+            ):
+                tables = TrialMetrics() * vr4mice.Groups() * (Dataset() & key)
+            else:
+                tables = TrialMetrics() * (Dataset() & key)
+
+            trial_df = tables.fetch(as_dict=True)
+
+            if not trial_df:
+                self.insert1({**key, "included": False})
+                return
+
             trial_df = pd.concat([pd.DataFrame(x) for x in trial_df])
-            trial_df["aperture"] = trial_df.aperture.round(2)
+            trial_df["aperture"] = trial_df["aperture"].round(2)
 
-            trial_df = trial_df[trial_df["dataset"] != "Lemming_2024-08-09_1"]
+            # NOTE(celia): This is handled with the Groups table now, but kept if we decide to drop it
+            # trial_df = trial_df[trial_df["dataset"] != "Lemming_2024-08-09_1"]
 
-            # Exclude sessions that were not in the list
             from vr4mice.analysis.utils import apply_inclusion_criteria
 
-            if trial_df["session_label"].iloc[0] in DualGroup().fetch("session_label"):
-                trial_df, _ = apply_inclusion_criteria(
-                    trial_df, task_type="dual_occluder"
-                )
-
-                if not trial_df.empty:
-                    self.insert1({**key, "dual_occl": 1, "multi_occl": 0})
-                else:
-                    self.insert1({**key, "dual_occl": 0, "multi_occl": 0})
-            elif trial_df["session_label"].iloc[0] in MultiGroup().fetch(
-                "session_label"
-            ):
-                trial_df, _ = apply_inclusion_criteria(
-                    trial_df, task_type="multi_occluder"
-                )
-
-                if not trial_df.empty:
-                    self.insert1({**key, "dual_occl": 0, "multi_occl": 1})
-                else:
-                    self.insert1({**key, "dual_occl": 0, "multi_occl": 0})
-
-            else:
-                TrainingGroup().insert1({**key})
-                return
+            filtered_df, _ = apply_inclusion_criteria(trial_df)
+            included = not filtered_df.empty
+            self.insert1({**key, "included": included})
         except Exception as err:
             dataset = key.get("dataset") if isinstance(key, dict) else None
             if dataset:
@@ -159,10 +234,10 @@ class LabelSet(dj.Lookup):
     def fill(cls):
         custom_sets = {
             1: ("Kinematics only", ["x", "y", "velocity_x", "velocity_y"]),
-            2: ("Position + Reward", ["x", "y", "trial_rewarded"]),
+            2: ("Position only", ["x", "y"]),
             3: ("Velocity only", ["velocity_x", "velocity_y"]),
             4: (
-                "sin & cos only",
+                "Orientation only",
                 [
                     "heading_dir_sin",
                     "heading_dir_cos",
@@ -171,7 +246,7 @@ class LabelSet(dj.Lookup):
                 ],
             ),
             5: (
-                "Baseline",
+                "Task-related",
                 [
                     "x",
                     "y",
@@ -205,18 +280,7 @@ class LabelSet(dj.Lookup):
                     "trial_history",
                 ],
             ),
-            7: (
-                "Best on baseline",
-                [
-                    "x",
-                    "velocity_x",
-                    "heading_dir_sin",
-                    "head_angle_sin",
-                    "trial_rewarded",
-                ],
-            ),
-            8: ("History only", ["trial_history"]),
-            9: ("Initial position only", ["trial_init_x", "trial_init_y"]),
+            7: ("Priors", ["trial_history", "trial_init_x", "trial_init_y"]),
         }
 
         for set_id, (name, labels) in custom_sets.items():
@@ -245,26 +309,14 @@ class ModelParams(dj.Lookup):
 
 
 @schema
-class TaskType(dj.Lookup):
-    definition = """
-    task_type : varchar(32)      # type of task (e.g., dual_occl, multi_occl)
-    ---
-    description : varchar(255)   # description of the task type
-    """
-    contents = [
-        ("dual_occl", "Dual occluder discrimination task"),
-        ("multi_occl", "Multi occluder discrimination task"),
-    ]
-
-
-@schema
 class PredictionModel(dj.Computed):
     """Train logistic regression model per mouse using LOGO cross-validation."""
 
     definition = """
     -> LabelSet
     -> ModelParams
-    -> TaskType
+    -> ExperimentSet
+    -> ExperimentStage
     ---
     coefficients : longblob     # coefficients per session (per_mouse=True)
     n_sessions : int            # number of sessions included
@@ -296,12 +348,30 @@ class PredictionModel(dj.Computed):
             return
 
         try:
+            # Skip training stage - only train models for dual_occlusion and multi_occlusion
+            stage_name = (ExperimentStage & key).fetch1("stage_name")
+            if stage_name == "training":
+                logger.info(f"Skipping training stage for {self.__class__.__name__}")
+                return
+
             # Get label set and model params
             label_set = list((LabelSet.Member & key).fetch("label_key"))
             params = (ModelParams & key).fetch(as_dict=True)[0]
-            task_type = (TaskType & key).fetch1("task_type")
 
-            sessions_list = list((ValidGroup & f"{task_type}=1").fetch("dataset"))
+            # Get included datasets for this experiment set and stage
+            # Join with ExperimentMember to filter by set_name and stage_name
+            sessions_list = list(
+                (InclusionStatus * ExperimentMember & key & {"included": 1}).fetch(
+                    "dataset"
+                )
+            )
+
+            # Validate that we have valid sessions for this model
+            if not sessions_list:
+                logger.warning(
+                    f"No valid sessions found for {self.__class__.__name__} with key {key}"
+                )
+                return
 
             # This takes a while to fetch because we need to fetch data from all sessions
             dataset_list = []
@@ -431,22 +501,20 @@ class DecisionThreshold(dj.Lookup):
     """Lookup table for different uncertainty thresholds to define decision points."""
 
     definition = """
-    threshold_uncertainty : varchar(10)    # uncertainty threshold used to define decision point
-    ---
-    description : varchar(255)             # description of the threshold
+    threshold_uncertainty : varchar(10)
     """
     contents = [
-        ("0.0", "Threshold at 0.0 uncertainty"),
-        ("0.1", "Threshold at 0.1 uncertainty"),
-        ("0.2", "Threshold at 0.2 uncertainty"),
-        ("0.3", "Baseline threshold"),
-        ("0.4", "Threshold at 0.4 uncertainty"),
-        ("0.5", "Threshold at 0.5 uncertainty"),
-        ("0.6", "Threshold at 0.6 uncertainty"),
-        ("0.7", "Threshold at 0.7 uncertainty"),
-        ("0.8", "Threshold at 0.8 uncertainty"),
-        ("0.9", "Threshold at 0.9 uncertainty"),
-        ("1.0", "Threshold at 1.0 uncertainty"),
+        ("0.0",),
+        ("0.1",),
+        ("0.2",),
+        ("0.3",),
+        ("0.4",),
+        ("0.5",),
+        ("0.6",),
+        ("0.7",),
+        ("0.8",),
+        ("0.9",),
+        ("1.0",),
     ]
 
 
@@ -456,7 +524,6 @@ class DecisionPoints(dj.Computed):
 
     definition = """
     -> PredictionModel
-    -> InterpolatedTrials
     -> DecisionThreshold
     ---
     trial: longblob                 # trial corresponding to the timestamp

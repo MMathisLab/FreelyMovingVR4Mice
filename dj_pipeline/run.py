@@ -184,7 +184,9 @@ if __name__ == "__main__":
     elif args.mode == "decision":
         from vr4mice.schema import decision
 
-        decision.ValidGroup().populate()
+        decision.ExperimentMember().populate()
+        decision.InclusionStatus().populate()
+        decision.LabelSet().fill()
         decision.PredictionModel().populate()
         decision.DecisionPoints().populate()
 
