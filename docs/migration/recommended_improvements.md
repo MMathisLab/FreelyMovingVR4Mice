@@ -114,7 +114,7 @@ Tables with foreign key relationships benefit most from this optimization, as th
 
 ---
 
-### External Storage for Large Arrays
+### Object Storage for Large Arrays
 
 **Current state:** Large arrays are stored directly in the database, which can bloat database size and slow backups.
 
