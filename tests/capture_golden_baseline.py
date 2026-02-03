@@ -14,7 +14,7 @@ Usage:
     python capture_golden_baseline.py
 
 Output:
-    golden_baseline/
+    golden_baseline/unit/
         test_results.json      - Pass/fail for each test
         data_structures.json   - Shapes, dtypes, column names
         sample_values.json     - Small sample of actual values
@@ -39,10 +39,10 @@ import pandas as pd
 
 SCRIPT_DIR = Path(__file__).parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
-GOLDEN_BASELINE_DIR = SCRIPT_DIR / "golden_baseline"
+GOLDEN_BASELINE_DIR = SCRIPT_DIR / "golden_baseline" / "unit"
 
 # Test data location
-TEST_DATA_DIR = PROJECT_ROOT / "test_data" / "Celia_Set_14012026"
+TEST_DATA_DIR = PROJECT_ROOT / "test_data" / "golden_dataset"
 DATASET_NAME = "Nightingale_2024-08-16_1"
 CAMERA_PREFIX = "Imagingsource"
 
