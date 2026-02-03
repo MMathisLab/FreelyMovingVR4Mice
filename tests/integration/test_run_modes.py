@@ -13,7 +13,7 @@ These tests verify the full pipeline execution for each mode in run.py:
 
 Test Strategy:
 - Sequential pipeline testing with shared database session
-- Golden master verification: row counts + sample values (first/last/middle)
+- Golden baseline verification: row counts + sample values (first/last/middle)
 - Module-scoped fixtures for efficiency
 
 Dependencies:
@@ -38,13 +38,13 @@ import pytest
 
 
 # ==============================================================================
-# Golden Master Fixtures
+# Golden Baseline Fixtures
 # ==============================================================================
 
 @pytest.fixture(scope="module")
 def golden_baseline_dir():
     """Path to golden baseline output files for integration tests."""
-    return Path(__file__).parent.parent / "golden_baseline" / "integration"
+    return Path(__file__).parent.parent / "golden_baseline" / "pipeline"
 
 
 @pytest.fixture(scope="module")

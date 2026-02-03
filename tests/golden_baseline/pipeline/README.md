@@ -1,6 +1,7 @@
-# Golden Baseline - Integration Tests
+# Golden Baseline - Pipeline Tests
 
-This directory contains expected outputs for the integration tests (`test_run_modes.py`).
+This directory contains expected pipeline outputs for the integration tests (`test_run_modes.py`).
+These capture row counts and sample values from database tables after running the full pipeline.
 
 ## File Naming Convention
 

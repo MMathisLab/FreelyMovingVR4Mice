@@ -3,14 +3,14 @@
 Golden Baseline Comparison Script for DataJoint 2.0 Migration.
 
 This script compares post-migration outputs with pre-migration baseline data
-stored in the golden_baseline/unit/ directory.
+stored in the golden_baseline/migration/ directory.
 
 Usage:
     cd scene/tests
     python compare_golden_baseline.py
 
 The script will:
-1. Load baseline data from golden_baseline/unit/
+1. Load baseline data from golden_baseline/migration/
 2. Regenerate current state from test data (if available)
 3. Compare data structures, sample values, and test results
 4. Report any differences found
@@ -33,7 +33,7 @@ import pandas as pd
 # ==============================================================================
 
 TESTS_DIR = Path(__file__).parent
-GOLDEN_BASELINE_DIR = TESTS_DIR / "golden_baseline" / "unit"
+GOLDEN_BASELINE_DIR = TESTS_DIR / "golden_baseline" / "migration"
 PROJECT_ROOT = TESTS_DIR.parent.parent
 TEST_DATA_DIR = PROJECT_ROOT / "test_data" / "golden_dataset"
 
