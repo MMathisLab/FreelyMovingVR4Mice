@@ -142,7 +142,7 @@ Once ObjectRef migration is complete, the storage backend can be switched from l
 
 ### Schema-Addressed Storage
 
-For tables with very large data (neural recordings, video data), DataJoint 2.0 supports lazy-loading storage types (`<npy@>`, `<object@>`). Data is loaded on-demand rather than all at once, which is essential for datasets that exceed available memory.
+For tables with very large data (neural recordings, video data), DataJoint 2.0 supports lazy-loading storage types (`<npy@>`, `<object@>`, `<zarr@>`). Data is loaded on-demand rather than all at once, which is essential for datasets that exceed available memory.
 
 **Effort:** Medium (for new tables or major refactoring)
 
