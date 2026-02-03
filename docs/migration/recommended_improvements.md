@@ -47,7 +47,7 @@ The new methods are more explicit about return types and align with DataJoint 2.
 
 ## High-Impact Improvements
 
-### Custom NumPy Array Codec
+### Built-in NumPy Array Codec
 
 **Current state:** NumPy arrays are stored as generic `<blob>` fields with no type validation. Incorrect types are stored silently, which can cause downstream errors.
 
