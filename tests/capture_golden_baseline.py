@@ -5,7 +5,7 @@ Golden Baseline Capture Script for DJ 2.0 Migration
 Captures the current test outputs and data structures BEFORE migration
 so we can verify the migration didn't break anything.
 
-Run this script with DJ 1.x installed to capture baseline behavior.
+Run this script with DJ 0.x installed to capture baseline behavior.
 After migration to DJ 2.0, run again and compare outputs.
 
 Usage:
