@@ -1,0 +1,18 @@
+{
+  "heading_dir": {
+    "length": 1000,
+    "dtype": "float64",
+    "first": 0.0,
+    "middle_idx": 500,
+    "middle": 0.0,
+    "last": 0.0
+  },
+  "head_angle": {
+    "length": 1000,
+    "dtype": "float64",
+    "first": 0.0,
+    "middle_idx": 500,
+    "middle": 0.0,
+    "last": 0.0
+  }
+}
