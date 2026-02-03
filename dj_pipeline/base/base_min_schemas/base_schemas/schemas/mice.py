@@ -10,7 +10,7 @@ import PIL.Image
 import datajoint as dj
 from base_schemas.utils import datastore
 
-schema = dj.Schema("mice")
+schema = dj.Schema("mice", locals(), create_tables=True)
 
 
 @schema
@@ -252,7 +252,7 @@ class MouseScoreSheet_WaterRestriction(dj.Manual):
 @schema
 class MouseScoreSheet(dj.Manual):
 
-    definition = """ 
+    definition = """
     -> Mouse
     doc : date          # date of check
     ---
