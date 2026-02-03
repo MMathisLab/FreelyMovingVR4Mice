@@ -5,7 +5,7 @@
   "datajoint_version": "0.14.6",
   "git_commit": "unknown",
   "git_branch": "unknown",
-  "test_data_dir": "/mnt/c/Users/eliss/Documents/python_projects/claude_groups/scene-migration/test_data/Celia_Set_14012026",
+  "test_data_dir": "/mnt/c/Users/eliss/Documents/python_projects/claude_groups/scene-migration/test_data/golden_dataset",
   "test_data_exists": true,
   "dataset_name": "Nightingale_2024-08-16_1",
   "camera_prefix": "Imagingsource",
