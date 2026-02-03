@@ -13,12 +13,12 @@ These tests verify the full pipeline execution for each mode in run.py:
 
 Test Strategy:
 - Sequential pipeline testing with shared database session
-- Golden baseline verification: row counts + sample values (first/last/middle)
+- Golden master verification: row counts + sample values (first/last/middle)
 - Module-scoped fixtures for efficiency
 
 Dependencies:
 - Docker Desktop running with WSL integration
-- Nightingale golden dataset in test_data/golden_dataset/
+- Nightingale golden dataset in test_data/Celia_Set_14012026/
 
 Run with:
     cd scene/tests
@@ -38,19 +38,19 @@ import pytest
 
 
 # ==============================================================================
-# Golden Baseline Fixtures
+# Golden Master Fixtures
 # ==============================================================================
 
 @pytest.fixture(scope="module")
-def golden_baseline_dir():
-    """Path to golden baseline output files for integration tests."""
-    return Path(__file__).parent.parent / "golden_baseline" / "pipeline"
+def golden_master_dir():
+    """Path to golden master output files."""
+    return Path(__file__).parent.parent / "golden_master" / "mode_outputs"
 
 
 @pytest.fixture(scope="module")
-def golden_baseline(golden_baseline_dir, request):
+def golden_master(golden_master_dir, request):
     """
-    Golden baseline comparison fixture.
+    Golden master comparison fixture.
 
     Provides methods to compare test outputs against golden snapshots.
     Use --regenerate-golden flag to regenerate golden files.
@@ -60,7 +60,7 @@ def golden_baseline(golden_baseline_dir, request):
     except ValueError:
         regenerate = False
 
-    class GoldenBaseline:
+    class GoldenMaster:
         def __init__(self, base_dir, should_regenerate):
             self.base_dir = Path(base_dir)
             self.base_dir.mkdir(parents=True, exist_ok=True)
@@ -216,7 +216,7 @@ def golden_baseline(golden_baseline_dir, request):
 
             return True
 
-    return GoldenBaseline(golden_baseline_dir, regenerate)
+    return GoldenMaster(golden_master_dir, regenerate)
 
 
 # ==============================================================================
@@ -373,24 +373,6 @@ def populated_db(dj_config, pipeline_test_data, test_dataset_name, test_camera_p
     }
 
 
-@pytest.fixture(scope="class")
-def clear_failed_sessions(populated_db):
-    """
-    Clear FailedSession entries before each test class.
-
-    This prevents test pollution where earlier tests' failures
-    cause later tests to skip via FailedSession.should_skip().
-    """
-    vr4mice = populated_db["vr4mice"]
-    # Delete all FailedSession entries for a clean slate
-    if len(vr4mice.FailedSession()) > 0:
-        vr4mice.FailedSession().delete_quick()
-    yield
-    # Optionally clean up after the test class too
-    if len(vr4mice.FailedSession()) > 0:
-        vr4mice.FailedSession().delete_quick()
-
-
 # ==============================================================================
 # Connect Mode Tests
 # ==============================================================================
@@ -464,11 +446,11 @@ class TestConnectMode:
 class TestPopulateMode:
     """Tests for populate mode - foundation of the pipeline."""
 
-    def test_dataset_table_populated(self, populated_db, golden_baseline):
+    def test_dataset_table_populated(self, populated_db, golden_master):
         """Verify Dataset table has expected row count."""
         vr4mice = populated_db["vr4mice"]
         count = len(vr4mice.Dataset())
-        golden_baseline.check_row_count("dataset", count)
+        golden_master.check_row_count("dataset", count)
 
     def test_dataset_values(self, populated_db):
         """Verify Dataset entry has correct values."""
@@ -479,13 +461,13 @@ class TestPopulateMode:
         assert result["dataset"] == key["dataset"]
         assert result["session_label"] == "ar_discrim_5_occluders"
 
-    def test_mousestate_table_populated(self, populated_db, golden_baseline):
+    def test_mousestate_table_populated(self, populated_db, golden_master):
         """Verify MouseState table has expected row count."""
         vr4mice = populated_db["vr4mice"]
         count = len(vr4mice.MouseState())
-        golden_baseline.check_row_count("mousestate", count)
+        golden_master.check_row_count("mousestate", count)
 
-    def test_mousestate_array_lengths(self, populated_db, golden_baseline):
+    def test_mousestate_array_lengths(self, populated_db, golden_master):
         """Verify MouseState arrays have expected lengths (339,045 steps)."""
         vr4mice = populated_db["vr4mice"]
         key = populated_db["dataset_key"]
@@ -497,7 +479,7 @@ class TestPopulateMode:
         assert len(x_pos) == 339045, f"x_pos length {len(x_pos)} != 339045"
 
         # Check sample values
-        golden_baseline.check_sample_values("mousestate_x_pos", {"x_pos": x_pos})
+        golden_master.check_sample_values("mousestate_x_pos", {"x_pos": x_pos})
 
     def test_mousestate_data_integrity(self, populated_db):
         """Verify MouseState data matches original pickle data."""
@@ -520,13 +502,13 @@ class TestPopulateMode:
             fetched_x_pos[-10:], original_x_pos[-10:], decimal=6
         )
 
-    def test_state_table_populated(self, populated_db, golden_baseline):
+    def test_state_table_populated(self, populated_db, golden_master):
         """Verify State table has expected row count."""
         vr4mice = populated_db["vr4mice"]
         count = len(vr4mice.State())
-        golden_baseline.check_row_count("state", count)
+        golden_master.check_row_count("state", count)
 
-    def test_state_episode_array(self, populated_db, golden_baseline):
+    def test_state_episode_array(self, populated_db, golden_master):
         """Verify State episode array has expected values."""
         vr4mice = populated_db["vr4mice"]
         key = populated_db["dataset_key"]
@@ -535,13 +517,13 @@ class TestPopulateMode:
         episode = np.array(result["episode"])
 
         assert len(episode) == 339045
-        golden_baseline.check_sample_values("state_episode", {"episode": episode})
+        golden_master.check_sample_values("state_episode", {"episode": episode})
 
-    def test_video_table_populated(self, populated_db, golden_baseline):
+    def test_video_table_populated(self, populated_db, golden_master):
         """Verify Video table has expected row count."""
         vr4mice = populated_db["vr4mice"]
         count = len(vr4mice.Video())
-        golden_baseline.check_row_count("video", count)
+        golden_master.check_row_count("video", count)
 
     def test_video_metadata(self, populated_db):
         """Verify Video entry has correct metadata."""
@@ -553,11 +535,11 @@ class TestPopulateMode:
         assert result["width"] == 530
         assert result["height"] == 510
 
-    def test_dlc_table_populated(self, populated_db, golden_baseline):
+    def test_dlc_table_populated(self, populated_db, golden_master):
         """Verify DLC table has expected row count."""
         vr4mice = populated_db["vr4mice"]
         count = len(vr4mice.DLC())
-        golden_baseline.check_row_count("dlc", count)
+        golden_master.check_row_count("dlc", count)
 
     def test_dlc_file_paths(self, populated_db):
         """Verify DLC entry has correct file paths."""
@@ -576,7 +558,7 @@ class TestPopulateMode:
 class TestAnalysisMode:
     """Tests for analysis mode - requires populate."""
 
-    def test_dataframe_populates(self, populated_db, golden_baseline):
+    def test_dataframe_populates(self, populated_db, golden_master):
         """Verify DataFrame.populate() creates entry."""
         from vr4mice.schema import base_analysis
 
@@ -586,7 +568,7 @@ class TestAnalysisMode:
         base_analysis.DataFrame.populate()
 
         count = len(base_analysis.DataFrame())
-        golden_baseline.check_row_count("dataframe", count)
+        golden_master.check_row_count("dataframe", count)
 
     def test_dataframe_columns_exist(self, populated_db):
         """Verify DataFrame has expected columns."""
@@ -609,7 +591,7 @@ class TestAnalysisMode:
         for col in expected_columns:
             assert col in df.columns, f"Missing column: {col}"
 
-    def test_dataframe_sample_values(self, populated_db, golden_baseline):
+    def test_dataframe_sample_values(self, populated_db, golden_master):
         """Verify DataFrame sample values match golden."""
         from vr4mice.schema import base_analysis
 
@@ -627,9 +609,9 @@ class TestAnalysisMode:
             "trial": df["trial"].values,
             "velocity": df["velocity"].values,
         }
-        golden_baseline.check_sample_values("dataframe", data_dict)
+        golden_master.check_sample_values("dataframe", data_dict)
 
-    def test_boxdataframe_populates(self, populated_db, golden_baseline):
+    def test_boxdataframe_populates(self, populated_db, golden_master):
         """Verify BoxDataFrame.populate() creates entry."""
         from vr4mice.schema import base_analysis
 
@@ -638,7 +620,7 @@ class TestAnalysisMode:
         base_analysis.BoxDataFrame.populate()
 
         count = len(base_analysis.BoxDataFrame())
-        golden_baseline.check_row_count("boxdataframe", count)
+        golden_master.check_row_count("boxdataframe", count)
 
     def test_boxdataframe_values(self, populated_db):
         """Verify BoxDataFrame has box coordinate values."""
@@ -665,16 +647,16 @@ class TestAnalysisMode:
 class TestDlcMode:
     """Tests for dlc mode - requires populate."""
 
-    def test_dlcprocessor_populates(self, populated_db, golden_baseline, clear_failed_sessions):
+    def test_dlcprocessor_populates(self, populated_db, golden_master):
         """Verify DLCProcessor.populate() creates entry."""
         from vr4mice.schema import dlc
 
         dlc.DLCProcessor.populate()
 
         count = len(dlc.DLCProcessor())
-        golden_baseline.check_row_count("dlcprocessor", count)
+        golden_master.check_row_count("dlcprocessor", count)
 
-    def test_dlcprocessor_kinematics(self, populated_db, golden_baseline):
+    def test_dlcprocessor_kinematics(self, populated_db, golden_master):
         """Verify DLCProcessor contains kinematic data."""
         from vr4mice.schema import dlc
 
@@ -690,19 +672,19 @@ class TestDlcMode:
         # From golden: PROC has 281,876 frames
         assert len(x_pos) == 281876, f"x_pos length {len(x_pos)} != 281876"
 
-        golden_baseline.check_sample_values(
+        golden_master.check_sample_values(
             "dlcprocessor_kinematics",
             {"x_pos": x_pos, "y_pos": y_pos, "heading_direction": heading}
         )
 
-    def test_dlckptsdf_populates(self, populated_db, golden_baseline):
+    def test_dlckptsdf_populates(self, populated_db, golden_master):
         """Verify DLCKptsDf.populate() creates entry."""
         from vr4mice.schema import dlc
 
         dlc.DLCKptsDf.populate()
 
         count = len(dlc.DLCKptsDf())
-        golden_baseline.check_row_count("dlckptsdf", count)
+        golden_master.check_row_count("dlckptsdf", count)
 
     def test_dlckptsdf_keypoints(self, populated_db):
         """Verify DLCKptsDf contains keypoint data."""
@@ -718,7 +700,7 @@ class TestDlcMode:
         # Should have bodypart columns
         assert "nose" in str(df.columns) or ("nose", "x") in df.columns
 
-    def test_syncdlckptsdf_populates(self, populated_db, golden_baseline):
+    def test_syncdlckptsdf_populates(self, populated_db, golden_master):
         """Verify SyncDLCKptsDf.populate() creates entry."""
         from vr4mice.schema import dlc
 
@@ -727,9 +709,9 @@ class TestDlcMode:
         dlc.SyncDLCKptsDf.populate()
 
         count = len(dlc.SyncDLCKptsDf())
-        golden_baseline.check_row_count("syncdlckptsdf", count)
+        golden_master.check_row_count("syncdlckptsdf", count)
 
-    def test_offlinekinematics_populates(self, populated_db, golden_baseline):
+    def test_offlinekinematics_populates(self, populated_db, golden_master):
         """Verify OfflineKinematics.populate() creates entry."""
         from vr4mice.schema import dlc
 
@@ -739,9 +721,9 @@ class TestDlcMode:
         dlc.OfflineKinematics.populate()
 
         count = len(dlc.OfflineKinematics())
-        golden_baseline.check_row_count("offlinekinematics", count)
+        golden_master.check_row_count("offlinekinematics", count)
 
-    def test_offlinekinematics_data(self, populated_db, golden_baseline):
+    def test_offlinekinematics_data(self, populated_db, golden_master):
         """Verify OfflineKinematics contains computed kinematics."""
         from vr4mice.schema import dlc
 
@@ -753,7 +735,7 @@ class TestDlcMode:
             # Should have kinematic columns
             assert "heading_dir" in df.columns or "head_angle" in df.columns
 
-            golden_baseline.check_sample_values(
+            golden_master.check_sample_values(
                 "offlinekinematics",
                 {col: df[col].values for col in df.columns if col not in ["dataset"]}
             )
@@ -781,14 +763,14 @@ class TestInterpMode:
         dlc.SyncDLCKptsDf.populate()
         dlc.OfflineKinematics.populate()
 
-    def test_interpolatedtrials_populates(self, populated_db, golden_baseline):
+    def test_interpolatedtrials_populates(self, populated_db, golden_master):
         """Verify InterpolatedTrials.populate() creates entry."""
         from vr4mice.schema import interpolated_trajectories
 
         interpolated_trajectories.InterpolatedTrials.populate()
 
         count = len(interpolated_trajectories.InterpolatedTrials())
-        golden_baseline.check_row_count("interpolatedtrials", count)
+        golden_master.check_row_count("interpolatedtrials", count)
 
     def test_interpolatedtrials_columns(self, populated_db):
         """Verify InterpolatedTrials has expected columns."""
@@ -804,7 +786,7 @@ class TestInterpMode:
             for k in expected_keys:
                 assert k in data, f"Missing key: {k}"
 
-    def test_meanxytrajectory_populates(self, populated_db, golden_baseline):
+    def test_meanxytrajectory_populates(self, populated_db, golden_master):
         """Verify MeanXYTrajectory.populate() creates entry."""
         from vr4mice.schema import interpolated_trajectories
 
@@ -812,18 +794,18 @@ class TestInterpMode:
         interpolated_trajectories.MeanXYTrajectory.populate()
 
         count = len(interpolated_trajectories.MeanXYTrajectory())
-        golden_baseline.check_row_count("meanxytrajectory", count)
+        golden_master.check_row_count("meanxytrajectory", count)
 
-    def test_sessionmetrics_populates(self, populated_db, golden_baseline):
+    def test_sessionmetrics_populates(self, populated_db, golden_master):
         """Verify SessionMetrics.populate() creates entry."""
         from vr4mice.schema import session_metrics
 
         session_metrics.SessionMetrics.populate()
 
         count = len(session_metrics.SessionMetrics())
-        golden_baseline.check_row_count("sessionmetrics", count)
+        golden_master.check_row_count("sessionmetrics", count)
 
-    def test_sessionmetrics_values(self, populated_db, golden_baseline):
+    def test_sessionmetrics_values(self, populated_db, golden_master):
         """Verify SessionMetrics has computed values."""
         from vr4mice.schema import session_metrics
 
@@ -839,17 +821,17 @@ class TestInterpMode:
             assert "session_trial_duration" in data
             assert "session_max_trial_number" in data
 
-            golden_baseline.check_scalar("session_reward", data["session_reward"])
-            golden_baseline.check_scalar("session_max_trial_number", data["session_max_trial_number"])
+            golden_master.check_scalar("session_reward", data["session_reward"])
+            golden_master.check_scalar("session_max_trial_number", data["session_max_trial_number"])
 
-    def test_trialmetrics_populates(self, populated_db, golden_baseline):
+    def test_trialmetrics_populates(self, populated_db, golden_master):
         """Verify TrialMetrics.populate() creates entry."""
         from vr4mice.schema import session_metrics
 
         session_metrics.TrialMetrics.populate()
 
         count = len(session_metrics.TrialMetrics())
-        golden_baseline.check_row_count("trialmetrics", count)
+        golden_master.check_row_count("trialmetrics", count)
 
 
 # ==============================================================================
@@ -868,24 +850,24 @@ class TestLatencyMode:
         assert hasattr(vr4mice, 'SignalsPhotodiode')
 
     @pytest.mark.skip(reason="SignalsPhotodiode population requires specific PROC data format")
-    def test_signalsphotodiode_populates(self, populated_db, golden_baseline):
+    def test_signalsphotodiode_populates(self, populated_db, golden_master):
         """Verify SignalsPhotodiode.populate() creates entry."""
         vr4mice = populated_db["vr4mice"]
 
         vr4mice.SignalsPhotodiode.populate()
 
         count = len(vr4mice.SignalsPhotodiode())
-        golden_baseline.check_row_count("signalsphotodiode", count)
+        golden_master.check_row_count("signalsphotodiode", count)
 
     @pytest.mark.skip(reason="Depends on SignalsPhotodiode population")
-    def test_signalsphotodiodealigned_populates(self, populated_db, golden_baseline):
+    def test_signalsphotodiodealigned_populates(self, populated_db, golden_master):
         """Verify SignalsPhotodiodeAligned.populate() creates entry."""
         from vr4mice.schema import latency_tests
 
         latency_tests.SignalsPhotodiodeAligned.populate()
 
         count = len(latency_tests.SignalsPhotodiodeAligned())
-        golden_baseline.check_row_count("signalsphotodiodealigned", count)
+        golden_master.check_row_count("signalsphotodiodealigned", count)
 
 
 # ==============================================================================
@@ -914,7 +896,7 @@ class TestSummaryMode:
         base_analysis.SummaryPlots.populate()
 
         count = len(base_analysis.SummaryPlots())
-        golden_baseline.check_row_count("summaryplots", count)
+        golden_master.check_row_count("summaryplots", count)
 
     @pytest.mark.skip(reason="TrackingSummaryPlots requires DLC data and plot infrastructure")
     def test_trackingsummaryplots_populates(self, populated_db, golden_master, monkeypatch):
@@ -930,7 +912,7 @@ class TestSummaryMode:
         base_analysis.TrackingSummaryPlots.populate()
 
         count = len(base_analysis.TrackingSummaryPlots())
-        golden_baseline.check_row_count("trackingsummaryplots", count)
+        golden_master.check_row_count("trackingsummaryplots", count)
 
 
 # ==============================================================================
