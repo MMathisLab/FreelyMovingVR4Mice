@@ -7,7 +7,7 @@ This module implements the testing infrastructure pattern with:
 - Environment configuration: .env.test.local for flexible data paths
 - Synthetic mock fixtures: Unit tests use fake data, no file I/O
 
-Golden dataset: Nightingale_2024-08-16_1 in test_data/Celia_Set_14012026/
+Golden dataset: Nightingale_2024-08-16_1 in test_data/golden_dataset/
 """
 
 import json
@@ -179,7 +179,7 @@ def nightingale_session_info():
     return {
         "dataset_name": DATASET_NAME,
         "camera_prefix": CAMERA_PREFIX,
-        "session_dir_name": "Celia_Set_14012026",
+        "session_dir_name": "golden_dataset",
     }
 
 
@@ -326,7 +326,7 @@ def nightingale_proc_data(nightingale_session_path, nightingale_session_info):
 @pytest.fixture(scope="session")
 def test_data_path():
     """Path to test data directory (legacy - use nightingale_session_path)."""
-    test_dir = PROJECT_ROOT / "test_data" / "Celia_Set_14012026"
+    test_dir = PROJECT_ROOT / "test_data" / "golden_dataset"
     if not test_dir.exists():
         pytest.skip(f"Test data directory not found: {test_dir}")
     return test_dir

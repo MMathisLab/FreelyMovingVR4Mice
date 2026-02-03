@@ -47,7 +47,7 @@ The new methods are more explicit about return types and align with DataJoint 2.
 
 ## High-Impact Improvements
 
-### Built-in NumPy Array Codec
+### Custom NumPy Array Codec
 
 **Current state:** NumPy arrays are stored as generic `<blob>` fields with no type validation. Incorrect types are stored silently, which can cause downstream errors.
 
@@ -114,7 +114,7 @@ Tables with foreign key relationships benefit most from this optimization, as th
 
 ---
 
-### Object Storage for Large Arrays
+### External Storage for Large Arrays
 
 **Current state:** Large arrays are stored directly in the database, which can bloat database size and slow backups.
 
@@ -142,7 +142,7 @@ Once ObjectRef migration is complete, the storage backend can be switched from l
 
 ### Schema-Addressed Storage
 
-For tables with very large data (neural recordings, video data), DataJoint 2.0 supports lazy-loading storage types (`<npy@>`, `<object@>`, `<zarr@>`). Data is loaded on-demand rather than all at once, which is essential for datasets that exceed available memory.
+For tables with very large data (neural recordings, video data), DataJoint 2.0 supports lazy-loading storage types (`<npy@>`, `<object@>`). Data is loaded on-demand rather than all at once, which is essential for datasets that exceed available memory.
 
 **Effort:** Medium (for new tables or major refactoring)
 

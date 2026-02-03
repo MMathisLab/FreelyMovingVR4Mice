@@ -362,17 +362,17 @@ def test_data_dir():
     """
     Path to test data directory with graceful skipping.
 
-    Uses PROJECT_ROOT/test_data/Celia_Set_14012026/ for development setup.
+    Uses PROJECT_ROOT/test_data/golden_dataset/ for development setup.
     Falls back to RAW_ROOT_DATA_DIR if set in environment.
     """
     # Primary location (inside project directory)
-    data_dir = PROJECT_ROOT / "test_data" / "Celia_Set_14012026"
+    data_dir = PROJECT_ROOT / "test_data" / "golden_dataset"
 
     if not data_dir.exists():
         # Fallback to RAW_ROOT_DATA_DIR
         raw_root = os.environ.get("RAW_ROOT_DATA_DIR", "")
         if raw_root:
-            data_dir = Path(raw_root) / "Celia_Set_14012026"
+            data_dir = Path(raw_root) / "golden_dataset"
 
     if not data_dir.exists():
         pytest.skip(
