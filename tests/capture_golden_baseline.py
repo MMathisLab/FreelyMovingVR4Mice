@@ -5,7 +5,7 @@ Golden Baseline Capture Script for DJ 2.0 Migration
 Captures the current test outputs and data structures BEFORE migration
 so we can verify the migration didn't break anything.
 
-Run this script with DJ 1.x installed to capture baseline behavior.
+Run this script with DJ 0.x installed to capture baseline behavior.
 After migration to DJ 2.0, run again and compare outputs.
 
 Usage:
@@ -14,7 +14,7 @@ Usage:
     python capture_golden_baseline.py
 
 Output:
-    golden_baseline/
+    golden_baseline/migration/
         test_results.json      - Pass/fail for each test
         data_structures.json   - Shapes, dtypes, column names
         sample_values.json     - Small sample of actual values
@@ -39,10 +39,10 @@ import pandas as pd
 
 SCRIPT_DIR = Path(__file__).parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
-GOLDEN_BASELINE_DIR = SCRIPT_DIR / "golden_baseline"
+GOLDEN_BASELINE_DIR = SCRIPT_DIR / "golden_baseline" / "migration"
 
 # Test data location
-TEST_DATA_DIR = PROJECT_ROOT / "test_data" / "Celia_Set_14012026"
+TEST_DATA_DIR = PROJECT_ROOT / "test_data" / "golden_dataset"
 DATASET_NAME = "Nightingale_2024-08-16_1"
 CAMERA_PREFIX = "Imagingsource"
 

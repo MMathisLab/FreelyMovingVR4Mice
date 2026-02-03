@@ -23,22 +23,33 @@ from pathlib import Path
 
 import pytest
 
+
+def pytest_addoption(parser):
+    """Add custom pytest options for integration tests."""
+    parser.addoption(
+        "--regenerate-golden",
+        action="store_true",
+        default=False,
+        help="Regenerate golden master files instead of comparing against them"
+    )
+
+
 # ==============================================================================
 # Path Configuration (must happen before DataJoint imports)
 # ==============================================================================
 
 # Get paths
 TESTS_DIR = Path(__file__).parent.parent
-SCENE_ROOT = TESTS_DIR.parent
-PROJECT_ROOT = SCENE_ROOT.parent
+PROJECT_ROOT = TESTS_DIR.parent
 
 # Add module paths - need to add the vr4mice parent so imports like "from vr4mice.schema import vr4mice" work
-VR4MICE_PARENT = SCENE_ROOT / "dj_pipeline"
-VR4MICE_PATH = SCENE_ROOT / "dj_pipeline" / "vr4mice"
-BASE_SCHEMAS_PATH = SCENE_ROOT / "dj_pipeline" / "base" / "base_min_schemas"
-BASE_ACTIONS_PATH = SCENE_ROOT / "dj_pipeline" / "base" / "base_actions"
+VR4MICE_PARENT = PROJECT_ROOT / "dj_pipeline"
+VR4MICE_PATH = PROJECT_ROOT / "dj_pipeline" / "vr4mice"
+VR4MICE_ACTIONS_PATH = PROJECT_ROOT / "dj_pipeline" / "vr4mice" / "actions"
+BASE_SCHEMAS_PATH = PROJECT_ROOT / "dj_pipeline" / "base" / "base_min_schemas"
+BASE_ACTIONS_PATH = PROJECT_ROOT / "dj_pipeline" / "base" / "base_actions"
 
-for path in [VR4MICE_PARENT, VR4MICE_PATH, BASE_SCHEMAS_PATH, BASE_ACTIONS_PATH]:
+for path in [VR4MICE_PARENT, VR4MICE_PATH, VR4MICE_ACTIONS_PATH, BASE_SCHEMAS_PATH, BASE_ACTIONS_PATH]:
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
@@ -46,6 +57,7 @@ for path in [VR4MICE_PARENT, VR4MICE_PATH, BASE_SCHEMAS_PATH, BASE_ACTIONS_PATH]
 os.environ.setdefault("IMG_SRC", "Imagingsource")
 os.environ.setdefault("GUI", "false")
 os.environ.setdefault("DJ_LAB", "test")
+os.environ.setdefault("EMAIL", "false")  # Disable email sending in tests
 
 
 # ==============================================================================
@@ -350,17 +362,17 @@ def test_data_dir():
     """
     Path to test data directory with graceful skipping.
 
-    Uses PROJECT_ROOT/test_data/Celia_Set_14012026/ for development setup.
+    Uses PROJECT_ROOT/test_data/golden_dataset/ for development setup.
     Falls back to RAW_ROOT_DATA_DIR if set in environment.
     """
-    # Primary location (development setup)
-    data_dir = PROJECT_ROOT / "test_data" / "Celia_Set_14012026"
+    # Primary location (inside project directory)
+    data_dir = PROJECT_ROOT / "test_data" / "golden_dataset"
 
     if not data_dir.exists():
         # Fallback to RAW_ROOT_DATA_DIR
         raw_root = os.environ.get("RAW_ROOT_DATA_DIR", "")
         if raw_root:
-            data_dir = Path(raw_root) / "Celia_Set_14012026"
+            data_dir = Path(raw_root) / "golden_dataset"
 
     if not data_dir.exists():
         pytest.skip(
