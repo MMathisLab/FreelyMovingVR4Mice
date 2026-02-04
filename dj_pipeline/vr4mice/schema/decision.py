@@ -96,21 +96,20 @@ class ExperimentMember(dj.Imported):
         try:
             session_label = (Dataset & key).fetch1("session_label")
 
+            if not session_label:
+                raise ValueError(
+                    f"Session label not found for dataset '{key['dataset']}' in Dataset table"
+                )
+
+            # Look up the mapping for this session label
             label_info = (SessionLabel & {"session_label": session_label}).fetch(
                 as_dict=True
             )
 
             if not label_info:
-                logger.warning(
-                    f"Session label '{session_label}' for dataset '{key['dataset']}' not found in SessionLabel table"
+                raise ValueError(
+                    f"Session label '{session_label}' not found in SessionLabel table"
                 )
-                return
-
-            if len(label_info) > 1:
-                logger.warning(
-                    f"Multiple entries found for session label '{session_label}' in SessionLabel table"
-                )
-                return
 
             label_info = label_info[0]
 
@@ -368,10 +367,9 @@ class PredictionModel(dj.Computed):
 
             # Validate that we have valid sessions for this model
             if not sessions_list:
-                logger.warning(
+                raise ValueError(
                     f"No valid sessions found for {self.__class__.__name__} with key {key}"
                 )
-                return
 
             # This takes a while to fetch because we need to fetch data from all sessions
             dataset_list = []
