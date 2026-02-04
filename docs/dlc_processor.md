@@ -25,7 +25,12 @@ class dlc_inference_w_pd(Processor):
 1. `com`: Str, the com port for the teensy, default is `COM3`
 2. `baudrate`: Int, the baudrate that the teensy is running at, default is `9600`
 3. `signal_delay`: Int, the delay between starting the game and the oscillating signal starting in seconds. This allows for the game to start before the signal starts being generated. 
-4. `signal_type`: Str, options: `pulse` = a square wave pulse that changes in time (best to use), `flip`= a black and white signal that flips every time dlc sends a frame (caution: this can miss frames!!!), `sin` = a sine wave. default is `pulse`.
+4. `signal_type`: Str, options: 
+   - `pulse` = periodic square wave pulse
+   - `pulse_geo` = square wave with geometric jitter (recommended for non-periodic TTL)
+   - `sin` = sine wave output
+   - `flip` = toggle every frame (caution: can miss frames!!!)
+   Default is `pulse_geo`.
 5. `freq`: Int, the frequency of the square pulse or sine wave. default is `5`
 6. `use_teensy`: Bool: If the photodiode teensy is connected this should be set to `True` for recording the photodiode signal. If the photodiode teensy is not connected you can set this to `False`. If set to `False` the dlc processor will still send a signal but this will not be recorded using the photodiode. 
 

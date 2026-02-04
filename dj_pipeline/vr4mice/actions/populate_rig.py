@@ -1,8 +1,10 @@
 import os
 import pickle
 import re
+import shutil
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -21,7 +23,7 @@ logger = Logger.get_logger()
 SKIP_DUPLICATES = True
 
 
-def get_filenames(ext, path="/tmp") -> dict:
+def get_filenames(ext, path: str = "/tmp") -> dict:
     """
     Get a dictionary of filenames with the specified extensions from the given path.
 
@@ -46,7 +48,7 @@ def get_filenames(ext, path="/tmp") -> dict:
     return output
 
 
-def get_new_file(filename, path="/tmp"):
+def get_new_file(filename, path: str = "/tmp"):
     """
     Load data from a new file and return it as a dictionary.
 
@@ -168,9 +170,9 @@ def populate(
                 raw_data=raw_data,
                 key=a,
                 transformer=schema["transformer"],
-                srcf="/data",
-                dstf="processed",
-                move=True,
+                srcf=srcf,
+                dstf=dstf,
+                move=move,
             )
         else:  # dj_def-orientated
             label = a
@@ -214,15 +216,21 @@ def parse_date(filename):
 
 def get_files_paths(
     dataset,
-    remote_src=None,
-    local_src="/data",
-    data="/data",
-    filename=os.environ["IMG_SRC"],
+    remote_src: Optional[str] = None,
+    local_src: str = "/data",
+    data: str = "/data",
+    filename: str = os.environ["IMG_SRC"],
 ):
     """
     Simulation of data from gui .npy, if it's missing
-    # todo: add files move if one folder
-    # todo: move this function to a separate file
+
+    Args:
+        dataset: The name of the dataset, formatting is {mouse_name}-{doe}-{attempt}.
+        remote_src: The source path for remote files.
+        local_src: The source path for local files.
+        data: The data path.
+        filename: The base filename for the video files.
+
     """
     dlc_video_path = local_src + "/dlc_video"
 
@@ -257,11 +265,10 @@ def get_files_paths(
             "src": remote_src,
             "dst": local_src + data,
         },
-        "video_meta": {
-            "duration": None,
-            "fps": None,
-            "width": None,
-            "height": None,
+        "video_meta": {"duration": None, "fps": None, "width": None, "height": None},
+        "screen_recording_output": {
+            "filename": dataset + ".mkv",
+            "dst": "/vr4mice_screen_recordings/raw_screen_recordings/",
         },
         "time_stamp": None,
         "doe": parse_date(dataset),
@@ -308,6 +315,21 @@ def populate_rig(
 
     dir_list = get_filenames(ext, path)
 
+    def move_dataset_files(dataset_name: str, base_path: str, dst_folder: str) -> None:
+        dst_path = os.path.join(base_path, dst_folder)
+        os.makedirs(dst_path, exist_ok=True)
+        moved = False
+        for ext in [".pickle", ".npy"]:
+            filename = f"{dataset_name}{ext}"
+            src = os.path.join(base_path, filename)
+            if os.path.exists(src):
+                shutil.move(src, os.path.join(dst_path, filename))
+                moved = True
+        if moved:
+            logger.info(f"Moved raw files for {dataset_name} to {dst_path}")
+        else:
+            logger.info(f"No raw files found to move for {dataset_name}")
+
     if ".pickle" in dir_list.keys():
 
         for pickle_file in dir_list[".pickle"]:
@@ -318,7 +340,9 @@ def populate_rig(
 
                 if (dj_schema.vr4mice.Dataset() & key).fetch(as_dict=True):
                     logger.info(f"{key} is already in the database, skip.")
-                    # break
+                    if move:
+                        move_dataset_files(dataset, path, dstf)
+                    continue
                 else:
                     logger.info(f"{key} not yet in the database, continue.")
 
@@ -338,7 +362,7 @@ def populate_rig(
                                 f"Attention: .npy file from GUI was not found for {dataset}; \
                                 As .npy files from gui were expected (gui flag is {gui}) the population will be aborted."
                             )
-                            return False
+                            continue
 
                         logger.info(
                             f"Attention: .npy file from GUI was not found for {dataset}; \
@@ -373,9 +397,9 @@ def populate_rig(
                                     attributes,
                                     raw_data,
                                     schema=schema,
-                                    srcf="/data",
-                                    dstf="processed",
-                                    move=True,
+                                    srcf=srcf,
+                                    dstf=dstf,
+                                    move=move,
                                 )
 
             except Exception as e:
@@ -383,30 +407,33 @@ def populate_rig(
 
     elif ".npy" in dir_list.keys():  # case no pickle
         for npy_file in dir_list[".npy"]:
-            raw_data_npy, dataset = get_new_file(npy_file, path)
-            raw_data_npy["rig_id"] = 12
-            raw_data_npy["license"] = "N/A"
-            files_info = get_files_paths(
-                dataset=dataset, remote_src=None, local_src="/data", data=path
-            )  # paths correspond to docker env
-            raw_data = {**files_info, **raw_data_npy}
-            schemas = [base]
+            try:
+                raw_data_npy, dataset = get_new_file(npy_file, path)
+                raw_data_npy["rig_id"] = 12
+                raw_data_npy["license"] = "N/A"
+                files_info = get_files_paths(
+                    dataset=dataset, remote_src=None, local_src="/data", data=path
+                )  # paths correspond to docker env
+                raw_data = {**files_info, **raw_data_npy}
+                schemas = [base]
 
-            for schema in schemas:
-                for table_name, attributes in schema[
-                    "tables"
-                ].items():  # get attributes
-                    flag, none_vals = check_keys(
-                        attributes, raw_data, table_name, schema=schema
-                    )
-                    if flag:
-                        raw_data = {**raw_data, **none_vals}
-                        populate(
-                            table_name,
-                            attributes,
-                            raw_data,
-                            schema=schema,
-                            srcf="/data",
-                            dstf="processed",
-                            move=True,
+                for schema in schemas:
+                    for table_name, attributes in schema[
+                        "tables"
+                    ].items():  # get attributes
+                        flag, none_vals = check_keys(
+                            attributes, raw_data, table_name, schema=schema
                         )
+                        if flag:
+                            raw_data = {**raw_data, **none_vals}
+                            populate(
+                                table_name,
+                                attributes,
+                                raw_data,
+                                schema=schema,
+                                srcf=srcf,
+                                dstf=dstf,
+                                move=move,
+                            )
+            except Exception as e:
+                logger.warning(f"Population of raw data failed for {npy_file}: {e}")

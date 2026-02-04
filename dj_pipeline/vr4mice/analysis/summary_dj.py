@@ -1,8 +1,7 @@
 import pathlib
 import warnings
 
-from pathlib import Path
-from typing import List, Dict
+from typing import Dict
 
 
 import matplotlib.pyplot as plt
@@ -74,6 +73,7 @@ def fetch_data(key: Dict, database: bool):
         from vr4mice.analysis import analysis
 
         df, unity_to_physical_arena_size = analysis.create_data_frame(key, iti=False)
+        df["trial_rewarded"] = analysis.get_rewarded(df)
         box_df_output = analysis.get_box_df(
             key, df, unity_to_physical_arena_size=unity_to_physical_arena_size
         )
@@ -118,9 +118,6 @@ def vr4mice_summary_plots(
     """
     Generate a summary plot for a given dataset.
 
-    final results to email
-    [DJ SummaryPlot table: path?]
-
     Args:
         key (dict): A dictionary that specifies which dataset to generate a
             summary plot for.
@@ -141,75 +138,76 @@ def vr4mice_summary_plots(
     df = df.infer_objects()
     df["dataset"] = key["dataset"]
 
-    # if not fecthing from database the trial rewarded needs to be computed, otherwise summary plots fail
-    if database == False:
-        df.groupby(["dataset", "trial"])["reward"].transform(lambda x: x.max())
-
     df = df[df.iti == 0].copy()
 
-    # NOTE: so that the head_dir is align to the screen
+    # NOTE(tom): so that the head_dir is aligned to the screen
     df["head_dir"] = ((df.head_dir) + 180) % 360 - 180
 
-    # ensure that if the occluder is not displayed (as in training data) that there are no multiple apertures
-    if (GuiParams() & key).fetch("occlusion_type_param") == 0.0:
+    # NOTE(tom): ensure that if the occluder is not displayed (as in training data) that there are no
+    # multiple apertures (ie multiple occlusion might be defined but not used)
+    if (GuiParams() & key).fetch1("occlusion_type_param") == 0.0:
         df["aperture"] = 0
 
     num_apertures = len(df.aperture.unique())
 
     # Create the summary figure grid
     fig = plt.figure(figsize=(25, 20), constrained_layout=True)
-    gs = plt.GridSpec(6, 10, figure=fig)
+    gs = fig.add_gridspec(6, 10)
 
-    ax1 = fig.add_subplot(gs[0:2, 0:3])
-    ax2 = fig.add_subplot(gs[0:2, 3:5])
-    ax3 = fig.add_subplot(gs[0:2, 5:7])
-    ax10 = fig.add_subplot(gs[0:2, 7:10])
+    subplot_specs = {
+        "all_trials": gs[0:2, 0:3],
+        "left_rewarded": gs[0:2, 3:5],
+        "right_rewarded": gs[0:2, 5:7],
+        "j_mean": gs[0:2, 7:10],
+        "target_rate": gs[2, 0:2],
+        "trial_count": gs[2, 2:4],
+        "time_aperture": gs[2, 4:6],
+        "time_reward": gs[2, 6:8],
+        "time_choice": gs[2, 8:10],
+        "vel_aperture": gs[3, 0:2],
+        "vel_reward": gs[3, 2:4],
+        "vel_choice": gs[3, 4:6],
+        "heading": gs[3, 6:8],
+        "j_rate": gs[3, 8:10],
+        "rewards": gs[4, 0:2],
+        "rolling_reward": gs[4, 2:],
+        "choice_rate": gs[5, 0:2],
+        "choices_by_trial": gs[5, 2:],
+    }
 
-    ax5 = fig.add_subplot(gs[2, 0:2])
-    ax6 = fig.add_subplot(gs[2, 2:4])
-    time_plots_aperture = fig.add_subplot(gs[2, 4:6])
-    time_plots_reward = fig.add_subplot(gs[2, 6:8])
-    time_plots_choice = fig.add_subplot(gs[2, 8:10])
+    axes = {name: fig.add_subplot(spec) for name, spec in subplot_specs.items()}
 
-    velocity_plot_aperture = fig.add_subplot(gs[3, 0:2])
-    velocity_plot_reward = fig.add_subplot(gs[3, 2:4])
-    velocity_plot_choice = fig.add_subplot(gs[3, 4:6])
-    heading_angle_plot = fig.add_subplot(gs[3, 6:8])
-    j_shaped_plot = fig.add_subplot(gs[3, 8:10])
-
-    ax7 = fig.add_subplot(gs[4, 0:2])
-    ax8 = fig.add_subplot(gs[4, 2:])
-    ax4 = fig.add_subplot(gs[5, 0:2])
-    ax9 = fig.add_subplot(gs[5, 2:])
-
-    ## Display all trials
+    # Display all trials
     plotting.plot_session(
         df=df,
         box_df=box_df_output,
         per_aperture=False,
         per_side=True,
-        ax=ax1,
+        ax=axes["all_trials"],
     )
+    axes["all_trials"].set_title("All Trials (no ITI)")
 
-    ## Display all rewarded trials on left side
+    # Display all rewarded trials on left side
     plotting.plot_session(
         df=df[(df.trial_rewarded == 1) & (df.trial_left_choice == 1)],
         box_df=box_df_output,
         per_aperture=False,
         per_side=True,
-        ax=ax2,
+        ax=axes["left_rewarded"],
     )
+    axes["left_rewarded"].set_title("Left Rewarded Trials (no ITI)")
 
-    ## Display all rewarded trials on right side
+    # Display all rewarded trials on right side
     plotting.plot_session(
         df=df[(df.trial_rewarded == 1) & (df.trial_right_choice == 1)],
         box_df=box_df_output,
         per_aperture=False,
         per_side=True,
-        ax=ax3,
+        ax=axes["right_rewarded"],
     )
+    axes["right_rewarded"].set_title("Right Rewarded Trials (no ITI)")
 
-    ## Display mean trajectory for the j-shaped trials
+    # Display mean trajectory for the j-shaped trials
     j_shaped_df = analysis.get_jshaped_trials(df).copy()
     j_shaped_df = utils.create_bins(
         data=j_shaped_df, spatial_ybins=[6.75, 20, 25], label="y"
@@ -222,63 +220,99 @@ def vr4mice_summary_plots(
         palette=plotting.colors_choice if num_apertures <= 2 else "viridis",
         style="aperture" if num_apertures <= 2 else "trial_right_choice",
         errorbar="se",
-        ax=ax10,
+        ax=axes["j_mean"],
     )
-    ax10.set_xlim([-15, 15])
-    ax10.set_ylabel("y position (cm)")
-    ax10.set_xlabel("x position (cm)")
+    axes["j_mean"].set_xlim([-15, 15])
+    axes["j_mean"].set_ylabel("y position (cm)")
+    axes["j_mean"].set_xlabel("x position (cm)")
 
-    ## Display the choice rate
+    # Display the choice rate
     plotting.plot_rate(
         df=df,
         label_x="trial_left_choice",
         per_aperture=True if num_apertures >= 2 else False,
-        ax=ax4,
+        ax=axes["choice_rate"],
     )
-    ax4.set_ylabel("Prob(Left Choice)")
-    ax4.set_ylim([0, 1])
+    axes["choice_rate"].set_ylabel("Prob(Left Choice)")
+    axes["choice_rate"].set_ylim([0, 1])
+    axes["choice_rate"].hlines(
+        0.5,
+        xmin=axes["choice_rate"].get_xlim()[0],
+        xmax=axes["choice_rate"].get_xlim()[1],
+        colors="gray",
+        linestyles="dashed",
+    )
 
-    ## Display the target location rate
+    # Display the target location rate
     plotting.plot_rate(
         df=df,
         label_x="object_on_left",
         per_aperture=True if num_apertures >= 2 else False,
-        ax=ax5,
+        ax=axes["target_rate"],
     )
-    ax5.set_ylabel("Prob(Target on Left)")
-    ax5.set_ylim([0, 1])
+    axes["target_rate"].hlines(
+        0.5,
+        xmin=axes["target_rate"].get_xlim()[0],
+        xmax=axes["target_rate"].get_xlim()[1],
+        colors="gray",
+        linestyles="dashed",
+    )
+    axes["target_rate"].set_ylabel("Prob(Target on Left)")
+    axes["target_rate"].set_ylim([0, 1])
 
-    ## Display trial count
+    # Display trial count
     plotting.plot_trial_count(
         df=df,
         per_aperture=True if num_apertures >= 2 else False,
-        ax=ax6,
+        ax=axes["trial_count"],
+    )
+    axes["trial_count"].hlines(
+        y=125,
+        xmin=axes["trial_count"].get_xlim()[0],
+        xmax=axes["trial_count"].get_xlim()[1],
+        colors="purple",
+        linestyles="dashed",
     )
 
-    ## Display the reward rate
+    # Display the reward rate
     plotting.plot_rewards(
-        df=df, per_aperture=True if num_apertures >= 2 else False, ax=ax7
+        df=df,
+        per_aperture=True if num_apertures >= 2 else False,
+        ax=axes["rewards"],
+    )
+    axes["rewards"].hlines(
+        0.7,
+        xmin=axes["rewards"].get_xlim()[0],
+        xmax=axes["rewards"].get_xlim()[1],
+        colors="purple",
+        linestyles="dashed",
     )
 
-    ## Display the time to reward
-    # per aperture
+    # Display the time to reward
+    # 1: per aperture
     plotting.plot_time_to_reward(
         df,
         label_x="aperture",
         xticks=list(df.aperture.astype(float).sort_values().astype(str).unique()),
-        ax=time_plots_aperture,
+        ax=axes["time_aperture"],
     )
-    # per trial rewarded
+    axes["time_aperture"].set_ylabel("Trial Duration / Occl")
+    # 2: per trial rewarded
     plotting.plot_time_to_reward(
         df,
         label_x="trial_rewarded",
-        xticks=["Uncorrect", "Correct"],
-        ax=time_plots_reward,
+        xticks=["Incorrect", "Correct"],
+        ax=axes["time_reward"],
     )
-    # per choice
+    axes["time_reward"].set_ylabel("Trial Duration / Reward")
+    # 3: per choice
     plotting.plot_time_to_reward(
-        df, label_x="trial_right_choice", xticks=["Left", "Right"], ax=time_plots_choice
+        df,
+        label_x="trial_right_choice",
+        xticks=["Left", "Right"],
+        ax=axes["time_choice"],
     )
+    axes["time_choice"].set_ylabel("Trial Duration / Choice")
 
     # Interpolation on variable of interest
     columns = [
@@ -305,7 +339,8 @@ def vr4mice_summary_plots(
     ).trial.cumcount()
     interpolated_df["trial_length"] = interpolated_df["trial_step"] / 200
 
-    ## Display the speed
+    # Display the speed
+    # 1: per aperture
     sns.lineplot(
         data=interpolated_df,
         x="trial_length",
@@ -313,12 +348,12 @@ def vr4mice_summary_plots(
         palette=(plotting.colors_aperture[:2] if num_apertures == 2 else "viridis"),
         hue="aperture",
         errorbar="se",
-        ax=velocity_plot_aperture,
+        ax=axes["vel_aperture"],
     )
-    velocity_plot_aperture.set_ylabel("Speed / Aperture")
-    velocity_plot_aperture.set_xlabel("Trial progression")
-    # per trial rewarded
+    axes["vel_aperture"].set_ylabel("Speed / Aperture")
+    axes["vel_aperture"].set_xlabel("Trial progression")
 
+    # 2: per trial rewarded
     sns.lineplot(
         data=interpolated_df,
         x="trial_length",
@@ -326,12 +361,12 @@ def vr4mice_summary_plots(
         palette=plotting.colors_rewarded,
         hue="trial_rewarded",
         errorbar="se",
-        ax=velocity_plot_reward,
+        ax=axes["vel_reward"],
     )
-    velocity_plot_reward.set_ylabel("Speed / Reward")
-    velocity_plot_reward.set_xlabel("Trial progression")
+    axes["vel_reward"].set_ylabel("Speed / Reward")
+    axes["vel_reward"].set_xlabel("Trial progression")
 
-    # per choice
+    # 3: per choice
     sns.lineplot(
         data=interpolated_df,
         x="trial_length",
@@ -339,13 +374,12 @@ def vr4mice_summary_plots(
         palette=plotting.colors_choice,
         hue="trial_right_choice",
         errorbar="se",
-        ax=velocity_plot_choice,
+        ax=axes["vel_choice"],
     )
-    velocity_plot_choice.set_ylabel("Speed / Choice")
-    velocity_plot_choice.set_xlabel("Trial progression")
+    axes["vel_choice"].set_ylabel("Speed / Choice")
+    axes["vel_choice"].set_xlabel("Trial progression")
 
-    ## Display heading direction per choice
-
+    # Display heading direction per choice
     sns.lineplot(
         data=interpolated_df,
         x="trial_length",
@@ -354,25 +388,28 @@ def vr4mice_summary_plots(
         palette=plotting.colors_choice if num_apertures <= 2 else "viridis",
         style="aperture" if num_apertures <= 2 else "trial_right_choice",
         errorbar="se",
-        ax=heading_angle_plot,
+        ax=axes["heading"],
     )
-    heading_angle_plot.legend([], [], frameon=False)
-    heading_angle_plot.set_ylabel("Heading direction")
-    heading_angle_plot.set_xlabel("Trial progression")
+    axes["heading"].set_ylabel("Heading direction")
+    axes["heading"].set_xlabel("Trial progression")
 
-    ## Display J-shaped trials rate
+    # Display J-shaped trials rate
     plotting.plot_rate(
         df=df,
         label_x="is_j_shaped",
         per_aperture=True if num_apertures >= 2 else False,
-        ax=j_shaped_plot,
+        ax=axes["j_rate"],
     )
-    j_shaped_plot.set_ylabel("J-shaped trials rate")
-    j_shaped_plot.set_ylim([0, 1])
+    axes["j_rate"].set_ylabel("J-shaped trials rate")
+    axes["j_rate"].set_ylim([0, 1.1])
 
-    ## Display rolling reward and choice
-    plotting.plot_rolling_reward(df, ax=ax8)
-    plotting.plot_choices_by_trial(df, ax=ax9)
+    # Display rolling reward and choice
+    plotting.plot_rolling_reward(
+        df,
+        ax=axes["rolling_reward"],
+        per_aperture=True if num_apertures >= 2 else False,
+    )
+    plotting.plot_choices_by_trial(df, ax=axes["choices_by_trial"])
 
     if database:
         from vr4mice.schema import base_analysis
@@ -387,8 +424,13 @@ def vr4mice_summary_plots(
         full_path = get_path(key=key, base=save_path, ext=".png")
         subtitle = get_subtitle(key=key, task_name="AR Task")
 
-    fig.suptitle(subtitle)
-    plt.tight_layout()
+    # Despine all axes for cleaner aesthetics
+    for ax in axes.values():
+        sns.despine(ax=ax, offset=10)
+
+    # Set title and adjust layout to prevent overlap
+    fig.suptitle(subtitle, fontsize=16)
+    plt.tight_layout(rect=[0, 0, 1, 0.98])
     plt.savefig(full_path)
     plt.close()
 

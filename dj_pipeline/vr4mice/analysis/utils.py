@@ -75,11 +75,24 @@ def interpolate_group(
             y_new = np.full(x_new.shape, y.iloc[0])
 
         else:
-            # Fit Cubic Spline
-            cs = scipy.interpolate.CubicSpline(x, y)
+            # Check for NaN values and handle them
+            mask = ~np.isnan(y)
 
-            # Interpolate y values at the new x positions
-            y_new = cs(x_new)
+            if mask.sum() < 2:  # Need at least 2 points for interpolation
+                logger.warning(
+                    f"Column '{column}' has insufficient non-NaN values for interpolation. Filling with zeros."
+                )
+                y_new = np.zeros(x_new.shape)
+            elif mask.sum() == len(y):
+                # No NaN values, proceed normally
+                cs = scipy.interpolate.CubicSpline(x, y)
+                y_new = cs(x_new)
+            else:
+                # Has some NaN values - interpolate only on valid points
+                x_valid = x[mask]
+                y_valid = y[mask]
+                cs = scipy.interpolate.CubicSpline(x_valid, y_valid)
+                y_new = cs(x_new)
 
         # Store the interpolated values
         interpolated_data[column] = y_new
@@ -129,9 +142,6 @@ def interpolate(
 
 
 def interpolate_j_shaped(big_df, box_df, n_points=100):
-    # big_df["norm_x"] = big_df.groupby(["dataset", "trial"], as_index=False)["x"].transform(
-    #         lambda x: x - np.mean(x.iloc[:3])
-    #     )
 
     big_df["optimal_p"] = analysis.get_optimal_p(big_df)
     big_df["local_tortuosity"] = analysis.get_local_tortuosity(big_df, window_size=1)
@@ -139,8 +149,6 @@ def interpolate_j_shaped(big_df, box_df, n_points=100):
     big_df["distance_to_choice"] = analysis.get_distance_to_choice(big_df, box_df)
 
     columns = [
-        # "norm_y",
-        # "norm_x",
         "heading_dir",
         "head_angle",
         "trial_tortuosity",
@@ -160,10 +168,19 @@ def interpolate_j_shaped(big_df, box_df, n_points=100):
 
     j_shaped = analysis.get_jshaped_trials(big_df)
 
+    # Filter out trials with NaN values in critical columns to avoid interpolation errors
+    cols_to_check = ["trial_left_choice"] + columns
+    j_shaped_clean = j_shaped.dropna(subset=cols_to_check)
+
+    if len(j_shaped_clean) < len(j_shaped):
+        logger.warning(
+            f"Dropped {len(j_shaped) - len(j_shaped_clean)} rows with NaN values before interpolation in j-shaped trials"
+        )
+
     interpolated_j_shaped = interpolate(
-        j_shaped,
+        j_shaped_clean,
         n_points=n_points,
-        value_columns=["trial_left_choice"] + columns,
+        value_columns=cols_to_check,
         interpolation_columns=["dataset", "trial"],
     )
     interpolated_j_shaped["trial_step"] = interpolated_j_shaped.groupby(
@@ -313,23 +330,21 @@ def get_data_from_list(data_set_list, game_columns, dlc_columns=None):
     return big_df.reset_index(drop=True)
 
 
-def dual_occluder_inclusion_criteria(
+def apply_inclusion_criteria(
     data: pd.DataFrame,
-    threshold_wide: Optional[float] = 0.7,
-    threshold_drop: Optional[float] = 0.3,
     return_excluded: Optional[bool] = False,
+    consider_reward_drop: Optional[bool] = True,
 ) -> pd.DataFrame:
-    """get all datasets that survive the inclusion criteria
+    """Get all datasets that survive the inclusion criteria
 
-    This function calculates performance parameters and returns those datasets
+    This function calculates performance parameters and returns the datasets
     that survive the inclusion criteria
 
     Args:
         data (pd.DataFrame): a dataframe, containing multiple datasets
-        threshold_wide (float): the minimum reward success for the wide occlusion
-        threshold drop (float): the maximum reward drop between wide and narrow occluders
+        return_excluded (bool, optional): whether to return the excluded datasets instead of the included ones. Default is False.
+        consider_reward_drop (bool, optional): whether to consider reward drop as an inclusion criteria. Default is True.
     """
-
     reward_table = data.groupby(["dataset", "aperture", "trial"], as_index=False)[
         "trial_rewarded"
     ].mean()
@@ -338,55 +353,38 @@ def dual_occluder_inclusion_criteria(
     ].mean()
     pivoted_reward = reward_table.pivot(index="dataset", columns="aperture")
 
+    # Extract aperture values from the MultiIndex columns (second level)
+    aperture_values = [
+        col[1] for col in pivoted_reward.columns if col[0] == "trial_rewarded"
+    ]
+
+    if len(aperture_values) < 2:
+        raise ValueError(
+            f"Not enough occluder sizes found to apply inclusion criteria. "
+            f"Found {len(aperture_values)}, need at least 2."
+        )
+
+    narrowest_aperture = min(aperture_values)
+    widest_aperture = max(aperture_values)
+
+    min_wide_reward = 0.7
+    max_reward_drop = 0.25
+
+    # Calculate reward drop between widest and narrowest occluder
     pivoted_reward["reward_drop"] = (
-        pivoted_reward[("trial_rewarded", 12.0)]
-        - pivoted_reward[("trial_rewarded", 4.3)]
+        pivoted_reward[("trial_rewarded", widest_aperture)]
+        - pivoted_reward[("trial_rewarded", narrowest_aperture)]
     )
+
     reward_table = pivoted_reward
     pivoted_reward = pivoted_reward[
-        (pivoted_reward[("trial_rewarded", 12.0)] > threshold_wide)
+        (pivoted_reward[("trial_rewarded", widest_aperture)] > min_wide_reward)
     ]
-    pivoted_reward = pivoted_reward[abs(pivoted_reward.reward_drop) < threshold_drop]
+    if consider_reward_drop:
+        pivoted_reward = pivoted_reward[
+            abs(pivoted_reward.reward_drop) < max_reward_drop
+        ]
 
-    print(
-        "Excluded datasets: ",
-        data[data.dataset.isin(pivoted_reward.index) == 0].dataset.unique(),
-    )
-    if return_excluded:
-        filtered_data = data[data.dataset.isin(pivoted_reward.index) == 0]
-    else:
-        filtered_data = data[data.dataset.isin(pivoted_reward.index)]
-    return filtered_data, reward_table
-
-
-def multi_occluder_inclusion_criteria(
-    data: pd.DataFrame,
-    threshold_wide: Optional[float] = 0.7,
-    threshold_drop: Optional[float] = 0.3,
-    return_excluded: Optional[bool] = False,
-):
-    reward_table = data.groupby(["dataset", "aperture", "trial"], as_index=False)[
-        "trial_rewarded"
-    ].mean()
-    reward_table = reward_table.groupby(["dataset", "aperture"], as_index=False)[
-        "trial_rewarded"
-    ].mean()
-    pivoted_reward = reward_table.pivot(index="dataset", columns="aperture")
-
-    pivoted_reward["reward_drop"] = (
-        pivoted_reward[("trial_rewarded", 12.0)]
-        - pivoted_reward[("trial_rewarded", 3.0)]
-    )
-    reward_table = pivoted_reward
-    pivoted_reward = pivoted_reward[
-        (pivoted_reward[("trial_rewarded", 12.0)] > threshold_wide)
-    ]
-    pivoted_reward = pivoted_reward[abs(pivoted_reward.reward_drop) < threshold_drop]
-
-    print(
-        "Excluded datasets: ",
-        data[data.dataset.isin(pivoted_reward.index) == 0].dataset.unique(),
-    )
     if return_excluded:
         filtered_data = data[data.dataset.isin(pivoted_reward.index) == 0]
     else:

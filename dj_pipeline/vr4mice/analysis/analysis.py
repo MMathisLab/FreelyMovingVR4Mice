@@ -54,9 +54,7 @@ def _resample_data_frame(
         (~df.columns.isin(categorical_columns)) & (~df.columns.isin(binary_columns))
     ]
 
-    t = (
-        f"{resampling_period_ms}ms"
-    )  # old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
+    t = f"{resampling_period_ms}ms"  # old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
 
     df["time"] = pd.to_datetime(df["step_time"], unit="s")
     categorical_resampled = (
@@ -104,8 +102,13 @@ def get_rewarded(df: pd.DataFrame) -> pd.Series:
         A pandas.Series with 1 if the trial to which the timepoint
         belongs to is rewarded and 0 else.
     """
-
-    return df.groupby(["dataset", "trial"])["reward"].transform(lambda x: x.max())
+    if "dataset" in df.columns and "trial" in df.columns:
+        groupby = ["dataset", "trial"]
+    elif "trial" in df.columns:
+        groupby = ["trial"]
+    else:
+        raise ValueError("DataFrame must contain at least a 'trial' column.")
+    return df.groupby(groupby)["reward"].transform(lambda x: x.max())
 
 
 def get_distance_to_choice(df: pd.DataFrame, box_df: pd.DataFrame) -> pd.Series:
@@ -370,6 +373,7 @@ def create_data_frame(
     df["norm_y"] = df.groupby("trial", as_index=False)["y"].transform(
         lambda x: x - np.mean(x.iloc[:first_n_samples])
     )
+
     if not iti:
         df = df[df.iti == 0.0]
 
@@ -474,7 +478,10 @@ def create_data_frame(
     df.trial = df.trial.astype(int)
     df.aperture = df.aperture.round(2)
 
-    df = df.drop(columns=["first", "last"])
+    # Drop temporary columns only if they exist (only created when iti=True)
+    cols_to_drop = [col for col in ["first", "last"] if col in df.columns]
+    if cols_to_drop:
+        df = df.drop(columns=cols_to_drop)
 
     return df, unity_to_physical_arena_size
 
@@ -585,11 +592,15 @@ def mean_xy_trajectory(
     ],
     values=["x", "y"],
 ):
+    # Calculate mean
     mean_df = df.groupby(index_columns, as_index=False)[values].mean()
+
+    # Calculate SEM and STD
     mean_df[["sem_x", "sem_y"]] = df.groupby(index_columns, as_index=False)[
         values
     ].sem()[values]
     mean_df[["std_x", "std_y"]] = df.groupby(index_columns, as_index=False)[
         values
     ].std()[values]
+
     return mean_df

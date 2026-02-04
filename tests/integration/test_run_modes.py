@@ -373,6 +373,24 @@ def populated_db(dj_config, pipeline_test_data, test_dataset_name, test_camera_p
     }
 
 
+@pytest.fixture(scope="class")
+def clear_failed_sessions(populated_db):
+    """
+    Clear FailedSession entries before each test class.
+
+    This prevents test pollution where earlier tests' failures
+    cause later tests to skip via FailedSession.should_skip().
+    """
+    vr4mice = populated_db["vr4mice"]
+    # Delete all FailedSession entries for a clean slate
+    if len(vr4mice.FailedSession()) > 0:
+        vr4mice.FailedSession().delete_quick()
+    yield
+    # Optionally clean up after the test class too
+    if len(vr4mice.FailedSession()) > 0:
+        vr4mice.FailedSession().delete_quick()
+
+
 # ==============================================================================
 # Connect Mode Tests
 # ==============================================================================
@@ -647,7 +665,7 @@ class TestAnalysisMode:
 class TestDlcMode:
     """Tests for dlc mode - requires populate."""
 
-    def test_dlcprocessor_populates(self, populated_db, golden_baseline):
+    def test_dlcprocessor_populates(self, populated_db, golden_baseline, clear_failed_sessions):
         """Verify DLCProcessor.populate() creates entry."""
         from vr4mice.schema import dlc
 

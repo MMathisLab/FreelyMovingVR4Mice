@@ -24,7 +24,7 @@ services:
         - "/mnt/database/shared:/shared"
 
         - "/mnt/database/vr4mice/vr4mice_database/data:/data"
-
+        - "/mnt/neuropixel_data/vr4mice/raw_screen_recordings:/vr4mice_screen_recordings"
         - "./base/base_min_schemas:/base_schemas"
         - "./base/base_actions:/base_actions"
     ports: 

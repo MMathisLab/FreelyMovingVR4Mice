@@ -682,7 +682,7 @@ class TestPopulateRig:
             populate_rig(path=str(tmp_path), gui="false")
 
     def test_populate_rig_gui_mode_requires_npy(self, tmp_path, sample_pickle_data):
-        """populate_rig in GUI mode should require .npy files."""
+        """populate_rig in GUI mode should skip files when .npy is missing."""
         # Create only pickle file, no npy
         pickle_path = tmp_path / "TestMouse_2024-01-01_1.pickle"
         with open(pickle_path, "wb") as f:
@@ -691,10 +691,10 @@ class TestPopulateRig:
         with patch("populate_rig.dj_schema") as mock_schema:
             mock_schema.vr4mice.Dataset.return_value.__and__.return_value.fetch.return_value = []
 
-            # In GUI mode, should return False when npy is missing
+            # In GUI mode, function skips files missing npy and returns None
             with patch.dict(os.environ, {"GUI": "true"}):
                 result = populate_rig(path=str(tmp_path), gui="true")
-                assert result is False
+                assert result is None
 
     def test_populate_rig_processes_npy_only(self, tmp_path):
         """populate_rig should process .npy files when no pickle files exist."""
