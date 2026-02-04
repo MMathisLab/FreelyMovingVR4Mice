@@ -368,10 +368,7 @@ class PredictionModel(dj.Computed):
 
             # Validate that we have valid sessions for this model
             if not sessions_list:
-                logger.warning(
-                    f"No valid sessions found for {self.__class__.__name__} with key {key}"
-                )
-                return
+                raise ValueError(f"No valid sessions found for {self.__class__.__name__} with key {key}")
 
             # This takes a while to fetch because we need to fetch data from all sessions
             dataset_list = []
