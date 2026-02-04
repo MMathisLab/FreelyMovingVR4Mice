@@ -106,9 +106,9 @@ class ExperimentMember(dj.Imported):
                 as_dict=True
             )
 
-            if not label_info or len(label_info) > 1:
+            if not label_info:
                 raise ValueError(
-                    f"Session label '{session_label}' not found in SessionLabel table or multiple entries found"
+                    f"Session label '{session_label}' not found in SessionLabel table"
                 )
 
             label_info = label_info[0]
@@ -317,9 +317,9 @@ class PredictionModel(dj.Computed):
     -> ExperimentSet
     -> ExperimentStage
     ---
-    coefficients : longblob     # coefficients per session (per_mouse=True)
+    coefficients : <blob>     # coefficients per session (per_mouse=True)
     n_sessions : int            # number of sessions included
-    sessions : longblob         # list of session dataset names
+    sessions : <blob>         # list of session dataset names
     random_state : int          # random state used for reproducibility
     mean_accuracy : float       # mean accuracy across sessions
     bic : float                 # Bayesian Information Criterion for the model
@@ -333,20 +333,18 @@ class PredictionModel(dj.Computed):
         n_samples : int                # number of samples in the session
         mean_accuracy : float          # mean accuracy for this session
         mean_proba_left: float         # mean predicted probability for left choice
-        trial : longblob               # trial numbers
-        trial_length: longblob         # trial progression
-        proba_left : longblob          # predicted probabilities for left choice
-        accuracy : longblob            # per-trial accuracy values
-        trial_left_choice : longblob   # ground truth left choice
-        bic : longblob                 # Bayesian Information Criterion per timestep
+        trial : <blob>               # trial numbers
+        trial_length: <blob>         # trial progression
+        proba_left : <blob>          # predicted probabilities for left choice
+        accuracy : <blob>            # per-trial accuracy values
+        trial_left_choice : <blob>   # ground truth left choice
+        bic : <blob>                 # Bayesian Information Criterion per timestep
         """
 
     def make(self, key):
         """Train regression model and store per-session predictions."""
         if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
-
-        logger.info(f"{self.__class__.__name__} population started for {key}.")
 
         try:
             # Skip training stage - only train models for dual_occlusion and multi_occlusion
@@ -404,21 +402,9 @@ class PredictionModel(dj.Computed):
                 )["y"].transform("first")
 
             if "trial_history" in label_set:
-                trial_choices = (
-                    interpolated_df.groupby(["dataset", "trial"], as_index=False)
-                    .agg({"trial_left_choice": "first"})
-                    .sort_values(["dataset", "trial"])
-                )
-                trial_choices["trial_history"] = (
-                    trial_choices.groupby("dataset")["trial_left_choice"]
-                    .shift(1)
-                    .fillna(0)
-                )
-                interpolated_df = interpolated_df.merge(
-                    trial_choices[["dataset", "trial", "trial_history"]],
-                    on=["dataset", "trial"],
-                    how="left",
-                )
+                interpolated_df["trial_history"] = interpolated_df.groupby(
+                    ["dataset", "trial"]
+                )["trial_left_choice"].transform(lambda x: x.shift(1).fillna(0))
 
             random_state = 42
 
@@ -535,25 +521,23 @@ class DecisionPoints(dj.Computed):
     """Decision point and corresponding per-trial data."""
 
     definition = """
-    -> PredictionModel.SessionPrediction
+    -> PredictionModel
     -> DecisionThreshold
     ---
-    trial: longblob                 # trial corresponding to the timestamp
-    proba_left: longblob            # pred proba of the regression on decision side
-    aperture: longblob              # occlusion size for the corresponding trial
-    trial_left_choice: longblob     # ground truth on the decision side
-    trial_rewarded: longblob        # 1 if trial was rewarded, else 0
-    trial_length: longblob          # length of the trial at which decision was made
-    x: longblob                     # x position of the decision point in the trial
-    y: longblob                     # y position of the decision point in the trial
+    trial: <blob>                 # trial corresponding to the timestamp
+    proba_left: <blob>            # pred proba of the regression on decision side
+    aperture: <blob>              # occlusion size for the corresponding trial
+    trial_left_choice: <blob>     # ground truth on the decision side
+    trial_rewarded: <blob>        # 1 if trial was rewarded, else 0
+    trial_length: <blob>          # length of the trial at which decision was made
+    x: <blob>                     # x position of the decision point in the trial
+    y: <blob>                     # y position of the decision point in the trial
     """
 
     def make(self, key):
         """Compute decision points from model predictions and trials."""
         if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
-
-        logger.info(f"{self.__class__.__name__} population started for {key}.")
 
         try:
             threshold_uncertainty = float(
