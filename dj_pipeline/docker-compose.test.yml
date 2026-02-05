@@ -1,0 +1,38 @@
+services:
+  mysql:
+    image: datajoint/mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: simple
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-psimple"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  tests:
+    build:
+      context: ..
+      dockerfile: dj_pipeline/Dockerfile
+      args:
+        user_name: testuser
+        uid: "1000"
+        gid: "1000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DJ_USE_EXTERNAL_CONTAINERS: "1"
+      DJ_HOST: mysql
+      DJ_PORT: "3306"
+      DJ_USER: root
+      DJ_PASSWORD: simple
+      DJ_LAB: test
+      IMG_SRC: Imagingsource
+      GUI: "false"
+      EMAIL: "false"
+      DATABASE_USE_TLS: "false"
+    volumes:
+      - ..:/app
+    working_dir: /app
+    entrypoint: []
+    command: ["bash", "-c", "cd tests && python -m pytest integration/ unit/ -v"]
