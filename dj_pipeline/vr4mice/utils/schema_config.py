@@ -1,45 +1,32 @@
 import datajoint as dj
 
-def connect_to_database(user, prefix="", create_tables=True, storage="/storage"):
+
+def connect_to_database(user=None, prefix=None, create_tables=None, storage=None):
     """
-    Connects to a database using DataJoint.
+    Connects to database using DataJoint 2.0's auto-configuration.
 
-    Args:
-    user (User): A User object that contains the necessary information to connect to the database,
-                such as the host, name, and password.
-    prefix (str, optional): A prefix to add to the schema name. Defaults to "".
-    create_tables (bool, optional): Whether to create tables if they don't exist. Defaults to True.
-    storage (str, optional): The location of the storage directory. Defaults to "/storage".
+    Configuration loads automatically from:
+    1. Environment variables (DJ_HOST, DJ_USER, DJ_PASS)
+    2. .secrets/datajoint.json
+    3. datajoint.json
 
-    Raises:
-    ConnectionError: If the connection to the database fails.
-
-    Notes:
-    - This function assumes that DataJoint has already been imported and configured.
-    - The user argument is expected to be a User object with attributes host, name, and password.
-    - The prefix argument is useful if you want to add a prefix to the schema name to distinguish it from other schemas in the same database.
-    - The create_tables argument is useful if you want to create tables in the database if they don't already exist.
-    - The location argument is the location of the storage directory where DataJoint will store data files.
+    Args (all optional - override datajoint.json if provided):
+        user: LoginUser object (deprecated, for backward compatibility)
+        prefix: Schema prefix (overrides database.database_prefix)
+        create_tables: Whether to create tables (overrides database.create_tables)
+        storage: Ignored (deprecated)
     """
+    # Override config if parameters provided (backward compatibility)
+    if prefix is not None:
+        dj.config['database.database_prefix'] = prefix
+    if create_tables is not None:
+        dj.config['database.create_tables'] = create_tables
+    if user is not None:
+        dj.config["database.host"] = user.host
+        dj.config["database.user"] = user.name
+        dj.config["database.password"] = user.password
 
-    # deprecated
-    # dj.config["stores"] = {
-    # read-only store
-    #     "data": {
-    #         "protocol": "file",
-    #         "location": storage,
-    #         "stage": storage
-    #     },
-    # }
-
-    dj.config['database.database_prefix'] = prefix
-    dj.config['database.create_tables'] = create_tables
-
-    dj.config["database.host"] = user.host
-    dj.config["database.user"] = user.name
-    dj.config["database.password"] = user.password
-
-    conn = dj.conn()
+    return dj.conn()
 
 
 def get_schema(name, _locals):

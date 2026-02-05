@@ -1,12 +1,18 @@
+"""
+Project-specific environment variable defaults.
+
+NOTE: Database configuration (DJ_HOST, DJ_USER, DJ_PWD) is now handled by
+datajoint.json and .secrets/datajoint.json - do NOT set them here.
+"""
 import os
 
-os.environ["DJ_HOST"] = "localhost"
-os.environ["DJ_USER"] = "user_name"
-os.environ["DJ_PWD"] = "user_name"
-os.environ["DJ_LAB"] = "lab_name"
-os.environ["GUI"] = "gui_mode"
-os.environ["EMAIL"] = "True"
-os.environ["VR4MICE_EMAIL_RECIPIENTS"] = "mathislab"
-os.environ["IMG_SRC"] = "Imagingsource"
-os.environ["DJ_SUPPORT_FILEPATH_MANAGEMENT"] = "TRUE"
-os.environ["DJ_SUPPORT_ADAPTED_TYPES"] = "TRUE"
+# Project-specific settings (not handled by DataJoint 2.0)
+os.environ.setdefault("DJ_LAB", "lab_name")
+os.environ.setdefault("GUI", "gui_mode")
+os.environ.setdefault("EMAIL", "True")
+os.environ.setdefault("VR4MICE_EMAIL_RECIPIENTS", "mathislab")
+os.environ.setdefault("IMG_SRC", "Imagingsource")
+
+# DataJoint feature flags
+os.environ.setdefault("DJ_SUPPORT_FILEPATH_MANAGEMENT", "TRUE")
+os.environ.setdefault("DJ_SUPPORT_ADAPTED_TYPES", "TRUE")
