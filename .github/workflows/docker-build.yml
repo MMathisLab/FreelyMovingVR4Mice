@@ -1,0 +1,20 @@
+name: Test Docker Build
+
+on:
+  push:
+    paths:
+      - 'dj_pipeline/Dockerfile'
+      - '.github/workflows/docker-build.yml'
+  pull_request:
+    paths:
+      - 'dj_pipeline/Dockerfile'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t vr4mice_app:test-image ./dj_pipeline
