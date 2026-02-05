@@ -106,9 +106,9 @@ class ExperimentMember(dj.Imported):
                 as_dict=True
             )
 
-            if not label_info:
+            if not label_info or len(label_info) > 1:
                 raise ValueError(
-                    f"Session label '{session_label}' not found in SessionLabel table"
+                    f"Session label '{session_label}' not found in SessionLabel table or multiple entries found"
                 )
 
             label_info = label_info[0]
@@ -402,9 +402,21 @@ class PredictionModel(dj.Computed):
                 )["y"].transform("first")
 
             if "trial_history" in label_set:
-                interpolated_df["trial_history"] = interpolated_df.groupby(
-                    ["dataset", "trial"]
-                )["trial_left_choice"].transform(lambda x: x.shift(1).fillna(0))
+                trial_choices = (
+                    interpolated_df.groupby(["dataset", "trial"], as_index=False)
+                    .agg({"trial_left_choice": "first"})
+                    .sort_values(["dataset", "trial"])
+                )
+                trial_choices["trial_history"] = (
+                    trial_choices.groupby("dataset")["trial_left_choice"]
+                    .shift(1)
+                    .fillna(0)
+                )
+                interpolated_df = interpolated_df.merge(
+                    trial_choices[["dataset", "trial", "trial_history"]],
+                    on=["dataset", "trial"],
+                    how="left",
+                )
 
             random_state = 42
 
