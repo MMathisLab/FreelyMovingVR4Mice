@@ -15,6 +15,8 @@ RUN apt-get update -y && apt-get install -yy --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
+RUN pip install -U pip setuptools wheel packaging
+
 RUN pip install datajoint==0.14 \
     # Note: this version of seaborn, as otherwise it installs 0.12.2 and updates numpy to 1.26,
     # and then Numby stops to work: err "Numba needs NumPy 1.24 or less" 
@@ -22,7 +24,7 @@ RUN pip install datajoint==0.14 \
     pandas==1.4.3 \
     numpy==1.22.4 \
     jupyter \
-    umap \ 
+    umap-learn \
     black==22.6
     # TODO: make pip via req
     # with newer 2.0.3, tom's code fails 

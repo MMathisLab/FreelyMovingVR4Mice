@@ -115,6 +115,23 @@ vr4mice.Dataset()
 ```bash
 make client_down
 ```
+
+
+#### DataJoint database user remote access via Jupyter Notebook (tested with Python 3.9.5):
+1. Assuming that Jupyter Notebook and DataJoint are installed, "vr4mice" repository is loaded, and "base_schemas" are pip-installed:  
+   ```bash
+   pip install notebook datajoint==0.12.5b1
+   pip install base/base_actions/
+   pip install base/base_min_schemas/
+   ```
+2. Make sure the "graphviz" package is available if you want to display images (i.e. schema diagrams): `sudo apt install -y graphviz`
+3. Update the information in the `env.py` file (IP of server, username provided by administrator)
+4. From the current directory, start `jupyter notebook` and launch a Python3 kernel
+5. `%run env.py` to load environmental variables
+6. `%run run.py connect` to connect to the DJ database
+7. Bravo! Data can now be fetched with ```vr4mice.Dataset()``` (relative imports were done in the `run.py` script)
+
+
 ## Deployment (server)
 
 ### Server deployment (database + client containers)
