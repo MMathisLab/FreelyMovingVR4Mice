@@ -29,9 +29,10 @@ RUN pip install datajoint==0.14 \
     # TODO: make pip via req
     # with newer 2.0.3, tom's code fails 
 
-ARG user_name
-ARG uid
-ARG gid
+# Default values for CI workflow, will be overridden by build args
+ARG user_name=user
+ARG uid=1000
+ARG gid=1000
 #ARG base_schemas_path
 #ARG base_actions_path
 

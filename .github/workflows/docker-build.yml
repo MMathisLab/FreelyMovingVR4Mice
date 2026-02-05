@@ -5,9 +5,6 @@ on:
     paths:
       - 'dj_pipeline/Dockerfile'
       - '.github/workflows/docker-build.yml'
-  pull_request:
-    paths:
-      - 'dj_pipeline/Dockerfile'
 
 jobs:
   build:
