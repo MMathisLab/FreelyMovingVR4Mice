@@ -691,10 +691,10 @@ class TestPopulateRig:
         with patch("populate_rig.dj_schema") as mock_schema:
             mock_schema.vr4mice.Dataset.return_value.__and__.return_value.fetch.return_value = []
 
-            # In GUI mode, should return False when npy is missing
+            # In GUI mode, should return None when npy is missing (early return)
             with patch.dict(os.environ, {"GUI": "true"}):
                 result = populate_rig(path=str(tmp_path), gui="true")
-                assert result is False
+                assert result is None
 
     def test_populate_rig_processes_npy_only(self, tmp_path):
         """populate_rig should process .npy files when no pickle files exist."""

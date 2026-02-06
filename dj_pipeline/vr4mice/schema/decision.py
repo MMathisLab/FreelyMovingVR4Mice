@@ -106,9 +106,9 @@ class ExperimentMember(dj.Imported):
                 as_dict=True
             )
 
-            if not label_info:
+            if not label_info or len(label_info) > 1:
                 raise ValueError(
-                    f"Session label '{session_label}' not found in SessionLabel table"
+                    f"Session label '{session_label}' not found in SessionLabel table or multiple entries found"
                 )
 
             label_info = label_info[0]
@@ -346,6 +346,8 @@ class PredictionModel(dj.Computed):
         if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
+        logger.info(f"{self.__class__.__name__} population started for {key}.")
+
         try:
             # Skip training stage - only train models for dual_occlusion and multi_occlusion
             stage_name = (ExperimentStage & key).fetch1("stage_name")
@@ -402,9 +404,21 @@ class PredictionModel(dj.Computed):
                 )["y"].transform("first")
 
             if "trial_history" in label_set:
-                interpolated_df["trial_history"] = interpolated_df.groupby(
-                    ["dataset", "trial"]
-                )["trial_left_choice"].transform(lambda x: x.shift(1).fillna(0))
+                trial_choices = (
+                    interpolated_df.groupby(["dataset", "trial"], as_index=False)
+                    .agg({"trial_left_choice": "first"})
+                    .sort_values(["dataset", "trial"])
+                )
+                trial_choices["trial_history"] = (
+                    trial_choices.groupby("dataset")["trial_left_choice"]
+                    .shift(1)
+                    .fillna(0)
+                )
+                interpolated_df = interpolated_df.merge(
+                    trial_choices[["dataset", "trial", "trial_history"]],
+                    on=["dataset", "trial"],
+                    how="left",
+                )
 
             random_state = 42
 
@@ -521,7 +535,7 @@ class DecisionPoints(dj.Computed):
     """Decision point and corresponding per-trial data."""
 
     definition = """
-    -> PredictionModel
+    -> PredictionModel.SessionPrediction
     -> DecisionThreshold
     ---
     trial: <blob>                 # trial corresponding to the timestamp
@@ -538,6 +552,8 @@ class DecisionPoints(dj.Computed):
         """Compute decision points from model predictions and trials."""
         if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
+
+        logger.info(f"{self.__class__.__name__} population started for {key}.")
 
         try:
             threshold_uncertainty = float(

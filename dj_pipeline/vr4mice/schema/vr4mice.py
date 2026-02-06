@@ -87,6 +87,7 @@ class FailedSession(dj.Manual):
     """
 
     def add_entry(self, dataset_key, table_name, error_message, skip_duplicates=True):
+        """Insert a failed-session record for a dataset and table."""
         self.insert1(
             {
                 "dataset": dataset_key,
@@ -95,6 +96,48 @@ class FailedSession(dj.Manual):
             },
             skip_duplicates=skip_duplicates,
         )
+
+    @classmethod
+    def should_skip(cls, key, table_name, logger=None) -> bool:
+        """Return True if dataset is in FailedSession; optionally log a warning."""
+        dataset = None
+        if isinstance(key, dict):
+            dataset = key.get("dataset")
+        else:
+            dataset = key
+
+        if not dataset:
+            return False
+
+        failed = cls() & {"dataset": dataset}
+        if failed:
+            if logger:
+                failed_rows = failed.fetch(
+                    "failed_table_name", "error_message", as_dict=True
+                )
+                table_rows = [
+                    row
+                    for row in failed_rows
+                    if row.get("failed_table_name") == table_name
+                ]
+                target_rows = table_rows if table_rows else failed_rows
+                error_msg = None
+                if target_rows:
+                    error_msg = target_rows[-1].get("error_message")
+                short_error = None
+                if error_msg:
+                    short_error = (
+                        (error_msg[:160] + "...") if len(error_msg) > 160 else error_msg
+                    )
+                if short_error:
+                    logger.warning(
+                        f"skip {table_name} {dataset} (FailedSession: {short_error})"
+                    )
+                else:
+                    logger.warning(f"skip {table_name} {dataset} (FailedSession)")
+            return True
+
+        return False
 
 
 @schema
