@@ -5,12 +5,12 @@ source utils.sh
 log "Start backup procedure!"
 
 databases=$(mysql $group$s1_prefix $ssl -e "SHOW DATABASES;" |
-	grep -Ev "(Database|information_schema|performance_schema|mysql|sys|base|base_analysis|dlc)")
+	grep -Ev "(Database|information_schema|performance_schema|mysql|sys|base|inputs_videos|dlc)") #base_analysis|dlc)")
 
 log "Detected databases to backup: $databases"
 
 # if needed to define manually the databases to sync
-# databases=(interpolated_trajectories)
+databases=(dlc)
 
 #for db in "${databases[@]}"; do
 for db in $databases; do
@@ -59,10 +59,10 @@ tables=$(mysql $group$s1_prefix $ssl -e "SHOW TABLES IN $db;" -s --skip-column-n
 	    msg="Dumping and importing database: $db, table $table"
 	    
 	    cmd3="mysqldump $group$s1_prefix $ssl --ignore-table='$db'.'~log' --max_allowed_packet=1G  \
-		    --skip-add-drop-table --insert-ignore $db $table \
+		    --skip-add-drop-table --insert-ignore '$db' '$table' \
 			| sed 's/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g' \
 				    | sed 's/INSERT INTO/INSERT IGNORE INTO/g' \
-				    | mysql $group$aws_prefix $db --max_allowed_packet=1G"
+				    | mysql $group$aws_prefix '$db' --max_allowed_packet=1G"
 	    
 	    execute_command "$cmd3" "$msg"
 	    
