@@ -346,6 +346,8 @@ class PredictionModel(dj.Computed):
         if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
+        logger.info(f"{self.__class__.__name__} population started for {key}.")
+
         try:
             # Skip training stage - only train models for dual_occlusion and multi_occlusion
             stage_name = (ExperimentStage & key).fetch1("stage_name")
@@ -533,7 +535,7 @@ class DecisionPoints(dj.Computed):
     """Decision point and corresponding per-trial data."""
 
     definition = """
-    -> PredictionModel
+    -> PredictionModel.SessionPrediction
     -> DecisionThreshold
     ---
     trial: longblob                 # trial corresponding to the timestamp
@@ -550,6 +552,8 @@ class DecisionPoints(dj.Computed):
         """Compute decision points from model predictions and trials."""
         if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
+
+        logger.info(f"{self.__class__.__name__} population started for {key}.")
 
         try:
             threshold_uncertainty = float(
