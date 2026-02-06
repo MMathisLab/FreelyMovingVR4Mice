@@ -57,7 +57,7 @@ def main():
         interpolated_trajectories,
         session_metrics,
         latency_tests,
-        #inputs_videos,
+        # inputs_videos,
         decision,
     )
 
@@ -141,15 +141,18 @@ def main():
             lambda: decision.PredictionModel().populate(),
         )
         run_step(
-            "decision.DecisionPoints.populate", lambda: decision.DecisionPoints().populate()
+            "decision.DecisionPoints.populate",
+            lambda: decision.DecisionPoints().populate(),
         )
     else:
 
         from vr4mice.schema import (
             inputs_videos,
         )
+
         run_step(
-            "inputs_videos.RawVideo.populate", lambda: inputs_videos.RawVideo().populate()
+            "inputs_videos.RawVideo.populate",
+            lambda: inputs_videos.RawVideo().populate(),
         )
         run_step(
             "inputs_videos.ProcessedVideo.populate",
