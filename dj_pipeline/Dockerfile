@@ -15,6 +15,8 @@ RUN apt-get update -y && apt-get install -yy --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
+RUN pip install -U pip setuptools wheel packaging
+
 # Install packages - base image already has numpy/pandas/jupyter from conda
 # Only override what's necessary, add test dependencies
 RUN pip install --no-deps datajoint==2.0.1 && \
@@ -22,9 +24,10 @@ RUN pip install --no-deps datajoint==2.0.1 && \
     pip install seaborn umap-learn black==22.6 && \
     pip install pytest pytest-cov scipy tables 
 
-ARG user_name
-ARG uid
-ARG gid
+# Default values for CI workflow, will be overridden by build args
+ARG user_name=user
+ARG uid=1000
+ARG gid=1000
 #ARG base_schemas_path
 #ARG base_actions_path
 
