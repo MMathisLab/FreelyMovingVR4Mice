@@ -1,4 +1,4 @@
-FROM deeplabcut/deeplabcut:3.0.0-core-cuda12.4-cudnn9
+FROM deeplabcut/deeplabcut:3.0.0-jupyter-cuda12.4-cudnn9
 #mysql:debian
 
 WORKDIR /

@@ -74,7 +74,11 @@ class InterpolatedTrials(dj.Computed):
                 offline_kinematics_df = (dlc.OfflineKinematics()).get_data(
                     columns=["heading_dir", "head_angle"], key=key
                 )
-                df = pd.concat([df, offline_kinematics_df], axis=1)
+                # TEMP WORKAROUND: DJ 2.0 fetch(as_dict=True) includes primary key
+                # columns even when specific columns are requested. Revert once
+                # datajoint fixes fetch to match DJ 0.14 behavior.
+                ok_cols = [c for c in offline_kinematics_df.columns if c not in df.columns]
+                df = pd.concat([df, offline_kinematics_df[ok_cols]], axis=1)
                 df = df[df.iti == 0.0]
                 interpolated_df = interpolate_j_shaped(df, box_df=box_df)
                 interpolated_df = interpolated_df.drop(
