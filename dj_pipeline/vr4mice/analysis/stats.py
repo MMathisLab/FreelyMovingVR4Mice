@@ -154,7 +154,9 @@ def get_multi_performance_p_val(trial_df: pd.DataFrame, y_var: str) -> pd.DataFr
         pd.DataFrame: DataFrame containing p-values for each pair of apertures with columns
             'aperture1', 'aperture2', and 'p_value'.
     """
-    mean_mouse = trial_df.groupby(["dataset", "aperture"], as_index=False).mean()
+    mean_mouse = trial_df.groupby(["dataset", "aperture"], as_index=False).mean(
+        numeric_only=True
+    )
     p_values = []
     for ap1, ap2 in itertools.combinations(mean_mouse.aperture.unique(), 2):
         ap1_data = mean_mouse[mean_mouse["aperture"] == ap1][y_var]

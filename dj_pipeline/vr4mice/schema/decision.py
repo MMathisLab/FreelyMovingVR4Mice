@@ -280,6 +280,15 @@ class LabelSet(dj.Lookup):
                 ],
             ),
             7: ("Priors", ["trial_history", "trial_init_x", "trial_init_y"]),
+            8: (
+                "Lateral Kinematics",
+                [
+                    "x",
+                    "velocity_x",
+                    "heading_dir_sin",
+                    "head_angle_sin",
+                ],
+            ),
         }
 
         for set_id, (name, labels) in custom_sets.items():
@@ -450,6 +459,7 @@ class PredictionModel(dj.Computed):
             bic = regression.compute_bic(
                 df_model_per_trial["proba_left"].values.reshape(-1, 1),
                 df_model_per_trial["trial_left_choice"].values,
+                n_params=len(label_set) + 1,
             )
 
             self.insert1(
@@ -480,6 +490,7 @@ class PredictionModel(dj.Computed):
                     ] = regression.compute_bic_sliding_window(
                         trial_df["proba_left"].values.reshape(-1, 1),
                         trial_df["trial_left_choice"].values,
+                        n_params=len(label_set) + 1,
                         window_size=10,
                     )
 
@@ -516,17 +527,11 @@ class DecisionThreshold(dj.Lookup):
     threshold_uncertainty : varchar(10)
     """
     contents = [
-        ("0.0",),
         ("0.1",),
         ("0.2",),
         ("0.3",),
         ("0.4",),
         ("0.5",),
-        ("0.6",),
-        ("0.7",),
-        ("0.8",),
-        ("0.9",),
-        ("1.0",),
     ]
 
 
