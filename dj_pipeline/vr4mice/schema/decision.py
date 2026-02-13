@@ -457,7 +457,7 @@ class PredictionModel(dj.Computed):
 
             # Across all sessions BIC
             bic = regression.compute_bic(
-                df_model_per_trial["proba_left"].values.reshape(-1, 1),
+                df_model_per_trial["proba_left"].values,
                 df_model_per_trial["trial_left_choice"].values,
                 n_params=len(label_set) + 1,
             )
@@ -488,7 +488,7 @@ class PredictionModel(dj.Computed):
                     bic_per_timestep[
                         trial_df.index
                     ] = regression.compute_bic_sliding_window(
-                        trial_df["proba_left"].values.reshape(-1, 1),
+                        trial_df["proba_left"].values,
                         trial_df["trial_left_choice"].values,
                         n_params=len(label_set) + 1,
                         window_size=10,
