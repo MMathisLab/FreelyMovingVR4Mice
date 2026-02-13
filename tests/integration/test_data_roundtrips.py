@@ -16,7 +16,6 @@ Tests will skip gracefully if data is not available.
 """
 
 import numpy as np
-import pandas as pd
 import pytest
 
 # Import transformation functions
@@ -24,8 +23,6 @@ from dlc_helpers import (
     df_to_dj,
     dj_to_df,
     h5_to_dj,
-    dlc_interpolate,
-    dlc_savgol_filter,
     filter_dlc,
     compute_head_angles,
     find_closest_indices,
@@ -43,6 +40,10 @@ from populate_rig import (
     parse_date,
     get_files_paths,
 )
+
+# Golden dataset sizes (Nightingale_2024-08-16_1).
+# If the golden dataset changes, update these values here.
+GOLDEN_STATE_ROWS = 339045      # rows in pickle state array
 
 
 # ==============================================================================
@@ -302,10 +303,10 @@ class TestStateArrayExtraction:
         require_nightingale_data,
         integration_pickle_data
     ):
-        """Golden dataset state should have 339045 rows."""
+        """Golden dataset state should have expected number of rows."""
         pickle_data = integration_pickle_data
         x_pos = get_state(raw_data=pickle_data, key="x_pos")
-        assert len(x_pos) == 339045
+        assert len(x_pos) == GOLDEN_STATE_ROWS
 
     def test_state_extraction_sample_values(
         self,
@@ -336,20 +337,9 @@ class TestStateArrayExtraction:
             assert actual == pytest.approx(expected, rel=1e-10), \
                 f"velocity[{i}] mismatch: {actual} != {expected}"
 
-        # Golden Baseline: Verify statistical properties
-        x_pos = extracted["x_pos"]
-        velocity = extracted["velocity"]
-
-        # These are approximate values from the golden dataset
-        # that should remain constant across migrations
-        assert np.nanmean(x_pos) == pytest.approx(np.nanmean(x_pos), rel=1e-6)
-        assert np.nanstd(x_pos) == pytest.approx(np.nanstd(x_pos), rel=1e-6)
-        assert np.nanmin(x_pos) == pytest.approx(np.nanmin(x_pos), rel=1e-6)
-        assert np.nanmax(x_pos) == pytest.approx(np.nanmax(x_pos), rel=1e-6)
-
         # Verify no unexpected NaN values introduced
         original_nan_count = np.isnan(pickle_data["state"][:, state_index_map["x_pos"]]).sum()
-        extracted_nan_count = np.isnan(x_pos).sum()
+        extracted_nan_count = np.isnan(extracted["x_pos"]).sum()
         assert extracted_nan_count == original_nan_count, \
             f"NaN count changed: {original_nan_count} -> {extracted_nan_count}"
 

@@ -1,15 +1,17 @@
 """
-Integration tests for run.py mode handlers using the Nightingale golden dataset.
+Integration tests for the vr4mice pipeline using the Nightingale golden dataset.
 
-These tests verify the full pipeline execution for each mode in run.py:
+Tests are organized by pipeline mode (matching run.py's mode argument):
 - connect: Schema imports and database connectivity
 - populate: Dataset, MouseState, State, Video, DLC table population
-- analysis: DataFrame, BoxDataFrame, GitCommit population
+- analysis: DataFrame, BoxDataFrame population
 - dlc: DLCProcessor, DLCKptsDf, SyncDLCKptsDf, OfflineKinematics population
-- summary: SummaryPlots, TrackingSummaryPlots generation
-- interp: InterpolatedTrials, MeanXYTrajectory, SessionMetrics, TrialMetrics
-- latency: SignalsPhotodiode, SignalsPhotodiodeAligned, AllLatencies
+- interp: InterpolatedTrials, MeanXYTrajectory, YBinnedXYTrajectory,
+          MeanVelocities, SessionMetrics, TrialMetrics
+- latency: SignalsPhotodiode (table existence only, no valid photodiode data)
 - fetch: GUI menu .npy file creation
+
+Not tested: SummaryPlots, TrackingSummaryPlots (upstream design issues, see comments at bottom)
 
 Test Strategy:
 - Sequential pipeline testing with shared database session
@@ -17,24 +19,29 @@ Test Strategy:
 - Module-scoped fixtures for efficiency
 
 Dependencies:
-- Docker Desktop running with WSL integration
+- Docker Desktop running (testcontainers auto-provisions MySQL)
 - Nightingale golden dataset in test_data/golden_dataset/
 
 Run with:
-    cd scene/tests
-    sg docker -c "bash -c 'source ../venv/bin/activate && python -m pytest integration/test_run_modes.py -v'"
+    cd scene/dj_pipeline
+    docker-compose -f docker-compose.test.yml run --rm tests \\
+        bash -c "cd tests && python -m pytest integration/test_run_modes.py -v"
 """
 
 import json
-import os
 import pickle
 import shutil
-from datetime import date
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import pytest
+
+# Golden dataset sizes (Nightingale_2024-08-16_1).
+# These are properties of the golden dataset, not configuration.
+# If the golden dataset changes, update these values here.
+GOLDEN_STATE_ROWS = 339045      # rows in pickle state array
+GOLDEN_DLC_FRAMES = 281748      # frames in DLC HDF5 file
+GOLDEN_PROC_FRAMES = 281876     # frames in PROC file (DLCProcessor output)
 
 
 # ==============================================================================
@@ -279,13 +286,25 @@ def pipeline_test_data(test_data_dir, test_dataset_name, test_camera_prefix, tmp
 @pytest.fixture(scope="module")
 def populated_db(dj_config, pipeline_test_data, test_dataset_name, test_camera_prefix):
     """
-    Run populate mode equivalent and return database handle.
+    Populate input tables using check_keys() + populate() from populate_rig.py.
 
-    This is the foundation fixture - populates Dataset, MouseState, State, Video, DLC tables.
+    This bypasses populate_rig() itself because it hardcodes Docker-specific
+    paths (/data, /data/dlc_video) that don't work with temp directories.
+    What we exercise here is the validation/transformation/insertion core:
+    - check_keys() validates required attributes exist or can be derived
+    - populate() applies transformers and local_defs (get_state, get_path, etc.)
+    - Real table.insert1() inserts the data
+
+    What we skip: file discovery (get_filenames), GUI/non-GUI branching,
+    get_session_incr(), and populate_rig()'s error handling wrapper.
+
+    Additionally, we merge JSON video metadata into raw_data so the Video table
+    gets real fps/width/height values. In the gui=False production path, these
+    would be None since video_meta comes from the .npy GUI file.
     """
-    from datetime import date
     from vr4mice.schema import vr4mice
-    from helpers_dj import get_state
+    from vr4mice.actions.populate_rig import check_keys, populate, get_files_paths
+    from vr4mice.actions.keys2tables_vr4mice import vr4mice as vr4mice_schema_dict
 
     # Load test data
     with open(pipeline_test_data["pickle_path"], "rb") as f:
@@ -294,73 +313,66 @@ def populated_db(dj_config, pipeline_test_data, test_dataset_name, test_camera_p
     with open(pipeline_test_data["json_path"]) as f:
         json_data = json.load(f)
 
-    # 1. Insert Dataset
-    dataset_entry = {
-        "dataset": test_dataset_name,
-        "exp_teensy_filepath": str(pipeline_test_data["pickle_path"]),
-        "exp_session_filepath": "none",
-        "session_label": pickle_data["session_label"][0],
-    }
-    vr4mice.Dataset.insert1(dataset_entry, skip_duplicates=True)
+    # Set up directory structure matching what get_path() expects.
+    # get_path() resolves: Path(srcf) / Path(file_info["dst"]).name / filename
+    # So we need DLC/TS/PROC files in a "dlc_video" subdir under srcf.
+    data_dir = pipeline_test_data["data_dir"]
+    srcf = str(data_dir.parent)  # tmp_dir, parent of "data/"
+    dlc_video_dir = data_dir.parent / "dlc_video"
+    dlc_video_dir.mkdir(exist_ok=True)
+    for src_key in ["dlc_path", "ts_path", "proc_path"]:
+        src = pipeline_test_data[src_key]
+        dst = dlc_video_dir / src.name
+        if not dst.exists() and src.exists():
+            if src.is_dir():
+                shutil.copytree(src, dst)
+            else:
+                shutil.copy(src, dst)
 
-    # 2. Insert MouseState
-    mousestate_entry = {
-        "dataset": test_dataset_name,
-        "x_pos": get_state(raw_data=pickle_data, key="x_pos"),
-        "z_pos": get_state(raw_data=pickle_data, key="z_pos"),
-        "head_dir": get_state(raw_data=pickle_data, key="head_dir"),
-        "mouse_can_report": get_state(raw_data=pickle_data, key="mouse_can_report"),
-        "iti": get_state(raw_data=pickle_data, key="iti"),
-        "obj_left": get_state(raw_data=pickle_data, key="obj_left"),
-        "mouse_report_correct": get_state(raw_data=pickle_data, key="mouse_report_correct"),
-        "report_left": get_state(raw_data=pickle_data, key="report_left"),
-        "report_right": get_state(raw_data=pickle_data, key="report_right"),
-        "velocity": get_state(raw_data=pickle_data, key="velocity"),
-    }
-    vr4mice.MouseState.insert1(mousestate_entry, skip_duplicates=True)
+    # Build raw_data the same way populate_rig() does for gui=False:
+    # 1. get_files_paths() generates file path info from dataset name
+    # 2. Merge with pickle data
+    files_info = get_files_paths(
+        dataset=test_dataset_name,
+        remote_src=None,
+        local_src=srcf,
+        data=str(data_dir),
+    )
+    raw_data = {**files_info, **pickle_data}
 
-    # 3. Insert State
-    state_entry = {
-        "dataset": test_dataset_name,
-        "start_time": pickle_data["start_time"],
-        "episode": pickle_data["episode"],
-        "step": pickle_data["step"],
-        "step_time": pickle_data["step_time"],
-        "action": pickle_data["action"],
-        "reward": pickle_data["reward"],
-        "terminal": pickle_data["terminal"],
-        "dlc_read_time": pickle_data.get("dlc_read_time"),
-        "dlc_x": pickle_data["dlc_x"],
-        "dlc_y": pickle_data["dlc_y"],
-        "dlc_heading": pickle_data["dlc_heading"],
-    }
-    vr4mice.State.insert1(state_entry, skip_duplicates=True)
+    # Merge JSON video metadata so Video table gets real values.
+    # In production gui=False, video_meta values are None. We override
+    # them here to get better test coverage of the Video insertion path.
+    raw_data["video_meta"] = json_data["video_meta"]
+    raw_data["doe"] = files_info["doe"]
 
-    # 4. Insert Video
-    doe = date.fromisoformat(json_data["doe"])
-    video_entry = {
-        "dataset": test_dataset_name,
-        "camera": test_camera_prefix,
-        "doe": doe,
-        "duration": json_data["video_meta"]["duration"],
-        "fps": json_data["video_meta"]["fps"],
-        "width": json_data["video_meta"]["width"],
-        "height": json_data["video_meta"]["height"],
-        "video_filepath": str(pipeline_test_data["data_dir"] / json_data["video_path"]["filename"]),
-        "timestamp_filepath": str(pipeline_test_data["ts_path"]),
-    }
-    vr4mice.Video.insert1(video_entry, skip_duplicates=True)
+    # Run check_keys + populate for each table, same as populate_rig()'s inner loop
+    for table_name, attributes in vr4mice_schema_dict["tables"].items():
+        flag, none_vals = check_keys(
+            attributes, raw_data, table_name, schema=vr4mice_schema_dict
+        )
+        if flag:
+            raw_data = {**raw_data, **none_vals}
+            populate(
+                table_name,
+                attributes,
+                raw_data,
+                schema=vr4mice_schema_dict,
+                srcf=srcf,
+                dstf="processed",
+                move=False,
+            )
 
-    # 5. Insert DLC
-    dlc_entry = {
-        "dataset": test_dataset_name,
-        "camera": test_camera_prefix,
-        "doe": doe,
-        "model_name": "DLC",
-        "keypoints_filepath": str(pipeline_test_data["dlc_path"]),
-        "proc_filepath": str(pipeline_test_data["proc_path"]),
-    }
-    vr4mice.DLC.insert1(dlc_entry, skip_duplicates=True)
+    # Verify the 5 core tables populated (fail fast if pipeline broke)
+    assert len(vr4mice.Dataset()) == 1, "Dataset not populated"
+    assert len(vr4mice.MouseState()) == 1, "MouseState not populated"
+    assert len(vr4mice.State()) == 1, "State not populated"
+    assert len(vr4mice.Video()) == 1, "Video not populated"
+    assert len(vr4mice.DLC()) == 1, "DLC not populated"
+
+    # Build keys for downstream test lookups.
+    # parse_date() returns datetime; convert to date for key matching.
+    doe = files_info["doe"].date() if hasattr(files_info["doe"], "date") else files_info["doe"]
 
     return {
         "vr4mice": vr4mice,
@@ -431,7 +443,6 @@ class TestConnectMode:
         assert hasattr(latency_tests, 'SignalsPhotodiodeAligned')
         assert hasattr(latency_tests, 'AllLatencies')
 
-    @pytest.mark.skip(reason="base_schemas has non-CamelCase class names incompatible with DataJoint 2.0")
     def test_base_schema_imports(self, dj_config):
         """Verify base schema imports without CamelCase errors."""
         from vr4mice.schema import base
@@ -476,7 +487,7 @@ class TestPopulateMode:
         x_pos = np.array(result["x_pos"])
 
         # Expected from golden dataset
-        assert len(x_pos) == 339045, f"x_pos length {len(x_pos)} != 339045"
+        assert len(x_pos) == GOLDEN_STATE_ROWS, f"x_pos length {len(x_pos)} != {GOLDEN_STATE_ROWS}"
 
         # Check sample values
         golden_baseline.check_sample_values("mousestate_x_pos", {"x_pos": x_pos})
@@ -516,7 +527,7 @@ class TestPopulateMode:
         result = (vr4mice.State & key).fetch1()
         episode = np.array(result["episode"])
 
-        assert len(episode) == 339045
+        assert len(episode) == GOLDEN_STATE_ROWS
         golden_baseline.check_sample_values("state_episode", {"episode": episode})
 
     def test_video_table_populated(self, populated_db, golden_baseline):
@@ -579,9 +590,7 @@ class TestAnalysisMode:
         # Get data
         df = base_analysis.DataFrame().get_data(key)
 
-        # Skip if DataFrame wasn't populated (requires base.Base table)
-        if df is False or df is None:
-            pytest.skip("DataFrame not populated - requires base.Base table data")
+        assert df is not False and df is not None, "DataFrame not populated - expected rows after populate()"
 
         expected_columns = [
             "x", "y", "trial", "iti", "velocity",
@@ -598,9 +607,7 @@ class TestAnalysisMode:
         key = populated_db["dataset_key"]
         df = base_analysis.DataFrame().get_data(key)
 
-        # Skip if DataFrame wasn't populated (requires base.Base table)
-        if df is False or df is None:
-            pytest.skip("DataFrame not populated - requires base.Base table data")
+        assert df is not False and df is not None, "DataFrame not populated - expected rows after populate()"
 
         # Check key columns
         data_dict = {
@@ -630,9 +637,7 @@ class TestAnalysisMode:
 
         box_df = base_analysis.BoxDataFrame().get_data(key)
 
-        # Skip if BoxDataFrame wasn't populated (depends on DataFrame)
-        if box_df is False or box_df is None:
-            pytest.skip("BoxDataFrame not populated - requires DataFrame to be populated first")
+        assert box_df is not False and box_df is not None, "BoxDataFrame not populated - expected rows after populate()"
 
         # Should have box coordinates
         assert "l_box_x_min" in box_df.columns
@@ -670,7 +675,7 @@ class TestDlcMode:
         heading = np.array(result["heading_direction"])
 
         # From golden: PROC has 281,876 frames
-        assert len(x_pos) == 281876, f"x_pos length {len(x_pos)} != 281876"
+        assert len(x_pos) == GOLDEN_PROC_FRAMES, f"x_pos length {len(x_pos)} != {GOLDEN_PROC_FRAMES}"
 
         golden_baseline.check_sample_values(
             "dlcprocessor_kinematics",
@@ -695,10 +700,10 @@ class TestDlcMode:
         df = dlc.DLCKptsDf().get_data(key)
 
         # Should have 281,748 frames (from golden DLC file)
-        assert len(df) == 281748, f"DLC DataFrame length {len(df)} != 281748"
+        assert len(df) == GOLDEN_DLC_FRAMES, f"DLC DataFrame length {len(df)} != {GOLDEN_DLC_FRAMES}"
 
-        # Should have bodypart columns
-        assert "nose" in str(df.columns) or ("nose", "x") in df.columns
+        # Should have bodypart columns (MultiIndex: bodypart, coord)
+        assert ("nose", "x") in df.columns, "Missing expected bodypart column ('nose', 'x')"
 
     def test_syncdlckptsdf_populates(self, populated_db, golden_baseline):
         """Verify SyncDLCKptsDf.populate() creates entry."""
@@ -731,14 +736,19 @@ class TestDlcMode:
 
         df = dlc.OfflineKinematics().get_data(key)
 
-        if df is not None and df is not False:
-            # Should have kinematic columns
-            assert "heading_dir" in df.columns or "head_angle" in df.columns
+        assert df is not False and df is not None, "OfflineKinematics not populated - expected rows after populate()"
 
-            golden_baseline.check_sample_values(
-                "offlinekinematics",
-                {col: df[col].values for col in df.columns if col not in ["dataset"]}
-            )
+        # Should have both kinematic columns (defined in OfflineKinematics schema)
+        assert "heading_dir" in df.columns, "Missing expected column 'heading_dir'"
+        assert "head_angle" in df.columns, "Missing expected column 'head_angle'"
+
+        # Exclude primary key columns (dataset, camera, doe, model_name) - these
+        # contain non-numeric types (dates, strings) that don't round-trip through JSON.
+        key_columns = {"dataset", "camera", "doe", "model_name"}
+        golden_baseline.check_sample_values(
+            "offlinekinematics",
+            {col: df[col].values for col in df.columns if col not in key_columns}
+        )
 
 
 # ==============================================================================
@@ -750,7 +760,13 @@ class TestInterpMode:
 
     @pytest.fixture(autouse=True)
     def setup_dependencies(self, populated_db):
-        """Ensure analysis and dlc modes have run."""
+        """Ensure analysis and dlc modes have run.
+
+        These populate() calls are safe to repeat. If the table already has
+        data (e.g., from TestAnalysisMode or TestDlcMode running first),
+        populate() returns immediately without re-computing anything. This
+        guarantees interp tests work regardless of test execution order.
+        """
         from vr4mice.schema import base_analysis, dlc
 
         # Analysis dependencies
@@ -780,11 +796,12 @@ class TestInterpMode:
 
         result = (interpolated_trajectories.InterpolatedTrials & key).fetch(as_dict=True)
 
-        if len(result) > 0:
-            data = result[0]
-            expected_keys = ["x", "y", "trial", "velocity", "aperture"]
-            for k in expected_keys:
-                assert k in data, f"Missing key: {k}"
+        assert len(result) > 0, "InterpolatedTrials not populated - expected rows after populate()"
+
+        data = result[0]
+        expected_keys = ["x", "y", "trial", "velocity", "aperture"]
+        for k in expected_keys:
+            assert k in data, f"Missing key: {k}"
 
     def test_meanxytrajectory_populates(self, populated_db, golden_baseline):
         """Verify MeanXYTrajectory.populate() creates entry."""
@@ -813,16 +830,17 @@ class TestInterpMode:
 
         result = (session_metrics.SessionMetrics & key).fetch(as_dict=True)
 
-        if len(result) > 0:
-            data = result[0]
+        assert len(result) > 0, "SessionMetrics not populated - expected rows after populate()"
 
-            # Verify expected metrics exist
-            assert "session_reward" in data
-            assert "session_trial_duration" in data
-            assert "session_max_trial_number" in data
+        data = result[0]
 
-            golden_baseline.check_scalar("session_reward", data["session_reward"])
-            golden_baseline.check_scalar("session_max_trial_number", data["session_max_trial_number"])
+        # Verify expected metrics exist
+        assert "session_reward" in data
+        assert "session_trial_duration" in data
+        assert "session_max_trial_number" in data
+
+        golden_baseline.check_scalar("session_reward", data["session_reward"])
+        golden_baseline.check_scalar("session_max_trial_number", data["session_max_trial_number"])
 
     def test_trialmetrics_populates(self, populated_db, golden_baseline):
         """Verify TrialMetrics.populate() creates entry."""
@@ -832,6 +850,52 @@ class TestInterpMode:
 
         count = len(session_metrics.TrialMetrics())
         golden_baseline.check_row_count("trialmetrics", count)
+
+    def test_ybinnedxytrajectory_populates(self, populated_db, golden_baseline):
+        """Verify YBinnedXYTrajectory.populate() creates entry."""
+        from vr4mice.schema import interpolated_trajectories
+
+        interpolated_trajectories.InterpolatedTrials.populate()
+        interpolated_trajectories.YBinnedXYTrajectory.populate()
+
+        count = len(interpolated_trajectories.YBinnedXYTrajectory())
+        golden_baseline.check_row_count("ybinnedxytrajectory", count)
+
+    def test_ybinnedxytrajectory_columns(self, populated_db):
+        """Verify YBinnedXYTrajectory has expected columns."""
+        from vr4mice.schema import interpolated_trajectories
+
+        key = populated_db["dataset_key"]
+        result = (interpolated_trajectories.YBinnedXYTrajectory & key).fetch(as_dict=True)
+
+        assert len(result) > 0, "YBinnedXYTrajectory not populated - expected rows after populate()"
+
+        data = result[0]
+        for k in ["aperture", "bin_centers", "x_flipped", "y"]:
+            assert k in data, f"Missing key: {k}"
+
+    def test_meanvelocities_populates(self, populated_db, golden_baseline):
+        """Verify MeanVelocities.populate() creates entry."""
+        from vr4mice.schema import interpolated_trajectories
+
+        interpolated_trajectories.InterpolatedTrials.populate()
+        interpolated_trajectories.MeanVelocities.populate()
+
+        count = len(interpolated_trajectories.MeanVelocities())
+        golden_baseline.check_row_count("meanvelocities", count)
+
+    def test_meanvelocities_columns(self, populated_db):
+        """Verify MeanVelocities has expected columns."""
+        from vr4mice.schema import interpolated_trajectories
+
+        key = populated_db["dataset_key"]
+        result = (interpolated_trajectories.MeanVelocities & key).fetch(as_dict=True)
+
+        assert len(result) > 0, "MeanVelocities not populated - expected rows after populate()"
+
+        data = result[0]
+        for k in ["aperture", "trial_length", "velocity", "velocity_x", "velocity_y", "velocity_x_fliped"]:
+            assert k in data, f"Missing key: {k}"
 
 
 # ==============================================================================
@@ -849,70 +913,20 @@ class TestLatencyMode:
         # This test verifies the table structure exists
         assert hasattr(vr4mice, 'SignalsPhotodiode')
 
-    @pytest.mark.skip(reason="SignalsPhotodiode population requires specific PROC data format")
-    def test_signalsphotodiode_populates(self, populated_db, golden_baseline):
-        """Verify SignalsPhotodiode.populate() creates entry."""
-        vr4mice = populated_db["vr4mice"]
-
-        vr4mice.SignalsPhotodiode.populate()
-
-        count = len(vr4mice.SignalsPhotodiode())
-        golden_baseline.check_row_count("signalsphotodiode", count)
-
-    @pytest.mark.skip(reason="Depends on SignalsPhotodiode population")
-    def test_signalsphotodiodealigned_populates(self, populated_db, golden_baseline):
-        """Verify SignalsPhotodiodeAligned.populate() creates entry."""
-        from vr4mice.schema import latency_tests
-
-        latency_tests.SignalsPhotodiodeAligned.populate()
-
-        count = len(latency_tests.SignalsPhotodiodeAligned())
-        golden_baseline.check_row_count("signalsphotodiodealigned", count)
+    # NOT TESTED: SignalsPhotodiode.populate() and SignalsPhotodiodeAligned.populate()
+    # The golden dataset's photodiode signal fails the has_signal() quality check
+    # (mean=0.17, threshold=8.0), so populate() produces 0 rows regardless.
+    # Testing these requires a dataset with valid photodiode recordings.
 
 
-# ==============================================================================
-# Summary Mode Tests
-# ==============================================================================
-
-class TestSummaryMode:
-    """Tests for summary mode - requires analysis (DataFrame + BoxDataFrame)."""
-
-    @pytest.fixture(autouse=True)
-    def setup_dependencies(self, populated_db):
-        """Ensure analysis mode has run."""
-        from vr4mice.schema import base_analysis
-
-        base_analysis.DataFrame.populate()
-        base_analysis.BoxDataFrame.populate()
-
-    @pytest.mark.skip(reason="SummaryPlots requires EMAIL env var and plot generation infrastructure")
-    def test_summaryplots_populates(self, populated_db, golden_master, monkeypatch):
-        """Verify SummaryPlots.populate() creates entry."""
-        from vr4mice.schema import base_analysis
-
-        # Disable email sending
-        monkeypatch.setenv("EMAIL", "false")
-
-        base_analysis.SummaryPlots.populate()
-
-        count = len(base_analysis.SummaryPlots())
-        golden_baseline.check_row_count("summaryplots", count)
-
-    @pytest.mark.skip(reason="TrackingSummaryPlots requires DLC data and plot infrastructure")
-    def test_trackingsummaryplots_populates(self, populated_db, golden_master, monkeypatch):
-        """Verify TrackingSummaryPlots.populate() creates entry."""
-        from vr4mice.schema import base_analysis, dlc
-
-        # Ensure DLC is populated
-        dlc.DLCKptsDf.populate()
-
-        # Disable email sending
-        monkeypatch.setenv("EMAIL", "false")
-
-        base_analysis.TrackingSummaryPlots.populate()
-
-        count = len(base_analysis.TrackingSummaryPlots())
-        golden_baseline.check_row_count("trackingsummaryplots", count)
+# NOT TESTED: SummaryPlots and TrackingSummaryPlots
+# Both have upstream design issues:
+# - SummaryPlots.make(): row insertion is coupled to the EMAIL send flag via
+#   insert_send_email(). When send=False, no row is inserted.
+# - TrackingSummaryPlots.make(): same insert-on-send issue, plus a copy-paste bug
+#   where it inserts into SummaryPlots() instead of self.
+# - Both require hardcoded /data/summary_plots path and GuiParams table data.
+# These need upstream fixes before tests can be written.
 
 
 # ==============================================================================
@@ -922,7 +936,6 @@ class TestSummaryMode:
 class TestFetchMode:
     """Tests for fetch mode - independent of pipeline, creates GUI menu file."""
 
-    @pytest.mark.skip(reason="Fetch mode requires connection to production base_schemas tables")
     def test_fetch_creates_npy_file(self, dj_config, tmp_path):
         """Verify fetch_data creates .npy file with expected structure."""
         from vr4mice.actions.fetch_data import fetch_data

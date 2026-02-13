@@ -285,8 +285,9 @@ class TestDlcSavgolFilter:
             assert not np.any(np.isnan(result))
             assert len(result) == len(trajectory)
         except ValueError:
-            # Older scipy versions raise on NaN input - this is acceptable
-            pass
+            # Some scipy versions raise ValueError on NaN input.
+            # This is acceptable since dlc_interpolate removes NaNs before this is called.
+            pytest.skip("scipy version raises ValueError on NaN input")
 
 
 # ==============================================================================
@@ -374,9 +375,10 @@ class TestConvertAngles:
 
     def test_convert_angles_wrapping(self):
         """Should correctly wrap angles."""
-        data = pd.Series([270.0])  # 270 - 90 = 180, wraps to 180 or -180
+        # convert_angles: ((270 - 90) + 180) % 360 - 180 = -180
+        data = pd.Series([270.0])
         result = convert_angles(data, shift=90)
-        assert result.iloc[0] == pytest.approx(0.0) or result.iloc[0] == pytest.approx(180.0) or result.iloc[0] == pytest.approx(-180.0)
+        assert result.iloc[0] == pytest.approx(-180.0)
 
     def test_convert_angles_preserves_length(self):
         """Output length should match input length."""
@@ -413,12 +415,11 @@ class TestFilterDlc:
         """Filtered x and y columns should not have NaN."""
         df = mock_dlc_dataframe.copy()
         result = filter_dlc(df)
-        # Check a few bodyparts
+        # Check a few bodyparts have finite values after filtering
         for bp in ["nose", "left_ear", "neck"]:
             if (bp, "x") in result.columns:
-                # After filtering, there might still be some NaN at edges
-                # but the filtering should have reduced them
-                pass  # Just ensure no errors
+                nan_count = result[(bp, "x")].isna().sum()
+                assert nan_count < len(result), f"{bp} x column is entirely NaN after filtering"
 
 
 # ==============================================================================

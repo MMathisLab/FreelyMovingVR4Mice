@@ -48,7 +48,14 @@ def style():
 def _resample_data_frame(
     df: pd.DataFrame, resampling_period_ms: int = 20
 ) -> pd.DataFrame:  # in ms
-    categorical_columns = ["aperture"]
+    # Auto-detect categorical dtype columns to exclude from .mean() aggregation
+    categorical_columns = df.select_dtypes(include=["category"]).columns.tolist()
+    # TEMP WORKAROUND: bins_y is stored as string (DJ 2.0 Interval workaround)
+    # so select_dtypes won't catch it. Aperture may also not be categorical.
+    # Revert bins_y entry once datajoint adds Interval support.
+    for col in ["aperture", "bins_y"]:
+        if col not in categorical_columns and col in df.columns:
+            categorical_columns.append(col)
     binary_columns = ["reward", "mouse_in_right", "mouse_in_left", "iti"]
     continuous_columns = df.columns[
         (~df.columns.isin(categorical_columns)) & (~df.columns.isin(binary_columns))
@@ -367,9 +374,11 @@ def create_data_frame(
     df[["x", "y", "head_dir"]] = df[["x", "y", "head_dir"]].bfill()
 
     # Normalized coordinates
+    # TEMP WORKAROUND: .astype(str) because DJ 2.0 blob serialization does not
+    # support pandas.Interval objects. Revert once datajoint adds Interval support.
     df["bins_y"] = pd.cut(
         df["y"], bins=np.linspace(spatial_ybins[0], spatial_ybins[1], spatial_ybins[2])
-    )
+    ).astype(str)
     df["norm_y"] = df.groupby("trial", as_index=False)["y"].transform(
         lambda x: x - np.mean(x.iloc[:first_n_samples])
     )

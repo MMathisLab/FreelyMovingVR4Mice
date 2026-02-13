@@ -10,9 +10,7 @@ This module implements the testing infrastructure pattern with:
 Golden dataset: Nightingale_2024-08-16_1 in test_data/golden_dataset/
 """
 
-import json
 import os
-import pickle
 import sys
 import tempfile
 from pathlib import Path
@@ -70,7 +68,11 @@ for path in [ANALYSIS_PATH, ACTIONS_PATH, BASE_SCHEMAS_PATH, BASE_ACTIONS_PATH]:
 # Mock DataJoint-dependent modules before they're imported
 # ==============================================================================
 
-# Mock the database-dependent modules to prevent connection attempts
+# Mock database-dependent modules. helpers_dj.py and populate_rig.py have
+# module-level imports of base_schemas and vr4mice.schema that connect to MySQL
+# at import time. These mocks let unit tests import those modules without a DB.
+# Integration tests clear these mocks in dj_config/pipeline fixtures (see
+# integration/conftest.py) before importing the real modules.
 mock_mice = MagicMock()
 mock_schemas = MagicMock()
 mock_schemas.mice = mock_mice
@@ -138,19 +140,7 @@ def pytest_collection_modifyitems(config, items):
         "clean_schemas",
         # Real data fixtures (golden dataset)
         "require_nightingale_data",
-        "nightingale_pickle_data",
-        "nightingale_dlc_dataframe",
-        "nightingale_json_metadata",
-        "nightingale_timestamp_array",
-        "nightingale_proc_data",
         "nightingale_session_path",
-        # Legacy fixtures that use real data
-        "pickle_data",
-        "dlc_dataframe",
-        "json_metadata",
-        "timestamp_array",
-        "proc_data",
-        "test_data_path",
     }
 
     for item in items:
@@ -208,6 +198,10 @@ def require_nightingale_data(nightingale_session_path, nightingale_session_info)
     Tests using this fixture will be automatically skipped if the data
     directory doesn't exist or is missing required files. Configure
     RAW_ROOT_DATA_DIR in .env.test.local to enable these tests.
+
+    NOTE: integration/conftest.py defines its own require_nightingale_data
+    that shadows this one inside integration/. Both do the same thing but
+    take different parameters due to different fixture chains.
     """
     dataset_name = nightingale_session_info["dataset_name"]
     camera_prefix = nightingale_session_info["camera_prefix"]
@@ -236,147 +230,6 @@ def require_nightingale_data(nightingale_session_path, nightingale_session_info)
         )
 
     return nightingale_session_path
-
-
-# ==============================================================================
-# Real Data Fixtures (Integration Tests Only)
-# ==============================================================================
-
-@pytest.fixture(scope="session")
-def nightingale_pickle_data(nightingale_session_path, nightingale_session_info):
-    """
-    Load REAL pickle file from golden dataset.
-
-    Contains 53 keys including:
-    - state: (339045, 13) float32
-    - episode, step: (339045,) int32
-    - step_time: (339045,) float64
-    """
-    pickle_path = nightingale_session_path / f"{nightingale_session_info['dataset_name']}.pickle"
-    if not pickle_path.exists():
-        pytest.skip(f"Pickle file not found: {pickle_path}")
-    with open(pickle_path, "rb") as f:
-        return pickle.load(f)
-
-
-@pytest.fixture(scope="session")
-def nightingale_json_metadata(nightingale_session_path, nightingale_session_info):
-    """
-    Load REAL JSON metadata from golden dataset.
-
-    Contains 33 keys including nested path dicts:
-    - teensy_path, dlc_path, camera_path, video_path, proc_path
-    - video_meta (duration, fps, width, height)
-    """
-    json_path = nightingale_session_path / f"{nightingale_session_info['dataset_name']}.json"
-    if not json_path.exists():
-        pytest.skip(f"JSON file not found: {json_path}")
-    with open(json_path) as f:
-        return json.load(f)
-
-
-@pytest.fixture(scope="session")
-def nightingale_dlc_dataframe(nightingale_session_path, nightingale_session_info):
-    """
-    Load REAL DLC keypoints from golden dataset.
-
-    Shape: (281748, 83)
-    MultiIndex columns: (bodyparts, coords)
-    """
-    dlc_path = nightingale_session_path / f"{nightingale_session_info['camera_prefix']}_{nightingale_session_info['dataset_name']}_DLC.hdf5"
-    if not dlc_path.exists():
-        pytest.skip(f"DLC file not found: {dlc_path}")
-    return pd.read_hdf(dlc_path)
-
-
-@pytest.fixture(scope="session")
-def nightingale_timestamp_array(nightingale_session_path, nightingale_session_info):
-    """
-    Load REAL timestamp array from golden dataset.
-
-    Shape: (455965,)
-    Dtype: float64
-    """
-    ts_path = nightingale_session_path / f"{nightingale_session_info['camera_prefix']}_{nightingale_session_info['dataset_name']}_TS.npy"
-    if not ts_path.exists():
-        pytest.skip(f"Timestamp file not found: {ts_path}")
-    return np.load(ts_path)
-
-
-@pytest.fixture(scope="session")
-def nightingale_proc_data(nightingale_session_path, nightingale_session_info):
-    """
-    Load REAL processed DLC data from golden dataset.
-
-    Dict with 11 keys including:
-    - x_pos, y_pos: (281876,) float32
-    - heading_direction, head_angle: (281876,) float64
-    """
-    proc_path = nightingale_session_path / f"{nightingale_session_info['camera_prefix']}_{nightingale_session_info['dataset_name']}_PROC"
-    if not proc_path.exists():
-        pytest.skip(f"PROC file not found: {proc_path}")
-    return np.load(proc_path, allow_pickle=True)
-
-
-# ==============================================================================
-# Legacy Real Data Fixtures (for backward compatibility during migration)
-# These will be removed once all tests are converted
-# ==============================================================================
-
-@pytest.fixture(scope="session")
-def test_data_path():
-    """Path to test data directory (legacy - use nightingale_session_path)."""
-    test_dir = PROJECT_ROOT / "test_data" / "golden_dataset"
-    if not test_dir.exists():
-        pytest.skip(f"Test data directory not found: {test_dir}")
-    return test_dir
-
-
-@pytest.fixture(scope="session")
-def pickle_data(test_data_path):
-    """Loaded pickle file (legacy - use nightingale_pickle_data or mock_pickle_data)."""
-    path = test_data_path / f"{DATASET_NAME}.pickle"
-    if not path.exists():
-        pytest.skip(f"Pickle file not found: {path}")
-    with open(path, "rb") as f:
-        return pickle.load(f)
-
-
-@pytest.fixture(scope="session")
-def json_metadata(test_data_path):
-    """Loaded JSON metadata (legacy - use nightingale_json_metadata or mock_json_metadata)."""
-    path = test_data_path / f"{DATASET_NAME}.json"
-    if not path.exists():
-        pytest.skip(f"JSON file not found: {path}")
-    with open(path) as f:
-        return json.load(f)
-
-
-@pytest.fixture(scope="session")
-def dlc_dataframe(test_data_path):
-    """DLC keypoints DataFrame (legacy - use nightingale_dlc_dataframe or mock_dlc_dataframe)."""
-    path = test_data_path / f"{CAMERA_PREFIX}_{DATASET_NAME}_DLC.hdf5"
-    if not path.exists():
-        pytest.skip(f"DLC HDF5 file not found: {path}")
-    return pd.read_hdf(path)
-
-
-@pytest.fixture(scope="session")
-def timestamp_array(test_data_path):
-    """Timestamp array (legacy - use nightingale_timestamp_array)."""
-    path = test_data_path / f"{CAMERA_PREFIX}_{DATASET_NAME}_TS.npy"
-    if not path.exists():
-        pytest.skip(f"Timestamp file not found: {path}")
-    return np.load(path)
-
-
-@pytest.fixture(scope="session")
-def proc_data(test_data_path):
-    """Processed DLC data (legacy - use nightingale_proc_data)."""
-    path = test_data_path / f"{CAMERA_PREFIX}_{DATASET_NAME}_PROC"
-    if not path.exists():
-        pytest.skip(f"PROC file not found: {path}")
-    return np.load(path, allow_pickle=True)
 
 
 # ==============================================================================
@@ -751,20 +604,3 @@ def dlc_key():
     }
 
 
-# ==============================================================================
-# Utility Fixtures
-# ==============================================================================
-
-@pytest.fixture
-def temp_pickle_data(mock_pickle_data):
-    """
-    Copy of mock pickle data that can be modified.
-    Use when tests need to modify the data.
-    """
-    return mock_pickle_data.copy()
-
-
-@pytest.fixture
-def sample_dlc_subset(mock_dlc_dataframe):
-    """Small subset of mock DLC data for faster tests."""
-    return mock_dlc_dataframe.iloc[:100].copy()

@@ -1,101 +1,134 @@
 # Minimum DataJoint Migration Guide (0.14.x to 2.0)
 
-This document describes the minimum changes required to migrate the vr4mice codebase from DataJoint 0.14.x to DataJoint 2.0.
+This document describes the minimum changes required to migrate the vr4mice codebase from DataJoint 0.14.x to DataJoint 2.0, and the steps to apply the migration.
 
-## Overview
+## Code Changes (already applied in this PR)
 
-The migration involves changes in two main areas:
-1. Schema class capitalization (`dj.schema` → `dj.Schema`)
-2. Configuration key names (`database.misc.*` → `database.*`)
+The PR updates the Python codebase in three areas:
 
-## 1. Schema Class Capitalization
+### 1. Blob Type Annotations
 
-**Files:** All schema definition files (e.g., `mice.py`, `exp.py`)
+**Files:** All schema definition files (`vr4mice.py`, `base_analysis.py`, `dlc.py`, etc.)
 
-### DJ 0.x (before migration)
+DJ 2.0 requires explicit `<blob>` type annotations instead of raw MySQL blob types.
+
+| DJ 0.x | DJ 2.0 |
+|--------|--------|
+| `longblob` | `<blob>` |
+| `blob` | `<blob>` |
+| `mediumblob` | `<blob>` |
+
+This is the largest change by file count: ~150+ columns across 10 schema files.
+
+### 2. Schema Class Capitalization
+
+**Files:** All schema definition files, `schema_config.py`
+
 ```python
-import datajoint as dj
-
+# DJ 0.x
 schema = dj.schema("mice", locals(), create_tables=True)
 
-@schema
-class Mouse(dj.Manual):
-    ...
-```
-
-### DJ 2.0 (after migration)
-```python
-import datajoint as dj
-
+# DJ 2.0
 schema = dj.Schema("mice", locals(), create_tables=True)
-
-@schema
-class Mouse(dj.Manual):
-    ...
 ```
 
-**Key change:**
-- `dj.schema` (lowercase) → `dj.Schema` (capitalized)
+### 3. Configuration Key Names
 
-**Note:** The `locals()` argument and `create_tables=True` continue to work in DJ 2.0.
+**File:** `dj_pipeline/vr4mice/utils/schema_config.py`, `dj_pipeline/base/base_min_schemas/base_schemas/utils/add_schema.py`
 
-## 2. Configuration Key Names
+| DJ 0.x | DJ 2.0 |
+|--------|--------|
+| `database.misc.schema_prefix` | `database.database_prefix` |
+| `database.misc.create_tables` | `database.create_tables` |
+| `enable_python_native_blobs = True` | (removed, native by default) |
 
-**File:** `dj_pipeline/vr4mice/utils/schema_config.py`
+## Migration Workflow
 
-### DJ 0.x (before migration)
+### Step 1: Back up the database
+
+Before anything else, create a full backup of the production database.
+
+```bash
+mysqldump -u root -p --all-databases > backup_pre_dj2_migration.sql
+```
+
+Keep this backup until you're confident everything works.
+
+### Step 2: Merge the migration PR
+
+Merge the `dj2-minimal-migration` branch. This updates the Python code but does not touch the database.
+
+### Step 3: Install DataJoint 2.0
+
+```bash
+pip install "datajoint>=2.0,<3.0"
+```
+
+### Step 4: Migrate the database columns
+
+The database needs its column metadata updated so DJ 2.0 can correctly deserialize blob data. This only modifies MySQL column comments (adding `:<blob>:` prefixes), not the actual data.
+
+```bash
+# Preview changes first (dry run)
+python scripts/migrate_to_dj2.py --prefix your_schema_prefix_ --dry-run
+
+# Apply the migration
+python scripts/migrate_to_dj2.py --prefix your_schema_prefix_
+```
+
+Or from Python:
+
 ```python
 import datajoint as dj
+from datajoint.migrate import migrate_columns
 
-_schema_prefix = None
-_create_tables = None
+schema = dj.Schema("your_schema_name")
 
-def configure_schema(prefix=None, create_tables=True):
-    global _schema_prefix, _create_tables
-    _schema_prefix = prefix
-    _create_tables = create_tables
+# Preview
+migrate_columns(schema, dry_run=True)
 
-    # DJ 0.x config keys
-    dj.config["database.misc.schema_prefix"] = prefix
-    dj.config["database.misc.create_tables"] = create_tables
-    dj.config["enable_python_native_blobs"] = True
+# Apply
+migrate_columns(schema, dry_run=False)
 ```
 
-### DJ 2.0 (after migration)
-```python
-import datajoint as dj
+### Step 5: Run the test suite
 
-_schema_prefix = None
-_create_tables = None
+```bash
+cd tests
 
-def configure_schema(prefix=None, create_tables=True):
-    global _schema_prefix, _create_tables
-    _schema_prefix = prefix
-    _create_tables = create_tables
+# Unit tests (no database or Docker required)
+python -m pytest unit/ -v
 
-    # DJ 2.0 config keys (changed names)
-    dj.config['database.database_prefix'] = prefix
-    dj.config['database.create_tables'] = create_tables
-    # Note: enable_python_native_blobs is removed in DJ 2.0
+# Integration tests (requires Docker)
+python -m pytest integration/ -v
 ```
 
-**Key changes:**
-- `database.misc.schema_prefix` → `database.database_prefix`
-- `database.misc.create_tables` → `database.create_tables`
-- `enable_python_native_blobs` is removed (no longer needed)
+The integration tests spin up a MySQL container, insert the golden dataset, populate downstream tables, and verify row counts and sample values against golden baselines.
 
-## 3. Summary of All Changes
+### Step 6: Run your analysis pipelines
 
-| Item | DJ 0.x | DJ 2.0 |
-|------|--------|--------|
-| Schema class | `dj.schema()` | `dj.Schema()` |
-| Prefix config key | `database.misc.schema_prefix` | `database.database_prefix` |
-| Create tables key | `database.misc.create_tables` | `database.create_tables` |
-| Native blobs config | `enable_python_native_blobs = True` | (removed) |
+Run your normal analysis workflows to confirm everything produces expected results. Pay attention to:
+- Tables that use blob columns (MouseState, State, DLC, etc.)
+- Downstream computed tables (DataFrame, OfflineKinematics, InterpolatedTrials, SessionMetrics)
+- Any custom scripts that call `fetch()` on blob columns
 
-## 4. Test Data Location
+### Step 7: Keep the backup
 
-The golden test dataset is located at:
+Keep the database backup around for a reasonable period until you're confident everything is working correctly in production.
+
+## What migrate_columns() Does
+
+`migrate_columns()` is a metadata-only operation. It:
+- Queries `information_schema.COLUMNS` for all columns in a schema
+- Identifies blob columns missing the `:<blob>:` comment marker
+- Runs `ALTER TABLE ... MODIFY COLUMN ... COMMENT ':<blob>:...'` to add the marker
+- Does NOT change column types or data
+
+DJ 2.0 uses these comment markers to know which columns to deserialize. Without them, blob columns return raw bytes instead of Python objects.
+
+## Test Data Location
+
+The golden test dataset should be placed at:
 ```
 {project_root}/test_data/golden_dataset/
 ```
@@ -107,17 +140,12 @@ Required files:
 - `Imagingsource_Nightingale_2024-08-16_1_TS.npy`
 - `Imagingsource_Nightingale_2024-08-16_1_PROC`
 
-## 5. Running Tests After Migration
+## Summary of All Code Changes
 
-```bash
-# Activate virtual environment
-cd /path/to/project
-source venv/bin/activate
-
-# Run unit tests (no database required)
-cd tests
-python -m pytest unit/ -v
-
-# Run integration tests (requires Docker)
-sg docker -c "bash -c 'source ../venv/bin/activate && python -m pytest integration/ -v'"
-```
+| Item | DJ 0.x | DJ 2.0 |
+|------|--------|--------|
+| Blob annotations | `longblob` / `blob` / `mediumblob` | `<blob>` |
+| Schema class | `dj.schema()` | `dj.Schema()` |
+| Prefix config key | `database.misc.schema_prefix` | `database.database_prefix` |
+| Create tables key | `database.misc.create_tables` | `database.create_tables` |
+| Native blobs config | `enable_python_native_blobs = True` | (removed) |

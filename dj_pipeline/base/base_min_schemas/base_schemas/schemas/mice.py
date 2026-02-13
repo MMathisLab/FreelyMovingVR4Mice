@@ -252,7 +252,7 @@ class MouseScoreSheet_WaterRestriction(dj.Manual):
 @schema
 class MouseScoreSheet(dj.Manual):
 
-    definition = """
+    definition = """ 
     -> Mouse
     doc : date          # date of check
     ---

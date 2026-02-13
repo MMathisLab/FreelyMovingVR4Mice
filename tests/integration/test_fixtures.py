@@ -8,7 +8,6 @@ Configure RAW_ROOT_DATA_DIR in .env.test.local to run these tests.
 
 import numpy as np
 import pandas as pd
-import pytest
 
 
 class TestFixturesPaths:

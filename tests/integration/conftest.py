@@ -4,7 +4,7 @@ Database integration test fixtures using testcontainers.
 Provides:
 - MySQL container that automatically starts/stops for tests
 - Pipeline fixture with access to all vr4mice schema modules
-- File manifest tracking for documenting required test data files
+- Real data loading fixtures for the golden dataset
 
 Uses 'test_' schema prefix to isolate from any real data.
 
@@ -18,7 +18,6 @@ import json
 import os
 import sys
 import time
-from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -59,71 +58,6 @@ os.environ.setdefault("GUI", "false")
 os.environ.setdefault("DJ_LAB", "test")
 os.environ.setdefault("EMAIL", "false")  # Disable email sending in tests
 
-
-# ==============================================================================
-# File Manifest Tracking
-# ==============================================================================
-
-# Global list to track file accesses during tests
-_FILE_MANIFEST = []
-
-
-def track_file_access(file_path: Path, context: str = ""):
-    """
-    Record a file access for manifest generation.
-
-    Args:
-        file_path: Path to the file being accessed
-        context: Optional context (e.g., test name) for the access
-    """
-    if file_path.is_file():
-        _FILE_MANIFEST.append({
-            "path": str(file_path),
-            "filename": file_path.name,
-            "size_bytes": file_path.stat().st_size,
-            "context": context,
-            "timestamp": datetime.now().isoformat(),
-        })
-
-
-@pytest.fixture(scope="module", autouse=True)
-def save_file_manifest(request):
-    """
-    Auto-save file manifest at end of each test module.
-
-    Manifests are saved to tests/fixtures/manifests/{module_name}_manifest.json
-    This documents which test data files each module requires.
-    """
-    # Clear manifest at start of module
-    _FILE_MANIFEST.clear()
-
-    yield
-
-    # Save manifest at end of module (if any files were tracked)
-    if _FILE_MANIFEST:
-        manifest_dir = TESTS_DIR / "fixtures" / "manifests"
-        manifest_dir.mkdir(parents=True, exist_ok=True)
-
-        # Get module name from request
-        module_name = request.module.__name__.split(".")[-1]
-        manifest_path = manifest_dir / f"{module_name}_manifest.json"
-
-        # Deduplicate by path
-        unique_files = {}
-        for entry in _FILE_MANIFEST:
-            path = entry["path"]
-            if path not in unique_files:
-                unique_files[path] = entry
-
-        manifest_data = {
-            "module": request.module.__name__,
-            "generated_at": datetime.now().isoformat(),
-            "files": list(unique_files.values()),
-            "total_size_bytes": sum(f["size_bytes"] for f in unique_files.values()),
-        }
-
-        with open(manifest_path, "w") as f:
-            json.dump(manifest_data, f, indent=2)
 
 
 # ==============================================================================
@@ -239,7 +173,6 @@ def dj_config(mysql_container):
             del sys.modules[_mod]
 
     import datajoint as dj
-    from vr4mice.utils import schema_config
 
     # Get connection details from container
     host = mysql_container.get_container_host_ip()
@@ -252,9 +185,9 @@ def dj_config(mysql_container):
     dj.config["database.use_tls"] = False  # Disable TLS for MySQL 5.7 compatibility
     dj.config["safemode"] = False  # Allow dropping schemas in tests
 
-    # Configure schema prefix (DJ 2.0 compatible - uses module variables)
-    schema_config._schema_prefix = "test_"
-    schema_config._create_tables = True
+    # Configure schema prefix
+    dj.config["database.database_prefix"] = "test_"
+    dj.config["database.create_tables"] = True
 
     # Test connection
     conn = dj.conn()
@@ -316,8 +249,8 @@ def pipeline(dj_config):
     Returns:
         dict: Dictionary mapping module names to their imported modules
     """
-    # Clear mocks from parent conftest.py so we can import the REAL modules
-    # This must happen before importing the real pipeline modules
+    # Safety net: clear mocks again in case dj_config's clearing was bypassed.
+    # dj_config already clears these, but this guards against future refactors.
     _mocked_modules = [
         'base_schemas',
         'base_schemas.schemas',
@@ -355,7 +288,7 @@ def pipeline(dj_config):
 
 
 # ==============================================================================
-# Test Data Fixtures (with manifest tracking)
+# Test Data Fixtures
 # ==============================================================================
 
 @pytest.fixture(scope="session")
@@ -393,6 +326,10 @@ def require_nightingale_data(test_data_dir, test_dataset_name, test_camera_prefi
 
     Tests using this fixture will be automatically skipped if the data
     directory doesn't exist or is missing required files.
+
+    NOTE: This shadows the top-level conftest's require_nightingale_data
+    within integration/. Same purpose, different fixture chain (uses
+    test_data_dir instead of nightingale_session_path).
     """
     # Check required files exist
     required_files = [
@@ -426,91 +363,64 @@ def test_camera_prefix():
 
 
 # ==============================================================================
-# Real Data Loading Fixtures (with manifest tracking)
+# Real Data Loading Fixtures
 # ==============================================================================
 
 @pytest.fixture(scope="session")
-def integration_pickle_data(test_data_dir, test_dataset_name, request):
-    """
-    Load pickle data from golden dataset with manifest tracking.
-
-    Automatically tracks file access for manifest generation.
-    """
+def integration_pickle_data(test_data_dir, test_dataset_name):
+    """Load pickle data from golden dataset."""
     import pickle
 
     pickle_path = test_data_dir / f"{test_dataset_name}.pickle"
     if not pickle_path.exists():
         pytest.skip(f"Pickle file not found: {pickle_path}")
 
-    # Track file access
-    track_file_access(pickle_path, request.node.name if hasattr(request, 'node') else "")
-
     with open(pickle_path, "rb") as f:
         return pickle.load(f)
 
 
 @pytest.fixture(scope="session")
-def integration_json_metadata(test_data_dir, test_dataset_name, request):
-    """
-    Load JSON metadata from golden dataset with manifest tracking.
-    """
+def integration_json_metadata(test_data_dir, test_dataset_name):
+    """Load JSON metadata from golden dataset."""
     json_path = test_data_dir / f"{test_dataset_name}.json"
     if not json_path.exists():
         pytest.skip(f"JSON file not found: {json_path}")
-
-    # Track file access
-    track_file_access(json_path, request.node.name if hasattr(request, 'node') else "")
 
     with open(json_path) as f:
         return json.load(f)
 
 
 @pytest.fixture(scope="session")
-def integration_dlc_dataframe(test_data_dir, test_dataset_name, test_camera_prefix, request):
-    """
-    Load DLC DataFrame from golden dataset with manifest tracking.
-    """
+def integration_dlc_dataframe(test_data_dir, test_dataset_name, test_camera_prefix):
+    """Load DLC DataFrame from golden dataset."""
     import pandas as pd
 
     dlc_path = test_data_dir / f"{test_camera_prefix}_{test_dataset_name}_DLC.hdf5"
     if not dlc_path.exists():
         pytest.skip(f"DLC HDF5 file not found: {dlc_path}")
 
-    # Track file access
-    track_file_access(dlc_path, request.node.name if hasattr(request, 'node') else "")
-
     return pd.read_hdf(dlc_path)
 
 
 @pytest.fixture(scope="session")
-def integration_timestamp_array(test_data_dir, test_dataset_name, test_camera_prefix, request):
-    """
-    Load timestamp array from golden dataset with manifest tracking.
-    """
+def integration_timestamp_array(test_data_dir, test_dataset_name, test_camera_prefix):
+    """Load timestamp array from golden dataset."""
     import numpy as np
 
     ts_path = test_data_dir / f"{test_camera_prefix}_{test_dataset_name}_TS.npy"
     if not ts_path.exists():
         pytest.skip(f"Timestamp file not found: {ts_path}")
 
-    # Track file access
-    track_file_access(ts_path, request.node.name if hasattr(request, 'node') else "")
-
     return np.load(ts_path)
 
 
 @pytest.fixture(scope="session")
-def integration_proc_data(test_data_dir, test_dataset_name, test_camera_prefix, request):
-    """
-    Load processed DLC data from golden dataset with manifest tracking.
-    """
+def integration_proc_data(test_data_dir, test_dataset_name, test_camera_prefix):
+    """Load processed DLC data from golden dataset."""
     import numpy as np
 
     proc_path = test_data_dir / f"{test_camera_prefix}_{test_dataset_name}_PROC"
     if not proc_path.exists():
         pytest.skip(f"PROC file not found: {proc_path}")
-
-    # Track file access
-    track_file_access(proc_path, request.node.name if hasattr(request, 'node') else "")
 
     return np.load(proc_path, allow_pickle=True)
