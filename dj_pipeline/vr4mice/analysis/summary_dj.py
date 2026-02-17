@@ -1,8 +1,7 @@
 import pathlib
 import warnings
 
-from pathlib import Path
-from typing import List, Dict
+from typing import Dict
 
 
 import matplotlib.pyplot as plt
@@ -74,6 +73,7 @@ def fetch_data(key: Dict, database: bool):
         from vr4mice.analysis import analysis
 
         df, unity_to_physical_arena_size = analysis.create_data_frame(key, iti=False)
+        df["trial_rewarded"] = analysis.get_rewarded(df)
         box_df_output = analysis.get_box_df(
             key, df, unity_to_physical_arena_size=unity_to_physical_arena_size
         )
@@ -118,9 +118,6 @@ def vr4mice_summary_plots(
     """
     Generate a summary plot for a given dataset.
 
-    final results to email
-    [DJ SummaryPlot table: path?]
-
     Args:
         key (dict): A dictionary that specifies which dataset to generate a
             summary plot for.
@@ -140,10 +137,6 @@ def vr4mice_summary_plots(
 
     df = df.infer_objects()
     df["dataset"] = key["dataset"]
-
-    # if not fecthing from database the trial rewarded needs to be computed, otherwise summary plots fail
-    if database == False:
-        df.groupby(["dataset", "trial"])["reward"].transform(lambda x: x.max())
 
     df = df[df.iti == 0].copy()
 
@@ -225,7 +218,7 @@ def vr4mice_summary_plots(
         y="x",
         hue="trial_right_choice" if num_apertures <= 2 else "aperture",
         palette=plotting.colors_choice if num_apertures <= 2 else "viridis",
-        style=None if num_apertures <= 2 else "trial_right_choice",
+        style="aperture" if num_apertures <= 2 else "trial_right_choice",
         errorbar="se",
         ax=axes["j_mean"],
     )
@@ -286,6 +279,13 @@ def vr4mice_summary_plots(
         df=df,
         per_aperture=True if num_apertures >= 2 else False,
         ax=axes["rewards"],
+    )
+    axes["rewards"].hlines(
+        0.7,
+        xmin=axes["rewards"].get_xlim()[0],
+        xmax=axes["rewards"].get_xlim()[1],
+        colors="purple",
+        linestyles="dashed",
     )
 
     # Display the time to reward
@@ -401,10 +401,14 @@ def vr4mice_summary_plots(
         ax=axes["j_rate"],
     )
     axes["j_rate"].set_ylabel("J-shaped trials rate")
-    axes["j_rate"].set_ylim([0, 1])
+    axes["j_rate"].set_ylim([0, 1.1])
 
     # Display rolling reward and choice
-    plotting.plot_rolling_reward(df, ax=axes["rolling_reward"])
+    plotting.plot_rolling_reward(
+        df,
+        ax=axes["rolling_reward"],
+        per_aperture=True if num_apertures >= 2 else False,
+    )
     plotting.plot_choices_by_trial(df, ax=axes["choices_by_trial"])
 
     if database:

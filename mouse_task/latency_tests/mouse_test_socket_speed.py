@@ -193,7 +193,7 @@ class ARVisualdiscrim_socket_test(UnityTask):
         self.dlc_time_step = []
         self.trial_mouse_report_delay = []
         self.socket_send_time = []
-        self.socket_recieve_time = []
+        self.socket_receive_time = []
         self.thread_read_time = []
         # self.address = ('localhost', 6000)
         # self.dlcClient = DLCClient(address=self.address)
