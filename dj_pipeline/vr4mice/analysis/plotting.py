@@ -1298,7 +1298,7 @@ def plot_rate(
         )
         ax.set_xlim(-0.5, num_aperture - 0.5)
 
-    if per_aperture and not plot_bias:
+    if per_aperture:
         data_for_stats = counts
 
         stats_tests = pd.DataFrame(
@@ -1320,9 +1320,9 @@ def plot_rate(
                     print(f"{i}-{j}: {stat}")
             mean = counts[counts["aperture"] == i]["count"].mean()
             sem = counts[counts["aperture"] == i]["count"].sem()
-            print(f"mean: {mean}, sem: {sem}")
+            print(f"{i}: mean={mean:.3f} ± {sem:.3f}")
 
-    else:
+    if plot_bias:
         data_for_stats = counts
         if per_mouse and "mouse_name" in counts.columns:
             if "aperture" in counts.columns:
@@ -1336,14 +1336,11 @@ def plot_rate(
 
         if "aperture" in data_for_stats.columns:
             for i in data_for_stats.aperture.unique():
-                t_null, p_null = stats.ttest_1samp(
-                    data_for_stats[data_for_stats["aperture"] == i]["count"], 0
-                )
-                print(f"{i} vs chance 0: t={t_null:.2f}, p={p_null:.3f}")
-
-                mean_i = data_for_stats[data_for_stats["aperture"] == i]["count"].mean()
-                sem_i = data_for_stats[data_for_stats["aperture"] == i]["count"].sem()
-                print(f"{i}: mean={mean_i:.3f} ± {sem_i:.3f}")
+                if data_for_stats.aperture.nunique() < 3:
+                    t_null, p_null = stats.ttest_1samp(
+                        data_for_stats[data_for_stats["aperture"] == i]["count"], 0
+                    )
+                    print(f"{i} vs chance 0: t={t_null:.2f}, p={p_null:.3f}")
     return counts
 
 

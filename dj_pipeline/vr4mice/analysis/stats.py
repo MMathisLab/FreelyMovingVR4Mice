@@ -140,7 +140,11 @@ def get_p_values_multi(
     return p_value_df
 
 
-def get_multi_performance_p_val(trial_df: pd.DataFrame, y_var: str) -> pd.DataFrame:
+def get_multi_performance_p_val(
+    trial_df: pd.DataFrame,
+    y_var: str,
+    group_by: str = "aperture",
+) -> pd.DataFrame:
     """Calculate p-values for performance metrics across different apertures.
 
     This function computes paired t-tests for each pair of apertures within each dataset.
@@ -152,20 +156,21 @@ def get_multi_performance_p_val(trial_df: pd.DataFrame, y_var: str) -> pd.DataFr
 
     Returns:
         pd.DataFrame: DataFrame containing p-values for each pair of apertures with columns
-            'aperture1', 'aperture2', and 'p_value'.
+            'comp1', 'comp2', and 'p_value'.
     """
-    mean_mouse = trial_df.groupby(["dataset", "aperture"], as_index=False).mean(
+    mean_mouse = trial_df.groupby(["dataset", group_by], as_index=False).mean(
         numeric_only=True
     )
     p_values = []
-    for ap1, ap2 in itertools.combinations(mean_mouse.aperture.unique(), 2):
-        ap1_data = mean_mouse[mean_mouse["aperture"] == ap1][y_var]
-        ap2_data = mean_mouse[mean_mouse["aperture"] == ap2][y_var]
+    for ap1, ap2 in itertools.combinations(mean_mouse[group_by].unique(), 2):
+        ap1_data = mean_mouse[mean_mouse[group_by] == ap1][y_var]
+        ap2_data = mean_mouse[mean_mouse[group_by] == ap2][y_var]
 
         t_stat, p_val = ttest_rel(ap1_data, ap2_data)
         p_values.append(
             pd.DataFrame(
-                {"aperture1": ap1, "aperture2": ap2, "p_value": p_val}, index=[0]
+                {"comp1": ap1, "comp2": ap2, "p_value": p_val, "t-test": t_stat},
+                index=[0],
             )
         )
     p_value_df = pd.concat(p_values)
@@ -176,7 +181,7 @@ def get_multi_performance_p_val(trial_df: pd.DataFrame, y_var: str) -> pd.DataFr
 def plot_aperture_heatmap(
     df: pd.DataFrame,
     ax: plt.Axes,
-    value_col: str = "p_value",
+    value_col: str = "p_value_corr",
     title: str = "Aperture Comparison Heatmap",
     cmap: str = "magma_r",
     annot: bool = True,
@@ -191,7 +196,7 @@ def plot_aperture_heatmap(
     Plots a heatmap of aperture comparisons using p-values or corrected p-values.
 
     Parameters:
-        df (pd.DataFrame): Input DataFrame with columns: aperture1, aperture2, p_value, p_value_corr.
+        df (pd.DataFrame): Input DataFrame with columns: comp1, comp2, p_value, p_value_corr.
         value_col (str): Column to plot ("p_value" or "p_value_corr").
         title (str): Plot title.
         cmap (str): Matplotlib/seaborn colormap. By default, "viridis_r" (dark for low values).
@@ -204,12 +209,12 @@ def plot_aperture_heatmap(
         linewidths (float): Width of cell borders.
     """
     # Get unique apertures and initialize matrix
-    apertures = sorted(set(df["aperture1"].unique()).union(df["aperture2"].unique()))
+    apertures = sorted(set(df["comp1"].unique()).union(df["comp2"].unique()))
     matrix = pd.DataFrame(np.nan, index=apertures, columns=apertures)
 
     # Fill the matrix
     for _, row in df.iterrows():
-        a1, a2, value = row["aperture1"], row["aperture2"], row[value_col]
+        a1, a2, value = row["comp1"], row["comp2"], row[value_col]
         matrix.loc[a2, a1] = value
         if symmetric:
             matrix.loc[a1, a2] = value  # Mirror for symmetry
