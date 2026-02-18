@@ -93,8 +93,11 @@ def plot_training_stats_heatmap(
         label.set_color(stage_colors[j])
 
 
-def get_p_values_multi(
-    mean_mouse: pd.DataFrame, x_var: str = "trial_length", y_var: str = "velocity"
+def get_multi_p_values_binned(
+    mean_mouse: pd.DataFrame,
+    x_var: str = "trial_length",
+    y_var: str = "velocity",
+    group_by: str = "aperture",
 ) -> pd.DataFrame:
     """Calculate p-values for performance metrics across different apertures and bins.
 
@@ -106,20 +109,21 @@ def get_p_values_multi(
             'aperture', and the performance metric.
         x_var (str): The column name of the variable to bin by (e.g., 'trial_length').
         y_var (str): The column name of the performance metric to compare across apertures.
+        group_by (str): The column name to group by (e.g., 'aperture').
 
     Returns:
         pd.DataFrame: DataFrame containing p-values for each pair of apertures within each bin,
-            with columns 'bin', 'aperture1', 'aperture2', and 'p_value'.
+            with columns 'bin', 'comp1', 'comp2', and 'p_value'.
     """
     p_values = []
     for bin_val in mean_mouse[x_var].unique():
         bin_data = mean_mouse[mean_mouse[x_var] == bin_val]
-        apertures = bin_data["aperture"].unique()
+        apertures = bin_data[group_by].unique()
 
         # Get all unique pairs of apertures
         for ap1, ap2 in itertools.combinations(apertures, 2):
-            ap1_data = bin_data[bin_data["aperture"] == ap1][y_var]
-            ap2_data = bin_data[bin_data["aperture"] == ap2][y_var]
+            ap1_data = bin_data[bin_data[group_by] == ap1][y_var]
+            ap2_data = bin_data[bin_data[group_by] == ap2][y_var]
 
             t_stat, p_val = ttest_rel(ap1_data, ap2_data)
             # print(f"Bin {bin_val}: Aperture {ap1} vs {ap2} - t = {t_stat:.3f}, p = {p_val:.4f}")
@@ -127,8 +131,8 @@ def get_p_values_multi(
                 pd.DataFrame(
                     {
                         "bin": bin_val,
-                        "aperture1": ap1,
-                        "aperture2": ap2,
+                        "comp1": ap1,
+                        "comp2": ap2,
                         "p_value": p_val,
                     },
                     index=[0],
@@ -140,7 +144,7 @@ def get_p_values_multi(
     return p_value_df
 
 
-def get_multi_performance_p_val(
+def get_multi_p_values_global(
     trial_df: pd.DataFrame,
     y_var: str,
     group_by: str = "aperture",
