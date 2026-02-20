@@ -38,7 +38,6 @@ from helpers_dj import (
 from populate_rig import (
     get_new_file,
     parse_date,
-    get_files_paths,
 )
 
 # Golden dataset sizes (Nightingale_2024-08-16_1).

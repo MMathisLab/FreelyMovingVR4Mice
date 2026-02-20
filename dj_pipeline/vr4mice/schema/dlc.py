@@ -272,10 +272,9 @@ class OfflineKinematics(dj.Computed):
     ) -> Optional[pd.DataFrame]:
         try:
             if self & key:
+                data = (self & key).fetch1()
                 if columns:
-                    data = (self & key).fetch(*columns, as_dict=True)[0]
-                else:
-                    data = (self & key).fetch(as_dict=True)[0]
+                    data = {k: v for k, v in data.items() if k in columns}
                 return pd.DataFrame(data)
             else:
                 return False

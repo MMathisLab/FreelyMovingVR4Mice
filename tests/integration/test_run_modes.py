@@ -920,13 +920,7 @@ class TestLatencyMode:
 
 
 # NOT TESTED: SummaryPlots and TrackingSummaryPlots
-# Both have upstream design issues:
-# - SummaryPlots.make(): row insertion is coupled to the EMAIL send flag via
-#   insert_send_email(). When send=False, no row is inserted.
-# - TrackingSummaryPlots.make(): same insert-on-send issue, plus a copy-paste bug
-#   where it inserts into SummaryPlots() instead of self.
-# - Both require hardcoded /data/summary_plots path and GuiParams table data.
-# These need upstream fixes before tests can be written.
+# See issue #272 - depends on upstream changes before tests can be written
 
 
 # ==============================================================================
