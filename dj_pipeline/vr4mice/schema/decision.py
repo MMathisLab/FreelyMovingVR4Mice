@@ -43,10 +43,15 @@ class SessionLabel(dj.Lookup):
         ("ar_discrim_inv", "contrast_black_target", "training"),
         ("ar_discrim_occluders_inv", "contrast_black_target", "dual_occlusion"),
         ("ar_discrim_5_occluders_inv", "contrast_black_target", "multi_occlusion"),
-        # Shape task with pacman target
+        # Shape task with white pacman target
         ("ar_shape_detection_no_velthr", "shape_pacman_target", "training"),
         ("ar_shape_detection_velthr", "shape_pacman_target", "training"),
         ("ar_shape_discrimination", "shape_pacman_target", "training"),
+        # Shape task with black teardrop target
+        ("ar_shape_det_no_velthr_inv", "shape_black_teardrop_target", "training"),
+        ("ar_shape_detection_velthr_inv", "shape_black_teardrop_target", "training"),
+        ("ar_shape_discrimination_inv", "shape_black_teardrop_target", "training"),
+        ("ar_shape_discrim_occluders_inv", "shape_black_teardrop_target", "dual_occlusion"),
         # NOTE(celia): 2-stage occlusion for this task, first one is still training
         ("ar_shape_discrim_occluders", "shape_pacman_target", "training"),
         ("ar_shape_discrim_narrow_occluders", "shape_pacman_target", "dual_occlusion"),
@@ -69,6 +74,7 @@ class ExperimentSet(dj.Lookup):
         ("contrast_white_target", "Contrast task, white target"),
         ("contrast_black_target", "Contrast task, black target"),
         ("shape_pacman_target", "Shape task, pacman target"),
+        ("shape_black_teardrop_target", "Shape task, black teardrop target"),
     ]
 
 
@@ -169,7 +175,7 @@ class InclusionStatus(dj.Computed):
 
             trial_df = tables.fetch(as_dict=True)
 
-            if not trial_df:
+            if not trial_df or key == {"dataset": "Hamster_2026-02-02_1"}:
                 self.insert1({**key, "included": False})
                 return
 

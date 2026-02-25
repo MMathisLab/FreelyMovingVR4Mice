@@ -1999,11 +1999,8 @@ def plot_mouse_trial_lineplot(
     ax=None,
     rolling_window=15,
     mouse_col="mouse_name",
-    color_individual="grey",
-    color_mean="black",
-    alpha_individual=0.25,
-    linewidth_mean=1.5,
-    normalize=True,
+    color="black",
+    normalize=False,
     normalize_df=None,
 ):
     """
@@ -2063,8 +2060,8 @@ def plot_mouse_trial_lineplot(
         ax.plot(
             mouse_df["trial"],
             mouse_df["rolling"],
-            color=color_individual,
-            alpha=alpha_individual,
+            color=color,
+            alpha=0.25,
             linewidth=1,
         )
 
@@ -2076,8 +2073,8 @@ def plot_mouse_trial_lineplot(
     ax.plot(
         mean_df["trial"],
         mean_df["rolling"],
-        color=color_mean,
-        linewidth=linewidth_mean,
+        color=color,
+        linewidth=1.5,
     )
 
     if normalize:
@@ -2096,10 +2093,10 @@ def plot_mouse_trial_lineplot(
             baseline_value = baseline_means.mean()
             ax.axhline(
                 baseline_value,
-                color=color_mean,
+                color=color,
                 linestyle="--",
                 linewidth=1,
-                alpha=0.6,
+                alpha=0.7,
             )
 
     ax.set_xlabel("Trial")
