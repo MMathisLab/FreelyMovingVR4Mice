@@ -30,14 +30,12 @@ def style():
             "text.color": font_color,
             "axes.labelcolor": font_color,
             "axes.labelsize": font_size,
-            # "axes.titleweight": "bold",
             "axes.titlesize": font_size,
             "xtick.labelcolor": font_color,
             "xtick.labelsize": font_size,
             "ytick.labelcolor": font_color,
             "ytick.labelsize": font_size,
             "font.weight": "regular",
-            # "svg.fonttype": "none",
         }
     )
 
@@ -45,30 +43,50 @@ def style():
     plt.rc("axes", edgecolor=font_color)
 
 
+def _categorize_columns(df: pd.DataFrame) -> Tuple[List[str], List[str], List[str]]:
+    """Automatically categorize DataFrame columns based on their dtype and values.
+
+    Args:
+        df (pd.DataFrame): DataFrame to analyze.
+
+    Returns:
+        Tuple[List[str], List[str], List[str]]: Lists of categorical, binary, and continuous column names.
+    """
+    categorical_columns = df.select_dtypes(
+        include=["object", "category"]
+    ).columns.tolist()
+    categorical_columns = [
+        col for col in categorical_columns if col not in ["step_time", "time"]
+    ]
+
+    binary_columns = []
+    continuous_columns = []
+
+    for col in df.columns:
+        if col in categorical_columns + ["step_time", "time"]:
+            continue
+        elif df[col].dtype == "bool" or set(df[col].dropna().unique()).issubset({0, 1}):
+            binary_columns.append(col)
+        elif pd.api.types.is_numeric_dtype(df[col]):
+            continuous_columns.append(col)
+
+    return categorical_columns, binary_columns, continuous_columns
+
+
 def _resample_data_frame(
     df: pd.DataFrame, resampling_period_ms: int = 20
 ) -> pd.DataFrame:  # in ms
-    # Auto-detect categorical dtype columns to exclude from .mean() aggregation
-    categorical_columns = df.select_dtypes(include=["category"]).columns.tolist()
-    # TEMP WORKAROUND: bins_y is stored as string (DJ 2.0 Interval workaround)
-    # so select_dtypes won't catch it. Aperture may also not be categorical.
-    # Revert bins_y entry once datajoint adds Interval support.
-    for col in ["aperture", "bins_y"]:
-        if col not in categorical_columns and col in df.columns:
-            categorical_columns.append(col)
-    binary_columns = ["reward", "mouse_in_right", "mouse_in_left", "iti"]
-    continuous_columns = df.columns[
-        (~df.columns.isin(categorical_columns)) & (~df.columns.isin(binary_columns))
-    ]
+    categorical_columns, binary_columns, continuous_columns = _categorize_columns(df)
 
     t = f"{resampling_period_ms}ms"  # old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
 
     df["time"] = pd.to_datetime(df["step_time"], unit="s")
+
     categorical_resampled = (
         df.set_index("time")
         .groupby("trial", as_index=False)[categorical_columns]
         .resample(t)  # resample to 50Hz
-        .first()
+        .first(numeric_only=False)
         .ffill()
     )
 
@@ -76,7 +94,7 @@ def _resample_data_frame(
         df.set_index("time")
         .groupby("trial", as_index=False)[binary_columns]
         .resample(t)
-        .max()
+        .max(numeric_only=True)
         .ffill()
     )
 
@@ -84,7 +102,7 @@ def _resample_data_frame(
         df.set_index("time")
         .groupby("trial", as_index=False)[continuous_columns]
         .resample(t)
-        .mean()
+        .mean(numeric_only=True)
         .interpolate()
     )
     df = pd.concat(
