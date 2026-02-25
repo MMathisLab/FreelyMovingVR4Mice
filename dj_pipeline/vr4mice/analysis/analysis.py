@@ -65,10 +65,18 @@ def _categorize_columns(df: pd.DataFrame) -> Tuple[List[str], List[str], List[st
     for col in df.columns:
         if col in categorical_columns + ["step_time", "time"]:
             continue
-        elif df[col].dtype == "bool" or set(df[col].dropna().unique()).issubset({0, 1}):
+
+        series = df[col]
+        # Boolean dtypes are always treated as binary
+        if series.dtype == "bool":
             binary_columns.append(col)
-        elif pd.api.types.is_numeric_dtype(df[col]):
-            continuous_columns.append(col)
+        # For numeric dtypes, check whether all non-NA values are in {0, 1}
+        elif pd.api.types.is_numeric_dtype(series):
+            non_na = series.dropna()
+            if non_na.isin((0, 1)).all():
+                binary_columns.append(col)
+            else:
+                continuous_columns.append(col)
 
     return categorical_columns, binary_columns, continuous_columns
 
@@ -85,7 +93,7 @@ def _resample_data_frame(
     categorical_resampled = (
         df.set_index("time")
         .groupby("trial", as_index=False)[categorical_columns]
-        .resample(t)  # resample to 50Hz
+        .resample(t)  # resample to fixed time intervals {resampling_period_ms} ms
         .first(numeric_only=False)
         .ffill()
     )
