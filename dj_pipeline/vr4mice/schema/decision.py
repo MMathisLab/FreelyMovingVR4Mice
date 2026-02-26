@@ -51,7 +51,11 @@ class SessionLabel(dj.Lookup):
         ("ar_shape_det_no_velthr_inv", "shape_black_teardrop_target", "training"),
         ("ar_shape_detection_velthr_inv", "shape_black_teardrop_target", "training"),
         ("ar_shape_discrimination_inv", "shape_black_teardrop_target", "training"),
-        ("ar_shape_discrim_occluders_inv", "shape_black_teardrop_target", "dual_occlusion"),
+        (
+            "ar_shape_discrim_occluders_inv",
+            "shape_black_teardrop_target",
+            "dual_occlusion",
+        ),
         # NOTE(celia): 2-stage occlusion for this task, first one is still training
         ("ar_shape_discrim_occluders", "shape_pacman_target", "training"),
         ("ar_shape_discrim_narrow_occluders", "shape_pacman_target", "dual_occlusion"),
@@ -175,14 +179,19 @@ class InclusionStatus(dj.Computed):
 
             trial_df = tables.fetch(as_dict=True)
 
-            if not trial_df or key == {"dataset": "Hamster_2026-02-02_1"}:
+            # NOTE(celia):
+            # "Lemming_2024-08-09_1" is droped through the Groups table for now, but kept if we decide to drop it
+            # "Hamster_2026-02-02_1" is missing the dlc data
+            if not trial_df or key in [
+                {"dataset": "Hamster_2026-02-02_1"},
+                {"dataset": "Lemming_2024-08-09_1"},
+            ]:
                 self.insert1({**key, "included": False})
                 return
 
             trial_df = pd.concat([pd.DataFrame(x) for x in trial_df])
             trial_df["aperture"] = trial_df["aperture"].round(2)
 
-            # NOTE(celia): This is handled with the Groups table now, but kept if we decide to drop it
             # trial_df = trial_df[trial_df["dataset"] != "Lemming_2024-08-09_1"]
 
             from vr4mice.analysis.utils import apply_inclusion_criteria
@@ -571,6 +580,10 @@ class DecisionPoints(dj.Computed):
         logger.info(f"{self.__class__.__name__} population started for {key}.")
 
         try:
+            # Only compute decision points for session included in the analysis
+            if not (InclusionStatus() & key & {"included": 1}):
+                return
+
             threshold_uncertainty = float(
                 (DecisionThreshold & key).fetch1("threshold_uncertainty")
             )
