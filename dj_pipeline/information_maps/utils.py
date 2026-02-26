@@ -68,7 +68,9 @@ def _visible_angles_from_cache(source, cache):
     source_y = source[1] - target_y
     source_z = source[2] - target_z
 
-    source_norm = np.sqrt(source_x * source_x + source_y * source_y + source_z * source_z)
+    source_norm = np.sqrt(
+        source_x * source_x + source_y * source_y + source_z * source_z
+    )
     source_x_unit = np.zeros_like(source_x)
     source_y_unit = np.zeros_like(source_y)
     np.divide(source_x, source_norm, out=source_x_unit, where=source_norm > 0)
@@ -91,9 +93,12 @@ def get_visibility(source, target, aperture):
     if v_t2s is None or v_t2Lwall is None or v_t2Rwall is None:
         return False
     cross_LS = np.cross(v_t2Lwall[:2], v_t2s[:2])
-    cross_RS = np.cross( v_t2s[:2], v_t2Rwall[:2],)
+    cross_RS = np.cross(
+        v_t2s[:2],
+        v_t2Rwall[:2],
+    )
 
-    if cross_LS >=0 and cross_RS >=0:
+    if cross_LS >= 0 and cross_RS >= 0:
         return True
     else:
         return False
@@ -127,6 +132,7 @@ def _get_segment_area_sorted(angles, radius):
 def infoMetric(area1, area2):
     return 0.5 * np.abs(area1 + area2)
 
+
 def info_map(
     arena,
     circle1_center,
@@ -143,8 +149,12 @@ def info_map(
     y = np.linspace(0, aperture.wall_depth, y_resolution)
 
     info_mat = np.zeros((x_resolution, y_resolution))
-    cache_l = _prepare_circle_cache(circle1_center, radius, angle_step_degrees, aperture)
-    cache_r = _prepare_circle_cache(circle2_center, radius, angle_step_degrees, aperture)
+    cache_l = _prepare_circle_cache(
+        circle1_center, radius, angle_step_degrees, aperture
+    )
+    cache_r = _prepare_circle_cache(
+        circle2_center, radius, angle_step_degrees, aperture
+    )
 
     left_dist = np.sqrt(
         (x[:, None] - circle1_center[0]) ** 2

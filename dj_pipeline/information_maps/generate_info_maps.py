@@ -49,7 +49,9 @@ def parse_args():
     parser.add_argument("--arena-length", type=float, default=52.0)
     parser.add_argument("--arena-width", type=float, default=52.0)
     parser.add_argument("--arena-height", type=float, default=50.0)
-    parser.add_argument("--radius", type=float, default=5.8, help="Target circle radius.")
+    parser.add_argument(
+        "--radius", type=float, default=5.8, help="Target circle radius."
+    )
     parser.add_argument("--x-resolution", type=int, default=52)
     parser.add_argument(
         "--y-resolution",
@@ -119,7 +121,9 @@ def save_info_map_plot(info_mat, output_path: Path, width_label: str):
     image = ax.imshow(info_mat, cmap="cividis", origin="lower", aspect="auto")
     min_val = info_mat.min()
     max_val = info_mat.max()
-    ax.set_title(f"Unnormalized Info Map (aperture width={width_label})\nmin={min_val:.3f}, max={max_val:.3f}")
+    ax.set_title(
+        f"Unnormalized Info Map (aperture width={width_label})\nmin={min_val:.3f}, max={max_val:.3f}"
+    )
     ax.set_xlabel("Y index")
     ax.set_ylabel("X index")
     fig.colorbar(image, ax=ax, label="Information")
@@ -179,6 +183,7 @@ def main():
                 width_label=width_label,
             )
             print(f"Saved plot {plot_output_path}")
+
 
 if __name__ == "__main__":
     main()
