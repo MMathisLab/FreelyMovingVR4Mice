@@ -1336,6 +1336,9 @@ def plot_rate(
 
         if "aperture" in data_for_stats.columns:
             for i in data_for_stats.aperture.unique():
+                # NOTE(celia): if dual aperture, we can do a t-test against,
+                # if multiple apertures, we run a FDR-corrected t-test later in the code
+                # so we do not compute it here.
                 if data_for_stats.aperture.nunique() < 3:
                     t_null, p_null = stats.ttest_1samp(
                         data_for_stats[data_for_stats["aperture"] == i]["count"], 0

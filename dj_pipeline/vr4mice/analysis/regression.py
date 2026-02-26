@@ -225,7 +225,10 @@ def _find_decision_point_per_trial(
         ):
             return trial_data.loc[index]
 
-    # Fallback when nothing crosses the threshold.
+    # Fallback:
+    # When nothing crosses the threshold, we take the last step of the trial
+    # as the decision point. We need to return something, but for some threshold there
+    # is no value above the threshold.
     return trial_data.iloc[-1]
 
 
@@ -401,101 +404,96 @@ def find_decision_point_from_value(
     return trial_data.iloc[idx, :]
 
 
-def select_threshold(
-    all_decision_points: pd.DataFrame,
+def _build_trial_cache(
     interpolated_df: pd.DataFrame,
-    decision_window: int = 10,
-    n_random_points: int = 2,
-    random_state: int = 42,
-):
-    """Choose the best decision threshold using session-wise random baselines.
+    index_cols: List[str],
+    keys: set,
+) -> dict:
+    """Cache per-trial dataframes for fast lookups."""
+    cache = {}
+    grouped = interpolated_df.groupby(index_cols, sort=False)
+    for key, group in grouped:
+        if key in keys:
+            cache[key] = group.sort_values("trial_length").reset_index(drop=True)
+    return cache
 
-    For each threshold, the function computes before/after window deltas around
-    decision points, z-scores them against random window deltas sampled per
-    session, and returns the weighted best threshold.
 
-    Args:
-        all_decision_points: DataFrame containing the decision points for all trials and sessions.
-        interpolated_df: DataFrame containing the interpolated trajectory data for all trials and sessions.
-        decision_window: Number of timesteps to consider before and after the decision point for computing metrics.
-        n_random_points: Number of random windows to sample per trial for building the null distribution.
-        random_state: Seed for the random number generator for reproducibility.
-    """
-    metric_cols = [
-        "velocity_x_fliped",
-        "velocity_y",
-        "heading_dir_flipped",
-        "head_angle_flipped",
-    ]
+def _metrics_for_window(
+    trial_data: pd.DataFrame,
+    metric_cols: List[str],
+    decision_window: int,
+    start: int,
+    end: int,
+    meta: dict,
+    period: str,
+    random_id: Optional[int] = None,
+) -> Optional[pd.Series]:
+    """Compute window means for selected metrics with attached metadata."""
+    if start < 0 or end > len(trial_data) or end - start != decision_window:
+        return None
+    metrics = trial_data.iloc[start:end][metric_cols].mean()
+    metrics["dataset"] = meta["dataset"]
+    metrics["aperture"] = meta["aperture"]
+    metrics["trial"] = meta["trial"]
+    metrics["decision_trial_length"] = meta["decision_trial_length"]
+    metrics["period"] = period
+    if random_id is not None:
+        metrics["random_id"] = random_id
+    return metrics
 
-    index_cols = ["dataset", "aperture", "trial"]
-    rng = np.random.default_rng(random_state)
 
-    def _build_trial_cache(keys):
-        """Cache per-trial dataframes for fast lookups."""
-        cache = {}
-        grouped = interpolated_df.groupby(index_cols, sort=False)
-        for key, group in grouped:
-            if key in keys:
-                cache[key] = group.sort_values("trial_length").reset_index(drop=True)
-        return cache
+def _paired_diff(
+    metrics_df: pd.DataFrame,
+    index_cols: List[str],
+    metric_cols: List[str],
+    extra_index_cols: List[str],
+) -> Optional[pd.DataFrame]:
+    """Compute paired after-before deltas for each index key."""
+    paired = metrics_df.pivot_table(
+        index=index_cols + extra_index_cols,
+        columns="period",
+        values=metric_cols,
+    ).dropna()
+    if paired.empty:
+        return None
+    return paired.xs("after", level=-1, axis=1) - paired.xs("before", level=-1, axis=1)
 
-    def _metrics_for_window(trial_data, start, end, meta, period, random_id=None):
-        """Compute window means for selected metrics with attached metadata."""
-        if start < 0 or end > len(trial_data) or end - start != decision_window:
-            return None
-        metrics = trial_data.iloc[start:end][metric_cols].mean()
-        metrics["dataset"] = meta["dataset"]
-        metrics["aperture"] = meta["aperture"]
-        metrics["trial"] = meta["trial"]
-        metrics["decision_trial_length"] = meta["decision_trial_length"]
-        metrics["period"] = period
-        if random_id is not None:
-            metrics["random_id"] = random_id
-        return metrics
 
-    def _paired_diff(metrics_df, extra_index_cols):
-        """Compute paired after-before deltas for each index key."""
-        paired = metrics_df.pivot_table(
-            index=index_cols + extra_index_cols,
-            columns="period",
-            values=metric_cols,
-        ).dropna()
-        if paired.empty:
-            return None
-        return paired.xs("after", level=-1, axis=1) - paired.xs(
-            "before", level=-1, axis=1
-        )
+def _jump_score_components(
+    df: pd.DataFrame,
+    metric_cols: List[str],
+    rand_mean: pd.Series,
+    rand_std: pd.Series,
+    rand_mean_abs: dict,
+    rand_std_abs: dict,
+) -> Tuple[dict, dict]:
+    """Compute per-row deltas and z-scores for metrics, handling abs metrics."""
+    abs_metric_cols = {"head_angle_flipped", "heading_dir_flipped"}
+    deltas = {}
+    z_scores = {}
+    for col in metric_cols:
+        if col in abs_metric_cols:
+            deltas[col] = df[col].abs()
+            z_scores[col] = (deltas[col] - rand_mean_abs[col]) / rand_std_abs[col]
+        else:
+            deltas[col] = df[col]
+            z_scores[col] = (deltas[col] - rand_mean[col]) / rand_std[col]
+    return deltas, z_scores
 
-    def _jump_score_components(df, rand_mean, rand_std, rand_mean_abs, rand_std_abs):
-        """Compute per-row deltas and z-scores for metrics, handling abs metrics."""
-        abs_metric_cols = {"head_angle_flipped", "heading_dir_flipped"}
-        deltas = {}
-        z_scores = {}
-        for col in metric_cols:
-            if col in abs_metric_cols:
-                deltas[col] = df[col].abs()
-                z_scores[col] = (deltas[col] - rand_mean_abs[col]) / rand_std_abs[col]
-            else:
-                deltas[col] = df[col]
-                z_scores[col] = (deltas[col] - rand_mean[col]) / rand_std[col]
-        return deltas, z_scores
 
-    # Use all trials as candidates for random sampling.
-    base_points = all_decision_points.drop_duplicates(index_cols)
-    all_keys = set(
-        zip(
-            all_decision_points["dataset"],
-            all_decision_points["aperture"],
-            all_decision_points["trial"],
-        )
-    )
-    trial_cache = _build_trial_cache(all_keys)
-
-    # Sample random windows per trial to build a null distribution per session.
+def _sample_random_metrics(
+    base_points: pd.DataFrame,
+    trial_cache: dict,
+    metric_cols: List[str],
+    decision_window: int,
+    n_random_points: int,
+    rng: np.random.Generator,
+    index_cols: List[str],
+) -> pd.DataFrame:
+    """Sample random before/after windows for a null distribution."""
     random_metrics = []
     for _, row in base_points.iterrows():
-        key = (row["dataset"], row["aperture"], row["trial"])
+        key = (row[index_cols[0]], row[index_cols[1]], row[index_cols[2]])
         trial_data = trial_cache.get(key)
         if trial_data is None:
             continue
@@ -513,13 +511,15 @@ def select_threshold(
 
         for rand_id, rand_idx in enumerate(rand_indices):
             meta = {
-                "dataset": row["dataset"],
-                "aperture": row["aperture"],
-                "trial": row["trial"],
+                "dataset": row[index_cols[0]],
+                "aperture": row[index_cols[1]],
+                "trial": row[index_cols[2]],
                 "decision_trial_length": trial_data.loc[rand_idx, "trial_length"],
             }
             before = _metrics_for_window(
                 trial_data,
+                metric_cols,
+                decision_window,
                 rand_idx - decision_window,
                 rand_idx,
                 meta,
@@ -528,6 +528,8 @@ def select_threshold(
             )
             after = _metrics_for_window(
                 trial_data,
+                metric_cols,
+                decision_window,
                 rand_idx + 1,
                 rand_idx + 1 + decision_window,
                 meta,
@@ -538,25 +540,15 @@ def select_threshold(
                 continue
             random_metrics.extend([before, after])
 
-    random_metrics_df = pd.DataFrame(random_metrics)
-    if random_metrics_df.empty:
-        raise ValueError(
-            "No random samples available. Check threshold filter and decision_window."
-        )
+    return pd.DataFrame(random_metrics)
 
-    random_diff_df = _paired_diff(random_metrics_df, ["random_id"])
-    if random_diff_df is None:
-        raise ValueError(
-            "No paired random samples available. Check threshold filter and decision_window."
-        )
 
-    # Cache per-session stats to normalize deltas (z-score).
+def _compute_random_stats(random_diff_df: pd.DataFrame) -> dict:
+    """Compute per-session stats to normalize deltas (z-score)."""
     random_stats_by_session = {}
     for dataset, df in random_diff_df.groupby(level="dataset"):
         rand_mean = df.mean(numeric_only=True)
         rand_std = df.std(numeric_only=True)
-        # For angle-based metrics: absolute values to capture typical jump magnitudes
-        # regardless of direction.
         rand_ang = df["head_angle_flipped"].abs()
         rand_dir = df["heading_dir_flipped"].abs()
         random_stats_by_session[dataset] = {
@@ -567,7 +559,15 @@ def select_threshold(
             "rand_mean_dir": rand_dir.mean(),
             "rand_std_dir": rand_dir.std(),
         }
+    return random_stats_by_session
 
+
+def _compute_random_jump_scores(
+    random_diff_df: pd.DataFrame,
+    random_stats_by_session: dict,
+    metric_cols: List[str],
+) -> dict:
+    """Compute per-session arrays of random jump scores."""
     random_jump_scores_by_session = {}
     for dataset, df in random_diff_df.groupby(level="dataset"):
         session_stats = random_stats_by_session.get(dataset)
@@ -585,6 +585,7 @@ def select_threshold(
         }
         _, z_scores = _jump_score_components(
             df,
+            metric_cols,
             rand_mean,
             rand_std,
             rand_mean_abs,
@@ -600,13 +601,21 @@ def select_threshold(
             .dropna()
             .to_numpy()
         )
+    return random_jump_scores_by_session
 
-    # Evaluate all thresholds using the same per-session random baselines.
+
+def _evaluate_thresholds(
+    all_decision_points: pd.DataFrame,
+    trial_cache: dict,
+    random_stats_by_session: dict,
+    random_jump_scores_by_session: dict,
+    metric_cols: List[str],
+    decision_window: int,
+    thresholds: np.ndarray,
+    index_cols: List[str],
+) -> List[dict]:
+    """Evaluate thresholds with session-specific baselines."""
     threshold_evals_norm = []
-    thresholds = all_decision_points.sort_values(
-        "threshold_uncertainty", ascending=False
-    )["threshold_uncertainty"].unique()
-
     for threshold in thresholds:
         print(
             f"Analyzing decision points with threshold_uncertainty {threshold} (normalized)..."
@@ -617,7 +626,7 @@ def select_threshold(
         decision_metrics = []
 
         for _, row in decision_points_threshold.iterrows():
-            key = (row["dataset"], row["aperture"], row["trial"])
+            key = (row[index_cols[0]], row[index_cols[1]], row[index_cols[2]])
             trial_data = trial_cache.get(key)
             if trial_data is None:
                 continue
@@ -631,13 +640,15 @@ def select_threshold(
             decision_index = decision_index_candidates[0]
 
             meta = {
-                "dataset": row["dataset"],
-                "aperture": row["aperture"],
-                "trial": row["trial"],
+                "dataset": row[index_cols[0]],
+                "aperture": row[index_cols[1]],
+                "trial": row[index_cols[2]],
                 "decision_trial_length": decision_length,
             }
             before = _metrics_for_window(
                 trial_data,
+                metric_cols,
+                decision_window,
                 decision_index - decision_window,
                 decision_index,
                 meta,
@@ -645,6 +656,8 @@ def select_threshold(
             )
             after = _metrics_for_window(
                 trial_data,
+                metric_cols,
+                decision_window,
                 decision_index + 1,
                 decision_index + 1 + decision_window,
                 meta,
@@ -658,7 +671,7 @@ def select_threshold(
         if decision_metrics_df.empty:
             continue
 
-        true_diff_df = _paired_diff(decision_metrics_df, [])
+        true_diff_df = _paired_diff(decision_metrics_df, index_cols, metric_cols, [])
         if true_diff_df is None:
             continue
 
@@ -679,6 +692,7 @@ def select_threshold(
 
             deltas, z_scores = _jump_score_components(
                 df,
+                metric_cols,
                 rand_mean,
                 rand_std,
                 rand_mean_abs,
@@ -711,7 +725,6 @@ def select_threshold(
                         "scipy is required for per-threshold statistical tests."
                     ) from exc
 
-            # Higher scores mean stronger directional change vs. random baseline.
             jump_score_norm = (
                 z_scores["velocity_x_fliped"].mean()
                 - z_scores["velocity_y"].mean()
@@ -745,24 +758,120 @@ def select_threshold(
                 }
             )
 
+    return threshold_evals_norm
+
+
+def _fisher_combine(p_values: Union[pd.Series, np.ndarray]) -> float:
+    p_values = np.asarray(p_values)
+    p_values = p_values[np.isfinite(p_values) & (p_values > 0)]
+    if p_values.size == 0:
+        return np.nan
+    try:
+        from scipy.stats import chi2
+
+        stat = -2.0 * np.sum(np.log(p_values))
+        return chi2.sf(stat, 2 * p_values.size)
+    except ImportError as exc:
+        raise ImportError(
+            "scipy is required for per-threshold statistical tests."
+        ) from exc
+
+
+def select_threshold(
+    all_decision_points: pd.DataFrame,
+    interpolated_df: pd.DataFrame,
+    decision_window: int = 10,
+    n_random_points: int = 2,
+    random_state: int = 42,
+):
+    """Evaluate decision thresholds using session-wise random baselines.
+
+    For each threshold, the function computes before/after window deltas around
+    decision points, z-scores them against random window deltas sampled per
+    session, and returns a per-session/per-threshold evaluation DataFrame. It
+    does not select a single best threshold.
+
+    Args:
+        all_decision_points: DataFrame containing the decision points for all trials and sessions.
+        interpolated_df: DataFrame containing the interpolated trajectory data for all trials and sessions.
+        decision_window: Number of timesteps to consider before and after the decision point for computing metrics.
+        n_random_points: Number of random windows to sample per trial for building the null distribution.
+        random_state: Seed for the random number generator for reproducibility.
+
+    Returns:
+        A DataFrame with one row per dataset and threshold containing jump-score
+        metrics and optional per-threshold p-values (when scipy is available).
+    """
+    metric_cols = [
+        "velocity_x_fliped",
+        "velocity_y",
+        "heading_dir_flipped",
+        "head_angle_flipped",
+    ]
+    index_cols = ["dataset", "aperture", "trial"]
+    rng = np.random.default_rng(random_state)
+
+    # Use all trials as candidates for random sampling.
+    base_points = all_decision_points.drop_duplicates(index_cols)
+    all_keys = set(
+        zip(
+            all_decision_points["dataset"],
+            all_decision_points["aperture"],
+            all_decision_points["trial"],
+        )
+    )
+    trial_cache = _build_trial_cache(interpolated_df, index_cols, all_keys)
+
+    # Sample random windows per trial to build a null distribution per session.
+    random_metrics_df = _sample_random_metrics(
+        base_points,
+        trial_cache,
+        metric_cols,
+        decision_window,
+        n_random_points,
+        rng,
+        index_cols,
+    )
+    if random_metrics_df.empty:
+        raise ValueError(
+            "No random samples available. Check threshold filter and decision_window."
+        )
+
+    random_diff_df = _paired_diff(
+        random_metrics_df, index_cols, metric_cols, ["random_id"]
+    )
+    if random_diff_df is None:
+        raise ValueError(
+            "No paired random samples available. Check threshold filter and decision_window."
+        )
+
+    # Cache per-session stats to normalize deltas (z-score).
+    random_stats_by_session = _compute_random_stats(random_diff_df)
+    random_jump_scores_by_session = _compute_random_jump_scores(
+        random_diff_df,
+        random_stats_by_session,
+        metric_cols,
+    )
+
+    # Evaluate all thresholds using the same per-session random baselines.
+    thresholds = all_decision_points.sort_values(
+        "threshold_uncertainty", ascending=False
+    )["threshold_uncertainty"].unique()
+
+    threshold_evals_norm = _evaluate_thresholds(
+        all_decision_points,
+        trial_cache,
+        random_stats_by_session,
+        random_jump_scores_by_session,
+        metric_cols,
+        decision_window,
+        thresholds,
+        index_cols,
+    )
+
     eval_df_norm = pd.DataFrame(threshold_evals_norm)
     if eval_df_norm.empty:
         raise ValueError("No threshold evaluations were computed.")
-
-    def _fisher_combine(p_values):
-        p_values = np.asarray(p_values)
-        p_values = p_values[np.isfinite(p_values) & (p_values > 0)]
-        if p_values.size == 0:
-            return np.nan
-        try:
-            from scipy.stats import chi2
-
-            stat = -2.0 * np.sum(np.log(p_values))
-            return chi2.sf(stat, 2 * p_values.size)
-        except ImportError as exc:
-            raise ImportError(
-                "scipy is required for per-threshold statistical tests."
-            ) from exc
 
     if "p_value" in eval_df_norm.columns:
         combined_p = eval_df_norm.groupby("threshold")["p_value"].apply(_fisher_combine)
