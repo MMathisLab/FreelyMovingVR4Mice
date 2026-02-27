@@ -1,3 +1,5 @@
+"""Interpolated trajectory schema used for downstream analysis tables."""
+
 import subprocess
 import os
 import re
@@ -50,12 +52,16 @@ class InterpolatedTrials(dj.Computed):
     """
 
     def make(self, key):
+        """Interpolate trials and store per-trial trajectories."""
         from vr4mice.analysis.utils import interpolate_j_shaped
 
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
+            return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
         try:
@@ -75,7 +81,9 @@ class InterpolatedTrials(dj.Computed):
                     columns=["time", "dataset", "trial_step"]
                 )
                 interpolated_df["x_flipped"] = df["x"] * df["flip_one_side"]
-                self.insert1({**key, **interpolated_df.to_dict()})
+                self.insert1(
+                    {**key, **interpolated_df.to_dict()}, allow_direct_insert=True
+                )
 
         except Exception as err:
             dataset = key["dataset"]
@@ -103,12 +111,16 @@ class MeanXYTrajectory(dj.Computed):
     """
 
     def make(self, key):
+        """Compute mean trajectory across trials for each aperture."""
         from vr4mice.analysis.analysis import mean_xy_trajectory
 
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
+            return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
         try:
@@ -159,6 +171,7 @@ class YBinnedXYTrajectory(dj.Computed):
     """
 
     def make(self, key):
+        """Compute y-binned mean trajectories for each aperture."""
         from vr4mice.analysis.analysis import mean_xy_trajectory
         from vr4mice.analysis.utils import create_bins
 
@@ -166,6 +179,9 @@ class YBinnedXYTrajectory(dj.Computed):
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
+            return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
         try:
@@ -219,10 +235,14 @@ class MeanVelocities(dj.Computed):
     """
 
     def make(self, key):
+        """Compute mean velocities across trials for each aperture."""
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
+            return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
         try:

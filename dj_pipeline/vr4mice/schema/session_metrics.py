@@ -1,3 +1,5 @@
+"""Session-level and trial-level summary metrics schema."""
+
 import subprocess
 import os
 import re
@@ -32,12 +34,17 @@ class SessionMetrics(dj.Computed):
     """
 
     def make(self, key):
+        """Compute session-level summary metrics from the DataFrame table."""
 
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         try:
             if len(base_analysis.DataFrame & key) > 0:
                 df = (base_analysis.DataFrame()).get_data(
@@ -112,10 +119,15 @@ class TrialMetrics(dj.Computed):
     """
 
     def make(self, key):
+        """Compute trial-level metrics derived from per-step data."""
+
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
+            return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
         try:
@@ -139,7 +151,7 @@ class TrialMetrics(dj.Computed):
                     "trial_duration": mean_df.trial_duration.values,
                     "trial_jshaped": mean_df.trial_jshaped.values,
                 }
-                self.insert1({**key, **insert_dict})
+                self.insert1({**key, **insert_dict}, allow_direct_insert=True)
 
         except Exception as err:
             dataset = key["dataset"]
