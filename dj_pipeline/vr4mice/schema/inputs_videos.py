@@ -26,7 +26,7 @@ class RawVideo(dj.Imported):
     """Stores the raw OBS recording path for a dataset."""
 
     definition = """
-    -> Dataset                     # source dataset key
+    -> vr4mice.Dataset             # source dataset key
     ---
     video_path: varchar(255)       # absolute path to the raw OBS recording
     """
