@@ -392,11 +392,17 @@ def apply_inclusion_criteria(
     return filtered_data, reward_table
 
 
-def get_training_stage_per_mouse(big_df, mouse_name):
+def get_training_stage_per_mouse(big_df, mouse_name, inv=False):
+    training_stages = ["ar_detection_no_velthr", "ar_detection_velthr", "ar_discrim"]
+    if inv:
+        training_stages = [f"{stage}_inv" for stage in training_stages]
+        training_stages[0] = "ar_det_no_velthr_inv"
+
     new_df_list = []
     mouse_df = big_df[big_df.mouse_name == mouse_name].copy()
 
-    df = mouse_df[(mouse_df.training_stage == "ar_detection_no_velthr")].copy()
+    df = mouse_df[(mouse_df.training_stage == training_stages[0])].copy()
+
     early = df[df.session_increment == df.session_increment.unique()[0]].copy()
     early["num_train_stage"] = 0
     new_df_list.append(early)
@@ -405,12 +411,12 @@ def get_training_stage_per_mouse(big_df, mouse_name):
     mid["num_train_stage"] = 1
     new_df_list.append(mid)
 
-    df = mouse_df[(mouse_df.training_stage == "ar_detection_velthr")].copy()
+    df = mouse_df[(mouse_df.training_stage == training_stages[0])].copy()
     late = df[df.session_increment == df.session_increment.unique()[-1]].copy()  # 0
     late["num_train_stage"] = 2
     new_df_list.append(late)
 
-    df = mouse_df[(mouse_df.training_stage == "ar_discrim")].copy()
+    df = mouse_df[(mouse_df.training_stage == training_stages[2])].copy()
 
     early = df[df.session_increment == df.session_increment.unique()[0]].copy()
     early["num_train_stage"] = 3
