@@ -31,7 +31,8 @@ jobs:
       DJ_USER: root
       DJ_PASS: simple
       DJ_LAB: ci
-      GUI: "gui_mode"
+      GUI: "TRUE"
+      EMAIL: "False"
       IMG_SRC: Imagingsource
       DJ_SUPPORT_FILEPATH_MANAGEMENT: "TRUE"
       DJ_SUPPORT_ADAPTED_TYPES: "TRUE"
@@ -49,7 +50,13 @@ jobs:
           mkdir -p "$RUNNER_TEMP/vr4mice-shared"
 
       - name: Build Docker image
-        run: docker build -t vr4mice_app:test-image ./dj_pipeline
+        run: |
+          docker build \
+            --build-arg user_name="$(id -un)" \
+            --build-arg uid="$(id -u)" \
+            --build-arg gid="$(id -g)" \
+            -t vr4mice_app:test-image \
+            ./dj_pipeline
 
       - name: Run cron_scenario.py
         run: |
@@ -62,6 +69,7 @@ jobs:
             -e DJ_PWD="${DJ_PASS}" \
             -e DJ_LAB="${DJ_LAB}" \
             -e GUI="${GUI}" \
+            -e EMAIL="${EMAIL}" \
             -e IMG_SRC="${IMG_SRC}" \
             -e DJ_SUPPORT_FILEPATH_MANAGEMENT="${DJ_SUPPORT_FILEPATH_MANAGEMENT}" \
             -e DJ_SUPPORT_ADAPTED_TYPES="${DJ_SUPPORT_ADAPTED_TYPES}" \
