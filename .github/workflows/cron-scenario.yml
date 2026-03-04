@@ -39,10 +39,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Prepare runtime directories
         run: |
-          mkdir -p "$RUNNER_TEMP/vr4mice-data/data"
+          mkdir -p "$RUNNER_TEMP/vr4mice-data/processed"
           mkdir -p "$RUNNER_TEMP/vr4mice-data/summary_plots"
           mkdir -p "$RUNNER_TEMP/vr4mice-shared"
 
@@ -65,7 +67,9 @@ jobs:
             -e DJ_SUPPORT_ADAPTED_TYPES="${DJ_SUPPORT_ADAPTED_TYPES}" \
             # Mount the code and data directories
             -v "$GITHUB_WORKSPACE/dj_pipeline:/app" \
-            -v "$RUNNER_TEMP/vr4mice-data:/data" \
+            -v "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/:/data/data/" \
+            -v "$RUNNER_TEMP/vr4mice-data/processed:/data/processed" \
+            -v "$RUNNER_TEMP/vr4mice-data/summary_plots:/data/summary_plots" \
             -v "$RUNNER_TEMP/vr4mice-shared:/shared" \
             vr4mice_app:test-image \
             -lc "pip install --no-deps /app/base/base_min_schemas /app/base/base_actions && python cron_scenario.py"
