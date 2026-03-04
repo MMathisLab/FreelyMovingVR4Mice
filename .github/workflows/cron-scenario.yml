@@ -80,3 +80,11 @@ jobs:
             -v "$RUNNER_TEMP/vr4mice-shared:/shared" \
             vr4mice_app:test-image \
             -lc "pip install --no-deps /app/base/base_min_schemas /app/base/base_actions && python cron_scenario.py"
+
+      - name: Upload summary plot artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cron-scenario-summary-plots
+          path: ${{ runner.temp }}/vr4mice-data/summary_plots
+          if-no-files-found: warn
