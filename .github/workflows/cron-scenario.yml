@@ -65,7 +65,6 @@ jobs:
             -e IMG_SRC="${IMG_SRC}" \
             -e DJ_SUPPORT_FILEPATH_MANAGEMENT="${DJ_SUPPORT_FILEPATH_MANAGEMENT}" \
             -e DJ_SUPPORT_ADAPTED_TYPES="${DJ_SUPPORT_ADAPTED_TYPES}" \
-            # Mount the code and data directories
             -v "$GITHUB_WORKSPACE/dj_pipeline:/app" \
             -v "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/:/data/data/" \
             -v "$RUNNER_TEMP/vr4mice-data/processed:/data/processed" \
