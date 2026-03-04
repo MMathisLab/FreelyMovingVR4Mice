@@ -43,14 +43,27 @@ class SessionLabel(dj.Lookup):
         ("ar_discrim_inv", "contrast_black_target", "training"),
         ("ar_discrim_occluders_inv", "contrast_black_target", "dual_occlusion"),
         ("ar_discrim_5_occluders_inv", "contrast_black_target", "multi_occlusion"),
-        # Shape task with pacman target
+        # Shape task with white pacman target
         ("ar_shape_detection_no_velthr", "shape_pacman_target", "training"),
         ("ar_shape_detection_velthr", "shape_pacman_target", "training"),
         ("ar_shape_discrimination", "shape_pacman_target", "training"),
+        # Shape task with black teardrop target
+        ("ar_shape_det_no_velthr_inv", "shape_black_teardrop_target", "training"),
+        ("ar_shape_detection_velthr_inv", "shape_black_teardrop_target", "training"),
+        ("ar_shape_discrimination_inv", "shape_black_teardrop_target", "training"),
+        (
+            "ar_shape_discrim_occluders_inv",
+            "shape_black_teardrop_target",
+            "dual_occlusion",
+        ),
         # NOTE(celia): 2-stage occlusion for this task, first one is still training
         ("ar_shape_discrim_occluders", "shape_pacman_target", "training"),
         ("ar_shape_discrim_narrow_occluders", "shape_pacman_target", "dual_occlusion"),
         ("ar_shape_discrim_multi_occluders", "shape_pacman_target", "multi_occlusion"),
+        # NOTE(celia): Specific to Niell lab: not part of any experiment set, but we want to exclude
+        # these sessions so that properly computed in InclusionCriteria
+        ("random_occluders", "random", "random_occlusion"),
+        ("AR_VD_single_teardrop", "random", "random_occlusion"),
     ]
 
 
@@ -65,6 +78,7 @@ class ExperimentSet(dj.Lookup):
         ("contrast_white_target", "Contrast task, white target"),
         ("contrast_black_target", "Contrast task, black target"),
         ("shape_pacman_target", "Shape task, pacman target"),
+        ("shape_black_teardrop_target", "Shape task, black teardrop target"),
     ]
 
 
@@ -165,14 +179,19 @@ class InclusionStatus(dj.Computed):
 
             trial_df = tables.fetch(as_dict=True)
 
-            if not trial_df:
+            # NOTE(celia):
+            # "Lemming_2024-08-09_1" is droped through the Groups table for now, but kept if we decide to drop it
+            # "Hamster_2026-02-02_1" is missing the dlc data
+            if not trial_df or key in [
+                {"dataset": "Hamster_2026-02-02_1"},
+                {"dataset": "Lemming_2024-08-09_1"},
+            ]:
                 self.insert1({**key, "included": False})
                 return
 
             trial_df = pd.concat([pd.DataFrame(x) for x in trial_df])
             trial_df["aperture"] = trial_df["aperture"].round(2)
 
-            # NOTE(celia): This is handled with the Groups table now, but kept if we decide to drop it
             # trial_df = trial_df[trial_df["dataset"] != "Lemming_2024-08-09_1"]
 
             from vr4mice.analysis.utils import apply_inclusion_criteria
@@ -280,6 +299,15 @@ class LabelSet(dj.Lookup):
                 ],
             ),
             7: ("Priors", ["trial_history", "trial_init_x", "trial_init_y"]),
+            8: (
+                "Lateral Kinematics",
+                [
+                    "x",
+                    "velocity_x",
+                    "heading_dir_sin",
+                    "head_angle_sin",
+                ],
+            ),
         }
 
         for set_id, (name, labels) in custom_sets.items():
@@ -448,8 +476,9 @@ class PredictionModel(dj.Computed):
 
             # Across all sessions BIC
             bic = regression.compute_bic(
-                df_model_per_trial["proba_left"].values.reshape(-1, 1),
+                df_model_per_trial["proba_left"].values,
                 df_model_per_trial["trial_left_choice"].values,
+                n_params=len(label_set) + 1,
             )
 
             self.insert1(
@@ -478,8 +507,9 @@ class PredictionModel(dj.Computed):
                     bic_per_timestep[
                         trial_df.index
                     ] = regression.compute_bic_sliding_window(
-                        trial_df["proba_left"].values.reshape(-1, 1),
+                        trial_df["proba_left"].values,
                         trial_df["trial_left_choice"].values,
+                        n_params=len(label_set) + 1,
                         window_size=10,
                     )
 
@@ -516,17 +546,11 @@ class DecisionThreshold(dj.Lookup):
     threshold_uncertainty : varchar(10)
     """
     contents = [
-        ("0.0",),
         ("0.1",),
         ("0.2",),
         ("0.3",),
         ("0.4",),
         ("0.5",),
-        ("0.6",),
-        ("0.7",),
-        ("0.8",),
-        ("0.9",),
-        ("1.0",),
     ]
 
 
@@ -556,6 +580,10 @@ class DecisionPoints(dj.Computed):
         logger.info(f"{self.__class__.__name__} population started for {key}.")
 
         try:
+            # Only compute decision points for session included in the analysis
+            if not (InclusionStatus() & key & {"included": 1}):
+                return
+
             threshold_uncertainty = float(
                 (DecisionThreshold & key).fetch1("threshold_uncertainty")
             )

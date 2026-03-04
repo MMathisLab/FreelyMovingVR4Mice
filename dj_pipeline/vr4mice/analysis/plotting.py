@@ -1298,7 +1298,7 @@ def plot_rate(
         )
         ax.set_xlim(-0.5, num_aperture - 0.5)
 
-    if per_aperture and not plot_bias:
+    if per_aperture:
         data_for_stats = counts
 
         stats_tests = pd.DataFrame(
@@ -1320,9 +1320,9 @@ def plot_rate(
                     print(f"{i}-{j}: {stat}")
             mean = counts[counts["aperture"] == i]["count"].mean()
             sem = counts[counts["aperture"] == i]["count"].sem()
-            print(f"mean: {mean}, sem: {sem}")
+            print(f"{i}: mean={mean:.3f} ± {sem:.3f}")
 
-    else:
+    if plot_bias:
         data_for_stats = counts
         if per_mouse and "mouse_name" in counts.columns:
             if "aperture" in counts.columns:
@@ -1336,14 +1336,14 @@ def plot_rate(
 
         if "aperture" in data_for_stats.columns:
             for i in data_for_stats.aperture.unique():
-                t_null, p_null = stats.ttest_1samp(
-                    data_for_stats[data_for_stats["aperture"] == i]["count"], 0
-                )
-                print(f"{i} vs chance 0: t={t_null:.2f}, p={p_null:.3f}")
-
-                mean_i = data_for_stats[data_for_stats["aperture"] == i]["count"].mean()
-                sem_i = data_for_stats[data_for_stats["aperture"] == i]["count"].sem()
-                print(f"{i}: mean={mean_i:.3f} ± {sem_i:.3f}")
+                # NOTE(celia): if dual aperture, we can do a t-test against,
+                # if multiple apertures, we run a FDR-corrected t-test later in the code
+                # so we do not compute it here.
+                if data_for_stats.aperture.nunique() < 3:
+                    t_null, p_null = stats.ttest_1samp(
+                        data_for_stats[data_for_stats["aperture"] == i]["count"], 0
+                    )
+                    print(f"{i} vs chance 0: t={t_null:.2f}, p={p_null:.3f}")
     return counts
 
 
@@ -1533,7 +1533,11 @@ def pairplot_std_decision_point(
 
     counts["count"] = counts[label_parameter]
     counts = pd.DataFrame(counts.reset_index())
-    counts.aperture = counts.aperture.round(2).astype(str)
+    aperture_numeric = pd.to_numeric(counts["aperture"], errors="coerce")
+    if aperture_numeric.notna().all():
+        counts["aperture"] = aperture_numeric.round(2).astype(str)
+    else:
+        counts["aperture"] = counts["aperture"].astype(str)
 
     _plot_bar_counts(
         counts=counts,
@@ -1601,7 +1605,11 @@ def pairplot_average_decision_point(
         )
     else:
         counts = pd.DataFrame(counts.reset_index().sort_values(by="aperture"))
-    counts.aperture = counts.aperture.round(2).astype(str)
+    aperture_numeric = pd.to_numeric(counts["aperture"], errors="coerce")
+    if aperture_numeric.notna().all():
+        counts["aperture"] = aperture_numeric.round(2).astype(str)
+    else:
+        counts["aperture"] = counts["aperture"].astype(str)
 
     _plot_bar_counts(
         counts=counts,
@@ -1912,7 +1920,9 @@ def plot_rolling_reward(df, ax=None, rolling_window=15, per_aperture=False):
     ax.set_xlabel("Trials")
 
 
-def plot_rolling_variable(df, label, ax=None, rolling_window=15, per_aperture=False):
+def plot_rolling_variable(
+    df, label, ax=None, rolling_window=15, per_aperture=True, plot_bar=False
+):
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=(10, 3))
 
@@ -1930,7 +1940,9 @@ def plot_rolling_variable(df, label, ax=None, rolling_window=15, per_aperture=Fa
 
     df_grouped.sort_values(by="aperture", inplace=True)
 
-    ax.bar(df_grouped.trial, df_grouped[label], color="grey")
+    if plot_bar:
+        ax.bar(df_grouped.trial, df_grouped[label], color="grey")
+
     sns.lineplot(
         data=df_grouped,
         x="trial",
@@ -1945,6 +1957,9 @@ def plot_rolling_variable(df, label, ax=None, rolling_window=15, per_aperture=Fa
 
 
 def plot_rolling_aperture_diff(df, label, ax=None, rolling_window=15, color="#B52916"):
+    """
+    Plot the rolling difference between two apertures for a given variable.
+    """
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=(10, 3))
 
@@ -1979,6 +1994,235 @@ def plot_rolling_aperture_diff(df, label, ax=None, rolling_window=15, color="#B5
     ax.set_ylabel(f"$\Delta$ Rolling {label}")
     ax.set_xlabel("Trial")
     ax.set_title(f"{apertures[1]} minus {apertures[0]}")
+
+
+def plot_mouse_trial_lineplot(
+    df,
+    label,
+    ax=None,
+    rolling_window=15,
+    mouse_col="mouse_name",
+    color="black",
+    normalize=False,
+    normalize_df=None,
+):
+    """
+    Plot per-mouse rolling trial averages as lines.
+
+    Each mouse is a grey line; the across-mouse mean is shown in black.
+    """
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=(10, 4))
+
+    if mouse_col not in df.columns:
+        raise ValueError(f"Expected '{mouse_col}' column in DataFrame.")
+
+    if "trial" not in df.columns:
+        raise ValueError("Expected 'trial' column in DataFrame.")
+
+    if label not in df.columns:
+        raise ValueError(f"Expected '{label}' column in DataFrame.")
+
+    grouped = df.groupby([mouse_col, "trial"])[label].mean().reset_index()
+    grouped = grouped.sort_values(by=[mouse_col, "trial"])
+
+    grouped["rolling"] = (
+        grouped.groupby(mouse_col)[label]
+        .rolling(rolling_window, min_periods=1, center=True)
+        .mean()
+        .reset_index(level=0, drop=True)
+    )
+
+    baseline_source = normalize_df if normalize_df is not None else df
+    if normalize:
+        baseline = (
+            baseline_source.groupby([mouse_col, "trial"])[label].mean().reset_index()
+        )
+        baseline = baseline.sort_values(by=[mouse_col, "trial"])
+
+        baseline_stats = (
+            baseline.groupby(mouse_col)[label]
+            .apply(lambda s: s.dropna().iloc[:rolling_window])
+            .groupby(level=0)
+            .agg(["mean", "std"])
+            .rename(columns={"mean": "_baseline_mean", "std": "_baseline_std"})
+            .reset_index()
+        )
+        if not baseline_stats.empty:
+            grouped = grouped.merge(baseline_stats, on=mouse_col, how="left")
+            invalid_std = grouped["_baseline_std"].isna() | (
+                grouped["_baseline_std"] == 0
+            )
+            grouped.loc[invalid_std, ["_baseline_mean", "_baseline_std"]] = np.nan
+            grouped["rolling"] = (
+                grouped["rolling"] - grouped["_baseline_mean"]
+            ) / grouped["_baseline_std"]
+
+    # Plot individual mice
+    for mouse, mouse_df in grouped.groupby(mouse_col):
+        ax.plot(
+            mouse_df["trial"],
+            mouse_df["rolling"],
+            color=color,
+            alpha=0.25,
+            linewidth=1,
+        )
+
+    # Plot mean across mice
+    mean_df = grouped.groupby("trial", as_index=False)["rolling"].mean()
+    mean_df["rolling"] = (
+        mean_df["rolling"].rolling(rolling_window, min_periods=1, center=True).mean()
+    )
+    ax.plot(
+        mean_df["trial"],
+        mean_df["rolling"],
+        color=color,
+        linewidth=1.5,
+    )
+
+    if normalize:
+        ax.axhline(0, color="black", linestyle="--", linewidth=1, alpha=0.6)
+    else:
+        baseline = (
+            baseline_source.groupby([mouse_col, "trial"])[label].mean().reset_index()
+        )
+        baseline = baseline.sort_values(by=[mouse_col, "trial"])
+        baseline_means = (
+            baseline.groupby(mouse_col)[label]
+            .apply(lambda s: s.dropna().iloc[:rolling_window].mean())
+            .dropna()
+        )
+        if not baseline_means.empty:
+            baseline_value = baseline_means.mean()
+            ax.axhline(
+                baseline_value,
+                color=color,
+                linestyle="--",
+                linewidth=1,
+                alpha=0.7,
+            )
+
+    ax.set_xlabel("Trial")
+    ax.set_ylabel(f"Rolling {label}")
+    ax.set_title(f"Per-mouse rolling {label}")
+    return ax
+
+
+def plot_pvalue_vs_baseline_by_bin(
+    df,
+    label,
+    rolling_window=15,
+    session_col="mouse_name",
+    trial_col="trial",
+    baseline_df=None,
+    ax=None,
+    color="black",
+    linewidth=1.5,
+):
+    """
+    Plot p-values per non-overlapping trial bin vs a baseline window.
+
+    Baseline is the mean of the first `rolling_window` trials per session
+    (using `baseline_df` if provided).
+    """
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=(6, 4))
+
+    if session_col not in df.columns:
+        raise ValueError(f"Expected '{session_col}' column in DataFrame.")
+    if trial_col not in df.columns:
+        raise ValueError(f"Expected '{trial_col}' column in DataFrame.")
+    if label not in df.columns:
+        raise ValueError(f"Expected '{label}' column in DataFrame.")
+
+    if baseline_df is not None:
+        if session_col not in baseline_df.columns:
+            raise ValueError(f"Expected '{session_col}' column in baseline_df.")
+        if trial_col not in baseline_df.columns:
+            raise ValueError(f"Expected '{trial_col}' column in baseline_df.")
+        if label not in baseline_df.columns:
+            raise ValueError(f"Expected '{label}' column in baseline_df.")
+
+    baseline_source = baseline_df if baseline_df is not None else df
+
+    def _trial_values(source_df):
+        return (
+            source_df.groupby([session_col, trial_col])[label]
+            .mean()
+            .reset_index()
+            .sort_values([session_col, trial_col])
+        )
+
+    baseline_trial_values = _trial_values(baseline_source)
+    baseline_trial_values["_trial_rank"] = (
+        baseline_trial_values.groupby(session_col)[trial_col]
+        .rank(method="first")
+        .astype(int)
+        - 1
+    )
+    baseline_means = (
+        baseline_trial_values[baseline_trial_values["_trial_rank"] < rolling_window]
+        .groupby(session_col)[label]
+        .mean()
+        .dropna()
+        .rename("baseline_mean")
+        .reset_index()
+    )
+
+    trial_values = _trial_values(df)
+    trial_order = trial_values[[session_col, trial_col]].drop_duplicates()
+    trial_order["_trial_rank"] = (
+        trial_order.groupby(session_col)[trial_col].rank(method="first").astype(int) - 1
+    )
+    trial_order["_bin"] = (trial_order["_trial_rank"] // rolling_window).astype(int)
+
+    trial_with_bins = trial_values.merge(
+        trial_order[[session_col, trial_col, "_bin"]],
+        on=[session_col, trial_col],
+        how="inner",
+    )
+
+    binned = (
+        trial_with_bins.groupby([session_col, "_bin"], as_index=False)
+        .agg({label: "mean", trial_col: "mean"})
+        .merge(baseline_means, on=session_col, how="inner")
+        .dropna(subset=[label, "baseline_mean"])
+    )
+
+    results = []
+    for bin_id in sorted(binned["_bin"].unique()):
+        bin_df = binned[binned["_bin"] == bin_id]
+        t_stat, p_value = stats.ttest_rel(bin_df[label], bin_df["baseline_mean"])
+        results.append(
+            {
+                "bin": bin_id,
+                "trial_center": bin_df[trial_col].mean(),
+                "n": len(bin_df),
+                "t_stat": t_stat,
+                "p_value": p_value,
+            }
+        )
+
+    results_df = pd.DataFrame(results)
+    if results_df.empty:
+        raise ValueError(
+            "No valid bins found for t-test; check your data and rolling_window size."
+        )
+    results_df = results_df.sort_values("trial_center")
+
+    if not results_df.empty:
+        ax.plot(
+            results_df["trial_center"],
+            results_df["p_value"],
+            color=color,
+            linewidth=linewidth,
+        )
+    ax.axhline(0.05, color="red", linestyle="--", linewidth=1, alpha=0.6)
+    ax.set_xlabel("Trial")
+    ax.set_ylabel("Paired t-test p-value")
+    ax.set_title(f"P-value vs baseline for {label}")
+
+    return results_df, binned, ax
 
 
 def plot_choices_by_trial(df, ax=None):
