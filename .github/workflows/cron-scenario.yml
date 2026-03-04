@@ -1,0 +1,71 @@
+name: Test cron_scenario.py
+
+on:
+  pull_request:
+    paths:
+      - "dj_pipeline/**"
+      - ".github/workflows/cron-scenario.yml"
+  workflow_dispatch:
+
+jobs:
+  cron-scenario:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: simple
+          MYSQL_ROOT_HOST: "%"
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -psimple --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+
+    env:
+      DJ_HOST: host.docker.internal
+      DJ_PORT: 3306
+      DJ_USER: root
+      DJ_PASS: simple
+      DJ_LAB: ci
+      GUI: "gui_mode"
+      IMG_SRC: Imagingsource
+      DJ_SUPPORT_FILEPATH_MANAGEMENT: "TRUE"
+      DJ_SUPPORT_ADAPTED_TYPES: "TRUE"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Prepare runtime directories
+        run: |
+          mkdir -p "$RUNNER_TEMP/vr4mice-data/data"
+          mkdir -p "$RUNNER_TEMP/vr4mice-data/summary_plots"
+          mkdir -p "$RUNNER_TEMP/vr4mice-shared"
+
+      - name: Build Docker image
+        run: docker build -t vr4mice_app:test-image ./dj_pipeline
+
+      - name: Run cron_scenario.py
+        run: |
+          docker run --rm \
+            --add-host=host.docker.internal:host-gateway \
+            -e DJ_HOST="${DJ_HOST}" \
+            -e DJ_PORT="${DJ_PORT}" \
+            -e DJ_USER="${DJ_USER}" \
+            -e DJ_PASS="${DJ_PASS}" \
+            -e DJ_PWD="${DJ_PASS}" \
+            -e DJ_LAB="${DJ_LAB}" \
+            -e GUI="${GUI}" \
+            -e IMG_SRC="${IMG_SRC}" \
+            -e DJ_SUPPORT_FILEPATH_MANAGEMENT="${DJ_SUPPORT_FILEPATH_MANAGEMENT}" \
+            -e DJ_SUPPORT_ADAPTED_TYPES="${DJ_SUPPORT_ADAPTED_TYPES}" \
+            # Mount the code and data directories
+            -v "$GITHUB_WORKSPACE/dj_pipeline:/app" \
+            -v "$RUNNER_TEMP/vr4mice-data:/data" \
+            -v "$RUNNER_TEMP/vr4mice-shared:/shared" \
+            vr4mice_app:test-image \
+            -lc "pip install --no-deps /app/base/base_min_schemas /app/base/base_actions && python cron_scenario.py"
