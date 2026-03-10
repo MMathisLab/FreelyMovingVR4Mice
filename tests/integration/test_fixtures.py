@@ -18,13 +18,13 @@ class TestFixturesPaths:
         assert test_data_dir.exists()
         assert test_data_dir.is_dir()
 
-    def test_required_files_exist(self, require_nightingale_data, test_dataset_name, test_camera_prefix):
+    def test_required_files_exist(self, require_golden_data, test_dataset_name, test_camera_prefix):
         """All required golden dataset files should exist."""
-        data_dir = require_nightingale_data
+        data_dir = require_golden_data
 
         files_to_check = [
             f"{test_dataset_name}.pickle",
-            f"{test_dataset_name}.json",
+            f"{test_dataset_name}.npy",
             f"{test_camera_prefix}_{test_dataset_name}_DLC.hdf5",
             f"{test_camera_prefix}_{test_dataset_name}_TS.npy",
             f"{test_camera_prefix}_{test_dataset_name}_PROC",
@@ -38,49 +38,49 @@ class TestFixturesPaths:
 class TestFixturesDataLoading:
     """Test that data fixtures load correctly."""
 
-    def test_pickle_data_is_dict(self, require_nightingale_data, integration_pickle_data):
+    def test_pickle_data_is_dict(self, require_golden_data, integration_pickle_data):
         """Pickle data should be a dict."""
         assert isinstance(integration_pickle_data, dict)
 
-    def test_pickle_data_has_keys(self, require_nightingale_data, integration_pickle_data, expected_pickle_keys):
+    def test_pickle_data_has_keys(self, require_golden_data, integration_pickle_data, expected_pickle_keys):
         """Pickle data should have expected keys."""
         assert len(integration_pickle_data) == 53
         for key in expected_pickle_keys:
             assert key in integration_pickle_data, f"Missing key: {key}"
 
-    def test_json_metadata_is_dict(self, require_nightingale_data, integration_json_metadata):
+    def test_json_metadata_is_dict(self, require_golden_data, integration_json_metadata):
         """JSON metadata should be a dict."""
         assert isinstance(integration_json_metadata, dict)
 
-    def test_json_metadata_has_dataset(self, require_nightingale_data, integration_json_metadata):
+    def test_json_metadata_has_dataset(self, require_golden_data, integration_json_metadata):
         """JSON should have dataset key."""
         assert "dataset" in integration_json_metadata
-        assert integration_json_metadata["dataset"] == "Nightingale_2024-08-16_1"
+        assert integration_json_metadata["dataset"] == "Flamingo_2026-02-05_1"
 
-    def test_dlc_dataframe_is_dataframe(self, require_nightingale_data, integration_dlc_dataframe):
+    def test_dlc_dataframe_is_dataframe(self, require_golden_data, integration_dlc_dataframe):
         """DLC data should be a DataFrame."""
         assert isinstance(integration_dlc_dataframe, pd.DataFrame)
 
-    def test_dlc_dataframe_shape(self, require_nightingale_data, integration_dlc_dataframe, expected_dlc_shape):
+    def test_dlc_dataframe_shape(self, require_golden_data, integration_dlc_dataframe, expected_dlc_shape):
         """DLC DataFrame should have expected shape."""
         assert integration_dlc_dataframe.shape == expected_dlc_shape
 
-    def test_dlc_dataframe_multiindex(self, require_nightingale_data, integration_dlc_dataframe):
+    def test_dlc_dataframe_multiindex(self, require_golden_data, integration_dlc_dataframe):
         """DLC DataFrame should have MultiIndex columns."""
         assert isinstance(integration_dlc_dataframe.columns, pd.MultiIndex)
         assert integration_dlc_dataframe.columns.nlevels == 2
         assert integration_dlc_dataframe.columns.names == ["bodyparts", "coords"]
 
-    def test_timestamp_array_is_ndarray(self, require_nightingale_data, integration_timestamp_array):
+    def test_timestamp_array_is_ndarray(self, require_golden_data, integration_timestamp_array):
         """Timestamp should be a numpy array."""
         assert isinstance(integration_timestamp_array, np.ndarray)
 
-    def test_timestamp_array_shape(self, require_nightingale_data, integration_timestamp_array):
+    def test_timestamp_array_shape(self, require_golden_data, integration_timestamp_array):
         """Timestamp array should have expected shape."""
-        assert integration_timestamp_array.shape == (455965,)
+        assert integration_timestamp_array.shape == (202972,)
         assert integration_timestamp_array.dtype == np.float64
 
-    def test_proc_data_is_dict(self, require_nightingale_data, integration_proc_data):
+    def test_proc_data_is_dict(self, require_golden_data, integration_proc_data):
         """PROC data should be a dict-like object."""
         # PROC data is loaded with allow_pickle=True and may be 0-d array containing dict
         proc = integration_proc_data
@@ -88,7 +88,7 @@ class TestFixturesDataLoading:
             proc = proc.item()
         assert isinstance(proc, dict)
 
-    def test_proc_data_has_keys(self, require_nightingale_data, integration_proc_data):
+    def test_proc_data_has_keys(self, require_golden_data, integration_proc_data):
         """PROC data should have expected keys."""
         proc = integration_proc_data
         if isinstance(proc, np.ndarray) and proc.ndim == 0:
@@ -106,11 +106,11 @@ class TestFixturesDataLoading:
 class TestFixturesArrayShapes:
     """Test that array shapes match expected values."""
 
-    def test_state_array_shape(self, require_nightingale_data, integration_pickle_data, expected_array_shapes):
+    def test_state_array_shape(self, require_golden_data, integration_pickle_data, expected_array_shapes):
         """State array should have expected shape."""
         assert integration_pickle_data["state"].shape == expected_array_shapes["state"]
 
-    def test_key_array_shapes(self, require_nightingale_data, integration_pickle_data, expected_array_shapes):
+    def test_key_array_shapes(self, require_golden_data, integration_pickle_data, expected_array_shapes):
         """Key arrays should have expected shapes."""
         for key, expected_shape in expected_array_shapes.items():
             if key in integration_pickle_data:
@@ -122,11 +122,11 @@ class TestFixturesArrayShapes:
 class TestFixturesArrayDtypes:
     """Test that array dtypes match expected values."""
 
-    def test_state_array_dtype(self, require_nightingale_data, integration_pickle_data, expected_array_dtypes):
-        """State array should be float32."""
+    def test_state_array_dtype(self, require_golden_data, integration_pickle_data, expected_array_dtypes):
+        """State array should have object dtype."""
         assert integration_pickle_data["state"].dtype == expected_array_dtypes["state"]
 
-    def test_key_array_dtypes(self, require_nightingale_data, integration_pickle_data, expected_array_dtypes):
+    def test_key_array_dtypes(self, require_golden_data, integration_pickle_data, expected_array_dtypes):
         """Key arrays should have expected dtypes."""
         for key, expected_dtype in expected_array_dtypes.items():
             if key in integration_pickle_data:
@@ -141,7 +141,7 @@ class TestFixturesKeys:
     def test_dataset_key_structure(self, dataset_key):
         """Dataset key should have dataset field."""
         assert "dataset" in dataset_key
-        assert dataset_key["dataset"] == "Nightingale_2024-08-16_1"
+        assert dataset_key["dataset"] == "Flamingo_2026-02-05_1"
 
     def test_video_key_structure(self, video_key):
         """Video key should have dataset, camera, doe fields."""

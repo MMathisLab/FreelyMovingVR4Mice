@@ -7,7 +7,7 @@ This module implements the testing infrastructure pattern with:
 - Environment configuration: .env.test.local for flexible data paths
 - Synthetic mock fixtures: Unit tests use fake data, no file I/O
 
-Golden dataset: Nightingale_2024-08-16_1 in test_data/golden_dataset/
+Golden dataset: Flamingo_2026-02-05_1 in test_data/golden_dataset/
 """
 
 import os
@@ -114,7 +114,7 @@ sys.modules['vr4mice.actions.keys2tables_vr4mice'] = mock_keys2tables_vr4mice
 sys.modules['vr4mice.schema'] = mock_dj_schema
 
 # Dataset identifiers (golden dataset)
-DATASET_NAME = "Nightingale_2024-08-16_1"
+DATASET_NAME = "Flamingo_2026-02-05_1"
 CAMERA_PREFIX = "Imagingsource"
 
 
@@ -139,8 +139,8 @@ def pytest_collection_modifyitems(config, items):
         "pipeline",
         "clean_schemas",
         # Real data fixtures (golden dataset)
-        "require_nightingale_data",
-        "nightingale_session_path",
+        "require_golden_data",
+        "golden_session_path",
     }
 
     for item in items:
@@ -151,18 +151,18 @@ def pytest_collection_modifyitems(config, items):
 
 
 # ==============================================================================
-# Golden Dataset Configuration (Nightingale)
+# Golden Dataset Configuration
 # ==============================================================================
 
 @pytest.fixture(scope="session")
-def nightingale_session_info():
+def golden_session_info():
     """
-    Information about the Nightingale golden dataset.
+    Information about the golden dataset.
 
     This is the primary test dataset containing:
-    - Pickle file with state data (339045 steps)
-    - JSON metadata with session configuration
-    - DLC HDF5 file with keypoints (281748 frames)
+    - Pickle file with state data
+    - NPY metadata with session configuration
+    - DLC HDF5 file with keypoints
     - Timestamp NPY file
     - Processed PROC file
     """
@@ -174,41 +174,41 @@ def nightingale_session_info():
 
 
 @pytest.fixture(scope="session")
-def nightingale_session_path(nightingale_session_info):
-    """Get path to Nightingale golden dataset directory."""
+def golden_session_path(golden_session_info):
+    """Get path to golden dataset directory."""
     raw_dir = Path(os.environ["RAW_ROOT_DATA_DIR"])
     # Check both possible locations:
     # 1. Directly under RAW_ROOT_DATA_DIR (e.g., /data/Celia_Set_14012026/)
     # 2. Via test_data subdirectory (e.g., scene-migration/test_data/Celia_Set_14012026/)
 
     # First check if PROJECT_ROOT/test_data exists (development setup)
-    dev_path = PROJECT_ROOT / "test_data" / nightingale_session_info["session_dir_name"]
+    dev_path = PROJECT_ROOT / "test_data" / golden_session_info["session_dir_name"]
     if dev_path.exists():
         return dev_path
 
     # Otherwise use RAW_ROOT_DATA_DIR directly
-    return raw_dir / nightingale_session_info["session_dir_name"]
+    return raw_dir / golden_session_info["session_dir_name"]
 
 
 @pytest.fixture(scope="function")
-def require_nightingale_data(nightingale_session_path, nightingale_session_info):
+def require_golden_data(golden_session_path, golden_session_info):
     """
-    Ensure Nightingale golden dataset exists. Skip test if not available.
+    Ensure golden dataset exists. Skip test if not available.
 
     Tests using this fixture will be automatically skipped if the data
     directory doesn't exist or is missing required files. Configure
     RAW_ROOT_DATA_DIR in .env.test.local to enable these tests.
 
-    NOTE: integration/conftest.py defines its own require_nightingale_data
+    NOTE: integration/conftest.py defines its own require_golden_data
     that shadows this one inside integration/. Both do the same thing but
     take different parameters due to different fixture chains.
     """
-    dataset_name = nightingale_session_info["dataset_name"]
-    camera_prefix = nightingale_session_info["camera_prefix"]
+    dataset_name = golden_session_info["dataset_name"]
+    camera_prefix = golden_session_info["camera_prefix"]
 
-    if not nightingale_session_path.exists():
+    if not golden_session_path.exists():
         pytest.skip(
-            f"Golden dataset not found at: {nightingale_session_path}\n"
+            f"Golden dataset not found at: {golden_session_path}\n"
             "Configure RAW_ROOT_DATA_DIR in .env.test.local to enable integration tests.\n"
             "See .env.test.local.example for configuration instructions."
         )
@@ -216,20 +216,20 @@ def require_nightingale_data(nightingale_session_path, nightingale_session_info)
     # Check required files exist
     required_files = [
         f"{dataset_name}.pickle",
-        f"{dataset_name}.json",
+        f"{dataset_name}.npy",
         f"{camera_prefix}_{dataset_name}_DLC.hdf5",
         f"{camera_prefix}_{dataset_name}_TS.npy",
         f"{camera_prefix}_{dataset_name}_PROC",
     ]
 
-    missing = [f for f in required_files if not (nightingale_session_path / f).exists()]
+    missing = [f for f in required_files if not (golden_session_path / f).exists()]
     if missing:
         pytest.skip(
-            f"Golden dataset incomplete at: {nightingale_session_path}\n"
+            f"Golden dataset incomplete at: {golden_session_path}\n"
             f"Missing files: {missing}"
         )
 
-    return nightingale_session_path
+    return golden_session_path
 
 
 # ==============================================================================
@@ -239,9 +239,9 @@ def require_nightingale_data(nightingale_session_path, nightingale_session_info)
 @pytest.fixture(scope="function")
 def mock_pickle_data():
     """
-    Synthetic pickle data matching Nightingale structure.
+    Synthetic pickle data matching golden dataset structure.
 
-    Smaller size (1000 steps instead of 339045) for fast tests.
+    Smaller size (1000 steps) for fast tests.
     No file I/O required - data is generated in memory.
     """
     n_steps = 1000
@@ -275,7 +275,7 @@ def mock_pickle_data():
 
         # Session metadata
         "session_label": ["ar_discrim_5_occluders"],
-        "start_time": "2024-08-16_12-00-00",
+        "start_time": "2026-02-05_12-00-00",
 
         # Box coordinates
         "l_report_box": np.array([-10, 10, 20, 40], dtype=np.int32),
@@ -336,7 +336,7 @@ def mock_pickle_data():
 @pytest.fixture(scope="function")
 def mock_json_metadata():
     """
-    Synthetic JSON metadata matching Nightingale structure.
+    Synthetic JSON metadata matching golden dataset structure.
 
     Contains all expected keys with realistic placeholder values.
     """
@@ -392,9 +392,9 @@ def mock_json_metadata():
 @pytest.fixture(scope="function")
 def mock_dlc_dataframe():
     """
-    Synthetic DLC DataFrame matching Nightingale structure.
+    Synthetic DLC DataFrame matching golden dataset structure.
 
-    Smaller size (500 frames instead of 281748) for fast tests.
+    Smaller size (500 frames) for fast tests.
     MultiIndex columns match real DLC output format.
     """
     n_frames = 500
@@ -441,7 +441,7 @@ def mock_timestamp_array():
     """
     Synthetic timestamp array.
 
-    Smaller size (1000 frames instead of 455965) for fast tests.
+    Smaller size (1000 frames) for fast tests.
     """
     n_frames = 1000
     # Simulate 30fps with some jitter
@@ -454,7 +454,7 @@ def mock_proc_data():
     """
     Synthetic processed DLC data.
 
-    Smaller size (1000 frames instead of 281876) for fast tests.
+    Smaller size (1000 frames) for fast tests.
     """
     n_frames = 1000
     n_photodiode = 10000
@@ -502,17 +502,21 @@ def expected_pickle_keys():
 
 @pytest.fixture(scope="session")
 def expected_array_shapes():
-    """Expected shapes for key arrays in pickle (real data)."""
+    """Expected shapes for key arrays in pickle (real data).
+
+    The state dimension (13) and box sizes (4, 5) should be stable across datasets.
+    Step/block counts are specific to the Flamingo_2026-02-05_1 golden dataset.
+    """
     return {
-        "state": (339045, 13),
-        "episode": (339045,),
-        "step": (339045,),
-        "step_time": (339045,),
-        "action": (339045, 1, 4),
-        "reward": (339045,),
-        "terminal": (339045,),
-        "slit_size": (207,),
-        "block_labels": (207,),
+        "state": (151737, 13),       # (n_steps, 13)
+        "episode": (151737,),        # (n_steps,)
+        "step": (151737,),           # (n_steps,)
+        "step_time": (151737,),      # (n_steps,)
+        "action": (151737, 1, 4),    # (n_steps, 1, 4)
+        "reward": (151737,),         # (n_steps,)
+        "terminal": (151737,),       # (n_steps,)
+        "slit_size": (250,),         # (n_blocks,)
+        "block_labels": (250,),      # (n_blocks,)
         "l_report_box": (4,),
         "r_report_box": (4,),
         "start_box": (5,),
@@ -524,7 +528,7 @@ def expected_array_shapes():
 def expected_array_dtypes():
     """Expected dtypes for key arrays in pickle."""
     return {
-        "state": np.float32,
+        "state": np.object_,
         "episode": np.int32,
         "step": np.int32,
         "step_time": np.float64,
@@ -539,7 +543,7 @@ def expected_array_dtypes():
 @pytest.fixture(scope="session")
 def expected_dlc_shape():
     """Expected shape of DLC DataFrame (real data)."""
-    return (281748, 83)
+    return (119755, 83)  # (n_frames, n_columns)
 
 
 @pytest.fixture(scope="session")
@@ -589,7 +593,7 @@ def video_key():
     return {
         "dataset": DATASET_NAME,
         "camera": CAMERA_PREFIX,
-        "doe": "2024-08-16",
+        "doe": "2026-02-05",
     }
 
 
@@ -599,7 +603,7 @@ def dlc_key():
     return {
         "dataset": DATASET_NAME,
         "camera": CAMERA_PREFIX,
-        "doe": "2024-08-16",
+        "doe": "2026-02-05",
         "model_name": "DLC",
     }
 
