@@ -20,6 +20,7 @@ import sys
 import time
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 
@@ -319,22 +320,22 @@ def test_data_dir():
 
 
 @pytest.fixture(scope="function")
-def require_nightingale_data(test_data_dir, test_dataset_name, test_camera_prefix):
+def require_golden_data(test_data_dir, test_dataset_name, test_camera_prefix):
     """
-    Ensure Nightingale golden dataset exists with all required files.
+    Ensure golden dataset exists with all required files.
     Skip test if data is not available.
 
     Tests using this fixture will be automatically skipped if the data
     directory doesn't exist or is missing required files.
 
-    NOTE: This shadows the top-level conftest's require_nightingale_data
+    NOTE: This shadows the top-level conftest's require_golden_data
     within integration/. Same purpose, different fixture chain (uses
-    test_data_dir instead of nightingale_session_path).
+    test_data_dir instead of golden_session_path).
     """
     # Check required files exist
     required_files = [
         f"{test_dataset_name}.pickle",
-        f"{test_dataset_name}.json",
+        f"{test_dataset_name}.npy",
         f"{test_camera_prefix}_{test_dataset_name}_DLC.hdf5",
         f"{test_camera_prefix}_{test_dataset_name}_TS.npy",
         f"{test_camera_prefix}_{test_dataset_name}_PROC",
@@ -353,7 +354,7 @@ def require_nightingale_data(test_data_dir, test_dataset_name, test_camera_prefi
 @pytest.fixture(scope="session")
 def test_dataset_name():
     """Name of the test dataset."""
-    return "Nightingale_2024-08-16_1"
+    return "Flamingo_2026-02-05_1"
 
 
 @pytest.fixture(scope="session")
@@ -381,13 +382,17 @@ def integration_pickle_data(test_data_dir, test_dataset_name):
 
 @pytest.fixture(scope="session")
 def integration_json_metadata(test_data_dir, test_dataset_name):
-    """Load JSON metadata from golden dataset."""
+    """Load session metadata from golden dataset (.npy or .json)."""
+    npy_path = test_data_dir / f"{test_dataset_name}.npy"
     json_path = test_data_dir / f"{test_dataset_name}.json"
-    if not json_path.exists():
-        pytest.skip(f"JSON file not found: {json_path}")
 
-    with open(json_path) as f:
-        return json.load(f)
+    if npy_path.exists():
+        return np.load(npy_path, allow_pickle=True).item()
+    elif json_path.exists():
+        with open(json_path) as f:
+            return json.load(f)
+    else:
+        pytest.skip(f"Metadata file not found: {npy_path} or {json_path}")
 
 
 @pytest.fixture(scope="session")

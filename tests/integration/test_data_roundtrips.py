@@ -8,7 +8,7 @@ Tests verify that data can be:
 4. Values match within acceptable tolerances
 
 These tests validate the data transformation pipeline using the
-Nightingale golden dataset (real production data).
+golden dataset (real production data).
 
 NOTE: These tests require the golden dataset to be available.
 Configure RAW_ROOT_DATA_DIR in .env.test.local to run these tests.
@@ -40,9 +40,8 @@ from populate_rig import (
     parse_date,
 )
 
-# Golden dataset sizes (Nightingale_2024-08-16_1).
-# If the golden dataset changes, update these values here.
-GOLDEN_STATE_ROWS = 339045      # rows in pickle state array
+# Golden dataset sizes (Flamingo_2026-02-05_1).
+GOLDEN_STATE_ROWS = 151737      # rows in pickle state array
 
 
 # ==============================================================================
@@ -52,7 +51,7 @@ GOLDEN_STATE_ROWS = 339045      # rows in pickle state array
 class TestDlcDataFrameRoundTrip:
     """Tests for DLC DataFrame serialization/deserialization round-trips."""
 
-    def test_dlc_dataframe_full_roundtrip(self, require_nightingale_data, integration_dlc_dataframe):
+    def test_dlc_dataframe_full_roundtrip(self, require_golden_data, integration_dlc_dataframe):
         """Full DLC DataFrame should survive df_to_dj -> dj_to_df round-trip."""
         dlc_dataframe = integration_dlc_dataframe
 
@@ -102,7 +101,7 @@ class TestDlcDataFrameRoundTrip:
             err_msg=f"Middle row (idx={mid_idx}) values don't match after round-trip"
         )
 
-    def test_df_to_dj_output_structure(self, require_nightingale_data, integration_dlc_dataframe):
+    def test_df_to_dj_output_structure(self, require_golden_data, integration_dlc_dataframe):
         """Golden Baseline: Verify df_to_dj output structure and sample values."""
         dlc_dataframe = integration_dlc_dataframe
         dj_format = df_to_dj(dlc_dataframe)
@@ -142,7 +141,7 @@ class TestDlcDataFrameRoundTrip:
             err_msg="Bottom-right corner values don't match"
         )
 
-    def test_dlc_dataframe_columns_preserved(self, require_nightingale_data, integration_dlc_dataframe):
+    def test_dlc_dataframe_columns_preserved(self, require_golden_data, integration_dlc_dataframe):
         """Column structure should be preserved through round-trip."""
         dlc_dataframe = integration_dlc_dataframe
         dj_format = df_to_dj(dlc_dataframe)
@@ -160,7 +159,7 @@ class TestDlcDataFrameRoundTrip:
         for orig, recon in zip(original_cols, reconstructed_cols):
             assert orig == recon
 
-    def test_dlc_dataframe_index_preserved(self, require_nightingale_data, integration_dlc_dataframe):
+    def test_dlc_dataframe_index_preserved(self, require_golden_data, integration_dlc_dataframe):
         """Index should be preserved through round-trip."""
         dlc_dataframe = integration_dlc_dataframe
         dj_format = df_to_dj(dlc_dataframe)
@@ -182,7 +181,7 @@ class TestH5ToDataFrameRoundTrip:
 
     def test_h5_to_dj_to_df_roundtrip(
         self,
-        require_nightingale_data,
+        require_golden_data,
         test_data_dir,
         test_dataset_name,
         test_camera_prefix,
@@ -228,7 +227,7 @@ class TestH5ToDataFrameRoundTrip:
 
     def test_h5_to_dj_preserves_bodyparts(
         self,
-        require_nightingale_data,
+        require_golden_data,
         test_data_dir,
         test_dataset_name,
         test_camera_prefix,
@@ -261,7 +260,7 @@ class TestStateArrayExtraction:
 
     def test_all_state_keys_extract_correctly(
         self,
-        require_nightingale_data,
+        require_golden_data,
         integration_pickle_data,
         state_index_map
     ):
@@ -281,7 +280,7 @@ class TestStateArrayExtraction:
 
     def test_state_extraction_preserves_dtype_values(
         self,
-        require_nightingale_data,
+        require_golden_data,
         integration_pickle_data
     ):
         """Extracted state values should preserve numeric precision."""
@@ -299,7 +298,7 @@ class TestStateArrayExtraction:
 
     def test_state_extraction_golden_dataset_size(
         self,
-        require_nightingale_data,
+        require_golden_data,
         integration_pickle_data
     ):
         """Golden dataset state should have expected number of rows."""
@@ -309,7 +308,7 @@ class TestStateArrayExtraction:
 
     def test_state_extraction_sample_values(
         self,
-        require_nightingale_data,
+        require_golden_data,
         integration_pickle_data,
         state_index_map
     ):
@@ -337,7 +336,9 @@ class TestStateArrayExtraction:
                 f"velocity[{i}] mismatch: {actual} != {expected}"
 
         # Verify no unexpected NaN values introduced
-        original_nan_count = np.isnan(pickle_data["state"][:, state_index_map["x_pos"]]).sum()
+        # Flamingo state has dtype=object, so cast to float for np.isnan
+        x_pos_col = pickle_data["state"][:, state_index_map["x_pos"]].astype(float)
+        original_nan_count = np.isnan(x_pos_col).sum()
         extracted_nan_count = np.isnan(extracted["x_pos"]).sum()
         assert extracted_nan_count == original_nan_count, \
             f"NaN count changed: {original_nan_count} -> {extracted_nan_count}"
@@ -350,7 +351,7 @@ class TestStateArrayExtraction:
 class TestBoxCoordinateExtraction:
     """Tests for box coordinate extraction from pickle data."""
 
-    def test_l_report_box_all_coordinates(self, require_nightingale_data, integration_pickle_data):
+    def test_l_report_box_all_coordinates(self, require_golden_data, integration_pickle_data):
         """All l_report_box coordinates should extract correctly."""
         pickle_data = integration_pickle_data
         keys = ["l_box_x_min", "l_box_x_max", "l_box_z_min", "l_box_z_max"]
@@ -360,7 +361,7 @@ class TestBoxCoordinateExtraction:
             result = get_box(raw_data=pickle_data, key=key, transformer=transformer)
             assert result == pickle_data["l_report_box"][i]
 
-    def test_r_report_box_all_coordinates(self, require_nightingale_data, integration_pickle_data):
+    def test_r_report_box_all_coordinates(self, require_golden_data, integration_pickle_data):
         """All r_report_box coordinates should extract correctly."""
         pickle_data = integration_pickle_data
         keys = ["r_box_x_min", "r_box_x_max", "r_box_z_min", "r_box_z_max"]
@@ -370,7 +371,7 @@ class TestBoxCoordinateExtraction:
             result = get_box(raw_data=pickle_data, key=key, transformer=transformer)
             assert result == pickle_data["r_report_box"][i]
 
-    def test_start_box_all_coordinates(self, require_nightingale_data, integration_pickle_data):
+    def test_start_box_all_coordinates(self, require_golden_data, integration_pickle_data):
         """All start_box coordinates should extract correctly."""
         pickle_data = integration_pickle_data
         keys = ["tt_box_x_min", "tt_box_x_max", "tt_box_z_min", "tt_box_z_max", "tt_box_angle"]
@@ -380,7 +381,7 @@ class TestBoxCoordinateExtraction:
             result = get_box(raw_data=pickle_data, key=key, transformer=transformer)
             assert result == pickle_data["start_box"][i]
 
-    def test_box_coordinates_golden_values(self, require_nightingale_data, integration_pickle_data):
+    def test_box_coordinates_golden_values(self, require_golden_data, integration_pickle_data):
         """Golden Baseline: Verify box coordinate extraction produces expected types and ranges."""
         pickle_data = integration_pickle_data
 
@@ -431,7 +432,7 @@ class TestBoxCoordinateExtraction:
 class TestMetadataExtraction:
     """Tests for metadata extraction from JSON and pickle files."""
 
-    def test_video_meta_all_fields(self, require_nightingale_data, integration_json_metadata):
+    def test_video_meta_all_fields(self, require_golden_data, integration_json_metadata):
         """All video_meta fields should extract correctly."""
         json_metadata = integration_json_metadata
         fields = ["duration", "fps", "width", "height"]
@@ -440,11 +441,11 @@ class TestMetadataExtraction:
             result = get_video_meta(raw_data=json_metadata, key=field)
             assert result == json_metadata["video_meta"][field]
 
-    def test_video_meta_golden_values(self, require_nightingale_data, integration_json_metadata):
-        """Golden Baseline: Verify expected video metadata values for Nightingale dataset."""
+    def test_video_meta_golden_values(self, require_golden_data, integration_json_metadata):
+        """Golden Baseline: Verify expected video metadata values for golden dataset."""
         json_metadata = integration_json_metadata
 
-        # Golden Baseline: These are the expected values from the Nightingale dataset
+        # Golden Baseline: These are the expected values from the golden dataset
         # If these change, the test data or extraction logic has changed
         duration = get_video_meta(raw_data=json_metadata, key="duration")
         fps = get_video_meta(raw_data=json_metadata, key="fps")
@@ -469,7 +470,7 @@ class TestMetadataExtraction:
         assert isinstance(width, int), f"Width type {type(width)} should be int"
         assert isinstance(height, int), f"Height type {type(height)} should be int"
 
-    def test_camera_name_matches_filename(self, require_nightingale_data, integration_json_metadata):
+    def test_camera_name_matches_filename(self, require_golden_data, integration_json_metadata):
         """Extracted camera name should match DLC filename prefix."""
         json_metadata = integration_json_metadata
         result = get_camera(raw_data=json_metadata)
@@ -477,7 +478,7 @@ class TestMetadataExtraction:
 
         assert result == filename.split("_")[0]
 
-    def test_model_name_matches_filename(self, require_nightingale_data, integration_json_metadata):
+    def test_model_name_matches_filename(self, require_golden_data, integration_json_metadata):
         """Extracted model name should match DLC filename suffix."""
         json_metadata = integration_json_metadata
         result = get_model_name(raw_data=json_metadata)
@@ -487,7 +488,7 @@ class TestMetadataExtraction:
         expected = filename.replace(".hdf5", "").split("_")[-1]
         assert result == expected
 
-    def test_session_label_extraction(self, require_nightingale_data, integration_pickle_data):
+    def test_session_label_extraction(self, require_golden_data, integration_pickle_data):
         """Session label should extract first element from list."""
         pickle_data = integration_pickle_data
         result = get_name(raw_data=pickle_data, key="session_label")
@@ -502,7 +503,7 @@ class TestMetadataExtraction:
 class TestDlcProcessingPipeline:
     """Tests for the full DLC processing pipeline."""
 
-    def test_filter_then_roundtrip(self, require_nightingale_data, integration_dlc_dataframe):
+    def test_filter_then_roundtrip(self, require_golden_data, integration_dlc_dataframe):
         """Filtered DLC data should survive round-trip."""
         dlc_dataframe = integration_dlc_dataframe
 
@@ -541,7 +542,7 @@ class TestDlcProcessingPipeline:
             err_msg="Last row changed after filter->round-trip"
         )
 
-    def test_filter_dlc_sample_values(self, require_nightingale_data, integration_dlc_dataframe):
+    def test_filter_dlc_sample_values(self, require_golden_data, integration_dlc_dataframe):
         """Golden Baseline: Verify filter_dlc produces expected output structure."""
         dlc_dataframe = integration_dlc_dataframe
 
@@ -567,7 +568,7 @@ class TestDlcProcessingPipeline:
 
     def test_compute_head_angles_preserves_row_count(
         self,
-        require_nightingale_data,
+        require_golden_data,
         integration_dlc_dataframe
     ):
         """compute_head_angles should preserve row count."""
@@ -578,7 +579,7 @@ class TestDlcProcessingPipeline:
 
     def test_compute_head_angles_output_columns(
         self,
-        require_nightingale_data,
+        require_golden_data,
         integration_dlc_dataframe
     ):
         """Golden Baseline: Verify compute_head_angles output has expected columns."""
@@ -618,7 +619,7 @@ class TestFileLoadingRoundTrip:
 
     def test_pickle_load_contains_all_expected_keys(
         self,
-        require_nightingale_data,
+        require_golden_data,
         test_data_dir,
         test_dataset_name,
         expected_pickle_keys
@@ -632,7 +633,7 @@ class TestFileLoadingRoundTrip:
 
     def test_pickle_load_array_shapes_match(
         self,
-        require_nightingale_data,
+        require_golden_data,
         test_data_dir,
         test_dataset_name,
         expected_array_shapes
@@ -647,7 +648,7 @@ class TestFileLoadingRoundTrip:
 
     def test_pickle_load_array_dtypes_match(
         self,
-        require_nightingale_data,
+        require_golden_data,
         test_data_dir,
         test_dataset_name,
         expected_array_dtypes
@@ -670,7 +671,7 @@ class TestTimestampAlignment:
 
     def test_find_closest_indices_with_real_data(
         self,
-        require_nightingale_data,
+        require_golden_data,
         integration_pickle_data,
         integration_timestamp_array
     ):
@@ -692,7 +693,7 @@ class TestTimestampAlignment:
 
     def test_timestamp_coverage(
         self,
-        require_nightingale_data,
+        require_golden_data,
         integration_pickle_data,
         integration_timestamp_array
     ):
@@ -719,7 +720,7 @@ class TestCrossFileConsistency:
 
     def test_dataset_name_consistency(
         self,
-        require_nightingale_data,
+        require_golden_data,
         test_data_dir,
         test_dataset_name,
         integration_json_metadata
@@ -731,7 +732,7 @@ class TestCrossFileConsistency:
 
         assert pickle_name == json_metadata["dataset"]
 
-    def test_date_parsing_matches_json(self, require_nightingale_data, integration_json_metadata):
+    def test_date_parsing_matches_json(self, require_golden_data, integration_json_metadata):
         """Parsed date should match JSON metadata."""
         json_metadata = integration_json_metadata
         dataset = json_metadata["dataset"]
@@ -739,13 +740,13 @@ class TestCrossFileConsistency:
 
         # The date should be extractable
         assert parsed_date is not None
-        assert parsed_date.year == 2024
-        assert parsed_date.month == 8
-        assert parsed_date.day == 16
+        assert parsed_date.year == 2026
+        assert parsed_date.month == 2
+        assert parsed_date.day == 5
 
     def test_dlc_shape_matches_json_meta(
         self,
-        require_nightingale_data,
+        require_golden_data,
         integration_dlc_dataframe,
         integration_json_metadata
     ):

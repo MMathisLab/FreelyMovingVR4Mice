@@ -1,10 +1,10 @@
 {
   "episode": {
-    "length": 339045,
+    "length": 151737,
     "dtype": "int32",
     "first": 1,
-    "middle": 176,
-    "middle_idx": 169522,
-    "last": 207
+    "middle": 146,
+    "middle_idx": 75868,
+    "last": 250
   }
 }
