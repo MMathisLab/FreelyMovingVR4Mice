@@ -1,0 +1,1034 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Mouse training &#8212; FreelyMovingVR4Mice</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../../_static/sphinx-thebe.js"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'docs/training_protocols/training_protocol';</script>
+    <link rel="shortcut icon" href="../../_static/logo.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Contrast discrimination game parameters" href="contrast_discrimination_training_parameters.html" />
+    <link rel="prev" title="DLC processor file" href="../dlc_processor.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../vr4mice_overview.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="FreelyMovingVR4Mice - Home"/>
+    <script>document.write(`<img src="../../_static/logo.png" class="logo__image only-dark" alt="FreelyMovingVR4Mice - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../vr4mice_overview.html">
+                    FreelyMovingVR4mice overview
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Hardware - Building the rig</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../Rig_building/Parts_list.html">Parts list</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Rig_building/building_the_box.html">Perspex box for housing the mouse</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Rig_building/Building_the_cage.html">Cage for mounting monitors and cameras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Rig_building/Monitor_Luminance_Measurement.html">Monitor Luminance Measurement</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Hardware - Teensy Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../Rig_building/Teensy_box_design.html">Teensy Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Rig_building/teensy_config.html">Configuring the teensy board and uploading the code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Rig_building/writing_a_teensy_sketch.html">Writing Teensy sketch for Vr4mice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Rig_building/Water_Valve_Calibration.html">Water Valve Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Rig_building/Photodiode_circuit.html">Another Teensy for Recording from the Photodiode</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software Installation - vr4mice &amp; Config File Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../Installation/installSumUp.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation/Config_file_setup.html">Config files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation/Run_a_session.html">How to run a session</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation/create_desktop_icon.html">Create a desktop icon to launch Teensy experiments</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Unity Games</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../Unity_games/AR_Game.html">Augmented Reality Game installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Unity_games/update_Unity_Game.html">Update the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Unity_games/build_Unity_Game.html">Rebuild a Unity game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Unity_games/Adding_new_objects.html">Adding new target objects</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - DataJoint</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../software/datajoint.html">VR4Mice DataJoint Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../software/install_dj_pipeline.html">Install and Run the vr4mice pipeline</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Tests</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../software/mouse_task_test.html">Mouse task</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Dev - Software package Documentation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../VisualDiscrim.html">Active Sensing Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dlc_processor.html">DLC processor file</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experiments - Training protocol and parameters</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Mouse training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrast_discrimination_training_parameters.html">Contrast discrimination game parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shape_discrimination_training_parameters.html">Shape discrimination game parameters</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/MMathisLab/FreelyMovingVR4Mice" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/MMathisLab/FreelyMovingVR4Mice/issues/new?title=Issue%20on%20page%20%2Fdocs/training_protocols/training_protocol.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/docs/training_protocols/training_protocol.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Mouse training</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-protocol-overview">Training protocol overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general-mouse-training">General mouse training</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#handling-habituation-and-baseline-weight">Handling habituation and baseline weight</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-habituation-to-experimenter-presence">Step 1: Habituation to experimenter presence</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-habituation-to-handling-tunnel-and-transit">Step 2: Habituation to handling tunnel and transit</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-habituation-to-daily-weights">Step 3: Habituation to daily weights</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#water-restriction">Water restriction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#arena-and-reward-port-habituation">Arena and Reward Port Habituation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stages">Training stages</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-1-detection-task">Training Stage 1: Detection task</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-2-discrimination-without-occlusion">Training Stage 2: Discrimination without occlusion</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-days">Test Days</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#test-stage-1-discrimination-with-occlusion">Test stage 1: Discrimination with occlusion</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#test-stage-2-discrimination-with-multiple-occlusion-sizes">Test Stage 2: Discrimination with multiple occlusion sizes</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-timeline">Reference timeline</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-guis-to-run-software">Using GUIs to run software</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-up-sessions">Setting up sessions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#starting-session">Starting session</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#materials">Materials</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="mouse-training">
+<h1>Mouse training<a class="headerlink" href="#mouse-training" title="Permalink to this heading">#</a></h1>
+<section id="training-protocol-overview">
+<h2>Training protocol overview<a class="headerlink" href="#training-protocol-overview" title="Permalink to this heading">#</a></h2>
+<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/training_protocol_2.jpg"><img alt="AR" class="bg-primary mb-1 align-center" src="../../_images/training_protocol_2.jpg" style="width: 800px;" /></a>
+</section>
+<section id="general-mouse-training">
+<h2>General mouse training<a class="headerlink" href="#general-mouse-training" title="Permalink to this heading">#</a></h2>
+<p>This documents give a protocol for training mice in the AR setup. This protocol should be followed by all labs so that we can get consistent data. Note that this will need to be adjusted as we perform the experiments but we should only deviate from it after we discussed a change in the monday meetings. This protocol should then be updated to reflect that by opening a pull request on the <a class="reference external" href="https://github.com/MMathisLab/FreelyMovingVR4Mice">GitHub repository</a>.</p>
+</section>
+<section id="handling-habituation-and-baseline-weight">
+<h2>Handling habituation and baseline weight<a class="headerlink" href="#handling-habituation-and-baseline-weight" title="Permalink to this heading">#</a></h2>
+<p>With behavioral training it is very important that stress on the mouse is kept to a minimum. Therefore mice should never be picked up by the tail. This has been shown to reduce the behavioral performance of mice and increase anxiety associated behaviors. Instead, pick up the mice using a plastic tube and if possible allow the mouse to voluntarily enter the tube. Do not force the mouse to go into the tube by boxing it into a corner, just try to be patient and at some point the mouse will enter the tube and you can gently pick the tube up and transfer it into the box. After a couple of days mice will be very happy entering the tube because they know that they will get water.</p>
+<div class="tip admonition">
+<p class="admonition-title">Materials</p>
+<p>Gloves, lab coat, mouse handling tunnel, candidate mice in home cage, 0.1 gram balance, weighing container, treats (optional).</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Siblings may be housed together, as appropriate.</p>
+</div>
+<div class="admonition-duration admonition">
+<p class="admonition-title">Duration</p>
+<p>~5-7 days.</p>
+</div>
+<section id="step-1-habituation-to-experimenter-presence">
+<h3>Step 1: Habituation to experimenter presence<a class="headerlink" href="#step-1-habituation-to-experimenter-presence" title="Permalink to this heading">#</a></h3>
+<div class="admonition-duration admonition">
+<p class="admonition-title">Duration</p>
+<p>1-2 days (15 min sessions).</p>
+</div>
+<p><strong>Continuation Criteria:</strong> Mice can behave normally without fear when the experimenter’s hand is in the cage, e.g. freely walking and eating, sniffing the gloved hand, climbing onto experimenter’s hand.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>This and all following steps should take place in a quiet room with minimal disruption and appropriate lighting.</p></li>
+<li><p>Animals should be in the dark phase of the circadian cycle (typically housed in reverse light cycle room), and thus the room should be dark with minimal red lighting for experimenter coordination.</p></li>
+<li><p>Transportation to and from the room should also be without exposure to light, and with minimal distressing sound or cage movement/vibration.</p></li>
+</ul>
+</div>
+<p><strong>Steps:</strong></p>
+<ul class="simple">
+<li><p>Put gloved hand in mouse home cage so that they can get used to your scent. Initially, they can be skittish but after a while they will get more confident. They may also bite/nibble on your finger, if they do, try not to make sudden movements because this will scare them, instead just lightly move them away with your finger.</p></li>
+<li><p>To encourage animals to explore your hand, may add a treat between fingers.</p></li>
+<li><p>Don’t move your hand, try to keep it still so you won’t scare the mice.</p></li>
+<li><p>When the session is done, remove the hand slowly and calmly.</p></li>
+</ul>
+</section>
+<section id="step-2-habituation-to-handling-tunnel-and-transit">
+<h3>Step 2: Habituation to handling tunnel and transit<a class="headerlink" href="#step-2-habituation-to-handling-tunnel-and-transit" title="Permalink to this heading">#</a></h3>
+<div class="admonition-duration admonition">
+<p class="admonition-title">Duration</p>
+<p>2-3 days (15-20 min sessions).</p>
+</div>
+<p><strong>Continuation Criteria:</strong> Mice can independently walk through the tunnel. Also mouse can be lifted to top of cage by tunnel more than two times per session.</p>
+<p><strong>Steps:</strong></p>
+<ul class="simple">
+<li><p>Put handling tunnel (see image <a class="reference internal" href="#tunnel"><span class="std std-ref">below</span></a>) in mouse home cage for at least 7 hours (maybe overnight, may require coordination with mouse colony staff). Let them sniff it, climb it and cross it by themselves. This can start the same day as the familiarization with the experimenter phase (<em>Step 1</em>).</p></li>
+<li><p>Once they have graduated from <em>Step 1</em>, they can be lifted with the tunnel. Wait for the mouse to enter the tube. and very gently lift the tube up off the ground and then place it back down.</p></li>
+<li><p>When the mouse is inside the tunnel, lift the tunnel to the height of the rim of the cage for 10 seconds and place it back down. Each time, increase the length of time that they are in tube so that they get used to being picked up.</p></li>
+<li><p>Gently put the mouse back to home cage, and wait that they cross the tunnel again (to demonstrate comfort).</p></li>
+<li><p>Repeat multiple times.</p></li>
+</ul>
+<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/tunnel.png" id="tunnel"><img alt="tunnel" class="bg-primary mb-1 align-center" id="tunnel" src="../../_images/tunnel.png" style="width: 300px;" /></a>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>The first day of this step, to help the mouse enter the tunnel, it will be reasonable to add a small treat in the middle of the tunnel.</p>
+</div>
+</section>
+<section id="step-3-habituation-to-daily-weights">
+<h3>Step 3: Habituation to daily weights<a class="headerlink" href="#step-3-habituation-to-daily-weights" title="Permalink to this heading">#</a></h3>
+<div class="admonition-duration admonition">
+<p class="admonition-title">Duration</p>
+<p>3-4 days.</p>
+</div>
+<p><strong>Continuation Criteria:</strong> Mice safely and comfortably undergo transit from home cage to weighing container on the scales more than two times.</p>
+<p><strong>Steps:</strong></p>
+<ul class="simple">
+<li><p>Put tunnel in mice home cage. Normally in this step, mice already can enter the tunnel within 2 minutes. Transit the mouse to the container of the scales slowly via tunnel.</p></li>
+<li><p>Weigh the mouse for 3 days. The average of these weights will be used as the animal’s baseline weight, for calculating provided water and percent body weight loss.</p></li>
+<li><p>Gently transit mice back to their home cage by weighing container or handling tunnel.</p></li>
+</ul>
+</section>
+</section>
+<section id="water-restriction">
+<h2>Water restriction<a class="headerlink" href="#water-restriction" title="Permalink to this heading">#</a></h2>
+<p>For the duration of the experiment mice will be placed on water restriction so that we can give the mice water rewards as a reinforcer to learn the task. To check that the mice are healthy you will need to weigh them each day. We allow for mice to loose up to 10% of their body weight. Daily water amount provided should be <strong>50 ml/kg</strong> based on mice baseline weight. Each mouse is required to drink a minimum of 25 ml/kg every day. Animals not meeting minimum daily water intake or minimum body weight are removed from water restriction and receive home cage water access ad libitum.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If mice are removed from water restriction and granted water access ad libitum, the experimenter should wait <strong>at least 2 days</strong> of renewed water restriction before allowing them to resume training on the task.</p>
+</div>
+<p>This means that it is important to know the water droplet size coming from the spouts on the rig. This water droplet size should be kept at 4 - 5<span class="math notranslate nohighlight">\(\mu\)</span>l. Then depending on the number of successful trials, one can subtract this amount from the minimum amount of water per day for a given mouse to get the remaining amount to give them. Water can be given to the mice after each session using a small tub (or lens cap) where the measured amount of water can be placed. Typically the mice will drink this very quickly.</p>
+<div class="tip admonition">
+<p class="admonition-title">Materials</p>
+<p>Empty mouse cage, 0.1 gram balance, weighing container, 1 mL syringe, small plastic dish, mouse water bottle, gloves, paper towel, 70% isopropyl alcohol.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Under BCM Tolias Lab IACUC protocol, water restriction can continue for 90 consecutive days.</p>
+</div>
+<p>Take the water bottle out of the cage in the evening the day before the first day of water restriction.</p>
+<p><strong>Continuation Criteria:</strong> Mice drink all the water in their dish within 2 minutes. Mouse weight has stabilized (+/- 0.1g on 3 consecutive days), after approximately 5-7 days.</p>
+<p><strong>Steps:</strong></p>
+<ul class="simple">
+<li><p>Transfer the mouse from their home cage to the weighing container via the tunnel. Weigh the mouse on the scale before water restriction.</p></li>
+<li><p>Gently transport the mouse from the weighing container to the empty mouse cage. If more than one mouse is participating in water restriction, each empty cage should only have one mouse at a time. The same empty cage can be used for multiple mice, but must be cleaned with alcohol in between each mouse.</p></li>
+<li><p>Add calculated amount of water (50ml/kg) to plastic dish and put inside each empty mouse cage. If the mouse drinks all the water, bring the dish out of the empty cage and continue to Step 4. If the mouse starts to stand inside the plastic dish, take the dish out of the cage. Wait 10 minutes and put the dish back again, replacing any water that was spilled in the cage. Keep repeating this process until the mouse drinks the minimum amount of water. Normally mice will drink all the water in their dish within 2 minutes, after the first 2 days of water restriction.</p></li>
+<li><p>Record the amount of water given to the mouse and the amount of water actually drank, as measured by volume drawn up in syringe. Transfer the mouse from the empty cage back to the home cage via the tunnel.</p></li>
+<li><p>Clean the weighing container, empty cage, small plastic dish, and tunnel with 70% isopropyl alcohol between each mouse.</p></li>
+</ul>
+<p><strong>During Arena Task Training:</strong> Once the mice are training in the arena, the timing of water allocation is important. Wait between 10 and 60 minutes after the arena session and then give the daily water. This delay was chosen to avoid association of water reward with poor arena performance, while allowing enough time to pass before the next session so the animal will be water motivated the next day.</p>
+</section>
+<section id="arena-and-reward-port-habituation">
+<span id="sec-arena-habituation"></span><h2>Arena and Reward Port Habituation<a class="headerlink" href="#arena-and-reward-port-habituation" title="Permalink to this heading">#</a></h2>
+<p><strong>Removal from Study Criteria:</strong></p>
+<ul class="simple">
+<li><p>[Optional] Animal repeatedly attempts to escape from arena (i.e., jumps to
+rim of arena more than once)</p></li>
+<li><p>[Optional] Animal chews through water tubing or destroys other components of the arena.</p></li>
+</ul>
+<p><strong>Steps:</strong></p>
+<ul class="simple">
+<li><p><em>Step 1: Arena preparation:</em></p>
+<ul>
+<li><p>Flush bubbles from the water tubing with 5000ms manual water at least twice.</p>
+<ul>
+<li><p>Place paper towels below each lick port to soak up water.</p></li>
+<li><p>Insert a syringe plunger into each tube of the syringe casings which are acting as reservoirs for the lick ports.</p></li>
+<li><p>Select the manual water task in the <code class="docutils literal notranslate"><span class="pre">VR4mice</span></code> GUI.</p></li>
+<li><p>Set the water duration to 5000ms and start the pulse. Water should come out of each port along with any trapped air.</p></li>
+</ul>
+</li>
+<li><p>Refill syringe reservoirs for both water ports up to the 20 mL notch to attain consistent water pressure across ports and sessions and clean up any residual water in the box well. Water is acquired from same source used to fill water bottles in colony housing, and replaced weekly.</p></li>
+<li><p>Ensure that the tip of the tube that the mouse drinks from is poking out of the water port. Mice tend to chew on these and sometimes they are not poking out enough to be easily accessible.</p></li>
+<li><p>The arena is in a quiet, dark room with minimal red lights.</p></li>
+</ul>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In the Tolias lab, the arena is on an air table and is enclosed on all sides but 1, to allow for cables and electrical components.</p>
+</div>
+<ul class="simple">
+<li><p><em>Step 2: Daily animal weights:</em> record animals weight using handling tunnel, weighing container, and 0.1 gram scale as described above, before they enter the arena and receive any water rewards.</p></li>
+<li><p><em>Step 3: Arena Habituation (Only for the first day of recording):</em></p>
+<ul>
+<li><p>Gently put the mice in the center of the arena by container after weighing.</p></li>
+<li><p>Let the mouse freely explore the arena for 5 min.</p></li>
+</ul>
+</li>
+<li><p><em>Step 4: Reward Port Training:</em></p>
+<ul>
+<li><p><strong>Continuation Criteria:</strong> Mice go to each reward port and drink water directly from the spout 3 times.</p></li>
+<li><p>When the mouse close to the port, manually give water around 15uL (At Jan 15, 2024 calibration, 15ul equates valve open for 159ms).</p></li>
+<li><p>Can be combined in same session/day with arena habituation and first detection task training session. Animals typically reach continuation criteria within 5 minutes.</p></li>
+<li><p>Transit the mouse from the arena back to the home cage with the handling tunnel.</p></li>
+</ul>
+</li>
+<li><p><em>Step 5: Remaining Water Handling:</em></p>
+<ul>
+<li><p>Calculate the water received by the animal during trials by number of rewards displayed in vr4mice GUI multiplied by 5uL.</p></li>
+<li><p>For any animals that did not receive their target daily water allocation in the arena tasks, transit to the empty cage for additional water as described above.</p></li>
+</ul>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is important to monitor the mice while they are training. If they stop doing the task for more than 2-3 min, please stop the task for the day. we find that if are pushed further they can get frustrated and will no longer do the task well on subsequent days. Sometimes you can try again on the same day after a short, ~10 min. break back in the homecage. We often give them a IACUC approved snack (goldfish cracker) in this 10 min break time, which also increases thirst and subsequent motivation. If they are put back in and still do not perform the task, abandon for the day.</p>
+</div>
+</section>
+<section id="training-stages">
+<h2>Training stages<a class="headerlink" href="#training-stages" title="Permalink to this heading">#</a></h2>
+<p>Here, we present 2 different training protocols.</p>
+<ul class="simple">
+<li><p>Contrast discrimination task: mice are trained to distinguish between a white (target) and black (distractor) object with identical shape (teardrop).</p></li>
+<li><p>Shape discrimination task: mice are trained to distinguish between a Pacman (target) and a teardrop (distractor) with identical color (white).</p></li>
+</ul>
+<p>Below, the training stages are outlined in more detail, referencing the game parameters and the Python task script used for both protocols. In both protocols, the test stage consists of adding occluders to (partially) hide the objects, encouraging mice to find a way to gather more information before making a decision.</p>
+<p>Note that it is possible to custom-select the objects for the tasks. To select the target type, change the <code class="docutils literal notranslate"><span class="pre">target_selection</span></code> parameter in the GUI (i.e. <code class="docutils literal notranslate"><span class="pre">target_selection</span> <span class="pre">=</span> <span class="pre">6.0</span></code> for the white single teardrop object). To change the distractor type, change the value of the <code class="docutils literal notranslate"><span class="pre">distractor_type</span></code> parameter. For a comprehensive list of available objects to select from, have a look at the <a class="reference internal" href="#sec-target-distractor-list"><span class="std std-ref">List of available targets/distractors</span></a>.</p>
+<div class="admonition-important-applies-to-all-training-stages admonition">
+<p class="admonition-title">Important (applies to <strong>ALL</strong> training stages)</p>
+<p>On each training day, between sessions with different mice, make sure to clean the arena. First, wipe the floor with paper towels and some water, then take some new paper towels and wipe both floor and walls with either 70% isopropyl alcohol or 70% ethanol. This is to make sure no odors from the previous mouse remain and is necessary to reduce stress in the animals.</p>
+</div>
+<section id="training-stage-1-detection-task">
+<h3>Training Stage 1: Detection task<a class="headerlink" href="#training-stage-1-detection-task" title="Permalink to this heading">#</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>May be combined in single arena session with <a class="reference internal" href="#sec-arena-habituation"><span class="std std-ref">Arena and Reward Port Habituation</span></a>.</p>
+</div>
+<ul class="simple">
+<li><p><strong>1.1: Detection task training - permissive trial initiation parameters.</strong></p>
+<ul>
+<li><p><strong>Continuation Criteria:</strong> Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 1 session.</p></li>
+<li><p>Standard arena preparation (see <a class="reference internal" href="#sec-arena-habituation"><span class="std std-ref">Arena and Reward Port Habituation</span></a>) and control software preparation (see <a class="reference internal" href="#sec-gui"><span class="std std-ref">Using GUIs to run software</span></a>).</p></li>
+<li><p>In this first stage, there is a higher velocity threshold on the trial initiation to facilitate learning of the task parameters, i.e. trial initiation and reward / visual stimuli coupling.</p></li>
+<li><p>To encourage mice to form connection between position and visual stimuli, longer initial session (ex 75 minutes) may be necessary to allow enough serendipitous trial initiations to occur.</p></li>
+<li><p>If mice are allowed to overtrain on this step their performance can reach up to 100%.</p></li>
+<li><p><strong>Python Task</strong> to be loaded in the GUI:</p>
+<ul>
+<li><p><a class="reference download internal" download="" href="../../_downloads/ff51b13b0157f270196c779d0679c5ac/mouse_detection_p1.py"><span class="xref download myst">DetectionWithoutVelocityThresholdTask</span></a></p></li>
+<li><p><a class="reference download internal" download="" href="../../_downloads/6876dcfb380cbd853a13ca0bbfd7b998/mouse_shape_detection_p1.py"><span class="xref download myst">ShapeDetectionWithoutVelocityThresholdTask</span></a></p></li>
+</ul>
+</li>
+<li><p><strong>Parameters</strong>:</p>
+<ul>
+<li><p><span class="xref myst"><strong>Contrast</strong></span></p></li>
+<li><p><span class="xref myst"><strong>Shape</strong></span></p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>1.2: Detection task training - restricted trial initiation parameters.</strong></p>
+<ul>
+<li><p><strong>Continuation Criteria:</strong> Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 1 session.</p></li>
+<li><p>Standard arena preparation (see <a class="reference internal" href="#sec-arena-habituation"><span class="std std-ref">Arena and Reward Port Habituation</span></a>) and control software preparation (see <a class="reference internal" href="#sec-gui"><span class="std std-ref">Using GUIs to run software</span></a>).</p></li>
+<li><p>Same as in <strong>1.1</strong> except we want the mice to learn to mark a stop at trial initiation so we lower <code class="docutils literal notranslate"><span class="pre">velocity_threshold</span></code> and increase <code class="docutils literal notranslate"><span class="pre">start_box_delay</span></code> from the task parameters compared to <strong>1.1</strong>.</p></li>
+<li><p><strong>Python Task</strong> to be loaded in the GUI:</p>
+<ul>
+<li><p><a class="reference download internal" download="" href="../../_downloads/fddb21bea5b1e389e811633ae5e320d8/mouse_detection_p2.py"><span class="xref download myst">DetectionWithVelocityThresholdTask</span></a></p></li>
+<li><p><a class="reference download internal" download="" href="../../_downloads/cd499e7d1db3fb5031d51c4e9740d06a/mouse_shape_detection_p2.py"><span class="xref download myst">ShapeDetectionWithVelocityThresholdTask</span></a></p></li>
+</ul>
+</li>
+<li><p><strong>Parameters</strong>:</p>
+<ul>
+<li><p><span class="xref myst"><strong>Contrast</strong></span></p></li>
+<li><p><span class="xref myst"><strong>Shape</strong></span></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="training-stage-2-discrimination-without-occlusion">
+<h3>Training Stage 2: Discrimination without occlusion<a class="headerlink" href="#training-stage-2-discrimination-without-occlusion" title="Permalink to this heading">#</a></h3>
+<p><strong>Continuation Criteria:</strong> Performance ≥ 70% successful trials on at least 125 trials in under 60 minutes in at least 2 sessions.</p>
+<ul class="simple">
+<li><p>Standard arena preparation (see <a class="reference internal" href="#sec-arena-habituation"><span class="std std-ref">Arena and Reward Port Habituation</span></a>) and control software preparation
+(see <a class="reference internal" href="#sec-gui"><span class="std std-ref">Using GUIs to run software</span></a>).</p></li>
+<li><p>At this stage, a distractor object is introduced so that the task becomes a discrimination task. The mouse gets no reward when going on the distractor object side. The distractor object can be selected by modifying the value of the <code class="docutils literal notranslate"><span class="pre">distractor_selection</span></code> parameter. Its presence (or absence) is controlled by the <code class="docutils literal notranslate"><span class="pre">distractor</span></code> parameter which can be either <code class="docutils literal notranslate"><span class="pre">1</span></code> (presence) or <code class="docutils literal notranslate"><span class="pre">0</span></code> (absence).</p></li>
+<li><p><strong>Python Task</strong> to be loaded in the GUI:</p>
+<ul>
+<li><p><a class="reference download internal" download="" href="../../_downloads/851ca44832b57f5f0f9768d685cbac42/mouse_discrim.py"><span class="xref download myst">DiscriminationTask</span></a></p></li>
+<li><p><a class="reference download internal" download="" href="../../_downloads/121661417f8ea26dfea7f69799cefc2c/mouse_shape_discrim.py"><span class="xref download myst">ShapeDiscrimination</span></a></p></li>
+</ul>
+</li>
+<li><p><strong>Parameters</strong>:</p>
+<ul>
+<li><p><span class="xref myst"><strong>Contrast</strong></span></p></li>
+<li><p><span class="xref myst"><strong>Shape</strong></span></p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="test-days">
+<h2>Test Days<a class="headerlink" href="#test-days" title="Permalink to this heading">#</a></h2>
+<section id="test-stage-1-discrimination-with-occlusion">
+<h3>Test stage 1: Discrimination with occlusion<a class="headerlink" href="#test-stage-1-discrimination-with-occlusion" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Standard arena preparation (see <a class="reference internal" href="#sec-arena-habituation"><span class="std std-ref">Arena and Reward Port Habituation</span></a>) and control software preparation
+(see <a class="reference internal" href="#sec-gui"><span class="std std-ref">Using GUIs to run software</span></a>).</p></li>
+<li><p>Ooccluder walls are introduced to hide varying amounts of both the target and the distractor.</p></li>
+<li><p><strong>Python Task</strong> to be loaded in the GUI:</p>
+<ul>
+<li><p><a class="reference download internal" download="" href="../../_downloads/9dcaa03ca8266c94a6bcbffd6a0dca32/mouse_discrim_occluders.py"><span class="xref download myst">DiscriminationWithOccludersTask</span></a></p></li>
+<li><p><a class="reference download internal" download="" href="../../_downloads/156f6b0fe729bbdaf2430fd168e2260d/mouse_shape_discrim_occluders.py"><span class="xref download myst">ShapeDiscriminationOccluders</span></a></p></li>
+</ul>
+</li>
+<li><p><strong>Parameters</strong>:</p>
+<ul>
+<li><p><span class="xref myst"><strong>Contrast</strong></span></p></li>
+<li><p><span class="xref myst"><strong>Shape</strong></span></p></li>
+</ul>
+</li>
+</ul>
+<p>This is currently the <strong>test stage</strong>. Mice that have reached it should do <strong>== 5 full sessions</strong>, i.e. should do the full 250 trials <strong>within 1 hour</strong> and the experimenter should ideally let them run for the 250 trials even after the full hour passed if necessary.</p>
+</section>
+<section id="test-stage-2-discrimination-with-multiple-occlusion-sizes">
+<h3>Test Stage 2: Discrimination with multiple occlusion sizes<a class="headerlink" href="#test-stage-2-discrimination-with-multiple-occlusion-sizes" title="Permalink to this heading">#</a></h3>
+<p><strong>Continuation Criteria:</strong> This is currently the last training stage, thus no criteria apply.</p>
+<ul class="simple">
+<li><p>Standard arena preparation (see <a class="reference internal" href="#sec-arena-habituation"><span class="std std-ref">Arena and Reward Port Habituation</span></a>) and control software preparation
+(see <a class="reference internal" href="#sec-gui"><span class="std std-ref">Using GUIs to run software</span></a>).</p></li>
+<li><p><strong>Python Task</strong> to be selected in the GUI:</p>
+<ul>
+<li><p><a class="reference download internal" download="" href="../../_downloads/66500493e40e1406d8b06cae09e962c0/mouse_discrim_multioccluders.py"><span class="xref download myst">DiscriminationWithMultiOccludersTask</span></a></p></li>
+</ul>
+</li>
+<li><p><strong>Parameters</strong>:</p>
+<ul>
+<li><p><span class="xref myst"><strong>Contrast</strong></span></p></li>
+<li><p><span class="xref myst"><strong>Shape</strong></span></p></li>
+</ul>
+</li>
+</ul>
+<p>This is currently the <strong>test stage</strong>. Mice that have reached it should do <strong>== 5 full sessions</strong> (i.e. should do the full 250 trials during each session). –&gt;</p>
+</section>
+</section>
+<section id="reference-timeline">
+<span id="id1"></span><h2>Reference timeline<a class="headerlink" href="#reference-timeline" title="Permalink to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table table-center" id="targets-distractors">
+<caption><span class="caption-text"><!-- **Reference timeline** --></span><a class="headerlink" href="#targets-distractors" title="Permalink to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Stage</p></th>
+<th class="head"><p>Name</p></th>
+<th class="head"><p>Duration estimate</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Training stage 1.1</p></td>
+<td><p>Detection task WITHOUT velocity threshold</p></td>
+<td><p>4-5 days</p></td>
+</tr>
+<tr class="row-odd"><td><p>Training stage 1.2</p></td>
+<td><p>Detection task WITH velocity threshold</p></td>
+<td><p>1-2 days</p></td>
+</tr>
+<tr class="row-even"><td><p>Training stage 2</p></td>
+<td><p>Discrimination task WITHOUT occluders</p></td>
+<td><p>2-3 days</p></td>
+</tr>
+<tr class="row-odd"><td><p>Test stage 1</p></td>
+<td><p>Discrimination task WITH dual occluders</p></td>
+<td><p>5 <strong>test</strong> days</p></td>
+</tr>
+<tr class="row-even"><td><p>Test stage 2</p></td>
+<td><p>Discrimination task WITH multiple occluders</p></td>
+<td><p>5 <strong>test</strong> days</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="using-guis-to-run-software">
+<span id="sec-gui"></span><h2>Using GUIs to run software<a class="headerlink" href="#using-guis-to-run-software" title="Permalink to this heading">#</a></h2>
+<section id="setting-up-sessions">
+<h3>Setting up sessions<a class="headerlink" href="#setting-up-sessions" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Open anaconda prompt and type <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">dlclivegui</span></code> then enter and type <code class="docutils literal notranslate"><span class="pre">dlclivegui</span></code> and enter again.</p></li>
+<li><p>Open <code class="docutils literal notranslate"><span class="pre">vr4mice</span></code> icon on desktop.</p></li>
+<li><p>Select and initialize camera in DLC.</p></li>
+<li><p>Select and set processor <code class="docutils literal notranslate"><span class="pre">dlc_inference_w_pd</span></code> in DLC. If you do not have the photodiode teensy connected make sure you set the use_teensy parameter to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p>Connect to rig teensy2v in vr4mice gui.</p></li>
+<li><p>Select subject and task in teensy (vr4mice) gui.</p></li>
+<li><p>Edit task parameters in teensy gui (except for manual water task) and submit.</p></li>
+<li><p>Select and initialize DLC topview in DLC gui. Wait for command lines to run in terminal. Press display DLC keypoints.</p></li>
+<li><p>Press ready on teensy gui.</p></li>
+<li><p>Select subject in DLC gui.</p></li>
+<li><p>Set up session and press ready in DLC gui.</p></li>
+<li><p>Now the mouse may be placed in the arena.</p></li>
+</ul>
+</section>
+<section id="starting-session">
+<h3>Starting session<a class="headerlink" href="#starting-session" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Press <code class="docutils literal notranslate"><span class="pre">On</span></code> in DLC gui.</p></li>
+<li><p>Press start in teensy gui.</p></li>
+<li><p>Hold down <code class="docutils literal notranslate"><span class="pre">alt</span></code> key and hit <code class="docutils literal notranslate"><span class="pre">tab</span></code> to select camera, teensy gui, and DLC gui.</p></li>
+<li><p>Start stimulus screen recording on laptop.</p></li>
+<li><p>Hover over stimulus to view if desired.</p></li>
+<li><p>Note start time.</p></li>
+</ul>
+<p>Note that you can mix and match different targets and distators by changing the <code class="docutils literal notranslate"><span class="pre">target_selection</span></code> and <code class="docutils literal notranslate"><span class="pre">distractor_selection</span></code> parameters. See <a class="reference internal" href="#sec-target-distractor-list"><span class="std std-ref">List of available targets/distractors</span></a> for a list of the floats used and their corresponding targets/distractors that can be spawned.</p>
+<div class="pst-scrollable-table-container"><span id="sec-target-distractor-list"></span><table class="table table-center" id="id2" style="width: 300px">
+<caption><span class="caption-number">Table 1 </span><span class="caption-text"><strong>List of available targets/distractors</strong></span><a class="headerlink" href="#id2" title="Permalink to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>ID</p></th>
+<th class="head"><p>Name</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">0.</span></code></p></td>
+<td><p>white cube</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">1.</span></code></p></td>
+<td><p>black cube</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">2.</span></code></p></td>
+<td><p>grey teardrop</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">3.</span></code></p></td>
+<td><p>grey pacman</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">4.</span></code></p></td>
+<td><p>black teardrop</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">5.</span></code></p></td>
+<td><p>black pacman</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">6.</span></code></p></td>
+<td><p>white teardrop</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">7.</span></code></p></td>
+<td><p>white pacman</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">8.</span></code></p></td>
+<td><p>zebra teardrop</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">9.</span></code></p></td>
+<td><p>zebra ball</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">10.</span></code></p></td>
+<td><p>white ball</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">11.</span></code></p></td>
+<td><p>light gray zebra teardrop</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">12.</span></code></p></td>
+<td><p>dark gray zebra teardrop</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="materials">
+<h2>Materials<a class="headerlink" href="#materials" title="Permalink to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Transfer tunnels: <a class="reference external" href="https://www.braintreesci.com/restraint-containment-handling/handlingenrichment/red-rodent-tunnel/">Braintree Scientific, inc., Red Rodent Tunnel (REDTUN-M)</a></p></li>
+<li><p>Transfer tunnels: <a class="reference external" href="https://www.braintreesci.com/restraint-containmenthandling/handling-enrichment/mouse-transfer-tube-clear-polycarbonate-130mmx-5mm-dia/">Braintree Scientific, inc., Mouse Transfer Tube (TRANSTUBE 130X50MM)</a></p></li>
+<li><p>Treats: <a class="reference external" href="https://www.bioserv.com/product/F7385.html">Bio-serv, Chocolate O’s™, Certified (F7385)</a></p></li>
+</ul>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./docs/training_protocols"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../dlc_processor.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">DLC processor file</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="contrast_discrimination_training_parameters.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Contrast discrimination game parameters</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-protocol-overview">Training protocol overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general-mouse-training">General mouse training</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#handling-habituation-and-baseline-weight">Handling habituation and baseline weight</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-habituation-to-experimenter-presence">Step 1: Habituation to experimenter presence</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-habituation-to-handling-tunnel-and-transit">Step 2: Habituation to handling tunnel and transit</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-habituation-to-daily-weights">Step 3: Habituation to daily weights</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#water-restriction">Water restriction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#arena-and-reward-port-habituation">Arena and Reward Port Habituation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stages">Training stages</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-1-detection-task">Training Stage 1: Detection task</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#training-stage-2-discrimination-without-occlusion">Training Stage 2: Discrimination without occlusion</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-days">Test Days</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#test-stage-1-discrimination-with-occlusion">Test stage 1: Discrimination with occlusion</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#test-stage-2-discrimination-with-multiple-occlusion-sizes">Test Stage 2: Discrimination with multiple occlusion sizes</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-timeline">Reference timeline</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-guis-to-run-software">Using GUIs to run software</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-up-sessions">Setting up sessions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#starting-session">Starting session</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#materials">Materials</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By MWMathis Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  <div>Powered by <a href="https://jupyterbook.org/">Jupyter Book</a>.</div>
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
