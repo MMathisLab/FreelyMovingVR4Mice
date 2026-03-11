@@ -1,4 +1,4 @@
-# How to run a session
+# Run a session
 
 ## Open the 2 GUIs
 ### VR4mice

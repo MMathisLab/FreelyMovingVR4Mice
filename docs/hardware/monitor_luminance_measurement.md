@@ -1,4 +1,4 @@
-## Monitor Luminance Measurement
+## Measure Monitor Luminance
 
 ### Some Information
 - **Luminance Meter**: KONICA MINOLTA LS-100

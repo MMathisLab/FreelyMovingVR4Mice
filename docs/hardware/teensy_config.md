@@ -1,4 +1,5 @@
 # Configuring the teensy board and uploading the code
+
 To configure your teensy board and be able to upload code to it you first need to download and install the open source [arduino IDE](https://www.arduino.cc/en/software). 
 Then you need to specific Teensy loaders and drivers to do this follow this [tutorial](https://www.pjrc.com/teensy/first_use.html). 
 

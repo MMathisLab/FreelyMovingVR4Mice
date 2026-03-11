@@ -1,4 +1,5 @@
-# Config files  
+# Configuration files
+
 As all systems are different, certain aspects of the code including some paths and ports for the arduino may need to be changed between systems. Therefore we have included a couple of config files to handle this:
 
 ## Config_path.json 

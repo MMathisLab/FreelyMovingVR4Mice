@@ -1,4 +1,4 @@
-# Writing Teensy sketch for Vr4mice
+# Write a Teensy sketch
 
 In Vr4mice, the microcontroller plays the role of reading and executing commands from the task (e.g. turn on the water valve), and writing data from sensors (e.g. encoders or IR beam breaks) back to the task. Please see the [template](../../mouse_task/teensy/teensy_AR.ino) for an example of what this should look like.
 

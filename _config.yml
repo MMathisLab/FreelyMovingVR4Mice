@@ -17,6 +17,7 @@ html:
   extra_navbar: ""
   use_issues_button: true
   use_repository_button: true
+  downloads: ["notebook"]
   extra_footer: |
     <div>Powered by <a href="https://jupyterbook.org/">Jupyter Book</a>.</div>
 

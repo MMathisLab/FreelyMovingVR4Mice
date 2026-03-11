@@ -1,4 +1,4 @@
-# Cage for mounting monitors and cameras
+# Build the cage & mount monitors and cameras
 
 The outside cage design can be found [here](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/stl_files/ARrig_cage.stl) Note: two of the monitors have been removed so that you can see the transparent box in the middle of the cage.
 

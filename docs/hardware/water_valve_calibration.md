@@ -1,4 +1,4 @@
-## Water Valve Calibration
+## Calibrate the water valve
 
 #### Preparation
 1. Label and weigh two weigh boats for the left and right water valves respectively.

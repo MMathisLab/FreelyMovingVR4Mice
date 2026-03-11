@@ -1,4 +1,4 @@
-# Augmented Reality Game installation
+# Install the `AugmentedReality` game
 
 This page outlines the steps required to install the Unity Augmented Reality game(s).
 

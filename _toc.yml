@@ -1,31 +1,34 @@
 format: jb-book
 root: docs/vr4mice_overview
 parts:
+- caption: Developer's Guide
+  chapters:
+  - file: docs/developer_guide.md
 - caption: Hardware - Building the rig
   chapters:
-  - file: docs/Rig_building/Parts_list
-  - file: docs/Rig_building/building_the_box
-  - file: docs/Rig_building/Building_the_cage
-  - file: docs/Rig_building/Monitor_Luminance_Measurement
+  - file: docs/hardware/parts_list
+  - file: docs/hardware/building_the_box
+  - file: docs/hardware/building_the_cage
+  - file: docs/hardware/monitor_luminance_measurement
 - caption: Hardware - Teensy Setup
   chapters:
-  - file: docs/Rig_building/Teensy_box_design
-  - file: docs/Rig_building/teensy_config
-  - file: docs/Rig_building/writing_a_teensy_sketch
-  - file: docs/Rig_building/Water_Valve_Calibration
-  - file: docs/Rig_building/Photodiode_circuit
+  - file: docs/hardware/water_teensy
+  - file: docs/hardware/photodiode_teensy
+  - file: docs/hardware/teensy_config
+  - file: docs/hardware/writing_a_teensy_sketch
+  - file: docs/hardware/water_valve_calibration
 - caption: Software Installation - vr4mice & Config File Setup
   chapters:
-  - file: docs/Installation/installSumUp
-  - file: docs/Installation/Config_file_setup
-  - file: docs/Installation/Run_a_session
-  - file: docs/Installation/create_desktop_icon
+  - file: docs/software_installation/installation
+  - file: docs/software_installation/config_file_setup
+  - file: docs/software_installation/run_a_session
+  - file: docs/software_installation/create_desktop_icon
 - caption: Software - Unity Games
   chapters:
-  - file: docs/Unity_games/AR_Game
-  - file: docs/Unity_games/update_Unity_Game
-  - file: docs/Unity_games/build_Unity_Game
-  - file: docs/Unity_games/Adding_new_objects
+  - file: docs/software_unity_games/ar_game
+  - file: docs/software_unity_games/update_unity_game
+  - file: docs/software_unity_games/build_unity_game
+  - file: docs/software_unity_games/add_new_objects
 - caption: Software - DataJoint
   chapters:
   - file: docs/software/datajoint.md
@@ -35,13 +38,22 @@ parts:
   - file: docs/software/mouse_task_test.md
 - caption: Dev - Software package Documentation
   chapters:
-  - file: docs/VisualDiscrim
-  - file: docs/dlc_processor
+  - file: docs/software_package/active_sensing_task
+  - file: docs/software_package/dlc_processor
 - caption: Experiments - Training protocol and parameters
   chapters:
   - file: docs/training_protocols/training_protocol
   - file: docs/training_protocols/contrast_discrimination_training_parameters
   - file: docs/training_protocols/shape_discrimination_training_parameters
-
-
-
+- caption: Benquet, Sainsbury, et al. material
+  chapters:
+  - file: docs/figures.md
+    sections:
+    - file: dj_pipeline/notebooks/Paper_figures/Figure_1.ipynb
+    - file: dj_pipeline/notebooks/Paper_figures/Figure_2.ipynb
+    - file: dj_pipeline/notebooks/Paper_figures/Figure_3.ipynb
+    - file: dj_pipeline/notebooks/Paper_figures/Figure_4.ipynb
+    - file: dj_pipeline/notebooks/Paper_figures/Figure_5a_kinematics.ipynb
+    - file: dj_pipeline/notebooks/Paper_figures/Figure_5b_decision.ipynb
+    - file: dj_pipeline/notebooks/Paper_figures/Latency_testing.ipynb
+    - file: dj_pipeline/notebooks/Paper_figures/Supp_Figure_control.ipynb

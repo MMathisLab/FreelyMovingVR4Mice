@@ -1,5 +1,5 @@
 
-# Install and Run the vr4mice pipeline
+# Install & run the vr4mice pipeline
 
 ## Rig Data Transfer GUI Installation
 1. `git clone` the [`FreelyMovingVR4Mice`](https://github.com/MMathisLab/FreelyMovingVR4Mice) repo.

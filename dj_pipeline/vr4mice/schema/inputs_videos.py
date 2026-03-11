@@ -11,7 +11,7 @@ import pandas as pd
 import scipy.interpolate
 
 from vr4mice.schema import vr4mice
-from vr4mice.schema.vr4mice import State
+from vr4mice.schema.vr4mice import Dataset, State
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
 

@@ -1,4 +1,4 @@
-# Perspex box for housing the mouse
+# Buil the box
 
 The mice are placed within a perspex box, which has transparent sides so that the mouse can view the computer monitors that surround it. The floor of this box consists of two layers of perspex with a sheet of light diffuser sandwiched between them. This provides strong illumination of the mouse for tracking with DLC.
 

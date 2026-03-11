@@ -1,4 +1,5 @@
-# Adding new target objects
+# Add new target objects
+
 This page describes how to add new targets and distractor objects to the unity game such as the tear drop and the white pacman below.
 
 ```{image} ../../docs/images/black_white_pacman.png
