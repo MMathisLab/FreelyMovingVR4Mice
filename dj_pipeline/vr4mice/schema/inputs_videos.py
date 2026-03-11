@@ -26,10 +26,11 @@ class RawVideo(dj.Imported):
     """Stores the raw OBS recording path for a dataset."""
 
     definition = """
-    -> Dataset                     # source dataset key
+    -> vr4mice.Dataset             # source dataset key
     ---
     video_path: varchar(255)       # absolute path to the raw OBS recording
     """
+    # key_source = vr4mice.Dataset.proj()
 
     # NOTE(celia): to update the default path when we put the videos onto the server
     def make(self, key, base_path: str = "/vr4mice_screen_recordings"):
@@ -229,7 +230,7 @@ class AlignedVideoFrame(dj.Computed):
 
     definition = """
     -> VideoSyncSignal              # sync ROI signal per frame
-    -> State                        # game state (step, step_time, photodiode optional)
+    -> vr4mice.State                # game state (step, step_time, photodiode optional)
     ---
     n_steps: int                    # number of steps in the session
     step: longblob                  # step indices
@@ -250,7 +251,7 @@ class AlignedVideoFrame(dj.Computed):
 
         try:
             video_signal = VideoSyncSignal.get_sync_df(key)
-            state_dict = (State() & key).fetch1()
+            state_dict = (vr4mice.State() & key).fetch1()
             step_times = np.array(state_dict["step_time"], dtype=float)
 
             photodiode_df = None
