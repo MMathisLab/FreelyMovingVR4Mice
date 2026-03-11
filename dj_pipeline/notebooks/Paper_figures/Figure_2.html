@@ -1,0 +1,1422 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Figure 2 &#8212; FreelyMovingVR4Mice</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../../../_static/sphinx-thebe.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'dj_pipeline/notebooks/Paper_figures/Figure_2';</script>
+    <link rel="shortcut icon" href="../../../_static/logo.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Figure 3" href="Figure_3.html" />
+    <link rel="prev" title="Figure 1" href="Figure_1.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../docs/vr4mice_overview.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="FreelyMovingVR4Mice - Home"/>
+    <script>document.write(`<img src="../../../_static/logo.png" class="logo__image only-dark" alt="FreelyMovingVR4Mice - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../docs/vr4mice_overview.html">
+                    FreelyMovingVR4mice overview
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer's Guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/developer_guide.html">Developer Guide for VR4Mice 🎉</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Hardware - Building the rig</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/parts_list.html">Parts list</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/building_the_box.html">Build the box</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/building_the_cage.html">Build the cage &amp; mount monitors and cameras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/monitor_luminance_measurement.html">Measure Monitor Luminance</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Hardware - Teensy Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/water_teensy.html">Water delivery &amp; Lick ports Teensy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/photodiode_teensy.html">Photodiode Teensy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/teensy_config.html">Configuring the teensy board and uploading the code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/writing_a_teensy_sketch.html">Write a Teensy sketch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/water_valve_calibration.html">Calibrate the water valve</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software Installation - vr4mice &amp; Config File Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_installation/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_installation/config_file_setup.html">Configuration files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_installation/run_a_session.html">Run a session</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_installation/create_desktop_icon.html">Create a desktop icon to launch Teensy experiments</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Unity Games</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/ar_game.html">Install the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/update_unity_game.html">Update the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/build_unity_game.html">Rebuild a Unity game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/add_new_objects.html">Add new target objects</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - DataJoint</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/datajoint.html">VR4Mice DataJoint Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/install_dj_pipeline.html">VR4Mice Pipeline - Full Documentation</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Tests</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/mouse_task_test.html">Mouse task</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Dev - Software package Documentation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_package/active_sensing_task.html">Active Sensing Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_package/dlc_processor.html">DLC processor file</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experiments - Training protocol and parameters</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/training_protocols/training_protocol.html">Mouse training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/training_protocols/contrast_discrimination_training_parameters.html">Contrast discrimination game parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/training_protocols/shape_discrimination_training_parameters.html">Shape discrimination game parameters</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Benquet, Sainsbury, et al. material</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../docs/figures.html">Figures</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Figure_1.html">Figure 1</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Figure 2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_3.html">Figure 3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_4.html">Figure 4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_5a_kinematics.html">[Trajectory Analysis] Figure 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_5b_decision.html">[Decision Variable Prediction] Figure 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Supp_Figure_control.html">Black target control</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-launch-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Launch interactive content">
+    <i class="fas fa-rocket"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://colab.research.google.com/github/MMathisLab/FreelyMovingVR4Mice/examples/yourdemo.ipynb/github/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/dj_pipeline/notebooks/Paper_figures/Figure_2.ipynb" target="_blank"
+   class="btn btn-sm dropdown-item"
+   title="Launch onColab"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  
+    <img src="../../../_static/images/logo_colab.png">
+  </span>
+<span class="btn__text-container">Colab</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/MMathisLab/FreelyMovingVR4Mice" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/MMathisLab/FreelyMovingVR4Mice/issues/new?title=Issue%20on%20page%20%2Fdj_pipeline/notebooks/Paper_figures/Figure_2.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../_sources/dj_pipeline/notebooks/Paper_figures/Figure_2.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Figure 2</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mice-can-learn-to-discriminate-objects-based-on-luminance-in-a-motion-parallax-correct-virtual-reality-world">Mice can learn to discriminate objects based on luminance in a motion-parallax correct virtual reality world.</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mean-training-plots">Mean Training plots</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-days-and-number-of-trials-per-mouse">Training days and number of trials per mouse</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="figure-2">
+<h1>Figure 2<a class="headerlink" href="#figure-2" title="Permalink to this heading">#</a></h1>
+<section id="mice-can-learn-to-discriminate-objects-based-on-luminance-in-a-motion-parallax-correct-virtual-reality-world">
+<h2>Mice can learn to discriminate objects based on luminance in a motion-parallax correct virtual reality world.<a class="headerlink" href="#mice-can-learn-to-discriminate-objects-based-on-luminance-in-a-motion-parallax-correct-virtual-reality-world" title="Permalink to this heading">#</a></h2>
+<p>For reference, here is the full figure</p>
+<p><img alt="Training" src="../../../_images/training.jpg" /></p>
+<p>and corresponding supplemental figure</p>
+<p><img alt="Supplemental training" src="../../../_images/supp_training.jpg" /></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="s2">&quot;/app/&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/IPython/core/magics/osm.py:417: UserWarning: using dhist requires you to install the `pickleshare` library.
+  self.shell.db[&#39;dhist&#39;] = compress_dhist(dhist)[-100:]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">run</span> env_aws.py
+<span class="o">%</span><span class="k">run</span> run.py connect
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/datajoint/plugin.py:2: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools&lt;81.
+  import pkg_resources
+[2026-02-17 13:04:19,713][INFO]: Connecting admin@vr4mice-ar-collab.cluster-cn54f38qpzgm.eu-central-1.rds.amazonaws.com:3306
+[2026-02-17 13:04:19,915][INFO]: Connected admin@vr4mice-ar-collab.cluster-cn54f38qpzgm.eu-central-1.rds.amazonaws.com:3306
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema.base_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataFrame</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">plotting</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">base_schemas.schemas.exp</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema.session_metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">SessionMetrics</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.analysis.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">style</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.analysis.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_training_stage_per_mouse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.analysis.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_training_stats_heatmap</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">statsmodels.api</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.formula.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">ols</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">statsmodels.formula.api</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">smf</span>
+
+<span class="n">style</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">save_fig_path</span> <span class="o">=</span> <span class="s2">&quot;notebooks/Paper_figures/Figure_output/&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">stage</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;ar_detection_no_velthr&quot;</span><span class="p">,</span> <span class="s2">&quot;ar_detection_velthr&quot;</span><span class="p">,</span> <span class="s2">&quot;ar_discrim&quot;</span><span class="p">]:</span>
+    <span class="n">training</span> <span class="o">=</span> <span class="p">(</span><span class="n">vr4mice</span><span class="o">.</span><span class="n">Groups</span><span class="p">()</span> <span class="o">*</span> <span class="n">vr4mice</span><span class="o">.</span><span class="n">Labels</span><span class="p">()</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">vr4mice</span><span class="o">.</span><span class="n">Dataset</span><span class="p">()</span> <span class="o">&amp;</span> <span class="sa">f</span><span class="s1">&#39;session_label = &quot;</span><span class="si">{</span><span class="n">stage</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">training</span><span class="p">:</span>
+        
+        <span class="n">dataset_name</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">((</span><span class="n">SessionMetrics</span><span class="p">()</span> <span class="o">&amp;</span> <span class="sa">f</span><span class="s1">&#39;dataset = &quot;</span><span class="si">{</span><span class="n">dataset_name</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">as_dict</span> <span class="o">=</span> <span class="kc">True</span><span class="p">))</span>
+        <span class="n">split_d</span> <span class="o">=</span> <span class="n">dataset_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">split_d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">split_d</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;attempt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">split_d</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;training_stage&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stage</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;lab_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">vr4mice</span><span class="o">.</span><span class="n">Collab</span><span class="p">()</span> <span class="o">&amp;</span> <span class="sa">f</span><span class="s1">&#39;dataset = &quot;</span><span class="si">{</span><span class="n">dataset_name</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="n">vr4mice</span><span class="o">.</span><span class="n">Labs</span><span class="p">())</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="s2">&quot;lab&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<span class="n">big_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  
+ 
+<span class="n">big_df</span><span class="p">[</span><span class="s2">&quot;session_increment&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">big_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">)[</span><span class="s2">&quot;dataset&quot;</span><span class="p">]</span>
+    <span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;dense&quot;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># remove failed session need to correct in datajoint - there was a second attempt run I need to correct its label</span>
+<span class="n">big_df</span> <span class="o">=</span> <span class="n">big_df</span> <span class="p">[</span><span class="n">big_df</span><span class="o">.</span><span class="n">dataset</span> <span class="o">!=</span> <span class="s2">&quot;Lemming_2024-08-09_1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">combined_training_df</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">mouse_name</span> <span class="ow">in</span> <span class="n">big_df</span><span class="o">.</span><span class="n">mouse_name</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+   <span class="n">tmp_df</span> <span class="o">=</span> <span class="n">get_training_stage_per_mouse</span><span class="p">(</span><span class="n">big_df</span><span class="p">,</span> <span class="n">mouse_name</span><span class="p">)</span>
+   <span class="n">combined_training_df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_df</span><span class="p">)</span>
+<span class="n">session_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">combined_training_df</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>31726_2025-02-06_1
+31726_2025-02-07_1
+31726_2025-02-10_1
+31726_2025-02-11_1
+31726_2025-02-12_1
+31726_2025-02-13_1
+31728_2025-02-06_1
+31728_2025-02-07_1
+31728_2025-02-10_1
+31728_2025-02-11_1
+31728_2025-02-12_1
+31728_2025-02-13_1
+J729_2024-11-09_1
+J729_2024-11-10_1
+J729_2024-11-11_1
+J729_2024-11-12_1
+J729_2024-11-13_1
+J729_2024-11-14_1
+J729_2024-11-15_1
+J729_2024-11-16_1
+J729_2024-11-17_1
+J731_2024-11-09_1
+J731_2024-11-10_1
+J731_2024-11-11_1
+J731_2024-11-12_1
+J731_2024-11-13_1
+J731_2024-11-14_1
+J731_2024-11-15_1
+J731_2024-11-16_1
+J731_2024-11-17_1
+Jacana_2024-07-28_1
+Jacana_2024-07-29_2
+Jacana_2024-07-30_1
+Jacana_2024-07-31_1
+Jacana_2024-08-01_1
+Jacana_2024-08-02_1
+Jacana_2024-08-05_2
+Jacana_2024-08-06_1
+Jacana_2024-08-07_1
+Kiwi_2024-07-26_1
+Kiwi_2024-07-27_1
+Kiwi_2024-07-28_1
+Kiwi_2024-07-29_1
+Kiwi_2024-07-30_1
+Kiwi_2024-07-31_1
+Kiwi_2024-08-01_1
+Lemming_2024-07-27_1
+Lemming_2024-07-28_1
+Lemming_2024-07-29_2
+Lemming_2024-07-30_1
+Lemming_2024-07-31_1
+Lemming_2024-08-01_1
+Nightingale_2024-07-27_1
+Nightingale_2024-07-28_1
+Nightingale_2024-07-29_2
+Nightingale_2024-07-30_1
+Nightingale_2024-07-31_1
+Nightingale_2024-07-31_2
+Nightingale_2024-08-01_1
+Oribi_2024-08-08_1
+Oribi_2024-08-09_1
+Oribi_2024-08-10_1
+Oribi_2024-08-11_1
+Oribi_2024-08-12_1
+Pheasant_2024-08-08_1
+Pheasant_2024-08-09_1
+Pheasant_2024-08-10_1
+Pheasant_2024-08-11_1
+31726_2025-02-14_1
+31726_2025-02-18_1
+31726_2025-03-03_1
+31726_2025-03-04_1
+31726_2025-03-05_1
+31728_2025-02-14_1
+31728_2025-02-18_1
+J729_2024-11-18_1
+J729_2024-11-19_1
+J729_2024-11-20_1
+J729_2024-11-21_1
+J729_2024-11-22_1
+J729_2024-11-23_1
+J731_2024-11-18_1
+J731_2024-11-19_1
+J731_2024-11-20_1
+J731_2024-11-21_1
+J731_2024-11-22_1
+J731_2024-11-23_1
+J731_2024-11-27_1
+J731_2024-11-28_1
+Jacana_2024-08-08_2
+Kiwi_2024-08-02_1
+Kiwi_2024-08-05_1
+Lemming_2024-08-05_1
+Lemming_2024-08-06_3
+Nightingale_2024-08-02_1
+Nightingale_2024-08-06_1
+Nightingale_2024-08-07_1
+Oribi_2024-08-13_1
+Pheasant_2024-08-12_1
+31726_2025-03-06_1
+31726_2025-03-07_1
+31726_2025-03-10_1
+31726_2025-03-11_1
+31726_2025-03-12_1
+31726_2025-03-14_1
+31726_2025-03-17_1
+31728_2025-03-03_1
+31728_2025-03-04_1
+J729_2024-11-24_1
+J729_2024-11-25_1
+J729_2024-11-26_1
+J729_2024-11-27_1
+J729_2024-11-28_1
+J731_2024-11-24_1
+J731_2024-11-25_1
+J731_2024-11-26_1
+J731_2024-11-30_1
+J731_2024-12-01_1
+J731_2024-12-02_1
+J731_2024-12-03_1
+Jacana_2024-08-09_1
+Jacana_2024-08-10_1
+Jacana_2024-08-11_1
+Jacana_2024-08-12_1
+Kiwi_2024-08-06_1
+Kiwi_2024-08-07_1
+Kiwi_2024-08-09_1
+Lemming_2024-08-07_1
+Lemming_2024-08-08_1
+Lemming_2024-08-09_1
+Nightingale_2024-08-08_2
+Nightingale_2024-08-09_2
+Oribi_2024-08-14_1
+Oribi_2024-08-15_1
+Pheasant_2024-08-13_1
+Pheasant_2024-08-14_1
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="mean-training-plots">
+<h2>Mean Training plots<a class="headerlink" href="#mean-training-plots" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Linear Mixed Model (with Mouse)</span>
+<span class="n">lmm_model</span> <span class="o">=</span> <span class="n">smf</span><span class="o">.</span><span class="n">mixedlm</span><span class="p">(</span><span class="s2">&quot;session_reward ~ C(num_train_stage)&quot;</span><span class="p">,</span> 
+                        <span class="n">data</span><span class="o">=</span><span class="n">session_df</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">session_df</span><span class="p">[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;bfgs&#39;</span><span class="p">)</span>
+
+<span class="c1"># Ordinary Least Squares (without Mouse)</span>
+<span class="n">ols_model</span> <span class="o">=</span> <span class="n">smf</span><span class="o">.</span><span class="n">ols</span><span class="p">(</span><span class="s2">&quot;session_reward ~ C(num_train_stage)&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">session_df</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+
+<span class="c1"># Likelihood Ratio Test</span>
+<span class="n">lr_stat</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">lmm_model</span><span class="o">.</span><span class="n">llf</span> <span class="o">-</span> <span class="n">ols_model</span><span class="o">.</span><span class="n">llf</span><span class="p">)</span>
+<span class="n">p_val</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">lr_stat</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># 1 degree of freedom for the random effect</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;LRT Statistic: </span><span class="si">{</span><span class="n">lr_stat</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;P-value for Mouse effect: </span><span class="si">{</span><span class="n">p_val</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">p_val</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Justification: Mouse identity does not significantly improve the model. Independent ANOVA is valid.&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Caution: Mouse identity still explains significant variance.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LRT Statistic: -27.5341
+P-value for Mouse effect: 1.0000
+Justification: Mouse identity does not significantly improve the model. Independent ANOVA is valid.
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/statsmodels/base/model.py:607: ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals
+  warnings.warn(&quot;Maximum Likelihood optimization failed to &quot;
+/app/.venv/lib/python3.9/site-packages/statsmodels/regression/mixed_linear_model.py:2206: ConvergenceWarning: MixedLM optimization failed, trying a different optimizer may help.
+  warnings.warn(msg, ConvergenceWarning)
+/app/.venv/lib/python3.9/site-packages/statsmodels/regression/mixed_linear_model.py:2218: ConvergenceWarning: Gradient optimization failed, |grad| = 1.070489
+  warnings.warn(msg, ConvergenceWarning)
+/app/.venv/lib/python3.9/site-packages/statsmodels/regression/mixed_linear_model.py:2237: ConvergenceWarning: The MLE may be on the boundary of the parameter space.
+  warnings.warn(msg, ConvergenceWarning)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">plotting</span><span class="o">.</span><span class="n">plot_training_phases</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">session_df</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;session_reward&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Success rate / Session&quot;</span><span class="p">)</span><span class="c1">#, hue=&quot;mouse_name&quot;)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure2_reward_mouse.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../../_images/b20367f259f86fea3c840f78b2c17edf268c06749f23b3c76b37aa24d7780934.png" src="../../../_images/b20367f259f86fea3c840f78b2c17edf268c06749f23b3c76b37aa24d7780934.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+<span class="n">plotting</span><span class="o">.</span><span class="n">plot_training_phases</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="o">=</span><span class="n">session_df</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;session_reward&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Success rate / Mouse&quot;</span><span class="p">,</span> <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;lab_id&quot;</span><span class="p">)</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">multicomp</span><span class="o">.</span><span class="n">pairwise_tukeyhsd</span><span class="p">(</span><span class="n">session_df</span><span class="o">.</span><span class="n">session_reward</span><span class="p">,</span> <span class="n">session_df</span><span class="o">.</span><span class="n">num_train_stage</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="n">plot_training_stats_heatmap</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">results</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure2_success_rate.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">anova_rewarded</span> <span class="o">=</span> <span class="n">ols</span><span class="p">(</span><span class="s1">&#39;session_reward ~ num_train_stage&#39;</span><span class="p">,</span>
+             <span class="n">data</span><span class="o">=</span><span class="n">session_df</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="n">table</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">anova_lm</span><span class="p">(</span><span class="n">anova_rewarded</span><span class="p">,</span> <span class="n">typ</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Anova&quot;</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Anova                    df    sum_sq   mean_sq         F    PR(&gt;F)
+num_train_stage   1.0  0.147007  0.147007  8.130146  0.006192
+Residual         53.0  0.958333  0.018082       NaN       NaN
+</pre></div>
+</div>
+<img alt="../../../_images/0be04e5d8f57afbc173e85ae8c44a32125fb2153212724f873d01ce187fd089d.png" src="../../../_images/0be04e5d8f57afbc173e85ae8c44a32125fb2153212724f873d01ce187fd089d.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">plotting</span><span class="o">.</span><span class="n">plot_training_phases</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="o">=</span><span class="n">session_df</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;session_tortuosity&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Trial tortuosity&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;lab_id&quot;</span><span class="p">)</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">multicomp</span><span class="o">.</span><span class="n">pairwise_tukeyhsd</span><span class="p">(</span><span class="n">session_df</span><span class="o">.</span><span class="n">session_tortuosity</span><span class="p">,</span> <span class="n">session_df</span><span class="o">.</span><span class="n">num_train_stage</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="n">plot_training_stats_heatmap</span><span class="p">(</span><span class="n">ax</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">results</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure2_tortuosity.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">anova_rewarded</span> <span class="o">=</span> <span class="n">ols</span><span class="p">(</span><span class="s1">&#39;session_tortuosity ~ num_train_stage&#39;</span><span class="p">,</span>
+             <span class="n">data</span><span class="o">=</span><span class="n">session_df</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="n">table</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">anova_lm</span><span class="p">(</span><span class="n">anova_rewarded</span><span class="p">,</span> <span class="n">typ</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Anova&quot;</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Anova                    df      sum_sq     mean_sq         F    PR(&gt;F)
+num_train_stage   1.0  138.855866  138.855866  8.328483  0.005634
+Residual         53.0  883.637602   16.672408       NaN       NaN
+</pre></div>
+</div>
+<img alt="../../../_images/1164d59729e6de7d850aa709ee12f525d468df55b90a8ac29ca5fc9c695c4be3.png" src="../../../_images/1164d59729e6de7d850aa709ee12f525d468df55b90a8ac29ca5fc9c695c4be3.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">plotting</span><span class="o">.</span><span class="n">plot_training_phases</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="o">=</span><span class="n">session_df</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;session_trial_duration&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Time to report (s)&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;lab_id&quot;</span><span class="p">)</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">multicomp</span><span class="o">.</span><span class="n">pairwise_tukeyhsd</span><span class="p">(</span><span class="n">session_df</span><span class="o">.</span><span class="n">session_trial_duration</span><span class="p">,</span> <span class="n">session_df</span><span class="o">.</span><span class="n">num_train_stage</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="n">plot_training_stats_heatmap</span><span class="p">(</span><span class="n">ax</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">results</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure2_trial_duration.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="n">anova_rewarded</span> <span class="o">=</span> <span class="n">ols</span><span class="p">(</span><span class="s1">&#39;session_trial_duration ~ num_train_stage&#39;</span><span class="p">,</span>
+             <span class="n">data</span><span class="o">=</span><span class="n">session_df</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="n">table</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">anova_lm</span><span class="p">(</span><span class="n">anova_rewarded</span><span class="p">,</span> <span class="n">typ</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Anova&quot;</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Anova                    df       sum_sq     mean_sq          F    PR(&gt;F)
+num_train_stage   1.0   773.058815  773.058815  11.271117  0.001463
+Residual         53.0  3635.142448   68.587593        NaN       NaN
+</pre></div>
+</div>
+<img alt="../../../_images/74393ab8ee71eddc49687b4439f9324ea8f6a98e4daa52e2cc3f7c48605a698a.png" src="../../../_images/74393ab8ee71eddc49687b4439f9324ea8f6a98e4daa52e2cc3f7c48605a698a.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">session_df</span><span class="p">[</span><span class="s2">&quot;session_bias_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">session_df</span><span class="p">[</span><span class="s2">&quot;session_bias&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span> 
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">plotting</span><span class="o">.</span><span class="n">plot_training_phases</span><span class="p">(</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">session_df</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;session_bias_index&quot;</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Choice bias index&quot;</span><span class="p">,</span>
+    <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+    <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;lab_id&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">xmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="n">session_df</span><span class="o">.</span><span class="n">num_train_stage</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
+
+<span class="c1"># One-sample t-test of bias against 0 (null) per training stage</span>
+<span class="n">stage_tests</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">stage</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">session_df</span><span class="o">.</span><span class="n">num_train_stage</span><span class="o">.</span><span class="n">unique</span><span class="p">()):</span>
+    <span class="n">vals</span> <span class="o">=</span> <span class="n">session_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">session_df</span><span class="o">.</span><span class="n">num_train_stage</span> <span class="o">==</span> <span class="n">stage</span><span class="p">,</span> <span class="s2">&quot;session_bias_index&quot;</span><span class="p">]</span>
+    <span class="n">t_stat</span><span class="p">,</span> <span class="n">p_val</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">ttest_1samp</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">stage_tests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+        <span class="s2">&quot;num_train_stage&quot;</span><span class="p">:</span> <span class="n">stage</span><span class="p">,</span>
+        <span class="s2">&quot;n&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">),</span>
+        <span class="s2">&quot;mean_bias&quot;</span><span class="p">:</span> <span class="n">vals</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+        <span class="s2">&quot;t_stat&quot;</span><span class="p">:</span> <span class="n">t_stat</span><span class="p">,</span>
+        <span class="s2">&quot;df&quot;</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="s2">&quot;p_value&quot;</span><span class="p">:</span> <span class="n">p_val</span><span class="p">,</span>
+    <span class="p">})</span>
+<span class="n">stage_tests_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">stage_tests</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;One-sample t-tests vs 0 (bias)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stage_tests_df</span><span class="p">)</span>
+
+<span class="c1"># Plot p-values only (no bar/box)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">stage_tests_df</span><span class="p">[</span><span class="s2">&quot;num_train_stage&quot;</span><span class="p">],</span> <span class="n">stage_tests_df</span><span class="p">[</span><span class="s2">&quot;p_value&quot;</span><span class="p">],</span> 
+           <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Training stage&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;p-value (vs 0)&quot;</span><span class="p">)</span>
+
+<span class="c1"># Define tick positions and labels</span>
+<span class="n">stage_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">stage_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;First&quot;</span><span class="p">,</span> <span class="s2">&quot;Middle&quot;</span><span class="p">,</span> <span class="s2">&quot;Last&quot;</span><span class="p">,</span> <span class="s2">&quot;First&quot;</span><span class="p">,</span> <span class="s2">&quot;Middle&quot;</span><span class="p">,</span> <span class="s2">&quot;Last&quot;</span><span class="p">]</span>
+<span class="n">stage_colors</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;#3FB47C&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#3FB47C&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#1F6F49&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#FF1493&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#FF1493&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#FF1493&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">stage_positions</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">stage_labels</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="c1"># Color the x-tick labels</span>
+<span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">()):</span>
+    <span class="n">label</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="n">stage_colors</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+    
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure2_bias.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>One-sample t-tests vs 0 (bias)
+   num_train_stage   n  mean_bias    t_stat  df   p_value
+0                0  10   0.024020  0.315024   9  0.759925
+1                1  10   0.099960  1.243030   9  0.245264
+2                2  10   0.072631  0.913433   9  0.384832
+3                3  10   0.215386  3.028606   9  0.014279
+4                4   5   0.156937  5.195691   4  0.006535
+5                5  10   0.042537  0.990603   9  0.347763
+</pre></div>
+</div>
+<img alt="../../../_images/61bcb94a585c206d04702100f7c43b8a649fdfbcb59ff7e380d13e4f58505dd9.png" src="../../../_images/61bcb94a585c206d04702100f7c43b8a649fdfbcb59ff7e380d13e4f58505dd9.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.stats.multitest</span><span class="w"> </span><span class="kn">import</span> <span class="n">multipletests</span>
+
+<span class="n">session_df</span><span class="p">[</span><span class="s2">&quot;session_bias_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">session_df</span><span class="p">[</span><span class="s2">&quot;session_bias&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span> 
+
+<span class="c1"># One-sample t-test of bias against 0 (null) per training stage</span>
+<span class="n">stage_tests</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">stage</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">session_df</span><span class="o">.</span><span class="n">num_train_stage</span><span class="o">.</span><span class="n">unique</span><span class="p">()):</span>
+    <span class="n">vals</span> <span class="o">=</span> <span class="n">session_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">session_df</span><span class="o">.</span><span class="n">num_train_stage</span> <span class="o">==</span> <span class="n">stage</span><span class="p">,</span> <span class="s2">&quot;session_bias_index&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">t_stat</span><span class="p">,</span> <span class="n">p_val</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">ttest_1samp</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">stage_tests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s2">&quot;num_train_stage&quot;</span><span class="p">:</span> <span class="n">stage</span><span class="p">,</span>
+            <span class="s2">&quot;n&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">),</span>
+            <span class="s2">&quot;mean_bias&quot;</span><span class="p">:</span> <span class="n">vals</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+            <span class="s2">&quot;t_stat&quot;</span><span class="p">:</span> <span class="n">t_stat</span><span class="p">,</span>
+            <span class="s2">&quot;df&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;p_value&quot;</span><span class="p">:</span> <span class="n">p_val</span><span class="p">,</span>
+        <span class="p">})</span>
+
+<span class="n">stage_tests_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">stage_tests</span><span class="p">)</span>
+
+<span class="c1"># Apply False Discovery Rate (FDR) Correction</span>
+<span class="n">rejected</span><span class="p">,</span> <span class="n">p_adjusted</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">multipletests</span><span class="p">(</span><span class="n">stage_tests_df</span><span class="p">[</span><span class="s2">&quot;p_value&quot;</span><span class="p">],</span> 
+                                            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> 
+                                            <span class="n">method</span><span class="o">=</span><span class="s1">&#39;fdr_bh&#39;</span><span class="p">)</span>
+
+<span class="n">stage_tests_df</span><span class="p">[</span><span class="s2">&quot;p_value_fdr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_adjusted</span>
+<span class="n">stage_tests_df</span><span class="p">[</span><span class="s2">&quot;significant_fdr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rejected</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;One-sample t-tests vs 0 (bias) with FDR Correction&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stage_tests_df</span><span class="p">[[</span><span class="s1">&#39;num_train_stage&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;p_value&#39;</span><span class="p">,</span> <span class="s1">&#39;p_value_fdr&#39;</span><span class="p">,</span> <span class="s1">&#39;significant_fdr&#39;</span><span class="p">]])</span>
+
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+<span class="c1"># Plot training phases</span>
+<span class="n">plotting</span><span class="o">.</span><span class="n">plot_training_phases</span><span class="p">(</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">session_df</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;session_bias_index&quot;</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Choice bias index&quot;</span><span class="p">,</span>
+    <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+    <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;lab_id&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">xmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
+
+<span class="c1"># Plot p-values</span>
+<span class="c1"># FDR-adjusted p-values in red and the raw ones in grey for comparison</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">stage_tests_df</span><span class="p">[</span><span class="s2">&quot;num_train_stage&quot;</span><span class="p">],</span> <span class="n">stage_tests_df</span><span class="p">[</span><span class="s2">&quot;p_value_fdr&quot;</span><span class="p">],</span>
+           <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;crimson&quot;</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">stage_tests_df</span><span class="p">[</span><span class="s2">&quot;num_train_stage&quot;</span><span class="p">],</span> <span class="n">stage_tests_df</span><span class="p">[</span><span class="s2">&quot;p_value&quot;</span><span class="p">],</span>
+           <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Training Phase&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;p-value (vs 0)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+
+<span class="c1"># Define tick positions and labels</span>
+<span class="n">stage_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">stage_tests_df</span><span class="p">))</span>
+<span class="n">stage_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;First&quot;</span><span class="p">,</span> <span class="s2">&quot;Middle&quot;</span><span class="p">,</span> <span class="s2">&quot;Last&quot;</span><span class="p">,</span> <span class="s2">&quot;First&quot;</span><span class="p">,</span> <span class="s2">&quot;Middle&quot;</span><span class="p">,</span> <span class="s2">&quot;Last&quot;</span><span class="p">][:</span><span class="nb">len</span><span class="p">(</span><span class="n">stage_tests_df</span><span class="p">)]</span>
+<span class="n">stage_colors</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;#3FB47C&quot;</span><span class="p">,</span> <span class="s2">&quot;#3FB47C&quot;</span><span class="p">,</span> <span class="s2">&quot;#1F6F49&quot;</span><span class="p">,</span> <span class="s2">&quot;#FF1493&quot;</span><span class="p">,</span> <span class="s2">&quot;#FF1493&quot;</span><span class="p">,</span> <span class="s2">&quot;#FF1493&quot;</span><span class="p">][:</span><span class="nb">len</span><span class="p">(</span><span class="n">stage_tests_df</span><span class="p">)]</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">stage_tests_df</span><span class="p">[</span><span class="s2">&quot;num_train_stage&quot;</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">stage_labels</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+
+<span class="c1"># Color the x-tick labels</span>
+<span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">()):</span>
+    <span class="k">if</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">stage_colors</span><span class="p">):</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="n">stage_colors</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure2_bias.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>One-sample t-tests vs 0 (bias) with FDR Correction
+   num_train_stage   n   p_value  p_value_fdr  significant_fdr
+0                0  10  0.759925     0.759925            False
+1                1  10  0.245264     0.461798            False
+2                2  10  0.384832     0.461798            False
+3                3  10  0.014279     0.042837             True
+4                4   5  0.006535     0.039213             True
+5                5  10  0.347763     0.461798            False
+</pre></div>
+</div>
+<img alt="../../../_images/c2381472b157f3cb02da5df0aeeb22653c18e49c657d9ecd17f5e24a6b24988f.png" src="../../../_images/c2381472b157f3cb02da5df0aeeb22653c18e49c657d9ecd17f5e24a6b24988f.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">plotting</span><span class="o">.</span><span class="n">plot_training_phases</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="o">=</span><span class="n">session_df</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;session_max_trial_number&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Total number of trials&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;lab_id&quot;</span><span class="p">)</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">multicomp</span><span class="o">.</span><span class="n">pairwise_tukeyhsd</span><span class="p">(</span><span class="n">session_df</span><span class="o">.</span><span class="n">session_max_trial_number</span><span class="p">,</span> <span class="n">session_df</span><span class="o">.</span><span class="n">num_train_stage</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<span class="n">plot_training_stats_heatmap</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">results</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure2_max_trial_number.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">anova_rewarded</span> <span class="o">=</span> <span class="n">ols</span><span class="p">(</span><span class="s1">&#39;session_max_trial_number ~ num_train_stage&#39;</span><span class="p">,</span>
+             <span class="n">data</span><span class="o">=</span><span class="n">session_df</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="n">table</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">anova_lm</span><span class="p">(</span><span class="n">anova_rewarded</span><span class="p">,</span> <span class="n">typ</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Anova&quot;</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Anova                    df         sum_sq       mean_sq          F    PR(&gt;F)
+num_train_stage   1.0   88504.064246  88504.064246  22.752666  0.000015
+Residual         53.0  206161.135754   3889.832750        NaN       NaN
+</pre></div>
+</div>
+<img alt="../../../_images/bfb44340f553fec4ad5127387be80c7f90b204aa7ce0d8a546e63352f5bd7318.png" src="../../../_images/bfb44340f553fec4ad5127387be80c7f90b204aa7ce0d8a546e63352f5bd7318.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">plotting</span><span class="o">.</span><span class="n">plot_training_phases</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">session_df</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;session_jshaped&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;J-shaped trials rate/session&quot;</span><span class="p">)</span><span class="c1">#, hue=&quot;mouse_name&quot;)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure2_jshaped_mouse.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../../_images/79283ed12dd87b0c6b0a68cb81ca46443309736f41bb7e61f149dbbdf8d9d54b.png" src="../../../_images/79283ed12dd87b0c6b0a68cb81ca46443309736f41bb7e61f149dbbdf8d9d54b.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">plotting</span><span class="o">.</span><span class="n">plot_training_phases</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="o">=</span><span class="n">session_df</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;session_jshaped&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;J-shaped trials rate/session&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;lab_id&quot;</span><span class="p">)</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">multicomp</span><span class="o">.</span><span class="n">pairwise_tukeyhsd</span><span class="p">(</span><span class="n">session_df</span><span class="o">.</span><span class="n">session_jshaped</span><span class="p">,</span> <span class="n">session_df</span><span class="o">.</span><span class="n">num_train_stage</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<span class="n">plot_training_stats_heatmap</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">results</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure2_jshaped.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">anova_rewarded</span> <span class="o">=</span> <span class="n">ols</span><span class="p">(</span><span class="s1">&#39;session_jshaped ~ num_train_stage&#39;</span><span class="p">,</span>
+             <span class="n">data</span><span class="o">=</span><span class="n">session_df</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="n">table</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">anova_lm</span><span class="p">(</span><span class="n">anova_rewarded</span><span class="p">,</span> <span class="n">typ</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Anova&quot;</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Anova                    df    sum_sq   mean_sq          F    PR(&gt;F)
+num_train_stage   1.0  1.238463  1.238463  29.529584  0.000001
+Residual         53.0  2.222806  0.041940        NaN       NaN
+</pre></div>
+</div>
+<img alt="../../../_images/ee13f28cd92a21120a791c139077305d17ac65b99a0e09a4c021aa623ddc88c6.png" src="../../../_images/ee13f28cd92a21120a791c139077305d17ac65b99a0e09a4c021aa623ddc88c6.png" />
+</div>
+</div>
+</section>
+<section id="training-days-and-number-of-trials-per-mouse">
+<h2>Training days and number of trials per mouse<a class="headerlink" href="#training-days-and-number-of-trials-per-mouse" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">training_days</span> <span class="o">=</span> <span class="n">big_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="s2">&quot;dataset&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
+<span class="n">training_days</span><span class="p">[</span><span class="s2">&quot;trials&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">big_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="s2">&quot;session_max_trial_number&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()[</span><span class="s2">&quot;session_max_trial_number&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">training_days</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>mouse_name</th>
+      <th>dataset</th>
+      <th>trials</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>31726</td>
+      <td>18</td>
+      <td>1522.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>31728</td>
+      <td>10</td>
+      <td>1567.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>J729</td>
+      <td>20</td>
+      <td>2274.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>J731</td>
+      <td>24</td>
+      <td>2320.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Jacana</td>
+      <td>14</td>
+      <td>2227.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>Kiwi</td>
+      <td>12</td>
+      <td>1450.0</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>Lemming</td>
+      <td>10</td>
+      <td>1450.0</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>Nightingale</td>
+      <td>11</td>
+      <td>1216.0</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>Oribi</td>
+      <td>8</td>
+      <td>1196.0</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>Pheasant</td>
+      <td>7</td>
+      <td>1218.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">training_days</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">numeric_only</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">training_days</span><span class="o">.</span><span class="n">sem</span><span class="p">(</span><span class="n">numeric_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(dataset      13.4
+ trials     1644.0
+ dtype: float64,
+ dataset      1.758787
+ trials     143.573984
+ dtype: float64)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">stripplot</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">training_days</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+    <span class="n">jitter</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+    <span class="n">zorder</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">pointplot</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">training_days</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span>
+    <span class="n">join</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+    <span class="n">markers</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+    <span class="n">errorbar</span><span class="o">=</span><span class="s2">&quot;se&quot;</span><span class="p">,</span>
+    <span class="n">capsize</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">errwidth</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="p">)</span>
+
+ 
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">35</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Training days&quot;</span><span class="p">)</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">stripplot</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">training_days</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;trials&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span>
+    <span class="n">jitter</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+    <span class="n">zorder</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">pointplot</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">training_days</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;trials&quot;</span><span class="p">,</span>
+    <span class="n">join</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span>
+    <span class="n">markers</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+    <span class="n">errorbar</span><span class="o">=</span><span class="s2">&quot;se&quot;</span><span class="p">,</span>
+    <span class="n">capsize</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">errwidth</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">3500</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Total trials&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure2_days_and_trials.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../../_images/b1c7b3b35b64d317e9d8b9a9cbdf4a43a156ed5ff4f4d97b1b8a7dab00afd3d1.png" src="../../../_images/b1c7b3b35b64d317e9d8b9a9cbdf4a43a156ed5ff4f4d97b1b8a7dab00afd3d1.png" />
+</div>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./dj_pipeline/notebooks/Paper_figures"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="Figure_1.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Figure 1</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="Figure_3.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Figure 3</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mice-can-learn-to-discriminate-objects-based-on-luminance-in-a-motion-parallax-correct-virtual-reality-world">Mice can learn to discriminate objects based on luminance in a motion-parallax correct virtual reality world.</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mean-training-plots">Mean Training plots</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-days-and-number-of-trials-per-mouse">Training days and number of trials per mouse</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By MWMathis Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  <div>Powered by <a href="https://jupyterbook.org/">Jupyter Book</a>.</div>
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

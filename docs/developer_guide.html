@@ -1,0 +1,703 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Developer Guide for VR4Mice 🎉 &#8212; FreelyMovingVR4Mice</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../_static/sphinx-thebe.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'docs/developer_guide';</script>
+    <link rel="shortcut icon" href="../_static/logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Parts list" href="hardware/parts_list.html" />
+    <link rel="prev" title="FreelyMovingVR4mice overview" href="vr4mice_overview.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="vr4mice_overview.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt="FreelyMovingVR4Mice - Home"/>
+    <script>document.write(`<img src="../_static/logo.png" class="logo__image only-dark" alt="FreelyMovingVR4Mice - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="vr4mice_overview.html">
+                    FreelyMovingVR4mice overview
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer's Guide</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Developer Guide for VR4Mice 🎉</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Hardware - Building the rig</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="hardware/parts_list.html">Parts list</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware/building_the_box.html">Build the box</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware/building_the_cage.html">Build the cage &amp; mount monitors and cameras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware/monitor_luminance_measurement.html">Measure Monitor Luminance</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Hardware - Teensy Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="hardware/water_teensy.html">Water delivery &amp; Lick ports Teensy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware/photodiode_teensy.html">Photodiode Teensy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware/teensy_config.html">Configuring the teensy board and uploading the code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware/writing_a_teensy_sketch.html">Write a Teensy sketch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware/water_valve_calibration.html">Calibrate the water valve</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software Installation - vr4mice &amp; Config File Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="software_installation/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_installation/config_file_setup.html">Configuration files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_installation/run_a_session.html">Run a session</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_installation/create_desktop_icon.html">Create a desktop icon to launch Teensy experiments</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Unity Games</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="software_unity_games/ar_game.html">Install the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_unity_games/update_unity_game.html">Update the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_unity_games/build_unity_game.html">Rebuild a Unity game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_unity_games/add_new_objects.html">Add new target objects</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - DataJoint</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="software/datajoint.html">VR4Mice DataJoint Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software/install_dj_pipeline.html">VR4Mice Pipeline - Full Documentation</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Tests</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="software/mouse_task_test.html">Mouse task</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Dev - Software package Documentation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="software_package/active_sensing_task.html">Active Sensing Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_package/dlc_processor.html">DLC processor file</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experiments - Training protocol and parameters</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="training_protocols/training_protocol.html">Mouse training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_protocols/contrast_discrimination_training_parameters.html">Contrast discrimination game parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_protocols/shape_discrimination_training_parameters.html">Shape discrimination game parameters</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Benquet, Sainsbury, et al. material</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="figures.html">Figures</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_1.html">Figure 1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_2.html">Figure 2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_3.html">Figure 3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_4.html">Figure 4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_5a_kinematics.html">[Trajectory Analysis] Figure 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_5b_decision.html">[Decision Variable Prediction] Figure 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Supp_Figure_control.html">Black target control</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/MMathisLab/FreelyMovingVR4Mice" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/MMathisLab/FreelyMovingVR4Mice/issues/new?title=Issue%20on%20page%20%2Fdocs/developer_guide.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/docs/developer_guide.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Developer Guide for VR4Mice 🎉</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#goverance">Goverance</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#core-development-team">Core Development Team</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#code-style">Code style</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#style-guide">Style Guide</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-black">Use Black</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-isort">Use isort</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#docstrings">Docstrings</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-annotations">Type Annotations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inline-comments">Inline comments</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#github-branching-commits-other-guidelines">GitHub Branching, Commits, &amp; Other Guidelines</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#branching-model">Branching Model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#commit-messages">Commit Messages</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pull-requests">Pull Requests</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#code-reviews">Code Reviews</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="developer-guide-for-vr4mice">
+<h1>Developer Guide for VR4Mice 🎉<a class="headerlink" href="#developer-guide-for-vr4mice" title="Permalink to this heading">#</a></h1>
+<section id="goverance">
+<h2>Goverance<a class="headerlink" href="#goverance" title="Permalink to this heading">#</a></h2>
+<p>This repository is maintained by the Mathis Lab.</p>
+<section id="core-development-team">
+<h3>Core Development Team<a class="headerlink" href="#core-development-team" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>&#64;maryapp is the core developer of the datajoint pipelines 💻</p></li>
+<li><p>&#64;mmathislab is the SC member (steering council) 🦄</p></li>
+<li><p>&#64;CeliaBenquet is actively developing analysis code</p></li>
+<li><p>&#64;tomsains is actively developing analysis code</p></li>
+</ul>
+<p>This codebase uses a “consensus seeking” process for making decisions. The group tries to find a resolution that has no open objections among core developers. Core developers are expected to distinguish between fundamental objections to a proposal and minor perceived flaws that they can live with, and not hold up the decision-making process for the latter. If no option can be found without objections, the decision is escalated to the SC, which will itself use consensus seeking to come to a resolution. In the unlikely event that there is still a deadlock, the proposal will move forward if it has the support of a simple majority of the SC.</p>
+<p>Decisions (in addition to adding core developers and SC membership as above) are made according to the following rules:</p>
+<ul class="simple">
+<li><p>Minor documentation changes, such as typo fixes, or addition / correction of a sentence, require approval by a core developer and no disagreement or requested changes by a core developer on the issue or pull request page (lazy consensus). Core developers are expected to give “reasonable time” to others to give their opinion on the pull request if they’re not confident others would agree.</p></li>
+<li><p>Code changes and major documentation changes require agreement by one core developer and no disagreement or requested changes by a core developer on the issue or pull-request page (lazy consensus). For all changes of this type, core developers are expected to give “reasonable time” after approval and before merging for others to weigh in on the pull request in its final state.</p></li>
+<li><p>Changes to the <strong>API principles require a dedicated issue</strong> on our issue tracker and follow the decision-making process outlined above.</p></li>
+<li><p>Changes to this <strong>governance model or our mission, vision, and values</strong> require a dedicated issue on our issue tracker and follow the decision-making process outlined above, unless there is unanimous agreement from core developers on the change in which case it can move forward faster.</p></li>
+<li><p>If an objection is raised on a lazy consensus, the proposer can appeal to the community and core developers and the change can be approved or rejected by escalating to the SC.</p></li>
+</ul>
+</section>
+</section>
+<section id="code-style">
+<h2>Code style<a class="headerlink" href="#code-style" title="Permalink to this heading">#</a></h2>
+<section id="style-guide">
+<h3>Style Guide<a class="headerlink" href="#style-guide" title="Permalink to this heading">#</a></h3>
+<p>We use the <a class="reference external" href="https://google.github.io/styleguide/">Google style guidelines</a>. Developers are highly encouraged to have a look at it from time to time. Note that formatting will be enforced by running <code class="docutils literal notranslate"><span class="pre">black</span></code> and <code class="docutils literal notranslate"><span class="pre">isort</span></code>.</p>
+<p>Some rules of interest included in the Google guidelines are:</p>
+<ul class="simple">
+<li><p>Import each module using the full pathname location of the module.</p></li>
+<li><p>Follow standard typographic rules for the use of spaces around punctuation.</p></li>
+<li><p>Function names, variable names, and filenames should be descriptive; avoid abbreviation.</p></li>
+</ul>
+</section>
+<section id="use-black">
+<h3>Use Black<a class="headerlink" href="#use-black" title="Permalink to this heading">#</a></h3>
+<p>Ensure all Python code is formatted with Black before committing (current version 22.6). Black enforces consistency and removes debates over code style. Use the default settings. Command: <code class="docutils literal notranslate"><span class="pre">black</span> <span class="pre">.</span></code> (to run in current folder).</p>
+</section>
+<section id="use-isort">
+<h3>Use isort<a class="headerlink" href="#use-isort" title="Permalink to this heading">#</a></h3>
+<p>Sort your imports to keep them organized. isort should be used to handle import ordering, grouping standard library, third-party, and project-specific imports. Command: <code class="docutils literal notranslate"><span class="pre">isort</span> <span class="pre">.</span></code> (to run in current folder).</p>
+</section>
+<section id="docstrings">
+<h3>Docstrings<a class="headerlink" href="#docstrings" title="Permalink to this heading">#</a></h3>
+<p>All public methods and functions should have docstrings using the <a class="reference external" href="https://peps.python.org/pep-0257/">PEP 257 format</a>. Briefly describe what the function does, its parameters, and return values and add any information that could help your collaborators or future users to understand your code faster.</p>
+</section>
+<section id="type-annotations">
+<h3>Type Annotations<a class="headerlink" href="#type-annotations" title="Permalink to this heading">#</a></h3>
+<p>Use type hints to make the code more readable and to help with catching potential bugs early.</p>
+</section>
+<section id="inline-comments">
+<h3>Inline comments<a class="headerlink" href="#inline-comments" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Use inline comments to explain non-obvious code logic or important context. Make sure they are clear and concise. Avoid comments that state the obvious, as they clutter the code.</p></li>
+<li><p>When using TODO or NOTE comments, always include the name of the person responsible for addressing it (e.g., TODO(username): Refactor this section). From Google style guidelines, TODO comments are for code that is temporary, a short-term solution, or good-enough but not perfect. Provide enough context for the TODO or NOTE to be actionable. Avoid vague comments like “TODO: fix this”. Instead, specify what needs to be fixed and why. Do not leave TODO or NOTE comments unresolved in the codebase if they are unclear or outdated. Regularly review and address them to maintain code quality.</p></li>
+</ul>
+</section>
+</section>
+<section id="github-branching-commits-other-guidelines">
+<h2>GitHub Branching, Commits, &amp; Other Guidelines<a class="headerlink" href="#github-branching-commits-other-guidelines" title="Permalink to this heading">#</a></h2>
+<section id="branching-model">
+<h3>Branching Model<a class="headerlink" href="#branching-model" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Use the GitHub Flow: Create a branch for every feature or bug fix. <strong>1 feature = 1 branch = 1 PR</strong>.</p></li>
+<li><p>Merging Dependent Branches: when multiple branches depend on each other (e.g., branch A is foundational, and branch B adds missing elements such as fixes, DJ integration, or tests), always <strong>merge the first branch (branch A) into main</strong> before merging branch B (either to main, once branch A is merged or to branch A). This approach maintains a clear history, simplifies the review process (by focusing reviews on incremental additional changes) making it more efficient, and minimizes merge conflicts.</p></li>
+<li><p>Keep the main branch always deployable. Only merge into main when the feature is complete, fully tested, and reviewed.</p></li>
+<li><p>Use descriptive branch names to indicate the purpose of the branch.</p></li>
+</ul>
+</section>
+<section id="commit-messages">
+<h3>Commit Messages<a class="headerlink" href="#commit-messages" title="Permalink to this heading">#</a></h3>
+<p>Write Clear, Concise Commit Messages: Follow the conventional commit style. Break down commits into small, meaningful changes, preferably addressing only one thing per commit.</p>
+</section>
+<section id="pull-requests">
+<h3>Pull Requests<a class="headerlink" href="#pull-requests" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>All changes must go through a pull request (PR), even minor changes.</p></li>
+<li><p>Include a summary of what the PR does, and link to the issue it resolves (if any) as soon as you open the PR (even if it is still WIP).</p></li>
+<li><p>PRs should include unit tests where applicable, and <strong>pass all CI checks</strong> before merging.</p></li>
+</ul>
+</section>
+<section id="code-reviews">
+<h3>Code Reviews<a class="headerlink" href="#code-reviews" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Every PR should be reviewed by at least one other core developer. If the PR was open by one of the core developers, they should ask for a review from at least one of the members of the development team based on their expertise.</p></li>
+<li><p>Address all comments before merging. <strong>No conversation should be left open.</strong></p></li>
+</ul>
+</section>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./docs"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="vr4mice_overview.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">FreelyMovingVR4mice overview</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="hardware/parts_list.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Parts list</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#goverance">Goverance</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#core-development-team">Core Development Team</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#code-style">Code style</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#style-guide">Style Guide</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-black">Use Black</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-isort">Use isort</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#docstrings">Docstrings</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-annotations">Type Annotations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inline-comments">Inline comments</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#github-branching-commits-other-guidelines">GitHub Branching, Commits, &amp; Other Guidelines</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#branching-model">Branching Model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#commit-messages">Commit Messages</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pull-requests">Pull Requests</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#code-reviews">Code Reviews</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By MWMathis Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  <div>Powered by <a href="https://jupyterbook.org/">Jupyter Book</a>.</div>
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

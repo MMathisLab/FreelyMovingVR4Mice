@@ -1,0 +1,1230 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Figure 1 &#8212; FreelyMovingVR4Mice</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../../../_static/sphinx-thebe.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'dj_pipeline/notebooks/Paper_figures/Figure_1';</script>
+    <link rel="shortcut icon" href="../../../_static/logo.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Figure 2" href="Figure_2.html" />
+    <link rel="prev" title="Figures" href="../../../docs/figures.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../docs/vr4mice_overview.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="FreelyMovingVR4Mice - Home"/>
+    <script>document.write(`<img src="../../../_static/logo.png" class="logo__image only-dark" alt="FreelyMovingVR4Mice - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../docs/vr4mice_overview.html">
+                    FreelyMovingVR4mice overview
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer's Guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/developer_guide.html">Developer Guide for VR4Mice 🎉</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Hardware - Building the rig</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/parts_list.html">Parts list</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/building_the_box.html">Build the box</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/building_the_cage.html">Build the cage &amp; mount monitors and cameras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/monitor_luminance_measurement.html">Measure Monitor Luminance</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Hardware - Teensy Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/water_teensy.html">Water delivery &amp; Lick ports Teensy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/photodiode_teensy.html">Photodiode Teensy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/teensy_config.html">Configuring the teensy board and uploading the code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/writing_a_teensy_sketch.html">Write a Teensy sketch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/water_valve_calibration.html">Calibrate the water valve</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software Installation - vr4mice &amp; Config File Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_installation/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_installation/config_file_setup.html">Configuration files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_installation/run_a_session.html">Run a session</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_installation/create_desktop_icon.html">Create a desktop icon to launch Teensy experiments</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Unity Games</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/ar_game.html">Install the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/update_unity_game.html">Update the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/build_unity_game.html">Rebuild a Unity game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/add_new_objects.html">Add new target objects</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - DataJoint</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/datajoint.html">VR4Mice DataJoint Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/install_dj_pipeline.html">VR4Mice Pipeline - Full Documentation</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Tests</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/mouse_task_test.html">Mouse task</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Dev - Software package Documentation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_package/active_sensing_task.html">Active Sensing Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_package/dlc_processor.html">DLC processor file</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experiments - Training protocol and parameters</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/training_protocols/training_protocol.html">Mouse training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/training_protocols/contrast_discrimination_training_parameters.html">Contrast discrimination game parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/training_protocols/shape_discrimination_training_parameters.html">Shape discrimination game parameters</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Benquet, Sainsbury, et al. material</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../docs/figures.html">Figures</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Figure 1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_2.html">Figure 2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_3.html">Figure 3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_4.html">Figure 4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_5a_kinematics.html">[Trajectory Analysis] Figure 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_5b_decision.html">[Decision Variable Prediction] Figure 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Supp_Figure_control.html">Black target control</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-launch-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Launch interactive content">
+    <i class="fas fa-rocket"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://colab.research.google.com/github/MMathisLab/FreelyMovingVR4Mice/examples/yourdemo.ipynb/github/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/dj_pipeline/notebooks/Paper_figures/Figure_1.ipynb" target="_blank"
+   class="btn btn-sm dropdown-item"
+   title="Launch onColab"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  
+    <img src="../../../_static/images/logo_colab.png">
+  </span>
+<span class="btn__text-container">Colab</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/MMathisLab/FreelyMovingVR4Mice" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/MMathisLab/FreelyMovingVR4Mice/issues/new?title=Issue%20on%20page%20%2Fdj_pipeline/notebooks/Paper_figures/Figure_1.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../_sources/dj_pipeline/notebooks/Paper_figures/Figure_1.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Figure 1</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-closed-loop-virtual-reality-active-sensing-task-for-mice">A closed-loop virtual-reality active sensing task for mice.</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#behavioral-traces">Behavioral traces</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#latency-tests">Latency tests</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="figure-1">
+<h1>Figure 1<a class="headerlink" href="#figure-1" title="Permalink to this heading">#</a></h1>
+<section id="a-closed-loop-virtual-reality-active-sensing-task-for-mice">
+<h2>A closed-loop virtual-reality active sensing task for mice.<a class="headerlink" href="#a-closed-loop-virtual-reality-active-sensing-task-for-mice" title="Permalink to this heading">#</a></h2>
+<p>For reference, here is the full figure</p>
+<p><img alt="Systems" src="../../../_images/systems.jpg" /></p>
+<p>and corresponding supplemental figure</p>
+<p><img alt="Supplemental systems" src="../../../_images/supp_systems.jpg" /></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="s2">&quot;/app/&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/IPython/core/magics/osm.py:417: UserWarning: using dhist requires you to install the `pickleshare` library.
+  self.shell.db[&#39;dhist&#39;] = compress_dhist(dhist)[-100:]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">run</span> env_aws.py
+<span class="o">%</span><span class="k">run</span> run.py connect
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/datajoint/plugin.py:2: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools&lt;81.
+  import pkg_resources
+[2026-03-11 11:00:26,535][INFO]: Connecting admin@vr4mice-ar-collab.cluster-cn54f38qpzgm.eu-central-1.rds.amazonaws.com:3306
+[2026-03-11 11:00:26,713][INFO]: Connected admin@vr4mice-ar-collab.cluster-cn54f38qpzgm.eu-central-1.rds.amazonaws.com:3306
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema.base_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataFrame</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">plotting</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">base_schemas.schemas.exp</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">base_analysis</span><span class="p">,</span> <span class="n">dlc</span><span class="p">,</span> <span class="n">vr4mice</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.analysis.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">style</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema.vr4mice</span><span class="w"> </span><span class="kn">import</span> <span class="n">SignalsPhotodiode</span><span class="p">,</span> <span class="n">Collab</span><span class="p">,</span> <span class="n">Labs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema.latency_tests</span><span class="w"> </span><span class="kn">import</span> <span class="n">AllLatencies</span><span class="p">,</span> <span class="n">SignalsPhotodiodeAligned</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.analysis.latency_testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_signals</span><span class="p">,</span> <span class="n">find_rising_edges</span><span class="p">,</span> <span class="n">get_latency</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ListedColormap</span> 
+
+<span class="n">style</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">save_fig_path</span> <span class="o">=</span> <span class="s2">&quot;notebooks/Paper_figures/Figure_output/&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="behavioral-traces">
+<h2>Behavioral traces<a class="headerlink" href="#behavioral-traces" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">key</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="s2">&quot;Oribi_2024-08-14_1&quot;</span><span class="p">}</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">()</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span>
+    <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;reward&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;trial&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;iti&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">box_df</span> <span class="o">=</span> <span class="n">base_analysis</span><span class="o">.</span><span class="n">BoxDataFrame</span><span class="p">()</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">plotting</span><span class="o">.</span><span class="n">plot_session</span><span class="p">(</span>
+    <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">iti</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">box_df</span><span class="o">=</span><span class="n">box_df</span><span class="p">,</span> <span class="n">per_aperture</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">per_side</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span>
+<span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
+    <span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure1_example_session_trajectory_plot.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../../_images/dfe20e090f92eecf77bea852eae2e61580729e24b91d6455d9574fce98035c15.png" src="../../../_images/dfe20e090f92eecf77bea852eae2e61580729e24b91d6455d9574fce98035c15.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">key</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="s2">&quot;Pheasant_2024-08-21_1&quot;</span><span class="p">}</span>
+
+<span class="n">traces_to_plot</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;head_center_x&quot;</span><span class="p">,</span> <span class="s2">&quot;head_center_y&quot;</span><span class="p">,</span> <span class="s2">&quot;heading_dir&quot;</span><span class="p">,</span> <span class="s2">&quot;head_angle&quot;</span><span class="p">]</span>
+<span class="n">dlc_df</span> <span class="o">=</span> <span class="n">dlc</span><span class="o">.</span><span class="n">OfflineKinematics</span><span class="p">()</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">traces_to_plot</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">()</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span>
+    <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;reward&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;trial&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_step&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;iti&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">dlc_df</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">iti</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">trial</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">trial</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">))]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+<span class="n">trial</span><span class="p">[</span><span class="s2">&quot;trial_length&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">trial</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;trial&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span>
+    <span class="s2">&quot;trial_step&quot;</span>
+<span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">/</span> <span class="n">x</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">trial</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">26</span><span class="p">,</span> <span class="mi">26</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">trial</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">trial</span><span class="o">.</span><span class="n">heading_dir</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="mi">180</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">trial</span><span class="o">.</span><span class="n">head_angle</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">trial</span><span class="o">.</span><span class="n">trial_length</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s2">&quot;axes.spines&quot;</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ax</span><span class="p">:</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">tick_right</span><span class="p">()</span>  <span class="c1"># Moves the ticks to the right</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_label_position</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>  <span class="c1"># Moves the label to the right</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_position</span><span class="p">((</span><span class="s2">&quot;outward&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>  <span class="c1"># Adjust the right spine outward</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># Hide the left spine</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">traces_to_plot</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure1_behavioural_var_traces.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;head_center_x&#39;, &#39;head_center_y&#39;, &#39;heading_dir&#39;, &#39;head_angle&#39;] {&#39;dataset&#39;: &#39;Pheasant_2024-08-21_1&#39;}
+</pre></div>
+</div>
+<img alt="../../../_images/6b47469a257b5073ad62f7b0ba2b17cf7bc4aae2bd4b5cb36f6f707ddc1e34a4.png" src="../../../_images/6b47469a257b5073ad62f7b0ba2b17cf7bc4aae2bd4b5cb36f6f707ddc1e34a4.png" />
+</div>
+</div>
+</section>
+<section id="latency-tests">
+<h2>Latency tests<a class="headerlink" href="#latency-tests" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># fetch latency data and transform into dataframe</span>
+
+<span class="n">mathis</span> <span class="o">=</span> <span class="p">(</span><span class="n">AllLatencies</span><span class="p">()</span> <span class="o">&amp;</span> <span class="s1">&#39;dataset LIKE &quot;</span><span class="si">%La</span><span class="s1">tencytest1%&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span> <span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">mathis_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">mathis</span><span class="p">])</span>
+<span class="n">mathis_df</span> <span class="p">[</span><span class="s2">&quot;lab_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Mathis&quot;</span>
+<span class="n">tolias</span> <span class="o">=</span> <span class="p">(</span><span class="n">AllLatencies</span><span class="p">()</span> <span class="o">&amp;</span> <span class="s1">&#39;dataset LIKE &quot;</span><span class="si">%La</span><span class="s1">tencytest2%&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">tolias_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tolias</span><span class="p">])</span>
+<span class="n">tolias_df</span> <span class="p">[</span><span class="s2">&quot;lab_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Tolias&quot;</span>
+<span class="n">niell</span> <span class="o">=</span> <span class="p">(</span><span class="n">AllLatencies</span><span class="p">()</span> <span class="o">&amp;</span> <span class="s1">&#39;dataset LIKE &quot;</span><span class="si">%La</span><span class="s1">tencytest3%&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">niell_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">niell</span><span class="p">])</span>
+<span class="n">niell_df</span> <span class="p">[</span><span class="s2">&quot;lab_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Niell&quot;</span>
+
+<span class="n">latencies</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">mathis_df</span><span class="p">,</span> <span class="n">tolias_df</span><span class="p">,</span> <span class="n">niell_df</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mean_latencies</span> <span class="o">=</span>  <span class="n">latencies</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;lab_id&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mean_latencies</span> <span class="p">[[</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;time_diff&quot;</span><span class="p">]]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>dataset</th>
+      <th>time_diff</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Latencytest1_2024-10-31_1</td>
+      <td>0.057624</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Latencytest1_2024-10-31_2</td>
+      <td>0.052294</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Latencytest1_2024-10-31_3</td>
+      <td>0.055488</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Latencytest1_2024-10-31_4</td>
+      <td>0.057332</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Latencytest1_2024-10-31_5</td>
+      <td>0.057414</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>Latencytest1_2024-10-31_6</td>
+      <td>0.056474</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>Latencytest2_2025-05-19_2</td>
+      <td>0.081183</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>Latencytest2_2025-05-19_3</td>
+      <td>0.084220</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>Latencytest2_2025-05-19_4</td>
+      <td>0.087179</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>Latencytest2_2025-05-19_5</td>
+      <td>0.074448</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>Latencytest2_2025-05-19_6</td>
+      <td>0.076069</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>Latencytest3_2025-05-19_1</td>
+      <td>0.059755</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>Latencytest3_2025-05-19_2</td>
+      <td>0.058267</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>Latencytest3_2025-05-19_3</td>
+      <td>0.060046</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>Latencytest3_2025-05-19_4</td>
+      <td>0.059708</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>Latencytest3_2025-05-19_5</td>
+      <td>0.060740</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">lab</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">latencies</span><span class="o">.</span><span class="n">lab_id</span><span class="o">.</span><span class="n">unique</span><span class="p">()):</span>
+    <span class="n">lab_latencies</span> <span class="o">=</span> <span class="n">latencies</span> <span class="p">[</span><span class="n">latencies</span><span class="o">.</span><span class="n">lab_id</span> <span class="o">==</span> <span class="n">lab</span><span class="p">]</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">lab_latencies</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span> <span class="n">lab_latencies</span><span class="o">.</span><span class="n">time_diff</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="n">ListedColormap</span><span class="p">([</span><span class="s1">&#39;black&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">colors</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">125</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Latency (ms)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">lab_latencies</span><span class="o">.</span><span class="n">time_diff</span><span class="o">*</span><span class="mi">1000</span><span class="p">),</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.7</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;lab = </span><span class="si">{</span><span class="n">lab</span><span class="si">}</span><span class="s2"> mean (ms): &quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span> <span class="n">lab_latencies</span><span class="o">.</span><span class="n">time_diff</span><span class="o">*</span><span class="mi">1000</span><span class="p">),</span> <span class="s2">&quot;std:&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span> <span class="n">lab_latencies</span><span class="o">.</span><span class="n">time_diff</span><span class="o">*</span><span class="mi">1000</span><span class="p">))</span>
+
+    <span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">lab</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure1_roundtrip_latency.svg&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>lab = Mathis mean (ms):  55.97584937966045 std: 9.15024485453672
+lab = Tolias mean (ms):  80.85091598421178 std: 9.345266512532897
+lab = Niell mean (ms):  59.70393234562562 std: 6.306178290000413
+</pre></div>
+</div>
+<img alt="../../../_images/4b6ab32b088f7edc9365439016d3c4d185fafcc7768b9603bc856b6831bf20f2.png" src="../../../_images/4b6ab32b088f7edc9365439016d3c4d185fafcc7768b9603bc856b6831bf20f2.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">lab</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mean_latencies</span><span class="o">.</span><span class="n">lab_id</span><span class="o">.</span><span class="n">unique</span><span class="p">()):</span>
+    <span class="n">lab_latencies</span> <span class="o">=</span> <span class="n">mean_latencies</span> <span class="p">[</span><span class="n">mean_latencies</span><span class="o">.</span><span class="n">lab_id</span> <span class="o">==</span> <span class="n">lab</span><span class="p">]</span>
+
+    <span class="n">sns</span><span class="o">.</span><span class="n">violinplot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="s2">&quot;DLClive&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lab_latencies</span> <span class="p">[</span><span class="s2">&quot;time_diff&quot;</span><span class="p">])),</span> <span class="n">y</span><span class="o">=</span><span class="nb">abs</span><span class="p">(</span><span class="n">lab_latencies</span> <span class="p">[</span><span class="s2">&quot;frame_to_socket&quot;</span><span class="p">])</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;cornflowerblue&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="n">sns</span><span class="o">.</span><span class="n">violinplot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="s2">&quot;Unity&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lab_latencies</span> <span class="p">[</span><span class="s2">&quot;time_diff&quot;</span><span class="p">])),</span> <span class="n">y</span><span class="o">=</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">lab_latencies</span> <span class="p">[</span><span class="s2">&quot;time_diff&quot;</span><span class="p">])</span><span class="o">*</span><span class="mi">1000</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">lab_latencies</span> <span class="p">[</span><span class="s2">&quot;frame_to_socket&quot;</span><span class="p">])</span><span class="o">*</span><span class="mi">1000</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;purple&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="n">sns</span><span class="o">.</span><span class="n">violinplot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="s2">&quot;Total&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lab_latencies</span> <span class="p">[</span><span class="s2">&quot;time_diff&quot;</span><span class="p">])),</span> <span class="n">y</span><span class="o">=</span><span class="nb">abs</span><span class="p">(</span><span class="n">lab_latencies</span> <span class="p">[</span><span class="s2">&quot;time_diff&quot;</span><span class="p">])</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Latency (ms)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">120</span><span class="p">)</span>
+    <span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">lab</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure1_mean_latencies.svg&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../../_images/c67872fc19181272a500c36ff831798b0355252d0cded70684636e5c5e62a05c.png" src="../../../_images/c67872fc19181272a500c36ff831798b0355252d0cded70684636e5c5e62a05c.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This fecth call takes some time as the photodide is sampled at 1000 hz</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">((</span><span class="n">SignalsPhotodiodeAligned</span><span class="p">()</span> <span class="o">&amp;</span> <span class="s1">&#39;dataset =  &quot;Latencytest1_2024-10-31_2&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">rising_edges_signal</span> <span class="o">=</span> <span class="n">find_rising_edges</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">time_stamp</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">signal_read</span><span class="p">)</span>
+<span class="n">rising_edges_photodiode</span> <span class="o">=</span> <span class="n">find_rising_edges</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">time_stamp</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">photodiode_read</span><span class="p">)</span>
+<span class="n">latencies</span> <span class="o">=</span> <span class="n">get_latency</span><span class="p">(</span><span class="n">rising_edges_signal</span><span class="p">,</span> <span class="n">rising_edges_photodiode</span><span class="p">)</span>
+
+<span class="n">start_time</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">time_stamp</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">signal_read</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;start_time&quot;</span><span class="p">,</span> <span class="n">start_time</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">time_stamp</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">signal_read</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">time_stamp</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">photodiode_raw_scaled</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;#AE18D3&quot;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">time_stamp</span><span class="p">,</span>  <span class="n">df</span><span class="o">.</span><span class="n">signal_read</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">time_stamp</span><span class="p">,</span>  <span class="n">df</span><span class="o">.</span><span class="n">photodiode_read</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;#AA1BCE&quot;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">ft</span><span class="p">,</span> <span class="n">td</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">latencies</span><span class="o">.</span><span class="n">frame_time</span><span class="p">,</span> <span class="n">latencies</span><span class="o">.</span><span class="n">time_diff</span><span class="p">):</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">td</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="n">ft</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">1.3</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">1.3</span><span class="p">)</span>
+
+
+<span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ax</span><span class="p">:</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">start_time</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">start_time</span><span class="o">+</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure1_signal.svg&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>start_time 10.146146774291992
+</pre></div>
+</div>
+<img alt="../../../_images/be2d2a3aa03a0405aa6e0ca89c51489f82f02a7896faab0bfefd71215ab00026.png" src="../../../_images/be2d2a3aa03a0405aa6e0ca89c51489f82f02a7896faab0bfefd71215ab00026.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mean_latencies</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>dataset</th>
+      <th>lab_id</th>
+      <th>frame_time</th>
+      <th>time_diff</th>
+      <th>photodiode_time</th>
+      <th>frame_to_socket</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Latencytest1_2024-10-31_1</td>
+      <td>Mathis</td>
+      <td>160.206761</td>
+      <td>0.057624</td>
+      <td>160.264385</td>
+      <td>0.022104</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Latencytest1_2024-10-31_2</td>
+      <td>Mathis</td>
+      <td>183.545026</td>
+      <td>0.052294</td>
+      <td>183.597319</td>
+      <td>0.015869</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Latencytest1_2024-10-31_3</td>
+      <td>Mathis</td>
+      <td>391.928782</td>
+      <td>0.055488</td>
+      <td>391.984271</td>
+      <td>0.019394</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Latencytest1_2024-10-31_4</td>
+      <td>Mathis</td>
+      <td>176.912174</td>
+      <td>0.057332</td>
+      <td>176.969506</td>
+      <td>0.019602</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Latencytest1_2024-10-31_5</td>
+      <td>Mathis</td>
+      <td>205.440877</td>
+      <td>0.057414</td>
+      <td>205.498290</td>
+      <td>0.018630</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>Latencytest1_2024-10-31_6</td>
+      <td>Mathis</td>
+      <td>150.832268</td>
+      <td>0.056474</td>
+      <td>150.888741</td>
+      <td>0.017312</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>Latencytest2_2025-05-19_2</td>
+      <td>Tolias</td>
+      <td>180.560032</td>
+      <td>0.081183</td>
+      <td>180.641215</td>
+      <td>0.022077</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>Latencytest2_2025-05-19_3</td>
+      <td>Tolias</td>
+      <td>214.032393</td>
+      <td>0.084220</td>
+      <td>214.116613</td>
+      <td>0.022139</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>Latencytest2_2025-05-19_4</td>
+      <td>Tolias</td>
+      <td>163.218385</td>
+      <td>0.087179</td>
+      <td>163.305564</td>
+      <td>0.021935</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>Latencytest2_2025-05-19_5</td>
+      <td>Tolias</td>
+      <td>165.315094</td>
+      <td>0.074448</td>
+      <td>165.389542</td>
+      <td>0.021643</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>Latencytest2_2025-05-19_6</td>
+      <td>Tolias</td>
+      <td>160.403716</td>
+      <td>0.076069</td>
+      <td>160.479785</td>
+      <td>0.021897</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>Latencytest3_2025-05-19_1</td>
+      <td>Niell</td>
+      <td>257.911612</td>
+      <td>0.059755</td>
+      <td>257.971367</td>
+      <td>0.020662</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>Latencytest3_2025-05-19_2</td>
+      <td>Niell</td>
+      <td>241.062477</td>
+      <td>0.058267</td>
+      <td>241.120744</td>
+      <td>0.020862</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>Latencytest3_2025-05-19_3</td>
+      <td>Niell</td>
+      <td>229.157876</td>
+      <td>0.060046</td>
+      <td>229.217922</td>
+      <td>0.020995</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>Latencytest3_2025-05-19_4</td>
+      <td>Niell</td>
+      <td>229.136176</td>
+      <td>0.059708</td>
+      <td>229.195884</td>
+      <td>0.020870</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>Latencytest3_2025-05-19_5</td>
+      <td>Niell</td>
+      <td>249.621961</td>
+      <td>0.060740</td>
+      <td>249.682701</td>
+      <td>0.020756</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">violinplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">mean_latencies</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;lab_id&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">mean_latencies</span><span class="o">.</span><span class="n">time_diff</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+   
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Latency (ms)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Lab&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">120</span><span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure1_mean_latencies_lab.svg&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../../_images/49935fec24935eddd4a734b46f273c0fe3fa3c0d12f6a6127afe3f68d0045b53.png" src="../../../_images/49935fec24935eddd4a734b46f273c0fe3fa3c0d12f6a6127afe3f68d0045b53.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mean_latencies</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;lab_id&quot;</span><span class="p">)[</span><span class="s2">&quot;time_diff&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">mean_latencies</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;lab_id&quot;</span><span class="p">)[</span><span class="s2">&quot;time_diff&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sem</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1000</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(lab_id
+ Mathis    56.104219
+ Niell     59.703195
+ Tolias    80.619879
+ Name: time_diff, dtype: float64,
+ lab_id
+ Mathis    0.828018
+ Niell     0.403628
+ Tolias    2.398950
+ Name: time_diff, dtype: float64)
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./dj_pipeline/notebooks/Paper_figures"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../../../docs/figures.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Figures</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="Figure_2.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Figure 2</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-closed-loop-virtual-reality-active-sensing-task-for-mice">A closed-loop virtual-reality active sensing task for mice.</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#behavioral-traces">Behavioral traces</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#latency-tests">Latency tests</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By MWMathis Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  <div>Powered by <a href="https://jupyterbook.org/">Jupyter Book</a>.</div>
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

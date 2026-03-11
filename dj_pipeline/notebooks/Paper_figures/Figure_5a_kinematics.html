@@ -1,0 +1,2019 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>[Trajectory Analysis] Figure 5 &#8212; FreelyMovingVR4Mice</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../../../_static/sphinx-thebe.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'dj_pipeline/notebooks/Paper_figures/Figure_5a_kinematics';</script>
+    <link rel="shortcut icon" href="../../../_static/logo.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="[Decision Variable Prediction] Figure 5" href="Figure_5b_decision.html" />
+    <link rel="prev" title="Figure 4" href="Figure_4.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../docs/vr4mice_overview.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="FreelyMovingVR4Mice - Home"/>
+    <script>document.write(`<img src="../../../_static/logo.png" class="logo__image only-dark" alt="FreelyMovingVR4Mice - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../docs/vr4mice_overview.html">
+                    FreelyMovingVR4mice overview
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer's Guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/developer_guide.html">Developer Guide for VR4Mice 🎉</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Hardware - Building the rig</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/parts_list.html">Parts list</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/building_the_box.html">Build the box</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/building_the_cage.html">Build the cage &amp; mount monitors and cameras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/monitor_luminance_measurement.html">Measure Monitor Luminance</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Hardware - Teensy Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/water_teensy.html">Water delivery &amp; Lick ports Teensy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/photodiode_teensy.html">Photodiode Teensy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/teensy_config.html">Configuring the teensy board and uploading the code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/writing_a_teensy_sketch.html">Write a Teensy sketch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/water_valve_calibration.html">Calibrate the water valve</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software Installation - vr4mice &amp; Config File Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_installation/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_installation/config_file_setup.html">Configuration files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_installation/run_a_session.html">Run a session</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_installation/create_desktop_icon.html">Create a desktop icon to launch Teensy experiments</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Unity Games</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/ar_game.html">Install the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/update_unity_game.html">Update the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/build_unity_game.html">Rebuild a Unity game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/add_new_objects.html">Add new target objects</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - DataJoint</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/datajoint.html">VR4Mice DataJoint Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/install_dj_pipeline.html">VR4Mice Pipeline - Full Documentation</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Tests</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/mouse_task_test.html">Mouse task</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Dev - Software package Documentation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_package/active_sensing_task.html">Active Sensing Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software_package/dlc_processor.html">DLC processor file</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experiments - Training protocol and parameters</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/training_protocols/training_protocol.html">Mouse training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/training_protocols/contrast_discrimination_training_parameters.html">Contrast discrimination game parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/training_protocols/shape_discrimination_training_parameters.html">Shape discrimination game parameters</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Benquet, Sainsbury, et al. material</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../docs/figures.html">Figures</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Figure_1.html">Figure 1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_2.html">Figure 2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_3.html">Figure 3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_4.html">Figure 4</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">[Trajectory Analysis] Figure 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_5b_decision.html">[Decision Variable Prediction] Figure 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Supp_Figure_control.html">Black target control</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-launch-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Launch interactive content">
+    <i class="fas fa-rocket"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://colab.research.google.com/github/MMathisLab/FreelyMovingVR4Mice/examples/yourdemo.ipynb/github/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/dj_pipeline/notebooks/Paper_figures/Figure_5a_kinematics.ipynb" target="_blank"
+   class="btn btn-sm dropdown-item"
+   title="Launch onColab"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  
+    <img src="../../../_static/images/logo_colab.png">
+  </span>
+<span class="btn__text-container">Colab</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/MMathisLab/FreelyMovingVR4Mice" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/MMathisLab/FreelyMovingVR4Mice/issues/new?title=Issue%20on%20page%20%2Fdj_pipeline/notebooks/Paper_figures/Figure_5a_kinematics.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../_sources/dj_pipeline/notebooks/Paper_figures/Figure_5a_kinematics.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>[Trajectory Analysis] Figure 5</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-amount-of-information-available-to-the-mouse-correlates-inversely-with-infotaxis-behavior">The amount of information available to the mouse correlates inversely with infotaxis behavior.</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trajectory-analysis">Trajectory analysis</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stats-on-trajectories">Stats on trajectories</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#velocity-analysis">Velocity analysis</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="trajectory-analysis-figure-5">
+<h1>[Trajectory Analysis] Figure 5<a class="headerlink" href="#trajectory-analysis-figure-5" title="Permalink to this heading">#</a></h1>
+<section id="the-amount-of-information-available-to-the-mouse-correlates-inversely-with-infotaxis-behavior">
+<h2>The amount of information available to the mouse correlates inversely with infotaxis behavior.<a class="headerlink" href="#the-amount-of-information-available-to-the-mouse-correlates-inversely-with-infotaxis-behavior" title="Permalink to this heading">#</a></h2>
+<p>For reference, here is the full figure</p>
+<p><img alt="dual_occlusion" src="../../../_images/multi_occlusion.jpg" /></p>
+<p>and corresponding supplemental figure</p>
+<p><img alt="Supplemental dual_occlusion" src="../../../_images/supp_multi_occlusion.jpg" /></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="s2">&quot;/app/&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/IPython/core/magics/osm.py:417: UserWarning: using dhist requires you to install the `pickleshare` library.
+  self.shell.db[&#39;dhist&#39;] = compress_dhist(dhist)[-100:]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">run</span> env_aws.py
+<span class="o">%</span><span class="k">run</span> run.py connect
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/datajoint/plugin.py:2: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools&lt;81.
+  import pkg_resources
+[2026-02-26 08:34:43,867][INFO]: Connecting admin@vr4mice-ar-collab.cluster-cn54f38qpzgm.eu-central-1.rds.amazonaws.com:3306
+[2026-02-26 08:34:44,076][INFO]: Connected admin@vr4mice-ar-collab.cluster-cn54f38qpzgm.eu-central-1.rds.amazonaws.com:3306
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.analysis.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">style</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">vr4mice</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">utils</span><span class="p">,</span> <span class="n">plotting</span><span class="p">,</span> <span class="n">analysis</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema.vr4mice</span><span class="w"> </span><span class="kn">import</span> <span class="n">Groups</span><span class="p">,</span> <span class="n">Labels</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema.session_metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrialMetrics</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema.interpolated_trajectories</span><span class="w"> </span><span class="kn">import</span> <span class="n">InterpolatedTrials</span><span class="p">,</span> <span class="n">MeanXYTrajectory</span><span class="p">,</span> <span class="n">MeanVelocities</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.analysis.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_multi_p_values_binned</span><span class="p">,</span> <span class="n">get_multi_p_values_global</span><span class="p">,</span> <span class="n">plot_aperture_heatmap</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.stats.anova</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnovaRM</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">statsmodels.formula.api</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">smf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">stats</span>
+
+<span class="n">style</span><span class="p">()</span>
+
+<span class="n">save_fig_path</span> <span class="o">=</span> <span class="s2">&quot;notebooks/Paper_figures/Figure_output/&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trial_df</span> <span class="o">=</span> <span class="p">(</span><span class="n">Groups</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="n">Labels</span><span class="p">()</span>  <span class="o">&amp;</span> <span class="s1">&#39;label = &quot;ar_paper&quot;&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">vr4mice</span><span class="o">.</span><span class="n">Dataset</span><span class="p">()</span> <span class="o">&amp;</span> <span class="s1">&#39;session_label = &quot;ar_discrim_5_occluders&quot;&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="n">TrialMetrics</span><span class="p">())</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">trial_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">trial_df</span><span class="p">])</span>
+<span class="n">trial_df</span> <span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">trial_df</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">trial_df</span><span class="p">,</span> <span class="n">reward_table</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">apply_inclusion_criteria</span><span class="p">(</span><span class="n">trial_df</span><span class="p">[[</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;trial&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_left_choice&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_rewarded&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_tortuosity&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_duration&quot;</span><span class="p">]],</span>
+                                                        <span class="n">return_excluded</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Create list of included datasets</span>
+<span class="n">sessions_list</span> <span class="o">=</span> <span class="n">trial_df</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+<span class="n">trial_df</span><span class="p">[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">trial_df</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">str</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trial_df</span><span class="o">.</span><span class="n">mouse_name</span><span class="o">.</span><span class="n">nunique</span><span class="p">(),</span> <span class="n">trial_df</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(9, 25)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trial_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span><span class="o">.</span><span class="n">dataset</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>mouse_name
+31726          2
+31728          2
+J729           4
+Jacana         2
+Kiwi           3
+Lemming        3
+Nightingale    4
+Oribi          3
+Pheasant       2
+Name: dataset, dtype: int64
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trial_df</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>array([&#39;31726_2025-03-27_1&#39;, &#39;31726_2025-03-28_1&#39;, &#39;31728_2025-03-11_1&#39;,
+       &#39;31728_2025-03-14_1&#39;, &#39;J729_2024-12-11_1&#39;, &#39;J729_2024-12-12_1&#39;,
+       &#39;J729_2024-12-13_1&#39;, &#39;J729_2024-12-15_1&#39;, &#39;Jacana_2024-08-21_1&#39;,
+       &#39;Jacana_2024-08-22_1&#39;, &#39;Kiwi_2024-08-19_1&#39;, &#39;Kiwi_2024-08-20_1&#39;,
+       &#39;Kiwi_2024-08-21_1&#39;, &#39;Lemming_2024-08-14_1&#39;,
+       &#39;Lemming_2024-08-15_1&#39;, &#39;Lemming_2024-08-19_1&#39;,
+       &#39;Nightingale_2024-08-15_1&#39;, &#39;Nightingale_2024-08-16_1&#39;,
+       &#39;Nightingale_2024-08-21_1&#39;, &#39;Nightingale_2024-08-22_1&#39;,
+       &#39;Oribi_2024-08-26_1&#39;, &#39;Oribi_2024-08-27_1&#39;, &#39;Oribi_2024-08-29_1&#39;,
+       &#39;Pheasant_2024-08-26_1&#39;, &#39;Pheasant_2024-08-28_1&#39;], dtype=object)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trial_df</span><span class="p">[</span><span class="s2">&quot;lab_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">dataset_name</span> <span class="ow">in</span> <span class="n">sessions_list</span><span class="p">:</span>
+    <span class="c1"># Fetch lab_id for each dataset</span>
+    <span class="n">trial_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">trial_df</span><span class="o">.</span><span class="n">dataset</span><span class="o">==</span><span class="n">dataset_name</span><span class="p">,</span> <span class="s2">&quot;lab_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">vr4mice</span><span class="o">.</span><span class="n">Collab</span><span class="p">()</span> <span class="o">&amp;</span> <span class="sa">f</span><span class="s1">&#39;dataset = &quot;</span><span class="si">{</span><span class="n">dataset_name</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="n">vr4mice</span><span class="o">.</span><span class="n">Labs</span><span class="p">())</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="s2">&quot;lab&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Linear Mixed Model (with Mouse)</span>
+<span class="n">lmm_model</span> <span class="o">=</span> <span class="n">smf</span><span class="o">.</span><span class="n">mixedlm</span><span class="p">(</span><span class="s2">&quot;trial_rewarded ~ C(aperture)&quot;</span><span class="p">,</span> 
+                        <span class="n">data</span><span class="o">=</span><span class="n">trial_df</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">trial_df</span><span class="p">[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;bfgs&#39;</span><span class="p">)</span>
+
+<span class="c1"># Ordinary Least Squares (without Mouse)</span>
+<span class="n">ols_model</span> <span class="o">=</span> <span class="n">smf</span><span class="o">.</span><span class="n">ols</span><span class="p">(</span><span class="s2">&quot;trial_rewarded ~ C(aperture)&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">trial_df</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+
+<span class="c1"># Likelihood Ratio Test</span>
+<span class="n">lr_stat</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">lmm_model</span><span class="o">.</span><span class="n">llf</span> <span class="o">-</span> <span class="n">ols_model</span><span class="o">.</span><span class="n">llf</span><span class="p">)</span>
+<span class="n">p_val</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">lr_stat</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># 1 degree of freedom for the random effect</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;LRT Statistic: </span><span class="si">{</span><span class="n">lr_stat</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;P-value for Mouse effect: </span><span class="si">{</span><span class="n">p_val</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">p_val</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Justification: Mouse identity does not significantly improve the model. Independent ANOVA is valid.&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Caution: Mouse identity explains significant variance.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LRT Statistic: 258.5593
+P-value for Mouse effect: 0.0000
+Caution: Mouse identity explains significant variance.
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Occurance of the different conditions</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">trial_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;mouse_name&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">trial</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;trial_count&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">total_trials</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">trial_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;dataset&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">trial</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;total_trials&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">counts</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">total_trials</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">)</span>
+<span class="n">counts</span><span class="p">[</span><span class="s2">&quot;probability&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="s2">&quot;trial_count&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">counts</span><span class="p">[</span><span class="s2">&quot;total_trials&quot;</span><span class="p">]</span>
+<span class="n">counts</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float&quot;</span><span class="p">)</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">&quot;aperture&quot;</span><span class="p">)</span>
+
+<span class="n">counts</span><span class="p">[</span><span class="s2">&quot;aperture_numeric&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span>
+<span class="n">aperture_order</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+<span class="n">counts</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Categorical</span><span class="p">(</span><span class="n">counts</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;str&quot;</span><span class="p">),</span> <span class="n">categories</span><span class="o">=</span><span class="n">aperture_order</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;str&quot;</span><span class="p">),</span> <span class="n">ordered</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;mouse_name&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">probability</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;probability&quot;</span><span class="p">,</span>
+    <span class="n">units</span><span class="o">=</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">,</span>
+    <span class="n">estimator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+    <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;mouse_name&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">probability</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;probability&quot;</span><span class="p">,</span>
+    <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span>
+    <span class="n">palette</span><span class="o">=</span><span class="n">plotting</span><span class="o">.</span><span class="n">colors_multi_aperture</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span>
+    <span class="n">s</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+    <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">counts</span><span class="p">,</span>
+    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;probability&quot;</span><span class="p">,</span>
+    <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span>
+    <span class="n">palette</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;grey&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">counts</span><span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">(),</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span>
+    <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">s</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;mouse_name&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">probability</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;probability&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+    <span class="n">err_style</span><span class="o">=</span><span class="s2">&quot;bars&quot;</span><span class="p">,</span>
+    <span class="n">errorbar</span><span class="o">=</span><span class="s2">&quot;se&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+    <span class="n">zorder</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span>
+    <span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">xmin</span><span class="o">=-</span><span class="mf">0.25</span><span class="p">,</span>
+    <span class="n">xmax</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">trial_df</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">-</span> <span class="mf">0.75</span><span class="p">,</span>
+    <span class="n">linestyles</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">,</span>
+    <span class="n">colors</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">.5</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">invert_xaxis</span><span class="p">()</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">,</span> <span class="s2">&quot;35&quot;</span><span class="p">,</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span> <span class="s2">&quot;99&quot;</span><span class="p">])</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Object visibility (%)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;P(Occurance)&quot;</span><span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Use numeric aperture for statistical analysis</span>
+<span class="n">counts_for_stats</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">counts_for_stats</span><span class="p">[</span><span class="s1">&#39;aperture&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts_for_stats</span><span class="p">[</span><span class="s1">&#39;aperture_numeric&#39;</span><span class="p">]</span>
+<span class="n">p_values</span> <span class="o">=</span> <span class="n">get_multi_p_values_global</span><span class="p">(</span><span class="n">counts_for_stats</span><span class="p">,</span>  <span class="n">y_var</span><span class="o">=</span><span class="s2">&quot;probability&quot;</span><span class="p">)</span>
+<span class="n">plot_aperture_heatmap</span><span class="p">(</span><span class="n">p_values</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mf">4.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">,</span> <span class="s2">&quot;35&quot;</span><span class="p">,</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span> <span class="s2">&quot;99&quot;</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([</span><span class="mf">4.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">,</span> <span class="s2">&quot;35&quot;</span><span class="p">,</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span> <span class="s2">&quot;99&quot;</span><span class="p">])</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">AnovaRM</span><span class="p">(</span><span class="n">counts_for_stats</span><span class="p">,</span> <span class="n">depvar</span><span class="o">=</span><span class="s2">&quot;probability&quot;</span><span class="p">,</span> <span class="n">subject</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="n">within</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">fit</span><span class="p">())</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure5_occurance.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                Anova
+======================================
+         F Value Num DF  Den DF Pr &gt; F
+--------------------------------------
+aperture  0.0901 4.0000 96.0000 0.9854
+======================================
+</pre></div>
+</div>
+<img alt="../../../_images/8e22a92b97a212ce52bbbf9408075e86c65eb05f9acdde848f8bf9c16c02f96c.png" src="../../../_images/8e22a92b97a212ce52bbbf9408075e86c65eb05f9acdde848f8bf9c16c02f96c.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Success rate per mouse</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">plotting</span><span class="o">.</span><span class="n">plot_rate</span><span class="p">(</span>
+    <span class="n">df</span><span class="o">=</span><span class="n">trial_df</span><span class="p">,</span>
+    <span class="n">label_x</span><span class="o">=</span><span class="s2">&quot;trial_rewarded&quot;</span><span class="p">,</span>
+    <span class="n">per_aperture</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+    <span class="n">cmap</span><span class="o">=</span><span class="n">plotting</span><span class="o">.</span><span class="n">colors_multi_aperture</span><span class="p">,</span>
+    <span class="n">per_mouse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span>
+    <span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">xmin</span><span class="o">=-</span><span class="mf">0.25</span><span class="p">,</span>
+    <span class="n">xmax</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">trial_df</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">-</span> <span class="mf">0.75</span><span class="p">,</span>
+    <span class="n">linestyles</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">,</span>
+    <span class="n">colors</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Object visibility (%)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Success rate / Mouse&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">,</span> <span class="s2">&quot;35&quot;</span><span class="p">,</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span> <span class="s2">&quot;99&quot;</span><span class="p">])</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">AnovaRM</span><span class="p">(</span><span class="n">counts_for_stats</span><span class="p">,</span> <span class="n">depvar</span><span class="o">=</span><span class="s2">&quot;probability&quot;</span><span class="p">,</span> <span class="n">subject</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="n">within</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">fit</span><span class="p">())</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure5_rewards_per_mouse.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>3.0-4.2: TtestResult(statistic=-2.493988124742931, pvalue=0.019918841916005924, df=24)
+3.0-6.0: TtestResult(statistic=-4.3481596890469, pvalue=0.00021792423175303471, df=24)
+3.0-8.48: TtestResult(statistic=-5.936285133499774, pvalue=3.986044948258331e-06, df=24)
+3.0: mean=0.749 ± 0.021
+4.2-6.0: TtestResult(statistic=-2.1904409874229156, pvalue=0.03844327894682323, df=24)
+4.2-8.48: TtestResult(statistic=-2.8444593290376323, pvalue=0.008952505101484732, df=24)
+4.2: mean=0.819 ± 0.024
+6.0-8.48: TtestResult(statistic=-0.4633245496675397, pvalue=0.6473060246641702, df=24)
+6.0: mean=0.891 ± 0.021
+8.48: mean=0.905 ± 0.017
+12.0-3.0: TtestResult(statistic=4.847181901915849, pvalue=6.12561974792148e-05, df=24)
+12.0-4.2: TtestResult(statistic=2.6168388007399845, pvalue=0.015117166807783985, df=24)
+12.0-6.0: TtestResult(statistic=0.04065996451030943, pvalue=0.9679033410169438, df=24)
+12.0-8.48: TtestResult(statistic=-0.5678700816992147, pvalue=0.5753978552200469, df=24)
+12.0: mean=0.892 ± 0.019
+                Anova
+======================================
+         F Value Num DF  Den DF Pr &gt; F
+--------------------------------------
+aperture  0.0901 4.0000 96.0000 0.9854
+======================================
+</pre></div>
+</div>
+<img alt="../../../_images/98a487d41f821f6c3dc8c550710789a1be0bf792bba775bbdd9f7d8e19a5ecf3.png" src="../../../_images/98a487d41f821f6c3dc8c550710789a1be0bf792bba775bbdd9f7d8e19a5ecf3.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Success rate per mouse</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">plotting</span><span class="o">.</span><span class="n">plot_rate</span><span class="p">(</span>
+    <span class="n">df</span><span class="o">=</span><span class="n">trial_df</span><span class="p">,</span>
+    <span class="n">label_x</span><span class="o">=</span><span class="s2">&quot;trial_rewarded&quot;</span><span class="p">,</span>
+    <span class="n">per_aperture</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">cmap</span><span class="o">=</span><span class="n">plotting</span><span class="o">.</span><span class="n">colors_multi_aperture</span><span class="p">,</span>
+    <span class="n">per_lab</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span>
+    <span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">xmin</span><span class="o">=-</span><span class="mf">0.25</span><span class="p">,</span>
+    <span class="n">xmax</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">trial_df</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">-</span> <span class="mf">0.75</span><span class="p">,</span>
+    <span class="n">linestyles</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">,</span>
+    <span class="n">colors</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Object visibility (%)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Success rate / Mouse&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">,</span> <span class="s2">&quot;35&quot;</span><span class="p">,</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span> <span class="s2">&quot;99&quot;</span><span class="p">])</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">p_values</span> <span class="o">=</span> <span class="n">get_multi_p_values_global</span><span class="p">(</span><span class="n">trial_df</span><span class="p">,</span> <span class="n">y_var</span><span class="o">=</span><span class="s2">&quot;trial_rewarded&quot;</span><span class="p">)</span>
+<span class="n">plot_aperture_heatmap</span><span class="p">(</span><span class="n">p_values</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mf">4.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">,</span> <span class="s2">&quot;35&quot;</span><span class="p">,</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span> <span class="s2">&quot;99&quot;</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([</span><span class="mf">4.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">,</span> <span class="s2">&quot;35&quot;</span><span class="p">,</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span> <span class="s2">&quot;99&quot;</span><span class="p">])</span>
+
+<span class="n">mean_mouse</span> <span class="o">=</span> <span class="n">trial_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">numeric_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">AnovaRM</span><span class="p">(</span><span class="n">mean_mouse</span><span class="p">,</span> <span class="n">depvar</span><span class="o">=</span><span class="s2">&quot;trial_rewarded&quot;</span><span class="p">,</span> <span class="n">subject</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="n">within</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">fit</span><span class="p">())</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure5_rewards.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>3.0-4.2: TtestResult(statistic=-4.294775142156709, pvalue=0.000249592248485294, df=24)
+3.0-6.0: TtestResult(statistic=-8.63596674410741, pvalue=7.938488027221137e-09, df=24)
+3.0-8.48: TtestResult(statistic=-9.922891044401927, pvalue=5.716543717984163e-10, df=24)
+3.0: mean=0.749 ± 0.021
+4.2-6.0: TtestResult(statistic=-4.96095944839423, pvalue=4.5893003535062247e-05, df=24)
+4.2-8.48: TtestResult(statistic=-5.653014738081343, pvalue=8.04406204065893e-06, df=24)
+4.2: mean=0.819 ± 0.024
+6.0-8.48: TtestResult(statistic=-0.9143341342926102, pvalue=0.36963645105671183, df=24)
+6.0: mean=0.891 ± 0.021
+8.48: mean=0.905 ± 0.017
+12.0-3.0: TtestResult(statistic=9.908373156320879, pvalue=5.88184256287188e-10, df=24)
+12.0-4.2: TtestResult(statistic=4.653696076204195, pvalue=0.00010017441571757577, df=24)
+12.0-6.0: TtestResult(statistic=0.07659887976618203, pvalue=0.9395776368965353, df=24)
+12.0-8.48: TtestResult(statistic=-0.931285761959232, pvalue=0.36097991128194373, df=24)
+12.0: mean=0.892 ± 0.019
+                Anova
+======================================
+         F Value Num DF  Den DF Pr &gt; F
+--------------------------------------
+aperture 37.5249 4.0000 96.0000 0.0000
+======================================
+</pre></div>
+</div>
+<img alt="../../../_images/960ce348ad982694f48406827289ad1bcbb8e51983982f1dae71f2f31d06ed4d.png" src="../../../_images/960ce348ad982694f48406827289ad1bcbb8e51983982f1dae71f2f31d06ed4d.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trial_df</span><span class="p">[</span><span class="s2">&quot;trial_bias&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">trial_df</span><span class="p">[</span><span class="s2">&quot;trial_left_choice&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span> 
+
+<span class="c1"># Choice bias per mouse and per lab</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">plotting</span><span class="o">.</span><span class="n">plot_rate</span><span class="p">(</span>
+    <span class="n">df</span><span class="o">=</span><span class="n">trial_df</span><span class="p">,</span>
+    <span class="n">label_x</span><span class="o">=</span><span class="s2">&quot;trial_left_choice&quot;</span><span class="p">,</span>
+    <span class="n">plot_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">per_aperture</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">cmap</span><span class="o">=</span><span class="n">plotting</span><span class="o">.</span><span class="n">colors_multi_aperture</span><span class="p">,</span>
+    <span class="n">per_mouse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span>
+    <span class="mi">0</span><span class="p">,</span>
+    <span class="n">ymin</span><span class="o">=-</span><span class="mf">0.25</span><span class="p">,</span>
+    <span class="n">ymax</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">trial_df</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">-</span> <span class="mf">0.75</span><span class="p">,</span>
+    <span class="n">linestyles</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">,</span>
+    <span class="n">colors</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Object visibility (%)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Choice bias index / Mouse&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">,</span> <span class="s2">&quot;35&quot;</span><span class="p">,</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span> <span class="s2">&quot;99&quot;</span><span class="p">])</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">plotting</span><span class="o">.</span><span class="n">plot_rate</span><span class="p">(</span>
+    <span class="n">df</span><span class="o">=</span><span class="n">trial_df</span><span class="p">,</span>
+    <span class="n">label_x</span><span class="o">=</span><span class="s2">&quot;trial_left_choice&quot;</span><span class="p">,</span>
+    <span class="n">per_aperture</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">plot_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">cmap</span><span class="o">=</span><span class="n">plotting</span><span class="o">.</span><span class="n">colors_multi_aperture</span><span class="p">,</span>
+    <span class="n">per_lab</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span>
+    <span class="mi">0</span><span class="p">,</span>
+    <span class="n">ymin</span><span class="o">=-</span><span class="mf">0.25</span><span class="p">,</span>
+    <span class="n">ymax</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">trial_df</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">-</span> <span class="mf">0.75</span><span class="p">,</span>
+    <span class="n">linestyles</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">,</span>
+    <span class="n">colors</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Object visibility (%)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Choice bias index / Session&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">,</span> <span class="s2">&quot;35&quot;</span><span class="p">,</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span> <span class="s2">&quot;99&quot;</span><span class="p">])</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># One-sample t-test of bias against 0 (null) across session</span>
+<span class="n">apertures_</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">stage</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">trial_df</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">unique</span><span class="p">()):</span>
+    <span class="c1">#vals = trial_df.groupby(&quot;dataset&quot;).mean().loc[trial_df.aperture == stage, &quot;trial_bias&quot;]</span>
+    <span class="n">vals</span> <span class="o">=</span> <span class="n">trial_df</span><span class="p">[</span><span class="n">trial_df</span><span class="o">.</span><span class="n">aperture</span> <span class="o">==</span> <span class="n">stage</span><span class="p">]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;dataset&quot;</span><span class="p">)[</span><span class="s2">&quot;trial_bias&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="n">t_stat</span><span class="p">,</span> <span class="n">p_val</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">ttest_1samp</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">apertures_</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+        <span class="s2">&quot;aperture&quot;</span><span class="p">:</span> <span class="n">stage</span><span class="p">,</span>
+        <span class="s2">&quot;n&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">),</span>
+        <span class="s2">&quot;mean_bias&quot;</span><span class="p">:</span> <span class="n">vals</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+        <span class="s2">&quot;t_stat&quot;</span><span class="p">:</span> <span class="n">t_stat</span><span class="p">,</span>
+        <span class="s2">&quot;df&quot;</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="s2">&quot;p_value&quot;</span><span class="p">:</span> <span class="n">p_val</span><span class="p">,</span>
+    <span class="p">})</span>
+<span class="n">apertures_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">apertures_</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;One-sample t-tests vs 0 (bias)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">apertures_df</span><span class="p">)</span>
+
+<span class="c1"># Plot p-values only (no bar/box)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">apertures_df</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">],</span> <span class="n">apertures_df</span><span class="p">[</span><span class="s2">&quot;p_value&quot;</span><span class="p">],</span> 
+           <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Training stage&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;p-value (vs 0)&quot;</span><span class="p">)</span>
+
+<span class="c1"># Plot p-values of the multi-comparison test</span>
+<span class="n">p_values</span> <span class="o">=</span> <span class="n">get_multi_p_values_global</span><span class="p">(</span><span class="n">trial_df</span><span class="p">,</span> <span class="n">y_var</span><span class="o">=</span><span class="s2">&quot;trial_bias&quot;</span><span class="p">)</span>
+<span class="n">plot_aperture_heatmap</span><span class="p">(</span><span class="n">p_values</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mf">4.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">,</span> <span class="s2">&quot;35&quot;</span><span class="p">,</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span> <span class="s2">&quot;99&quot;</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([</span><span class="mf">4.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">,</span> <span class="s2">&quot;35&quot;</span><span class="p">,</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span> <span class="s2">&quot;99&quot;</span><span class="p">])</span>
+
+<span class="n">mean_mouse</span> <span class="o">=</span> <span class="n">trial_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">numeric_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">AnovaRM</span><span class="p">(</span><span class="n">mean_mouse</span><span class="p">,</span> <span class="n">depvar</span><span class="o">=</span><span class="s2">&quot;trial_bias&quot;</span><span class="p">,</span> <span class="n">subject</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="n">within</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">fit</span><span class="p">())</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure5_choice_bias.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>3.0-4.2: TtestResult(statistic=0.16336372813892353, pvalue=0.8715999221309235, df=24)
+3.0-6.0: TtestResult(statistic=0.4605874808001341, pvalue=0.6492408672893397, df=24)
+3.0-8.48: TtestResult(statistic=-0.21695206601737546, pvalue=0.8300793967741364, df=24)
+3.0: mean=-0.015 ± 0.058
+4.2-6.0: TtestResult(statistic=0.24990922807693325, pvalue=0.8047842776180888, df=24)
+4.2-8.48: TtestResult(statistic=-0.4639523528123425, pvalue=0.6468625851577114, df=24)
+4.2: mean=-0.029 ± 0.050
+6.0-8.48: TtestResult(statistic=-0.8071400388375911, pvalue=0.4275128960568405, df=24)
+6.0: mean=-0.044 ± 0.029
+8.48: mean=-0.002 ± 0.037
+12.0-3.0: TtestResult(statistic=1.039734229048693, pvalue=0.30882528560258005, df=24)
+12.0-4.2: TtestResult(statistic=1.4772944346317236, pvalue=0.15260002867784161, df=24)
+12.0-6.0: TtestResult(statistic=2.278039263657111, pvalue=0.031918811598357646, df=24)
+12.0-8.48: TtestResult(statistic=1.0817185531546654, pvalue=0.2901272683683604, df=24)
+12.0: mean=0.049 ± 0.034
+3.0-4.2: TtestResult(statistic=0.3303329546903208, pvalue=0.7440147221911171, df=24)
+3.0-6.0: TtestResult(statistic=0.5474973379875565, pvalue=0.5890929385696668, df=24)
+3.0-8.48: TtestResult(statistic=-0.28162984226312127, pvalue=0.7806414478763297, df=24)
+3.0: mean=-0.015 ± 0.058
+4.2-6.0: TtestResult(statistic=0.33326551431673085, pvalue=0.7418278714668143, df=24)
+4.2-8.48: TtestResult(statistic=-0.6351285779922629, pvalue=0.5313537966029576, df=24)
+4.2: mean=-0.029 ± 0.050
+6.0-8.48: TtestResult(statistic=-1.08954063479577, pvalue=0.28673501955019925, df=24)
+6.0: mean=-0.044 ± 0.029
+8.48: mean=-0.002 ± 0.037
+12.0-3.0: TtestResult(statistic=1.4802509019087695, pvalue=0.15181514125284346, df=24)
+12.0-4.2: TtestResult(statistic=1.8501849075249917, pvalue=0.07663684708004127, df=24)
+12.0-6.0: TtestResult(statistic=2.5416645549429004, pvalue=0.017907792162877075, df=24)
+12.0-8.48: TtestResult(statistic=1.279571292169318, pvalue=0.2129281449325434, df=24)
+12.0: mean=0.049 ± 0.034
+One-sample t-tests vs 0 (bias)
+   aperture   n  mean_bias    t_stat  df   p_value
+0      3.00  25  -0.014895 -0.258352  24  0.798338
+1      4.20  25  -0.029098 -0.578491  24  0.568322
+2      6.00  25  -0.043690 -1.497616  24  0.147271
+3      8.48  25  -0.001692 -0.046162  24  0.963563
+4     12.00  25   0.049098  1.450087  24  0.159978
+                Anova
+======================================
+         F Value Num DF  Den DF Pr &gt; F
+--------------------------------------
+aperture  1.3589 4.0000 96.0000 0.2540
+======================================
+</pre></div>
+</div>
+<img alt="../../../_images/9c4790492598914afd99c3c5a0058db4209058b34879c158471f7c16bb92b018.png" src="../../../_images/9c4790492598914afd99c3c5a0058db4209058b34879c158471f7c16bb92b018.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+<span class="n">counts</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">trial_df</span>
+    <span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;lab_id&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">trial_tortuosity</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="p">)</span>
+
+<span class="n">counts</span><span class="p">[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="s2">&quot;trial_tortuosity&quot;</span><span class="p">]</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">reset_index</span><span class="p">())</span>
+<span class="n">counts</span><span class="o">.</span><span class="n">aperture</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+<span class="n">plotting</span><span class="o">.</span><span class="n">_plot_bar_counts</span><span class="p">(</span>
+    <span class="n">counts</span><span class="o">=</span><span class="n">counts</span><span class="p">,</span>
+    <span class="n">label_x</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">per_lab</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">cmap</span><span class="o">=</span><span class="n">plotting</span><span class="o">.</span><span class="n">colors_aperture</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">invert_xaxis</span><span class="p">()</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Object visibility (%)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Trial Tortuosity / Session&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">,</span> <span class="s2">&quot;35&quot;</span><span class="p">,</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span> <span class="s2">&quot;99&quot;</span><span class="p">])</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">p_values</span> <span class="o">=</span> <span class="n">get_multi_p_values_global</span><span class="p">(</span><span class="n">trial_df</span><span class="p">,</span>  <span class="n">y_var</span><span class="o">=</span><span class="s2">&quot;trial_tortuosity&quot;</span><span class="p">)</span>
+<span class="n">plot_aperture_heatmap</span><span class="p">(</span><span class="n">p_values</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mf">4.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">,</span> <span class="s2">&quot;35&quot;</span><span class="p">,</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span> <span class="s2">&quot;99&quot;</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([</span><span class="mf">4.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">,</span> <span class="s2">&quot;35&quot;</span><span class="p">,</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span> <span class="s2">&quot;99&quot;</span><span class="p">])</span>
+
+<span class="n">mean_mouse</span> <span class="o">=</span> <span class="n">trial_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">numeric_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">AnovaRM</span><span class="p">(</span><span class="n">mean_mouse</span><span class="p">,</span> <span class="n">depvar</span><span class="o">=</span><span class="s2">&quot;trial_tortuosity&quot;</span><span class="p">,</span> <span class="n">subject</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="n">within</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">fit</span><span class="p">())</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure5_tortuosity.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                Anova
+======================================
+         F Value Num DF  Den DF Pr &gt; F
+--------------------------------------
+aperture 11.8531 4.0000 96.0000 0.0000
+======================================
+</pre></div>
+</div>
+<img alt="../../../_images/7aeef90ba1a9ab348e2344ed6846e2a220d25f9d77d91363a555600bbbbfdb17.png" src="../../../_images/7aeef90ba1a9ab348e2344ed6846e2a220d25f9d77d91363a555600bbbbfdb17.png" />
+</div>
+</div>
+</section>
+<section id="trajectory-analysis">
+<h2>Trajectory analysis<a class="headerlink" href="#trajectory-analysis" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">xy_df</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">sessions_list</span><span class="p">:</span>
+    <span class="n">xy_df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">((</span><span class="n">MeanXYTrajectory</span><span class="p">()</span> <span class="o">&amp;</span> <span class="sa">f</span><span class="s1">&#39;dataset=&quot;</span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+<span class="n">xy_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">xy_df</span><span class="p">)</span>
+<span class="n">xy_df</span><span class="p">[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xy_df</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">str</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Mean and error by mouse</span>
+<span class="n">mean_mouse</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">mean_xy_trajectory</span><span class="p">(</span><span class="n">xy_df</span><span class="p">,</span>
+                                         <span class="n">index_columns</span><span class="o">=</span><span class="p">[</span>
+                                             <span class="s2">&quot;mouse_name&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_left_choice&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_length&quot;</span>
+                                         <span class="p">])</span>
+
+<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mean_mouse</span><span class="o">.</span><span class="n">mouse_name</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+    <span class="n">plotting</span><span class="o">.</span><span class="n">plot_mean_xy_trajectory</span><span class="p">(</span><span class="n">mean_mouse</span><span class="p">[</span><span class="n">mean_mouse</span><span class="o">.</span><span class="n">mouse_name</span> <span class="o">==</span> <span class="n">m</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">viridis_r</span><span class="p">,</span> <span class="n">color_by</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="n">style_by</span><span class="o">=</span><span class="s2">&quot;choice&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;figure5_trajectories_time_</span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;figure5_trajectories_time_</span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../../_images/683d6ef20c98af350b0b875a0c997e5bd027e891bacd7e266415dc528fca82c5.png" src="../../../_images/683d6ef20c98af350b0b875a0c997e5bd027e891bacd7e266415dc528fca82c5.png" />
+<img alt="../../../_images/6ef1b863e914f193f322a284eae3a6a50a56305b3aac33effd352bcb2c870933.png" src="../../../_images/6ef1b863e914f193f322a284eae3a6a50a56305b3aac33effd352bcb2c870933.png" />
+<img alt="../../../_images/076218dfd6149918657047795ebd57c7b15090253dc411dbb3fcf80ba872db63.png" src="../../../_images/076218dfd6149918657047795ebd57c7b15090253dc411dbb3fcf80ba872db63.png" />
+<img alt="../../../_images/82d0149e10848ccda41c95602e417543b6a73f46e3d8689b96c1c5990790f5c5.png" src="../../../_images/82d0149e10848ccda41c95602e417543b6a73f46e3d8689b96c1c5990790f5c5.png" />
+<img alt="../../../_images/346b6adb8e7ea3eebbc85cb9e212bc54e9cadf373f4964d145220988919e7092.png" src="../../../_images/346b6adb8e7ea3eebbc85cb9e212bc54e9cadf373f4964d145220988919e7092.png" />
+<img alt="../../../_images/2a77503d13184f5a9f2e7a30a7dc0fc6771f51cf6da46a80b4ec5b8c70b0e77c.png" src="../../../_images/2a77503d13184f5a9f2e7a30a7dc0fc6771f51cf6da46a80b4ec5b8c70b0e77c.png" />
+<img alt="../../../_images/1394f055404c3ec200aa0cbeb646bb680633427838d48bb7a53351d4b97e1df2.png" src="../../../_images/1394f055404c3ec200aa0cbeb646bb680633427838d48bb7a53351d4b97e1df2.png" />
+<img alt="../../../_images/427741f54725b9218c4e904f304378c666ae4a8e0b95294bcef0e6eb7a893451.png" src="../../../_images/427741f54725b9218c4e904f304378c666ae4a8e0b95294bcef0e6eb7a893451.png" />
+<img alt="../../../_images/cf52e336787aa7e889f246338c8f8cac2d894ffc28f3ab136882f22e97a03890.png" src="../../../_images/cf52e336787aa7e889f246338c8f8cac2d894ffc28f3ab136882f22e97a03890.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Mean and error by aperture and choice</span>
+<span class="n">mean_group</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">mean_xy_trajectory</span><span class="p">(</span><span class="n">mean_mouse</span><span class="p">,</span> 
+                                         <span class="n">index_columns</span><span class="o">=</span><span class="p">[</span>
+                                             <span class="s2">&quot;aperture&quot;</span><span class="p">,</span>  <span class="s2">&quot;trial_left_choice&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_length&quot;</span>
+                                         <span class="p">])</span>
+
+<span class="c1"># Plot the mean trajectories from 0, 23 cm in y axis, -18, 18 cm in x axis, colored by choice and styled by aperture</span>
+<span class="n">plotting</span><span class="o">.</span><span class="n">plot_mean_xy_trajectory</span><span class="p">(</span><span class="n">mean_group</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">viridis_r</span><span class="p">,</span> <span class="n">color_by</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="n">style_by</span><span class="o">=</span><span class="s2">&quot;choice&quot;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure5_trajectories_time.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure5_trajectories_time.png&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../../_images/538b21b9809d2a90d488e175948ef659bb80ee2af72dab0c5fdad63b1dc54242.png" src="../../../_images/538b21b9809d2a90d488e175948ef659bb80ee2af72dab0c5fdad63b1dc54242.png" />
+</div>
+</div>
+</section>
+<section id="stats-on-trajectories">
+<h2>Stats on trajectories<a class="headerlink" href="#stats-on-trajectories" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">y_binned_df</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">sessions_list</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">y_binned_df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">((</span><span class="n">InterpolatedTrials</span><span class="p">()</span> <span class="o">&amp;</span> <span class="sa">f</span><span class="s1">&#39;dataset=&quot;</span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;trial&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_left_choice&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;flip_one_side&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_rewarded&quot;</span><span class="p">,</span> <span class="s2">&quot;velocity&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_length&quot;</span><span class="p">,</span> <span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+<span class="n">y_binned_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">y_binned_df</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">aperture_to_occlusion</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mf">12.0</span><span class="p">:</span> <span class="mi">99</span><span class="p">,</span>
+    <span class="mf">8.48</span><span class="p">:</span> <span class="mi">72</span><span class="p">,</span>
+    <span class="mf">6.0</span><span class="p">:</span> <span class="mi">35</span><span class="p">,</span>
+    <span class="mf">4.2</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="mf">3.0</span><span class="p">:</span> <span class="mi">0</span>
+<span class="p">}</span>
+
+<span class="n">y_binned_df</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_binned_df</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">aperture_to_occlusion</span><span class="p">)</span>
+<span class="n">y_binned_df</span><span class="p">[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_binned_df</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">str</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">y_binned_df</span><span class="p">[</span><span class="s2">&quot;x_flipped&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_binned_df</span><span class="o">.</span><span class="n">x</span> <span class="o">*</span> <span class="n">y_binned_df</span><span class="o">.</span><span class="n">flip_one_side</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">create_bins</span><span class="p">(</span><span class="n">y_binned_df</span><span class="p">)</span>
+<span class="n">y_binned_df_mean</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">mean_xy_trajectory</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">index_columns</span><span class="o">=</span> <span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;mouse_name&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;bin_centers&quot;</span><span class="p">],</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;x_flipped&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># NOTE(celia): Data unbalanced across bins, so only include bins so that balanced</span>
+<span class="n">stats_binned</span> <span class="o">=</span> <span class="n">y_binned_df_mean</span><span class="p">[(</span><span class="n">y_binned_df_mean</span><span class="o">.</span><span class="n">bin_centers</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_binned_df_mean</span><span class="o">.</span><span class="n">bin_centers</span> <span class="o">&lt;=</span> <span class="mi">19</span><span class="p">)]</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">stats_binned</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;bin_centers&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;x_flipped&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span> <span class="s2">&quot;viridis_r&quot;</span><span class="p">,</span><span class="n">errorbar</span><span class="o">=</span><span class="s2">&quot;se&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Y bin&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;X position&quot;</span><span class="p">)</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure5_mean_xy_trajectory.svg&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span>
+    <span class="n">AnovaRM</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">stats_binned</span><span class="p">,</span>
+        <span class="n">depvar</span><span class="o">=</span><span class="s2">&quot;x_flipped&quot;</span><span class="p">,</span>
+        <span class="n">subject</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span>
+        <span class="n">within</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;bin_centers&quot;</span><span class="p">],</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                        Anova
+======================================================
+                     F Value   Num DF   Den DF  Pr &gt; F
+------------------------------------------------------
+aperture               8.8064  4.0000   96.0000 0.0000
+bin_centers          145.7173 24.0000  576.0000 0.0000
+aperture:bin_centers   2.5887 96.0000 2304.0000 0.0000
+======================================================
+</pre></div>
+</div>
+<img alt="../../../_images/80b513e826f992d2263ecd2c5ceb0e4062872d3575fa7b14f7dcb1f4f0cc623f.png" src="../../../_images/80b513e826f992d2263ecd2c5ceb0e4062872d3575fa7b14f7dcb1f4f0cc623f.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">p_value_df</span> <span class="o">=</span> <span class="n">get_multi_p_values_binned</span><span class="p">(</span><span class="n">stats_binned</span><span class="p">,</span> <span class="n">x_var</span><span class="o">=</span><span class="s2">&quot;bin_centers&quot;</span><span class="p">,</span> <span class="n">y_var</span><span class="o">=</span><span class="s2">&quot;x_flipped&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">p_value_df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;bin&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;p_value_corr&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="nb">zip</span><span class="p">(</span><span class="n">p_value_df</span><span class="o">.</span><span class="n">comp1</span><span class="p">,</span> <span class="n">p_value_df</span><span class="o">.</span><span class="n">comp2</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;FDR p-value&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;y bin&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure5_pos_pvalue.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../../_images/10e8f978f0afe02aee5ae0d751d3eef47a3dfa2fa79a98a3bf62a4fa98c506e2.png" src="../../../_images/10e8f978f0afe02aee5ae0d751d3eef47a3dfa2fa79a98a3bf62a4fa98c506e2.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">p_value_df</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span> <span class="o">=</span> <span class="s2">&quot;bin&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;comp1&quot;</span><span class="p">,</span> <span class="s2">&quot;comp2&quot;</span><span class="p">],</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;p_value_corr&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead tr th {
+        text-align: left;
+    }
+
+    .dataframe thead tr:last-of-type th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan="10" halign="left">p_value_corr</th>
+    </tr>
+    <tr>
+      <th>comp1</th>
+      <th colspan="4" halign="left">0</th>
+      <th colspan="3" halign="left">10</th>
+      <th colspan="2" halign="left">35</th>
+      <th>72</th>
+    </tr>
+    <tr>
+      <th>comp2</th>
+      <th>10</th>
+      <th>35</th>
+      <th>72</th>
+      <th>99</th>
+      <th>35</th>
+      <th>72</th>
+      <th>99</th>
+      <th>72</th>
+      <th>99</th>
+      <th>99</th>
+    </tr>
+    <tr>
+      <th>bin</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0.2145</th>
+      <td>0.192174</td>
+      <td>0.956419</td>
+      <td>0.973089</td>
+      <td>0.344165</td>
+      <td>0.097154</td>
+      <td>0.079531</td>
+      <td>0.060769</td>
+      <td>0.971913</td>
+      <td>0.295388</td>
+      <td>0.362481</td>
+    </tr>
+    <tr>
+      <th>0.9695</th>
+      <td>0.195309</td>
+      <td>0.788674</td>
+      <td>0.936356</td>
+      <td>0.182775</td>
+      <td>0.057112</td>
+      <td>0.136433</td>
+      <td>0.049608</td>
+      <td>0.552200</td>
+      <td>0.321979</td>
+      <td>0.154970</td>
+    </tr>
+    <tr>
+      <th>1.7245</th>
+      <td>0.427642</td>
+      <td>0.420168</td>
+      <td>0.353099</td>
+      <td>0.047190</td>
+      <td>0.135254</td>
+      <td>0.226977</td>
+      <td>0.048715</td>
+      <td>0.936356</td>
+      <td>0.265880</td>
+      <td>0.269191</td>
+    </tr>
+    <tr>
+      <th>2.4795</th>
+      <td>0.668287</td>
+      <td>0.854669</td>
+      <td>0.332668</td>
+      <td>0.119972</td>
+      <td>0.471501</td>
+      <td>0.195309</td>
+      <td>0.081074</td>
+      <td>0.375018</td>
+      <td>0.194958</td>
+      <td>0.416613</td>
+    </tr>
+    <tr>
+      <th>3.2345</th>
+      <td>0.831765</td>
+      <td>0.723907</td>
+      <td>0.552567</td>
+      <td>0.195309</td>
+      <td>0.436272</td>
+      <td>0.403973</td>
+      <td>0.108547</td>
+      <td>0.882090</td>
+      <td>0.214212</td>
+      <td>0.267612</td>
+    </tr>
+    <tr>
+      <th>3.9895</th>
+      <td>0.987504</td>
+      <td>0.532996</td>
+      <td>0.060248</td>
+      <td>0.086630</td>
+      <td>0.610762</td>
+      <td>0.195309</td>
+      <td>0.098347</td>
+      <td>0.177661</td>
+      <td>0.201915</td>
+      <td>0.485269</td>
+    </tr>
+    <tr>
+      <th>4.7445</th>
+      <td>0.749459</td>
+      <td>0.642495</td>
+      <td>0.223488</td>
+      <td>0.019187</td>
+      <td>0.448858</td>
+      <td>0.151232</td>
+      <td>0.035700</td>
+      <td>0.262764</td>
+      <td>0.067216</td>
+      <td>0.217900</td>
+    </tr>
+    <tr>
+      <th>5.5000</th>
+      <td>0.810183</td>
+      <td>0.471501</td>
+      <td>0.195309</td>
+      <td>0.035700</td>
+      <td>0.476597</td>
+      <td>0.194958</td>
+      <td>0.066373</td>
+      <td>0.468058</td>
+      <td>0.146549</td>
+      <td>0.468699</td>
+    </tr>
+    <tr>
+      <th>6.2555</th>
+      <td>0.165944</td>
+      <td>0.819766</td>
+      <td>0.236456</td>
+      <td>0.194958</td>
+      <td>0.236456</td>
+      <td>0.050104</td>
+      <td>0.014307</td>
+      <td>0.077088</td>
+      <td>0.111940</td>
+      <td>0.574385</td>
+    </tr>
+    <tr>
+      <th>7.0105</th>
+      <td>0.237446</td>
+      <td>0.460770</td>
+      <td>0.163390</td>
+      <td>0.054519</td>
+      <td>0.053834</td>
+      <td>0.040002</td>
+      <td>0.011031</td>
+      <td>0.427642</td>
+      <td>0.079953</td>
+      <td>0.405357</td>
+    </tr>
+    <tr>
+      <th>7.7655</th>
+      <td>0.236456</td>
+      <td>0.691595</td>
+      <td>0.382658</td>
+      <td>0.154868</td>
+      <td>0.214212</td>
+      <td>0.049608</td>
+      <td>0.036423</td>
+      <td>0.201915</td>
+      <td>0.042309</td>
+      <td>0.552200</td>
+    </tr>
+    <tr>
+      <th>8.5205</th>
+      <td>0.214212</td>
+      <td>0.696030</td>
+      <td>0.236456</td>
+      <td>0.135254</td>
+      <td>0.232779</td>
+      <td>0.065505</td>
+      <td>0.020740</td>
+      <td>0.136433</td>
+      <td>0.035700</td>
+      <td>0.520192</td>
+    </tr>
+    <tr>
+      <th>9.2755</th>
+      <td>0.422486</td>
+      <td>0.856608</td>
+      <td>0.208157</td>
+      <td>0.049608</td>
+      <td>0.391246</td>
+      <td>0.154868</td>
+      <td>0.040284</td>
+      <td>0.159660</td>
+      <td>0.035700</td>
+      <td>0.344165</td>
+    </tr>
+    <tr>
+      <th>10.0305</th>
+      <td>0.109896</td>
+      <td>0.511517</td>
+      <td>0.332668</td>
+      <td>0.081022</td>
+      <td>0.182355</td>
+      <td>0.018579</td>
+      <td>0.002283</td>
+      <td>0.053131</td>
+      <td>0.019187</td>
+      <td>0.264710</td>
+    </tr>
+    <tr>
+      <th>10.7855</th>
+      <td>0.145267</td>
+      <td>0.882090</td>
+      <td>0.082383</td>
+      <td>0.017654</td>
+      <td>0.059304</td>
+      <td>0.005374</td>
+      <td>0.004979</td>
+      <td>0.036423</td>
+      <td>0.024577</td>
+      <td>0.201915</td>
+    </tr>
+    <tr>
+      <th>11.5405</th>
+      <td>0.211958</td>
+      <td>0.771127</td>
+      <td>0.136726</td>
+      <td>0.053834</td>
+      <td>0.262764</td>
+      <td>0.023512</td>
+      <td>0.028312</td>
+      <td>0.022509</td>
+      <td>0.034795</td>
+      <td>0.522318</td>
+    </tr>
+    <tr>
+      <th>12.2955</th>
+      <td>0.390403</td>
+      <td>0.471501</td>
+      <td>0.089899</td>
+      <td>0.009237</td>
+      <td>0.769869</td>
+      <td>0.023583</td>
+      <td>0.009513</td>
+      <td>0.014921</td>
+      <td>0.005019</td>
+      <td>0.218224</td>
+    </tr>
+    <tr>
+      <th>13.0510</th>
+      <td>0.402682</td>
+      <td>0.902802</td>
+      <td>0.154868</td>
+      <td>0.011433</td>
+      <td>0.201915</td>
+      <td>0.012047</td>
+      <td>0.003978</td>
+      <td>0.062014</td>
+      <td>0.003149</td>
+      <td>0.109896</td>
+    </tr>
+    <tr>
+      <th>13.8065</th>
+      <td>0.129775</td>
+      <td>0.977774</td>
+      <td>0.062885</td>
+      <td>0.017654</td>
+      <td>0.136433</td>
+      <td>0.002223</td>
+      <td>0.002040</td>
+      <td>0.053159</td>
+      <td>0.006096</td>
+      <td>0.271056</td>
+    </tr>
+    <tr>
+      <th>14.5615</th>
+      <td>0.307954</td>
+      <td>0.448858</td>
+      <td>0.040284</td>
+      <td>0.000643</td>
+      <td>0.136433</td>
+      <td>0.003968</td>
+      <td>0.000643</td>
+      <td>0.077088</td>
+      <td>0.000181</td>
+      <td>0.089899</td>
+    </tr>
+    <tr>
+      <th>15.3165</th>
+      <td>0.410721</td>
+      <td>0.540532</td>
+      <td>0.019861</td>
+      <td>0.000100</td>
+      <td>0.192174</td>
+      <td>0.002283</td>
+      <td>0.000421</td>
+      <td>0.019044</td>
+      <td>0.000100</td>
+      <td>0.053834</td>
+    </tr>
+    <tr>
+      <th>16.0715</th>
+      <td>0.909310</td>
+      <td>0.236456</td>
+      <td>0.002027</td>
+      <td>0.000071</td>
+      <td>0.403973</td>
+      <td>0.019187</td>
+      <td>0.001329</td>
+      <td>0.034795</td>
+      <td>0.000095</td>
+      <td>0.051742</td>
+    </tr>
+    <tr>
+      <th>16.8265</th>
+      <td>0.907086</td>
+      <td>0.154970</td>
+      <td>0.003869</td>
+      <td>0.000568</td>
+      <td>0.111218</td>
+      <td>0.002027</td>
+      <td>0.000421</td>
+      <td>0.012141</td>
+      <td>0.000157</td>
+      <td>0.049608</td>
+    </tr>
+    <tr>
+      <th>17.5815</th>
+      <td>0.539659</td>
+      <td>0.136159</td>
+      <td>0.006096</td>
+      <td>0.000095</td>
+      <td>0.029046</td>
+      <td>0.000434</td>
+      <td>0.000100</td>
+      <td>0.010084</td>
+      <td>0.000307</td>
+      <td>0.054841</td>
+    </tr>
+    <tr>
+      <th>18.3365</th>
+      <td>0.448858</td>
+      <td>0.029046</td>
+      <td>0.000643</td>
+      <td>0.000071</td>
+      <td>0.054841</td>
+      <td>0.003149</td>
+      <td>0.000324</td>
+      <td>0.081518</td>
+      <td>0.000643</td>
+      <td>0.046315</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+<section id="velocity-analysis">
+<h2>Velocity analysis<a class="headerlink" href="#velocity-analysis" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">velocity_df</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">sessions_list</span><span class="p">:</span>
+    <span class="c1">#print(m)</span>
+    <span class="n">velocity_df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">((</span><span class="n">MeanVelocities</span><span class="p">()</span> <span class="o">&amp;</span> <span class="sa">f</span><span class="s1">&#39;dataset=&quot;</span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+<span class="n">velocity_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">velocity_df</span><span class="p">)</span>
+
+<span class="n">mean_mouse</span> <span class="o">=</span> <span class="n">velocity_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_length&quot;</span><span class="p">],</span><span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">aperture_to_occlusion</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mf">12.0</span><span class="p">:</span> <span class="mi">99</span><span class="p">,</span>
+    <span class="mf">8.48</span><span class="p">:</span> <span class="mi">72</span><span class="p">,</span>
+    <span class="mf">6.0</span><span class="p">:</span> <span class="mi">35</span><span class="p">,</span>
+    <span class="mf">4.2</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="mf">3.0</span><span class="p">:</span> <span class="mi">0</span>
+<span class="p">}</span>
+
+<span class="c1"># Map the values</span>
+<span class="n">mean_mouse</span><span class="p">[</span><span class="s1">&#39;aperture&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mean_mouse</span><span class="p">[</span><span class="s1">&#39;aperture&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">aperture_to_occlusion</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">mean_mouse</span><span class="p">,</span>
+    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;trial_length&quot;</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;velocity&quot;</span><span class="p">,</span>
+    <span class="n">palette</span><span class="o">=</span><span class="n">plotting</span><span class="o">.</span><span class="n">colors_multi_aperture</span><span class="p">,</span>
+    <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span>
+    <span class="n">errorbar</span><span class="o">=</span><span class="s2">&quot;se&quot;</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Trial progression&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Combined velocity (cm/s)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure5_velocity.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../../_images/5b594618b670d44a64f3d87e1354c7a3f890be51e26273744dd8d2f415beab74.png" src="../../../_images/5b594618b670d44a64f3d87e1354c7a3f890be51e26273744dd8d2f415beab74.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span>
+    <span class="n">AnovaRM</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">mean_mouse</span><span class="p">,</span>
+        <span class="n">depvar</span><span class="o">=</span><span class="s2">&quot;velocity&quot;</span><span class="p">,</span>
+        <span class="n">subject</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span>
+        <span class="n">within</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_length&quot;</span><span class="p">],</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                         Anova
+=======================================================
+                      F Value  Num DF    Den DF  Pr &gt; F
+-------------------------------------------------------
+aperture              14.1673   4.0000   96.0000 0.0000
+trial_length          41.8922  99.0000 2376.0000 0.0000
+aperture:trial_length  5.3963 396.0000 9504.0000 0.0000
+=======================================================
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">p_value_df</span> <span class="o">=</span> <span class="n">get_multi_p_values_binned</span><span class="p">(</span><span class="n">mean_mouse</span><span class="p">,</span> <span class="n">x_var</span><span class="o">=</span><span class="s2">&quot;trial_length&quot;</span><span class="p">,</span> <span class="n">y_var</span><span class="o">=</span><span class="s2">&quot;velocity&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">p_value_df</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>bin</th>
+      <th>comp1</th>
+      <th>comp2</th>
+      <th>p_value</th>
+      <th>p_value_corr</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.00</td>
+      <td>0</td>
+      <td>10</td>
+      <td>0.756933</td>
+      <td>0.848580</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.00</td>
+      <td>0</td>
+      <td>35</td>
+      <td>0.640678</td>
+      <td>0.772832</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.00</td>
+      <td>0</td>
+      <td>72</td>
+      <td>0.660219</td>
+      <td>0.784108</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.00</td>
+      <td>0</td>
+      <td>99</td>
+      <td>0.122099</td>
+      <td>0.264738</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.00</td>
+      <td>10</td>
+      <td>35</td>
+      <td>0.830888</td>
+      <td>0.899229</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.99</td>
+      <td>10</td>
+      <td>72</td>
+      <td>0.144746</td>
+      <td>0.295400</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.99</td>
+      <td>10</td>
+      <td>99</td>
+      <td>0.043505</td>
+      <td>0.120180</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.99</td>
+      <td>35</td>
+      <td>72</td>
+      <td>0.411949</td>
+      <td>0.598763</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.99</td>
+      <td>35</td>
+      <td>99</td>
+      <td>0.221908</td>
+      <td>0.404205</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.99</td>
+      <td>72</td>
+      <td>99</td>
+      <td>0.506777</td>
+      <td>0.683909</td>
+    </tr>
+  </tbody>
+</table>
+<p>1000 rows × 5 columns</p>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">p_value_df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;bin&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;p_value_corr&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="nb">zip</span><span class="p">(</span><span class="n">p_value_df</span><span class="o">.</span><span class="n">comp1</span><span class="p">,</span> <span class="n">p_value_df</span><span class="o">.</span><span class="n">comp2</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;FDR p-value&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Trial progression&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure5_velocity_pvalue.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../../_images/5287b2ed1d7773df3395bdfc83395cdd5ded97c7e53f761802dc3ffab1c26c36.png" src="../../../_images/5287b2ed1d7773df3395bdfc83395cdd5ded97c7e53f761802dc3ffab1c26c36.png" />
+</div>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./dj_pipeline/notebooks/Paper_figures"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="Figure_4.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Figure 4</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="Figure_5b_decision.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">[Decision Variable Prediction] Figure 5</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-amount-of-information-available-to-the-mouse-correlates-inversely-with-infotaxis-behavior">The amount of information available to the mouse correlates inversely with infotaxis behavior.</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trajectory-analysis">Trajectory analysis</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stats-on-trajectories">Stats on trajectories</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#velocity-analysis">Velocity analysis</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By MWMathis Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  <div>Powered by <a href="https://jupyterbook.org/">Jupyter Book</a>.</div>
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
