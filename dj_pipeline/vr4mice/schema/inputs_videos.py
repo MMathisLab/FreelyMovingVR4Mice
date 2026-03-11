@@ -29,7 +29,7 @@ class RawVideo(dj.Imported):
     ---
     video_path: varchar(255)       # absolute path to the raw OBS recording
     """
-    #key_source = vr4mice.Dataset.proj()
+    # key_source = vr4mice.Dataset.proj()
 
     # NOTE(celia): to update the default path when we put the videos onto the server
     def make(self, key, base_path: str = "/vr4mice_screen_recordings"):

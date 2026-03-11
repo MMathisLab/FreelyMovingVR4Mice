@@ -368,7 +368,6 @@ class SummaryPlots(dj.Computed):
             )
             return False
 
-
         data = {**key, **{"filename": full_path}}
         if self.__class__.base.Base() & key:
             key = (self.__class__.base.Base() & key).fetch(as_dict=True)[0]
@@ -383,7 +382,9 @@ class SummaryPlots(dj.Computed):
             table_name = self.__class__.__name__
             dataset = key.get("dataset") if isinstance(key, dict) else None
             if dataset:
-                vr4mice.FailedSession().add_entry(f"{dataset}", f"{table_name}", str(err))
+                vr4mice.FailedSession().add_entry(
+                    f"{dataset}", f"{table_name}", str(err)
+                )
             err_msg = f"Can't populate {table_name}, key: {key}. Error: {err}."
             logger.warning(err_msg)
 

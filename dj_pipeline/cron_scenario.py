@@ -127,6 +127,7 @@ def main():
     if args.aws:
 
         from vr4mice.schema import decision
+
         run_step(
             "decision.ExperimentMember.populate",
             lambda: decision.ExperimentMember().populate(),
