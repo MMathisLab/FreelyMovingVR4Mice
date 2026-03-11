@@ -57,8 +57,6 @@ def main():
         interpolated_trajectories,
         session_metrics,
         latency_tests,
-        # inputs_videos,
-        decision,
     )
 
     run_step(
@@ -127,6 +125,8 @@ def main():
     )
 
     if args.aws:
+
+        from vr4mice.schema import decision
         run_step(
             "decision.ExperimentMember.populate",
             lambda: decision.ExperimentMember().populate(),
@@ -146,9 +146,7 @@ def main():
         )
     else:
 
-        from vr4mice.schema import (
-            inputs_videos,
-        )
+        from vr4mice.schema import inputs_videos
 
         run_step(
             "inputs_videos.RawVideo.populate",
