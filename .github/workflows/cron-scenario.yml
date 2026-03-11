@@ -18,6 +18,7 @@ env:
   IMG_SRC: Imagingsource
   DJ_SUPPORT_FILEPATH_MANAGEMENT: "TRUE"
   DJ_SUPPORT_ADAPTED_TYPES: "TRUE"
+  MYSQL_MAX_ALLOWED_PACKET: 1G
   #MYSQL_IMAGE: datajoint/mysql:5.7
   MYSQL_IMAGE: mysql:5.7
 
@@ -53,7 +54,7 @@ jobs:
             --health-timeout=5s \
             --health-retries=12 \
             "${MYSQL_IMAGE}" \
-            --max_allowed_packet=256M \
+            --max_allowed_packet="${MYSQL_MAX_ALLOWED_PACKET}" \
             --net_read_timeout=600 \
             --net_write_timeout=600
 
@@ -140,6 +141,7 @@ jobs:
 
           docker exec vr4mice-mysql mysqldump \
             -uroot -psimple \
+            --max_allowed_packet="${MYSQL_MAX_ALLOWED_PACKET}" \
             --single-transaction \
             --hex-blob \
             --set-gtid-purged=OFF \
@@ -186,7 +188,7 @@ jobs:
             --health-timeout=5s \
             --health-retries=12 \
             "${MYSQL_IMAGE}" \
-            --max_allowed_packet=256M \
+            --max_allowed_packet="${MYSQL_MAX_ALLOWED_PACKET}" \
             --net_read_timeout=600 \
             --net_write_timeout=600
 
@@ -204,7 +206,7 @@ jobs:
 
       - name: Restore MySQL dump
         run: |
-          docker exec -i vr4mice-mysql-restore mysql -uroot -psimple < "$RUNNER_TEMP/mysql-dump/cron-scenario.sql"
+          docker exec -i vr4mice-mysql-restore mysql -uroot -psimple --max_allowed_packet="${MYSQL_MAX_ALLOWED_PACKET}" < "$RUNNER_TEMP/mysql-dump/cron-scenario.sql"
 
       - name: Verify restored schemas
         run: |
