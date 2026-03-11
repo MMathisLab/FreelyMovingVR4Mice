@@ -18,7 +18,8 @@ env:
   IMG_SRC: Imagingsource
   DJ_SUPPORT_FILEPATH_MANAGEMENT: "TRUE"
   DJ_SUPPORT_ADAPTED_TYPES: "TRUE"
-  MYSQL_IMAGE: datajoint/mysql:5.7
+  #MYSQL_IMAGE: datajoint/mysql:5.7
+  MYSQL_IMAGE: mysql:5.7
 
 jobs:
   run-pipeline-and-dump:
