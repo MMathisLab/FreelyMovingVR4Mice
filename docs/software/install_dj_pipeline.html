@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Install and Run the vr4mice pipeline &#8212; FreelyMovingVR4Mice</title>
+    <title>VR4Mice Pipeline - Full Documentation &#8212; FreelyMovingVR4Mice</title>
   
   
   
@@ -206,7 +206,7 @@ const thebe_selector_output = ".output, .cell_output"
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - DataJoint</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="datajoint.html">VR4Mice DataJoint Pipeline</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Install and Run the vr4mice pipeline</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">VR4Mice Pipeline - Full Documentation</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Tests</span></p>
 <ul class="nav bd-sidenav">
@@ -407,7 +407,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Install and Run the vr4mice pipeline</h1>
+    <h1>VR4Mice Pipeline - Full Documentation</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -417,16 +417,51 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rig-data-transfer-gui-installation">Rig Data Transfer GUI Installation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#datajoint-database-user-remote-access-via-jupyter-notebook">DataJoint database user remote access via Jupyter Notebook</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#datajoint-database-user-remote-access">DataJoint database user remote access</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#datajoint-database-deployment-on-server-or-locally">DataJoint database deployment (on server or locally)</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#setup-instructions">Setup Instructions</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#build-and-run">Build and Run</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#remote-access-and-testing">Remote Access and Testing</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-configurations">Additional Configurations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#end-to-end-workflow-data-acquisition-emails">End-to-end workflow (data acquisition → emails)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#repository-layout-dj-pipeline">Repository layout (dj_pipeline)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-module-guide-key-folders">vr4mice module guide (key folders)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-schema"><code class="docutils literal notranslate"><span class="pre">vr4mice/schema</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-actions"><code class="docutils literal notranslate"><span class="pre">vr4mice/actions</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-analysis"><code class="docutils literal notranslate"><span class="pre">vr4mice/analysis</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-transfer"><code class="docutils literal notranslate"><span class="pre">gui_transfer</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#base-schemas"><code class="docutils literal notranslate"><span class="pre">base</span></code> (schemas)</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-started-for-everyday-users">Getting Started — For Everyday Users</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-clone-the-repo">Step 1 — Clone the repo</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-configure-credentials">Step 2 — Configure credentials</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-start-the-client-container">Step 3 — Start the client container</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-connect-via-ipython-or-jupyter">Step 4 — Connect via IPython or Jupyter</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-verify-connection">Step 5 — Verify connection</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stop-the-client">Stop the client</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#datajoint-database-user-remote-access-via-jupyter-notebook-tested-with-python-3-9-5">DataJoint database user remote access via Jupyter Notebook (tested with Python 3.9.5):</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment-server">Deployment (server)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#server-deployment-database-client-containers">Server deployment (database + client containers)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mounts-and-storage">Mounts and storage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#database-deployment-notes-server">Database deployment notes (server)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-variables">Environment variables</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#schemas-what-they-do">Schemas (what they do)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#schema-modes">Schema modes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#import-data-from-mysql-dump">Import data from MySQL dump</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-vs-non-gui-mode">GUI vs non-GUI mode</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-installation-rig-related">GUI installation (rig-related)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manual-runs-run-py">Manual runs (run.py)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-quick-sanity">Testing / quick sanity</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#automated-runs-cron">Automated runs (cron)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#aws-mode">AWS mode</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backup-and-aws-sync">Backup and AWS sync</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling-and-failedsession">Error handling and FailedSession</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gitcommit-table">GitCommit table</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#emails">Emails</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#logs">Logs</a></li>
 </ul>
             </nav>
         </div>
@@ -438,157 +473,379 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="install-and-run-the-vr4mice-pipeline">
-<h1>Install and Run the vr4mice pipeline<a class="headerlink" href="#install-and-run-the-vr4mice-pipeline" title="Permalink to this heading">#</a></h1>
-<section id="rig-data-transfer-gui-installation">
-<h2>Rig Data Transfer GUI Installation<a class="headerlink" href="#rig-data-transfer-gui-installation" title="Permalink to this heading">#</a></h2>
+  <section class="tex2jax_ignore mathjax_ignore" id="vr4mice-pipeline-full-documentation">
+<h1>VR4Mice Pipeline - Full Documentation<a class="headerlink" href="#vr4mice-pipeline-full-documentation" title="Permalink to this heading">#</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">#</a></h2>
+<p>The VR4Mice pipeline is a DataJoint-based workflow for ingesting raw rig data,
+computing analysis tables, running DLC and interpolation, and generating summary outputs.
+It is designed to run from the client container and can be scheduled via cron.</p>
+</section>
+<section id="end-to-end-workflow-data-acquisition-emails">
+<h2>End-to-end workflow (data acquisition → emails)<a class="headerlink" href="#end-to-end-workflow-data-acquisition-emails" title="Permalink to this heading">#</a></h2>
 <ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> the <a class="reference external" href="https://github.com/MMathisLab/FreelyMovingVR4Mice"><code class="docutils literal notranslate"><span class="pre">FreelyMovingVR4Mice</span></code></a> repo.</p></li>
-<li><p>Ensure that Python 3 and PyQt 5 are installed (else, a setup file is provided).</p></li>
-<li><p>Navigate to the <code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code> folder and locate the <code class="docutils literal notranslate"><span class="pre">config.json</span></code> file within the <code class="docutils literal notranslate"><span class="pre">config/</span></code> folder.</p></li>
-<li><p>Fill in the appropriate paths within the <code class="docutils literal notranslate"><span class="pre">config.json</span></code> file.</p></li>
-<li><p>Start the GUI:</p>
+<li><p><strong>Acquisition (rig)</strong>: <code class="docutils literal notranslate"><span class="pre">.pickle</span></code> files (and optional <code class="docutils literal notranslate"><span class="pre">.npy</span></code> metadata via GUI).</p></li>
+<li><p><strong>Ingest</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">populate</span></code> → raw tables in <code class="docutils literal notranslate"><span class="pre">vr4mice</span></code>/<code class="docutils literal notranslate"><span class="pre">base</span></code>.</p></li>
+<li><p><strong>Analysis</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">analysis</span></code> → <code class="docutils literal notranslate"><span class="pre">base_analysis</span></code> tables.</p></li>
+<li><p><strong>DLC + interpolation</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">dlc</span></code> then <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">interp</span></code>.</p></li>
+<li><p><strong>Latency + inputs</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">latency</span></code> and <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">inputs_videos</span></code>.</p></li>
+<li><p><strong>Decision + summaries</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">decision</span></code> then <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">summary</span></code>.</p></li>
+<li><p><strong>Emails</strong>: sent if <code class="docutils literal notranslate"><span class="pre">EMAIL=true</span></code> and recipients are available.</p></li>
+</ol>
+</section>
+<section id="repository-layout-dj-pipeline">
+<h2>Repository layout (dj_pipeline)<a class="headerlink" href="#repository-layout-dj-pipeline" title="Permalink to this heading">#</a></h2>
 <ul class="simple">
-<li><p><em>For Linux/Mac,</em> execute the command <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run_gui</span></code> from the <code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code> folder root.</p></li>
-<li><p><em>For Windows,</em> adjust the paths in the provided batch file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">run.py</span></code>: manual CLI entrypoint for running pipeline modes (user mode).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cron_scenario.py</span></code>: scheduled runner for full pipeline execution (crontab call).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vr4mice/</span></code>: core schema, analysis, and action code.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code>: GUI configuration and data transfer tools.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">base/</span></code>: base schemas and actions (full and minimal modes: mice, exp tables, connections and email functions).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">backup/</span></code>: backup helpers (local/remote sync scripts).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cron_*.sh</span></code>: cron wrappers for scheduled runs (standard, reboot, AWS).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">generators/</span></code>: small utilities to create helper tables/files (e.g., add mice).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">parse_mice/</span></code>: parsing helpers for mouse metadata files.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mysql_access/</span></code>: SQL templates for user setup.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">notebooks/</span></code>: analysis and figure notebooks (research use).</p></li>
+<li><p>Logs are written on the <strong>server</strong> in a local <code class="docutils literal notranslate"><span class="pre">logs/</span></code> folder and are not part of the repo.</p></li>
 </ul>
-</li>
-</ol>
 </section>
-<section id="datajoint-database-user-remote-access-via-jupyter-notebook">
-<h2>DataJoint database user remote access via Jupyter Notebook<a class="headerlink" href="#datajoint-database-user-remote-access-via-jupyter-notebook" title="Permalink to this heading">#</a></h2>
-<ol class="arabic simple">
-<li><p>Ensure that <code class="docutils literal notranslate"><span class="pre">jupyter-notebook</span></code> is installed, <code class="docutils literal notranslate"><span class="pre">vr4mice</span></code> repository is loaded, and <code class="docutils literal notranslate"><span class="pre">base_schemas</span></code> is pip-installed.</p></li>
-<li><p>Update information in the <code class="docutils literal notranslate"><span class="pre">env.py</span></code> file (IP of server, user name and password provided by administrator).</p></li>
-<li><p>From working <code class="docutils literal notranslate"><span class="pre">vr4mice</span></code> directory start Jupyter Notebook and create a new Python3 page.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">%run</span> <span class="pre">env.py</span></code> to load environmental variables</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">%run</span> <span class="pre">run.py</span> <span class="pre">connect</span></code> to connect</p></li>
-<li><p>Bravo 👏! Data can be fetched <code class="docutils literal notranslate"><span class="pre">vr4mice.Dataset()</span></code> (relative imports were done in the run script).</p></li>
-</ol>
+<section id="vr4mice-module-guide-key-folders">
+<h2>vr4mice module guide (key folders)<a class="headerlink" href="#vr4mice-module-guide-key-folders" title="Permalink to this heading">#</a></h2>
+<section id="vr4mice-schema">
+<h3><code class="docutils literal notranslate"><span class="pre">vr4mice/schema</span></code><a class="headerlink" href="#vr4mice-schema" title="Permalink to this heading">#</a></h3>
+<p>DataJoint table definitions for core pipeline:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">vr4mice</span></code>: raw/session tables and metadata.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">base</span></code>, <code class="docutils literal notranslate"><span class="pre">base_analysis</span></code>: analysis and summary outputs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dlc</span></code>, <code class="docutils literal notranslate"><span class="pre">interpolated_trajectories</span></code>, <code class="docutils literal notranslate"><span class="pre">latency_tests</span></code>, <code class="docutils literal notranslate"><span class="pre">decision</span></code>, <code class="docutils literal notranslate"><span class="pre">inputs_videos</span></code>: downstream modules.</p></li>
+</ul>
 </section>
-<section id="datajoint-database-user-remote-access">
-<h2>DataJoint database user remote access<a class="headerlink" href="#datajoint-database-user-remote-access" title="Permalink to this heading">#</a></h2>
-<blockquote>
-<div><p>Similar to <a class="reference external" href="https://github.com/AdaptiveMotorControlLab/auxPipelines-DataJoint_Mathis?tab=readme-ov-file#connect-to-database-from-local-host-to-remote-server">general auxPipelines connection instructions</a>.</p>
-</div></blockquote>
-<ol class="arabic simple">
-<li><p>Obtain server access and database user credentials from the administrator (add them to the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file).</p></li>
-<li><p>To connect to a remote database from a local host, modify the server IP address and user credentials in the <code class="docutils literal notranslate"><span class="pre">docker-compose</span></code> file.</p></li>
-<li><p>Build the client service container using the <code class="docutils literal notranslate"><span class="pre">docker-compose</span></code> file and the command <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">build_client</span></code>.</p></li>
-<li><p>Run the client container to access the remote database using the command <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">up_client</span></code>.</p></li>
-<li><p>To connect to the DataJoint database, launch <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">ipython</span></code> and execute the minimal script <code class="docutils literal notranslate"><span class="pre">%run</span> <span class="pre">run.py</span> <span class="pre">connect</span></code>.</p></li>
-</ol>
+<section id="vr4mice-actions">
+<h3><code class="docutils literal notranslate"><span class="pre">vr4mice/actions</span></code><a class="headerlink" href="#vr4mice-actions" title="Permalink to this heading">#</a></h3>
+<p>Orchestration helpers and ingestion utilities:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">populate_rig.py</span></code>: main raw-data ingest for <code class="docutils literal notranslate"><span class="pre">.pickle</span></code>/<code class="docutils literal notranslate"><span class="pre">.npy</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fetch_data.py</span></code>: builds GUI dropdown <code class="docutils literal notranslate"><span class="pre">.npy</span></code> (menu).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sync_days.py</span></code>: sync/backfill missing days/sessions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keys2tables_*.py</span></code>: map GUI/rig keys to table attributes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">helpers_dj.py</span></code>: shared DataJoint helpers used by actions.</p></li>
+</ul>
 </section>
-<section id="datajoint-database-deployment-on-server-or-locally">
-<h2>DataJoint database deployment (on server or locally)<a class="headerlink" href="#datajoint-database-deployment-on-server-or-locally" title="Permalink to this heading">#</a></h2>
-<section id="setup-instructions">
-<h3>Setup Instructions<a class="headerlink" href="#setup-instructions" title="Permalink to this heading">#</a></h3>
-<ol class="arabic">
-<li><p><strong>Ensure that Docker Compose is installed and that the user is added to the Docker group.</strong> Refer to the <a class="reference external" href="https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository">Docker installation guide</a> for more info.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add user to the Docker group</span>
-sudo<span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>docker<span class="w"> </span>&lt;username&gt;
-</pre></div>
-</div>
-</li>
-<li><p><strong>Download the current repository.</strong> Make sure your git key is active. Else <a class="reference external" href="https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key">learn how to generate a SSH key for git</a>.</p>
+<section id="vr4mice-analysis">
+<h3><code class="docutils literal notranslate"><span class="pre">vr4mice/analysis</span></code><a class="headerlink" href="#vr4mice-analysis" title="Permalink to this heading">#</a></h3>
+<p>Computation and plotting utilities used by schema tables:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">analysis.py</span></code>: core session dataframe and derived metrics.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">latency_testing.py</span></code>, <code class="docutils literal notranslate"><span class="pre">inputs_videos.py</span></code>: latency and sync utilities.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">regression.py</span></code>, <code class="docutils literal notranslate"><span class="pre">stats.py</span></code>, <code class="docutils literal notranslate"><span class="pre">plotting.py</span></code>: downstream analyses and visualization.</p></li>
+</ul>
+</section>
+<section id="gui-transfer">
+<h3><code class="docutils literal notranslate"><span class="pre">gui_transfer</span></code><a class="headerlink" href="#gui-transfer" title="Permalink to this heading">#</a></h3>
+<p>Rig GUI and transfer utilities:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gui.py</span></code> + <code class="docutils literal notranslate"><span class="pre">config/</span></code> for metadata capture.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">utils/</span></code> and <code class="docutils literal notranslate"><span class="pre">modules/</span></code> for GUI logic.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">menu.npy</span></code> generated by <code class="docutils literal notranslate"><span class="pre">fetch_data.py</span></code>.</p></li>
+</ul>
+</section>
+<section id="base-schemas">
+<h3><code class="docutils literal notranslate"><span class="pre">base</span></code> (schemas)<a class="headerlink" href="#base-schemas" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">base_schemas</span></code>: full <code class="docutils literal notranslate"><span class="pre">exp</span></code> and <code class="docutils literal notranslate"><span class="pre">mice</span></code> schema definitions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">base_min_schemas</span></code>: minimal <code class="docutils literal notranslate"><span class="pre">exp</span></code>/<code class="docutils literal notranslate"><span class="pre">mice</span></code> for GUI + collab when full schemas are not available.</p></li>
+</ul>
+</section>
+</section>
+<section id="getting-started-for-everyday-users">
+<h2>Getting Started — For Everyday Users<a class="headerlink" href="#getting-started-for-everyday-users" title="Permalink to this heading">#</a></h2>
+<p>This quick guide helps you connect to the database and run the pipeline without deployment experience.</p>
+<section id="requirements">
+<h3>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Docker + Docker Compose</p></li>
+<li><p>GNU Make</p></li>
+<li><p>Database credentials (host/port, user, password)</p></li>
+</ul>
+</section>
+<section id="step-1-clone-the-repo">
+<h3>Step 1 — Clone the repo<a class="headerlink" href="#step-1-clone-the-repo" title="Permalink to this heading">#</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:MMathisLab/FreelyMovingVR4Mice.git
 <span class="nb">cd</span><span class="w"> </span>dj_pipeline
 </pre></div>
 </div>
+</section>
+<section id="step-2-configure-credentials">
+<h3>Step 2 — Configure credentials<a class="headerlink" href="#step-2-configure-credentials" title="Permalink to this heading">#</a></h3>
+<p>Update your credentials in <code class="docutils literal notranslate"><span class="pre">.env</span></code> (or <code class="docutils literal notranslate"><span class="pre">env.py</span></code> for local conda runs).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vim<span class="w"> </span>.env
+</pre></div>
+</div>
+</section>
+<section id="step-3-start-the-client-container">
+<h3>Step 3 — Start the client container<a class="headerlink" href="#step-3-start-the-client-container" title="Permalink to this heading">#</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>client_build
+make<span class="w"> </span>client_up
+</pre></div>
+</div>
+</section>
+<section id="step-4-connect-via-ipython-or-jupyter">
+<h3>Step 4 — Connect via IPython or Jupyter<a class="headerlink" href="#step-4-connect-via-ipython-or-jupyter" title="Permalink to this heading">#</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>ipython
+%run<span class="w"> </span>run.py<span class="w"> </span>connect
+</pre></div>
+</div>
+<p>Optional Jupyter:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>notebook
+</pre></div>
+</div>
+<p>Remote Jupyter via SSH tunnel:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ssh<span class="w"> </span>-NL<span class="w"> </span><span class="m">8887</span>:localhost:8887<span class="w"> </span>&lt;user&gt;@&lt;server&gt;<span class="w"> </span><span class="p">&amp;</span>
+</pre></div>
+</div>
+<p>You can add an SSH config alias (e.g., <code class="docutils literal notranslate"><span class="pre">wm</span></code>) and then connect with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ssh<span class="w"> </span>-NL<span class="w"> </span><span class="m">8887</span>:localhost:8887<span class="w"> </span>wm<span class="w"> </span><span class="p">&amp;</span>
+</pre></div>
+</div>
+</section>
+<section id="step-5-verify-connection">
+<h3>Step 5 — Verify connection<a class="headerlink" href="#step-5-verify-connection" title="Permalink to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">vr4mice</span>
+<span class="n">vr4mice</span><span class="o">.</span><span class="n">Dataset</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="stop-the-client">
+<h3>Stop the client<a class="headerlink" href="#stop-the-client" title="Permalink to this heading">#</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>client_down
+</pre></div>
+</div>
+<section id="datajoint-database-user-remote-access-via-jupyter-notebook-tested-with-python-3-9-5">
+<h4>DataJoint database user remote access via Jupyter Notebook (tested with Python 3.9.5):<a class="headerlink" href="#datajoint-database-user-remote-access-via-jupyter-notebook-tested-with-python-3-9-5" title="Permalink to this heading">#</a></h4>
+<ol class="arabic">
+<li><p>Assuming that Jupyter Notebook and DataJoint are installed, “vr4mice” repository is loaded, and “base_schemas” are pip-installed:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>notebook<span class="w"> </span><span class="nv">datajoint</span><span class="o">==</span><span class="m">0</span>.14.0<span class="w">  </span><span class="c1"># later versions enforce CamelCase for class names</span>
+pip<span class="w"> </span>install<span class="w"> </span>base/base_actions/
+pip<span class="w"> </span>install<span class="w"> </span>base/base_min_schemas/
+</pre></div>
+</div>
 </li>
-<li><p><strong>Adjust the paths in the shared volumes for the database storage and shared volumes.</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create folders if needed to store the data and database (Warning concerning permissions on /mnt, run ```sudo chmod 0777 /mnt``` if needed or change the location)</span>
-mkdir<span class="w"> </span>-p<span class="w"> </span>/path/to/database_directory
-mkdir<span class="w"> </span>-p<span class="w"> </span>/path/to/data_directory
-mkdir<span class="w"> </span>-p<span class="w"> </span>/mnt/database/vr4mice/vr4mice_database/database
+<li><p>Make sure the “graphviz” package is available if you want to display images (i.e. schema diagrams): <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">apt</span> <span class="pre">install</span> <span class="pre">-y</span> <span class="pre">graphviz</span></code></p></li>
+<li><p>Update the information in the <code class="docutils literal notranslate"><span class="pre">env.py</span></code> file (IP of server, username provided by administrator)</p></li>
+<li><p>From the current directory, start <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">notebook</span></code> and launch a Python3 kernel</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">%run</span> <span class="pre">env.py</span></code> to load environmental variables</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">%run</span> <span class="pre">run.py</span> <span class="pre">connect</span></code> to connect to the DJ database</p></li>
+<li><p>Bravo! Data can now be fetched with <code class="docutils literal notranslate"><span class="pre">vr4mice.Dataset()</span></code> (relative imports were done in the <code class="docutils literal notranslate"><span class="pre">run.py</span></code> script)</p></li>
+</ol>
+</section>
+</section>
+</section>
+<section id="deployment-server">
+<h2>Deployment (server)<a class="headerlink" href="#deployment-server" title="Permalink to this heading">#</a></h2>
+<section id="server-deployment-database-client-containers">
+<h3>Server deployment (database + client containers)<a class="headerlink" href="#server-deployment-database-client-containers" title="Permalink to this heading">#</a></h3>
+<p>The server runs two containers:</p>
+<ul class="simple">
+<li><p><strong>Database</strong> (MySQL/DataJoint)</p></li>
+<li><p><strong>Client</strong> (pipeline runner)</p></li>
+</ul>
+<p>Note: store MySQL admin credentials in <code class="docutils literal notranslate"><span class="pre">~/.my.cnf</span></code> on the server.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>build_all
+make<span class="w"> </span>up
+make<span class="w"> </span>mysql
+make<span class="w"> </span>ipython
+%run<span class="w"> </span>run.py<span class="w"> </span>connect
+</pre></div>
+</div>
+</section>
+<section id="mounts-and-storage">
+<h3>Mounts and storage<a class="headerlink" href="#mounts-and-storage" title="Permalink to this heading">#</a></h3>
+<p>In <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code>, map host storage for database and data volumes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/data</span></code> and <code class="docutils literal notranslate"><span class="pre">/data/summary_plots</span></code> must exist and be writable.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/shared</span></code> is used for GUI menu exports.</p></li>
+<li><p>Use persistent paths (e.g., <code class="docutils literal notranslate"><span class="pre">/mnt/database/...</span></code>) on the server.</p></li>
+</ul>
+</section>
+<section id="database-deployment-notes-server">
+<h3>Database deployment notes (server)<a class="headerlink" href="#database-deployment-notes-server" title="Permalink to this heading">#</a></h3>
+<ul>
+<li><p>Add user to Docker group:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>docker<span class="w"> </span>&lt;username&gt;
+</pre></div>
+</div>
+</li>
+<li><p>Create host storage paths (example):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>-p<span class="w"> </span>/mnt/database/vr4mice/vr4mice_database/database
 mkdir<span class="w"> </span>-p<span class="w"> </span>/mnt/database/vr4mice/vr4mice_database/data
-
-<span class="c1"># if gui is not used /data/dlc_video /data/data /data/summary_plots have to be created manually</span>
 mkdir<span class="w"> </span>-p<span class="w"> </span>/mnt/database/vr4mice/vr4mice_database/data/data/data
 mkdir<span class="w"> </span>-p<span class="w"> </span>/mnt/database/vr4mice/vr4mice_database/data/data/dlc_video
 mkdir<span class="w"> </span>-p<span class="w"> </span>/mnt/database/vr4mice/vr4mice_database/data/summary_plots
-
-<span class="c1"># if gui is not used: unused</span>
 mkdir<span class="w"> </span>-p<span class="w"> </span>/shared
 </pre></div>
 </div>
 </li>
-<li><p>To make the database accessible from any machine in the local subnet, change the IP in <code class="docutils literal notranslate"><span class="pre">docker-compose</span></code> to the server’s IP (and choose the port). Find the IP address via <code class="docutils literal notranslate"><span class="pre">ifconfig</span></code>.</p></li>
-</ol>
-</section>
-<section id="build-and-run">
-<h3>Build and Run<a class="headerlink" href="#build-and-run" title="Permalink to this heading">#</a></h3>
-<ol class="arabic simple" start="5">
-<li><p><strong>Build the Docker Compose</strong> using the command <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">build_all</span></code> to create the image for the DataJoint database and client container (do not use “sudo”).</p></li>
-</ol>
-<blockquote>
-<div><p>This command will also start the containers.</p>
-</div></blockquote>
-<ol class="arabic" start="6">
-<li><p><strong>Add default MySQL credentials</strong> to <code class="docutils literal notranslate"><span class="pre">~/.my.cnf</span></code> file. Ask the administrator for host, user, password.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span>client-vr4mice<span class="o">]</span>
-<span class="nv">host</span><span class="o">=</span>host
-<span class="nv">user</span><span class="o">=</span>default_user
-<span class="nv">password</span><span class="o">=</span>default_pwd
-<span class="nv">port</span><span class="o">=</span><span class="m">3309</span>
-</pre></div>
-</div>
-<p>Now you can run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">mysql</span></code> to connect to the database from MySQL interface. Here you can create a new user or change the credentials of an existing one.</p>
-</li>
-<li><p><strong>Install base schemas inside the container.</strong> Run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">base_install</span></code> from the host.</p></li>
-</ol>
-</section>
-<section id="remote-access-and-testing">
-<h3>Remote Access and Testing<a class="headerlink" href="#remote-access-and-testing" title="Permalink to this heading">#</a></h3>
-<ol class="arabic" start="8">
-<li><p><strong>To connect to the DataJoint database remotely</strong>, follow the instructions for local or remote connection provided in the previous section. To connect from the same server under the root account, you can call <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">ipython</span></code> that will place you in the container’s IPython shell.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%run<span class="w"> </span>run.py<span class="w"> </span>connect
-<span class="c1"># Import some schemas to play with </span>
-from<span class="w"> </span>base_schemas.schemas<span class="w"> </span>import<span class="w"> </span>exp,<span class="w"> </span>mice
-from<span class="w"> </span>vr4mice.schema<span class="w"> </span>import<span class="w"> </span>vr4mice
-vr4mice.Dataset<span class="o">()</span><span class="sb">```</span>
+<li><p>Add MySQL credentials in <code class="docutils literal notranslate"><span class="pre">~/.my.cnf</span></code> for <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">mysql</span></code>:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[client-vr4mice]</span>
+<span class="na">host</span><span class="o">=</span><span class="s">127.0.0.1</span>
+<span class="na">user</span><span class="o">=</span><span class="s">root</span>
+<span class="na">password</span><span class="o">=</span><span class="s">simple</span>
+<span class="na">port</span><span class="o">=</span><span class="s">3309</span>
 </pre></div>
 </div>
 </li>
-<li><p><strong>Test populate:</strong>
-Upload some files from GUI(s): <code class="docutils literal notranslate"><span class="pre">.pickle</span></code> file go to the <code class="docutils literal notranslate"><span class="pre">/mnt/database/vr4mice/vr4mice_database/data/data</span></code> folder and the <code class="docutils literal notranslate"><span class="pre">.hdf5</span></code> and <code class="docutils literal notranslate"><span class="pre">PROC.TS.npy</span></code> files in <code class="docutils literal notranslate"><span class="pre">/mnt/database/vr4mice/vr4mice_database/data/data/dlc_video</span></code> (<code class="docutils literal notranslate"><span class="pre">/data/dlc_video</span></code> path if you are in a container). Then run:</p></li>
+</ul>
+</section>
+<section id="environment-variables">
+<h3>Environment variables<a class="headerlink" href="#environment-variables" title="Permalink to this heading">#</a></h3>
+<p>Common variables used by the pipeline:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DJ_HOST</span></code>, <code class="docutils literal notranslate"><span class="pre">DJ_USER</span></code>, <code class="docutils literal notranslate"><span class="pre">DJ_PASS</span></code>, <code class="docutils literal notranslate"><span class="pre">DJ_PORT</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DJ_LAB</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GUI</span></code> (true/false)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EMAIL</span></code> (true/false)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">IMG_SRC</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS</span></code> (comma-separated experimenter names)</p></li>
+</ul>
+<p>Notes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS</span></code> is required if base schemas (exp/mice) are not in use,
+because experimenter names are otherwise missing from GUI metadata.</p></li>
+</ul>
+</section>
+<section id="schemas-what-they-do">
+<h3>Schemas (what they do)<a class="headerlink" href="#schemas-what-they-do" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">vr4mice</span></code>: core tables for datasets, raw signals, metadata, and derived features.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">base</span></code>: links datasets to <code class="docutils literal notranslate"><span class="pre">exp</span></code> and <code class="docutils literal notranslate"><span class="pre">mice</span></code> schema information.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">base_analysis</span></code>: analysis outputs and summary plots.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dlc</span></code>, <code class="docutils literal notranslate"><span class="pre">interpolated_trajectories</span></code>, <code class="docutils literal notranslate"><span class="pre">latency_tests</span></code>, <code class="docutils literal notranslate"><span class="pre">decision</span></code>, <code class="docutils literal notranslate"><span class="pre">inputs_videos</span></code>: downstream analysis modules.</p></li>
+</ul>
+</section>
+<section id="schema-modes">
+<h3>Schema modes<a class="headerlink" href="#schema-modes" title="Permalink to this heading">#</a></h3>
+<p>Two base schema modes are supported:</p>
+<ul class="simple">
+<li><p><strong>Full base schemas</strong>: <code class="docutils literal notranslate"><span class="pre">base_schemas</span></code> (exp/mice full definitions).</p></li>
+<li><p><strong>Minimal schemas</strong>: <code class="docutils literal notranslate"><span class="pre">base_min_schemas</span></code> (minimal exp/mice for collab + basic metadata).</p></li>
+</ul>
+<p>Both modes work; choose minimal when only GUI dropdowns and basic metadata are needed.</p>
+</section>
+<section id="import-data-from-mysql-dump">
+<h3>Import data from MySQL dump<a class="headerlink" href="#import-data-from-mysql-dump" title="Permalink to this heading">#</a></h3>
+<p>To directly populate an empty database from an existing MySQL dump (<code class="docutils literal notranslate"><span class="pre">data.sql</span></code>), run:
+<code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">exec</span> <span class="pre">-i</span> <span class="pre">&lt;vr4mice_db_name&gt;</span> <span class="pre">mysql</span> <span class="pre">-uroot</span> <span class="pre">-psimple</span> <span class="pre">&lt;</span> <span class="pre">data.sql</span></code>
+where <code class="docutils literal notranslate"><span class="pre">&lt;vr4mice_db_name&gt;</span></code> is the name of the databse container spawned as described in the <span class="xref myst">Server deployment</span> section.</p>
+</section>
+</section>
+<section id="gui-vs-non-gui-mode">
+<h2>GUI vs non-GUI mode<a class="headerlink" href="#gui-vs-non-gui-mode" title="Permalink to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>GUI mode</strong> (<code class="docutils literal notranslate"><span class="pre">GUI=true</span></code>): expects <code class="docutils literal notranslate"><span class="pre">.pickle</span></code> + <code class="docutils literal notranslate"><span class="pre">.npy</span></code> inputs.</p></li>
+<li><p><strong>Non-GUI</strong> (<code class="docutils literal notranslate"><span class="pre">GUI=false</span></code>): uses <code class="docutils literal notranslate"><span class="pre">.pickle</span></code> only; metadata is reconstructed as needed.
+Use GUI mode when experiment metadata is collected via the rig GUI.</p></li>
+</ul>
+</section>
+<section id="gui-installation-rig-related">
+<h2>GUI installation (rig-related)<a class="headerlink" href="#gui-installation-rig-related" title="Permalink to this heading">#</a></h2>
+<p>GUI is used to transfer <strong>experiment metadata</strong> and files (not videos; videos remain on the rig).</p>
+<ol class="arabic simple">
+<li><p>Clone or copy the <code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code> folder to the rig computer.</p></li>
+<li><p>Install Python 3 + PyQt5; conda environment.</p></li>
+<li><p>Edit <code class="docutils literal notranslate"><span class="pre">gui_transfer/config/config.json</span></code> (paths, host, user).</p></li>
+<li><p>Start GUI:</p>
+<ul class="simple">
+<li><p>Linux: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run_gui</span></code> from <code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code></p></li>
+<li><p>Windows: use the provided batch file example and adjust paths.</p></li>
+</ul>
+</li>
 </ol>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">   </span>%run<span class="w"> </span>run.py<span class="w"> </span>populate
-<span class="w">   </span><span class="c1"># Import some schemas and check that Dataset is here</span>
-<span class="w">   </span>from<span class="w"> </span>base_schemas.schemas<span class="w"> </span>import<span class="w"> </span>exp,<span class="w"> </span>mice
-<span class="w">   </span>from<span class="w"> </span>vr4mice.schema<span class="w"> </span>import<span class="w"> </span>vr4mice
-<span class="w">   </span>vr4mice.Dataset<span class="o">()</span>
-</pre></div>
-</div>
-<blockquote>
-<div><p><strong>Note:</strong>
-If the subfolder name is different (not <code class="docutils literal notranslate"><span class="pre">/data/data</span></code> but <code class="docutils literal notranslate"><span class="pre">/data/rawdata</span></code> for example, change the path in <code class="docutils literal notranslate"><span class="pre">run.py</span></code> script).</p>
-</div></blockquote>
-<ol class="arabic simple" start="10">
-<li><p><strong>To populate analysis</strong>, run:</p></li>
-</ol>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">  </span>from<span class="w"> </span>vr4mice.schema<span class="w"> </span>import<span class="w"> </span>base_analysis,<span class="w"> </span>federated_db
-<span class="w">  </span>base_analysis.DataFrame.populate<span class="o">()</span>
-<span class="w">  </span>base_analysis.BoxDataFrame<span class="o">()</span>
-<span class="w">  </span>base_analysis.OutputPlots.populate<span class="o">()</span>
-
-<span class="c1"># or via run.py</span>
-<span class="w">  </span>%run<span class="w"> </span>run.py<span class="w"> </span>analysis
+</section>
+<section id="manual-runs-run-py">
+<h2>Manual runs (<a class="reference external" href="http://run.py">run.py</a>)<a class="headerlink" href="#manual-runs-run-py" title="Permalink to this heading">#</a></h2>
+<p>Typical sequence:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%run<span class="w"> </span>run.py<span class="w"> </span>populate
+%run<span class="w"> </span>run.py<span class="w"> </span>analysis
+%run<span class="w"> </span>run.py<span class="w"> </span>summary
+...
 </pre></div>
 </div>
 </section>
-<section id="additional-configurations">
-<h3>Additional Configurations<a class="headerlink" href="#additional-configurations" title="Permalink to this heading">#</a></h3>
-<ol class="arabic simple" start="11">
-<li><p>The logs can be checked in the logs current folder.</p></li>
-<li><p><em>(Optional)</em> Configure cron jobs for regular populating and menu file generation.</p></li>
-</ol>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="m">0</span><span class="w"> </span><span class="m">2</span><span class="w"> </span>*<span class="w"> </span>*<span class="w"> </span>*<span class="w"> </span>bash<span class="w"> </span>/mnt/database/auxPipelines-DataJoint_Mathis/vr4mice/cron_script.sh<span class="w"> </span>&gt;&gt;<span class="w"> </span>~/vrlogs/cron.log<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
-
-@reboot<span class="w">  </span>bash<span class="w"> </span>/mnt/database/auxPipelines-DataJoint_Mathis/vr4mice/cron_script_reboot.sh<span class="w"> </span>&gt;&gt;<span class="w"> </span>~/vrlogs/cron.log<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
+<section id="testing-quick-sanity">
+<h2>Testing / quick sanity<a class="headerlink" href="#testing-quick-sanity" title="Permalink to this heading">#</a></h2>
+<ul>
+<li><p>Populate test:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">run</span> <span class="n">run</span><span class="o">.</span><span class="n">py</span> <span class="n">populate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">vr4mice</span>
+<span class="n">vr4mice</span><span class="o">.</span><span class="n">Dataset</span><span class="p">()</span>
+</pre></div>
+</div>
+</li>
+<li><p>Analysis test:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">run</span> <span class="n">run</span><span class="o">.</span><span class="n">py</span> <span class="n">analysis</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="automated-runs-cron">
+<h2>Automated runs (cron)<a class="headerlink" href="#automated-runs-cron" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">cron_scenario.py</span></code> executes the full pipeline in order with per-step logging.
+It is usually invoked via a bash wrapper and added to <code class="docutils literal notranslate"><span class="pre">crontab</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cron_script.sh</span></code> (nightly)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cron_script_reboot.sh</span></code> (on reboot)</p></li>
+</ul>
+</section>
+<section id="aws-mode">
+<h2>AWS mode<a class="headerlink" href="#aws-mode" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">--aws</span></code> mode uses <code class="docutils literal notranslate"><span class="pre">/data/processed</span></code> and disables moving raw files.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">--aws</span> <span class="pre">populate</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cron_scenario.py</span> <span class="pre">--aws</span></code></p></li>
+</ul>
+</section>
+<section id="backup-and-aws-sync">
+<h2>Backup and AWS sync<a class="headerlink" href="#backup-and-aws-sync" title="Permalink to this heading">#</a></h2>
+<p>Backup helpers live in <code class="docutils literal notranslate"><span class="pre">backup/</span></code> and cron scripts:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">backup/backup.sh</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cron_script_aws.sh</span></code></p></li>
+</ul>
+<p>These scripts are intended for <strong>append-only</strong> sync to AWS or remote storage.
+If older versions should be replaced, manual cleanup may be required before re-populating.
+Update paths and credentials to match your storage backend.</p>
+</section>
+<section id="error-handling-and-failedsession">
+<h2>Error handling and FailedSession<a class="headerlink" href="#error-handling-and-failedsession" title="Permalink to this heading">#</a></h2>
+<p>Failures are recorded in <code class="docutils literal notranslate"><span class="pre">vr4mice.FailedSession</span></code>:</p>
+<ul class="simple">
+<li><p>Used as a skip list to avoid repeated failures.</p></li>
+<li><p>Remove entries to retry after fixing data.</p></li>
+</ul>
+<p>Example removal:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">vr4mice</span>
+<span class="n">vr4mice</span><span class="o">.</span><span class="n">FailedSession</span><span class="p">()</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">&quot;dataset=&#39;Grizzly_2026-01-29_1&#39;&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
+<section id="gitcommit-table">
+<h2>GitCommit table<a class="headerlink" href="#gitcommit-table" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">base_analysis.GitCommit</span></code> stores commit hash and modified files for provenance.</p>
+</section>
+<section id="emails">
+<h2>Emails<a class="headerlink" href="#emails" title="Permalink to this heading">#</a></h2>
+<p>Summary emails are sent when <code class="docutils literal notranslate"><span class="pre">EMAIL=true</span></code>.
+Recipients are derived from:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS</span></code> (experimenter names)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exp.Session</span></code> experimenter (if available)</p></li>
+</ol>
+</section>
+<section id="logs">
+<h2>Logs<a class="headerlink" href="#logs" title="Permalink to this heading">#</a></h2>
+<p>Runtime logs are written to the local <code class="docutils literal notranslate"><span class="pre">logs/</span></code> folder on the server/container.</p>
 </section>
 </section>
 
@@ -656,16 +913,51 @@ If the subfolder name is different (not <code class="docutils literal notranslat
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rig-data-transfer-gui-installation">Rig Data Transfer GUI Installation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#datajoint-database-user-remote-access-via-jupyter-notebook">DataJoint database user remote access via Jupyter Notebook</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#datajoint-database-user-remote-access">DataJoint database user remote access</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#datajoint-database-deployment-on-server-or-locally">DataJoint database deployment (on server or locally)</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#setup-instructions">Setup Instructions</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#build-and-run">Build and Run</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#remote-access-and-testing">Remote Access and Testing</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-configurations">Additional Configurations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#end-to-end-workflow-data-acquisition-emails">End-to-end workflow (data acquisition → emails)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#repository-layout-dj-pipeline">Repository layout (dj_pipeline)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-module-guide-key-folders">vr4mice module guide (key folders)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-schema"><code class="docutils literal notranslate"><span class="pre">vr4mice/schema</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-actions"><code class="docutils literal notranslate"><span class="pre">vr4mice/actions</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-analysis"><code class="docutils literal notranslate"><span class="pre">vr4mice/analysis</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-transfer"><code class="docutils literal notranslate"><span class="pre">gui_transfer</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#base-schemas"><code class="docutils literal notranslate"><span class="pre">base</span></code> (schemas)</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-started-for-everyday-users">Getting Started — For Everyday Users</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-clone-the-repo">Step 1 — Clone the repo</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-configure-credentials">Step 2 — Configure credentials</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-start-the-client-container">Step 3 — Start the client container</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-connect-via-ipython-or-jupyter">Step 4 — Connect via IPython or Jupyter</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-verify-connection">Step 5 — Verify connection</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stop-the-client">Stop the client</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#datajoint-database-user-remote-access-via-jupyter-notebook-tested-with-python-3-9-5">DataJoint database user remote access via Jupyter Notebook (tested with Python 3.9.5):</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment-server">Deployment (server)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#server-deployment-database-client-containers">Server deployment (database + client containers)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mounts-and-storage">Mounts and storage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#database-deployment-notes-server">Database deployment notes (server)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-variables">Environment variables</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#schemas-what-they-do">Schemas (what they do)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#schema-modes">Schema modes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#import-data-from-mysql-dump">Import data from MySQL dump</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-vs-non-gui-mode">GUI vs non-GUI mode</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-installation-rig-related">GUI installation (rig-related)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manual-runs-run-py">Manual runs (run.py)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-quick-sanity">Testing / quick sanity</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#automated-runs-cron">Automated runs (cron)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#aws-mode">AWS mode</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backup-and-aws-sync">Backup and AWS sync</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling-and-failedsession">Error handling and FailedSession</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gitcommit-table">GitCommit table</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#emails">Emails</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#logs">Logs</a></li>
 </ul>
   </nav></div>
 
