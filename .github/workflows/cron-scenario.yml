@@ -17,7 +17,7 @@ jobs:
       DJ_USER: root
       DJ_PASS: simple
       DJ_LAB: test
-      GUI: "TRUE"
+      GUI: "FALSE"
       EMAIL: "False"
       IMG_SRC: Imagingsource
       DJ_SUPPORT_FILEPATH_MANAGEMENT: "TRUE"
