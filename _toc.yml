@@ -55,5 +55,4 @@ parts:
     - file: dj_pipeline/notebooks/Paper_figures/Figure_4.ipynb
     - file: dj_pipeline/notebooks/Paper_figures/Figure_5a_kinematics.ipynb
     - file: dj_pipeline/notebooks/Paper_figures/Figure_5b_decision.ipynb
-    - file: dj_pipeline/notebooks/Paper_figures/Latency_testing.ipynb
     - file: dj_pipeline/notebooks/Paper_figures/Supp_Figure_control.ipynb
