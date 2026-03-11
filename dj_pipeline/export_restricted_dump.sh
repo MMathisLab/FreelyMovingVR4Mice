@@ -52,7 +52,6 @@ SCHEMA_SUFFIXES=(
   "session_metrics"
 )
 
-INCLUDED_TABLES_SOURCE="embedded_default"
 INCLUDED_TABLES_DEFAULT=(
   '`base_analysis`.`__box_data_frame`'
   '`base_analysis`.`__data_frame`'
@@ -202,7 +201,7 @@ while IFS= read -r ds; do
 done <<< "$DATASET_SQL"
 DATASET_SQL_LIST="${DATASET_SQL_LIST%,}"
 
-EXPORT_ROOT="${EXPORT_ROOT:-/home/celia/exports}"
+EXPORT_ROOT="${EXPORT_ROOT:-/app/exports}"
 mkdir -p "$EXPORT_ROOT"
 RUN_TS="$(date +%Y%m%d_%H%M%S)"
 OUT_DIR="${EXPORT_ROOT}/restricted_dump_${RUN_TS}"
@@ -237,7 +236,6 @@ for suffix in "${SCHEMA_SUFFIXES[@]}"; do
     echo "-- Prefix: ${PREFIX}"
     echo "-- Session labels: ${SESSION_SQL_LIST}"
     echo "-- Set labels: ${SET_SQL_LIST}"
-    echo "-- Included tables source: ${INCLUDED_TABLES_SOURCE}"
     echo "-- Included tables filter enabled: ${INCLUDED_TABLES_FILTER_ENABLED}"
     echo "-- Effective included tables count: ${#INCLUDED_TABLE_KEYS[@]}"
     if [[ "${#TABLE_DATASET_OVERRIDES[@]}" -gt 0 ]]; then
@@ -399,7 +397,6 @@ done
   echo "tables_trace_file=${TRACE_TABLES_FILE}"
   echo "datasets_trace_file=${TRACE_DATASETS_FILE}"
   echo "db_prefix=${PREFIX}"
-  echo "included_tables_source=${INCLUDED_TABLES_SOURCE}"
   echo "included_tables_filter_enabled=${INCLUDED_TABLES_FILTER_ENABLED}"
   echo "included_tables_effective_count=${#INCLUDED_TABLE_KEYS[@]}"
   echo "dataset_table=${DATASET_TABLE_NAME}"
@@ -409,7 +406,7 @@ done
   echo "schemas_dumped=${SCHEMAS_DUMPED}"
   echo "trace_with_row_counts=${TRACE_WITH_ROW_COUNTS}"
   if [[ "${#SCHEMA_DUMP_FILES[@]}" -gt 0 ]]; then
-    echo "dump_files=$(IFS=,; echo "${SCHEMA_DUMP_FILES[*]}")"
+    echo "dump_files=$(IFS=,; echo \"${SCHEMA_DUMP_FILES[*]}\")"
   fi
 } > "$TRACE_META_FILE"
 
