@@ -1,0 +1,234 @@
+name: Test cron_scenario.py
+
+on:
+  pull_request:
+    paths:
+      - "dj_pipeline/base/**"
+      - "dj_pipeline/vr4mice/**"
+      - "dj_pipeline/tests/**"
+      - "dj_pipeline/Dockerfile"
+      - "dj_pipeline/cron_scenario.py"
+      - ".github/workflows/cron-scenario.yml"
+  workflow_dispatch:
+
+env:
+  DJ_HOST: host.docker.internal
+  DJ_PORT: 3306
+  DJ_USER: root
+  DJ_PASS: simple
+  DJ_LAB: test
+  GUI: "FALSE"
+  EMAIL: "False"
+  IMG_SRC: Imagingsource
+  DJ_SUPPORT_FILEPATH_MANAGEMENT: "TRUE"
+  DJ_SUPPORT_ADAPTED_TYPES: "TRUE"
+  MYSQL_MAX_ALLOWED_PACKET: 1G
+  #MYSQL_IMAGE: datajoint/mysql:5.7
+  MYSQL_IMAGE: mysql:5.7
+
+jobs:
+  run-pipeline-and-dump:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Prepare runtime directories
+        run: |
+          mkdir -p "$RUNNER_TEMP/vr4mice-data/processed"
+          mkdir -p "$RUNNER_TEMP/vr4mice-data/summary_plots"
+          mkdir -p "$RUNNER_TEMP/vr4mice-shared"
+          mkdir -p "$RUNNER_TEMP/vr4mice-screen-recordings/raw_screen_recordings"
+          ln -sf \
+            "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/Imagingsource_Flamingo_2026-02-05_1_VIDEO.avi" \
+            "$RUNNER_TEMP/vr4mice-screen-recordings/raw_screen_recordings/Flamingo_2026-02-05_1.mkv"
+
+      - name: Start MySQL
+        run: |
+          docker run -d \
+            --name vr4mice-mysql \
+            -e MYSQL_ROOT_PASSWORD=simple \
+            -e MYSQL_ROOT_HOST=% \
+            -p 3306:3306 \
+            --health-cmd="mysqladmin ping -h 127.0.0.1 -psimple --silent" \
+            --health-interval=10s \
+            --health-timeout=5s \
+            --health-retries=12 \
+            "${MYSQL_IMAGE}" \
+            --max_allowed_packet="${MYSQL_MAX_ALLOWED_PACKET}" \
+            --net_read_timeout=600 \
+            --net_write_timeout=600
+
+          for i in $(seq 1 30); do
+            status="$(docker inspect -f '{{.State.Health.Status}}' vr4mice-mysql)"
+            if [ "$status" = "healthy" ]; then
+              break
+            fi
+            if [ "$status" = "unhealthy" ]; then
+              docker logs vr4mice-mysql
+              exit 1
+            fi
+            sleep 2
+          done
+
+          docker exec vr4mice-mysql mysql -uroot -psimple -e "
+            SHOW VARIABLES
+            WHERE Variable_name IN ('max_allowed_packet', 'net_read_timeout', 'net_write_timeout');
+          "
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg user_name="$(id -un)" \
+            --build-arg uid="$(id -u)" \
+            --build-arg gid="$(id -g)" \
+            -t vr4mice_app:test-image \
+            ./dj_pipeline
+
+      - name: Run cron_scenario.py
+        run: |
+          docker run --rm \
+            --add-host=host.docker.internal:host-gateway \
+            -e DJ_HOST="${DJ_HOST}" \
+            -e DJ_PORT="${DJ_PORT}" \
+            -e DJ_USER="${DJ_USER}" \
+            -e DJ_PASS="${DJ_PASS}" \
+            -e DJ_PWD="${DJ_PASS}" \
+            -e DJ_LAB="${DJ_LAB}" \
+            -e GUI="${GUI}" \
+            -e EMAIL="${EMAIL}" \
+            -e IMG_SRC="${IMG_SRC}" \
+            -e DJ_SUPPORT_FILEPATH_MANAGEMENT="${DJ_SUPPORT_FILEPATH_MANAGEMENT}" \
+            -e DJ_SUPPORT_ADAPTED_TYPES="${DJ_SUPPORT_ADAPTED_TYPES}" \
+            -v "$GITHUB_WORKSPACE/dj_pipeline:/app" \
+            -v "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/:/data/data/" \
+            -v "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/:/data/dlc_video/" \
+            -v "$RUNNER_TEMP/vr4mice-data/processed:/data/processed" \
+            -v "$RUNNER_TEMP/vr4mice-data/summary_plots:/data/summary_plots" \
+            -v "$RUNNER_TEMP/vr4mice-shared:/shared" \
+            -v "$RUNNER_TEMP/vr4mice-screen-recordings:/vr4mice_screen_recordings" \
+            vr4mice_app:test-image \
+            -lc "pip install --no-deps /app/base/base_min_schemas /app/base/base_actions && python cron_scenario.py"
+
+      - name: Dump populated schemas
+        run: |
+          mkdir -p "$RUNNER_TEMP/mysql-dump"
+          schema_candidates=(
+            vr4mice
+            base_analysis
+            dlc
+            interpolated_trajectories
+            session_metrics
+            latency_tests
+            inputs_videos
+            base
+            mice
+            exp
+          )
+          dump_schemas=()
+
+          for schema in "${schema_candidates[@]}"; do
+            if docker exec vr4mice-mysql mysql -N -uroot -psimple -e "SHOW DATABASES LIKE '${schema}'" | grep -qx "${schema}"; then
+              dump_schemas+=("${schema}")
+            fi
+          done
+
+          if [ "${#dump_schemas[@]}" -eq 0 ]; then
+            echo "No application schemas found to dump."
+            exit 1
+          fi
+
+          printf '%s\n' "${dump_schemas[@]}" > "$RUNNER_TEMP/mysql-dump/schemas.txt"
+
+          docker exec vr4mice-mysql mysqldump \
+            -uroot -psimple \
+            --max_allowed_packet="${MYSQL_MAX_ALLOWED_PACKET}" \
+            --single-transaction \
+            --hex-blob \
+            --set-gtid-purged=OFF \
+            --databases "${dump_schemas[@]}" \
+            > "$RUNNER_TEMP/mysql-dump/cron-scenario.sql"
+
+      - name: Upload MySQL dump artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cron-scenario-mysql-dump
+          path: |
+            ${{ runner.temp }}/mysql-dump/cron-scenario.sql
+            ${{ runner.temp }}/mysql-dump/schemas.txt
+          if-no-files-found: error
+
+      - name: Upload summary plot artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cron-scenario-summary-plots
+          path: ${{ runner.temp }}/vr4mice-data/summary_plots
+          if-no-files-found: warn
+
+  restore-and-verify:
+    needs: run-pipeline-and-dump
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download MySQL dump artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: cron-scenario-mysql-dump
+          path: ${{ runner.temp }}/mysql-dump
+
+      - name: Start fresh MySQL
+        run: |
+          docker run -d \
+            --name vr4mice-mysql-restore \
+            -e MYSQL_ROOT_PASSWORD=simple \
+            -e MYSQL_ROOT_HOST=% \
+            -p 3306:3306 \
+            --health-cmd="mysqladmin ping -h 127.0.0.1 -psimple --silent" \
+            --health-interval=10s \
+            --health-timeout=5s \
+            --health-retries=12 \
+            "${MYSQL_IMAGE}" \
+            --max_allowed_packet="${MYSQL_MAX_ALLOWED_PACKET}" \
+            --net_read_timeout=600 \
+            --net_write_timeout=600
+
+          for i in $(seq 1 30); do
+            status="$(docker inspect -f '{{.State.Health.Status}}' vr4mice-mysql-restore)"
+            if [ "$status" = "healthy" ]; then
+              break
+            fi
+            if [ "$status" = "unhealthy" ]; then
+              docker logs vr4mice-mysql-restore
+              exit 1
+            fi
+            sleep 2
+          done
+
+      - name: Restore MySQL dump
+        run: |
+          docker exec -i vr4mice-mysql-restore mysql -uroot -psimple --max_allowed_packet="${MYSQL_MAX_ALLOWED_PACKET}" < "$RUNNER_TEMP/mysql-dump/cron-scenario.sql"
+
+      - name: Verify restored schemas
+        run: |
+          while IFS= read -r schema; do
+            docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e "SHOW DATABASES LIKE '${schema}'" | grep -qx "${schema}"
+          done < "$RUNNER_TEMP/mysql-dump/schemas.txt"
+
+          dataset_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM vr4mice.dataset;')"
+          state_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM vr4mice.state;')"
+          dataframe_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM base_analysis.__data_frame;')"
+          summary_plot_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM base_analysis.__summary_plots;')"
+
+          echo "vr4mice.dataset rows: ${dataset_count}"
+          echo "vr4mice.state rows: ${state_count}"
+          echo "base_analysis.__data_frame rows: ${dataframe_count}"
+          echo "base_analysis.__summary_plots rows: ${summary_plot_count}"
+
+          test "${dataset_count}" -ge 1
+          test "${state_count}" -ge 1
+          test "${dataframe_count}" -ge 1
+          test "${summary_plot_count}" -ge 1
