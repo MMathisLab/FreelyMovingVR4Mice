@@ -204,7 +204,9 @@ Both modes work; choose minimal when only GUI dropdowns and basic metadata are n
 (sec:import-sql-dump)=
 ### Import data from MySQL dump
 To directly populate an empty database from an existing MySQL dump (`data.sql`), run:
-`docker exec -i <vr4mice_db_name> mysql -uroot -psimple < data.sql`
+```bash
+docker exec -i <vr4mice_db_name> mysql -uroot -psimple < data.sql
+```
 where `<vr4mice_db_name>` is the name of the databse container spawned as described in the [Server deployment](#server-deployment-database--client-containers) section.
 
 
