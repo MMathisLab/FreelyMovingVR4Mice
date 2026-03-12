@@ -17,7 +17,7 @@ from rl_task.task.envs.rl_task_gym_wrapper import MouseTaskToGymWrapper
 
 def make_env(
     env_path: str,
-    task_config: str,
+    # task_config: str,
     fps: int = 50,
     num_envs: int = 1,
     base_port: int = 5004,
@@ -58,7 +58,7 @@ def make_env(
         def _thunk():
             env = MouseTaskToGymWrapper(
                 env_path=env_path,
-                task_config=task_config,
+                # task_config=task_config,
                 fps=fps,
                 base_port=base_port,
                 worker_id=worker_id,

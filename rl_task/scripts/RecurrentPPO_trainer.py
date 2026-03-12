@@ -48,7 +48,7 @@ config = dict(
     algorithm="RecurrentPPO",
     # environment
     env_kwargs=dict(
-        task_config="shape_discrim_multi_occluders",
+        # task_config="shape_discrim_multi_occluders",
         pos_reward_size=1.5,
         neg_reward_size=1.5,
         trunc_penalty_size=1.5,

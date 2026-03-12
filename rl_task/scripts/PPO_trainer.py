@@ -41,7 +41,7 @@ config = dict(
     algorithm="PPO",
     # environment
     env_kwargs=dict(
-        task_config="shape_discrim",
+        # task_config="shape_discrim",
         pos_reward_size=1.5,
         neg_reward_size=1.5,
         trunc_penalty_size=1.5,
