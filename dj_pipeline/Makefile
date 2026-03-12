@@ -3,6 +3,8 @@ mount :=/mnt/data_storage/vr4mice_database_dump
 base_schemas_path="$(mount)/$(git_repo)/base_schemas"
 base_actions_path="$(mount)/$(git_repo)/base_actions"
 
+COMPOSE_PROJECT ?= mysqltest
+
 cron_script_path := $(mount)/$(git_repo)/cron_script.sh
 cron_script_aws_path := $(mount)/$(git_repo)/cron_script_aws.sh
 
@@ -24,36 +26,36 @@ git_info:
 
 up_all: 
 	#git_info
-	@docker-compose -p mysqltest up -d
-	@docker-compose -p mysqltest exec client bash -c "pip install /base_schemas/ ; pip install /base_actions/" 1>/dev/null
+	@docker-compose -p $(COMPOSE_PROJECT) up -d
+	@docker-compose -p $(COMPOSE_PROJECT) exec client bash -c "pip install /base_schemas/ ; pip install /base_actions/" 1>/dev/null
 
 base_install:
-	@docker-compose -p mysqltest exec client bash -c "pip install --no-deps /base_schemas/ ; pip install --no-deps /base_actions/" 1>/dev/null
+	@docker-compose -p $(COMPOSE_PROJECT) exec client bash -c "pip install --no-deps /base_schemas/ ; pip install --no-deps /base_actions/" 1>/dev/null
 
 down_all:
-	@docker-compose -p mysqltest down
+	@docker-compose -p $(COMPOSE_PROJECT) down
 
 client_build:
 	docker-compose build $(BUILD_ARGS) client #&& \
 
 client_up: git_info
-	@docker-compose -p mysqltest up -d client
-	@docker-compose -p mysqltest exec client bash -c "pip install --no-deps /base_schemas/ ; pip install --no-deps /base_actions/" 1>/dev/null
+	@docker-compose -p $(COMPOSE_PROJECT) up -d client
+	@docker-compose -p $(COMPOSE_PROJECT) exec client bash -c "pip install --no-deps /base_schemas/ ; pip install --no-deps /base_actions/" 1>/dev/null
 
 client_stop:
-	@docker-compose -p mysqltest stop client
+	@docker-compose -p $(COMPOSE_PROJECT) stop client
 
 client_rm:
-	@docker-compose -p mysqltest rm client
+	@docker-compose -p $(COMPOSE_PROJECT) rm client
 
 client_down: client_stop
-	@docker-compose -p mysqltest rm client
+	@docker-compose -p $(COMPOSE_PROJECT) rm client
 
 ipython: git_info
-	@docker-compose -p mysqltest exec client ipython
+	@docker-compose -p $(COMPOSE_PROJECT) exec client ipython
 
 bash: git_info
-	@docker-compose -p mysqltest exec client bash
+	@docker-compose -p $(COMPOSE_PROJECT) exec client bash
 
 mysql: git_info
 	@mysql --defaults-group-suffix=-vr4mice -A
@@ -62,7 +64,7 @@ aws:
 	@mysql --defaults-group-suffix=-aws_vr4mice -A
 
 notebook:
-	@docker-compose -p mysqltest exec client bash -c "jupyter notebook --ip 0.0.0.0 "
+	@docker-compose -p $(COMPOSE_PROJECT) exec client bash -c "jupyter notebook --ip 0.0.0.0 "
 
 sync_build:
 	cp ~/.my.cnf_vr4mice ./.my.cnf_vr4mice
@@ -81,8 +83,8 @@ import-dumps:
 	for f in $(DUMP_DIR)/restricted_dump_*.sql; do \
 	  db=$$(basename "$$f" | sed -E 's/^restricted_dump_(.*)_[0-9]{8}_[0-9]{6}\.sql$$/\1/'); \
 	  echo "Importing $$f -> $$db"; \
-	  docker-compose -p mysqltest exec -T db \
+	  docker-compose -p $(COMPOSE_PROJECT) exec -T db \
 	    mysql -u root -psimple -e "CREATE DATABASE IF NOT EXISTS \`$$db\`;"; \
-	  docker-compose -p mysqltest exec -T db \
+	  docker-compose -p $(COMPOSE_PROJECT) exec -T db \
 	    mysql -u root -psimple "$$db" < "$$f"; \
 	done
