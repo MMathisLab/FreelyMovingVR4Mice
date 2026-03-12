@@ -113,16 +113,14 @@ def obs_to_surface(pygame, win, obs, _cache={}):
 def main():
     # Env
     env = MouseTaskToGymWrapper(
-        # env_path="/Users/subnaulitus/Documents/EPFL/GitHub_Repos/FreelyMovingVR4Mice/rl_task/AR_build/macOS/augmented_reality.app",
-        env_path=None,
-        task_config="shape_discrim",
+        env_path=None, # Launch environment from Unity editor directly
         fps=50,
         base_port=5004,
         worker_id=0,
         batchmode=True,
         pos_reward_size=1.5,
         neg_reward_size=1.5,
-        step_penalty_size=0.01,
+        step_penalty_size=.0,
         max_episode_steps=500,
     )
 

@@ -61,6 +61,7 @@ class ShapeDiscrimMultiOccluders(ActiveSensingTask):
         grey_screen_active=0.0,
         target_distance=4.0,
         use_dlc=True,
+        **kwargs,
     ):
         super().__init__(
             teensy=teensy,
@@ -98,4 +99,5 @@ class ShapeDiscrimMultiOccluders(ActiveSensingTask):
             grey_screen_active=grey_screen_active,
             target_distance=target_distance,
             use_dlc=use_dlc,
+            **kwargs,
         )

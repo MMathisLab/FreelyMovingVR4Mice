@@ -20,54 +20,20 @@ from pathlib import Path
 from unittest.mock import patch
 
 from rl_task.task.utils.fake_teensy import FakeTeensy
-from mouse_task.task_active_sensing import ActiveSensingTask
+from mouse_task.mouse_shape_discrim_multioccluders import ShapeDiscrimMultiOccluders
 
-
-class ActiveSensingTaskRL(ActiveSensingTask):
+class ActiveSensingTaskRL(ShapeDiscrimMultiOccluders):
     """RL-oriented wrapper around the Unity Active Sensing task.
 
     Args are primarily forwarded to the parent task. Only Unity process options
-    (``batchmode``, ``base_port``, ``worker_id``) and logging (``save_data``)
-    are handled locally.
+    (``batchmode``, ``base_port``, ``worker_id``) and logging (``save_data``) are handled locally.
     """
 
     def __init__(
         self,
         env_path: Path | None,
         teensy: FakeTeensy,
-        session_label: List[str],
-        config_file_path: Path,
-        monitor: bool | None,
-        write_video: bool,
         fps: float,
-        epochs: int,
-        epoch_labels: List[str],
-        reward_size: int,
-        cropped_image: List[int],
-        unity_arena_size: List[int],
-        r_report_box: List[int],
-        l_report_box: List[int],
-        start_box: List[int],
-        rotate_camera: float,
-        prob_obj_on_left: float,
-        prob_block_coherence: float,
-        mouse_report_delay: float,
-        slit_size: List[int],
-        slit_depth: float,
-        target_selection: float,
-        distractor_selection: float,
-        occlusion_type: float,
-        camera_type: float,
-        target_spread: float,
-        target_rotation: float,
-        target_size: float,
-        target_height: float,
-        block_length: float,
-        start_box_delay: float,
-        velocity_threshold: float,
-        distractor: float,
-        grey_screen_active: float,
-        target_distance: float,
 
         # RL / Unity process specific args to create vector envs
         # where each instance needs its own port/worker_id and all
@@ -79,19 +45,13 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         save_data: bool = False,
     ):
 
-        self.angle_in_degrees = True
-
         # Empirical upper bounds based on both visual inspection and
         # on analysis of real behavioral data of mice performing the task.
         self.max_lin_speed = 300  # mm / s
         self.max_ang_speed = np.pi  # rad / s
-
         self.dt = 1 / fps
-        self.default_virtual_state = np.array(
-            [cropped_image[1] // 2, cropped_image[3] // 4, 0]
-        )
-
         self.save_data = save_data
+        self.angle_in_degrees = True
 
         # Patching the config processing to inject the Unity env path
         with patch(
@@ -99,45 +59,17 @@ class ActiveSensingTaskRL(ActiveSensingTask):
             return_value={"ar_env_unity_absolute_path": env_path},
         ):
             super().__init__(
-                teensy,
-                session_label,
-                config_file_path,
-                monitor,
-                write_video,
-                fps,
-                epochs,
-                epoch_labels,
-                reward_size,
-                cropped_image,
-                unity_arena_size,
-                r_report_box,
-                l_report_box,
-                start_box,
-                rotate_camera,
-                prob_obj_on_left,
-                prob_block_coherence,
-                mouse_report_delay,
-                slit_size,
-                slit_depth,
-                target_selection,
-                distractor_selection,
-                occlusion_type,
-                camera_type,
-                target_spread,
-                target_rotation,
-                target_size,
-                target_height,
-                block_length,
-                start_box_delay,
-                velocity_threshold,
-                distractor,
-                grey_screen_active,
-                target_distance,
-                use_dlc,
-                batchmode,
-                base_port,
-                worker_id,
+                teensy=teensy,
+                fps=fps,
+                use_dlc=use_dlc,
+                batchmode=batchmode,
+                base_port=base_port,
+                worker_id=worker_id,
             )
+
+        self.default_virtual_state = np.array(
+            [self.cropped_image[1] // 2, self.cropped_image[3] // 4, 0]
+        )
 
     def start(self):
         """Start Unity environment and initialize observation spaces."""
@@ -265,7 +197,7 @@ class ActiveSensingTaskRL(ActiveSensingTask):
         super().set_channel()
 
         # Setting the Unity env to be in RL mode
-        self.channel.set_float_parameter("RL_training", 1)
+        self.channel.set_float_parameter("rl_training", 1)
 
     def sample_start_state(self) -> np.ndarray:
         """Uniformly sample a start (x,z,theta) within the start box."""

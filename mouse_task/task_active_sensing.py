@@ -68,6 +68,9 @@ class ActiveSensingTask(UnityTask):
         grey_screen_active: Integer, specifies whether to show the grey ITI screen or not (`0` = no grey screen, `1` = grey screen)
         target_distance: Integer, specifies the distance of the targets in y.
         use_dlc: Bool, specifies whether to use the dlc socket or not, this is mainly used for debugging, it should be set to true for the task to run.
+        batchmode: Bool, specifies whether to run Unity in batchmode or not, this allows to train rl agents in a headless container. Keep as False when training mice on the Rig.
+        base_port: Int, specifies the base port for the Unity environment.
+        worker_id: Int, specifies the worker ID for the Unity environment.
     """
 
     def __init__(

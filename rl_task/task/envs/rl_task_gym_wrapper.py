@@ -18,7 +18,6 @@ import gymnasium as gym
 from gymnasium import spaces
 from rl_task.task.utils.fake_teensy import FakeTeensy
 from rl_task.task.envs.rl_task_active_sensing import ActiveSensingTaskRL
-from rl_task.config.config import load_config
 
 
 class MouseTaskToGymWrapper(gym.Env):
@@ -50,7 +49,6 @@ class MouseTaskToGymWrapper(gym.Env):
     def __init__(
         self,
         env_path,
-        task_config,
         fps=metadata["render_fps"],
         base_port=5004,
         worker_id=0,
@@ -66,8 +64,7 @@ class MouseTaskToGymWrapper(gym.Env):
         self.neg_reward_size = neg_reward_size
         self.trunc_penalty_size = trunc_penalty_size
         self.step_penalty_size = step_penalty_size
-        self.cfg = load_config(
-            preset_name=task_config,
+        self.cfg = dict(
             env_path=env_path,
             teensy=FakeTeensy(),
             fps=fps,
@@ -76,7 +73,7 @@ class MouseTaskToGymWrapper(gym.Env):
             worker_id=worker_id,
             save_data=save_data,
         )
-        self.task = ActiveSensingTaskRL(**self.cfg.as_kwargs())
+        self.task = ActiveSensingTaskRL(**self.cfg)
         self.task.start()
 
         # Define action space: [move, turn] both in [-1, 1]
@@ -88,14 +85,14 @@ class MouseTaskToGymWrapper(gym.Env):
             low=0, high=255, shape=(C, H, W), dtype=np.uint8
         )
 
-        # Defining parameters to track
+        # Define parameters to track
         self.episode_reward = 0.0
         self.episode_length = 0
 
-        # Defining time horizon
+        # Define time horizon
         self.max_episode_steps = max_episode_steps
 
-        # Doesn't support rendering at this point in time
+        # No rendering support at this point in time
         self.render_mode = None
 
     def _get_obs(self):
@@ -130,7 +127,6 @@ class MouseTaskToGymWrapper(gym.Env):
         """
         observation, reward_signal, terminated, _ = self.task.step_task(action)
 
-        reward = 0
         if reward_signal == 1:
             reward = self.pos_reward_size
         if reward_signal == -1:
