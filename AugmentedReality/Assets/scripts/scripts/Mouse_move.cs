@@ -62,10 +62,11 @@ public class Mouse_move : Agent
 	Stopwatch stopwatch;
 	float lastFrameTime;
 
+	[Header("RL Settings")]
+
 	// Binary flag to determine whether task is being run in a reinforcement learning 
 	// context or within the behavioral mouse task. 0 = mouse task | 1 = rl task
 	public float RL_training;
-
 
 	// Start is called before the first frame update
 	void Start()
@@ -146,7 +147,7 @@ public class Mouse_move : Agent
 		float deltaTime = GetDeltaTime();
 		totalEpisodeTime += deltaTime;
 
-		//move the Mouse, to x y and head angle of actual mouse 
+		// move the Mouse, to x y and head angle of actual mouse 
 		if (targets_visable == false)
 		{
 			plane.GetComponent<Target_spawner>().Targets_set_visable();
@@ -183,14 +184,14 @@ public class Mouse_move : Agent
 			}
 		}
 
+		// Setting reward for current step
+		SetReward(thisReward);
+
 		//EpisdoeTimeOut();
 		mouse_can_report_trigger();
 
 		// Trigger ITI either - ITI can be timed or next episode can start when the agent looks back at the screen in a frontal box
 		triggerGreyScreen_agentTriggerd(deltaTime);
-
-		// Setting reward for current step
-		SetReward(thisReward);
 	}
 
 
