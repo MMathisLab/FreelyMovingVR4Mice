@@ -59,6 +59,7 @@ INCLUDED_TABLES_DEFAULT=(
   '`base_analysis`.`__box_data_frame`'
   '`base_analysis`.`__data_frame`'
   '`decision`.`#label_set`'
+  '`decision`.`#label_set__member`'
   '`decision`.`#label`'
   '`decision`.`__decision_points`'
   '`decision`.`__inclusion_status`'
