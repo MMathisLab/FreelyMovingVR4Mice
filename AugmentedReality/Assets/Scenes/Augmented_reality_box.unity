@@ -340,7 +340,7 @@ MonoBehaviour:
   targets_visable: 0
   photodiode_change_value: 0
   sync: {fileID: 804046499}
-  RL_training: 0
+  rl_training: 0
 --- !u!54 &121224361
 Rigidbody:
   m_ObjectHideFlags: 0

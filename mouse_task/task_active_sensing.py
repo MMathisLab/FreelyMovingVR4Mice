@@ -162,7 +162,7 @@ class ActiveSensingTask(UnityTask):
         self.velocity_threshold = velocity_threshold
 
         self.previous = np.array(
-            [0, -5, 0, 0],
+            [9, -5, 0, 0],
             dtype=np.float16,
         ).reshape(1, -1)
 

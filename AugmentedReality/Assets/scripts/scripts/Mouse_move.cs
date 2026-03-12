@@ -62,11 +62,11 @@ public class Mouse_move : Agent
 	Stopwatch stopwatch;
 	float lastFrameTime;
 
-	[Header("RL Settings")]
+	[Header("Reinforcement Learning Settings")]
 
 	// Binary flag to determine whether task is being run in a reinforcement learning 
 	// context or within the behavioral mouse task. 0 = mouse task | 1 = rl task
-	public float RL_training;
+	public float rl_training;
 
 	// Start is called before the first frame update
 	void Start()
@@ -79,6 +79,7 @@ public class Mouse_move : Agent
 		stopwatch.Start();
 		lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
 	}
+
 
 	public override void OnEpisodeBegin()
 	{
@@ -117,6 +118,7 @@ public class Mouse_move : Agent
 		lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
 	}
 
+
 	float GetDeltaTime()
 	{
 		float currentTime = (float)stopwatch.Elapsed.TotalSeconds;
@@ -125,6 +127,7 @@ public class Mouse_move : Agent
 		return deltaTime;
 	}
 
+
 	private void ITIScreenOff()
 	{
 		foreach (GameObject can in ITI_screen)
@@ -132,6 +135,7 @@ public class Mouse_move : Agent
 			can.SetActive(false);
 		}
 	}
+
 
 	private void ITIScreenOn()
 	{
@@ -176,7 +180,7 @@ public class Mouse_move : Agent
 			if (mouse_reported)
 			{
 				if (mouse_report_correct) thisReward = 1f;
-				else if (RL_training == 1f) thisReward = -1f;
+				else if (rl_training == 1f) thisReward = -1f;
 
 				mouse_report_correct = false;
 				mouse_can_report = false;
@@ -213,6 +217,7 @@ public class Mouse_move : Agent
 		sensor.AddObservation(start_box_delay); // 12
 	}
 
+
 	public override void Heuristic(in ActionBuffers actionsOut)
 	{
 		ActionSegment<float> continuousActionsOut = actionsOut.ContinuousActions;
@@ -221,40 +226,12 @@ public class Mouse_move : Agent
 		continuousActionsOut[2] = this.transform.eulerAngles.y;
 	}
 
-	// void EpisdoeTimeOut()
-	// {
-	// 	if ((totalEpisodeTime > maxEpisodeTime) & (ITI != true))
-	// 	{
-	// 		ITI = true;
-	// 		inITItimer = 0;
-	// 	}
-	// }
-
-	// void triggerGreyScreenTimed()
-	// {
-	// 	if (ITI == true)
-	// 	{
-	// 		inITItimer += Time.deltaTime;
-	// 		if (inITItimer < ITI_length)
-	// 		{
-	// 			ITI_screen.SetActive(true);
-	// 		}
-	// 		else
-	// 		{
-	// 			Done();
-	// 		}
-	// 	}
-	// 	if (ITI == false)
-	// 	{
-	// 		ITI_screen.SetActive(false);
-	// 	}
-	// }
 
 	void triggerGreyScreen_agentTriggerd(float deltaTime)
 	{
 		if (ITI == true)
 		{
-			if (RL_training == 1f) EndEpisode();
+			if (rl_training == 1f) EndEpisode();
 			else
 			{
 				inITItimer += deltaTime;
@@ -284,6 +261,7 @@ public class Mouse_move : Agent
 		}
 	}
 
+
 	bool agentInBox(float xmin, float xmax, float zmin, float zmax, bool atScreen)
 	{
 		if ((this.transform.position.x > xmin) & (this.transform.position.x < xmax) & (this.transform.position.z > zmin) & (this.transform.position.z < zmax))
@@ -310,6 +288,7 @@ public class Mouse_move : Agent
 		}
 	}
 
+
 	void mouse_can_report_trigger()
 	{
 		if ((totalEpisodeTime > mouseReportDelay) & (!ITI))
@@ -321,6 +300,7 @@ public class Mouse_move : Agent
 			mouse_can_report = false;
 		}
 	}
+
 
 	void MouseReported(float deltaTime)
 	{
@@ -396,7 +376,7 @@ public class Mouse_move : Agent
 		ITIGreyScreen = environmentParameters.GetWithDefault("Grey_screen_active", 0f);
 
 		// Retrieve whether the rl task is running or not
-		RL_training = environmentParameters.GetWithDefault("RL_training", 0f);
+		rl_training = environmentParameters.GetWithDefault("rl_training", 0f);
 	}
 }
 
