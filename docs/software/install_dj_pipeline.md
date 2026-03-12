@@ -201,6 +201,7 @@ Two base schema modes are supported:
 
 Both modes work; choose minimal when only GUI dropdowns and basic metadata are needed.
 
+(sec:import-sql-dump)=
 ### Import data from MySQL dump
 To directly populate an empty database from an existing MySQL dump (`data.sql`), run:
 ```bash

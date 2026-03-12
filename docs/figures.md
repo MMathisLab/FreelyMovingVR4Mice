@@ -33,7 +33,7 @@ The notebooks are not offline by default: they query database tables at runtime.
 To reproduce the figure notebooks end-to-end:
 
 1. Download the database data on Zotero.
-2. Install and configure the DJ pipeline following our guidelines.
+2. Install and configure the DJ pipeline following {ref}`our installation guide <sec:import-sql-dump>`.
 3. Run the figure notebooks listed below in order, after the database connection and fetch steps are complete.
 
 You can run notebooks locally if your local environment can connect to the DJ database (either a local database deployment or a remote server with credentials). Without database access, the notebooks will fail.
