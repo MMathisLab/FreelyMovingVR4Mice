@@ -21,7 +21,7 @@ if [[ "$DJ_HOST" == *:* ]]; then
   PORT="${DJ_HOST##*:}"
 fi
 
-# Restrictions requested in notebook
+# Restrictions for the Benquet, Sainsbury et al. paper
 SESSION_LABELS=(
   "ar_detection_no_velthr"
   "ar_detection_velthr"
@@ -52,6 +52,9 @@ SCHEMA_SUFFIXES=(
   "session_metrics"
 )
 
+# Minimal list of tables included in the figure notebooks
+# These names are stored without deployment-specific prefixes; the script adds
+# the detected prefix before matching against live schemas.
 INCLUDED_TABLES_DEFAULT=(
   '`base_analysis`.`__box_data_frame`'
   '`base_analysis`.`__data_frame`'
@@ -79,6 +82,8 @@ INCLUDED_TABLES_DEFAULT=(
   '`vr4mice`.`signals_photodiode`'
 )
 
+# A few tables are intentionally narrowed to a single dataset instead of the
+# broader dataset list derived from session_label/set_name.
 declare -A TABLE_DATASET_OVERRIDES=(
   ["dlc.__offline_kinematics"]="Pheasant_2024-08-21_1"
   ["latency_tests.__signals_photodiode_aligned"]="Latencytest1_2024-10-31_2"
@@ -127,6 +132,8 @@ if [[ -z "$BASE_DB" ]]; then
   exit 1
 fi
 
+# Some deployments prefix every schema name. Infer that once so the embedded
+# allowlist and the live database names can be compared consistently.
 PREFIX="${BASE_DB%vr4mice}"
 
 declare -A INCLUDED_TABLE_KEYS=()
@@ -141,7 +148,7 @@ for full_table_name in "${INCLUDED_TABLES_DEFAULT[@]}"; do
   table_name="${clean_name#*.}"
   [[ -z "$schema_name" || -z "$table_name" ]] && continue
 
-  # Match notebook logic: prepend detected prefix to include-list schema names.
+  # Prepend detected prefix to include-list schema names
   effective_schema="${PREFIX}${schema_name}"
   INCLUDED_TABLE_KEYS["${effective_schema}.${table_name}"]=1
 done
@@ -193,6 +200,8 @@ if [[ -z "$DATASET_SQL" ]]; then
   exit 1
 fi
 
+# Convert the selected datasets into a quoted SQL list reused by all tables
+# that can be restricted directly on a dataset column.
 DATASET_SQL_LIST=""
 while IFS= read -r ds; do
   [[ -z "$ds" ]] && continue
@@ -260,6 +269,7 @@ for suffix in "${SCHEMA_SUFFIXES[@]}"; do
     [[ -z "$TBL" ]] && continue
     [[ "$TBL" == ~* ]] && continue
 
+    # Skip anything that is not part of the notebook export allowlist.
     TABLE_FULL_KEY="${DB}.${TBL}"
     if [[ "$INCLUDED_TABLES_FILTER_ENABLED" == "true" && -z "${INCLUDED_TABLE_KEYS[$TABLE_FULL_KEY]+x}" ]]; then
       continue
@@ -291,6 +301,7 @@ for suffix in "${SCHEMA_SUFFIXES[@]}"; do
         AND column_name='set_name'
     ")"
 
+    # Prefer the most specific restriction available for the current table.
     WHERE_CLAUSE=""
     RESTRICTION_MODE="unrestricted"
     DATASET_OVERRIDE_USED=""
@@ -332,6 +343,8 @@ for suffix in "${SCHEMA_SUFFIXES[@]}"; do
       read -r TABLE_ROWS_ESTIMATE TABLE_DATA_LENGTH TABLE_INDEX_LENGTH <<< "$TABLE_STATS"
     fi
 
+    # Keep the full-table storage size plus a restricted-size estimate in Go so
+    # the trace file can be compared directly with the notebook summary.
     TABLE_SIZE_BYTES=$((TABLE_DATA_LENGTH + TABLE_INDEX_LENGTH))
     TABLE_SIZE_GO="$(bytes_to_go "$TABLE_SIZE_BYTES")"
 
@@ -350,6 +363,8 @@ for suffix in "${SCHEMA_SUFFIXES[@]}"; do
       fi
     fi
 
+    # Approximate the restricted size the same way as the notebook: scale the
+    # full table size by the fraction of selected rows.
     ESTIMATED_SIZE_GO=""
     if [[ -n "$ROW_COUNT" ]]; then
       if [[ "$TABLE_ROWS_ESTIMATE" -gt 0 ]]; then
@@ -391,6 +406,7 @@ for suffix in "${SCHEMA_SUFFIXES[@]}"; do
 
 done
 
+# Write a compact run summary so the output directory is self-describing.
 {
   echo "generated_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "dump_dir=${OUT_DIR}"
