@@ -75,6 +75,5 @@ vr4mice/cfg/*
 *dj_pipline/user_*
 *.bak
 *dj_pipeline/.local/
-*dj_pipeline/docker/
 *dj_pipeline/local_data/
 
