@@ -392,6 +392,9 @@ if [ "${IMPORT_DUMPS}" = "yes" ]; then
       if command -v pv >/dev/null 2>&1; then
         pv "${f}" | ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
           env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root "${db}"
+      elif dd --help 2>&1 | grep -q "status=progress"; then
+        dd if="${f}" bs=4M status=progress | ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
+          env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root "${db}"
       else
         ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
           env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root "${db}" < "${f}" &
