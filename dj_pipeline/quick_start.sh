@@ -94,6 +94,31 @@ spinner_wait() {
   printf "\r%s\n" "${message} done."
 }
 
+table_progress_filter() {
+  local enabled="${TABLE_PROGRESS:-yes}"
+  enabled="$(echo "${enabled}" | tr '[:upper:]' '[:lower:]')"
+  if [ "${enabled}" != "yes" ]; then
+    cat
+    return
+  fi
+  awk '
+    BEGIN { last="" }
+    /^INSERT INTO/ || /^CREATE TABLE/ {
+      table=""
+      if (match($0, /`[^`]+`(\.`[^`]+`)?/)) {
+        table=substr($0, RSTART, RLENGTH)
+        gsub(/`/, "", table)
+        sub(/^.*\./, "", table)
+      }
+      if (table != "" && table != last) {
+        print "Importing table " table > "/dev/stderr"
+        last=table
+      }
+    }
+    { print }
+  '
+}
+
 echo "${C_BLUE}VR4Mice quick start${C_RESET}"
 if ! command -v docker >/dev/null 2>&1; then
   echo "Docker is not installed or not in PATH."
@@ -383,24 +408,31 @@ if [ "${IMPORT_DUMPS}" = "yes" ]; then
   fi
   if [ -d "${WORK_DIR}" ]; then
     echo "${C_YELLOW}Importing dumps from ${WORK_DIR}. This can take time.${C_RESET}"
-    for f in "${WORK_DIR}"/restricted_dump_*.sql; do
-      [ -f "${f}" ] || continue
-      db="$(basename "${f}" | sed -E 's/^restricted_dump_(.*)_[0-9]{8}_[0-9]{6}\.sql$/\1/')"
-      echo "${C_BLUE}Importing ${f} -> ${db}${C_RESET}"
-      ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
-        env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${db}\`;"
+    shopt -s nullglob globstar
+    dump_files=( "${WORK_DIR}"/**/restricted_dump_*.sql )
+    if [ "${#dump_files[@]}" -eq 0 ]; then
+      echo "${C_YELLOW}No restricted_dump_*.sql files found in ${WORK_DIR}.${C_RESET}"
+      echo "${C_YELLOW}If using an archive, ensure the dumps are inside it (they can be nested).${C_RESET}"
+    else
+      for f in "${dump_files[@]}"; do
+        [ -f "${f}" ] || continue
+        db="$(basename "${f}" | sed -E 's/^restricted_dump_(.*)_[0-9]{8}_[0-9]{6}\.sql$/\1/')"
+        echo "${C_BLUE}Importing ${f} -> ${db}${C_RESET}"
+        ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
+          env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${db}\`;"
       if command -v pv >/dev/null 2>&1; then
-        pv "${f}" | ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
+        pv "${f}" | table_progress_filter | ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
           env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root "${db}"
       elif dd --help 2>&1 | grep -q "status=progress"; then
-        dd if="${f}" bs=4M status=progress | ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
+        dd if="${f}" bs=4M status=progress | table_progress_filter | ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
           env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root "${db}"
       else
-        ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
-          env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root "${db}" < "${f}" &
+        table_progress_filter < "${f}" | ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
+          env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root "${db}" &
         spinner_wait "$!" "Importing ${db}"
       fi
-    done
+      done
+    fi
   else
     echo "${C_YELLOW}Dump directory not found: ${DUMP_PATH}${C_RESET}"
   fi

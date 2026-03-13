@@ -24,7 +24,7 @@ BUILD_ARGS := \
 
 .PHONY: build_all git_info up_all base_install down_all client_build client_up \
 	client_stop client_rm client_down ipython bash mysql aws notebook sync_build \
-	sync_up add-cron import-dumps
+	sync_up add-cron import-dumps export-dumps
 
 build_all:
 	@$(DOCKER_COMPOSE) build
@@ -97,3 +97,7 @@ import-dumps:
 	  $(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec -T db \
 	    mysql -u root -psimple "$$db" < "$$f"; \
 	done
+
+export-dumps:
+	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client \
+	  bash -c "cd /app && bash export_restricted_dump.sh"
