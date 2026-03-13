@@ -203,8 +203,8 @@ else
 fi
 
 if [ -f "${REPO_DIR}/.env" ]; then
-  CURRENT_CLIENT_NAME="$(grep -E '^CLIENT_CONTAINER_NAME=' "${REPO_DIR}/.env" | tail -n1 | cut -d= -f2-)"
-  CURRENT_DB_NAME="$(grep -E '^DB_CONTAINER_NAME=' "${REPO_DIR}/.env" | tail -n1 | cut -d= -f2-)"
+  CURRENT_CLIENT_NAME="$({ grep -E '^CLIENT_CONTAINER_NAME=' "${REPO_DIR}/.env" || true; } | tail -n1 | cut -d= -f2-)"
+  CURRENT_DB_NAME="$({ grep -E '^DB_CONTAINER_NAME=' "${REPO_DIR}/.env" || true; } | tail -n1 | cut -d= -f2-)"
 else
   CURRENT_CLIENT_NAME="vr4mice_${USER}"
   CURRENT_DB_NAME="vr4mice_db"
