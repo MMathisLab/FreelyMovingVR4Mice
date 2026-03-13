@@ -80,6 +80,20 @@ prompt_dir() {
   done
 }
 
+spinner_wait() {
+  local pid="$1"
+  local message="$2"
+  local spin='|/-\'
+  local i=0
+  while kill -0 "${pid}" 2>/dev/null; do
+    i=$(( (i + 1) % 4 ))
+    printf "\r%s %s" "${spin:$i:1}" "${message}"
+    sleep 2
+  done
+  wait "${pid}"
+  printf "\r%s\n" "${message} done."
+}
+
 echo "${C_BLUE}VR4Mice quick start${C_RESET}"
 if ! command -v docker >/dev/null 2>&1; then
   echo "Docker is not installed or not in PATH."
@@ -309,6 +323,12 @@ fi
 
 echo "${C_BLUE}Starting containers...${C_RESET}"
 cd "${REPO_DIR}"
+if [ ! -f "${REPO_DIR}/Dockerfile" ] || [ ! -f "${REPO_DIR}/docker-compose.yml" ] || [ ! -f "${REPO_DIR}/docker/entrypoint.sh" ] || [ ! -f "${REPO_DIR}/Makefile" ]; then
+  echo "${C_YELLOW}Repo dir looks incomplete: ${REPO_DIR}${C_RESET}"
+  echo "${C_YELLOW}Expected Dockerfile, docker-compose.yml, docker/entrypoint.sh, and Makefile.${C_RESET}"
+  echo "${C_YELLOW}Please rerun and set Repo dir to the FreelyMovingVR4Mice/dj_pipeline folder.${C_RESET}"
+  exit 1
+fi
 USE_NO_CACHE="$(prompt_yes_no "Build with --no-cache?" "no")"
 if [ "${MODE}" = "client" ]; then
   echo "${C_YELLOW}Building client image (this may take some time)...${C_RESET}"
@@ -338,18 +358,20 @@ if [ "${IMPORT_DUMPS}" = "yes" ]; then
   DUMP_PATH="$(prompt "Dump directory or .zip/.tar.gz archive" "${DUMP_DIR}")"
   WORK_DIR="${DUMP_PATH}"
   if [ -f "${DUMP_PATH}" ]; then
+    TMP_BASE="${DUMP_DIR}/tmp_extract"
+    mkdir -p "${TMP_BASE}"
     case "${DUMP_PATH}" in
       *.zip)
         if ! command -v unzip >/dev/null 2>&1; then
           echo "unzip is not installed. Please install it or provide a directory."
           exit 1
         fi
-        WORK_DIR="$(mktemp -d)"
+        WORK_DIR="$(mktemp -d -p "${TMP_BASE}")"
         echo "Extracting ${DUMP_PATH} to ${WORK_DIR}"
         unzip -q "${DUMP_PATH}" -d "${WORK_DIR}"
         ;;
       *.tar.gz|*.tgz)
-        WORK_DIR="$(mktemp -d)"
+        WORK_DIR="$(mktemp -d -p "${TMP_BASE}")"
         echo "Extracting ${DUMP_PATH} to ${WORK_DIR}"
         tar -xzf "${DUMP_PATH}" -C "${WORK_DIR}"
         ;;
@@ -372,7 +394,8 @@ if [ "${IMPORT_DUMPS}" = "yes" ]; then
           env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root "${db}"
       else
         ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
-          env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root "${db}" < "${f}"
+          env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root "${db}" < "${f}" &
+        spinner_wait "$!" "Importing ${db}"
       fi
     done
   else
