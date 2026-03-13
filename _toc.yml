@@ -29,10 +29,11 @@ parts:
   - file: docs/software_unity_games/update_unity_game
   - file: docs/software_unity_games/build_unity_game
   - file: docs/software_unity_games/add_new_objects
-- caption: Software - DataJoint
+- caption: Software - Vr4Mice DataJoint
   chapters:
-  - file: docs/software/datajoint.md
   - file: docs/software/install_dj_pipeline.md
+  - file: docs/software/datajoint.md
+  - file: docs/software/data_import_export.md
 - caption: Software - Tests
   chapters:
   - file: docs/software/mouse_task_test.md
@@ -56,3 +57,4 @@ parts:
     - file: dj_pipeline/notebooks/Paper_figures/Figure_5a_kinematics.ipynb
     - file: dj_pipeline/notebooks/Paper_figures/Figure_5b_decision.ipynb
     - file: dj_pipeline/notebooks/Paper_figures/Supp_Figure_control.ipynb
+  - file: docs/software/quickstart_local_dump.md
