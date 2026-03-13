@@ -30,6 +30,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEFAULT_REPO_DIR="${SCRIPT_DIR}"
 DEFAULT_MOUNT="/mnt/database/vr4mice/vr4mice_database"
 DEFAULT_DUMP_DIR="/mnt/data_storage/vr4mice_database_dump"
+CACHE_FILE="${HOME}/.vr4mice_quick_start_last_paths"
 
 prompt() {
   local label="$1"
@@ -78,6 +79,23 @@ prompt_dir() {
     fi
     echo "${C_YELLOW}Please re-enter the path.${C_RESET}"
   done
+}
+
+cache_get() {
+  local key="$1"
+  [ -f "${CACHE_FILE}" ] || return 0
+  grep -E "^${key}=" "${CACHE_FILE}" | tail -n1 | cut -d= -f2-
+}
+
+cache_set() {
+  local key="$1"
+  local value="$2"
+  touch "${CACHE_FILE}"
+  if grep -qE "^${key}=" "${CACHE_FILE}"; then
+    sed -i.bak -E "s|^${key}=.*|${key}=${value}|" "${CACHE_FILE}"
+  else
+    echo "${key}=${value}" >> "${CACHE_FILE}"
+  fi
 }
 
 spinner_wait() {
@@ -380,7 +398,13 @@ fi
 
 IMPORT_DUMPS="$(prompt_yes_no "Import DB dumps now?" "no")"
 if [ "${IMPORT_DUMPS}" = "yes" ]; then
-  DUMP_PATH="$(prompt "Dump directory or .zip/.tar.gz archive" "${DUMP_DIR}")"
+  CACHED_DUMP_PATH="$(cache_get "LAST_DUMP_PATH")"
+  DEFAULT_DUMP_PATH="${DUMP_DIR}"
+  if [ -n "${CACHED_DUMP_PATH}" ]; then
+    DEFAULT_DUMP_PATH="${CACHED_DUMP_PATH}"
+  fi
+  DUMP_PATH="$(prompt "Dump directory or .zip/.tar.gz archive" "${DEFAULT_DUMP_PATH}")"
+  cache_set "LAST_DUMP_PATH" "${DUMP_PATH}"
   WORK_DIR="${DUMP_PATH}"
   if [ -f "${DUMP_PATH}" ]; then
     TMP_BASE="${DUMP_DIR}/tmp_extract"
