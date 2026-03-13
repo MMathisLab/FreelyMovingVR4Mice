@@ -47,8 +47,10 @@ When prompted:
 
 The script creates missing databases and imports each `restricted_dump_*.sql`.
 If you provide an archive, it is extracted to `.../tmp_extract` under the dump dir,
-so make sure you have ~50GB of free space available there. Archives may contain a
-nested folder; the importer will search recursively for `restricted_dump_*.sql`.
+so make sure you have ~50GB of free space available there. The archive is extracted
+once into a stable folder; if that folder already exists, the script asks whether
+to re-extract or reuse it. Archives may contain a nested folder; the importer will
+search recursively for `restricted_dump_*.sql`.
 Imports stay in the foreground and show progress (via `pv` or `dd status=progress`
 when available).
 

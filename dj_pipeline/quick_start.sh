@@ -385,26 +385,44 @@ if [ "${IMPORT_DUMPS}" = "yes" ]; then
   if [ -f "${DUMP_PATH}" ]; then
     TMP_BASE="${DUMP_DIR}/tmp_extract"
     mkdir -p "${TMP_BASE}"
-    case "${DUMP_PATH}" in
-      *.zip)
-        if ! command -v unzip >/dev/null 2>&1; then
-          echo "unzip is not installed. Please install it or provide a directory."
-          exit 1
-        fi
-        WORK_DIR="$(mktemp -d -p "${TMP_BASE}")"
-        echo "Extracting ${DUMP_PATH} to ${WORK_DIR}"
-        unzip -q "${DUMP_PATH}" -d "${WORK_DIR}"
-        ;;
-      *.tar.gz|*.tgz)
-        WORK_DIR="$(mktemp -d -p "${TMP_BASE}")"
-        echo "Extracting ${DUMP_PATH} to ${WORK_DIR}"
-        tar -xzf "${DUMP_PATH}" -C "${WORK_DIR}"
-        ;;
-      *)
-        echo "Unsupported archive type. Provide a directory, .zip, or .tar.gz."
-        exit 1
-        ;;
+    ARCHIVE_NAME="$(basename "${DUMP_PATH}")"
+    ARCHIVE_STEM="${ARCHIVE_NAME}"
+    case "${ARCHIVE_NAME}" in
+      *.tar.gz) ARCHIVE_STEM="${ARCHIVE_NAME%.tar.gz}" ;;
+      *.tgz) ARCHIVE_STEM="${ARCHIVE_NAME%.tgz}" ;;
+      *.zip) ARCHIVE_STEM="${ARCHIVE_NAME%.zip}" ;;
     esac
+    WORK_DIR="${TMP_BASE}/${ARCHIVE_STEM}"
+    if [ -d "${WORK_DIR}" ] && [ "$(ls -A "${WORK_DIR}" 2>/dev/null)" ]; then
+      REEXTRACT="$(prompt_yes_no "Extract archive again?" "no")" || true
+      if [ "${REEXTRACT}" = "yes" ]; then
+        find "${WORK_DIR}" -mindepth 1 -delete
+      else
+        echo "${C_YELLOW}Using existing extracted archive at ${WORK_DIR}${C_RESET}"
+      fi
+    else
+      mkdir -p "${WORK_DIR}"
+    fi
+    if [ -d "${WORK_DIR}" ] && [ ! "$(ls -A "${WORK_DIR}" 2>/dev/null)" ]; then
+      case "${DUMP_PATH}" in
+        *.zip)
+          if ! command -v unzip >/dev/null 2>&1; then
+            echo "unzip is not installed. Please install it or provide a directory."
+            exit 1
+          fi
+          echo "Extracting ${DUMP_PATH} to ${WORK_DIR}"
+          unzip -q "${DUMP_PATH}" -d "${WORK_DIR}"
+          ;;
+        *.tar.gz|*.tgz)
+          echo "Extracting ${DUMP_PATH} to ${WORK_DIR}"
+          tar -xzf "${DUMP_PATH}" -C "${WORK_DIR}"
+          ;;
+        *)
+          echo "Unsupported archive type. Provide a directory, .zip, or .tar.gz."
+          exit 1
+          ;;
+      esac
+    fi
   fi
   if [ -d "${WORK_DIR}" ]; then
     echo "${C_YELLOW}Importing dumps from ${WORK_DIR}. This can take time.${C_RESET}"
