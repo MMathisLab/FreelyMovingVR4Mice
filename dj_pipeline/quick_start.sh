@@ -108,6 +108,10 @@ esac
 if [ "${MODE}" = "default" ]; then
   REPO_DIR="${DEFAULT_REPO_DIR}"
   echo "${C_YELLOW}Using repo dir: ${REPO_DIR}${C_RESET}"
+  if [ ! -d "${REPO_DIR}" ]; then
+    echo "${C_YELLOW}Default repo dir not found. Please provide the correct path.${C_RESET}"
+    REPO_DIR="$(prompt "Repo dir" "${DEFAULT_REPO_DIR}")"
+  fi
 else
   REPO_DIR="$(prompt "Repo dir" "${DEFAULT_REPO_DIR}")"
 fi
