@@ -5,7 +5,14 @@ from pathlib import Path
 
 import datajoint as dj
 import pandas as pd
-from base_schemas.schemas import exp, mice
+
+try:
+    from base_schemas.schemas import exp, mice
+except ModuleNotFoundError:
+    import sys
+
+    sys.path.insert(0, "/base_schemas")
+    from base_schemas.schemas import exp, mice
 
 from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger

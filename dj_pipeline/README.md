@@ -152,6 +152,8 @@ In `docker-compose.yml`, map host storage for database and data volumes:
 - `/data` and `/data/summary_plots` must exist and be writable.
 - `/shared` is used for GUI menu exports.
 - Use persistent paths (e.g., `/mnt/database/...`) on the server.
+Network mode:
+- Default is `bridge`. Set `CLIENT_NETWORK_MODE=host` in `.env` if you need host networking.
 
 ### Database deployment notes (server)
 - Add user to Docker group:
