@@ -398,6 +398,7 @@ fi
 
 IMPORT_DUMPS="$(prompt_yes_no "Import DB dumps now?" "no")"
 if [ "${IMPORT_DUMPS}" = "yes" ]; then
+  SKIP_EXISTING_DB="$(prompt_yes_no "Skip import if DB already has tables?" "no")"
   CACHED_DUMP_PATH="$(cache_get "LAST_DUMP_PATH")"
   DEFAULT_DUMP_PATH="${DUMP_DIR}"
   if [ -n "${CACHED_DUMP_PATH}" ]; then
@@ -460,6 +461,15 @@ if [ "${IMPORT_DUMPS}" = "yes" ]; then
         [ -f "${f}" ] || continue
         db="$(basename "${f}" | sed -E 's/^restricted_dump_(.*)_[0-9]{8}_[0-9]{6}\.sql$/\1/')"
         echo "${C_BLUE}Importing ${f} -> ${db}${C_RESET}"
+        if [ "${SKIP_EXISTING_DB}" = "yes" ]; then
+          db_tables_count="$(${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
+            env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root -Nse \
+            "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${db}' AND table_type='BASE TABLE';" 2>/dev/null || echo "0")"
+          if [ "${db_tables_count}" != "0" ]; then
+            echo "${C_YELLOW}Skipping ${db}: already has ${db_tables_count} tables.${C_RESET}"
+            continue
+          fi
+        fi
         ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
           env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${db}\`;"
       if command -v pv >/dev/null 2>&1; then

@@ -43,6 +43,7 @@ bash quick_start.sh
 ```
 When prompted:
 - **Import DB dumps now?** → `yes`
+- **Skip import if DB already has tables?** → `yes` for demo mode (default: `no`)
 - **Dump directory or .zip/.tar.gz archive** → path to the dump folder or archive
 
 The script creates missing databases and imports each `restricted_dump_*.sql`.

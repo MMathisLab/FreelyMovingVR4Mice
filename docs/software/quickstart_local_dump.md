@@ -37,11 +37,13 @@ When prompted:
 - **Build with --no-cache?**: choose `no` unless you need a clean rebuild
 - **Install base schemas/actions now?**: choose `yes`
 - **Import DB dumps now?**: choose `yes`
+- **Skip import if DB already has tables?**: choose `yes` for demo mode (default: `no`)
 - **Dump directory or .zip/.tar.gz archive**: path to your dump folder or archive
 
 The script will create databases and import `restricted_dump_*.sql`.
 Imports stay in the foreground and show progress (via `pv` or `dd status=progress`
 when available).
+Depending on disk speed and dump size, the import can take up to ~1 hour.
 
 ## Step 4 — Connect Jupyter Notebook
 ```bash
