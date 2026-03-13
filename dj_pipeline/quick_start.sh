@@ -6,6 +6,8 @@ if [ -z "${BASH_VERSION:-}" ]; then
   exit 1
 fi
 
+trap 'echo "${C_YELLOW}Quick start failed at line ${LINENO}.${C_RESET}"' ERR
+
 if command -v tput >/dev/null 2>&1; then
   C_GREEN="$(tput setaf 2)"
   C_YELLOW="$(tput setaf 3)"
