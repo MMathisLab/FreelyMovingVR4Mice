@@ -67,6 +67,12 @@ This quick guide helps you connect to the database and run the pipeline without 
 - GNU Make
 - Database credentials (host/port, user, password)
 
+### Quick start (recommended)
+Use the interactive setup script to configure `.env`/`env.py` and start containers:
+```bash
+bash quick_start.sh
+```
+
 ### Step 1 — Clone the repo
 ```bash
 git clone git@github.com:MMathisLab/FreelyMovingVR4Mice.git
@@ -98,11 +104,12 @@ make notebook
 
 Remote Jupyter via SSH tunnel:
 ```bash
-ssh -NL 8887:localhost:8887 <user>@<server> &
+ssh -NL 8887:localhost:8887 <user>@<server>
 ```
+Append `&` if you want the tunnel in the background.
 You can add an SSH config alias (e.g., `wm`) and then connect with:
 ```bash
-ssh -NL 8887:localhost:8887 wm &
+ssh -NL 8887:localhost:8887 wm
 ```
 
 ### Step 5 — Verify connection
@@ -142,7 +149,7 @@ The server runs two containers:
 Note: store MySQL admin credentials in `~/.my.cnf` on the server.
 ```bash
 make build_all
-make up
+make up_all
 make mysql
 make ipython
 %run run.py connect
@@ -153,7 +160,7 @@ In `docker-compose.yml`, map host storage for database and data volumes:
 - `/shared` is used for GUI menu exports.
 - Use persistent paths (e.g., `/mnt/database/...`) on the server.
 Network mode:
-- Default is `bridge`. Set `CLIENT_NETWORK_MODE=host` in `.env` if you need host networking.
+- Default is `host`. Set `CLIENT_NETWORK_MODE=bridge` in `.env` if you need bridge networking.
 
 ### Database deployment notes (server)
 - Add user to Docker group:
@@ -179,12 +186,15 @@ Network mode:
   ```
 ### Environment variables
 Common variables used by the pipeline:
-- `DJ_HOST`, `DJ_USER`, `DJ_PASS`, `DJ_PORT`
+- `DJ_HOST` (include port, e.g. `127.0.0.1:3309`), `DJ_USER`, `DJ_PWD`
 - `DJ_LAB`
 - `GUI` (true/false)
 - `EMAIL` (true/false)
 - `IMG_SRC`
 - `VR4MICE_EMAIL_RECIPIENTS` (comma-separated experimenter names)
+Docker-specific overrides (optional):
+- `DB_BIND_IP`, `DB_PORT`, `MYSQL_ROOT_PASSWORD`
+- `DB_DATA_PATH`, `SHARED_PATH`, `DATA_PATH`, `SCREEN_RECORDINGS_PATH`
 
 Notes:
 - `VR4MICE_EMAIL_RECIPIENTS` is required if base schemas (exp/mice) are not in use,

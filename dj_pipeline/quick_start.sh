@@ -111,7 +111,11 @@ if [ "${MODE}" = "default" ]; then
 else
   REPO_DIR="$(prompt "Repo dir" "${DEFAULT_REPO_DIR}")"
 fi
-COMPOSE_PROJECT_DEFAULT="$(awk -F'=' '/^COMPOSE_PROJECT/ {gsub(/ /,"",$2); print $2}' "${REPO_DIR}/Makefile" 2>/dev/null | tail -n1)"
+if [ ! -d "${REPO_DIR}" ]; then
+  echo "Repo dir not found: ${REPO_DIR}"
+  exit 1
+fi
+COMPOSE_PROJECT_DEFAULT="$(awk -F'=' '/^COMPOSE_PROJECT/ {gsub(/ /,"",$2); print $2}' "${REPO_DIR}/Makefile" 2>/dev/null | tail -n1 || true)"
 COMPOSE_PROJECT_DEFAULT="${COMPOSE_PROJECT_DEFAULT:-mysqltest}"
 COMPOSE_PROJECT="${COMPOSE_PROJECT_DEFAULT}"
 
