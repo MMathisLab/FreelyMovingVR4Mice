@@ -1,7 +1,7 @@
 # Quickstart (Local Deploy + Data Dump)
 
 This guide explains how to:
-- Clone the **data archive** (database dump files)
+- Download the **data archive** (database dump files) from Zenodo
 - Clone the **git repository**
 - Run **default quickstart** for a local deployment with a data dump
 - Connect **Jupyter Notebook**
@@ -11,17 +11,13 @@ This guide explains how to:
 - Docker + Docker Compose
 - GNU Make
 
-## Step 1 — Clone the data archive (DB dumps)
-The data archive contains `restricted_dump_*.sql` files (or a compressed archive).
-
-Example:
-```bash
-git clone <DATA_ARCHIVE_REPO_URL> /mnt/data_storage/vr4mice_database_dump
-```
+## Step 1 — Download the data archive (DB dumps)
+The data archive contains `restricted_dump_*.sql` files (in a compressed .zip archive).
 
 If the archive is a `.zip`/`.tar.gz`, keep it as-is; quickstart can import it directly.
-The archive is extracted to a temporary folder inside your dump directory
-(`.../tmp_extract`), so make sure you have ~50GB of free space available there.
+The archive is extracted once to a stable folder inside your dump directory
+(`.../tmp_extract/<archive-name>`). If that folder already exists, the script asks
+whether to re-extract or reuse it, so make sure you have ~50GB of free space there.
 
 ## Step 2 — Clone the git repository
 ```bash
@@ -51,6 +47,9 @@ when available).
 ```bash
 make notebook
 ```
+
+After it starts, open the URL printed in the terminal (it includes a token), e.g.
+`http://localhost:8887/?token=...`. If you need a fresh link, re-run `make notebook`.
 
 Then in Jupyter:
 ```python
