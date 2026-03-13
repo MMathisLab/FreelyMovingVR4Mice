@@ -1,5 +1,5 @@
 git_repo :=FreelyMovingVR4Mice/dj_pipeline
-mount :=/home/mariiapopova/FreelyMovingVR4Mice/dj_pipeline/local_data
+mount ?= $(CURDIR)
 base_schemas_path="$(mount)/$(git_repo)/base_schemas"
 base_actions_path="$(mount)/$(git_repo)/base_actions"
 
