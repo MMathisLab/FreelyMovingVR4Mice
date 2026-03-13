@@ -17,13 +17,18 @@ DataJoint is an open-source data management framework designed for scientific wo
 - [DataJoint Documentation](https://docs.datajoint.org/)
 - [DataJoint GitHub](https://github.com/datajoint/datajoint)
 
+**Related VR4Mice docs:**
+- `docs/software/install_dj_pipeline.md`
+- `docs/software/quickstart_local_dump.md`
+- `docs/software/data_import_export.md`
+
 ## Repository Structure and Roles
 ### Key components
 
 1. **Graphical User Interface (GUI)** for metadata and data transfer.
 2. **VR4mice DataJoint pipeline** including table definitions, as well as external schemas for experiments and mice.
 3. **Data fetching and population.**
-4. **System/Docker**: Uses docker-compose for deployment. *Please ensure that `docker-compose` is installed and that your user is added in the Docker group.*
+4. **System/Docker**: Uses Docker Compose for deployment. *Ensure Docker Compose is available (`docker compose` or `docker-compose`) and your user is in the Docker group.*
 
 ### Codebase overview
 

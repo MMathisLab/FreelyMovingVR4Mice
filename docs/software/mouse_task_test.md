@@ -4,7 +4,8 @@
 
 ### Necessary packages
 
-To run the tests, the following packages are required. They should already be available in the conda environment created when following the installation instructions [here](../Installation/installSumUp.md):
+To run the tests, the following packages are required. They should already be
+available in the conda environment you use for the project.
 
 - `unittest`
 - `tkinter`
@@ -60,7 +61,9 @@ python mouse_task/tests/test_mouse_active_sensing.py
 ```
 
 ```{warning}
- It is assumed that your terminal window is open at the root of the `FreelyMovingVR4Mice` repository and that the conda environment created [here](../Installation/installSumUp.md) is activated and has the necessary packages installed. If you are already in the `mouse_task/tests/` subfolder, you can directly run:
+ It is assumed that your terminal window is open at the root of the `FreelyMovingVR4Mice`
+ repository and that the correct conda environment is activated with the necessary
+ packages installed. If you are already in the `mouse_task/tests/` subfolder, you can directly run:
 
  ```bash
  python test_mouse_active_sensing.py
@@ -87,7 +90,9 @@ python mouse_task/tests/test_mouse_game_auto.py
 ```
 
 ```{warning}
- It is assumed that your terminal window is open at the root of the `FreelyMovingVR4Mice` repository and that the conda environment created [here](../Installation/installSumUp.md) is activated and has the necessary packages installed. If you are already in the `mouse_task/tests/` subfolder, you can directly run:
+ It is assumed that your terminal window is open at the root of the `FreelyMovingVR4Mice`
+ repository and that the correct conda environment is activated with the necessary
+ packages installed. If you are already in the `mouse_task/tests/` subfolder, you can directly run:
 
  ```bash
  python test_mouse_game_auto.py

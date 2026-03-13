@@ -44,6 +44,8 @@ When prompted:
 - **Dump directory or .zip/.tar.gz archive**: path to your dump folder or archive
 
 The script will create databases and import `restricted_dump_*.sql`.
+Imports stay in the foreground and show progress (via `pv` or `dd status=progress`
+when available).
 
 ## Step 4 — Connect Jupyter Notebook
 ```bash

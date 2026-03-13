@@ -63,6 +63,7 @@ Rig GUI and transfer utilities:
 This quick guide helps you connect to the database and run the pipeline without deployment experience.
 
 ### Requirements
+- Bash
 - Docker + Docker Compose
 - GNU Make
 - Database credentials (host/port, user, password)
@@ -114,6 +115,8 @@ When prompted:
 - **Dump directory or .zip/.tar.gz archive** → path to the dump folder or archive
 
 The script creates missing databases and imports each `restricted_dump_*.sql`.
+Imports stay in the foreground and show progress (via `pv` or `dd status=progress`
+when available).
 
 ### Step 1 — Clone the repo
 ```bash
@@ -265,13 +268,14 @@ Two base schema modes are supported:
 
 Both modes work; choose minimal when only GUI dropdowns and basic metadata are needed.
 
-(sec:import-sql-dump)=
-### Import data from MySQL dump
-To directly populate an empty database from an existing MySQL dump (`data.sql`), run:
-```bash
-docker exec -i <vr4mice_db_name> mysql -uroot -psimple < data.sql
-```
-where `<vr4mice_db_name>` is the name of the databse container spawned as described in the [Server deployment](#server-deployment-database--client-containers) section.
+### Data import/export (restricted dumps)
+See `docs/software/data_import_export.md` for:
+- Exporting restricted dumps (`export_restricted_dump.sh`)
+- Importing dumps with `quick_start.sh`
+- Manual mysql import
+
+See `docs/software/quickstart_local_dump.md` for a full local deploy workflow
+that clones the data archive, runs quickstart, and connects Jupyter.
 
 
 ## GUI vs non-GUI mode
