@@ -4,7 +4,7 @@ This document covers exporting a restricted subset of the database and importing
 
 ## Export (`export_restricted_dump.sh`)
 
-We provide an `export_restricted_dump.sh` bash script. This script exports a **restricted** set of tables, used spcifically for the Benquet, Sainsbury et al. paper by selecting entries based on:
+We provide an `export_restricted_dump.sh` bash script. This script exports a **restricted** set of tables, used specifically for the Benquet, Sainsbury et al. paper by selecting entries based on:
 - `SESSION_LABELS` and `SET_LABELS`, corresponding to the tasks included in the paper (white and black target contrast tasks).
 - an internal list of tables, used in the figure notebooks specifically
 - optional per-table dataset overrides

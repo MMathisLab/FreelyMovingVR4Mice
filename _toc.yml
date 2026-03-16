@@ -29,7 +29,7 @@ parts:
   - file: docs/software_unity_games/update_unity_game
   - file: docs/software_unity_games/build_unity_game
   - file: docs/software_unity_games/add_new_objects
-- caption: Software - Vr4Mice DataJoint
+- caption: Software - VR4Mice DataJoint
   chapters:
   - file: docs/software/install_dj_pipeline.md
   - file: docs/software/datajoint.md

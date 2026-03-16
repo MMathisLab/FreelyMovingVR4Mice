@@ -14,10 +14,10 @@
 
 We provide a Zenodo record containing all the files you need to reproduce our database locally.
 
- ```{note}
+```{note}
 The archive should be a `.zip` file. **Keep it as-is**; the quickstart script will import it directly. The archive will be extracted to a folder inside your dump directory
 (`.../tmp_extract/<archive-name>`). **Make sure you have ~50GB of free space** there.
-  ```
+```
 
 The Zenodo record consists of a compressed `.zip` archive containing:
 -  `restricted_dump_*.sql` files, with one file per schema (should contain 7 `.sql` files in total).
@@ -25,7 +25,7 @@ The Zenodo record consists of a compressed `.zip` archive containing:
 - `meta.txt`, a run summary file, emitted at the end of the export.
 - `tables.csv`, a per-table log of the tables and row counts exported (see below).
 
-| Schema | Table | Restrictio Mode | Entries count |
+| Schema | Table | Restriction Mode | Entries count |
 |---|---|---|---|
 | vr4mice | #labels | unrestricted | 5 |
 | vr4mice | #labs | unrestricted | 4 |
@@ -58,7 +58,11 @@ The Zenodo record consists of a compressed `.zip` archive containing:
 If you haven't already, you need to clone our GitHub repository, as it contains the code to deploy the database. To do so, move to the folder you want to clone the repository and run: 
 
 ```bash
-git clone git@github.com:MMathisLab/FreelyMovingVR4Mice.git
+ # Using HTTPS (recommended):
+ git clone https://github.com/MMathisLab/FreelyMovingVR4Mice.git
+ # Or, if you have SSH keys configured with GitHub:
+ # git clone git@github.com:MMathisLab/FreelyMovingVR4Mice.git
+
 cd FreelyMovingVR4Mice/dj_pipeline
 ```
 
@@ -81,9 +85,9 @@ The script will create databases and import `restricted_dump_*.sql`.
 Imports stay in the foreground and show progress (via `pv` or `dd status=progress`
 when available).
 
- ```{warning}
+```{warning}
 Depending on the disk speed, the import can take **up to ~1 hour**.
-  ```
+```
 
 ## Step 4 — Connect Jupyter Notebooks
 First, run:
