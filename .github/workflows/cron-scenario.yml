@@ -92,6 +92,9 @@ jobs:
         run: |
           docker run --rm \
             --add-host=host.docker.internal:host-gateway \
+            -e USERNAME="$(id -un)" \
+            -e PUID="$(id -u)" \
+            -e PGID="$(id -g)" \
             -e DJ_HOST="${DJ_HOST}" \
             -e DJ_PORT="${DJ_PORT}" \
             -e DJ_USER="${DJ_USER}" \
@@ -111,7 +114,7 @@ jobs:
             -v "$RUNNER_TEMP/vr4mice-shared:/shared" \
             -v "$RUNNER_TEMP/vr4mice-screen-recordings:/vr4mice_screen_recordings" \
             vr4mice_app:test-image \
-            -lc "pip install --no-deps /app/base/base_min_schemas /app/base/base_actions && python cron_scenario.py"
+            bash -lc "pip install --no-deps /app/base/base_min_schemas /app/base/base_actions && python cron_scenario.py"
 
       - name: Dump populated schemas
         run: |

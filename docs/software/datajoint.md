@@ -1,4 +1,4 @@
-# VR4Mice DataJoint Pipeline
+# Architecture & Tables
 
 ## Quick Intro & Resources to DataJoint
 
@@ -17,24 +17,30 @@ DataJoint is an open-source data management framework designed for scientific wo
 - [DataJoint Documentation](https://docs.datajoint.org/)
 - [DataJoint GitHub](https://github.com/datajoint/datajoint)
 
+**Related VR4Mice docs:**
+- `docs/software/install_dj_pipeline.md`
+- `docs/software/quickstart_local_dump.md`
+- `docs/software/data_import_export.md`
+
 ## Repository Structure and Roles
 ### Key components
 
 1. **Graphical User Interface (GUI)** for metadata and data transfer.
 2. **VR4mice DataJoint pipeline** including table definitions, as well as external schemas for experiments and mice.
 3. **Data fetching and population.**
-4. **System/Docker**: Uses docker-compose for deployment. *Please ensure that `docker-compose` is installed and that your user is added in the Docker group.*
+4. **System/Docker**: Uses Docker Compose for deployment. *Ensure Docker Compose is available (`docker compose` or `docker-compose`) and your user is in the Docker group.*
 
 ### Codebase overview
 
-1. The **`base_schemas/min_base/`** directory contains minimal `exp` and `mice` schema definitions that are required for correct data fetching and population for the GUI dropdown menu.
-2. The **`docker/client directory/`** includes the Dockerfile used to build the client's image in `docker-compose.yml`, which contains the necessary environment for interacting with the DataJoint database. Any new Dockerfiles with specific environments for data analysis should be added here.
-3. The **`gui_transfer/`** folder contains all GUI-related information. Only this folder, as well as Python 3 and PyQt5, are needed to build the GUI on a rig computer.
-4. The **`run/`** folder includes Bash scripts that can be run directly from the shell to launch a specific action on the database via Docker Compose service. For example, `docker-compose exec app python3 scripts/minimal_run.py`.
-5. The **`scripts/`** folder includes all scripts for interacting with the database. Each script always has a database connection part and a scenario to execute, and the simplest script only includes a connection. Scripts can be called via Bash run or via IPython, for example, `%run scripts/minimal_run.py` (assuming IPython is launched in the Docker via `docker-compose exec app ipython`).
-6. The **`vr4mice/`** folder contains the core of the pipeline, including `vr4mice` schema (table definitions) and actions (which build the scenarios in scripts).
-7. The **`Makefile`** provides a shortcut for calling commands.
-8. The **`docker-compose.yml`** file contains all Docker definitions, including the database Docker and client. New services can be added if a different configuration is needed. Volumes that correspond to the locations on the drive where all data will be stored are defined here.
+1. The **`base/base_min_schemas/`** directory contains minimal `exp` and `mice` schema definitions needed for GUI dropdowns and basic metadata.
+2. The **`Dockerfile`** and **`docker/entrypoint.sh`** build the client image used by `docker-compose.yml`.
+3. The **`gui_transfer/`** folder contains all GUI-related information. Only this folder, plus Python 3 and PyQt5, are needed to build the GUI on a rig computer.
+4. The **`run.py`** script is the main CLI entrypoint for running pipeline modes (populate, analysis, dlc, etc.).
+5. The **`cron_scenario.py`** script runs the full pipeline with per-step logging (used by cron).
+6. The **`quick_start.sh`** script interactively configures `.env`/`env.py` and starts containers.
+7. The **`vr4mice/`** folder contains the core of the pipeline, including `vr4mice` schema (table definitions) and actions.
+8. The **`Makefile`** provides shortcuts for Docker and common commands.
+9. The **`docker-compose.yml`** file defines the database and client services and volume mounts.
 
 ![Untitled presentation(4)](https://user-images.githubusercontent.com/43879378/234044336-e7693e02-e8de-4000-9dd0-1716a80002db.jpg)
 
@@ -176,7 +182,7 @@ class Dataset(dj.Manual)
 ```python
 class FailedSession(dj.Manual)
 ```
-**Manual entry:** Tracks failed sessions and error logging.
+**Manual entry:** Tracks failed sessions and error logging; used as a skip list to prevent repeated failures.
 
 ```python
 class Labels(dj.Lookup)
