@@ -92,6 +92,9 @@ jobs:
         run: |
           docker run --rm \
             --add-host=host.docker.internal:host-gateway \
+            -e USERNAME="$(id -un)" \
+            -e PUID="$(id -u)" \
+            -e PGID="$(id -g)" \
             -e DJ_HOST="${DJ_HOST}" \
             -e DJ_PORT="${DJ_PORT}" \
             -e DJ_USER="${DJ_USER}" \
