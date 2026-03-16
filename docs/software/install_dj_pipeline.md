@@ -1,4 +1,4 @@
-# VR4Mice Pipeline - Full Documentation
+# Setup & Usage
 
 ## Overview
 The VR4Mice pipeline is a DataJoint-based workflow for ingesting raw rig data,
@@ -274,8 +274,7 @@ See `docs/software/data_import_export.md` for:
 - Importing dumps with `quick_start.sh`
 - Manual mysql import
 
-See `docs/software/quickstart_local_dump.md` for a full local deploy workflow
-that clones the data archive, runs quickstart, and connects Jupyter.
+See `docs/software/quickstart_local_dump.md` for a full local deploy workflow that clones the data archive, runs quickstart, and connects Jupyter.
 
 
 ## GUI vs non-GUI mode

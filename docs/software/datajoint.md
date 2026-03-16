@@ -1,4 +1,4 @@
-# VR4Mice DataJoint Pipeline
+# Architecture & Tables
 
 ## Quick Intro & Resources to DataJoint
 

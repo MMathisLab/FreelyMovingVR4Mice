@@ -5,13 +5,13 @@ set -euo pipefail
 CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-2}"
 export CUDA_VISIBLE_DEVICES
 
-# Load credentials from .env_aws file (not tracked in git)
-if [[ -f .env_aws ]]; then
+# Load credentials from .env file (not tracked in git)
+if [[ -f .env ]]; then
   set -a
-  source .env_aws
+  source .env
   set +a
 elif [[ -z "${DJ_HOST:-}" || -z "${DJ_USER:-}" || -z "${DJ_PWD:-}" ]]; then
-  echo "Error: Database credentials not found. Please set DJ_HOST, DJ_USER, and DJ_PWD environment variables or create a .env_aws file." >&2
+  echo "Error: Database credentials not found. Please set DJ_HOST, DJ_USER, and DJ_PWD environment variables or create a .env file." >&2
   exit 1
 fi
 
