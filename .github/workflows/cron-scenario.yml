@@ -111,7 +111,7 @@ jobs:
             -v "$RUNNER_TEMP/vr4mice-shared:/shared" \
             -v "$RUNNER_TEMP/vr4mice-screen-recordings:/vr4mice_screen_recordings" \
             vr4mice_app:test-image \
-            -lc "pip install --no-deps /app/base/base_min_schemas /app/base/base_actions && python cron_scenario.py"
+            bash -lc "pip install --no-deps /app/base/base_min_schemas /app/base/base_actions && python cron_scenario.py"
 
       - name: Dump populated schemas
         run: |
