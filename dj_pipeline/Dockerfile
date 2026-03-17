@@ -18,12 +18,16 @@ RUN apt-get update -y && apt-get install -yy --no-install-recommends \
 
 RUN pip install -U pip setuptools wheel packaging
 
-# Install packages - base image already has numpy/pandas/jupyter from conda
-# Only override what's necessary, add test dependencies
-RUN pip install --no-cache-dir --no-deps datajoint==2.0.1 && \
-    pip install pymysql cryptography minio pydantic-settings deepdiff && \
-    pip install seaborn umap-learn black==22.6 && \
-    pip install pytest pytest-cov scipy tables 
+# Pin pandas<2.0 and scipy<1.12: upstream plotting.py uses
+# groupby().rolling(win_type='gaussian').mean(std=3) which requires:
+#   - pandas<2.0 (std kwarg removed in 2.0)
+#   - scipy<1.12 (scipy.signal.gaussian removed from top-level in 1.12)
+RUN pip install datajoint==2.0.1 \
+    pymysql cryptography minio pydantic-settings deepdiff \
+    "pandas<2.0" \
+    "scipy<1.12" \
+    seaborn umap-learn black==22.6 \
+    pytest pytest-cov tables
 
 ARG user_name=user
 ARG uid=1000

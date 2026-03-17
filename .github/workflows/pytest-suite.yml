@@ -1,0 +1,85 @@
+name: Run pytest suite
+
+on:
+  pull_request:
+    paths:
+      - "dj_pipeline/**"
+      - "tests/**"
+      - ".github/workflows/pytest-suite.yml"
+  workflow_dispatch:
+
+env:
+  DJ_HOST: host.docker.internal
+  DJ_PORT: 3306
+  DJ_USER: root
+  DJ_PASSWORD: simple
+  DJ_LAB: test
+  GUI: "false"
+  EMAIL: "false"
+  IMG_SRC: Imagingsource
+  DATABASE_USE_TLS: "false"
+  MYSQL_IMAGE: mysql:5.7
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Start MySQL
+        run: |
+          docker run -d \
+            --name vr4mice-mysql \
+            -e MYSQL_ROOT_PASSWORD=simple \
+            -e MYSQL_ROOT_HOST=% \
+            -p 3306:3306 \
+            --health-cmd="mysqladmin ping -h 127.0.0.1 -psimple --silent" \
+            --health-interval=10s \
+            --health-timeout=5s \
+            --health-retries=12 \
+            "${MYSQL_IMAGE}" \
+            --max_allowed_packet=1G \
+            --net_read_timeout=600 \
+            --net_write_timeout=600
+
+          for i in $(seq 1 30); do
+            status="$(docker inspect -f '{{.State.Health.Status}}' vr4mice-mysql)"
+            if [ "$status" = "healthy" ]; then
+              break
+            fi
+            if [ "$status" = "unhealthy" ]; then
+              docker logs vr4mice-mysql
+              exit 1
+            fi
+            sleep 2
+          done
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg user_name="$(id -un)" \
+            --build-arg uid="$(id -u)" \
+            --build-arg gid="$(id -g)" \
+            -t vr4mice_app:test-image \
+            ./dj_pipeline
+
+      - name: Run pytest
+        run: |
+          docker run --rm \
+            --add-host=host.docker.internal:host-gateway \
+            -e DJ_HOST="${DJ_HOST}" \
+            -e DJ_PORT="${DJ_PORT}" \
+            -e DJ_USER="${DJ_USER}" \
+            -e DJ_PASSWORD="${DJ_PASSWORD}" \
+            -e DJ_LAB="${DJ_LAB}" \
+            -e GUI="${GUI}" \
+            -e EMAIL="${EMAIL}" \
+            -e IMG_SRC="${IMG_SRC}" \
+            -e DATABASE_USE_TLS="${DATABASE_USE_TLS}" \
+            -v "$GITHUB_WORKSPACE:/app" \
+            vr4mice_app:test-image \
+            -lc "pip install --no-deps /app/dj_pipeline/base/base_min_schemas /app/dj_pipeline/base/base_actions && cd /app/tests && python -m pytest integration/ unit/ -v"

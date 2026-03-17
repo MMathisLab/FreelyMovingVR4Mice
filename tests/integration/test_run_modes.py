@@ -1189,9 +1189,12 @@ class TestSummaryPlots:
             path.touch()
             return str(path)
 
+        # PR #275 moved vr4mice_summary_plots to a class-level import, so
+        # the class attribute must be patched directly (not the module).
         monkeypatch.setattr(
-            "vr4mice.analysis.summary_dj.vr4mice_summary_plots",
-            mock_summary_plots,
+            base_analysis.SummaryPlots,
+            "vr4mice_summary_plots",
+            staticmethod(mock_summary_plots),
         )
 
         # Monkeypatch insert_send_email to skip email recipient lookup.
