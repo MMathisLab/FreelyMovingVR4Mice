@@ -60,10 +60,12 @@ class SessionLabel(dj.Lookup):
         ("ar_shape_discrim_occluders", "shape_pacman_target", "training"),
         ("ar_shape_discrim_narrow_occluders", "shape_pacman_target", "dual_occlusion"),
         ("ar_shape_discrim_multi_occluders", "shape_pacman_target", "multi_occlusion"),
-        # NOTE(celia): Specific to Niell lab: not part of any experiment set, but we want to exclude
+        # NOTE(celia): not part of any experiment set, but we want to exclude
         # these sessions so that properly computed in InclusionCriteria
         ("random_occluders", "random", "random_occlusion"),
         ("AR_VD_single_teardrop", "random", "random_occlusion"),
+        ("AR_VD_blocks_training", "random", "random_occlusion"),
+        ("AR_VD_single_teardrop_blocks", "random", "random_occlusion"),
     ]
 
 

@@ -5,7 +5,11 @@ import argparse
 import sys
 import warnings
 
-from base_actions.connect import connect
+try:
+    from base_actions.connect import connect
+except ModuleNotFoundError:
+    sys.path.insert(0, "/base_actions")
+    from base_actions.connect import connect
 from vr4mice.utils.logger import Logger, config_logger
 
 logger = Logger.get_logger()

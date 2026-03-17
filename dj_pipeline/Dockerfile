@@ -7,9 +7,10 @@ RUN apt-get update -y && apt-get install -yy --no-install-recommends \
     build-essential make \
     perl libnet-ssleay-perl libio-socket-ssl-perl \
     sendemail msmtp ca-certificates \
-    mysql-client \ 
+    mysql-client \
     graphviz \
-    vim \ 
+    gosu \
+    vim \
     && apt-get -y autoclean \
     && apt-get -y autoremove \
     && rm -rf /var/lib/apt/lists/* \
@@ -17,7 +18,7 @@ RUN apt-get update -y && apt-get install -yy --no-install-recommends \
 
 RUN pip install -U pip setuptools wheel packaging
 
-RUN pip install datajoint==0.14 \
+RUN pip install --no-cache-dir datajoint==0.14 \
     # Note: this version of seaborn, as otherwise it installs 0.12.2 and updates numpy to 1.26,
     # and then Numba stops to work: err "Numba needs NumPy 1.24 or less" 
     seaborn==0.13.0 \
@@ -29,30 +30,22 @@ RUN pip install datajoint==0.14 \
     # TODO: make pip via req
     # with newer 2.0.3, tom's code fails 
 
-# Default values for CI workflow, will be overridden by build args
 ARG user_name=user
 ARG uid=1000
 ARG gid=1000
-#ARG base_schemas_path
-#ARG base_actions_path
 
 RUN mkdir /app /logs
 RUN groupadd -g ${gid} ${user_name} \
     && useradd -m -u ${uid} -g ${gid} ${user_name}
 
-#COPY ${mysql_config_path} /home/${user_name}
 RUN chown -R ${uid}:${gid} /home /app /logs
 
-#COPY ${base_schemas_path} . 
-#COPY ${base_actions_path} . 
-#RUN pip3 install ./base_schemas 
-#RUN pip3 install ./base_actions
-
 WORKDIR /app
-USER ${user_name}
-#RUN pip3 install -e .
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 3306
 
-ENTRYPOINT ["bash"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["bash"]
 
