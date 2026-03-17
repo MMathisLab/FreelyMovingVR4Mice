@@ -1,4 +1,4 @@
-# VR4Mice Pipeline - Full Documentation
+# Setup & Usage
 
 ## Overview
 The VR4Mice pipeline is a DataJoint-based workflow for ingesting raw rig data,
@@ -63,9 +63,60 @@ Rig GUI and transfer utilities:
 This quick guide helps you connect to the database and run the pipeline without deployment experience.
 
 ### Requirements
+- Bash
 - Docker + Docker Compose
 - GNU Make
 - Database credentials (host/port, user, password)
+
+### Quick start (recommended)
+Use the interactive setup script to configure `.env`/`env.py` and start containers:
+```bash
+bash quick_start.sh
+```
+
+### Quick start — client mode (connect to an existing DB)
+Use when the database already runs elsewhere.
+```bash
+bash quick_start.sh
+```
+Choose:
+- **Mode**: `client`
+- **DJ host**: `ip:port` or hostname (e.g., `127.0.0.1:3309`)
+- **DJ user / DJ password**
+
+This starts only the client container.
+
+### Quick start — deployment mode (DB + client on server)
+Use when deploying both database and client containers on a server.
+```bash
+bash quick_start.sh
+```
+Choose:
+- **Mode**: `deployment`
+- Provide mount paths for database, data, shared, and screen recordings
+- Set DB bind IP/port and MySQL root password
+
+Defaults shown by the script:
+- `/mnt/database/vr4mice/vr4mice_database/database` → `/var/lib/mysql`
+- `/mnt/database/shared` → `/shared`
+- `/mnt/database/vr4mice/vr4mice_database/data` → `/data`
+- `/mnt/neuropixel_data/vr4mice/raw_screen_recordings` → `/vr4mice_screen_recordings`
+- repo root (`./`) → `/app`
+- `./base/base_min_schemas` → `/base_schemas`
+- `./base/base_actions` → `/base_actions`
+
+### Quick start — import DB dumps
+Use this when you have `restricted_dump_*.sql` files or a `.zip`/`.tar.gz` archive.
+```bash
+bash quick_start.sh
+```
+When prompted:
+- **Import DB dumps now?** → `yes`
+- **Dump directory or .zip/.tar.gz archive** → path to the dump folder or archive
+
+The script creates missing databases and imports each `restricted_dump_*.sql`.
+Imports stay in the foreground and show progress (via `pv` or `dd status=progress`
+when available).
 
 ### Step 1 — Clone the repo
 ```bash
@@ -98,11 +149,12 @@ make notebook
 
 Remote Jupyter via SSH tunnel:
 ```bash
-ssh -NL 8887:localhost:8887 <user>@<server> &
+ssh -NL 8887:localhost:8887 <user>@<server>
 ```
+Append `&` if you want the tunnel in the background.
 You can add an SSH config alias (e.g., `wm`) and then connect with:
 ```bash
-ssh -NL 8887:localhost:8887 wm &
+ssh -NL 8887:localhost:8887 wm
 ```
 
 ### Step 5 — Verify connection
@@ -142,7 +194,7 @@ The server runs two containers:
 Note: store MySQL admin credentials in `~/.my.cnf` on the server.
 ```bash
 make build_all
-make up
+make up_all
 make mysql
 make ipython
 %run run.py connect
@@ -152,6 +204,18 @@ In `docker-compose.yml`, map host storage for database and data volumes:
 - `/data` and `/data/summary_plots` must exist and be writable.
 - `/shared` is used for GUI menu exports.
 - Use persistent paths (e.g., `/mnt/database/...`) on the server.
+Network mode:
+- Default is `host`. Set `CLIENT_NETWORK_MODE=bridge` in `.env` if you need bridge networking.
+
+### Deployment defaults (quick_start.sh)
+When using `bash quick_start.sh` in **deployment** mode, the default host paths map to:
+- `/mnt/database/vr4mice/vr4mice_database/database` → `/var/lib/mysql`
+- `/mnt/database/shared` → `/shared`
+- `/mnt/database/vr4mice/vr4mice_database/data` → `/data`
+- `/mnt/neuropixel_data/vr4mice/raw_screen_recordings` → `/vr4mice_screen_recordings`
+- repo root (`./`) → `/app`
+- `./base/base_min_schemas` → `/base_schemas`
+- `./base/base_actions` → `/base_actions`
 
 ### Database deployment notes (server)
 - Add user to Docker group:
@@ -177,12 +241,15 @@ In `docker-compose.yml`, map host storage for database and data volumes:
   ```
 ### Environment variables
 Common variables used by the pipeline:
-- `DJ_HOST`, `DJ_USER`, `DJ_PASS`, `DJ_PORT`
+- `DJ_HOST` (include port, e.g. `127.0.0.1:3309`), `DJ_USER`, `DJ_PWD`
 - `DJ_LAB`
 - `GUI` (true/false)
 - `EMAIL` (true/false)
 - `IMG_SRC`
 - `VR4MICE_EMAIL_RECIPIENTS` (comma-separated experimenter names)
+Docker-specific overrides (optional):
+- `DB_BIND_IP`, `DB_PORT`, `MYSQL_ROOT_PASSWORD`
+- `DB_DATA_PATH`, `SHARED_PATH`, `DATA_PATH`, `SCREEN_RECORDINGS_PATH`
 
 Notes:
 - `VR4MICE_EMAIL_RECIPIENTS` is required if base schemas (exp/mice) are not in use,
@@ -201,11 +268,13 @@ Two base schema modes are supported:
 
 Both modes work; choose minimal when only GUI dropdowns and basic metadata are needed.
 
-(sec:import-sql-dump)=
-### Import data from MySQL dump
-To directly populate an empty database from an existing MySQL dump (`data.sql`), run:
-`docker exec -i <vr4mice_db_name> mysql -uroot -psimple < data.sql`
-where `<vr4mice_db_name>` is the name of the databse container spawned as described in the [Server deployment](#server-deployment-database--client-containers) section.
+### Data import/export (restricted dumps)
+See `docs/software/data_import_export.md` for:
+- Exporting restricted dumps (`export_restricted_dump.sh`)
+- Importing dumps with `quick_start.sh`
+- Manual mysql import
+
+See `docs/software/quickstart_local_dump.md` for a full local deploy workflow that clones the data archive, runs quickstart, and connects Jupyter.
 
 
 ## GUI vs non-GUI mode

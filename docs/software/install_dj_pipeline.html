@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>VR4Mice Pipeline - Full Documentation &#8212; FreelyMovingVR4Mice</title>
+    <title>Setup &amp; Usage &#8212; FreelyMovingVR4Mice</title>
   
   
   
@@ -66,8 +66,8 @@ const thebe_selector_output = ".output, .cell_output"
     <link rel="shortcut icon" href="../../_static/logo.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Mouse task" href="mouse_task_test.html" />
-    <link rel="prev" title="VR4Mice DataJoint Pipeline" href="datajoint.html" />
+    <link rel="next" title="Architecture &amp; Tables" href="datajoint.html" />
+    <link rel="prev" title="Add new target objects" href="../software_unity_games/add_new_objects.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -207,10 +207,11 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="../software_unity_games/build_unity_game.html">Rebuild a Unity game</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../software_unity_games/add_new_objects.html">Add new target objects</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - DataJoint</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - VR4Mice DataJoint</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="datajoint.html">VR4Mice DataJoint Pipeline</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">VR4Mice Pipeline - Full Documentation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Setup &amp; Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datajoint.html">Architecture &amp; Tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_import_export.html">Data Import/Export</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Tests</span></p>
 <ul class="nav bd-sidenav">
@@ -239,6 +240,7 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Supp_Figure_control.html">Black target control</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart_local_dump.html">Deploy the DataJoint database locally</a></li>
 </ul>
 
     </div>
@@ -424,7 +426,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>VR4Mice Pipeline - Full Documentation</h1>
+    <h1>Setup & Usage</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -447,6 +449,10 @@ document.write(`
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-started-for-everyday-users">Getting Started — For Everyday Users</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-recommended">Quick start (recommended)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-client-mode-connect-to-an-existing-db">Quick start — client mode (connect to an existing DB)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-deployment-mode-db-client-on-server">Quick start — deployment mode (DB + client on server)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-import-db-dumps">Quick start — import DB dumps</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-clone-the-repo">Step 1 — Clone the repo</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-configure-credentials">Step 2 — Configure credentials</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-start-the-client-container">Step 3 — Start the client container</a></li>
@@ -461,11 +467,12 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment-server">Deployment (server)</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#server-deployment-database-client-containers">Server deployment (database + client containers)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mounts-and-storage">Mounts and storage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment-defaults-quick-start-sh">Deployment defaults (quick_start.sh)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#database-deployment-notes-server">Database deployment notes (server)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-variables">Environment variables</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#schemas-what-they-do">Schemas (what they do)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#schema-modes">Schema modes</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#import-data-from-mysql-dump">Import data from MySQL dump</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-import-export-restricted-dumps">Data import/export (restricted dumps)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-vs-non-gui-mode">GUI vs non-GUI mode</a></li>
@@ -490,8 +497,8 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="vr4mice-pipeline-full-documentation">
-<h1>VR4Mice Pipeline - Full Documentation<a class="headerlink" href="#vr4mice-pipeline-full-documentation" title="Permalink to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="setup-usage">
+<h1>Setup &amp; Usage<a class="headerlink" href="#setup-usage" title="Permalink to this heading">#</a></h1>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">#</a></h2>
 <p>The VR4Mice pipeline is a DataJoint-based workflow for ingesting raw rig data,
@@ -581,10 +588,70 @@ It is designed to run from the client container and can be scheduled via cron.</
 <section id="requirements">
 <h3>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
+<li><p>Bash</p></li>
 <li><p>Docker + Docker Compose</p></li>
 <li><p>GNU Make</p></li>
 <li><p>Database credentials (host/port, user, password)</p></li>
 </ul>
+</section>
+<section id="quick-start-recommended">
+<h3>Quick start (recommended)<a class="headerlink" href="#quick-start-recommended" title="Permalink to this heading">#</a></h3>
+<p>Use the interactive setup script to configure <code class="docutils literal notranslate"><span class="pre">.env</span></code>/<code class="docutils literal notranslate"><span class="pre">env.py</span></code> and start containers:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bash<span class="w"> </span>quick_start.sh
+</pre></div>
+</div>
+</section>
+<section id="quick-start-client-mode-connect-to-an-existing-db">
+<h3>Quick start — client mode (connect to an existing DB)<a class="headerlink" href="#quick-start-client-mode-connect-to-an-existing-db" title="Permalink to this heading">#</a></h3>
+<p>Use when the database already runs elsewhere.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bash<span class="w"> </span>quick_start.sh
+</pre></div>
+</div>
+<p>Choose:</p>
+<ul class="simple">
+<li><p><strong>Mode</strong>: <code class="docutils literal notranslate"><span class="pre">client</span></code></p></li>
+<li><p><strong>DJ host</strong>: <code class="docutils literal notranslate"><span class="pre">ip:port</span></code> or hostname (e.g., <code class="docutils literal notranslate"><span class="pre">127.0.0.1:3309</span></code>)</p></li>
+<li><p><strong>DJ user / DJ password</strong></p></li>
+</ul>
+<p>This starts only the client container.</p>
+</section>
+<section id="quick-start-deployment-mode-db-client-on-server">
+<h3>Quick start — deployment mode (DB + client on server)<a class="headerlink" href="#quick-start-deployment-mode-db-client-on-server" title="Permalink to this heading">#</a></h3>
+<p>Use when deploying both database and client containers on a server.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bash<span class="w"> </span>quick_start.sh
+</pre></div>
+</div>
+<p>Choose:</p>
+<ul class="simple">
+<li><p><strong>Mode</strong>: <code class="docutils literal notranslate"><span class="pre">deployment</span></code></p></li>
+<li><p>Provide mount paths for database, data, shared, and screen recordings</p></li>
+<li><p>Set DB bind IP/port and MySQL root password</p></li>
+</ul>
+<p>Defaults shown by the script:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/mnt/database/vr4mice/vr4mice_database/database</span></code> → <code class="docutils literal notranslate"><span class="pre">/var/lib/mysql</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/mnt/database/shared</span></code> → <code class="docutils literal notranslate"><span class="pre">/shared</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/mnt/database/vr4mice/vr4mice_database/data</span></code> → <code class="docutils literal notranslate"><span class="pre">/data</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/mnt/neuropixel_data/vr4mice/raw_screen_recordings</span></code> → <code class="docutils literal notranslate"><span class="pre">/vr4mice_screen_recordings</span></code></p></li>
+<li><p>repo root (<code class="docutils literal notranslate"><span class="pre">./</span></code>) → <code class="docutils literal notranslate"><span class="pre">/app</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">./base/base_min_schemas</span></code> → <code class="docutils literal notranslate"><span class="pre">/base_schemas</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">./base/base_actions</span></code> → <code class="docutils literal notranslate"><span class="pre">/base_actions</span></code></p></li>
+</ul>
+</section>
+<section id="quick-start-import-db-dumps">
+<h3>Quick start — import DB dumps<a class="headerlink" href="#quick-start-import-db-dumps" title="Permalink to this heading">#</a></h3>
+<p>Use this when you have <code class="docutils literal notranslate"><span class="pre">restricted_dump_*.sql</span></code> files or a <code class="docutils literal notranslate"><span class="pre">.zip</span></code>/<code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code> archive.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bash<span class="w"> </span>quick_start.sh
+</pre></div>
+</div>
+<p>When prompted:</p>
+<ul class="simple">
+<li><p><strong>Import DB dumps now?</strong> → <code class="docutils literal notranslate"><span class="pre">yes</span></code></p></li>
+<li><p><strong>Dump directory or .zip/.tar.gz archive</strong> → path to the dump folder or archive</p></li>
+</ul>
+<p>The script creates missing databases and imports each <code class="docutils literal notranslate"><span class="pre">restricted_dump_*.sql</span></code>.
+Imports stay in the foreground and show progress (via <code class="docutils literal notranslate"><span class="pre">pv</span></code> or <code class="docutils literal notranslate"><span class="pre">dd</span> <span class="pre">status=progress</span></code>
+when available).</p>
 </section>
 <section id="step-1-clone-the-repo">
 <h3>Step 1 — Clone the repo<a class="headerlink" href="#step-1-clone-the-repo" title="Permalink to this heading">#</a></h3>
@@ -618,11 +685,12 @@ make<span class="w"> </span>client_up
 </pre></div>
 </div>
 <p>Remote Jupyter via SSH tunnel:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ssh<span class="w"> </span>-NL<span class="w"> </span><span class="m">8887</span>:localhost:8887<span class="w"> </span>&lt;user&gt;@&lt;server&gt;<span class="w"> </span><span class="p">&amp;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ssh<span class="w"> </span>-NL<span class="w"> </span><span class="m">8887</span>:localhost:8887<span class="w"> </span>&lt;user&gt;@&lt;server&gt;
 </pre></div>
 </div>
-<p>You can add an SSH config alias (e.g., <code class="docutils literal notranslate"><span class="pre">wm</span></code>) and then connect with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ssh<span class="w"> </span>-NL<span class="w"> </span><span class="m">8887</span>:localhost:8887<span class="w"> </span>wm<span class="w"> </span><span class="p">&amp;</span>
+<p>Append <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> if you want the tunnel in the background.
+You can add an SSH config alias (e.g., <code class="docutils literal notranslate"><span class="pre">wm</span></code>) and then connect with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ssh<span class="w"> </span>-NL<span class="w"> </span><span class="m">8887</span>:localhost:8887<span class="w"> </span>wm
 </pre></div>
 </div>
 </section>
@@ -669,7 +737,7 @@ pip<span class="w"> </span>install<span class="w"> </span>base/base_min_schemas/
 </ul>
 <p>Note: store MySQL admin credentials in <code class="docutils literal notranslate"><span class="pre">~/.my.cnf</span></code> on the server.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>build_all
-make<span class="w"> </span>up
+make<span class="w"> </span>up_all
 make<span class="w"> </span>mysql
 make<span class="w"> </span>ipython
 %run<span class="w"> </span>run.py<span class="w"> </span>connect
@@ -682,7 +750,22 @@ make<span class="w"> </span>ipython
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">/data</span></code> and <code class="docutils literal notranslate"><span class="pre">/data/summary_plots</span></code> must exist and be writable.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">/shared</span></code> is used for GUI menu exports.</p></li>
-<li><p>Use persistent paths (e.g., <code class="docutils literal notranslate"><span class="pre">/mnt/database/...</span></code>) on the server.</p></li>
+<li><p>Use persistent paths (e.g., <code class="docutils literal notranslate"><span class="pre">/mnt/database/...</span></code>) on the server.
+Network mode:</p></li>
+<li><p>Default is <code class="docutils literal notranslate"><span class="pre">host</span></code>. Set <code class="docutils literal notranslate"><span class="pre">CLIENT_NETWORK_MODE=bridge</span></code> in <code class="docutils literal notranslate"><span class="pre">.env</span></code> if you need bridge networking.</p></li>
+</ul>
+</section>
+<section id="deployment-defaults-quick-start-sh">
+<h3>Deployment defaults (quick_start.sh)<a class="headerlink" href="#deployment-defaults-quick-start-sh" title="Permalink to this heading">#</a></h3>
+<p>When using <code class="docutils literal notranslate"><span class="pre">bash</span> <span class="pre">quick_start.sh</span></code> in <strong>deployment</strong> mode, the default host paths map to:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/mnt/database/vr4mice/vr4mice_database/database</span></code> → <code class="docutils literal notranslate"><span class="pre">/var/lib/mysql</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/mnt/database/shared</span></code> → <code class="docutils literal notranslate"><span class="pre">/shared</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/mnt/database/vr4mice/vr4mice_database/data</span></code> → <code class="docutils literal notranslate"><span class="pre">/data</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/mnt/neuropixel_data/vr4mice/raw_screen_recordings</span></code> → <code class="docutils literal notranslate"><span class="pre">/vr4mice_screen_recordings</span></code></p></li>
+<li><p>repo root (<code class="docutils literal notranslate"><span class="pre">./</span></code>) → <code class="docutils literal notranslate"><span class="pre">/app</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">./base/base_min_schemas</span></code> → <code class="docutils literal notranslate"><span class="pre">/base_schemas</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">./base/base_actions</span></code> → <code class="docutils literal notranslate"><span class="pre">/base_actions</span></code></p></li>
 </ul>
 </section>
 <section id="database-deployment-notes-server">
@@ -718,12 +801,15 @@ mkdir<span class="w"> </span>-p<span class="w"> </span>/shared
 <h3>Environment variables<a class="headerlink" href="#environment-variables" title="Permalink to this heading">#</a></h3>
 <p>Common variables used by the pipeline:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">DJ_HOST</span></code>, <code class="docutils literal notranslate"><span class="pre">DJ_USER</span></code>, <code class="docutils literal notranslate"><span class="pre">DJ_PASS</span></code>, <code class="docutils literal notranslate"><span class="pre">DJ_PORT</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DJ_HOST</span></code> (include port, e.g. <code class="docutils literal notranslate"><span class="pre">127.0.0.1:3309</span></code>), <code class="docutils literal notranslate"><span class="pre">DJ_USER</span></code>, <code class="docutils literal notranslate"><span class="pre">DJ_PWD</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">DJ_LAB</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">GUI</span></code> (true/false)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">EMAIL</span></code> (true/false)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">IMG_SRC</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS</span></code> (comma-separated experimenter names)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS</span></code> (comma-separated experimenter names)
+Docker-specific overrides (optional):</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DB_BIND_IP</span></code>, <code class="docutils literal notranslate"><span class="pre">DB_PORT</span></code>, <code class="docutils literal notranslate"><span class="pre">MYSQL_ROOT_PASSWORD</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DB_DATA_PATH</span></code>, <code class="docutils literal notranslate"><span class="pre">SHARED_PATH</span></code>, <code class="docutils literal notranslate"><span class="pre">DATA_PATH</span></code>, <code class="docutils literal notranslate"><span class="pre">SCREEN_RECORDINGS_PATH</span></code></p></li>
 </ul>
 <p>Notes:</p>
 <ul class="simple">
@@ -749,11 +835,15 @@ because experimenter names are otherwise missing from GUI metadata.</p></li>
 </ul>
 <p>Both modes work; choose minimal when only GUI dropdowns and basic metadata are needed.</p>
 </section>
-<section id="import-data-from-mysql-dump">
-<span id="sec-import-sql-dump"></span><h3>Import data from MySQL dump<a class="headerlink" href="#import-data-from-mysql-dump" title="Permalink to this heading">#</a></h3>
-<p>To directly populate an empty database from an existing MySQL dump (<code class="docutils literal notranslate"><span class="pre">data.sql</span></code>), run:
-<code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">exec</span> <span class="pre">-i</span> <span class="pre">&lt;vr4mice_db_name&gt;</span> <span class="pre">mysql</span> <span class="pre">-uroot</span> <span class="pre">-psimple</span> <span class="pre">&lt;</span> <span class="pre">data.sql</span></code>
-where <code class="docutils literal notranslate"><span class="pre">&lt;vr4mice_db_name&gt;</span></code> is the name of the databse container spawned as described in the <span class="xref myst">Server deployment</span> section.</p>
+<section id="data-import-export-restricted-dumps">
+<h3>Data import/export (restricted dumps)<a class="headerlink" href="#data-import-export-restricted-dumps" title="Permalink to this heading">#</a></h3>
+<p>See <code class="docutils literal notranslate"><span class="pre">docs/software/data_import_export.md</span></code> for:</p>
+<ul class="simple">
+<li><p>Exporting restricted dumps (<code class="docutils literal notranslate"><span class="pre">export_restricted_dump.sh</span></code>)</p></li>
+<li><p>Importing dumps with <code class="docutils literal notranslate"><span class="pre">quick_start.sh</span></code></p></li>
+<li><p>Manual mysql import</p></li>
+</ul>
+<p>See <code class="docutils literal notranslate"><span class="pre">docs/software/quickstart_local_dump.md</span></code> for a full local deploy workflow that clones the data archive, runs quickstart, and connects Jupyter.</p>
 </section>
 </section>
 <section id="gui-vs-non-gui-mode">
@@ -897,20 +987,20 @@ Recipients are derived from:</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="datajoint.html"
+       href="../software_unity_games/add_new_objects.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">VR4Mice DataJoint Pipeline</p>
+        <p class="prev-next-title">Add new target objects</p>
       </div>
     </a>
     <a class="right-next"
-       href="mouse_task_test.html"
+       href="datajoint.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Mouse task</p>
+        <p class="prev-next-title">Architecture &amp; Tables</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -943,6 +1033,10 @@ Recipients are derived from:</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-started-for-everyday-users">Getting Started — For Everyday Users</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-recommended">Quick start (recommended)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-client-mode-connect-to-an-existing-db">Quick start — client mode (connect to an existing DB)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-deployment-mode-db-client-on-server">Quick start — deployment mode (DB + client on server)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-import-db-dumps">Quick start — import DB dumps</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-clone-the-repo">Step 1 — Clone the repo</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-configure-credentials">Step 2 — Configure credentials</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-start-the-client-container">Step 3 — Start the client container</a></li>
@@ -957,11 +1051,12 @@ Recipients are derived from:</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment-server">Deployment (server)</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#server-deployment-database-client-containers">Server deployment (database + client containers)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mounts-and-storage">Mounts and storage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment-defaults-quick-start-sh">Deployment defaults (quick_start.sh)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#database-deployment-notes-server">Database deployment notes (server)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-variables">Environment variables</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#schemas-what-they-do">Schemas (what they do)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#schema-modes">Schema modes</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#import-data-from-mysql-dump">Import data from MySQL dump</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-import-export-restricted-dumps">Data import/export (restricted dumps)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-vs-non-gui-mode">GUI vs non-GUI mode</a></li>

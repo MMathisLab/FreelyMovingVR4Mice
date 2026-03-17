@@ -66,6 +66,7 @@ const thebe_selector_output = ".output, .cell_output"
     <link rel="shortcut icon" href="../../../_static/logo.png"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Deploy the DataJoint database locally" href="../../../docs/software/quickstart_local_dump.html" />
     <link rel="prev" title="[Decision Variable Prediction] Figure 5" href="Figure_5b_decision.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -206,10 +207,11 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/build_unity_game.html">Rebuild a Unity game</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/add_new_objects.html">Add new target objects</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - DataJoint</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - VR4Mice DataJoint</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/datajoint.html">VR4Mice DataJoint Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/install_dj_pipeline.html">VR4Mice Pipeline - Full Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/install_dj_pipeline.html">Setup &amp; Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/datajoint.html">Architecture &amp; Tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/data_import_export.html">Data Import/Export</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Tests</span></p>
 <ul class="nav bd-sidenav">
@@ -238,6 +240,7 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Black target control</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/quickstart_local_dump.html">Deploy the DataJoint database locally</a></li>
 </ul>
 
     </div>
@@ -470,18 +473,17 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#velocity-analysis">Velocity analysis</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#optimal-p">Optimal p</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#regression-model">Regression model</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#direct-comparison">Direct comparison</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-session-analysis">Multi-session analysis</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Trajectory analysis</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stats-on-trajectories">Stats on trajectories</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-session-analysis">Multi-session analysis</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Trajectory analysis</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stats-on-trajectories">Stats on trajectories</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Velocity analysis</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#prediction-model">Prediction model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-the-decision-points">Get the decision points</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#get-distance-to-screen-at-decision-point">Get distance to screen at decision point</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#get-the-decision-points">Get the decision points</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-distance-to-screen-at-decision-point">Get distance to screen at decision point</a></li>
 </ul>
 </li>
 </ul>
@@ -515,16 +517,8 @@ document.write(`
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">run</span> env_aws.py
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">run</span> env.py
 <span class="o">%</span><span class="k">run</span> run.py connect
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/datajoint/plugin.py:2: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools&lt;81.
-  import pkg_resources
-[2026-02-25 13:24:25,571][INFO]: Connecting admin@vr4mice-ar-collab.cluster-cn54f38qpzgm.eu-central-1.rds.amazonaws.com:3306
-[2026-02-25 13:24:25,734][INFO]: Connected admin@vr4mice-ar-collab.cluster-cn54f38qpzgm.eu-central-1.rds.amazonaws.com:3306
 </pre></div>
 </div>
 </div>
@@ -561,6 +555,12 @@ document.write(`
 <span class="n">style</span><span class="p">()</span>
 
 <span class="n">save_fig_path</span> <span class="o">=</span> <span class="s2">&quot;notebooks/Paper_figures/Figure_output/&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
 </pre></div>
 </div>
 </div>
@@ -1404,9 +1404,7 @@ sem 12.0: 0.9594091335646505
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Flamingo_2026-02-02_1
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Flamingo_2026-02-03_1
+Flamingo_2026-02-03_1
 Flamingo_2026-02-04_1
 Flamingo_2026-02-05_1
 Flamingo_2026-02-06_1
@@ -1604,7 +1602,7 @@ Hamster_2026-02-09_1
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/901e5ab6cdcf516fd8e4015ff905e7f29a9e89c3e65f32bd1509c8d35dd283e2.png" src="../../../_images/901e5ab6cdcf516fd8e4015ff905e7f29a9e89c3e65f32bd1509c8d35dd283e2.png" />
+<img alt="../../../_images/1bae1fb48ac01c924b623107a1bd86b6c8ad1241f0527738392fc212483a9c89.png" src="../../../_images/1bae1fb48ac01c924b623107a1bd86b6c8ad1241f0527738392fc212483a9c89.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -1653,7 +1651,7 @@ Hamster_2026-02-09_1
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/e64c29882f6196cc22c8eb1447f9b14b4a30ff9788855e5b5c2d735a512adf34.png" src="../../../_images/e64c29882f6196cc22c8eb1447f9b14b4a30ff9788855e5b5c2d735a512adf34.png" />
+<img alt="../../../_images/9cf2846d3bbf29c4f3bdc36ee9fe8c5cd92e64f1195ee5bf06a5a2180c8b397e.png" src="../../../_images/9cf2846d3bbf29c4f3bdc36ee9fe8c5cd92e64f1195ee5bf06a5a2180c8b397e.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -1686,7 +1684,7 @@ Hamster_2026-02-09_1
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/e9abf4ac8231fbfe7504df34187b014ccc3b804e06ea6972c5aa87f62fbf11c8.png" src="../../../_images/e9abf4ac8231fbfe7504df34187b014ccc3b804e06ea6972c5aa87f62fbf11c8.png" />
+<img alt="../../../_images/ef788ef9c9dfa17ec75c8c0b405369fd39fd83c3b3c9034c5eee82b23586e433.png" src="../../../_images/ef788ef9c9dfa17ec75c8c0b405369fd39fd83c3b3c9034c5eee82b23586e433.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -1793,7 +1791,7 @@ Hamster_2026-02-09_1
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/0be00c8b42498a5c58c74a75f5c7ed480874e11afc1d054d863ba188fd0cc8ab.png" src="../../../_images/0be00c8b42498a5c58c74a75f5c7ed480874e11afc1d054d863ba188fd0cc8ab.png" />
+<img alt="../../../_images/797567ebd0016b900bc7736bc2de80c81dda0ce609900143af3dc998bf3e09bb.png" src="../../../_images/797567ebd0016b900bc7736bc2de80c81dda0ce609900143af3dc998bf3e09bb.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -1824,215 +1822,13 @@ Hamster_2026-02-09_1
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>mean: 13.86564617811223 +/- 0.5386939023469558
-12.0-4.3: TtestResult(statistic=-4.592982876939882, pvalue=0.00041800924735993993, df=14)
- mean difference:  3.6491137828863707
-mean: 10.21653239522586 +/- 0.4492331557704968
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>mean: 13.655707382867684 +/- 0.7276650474475177
+12.0-4.3: TtestResult(statistic=-3.666482601387328, pvalue=0.004342290677221043, df=10)
+ mean difference:  3.1697950030291473
+mean: 10.485912379838537 +/- 0.5906186871214906
 </pre></div>
 </div>
-<img alt="../../../_images/1558d63cb4003df371bac7bc9f6081b99fe533ae6b69127c0ba582beded00127.png" src="../../../_images/1558d63cb4003df371bac7bc9f6081b99fe533ae6b69127c0ba582beded00127.png" />
-</div>
-</div>
-</section>
-<section id="direct-comparison">
-<h3>Direct comparison<a class="headerlink" href="#direct-comparison" title="Permalink to this heading">#</a></h3>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trial_df_white</span> <span class="o">=</span> <span class="p">(</span><span class="n">TrialMetrics</span><span class="p">()</span> <span class="o">*</span> <span class="n">vr4mice</span><span class="o">.</span><span class="n">Groups</span><span class="p">()</span> <span class="o">*</span> <span class="n">vr4mice</span><span class="o">.</span><span class="n">Labels</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="n">vr4mice</span><span class="o">.</span><span class="n">Dataset</span><span class="p">()</span> <span class="o">&amp;</span> <span class="s1">&#39;session_label = &quot;ar_discrim_occluders&quot;&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">trial_df_white</span> <span class="o">=</span>  <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">trial_df_white</span><span class="p">])</span>
-
-<span class="c1"># Exclude sessions that were not in the list</span>
-<span class="n">trial_df_white</span><span class="p">,</span> <span class="n">reward_table</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">apply_inclusion_criteria</span><span class="p">(</span><span class="n">trial_df_white</span><span class="p">,</span>
-                                                        <span class="n">return_excluded</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-<span class="c1"># Create list of included datasets</span>
-<span class="n">mouse_list_white</span> <span class="o">=</span> <span class="n">trial_df_white</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
-<span class="n">trial_df_white</span><span class="p">[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">trial_df_white</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">y_binned_df_white</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mouse_list_white</span><span class="p">:</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">y_binned_df_white</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">((</span><span class="n">InterpolatedTrials</span><span class="p">()</span> <span class="o">&amp;</span> <span class="sa">f</span><span class="s1">&#39;dataset=&quot;</span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;trial&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;flip_one_side&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_left_choice&quot;</span><span class="p">,</span> <span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
-<span class="n">y_binned_df_white</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">y_binned_df_white</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">y_binned_df_white</span><span class="p">[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_binned_df_white</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">str</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">y_binned_df_white</span><span class="p">[</span><span class="s2">&quot;x_flipped&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_binned_df_white</span><span class="o">.</span><span class="n">x</span> <span class="o">*</span> <span class="n">y_binned_df_white</span><span class="o">.</span><span class="n">flip_one_side</span>
-<span class="n">y_binned_df_white_mean</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">mean_xy_trajectory</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">create_bins</span><span class="p">(</span><span class="n">y_binned_df_white</span><span class="p">,</span>
-                                                                  <span class="n">spatial_ybins</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">13</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">30</span><span class="p">]),</span> <span class="n">index_columns</span><span class="o">=</span> <span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;mouse_name&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;bin_centers&quot;</span><span class="p">],</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;x_flipped&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">])</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">stats_binned_white</span> <span class="o">=</span> <span class="n">y_binned_df_white_mean</span><span class="p">[(</span><span class="n">y_binned_df_white_mean</span><span class="o">.</span><span class="n">bin_centers</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_binned_df_white_mean</span><span class="o">.</span><span class="n">bin_centers</span> <span class="o">&lt;=</span> <span class="mi">18</span><span class="p">)]</span>
-<span class="n">stats_binned</span> <span class="o">=</span> <span class="n">y_binned_df_mean</span><span class="p">[(</span><span class="n">y_binned_df_mean</span><span class="o">.</span><span class="n">bin_centers</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_binned_df_mean</span><span class="o">.</span><span class="n">bin_centers</span> <span class="o">&lt;=</span> <span class="mi">18</span><span class="p">)]</span>
-
-<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
-
-<span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">stats_binned_white</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;bin_centers&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;x_flipped&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span> 
-             <span class="n">palette</span><span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">colors_aperture</span><span class="p">,</span> <span class="n">errorbar</span><span class="o">=</span><span class="s2">&quot;se&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Y position&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;X position&quot;</span><span class="p">)</span>
-
-
-<span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">stats_binned</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;bin_centers&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;x_flipped&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span> 
-             <span class="n">palette</span><span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">colors_aperture</span><span class="p">,</span> <span class="n">errorbar</span><span class="o">=</span><span class="s2">&quot;se&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Y position&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;X position&quot;</span><span class="p">)</span>
-
-<span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<img alt="../../../_images/365bd9b5f1cbbf391b9b1f5ccde13f904838349b01971094b968608422a1abe4.png" src="../../../_images/365bd9b5f1cbbf391b9b1f5ccde13f904838349b01971094b968608422a1abe4.png" />
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">p_values_white</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">stats_binned_white</span><span class="o">.</span><span class="n">bin_centers</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
-    <span class="n">section</span> <span class="o">=</span> <span class="n">stats_binned_white</span><span class="p">[</span><span class="n">stats_binned_white</span><span class="o">.</span><span class="n">bin_centers</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span>
-    <span class="n">t</span> <span class="o">=</span> <span class="n">ttest_rel</span><span class="p">(</span>
-        <span class="n">section</span><span class="p">[</span><span class="n">section</span><span class="o">.</span><span class="n">aperture</span> <span class="o">==</span> <span class="n">section</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">x_flipped</span><span class="p">,</span>
-        <span class="n">section</span><span class="p">[</span><span class="n">section</span><span class="o">.</span><span class="n">aperture</span> <span class="o">==</span> <span class="n">section</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">x_flipped</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">p_values_white</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;segment&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="s2">&quot;p_value&quot;</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">pvalue</span><span class="p">},</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-
-<span class="n">p_value_df_white</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">p_values_white</span><span class="p">)</span>
-<span class="n">p_value_df_white</span><span class="p">[</span><span class="s2">&quot;p_value_corr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">false_discovery_control</span><span class="p">(</span><span class="n">p_value_df_white</span><span class="o">.</span><span class="n">p_value</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Assign labels</span>
-<span class="n">stats_binned_white</span><span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">stats_binned</span><span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-
-<span class="c1"># Vertical append</span>
-<span class="n">df_combined</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">stats_binned_white</span><span class="p">,</span> <span class="n">stats_binned</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">calculate_cohen_d</span><span class="p">(</span><span class="n">group0</span><span class="p">,</span> <span class="n">group1</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates Cohen&#39;s d for two independent samples.&quot;&quot;&quot;</span>
-    <span class="n">n0</span><span class="p">,</span> <span class="n">n1</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">group0</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">group1</span><span class="p">)</span>
-    <span class="c1"># Degrees of freedom</span>
-    <span class="n">dof</span> <span class="o">=</span> <span class="n">n0</span> <span class="o">+</span> <span class="n">n1</span> <span class="o">-</span> <span class="mi">2</span>
-    <span class="c1"># Pooled Standard Deviation</span>
-    <span class="c1"># Using ddof=1 for unbiased variance estimate</span>
-    <span class="n">var0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">group0</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">var1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">pooled_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(((</span><span class="n">n0</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">var0</span> <span class="o">+</span> <span class="p">(</span><span class="n">n1</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">var1</span><span class="p">)</span> <span class="o">/</span> <span class="n">dof</span><span class="p">)</span>
-    
-    <span class="c1"># Calculate d (difference of means over pooled std)</span>
-    <span class="k">if</span> <span class="n">pooled_std</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="mi">0</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">group0</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">group1</span><span class="p">))</span> <span class="o">/</span> <span class="n">pooled_std</span>
-
-<span class="n">comp_rows</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="p">(</span><span class="n">ap</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">df_combined</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;bin_centers&quot;</span><span class="p">]):</span>
-    <span class="n">vals_0</span> <span class="o">=</span> <span class="n">g</span><span class="p">[</span><span class="n">g</span><span class="p">[</span><span class="s2">&quot;source&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">][</span><span class="s2">&quot;x_flipped&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
-    <span class="n">vals_1</span> <span class="o">=</span> <span class="n">g</span><span class="p">[</span><span class="n">g</span><span class="p">[</span><span class="s2">&quot;source&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">][</span><span class="s2">&quot;x_flipped&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
-    
-    <span class="c1"># Increased minimum N to 3 for slightly better stability</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals_0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals_1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
-        <span class="k">continue</span>
-        
-    <span class="c1"># Welch&#39;s t-test (handles unequal variance and unequal n)</span>
-    <span class="n">t_res</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">ttest_ind</span><span class="p">(</span><span class="n">vals_0</span><span class="p">,</span> <span class="n">vals_1</span><span class="p">,</span> <span class="n">equal_var</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    
-    <span class="c1"># Cohen&#39;s d for effect size</span>
-    <span class="n">d_val</span> <span class="o">=</span> <span class="n">calculate_cohen_d</span><span class="p">(</span><span class="n">vals_0</span><span class="p">,</span> <span class="n">vals_1</span><span class="p">)</span>
-    
-    <span class="n">comp_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-        <span class="p">{</span>
-            <span class="s2">&quot;aperture&quot;</span><span class="p">:</span> <span class="n">ap</span><span class="p">,</span>
-            <span class="s2">&quot;bin_centers&quot;</span><span class="p">:</span> <span class="n">b</span><span class="p">,</span>
-            <span class="s2">&quot;n_source0&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals_0</span><span class="p">),</span>
-            <span class="s2">&quot;n_source1&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals_1</span><span class="p">),</span>
-            <span class="s2">&quot;t_stat&quot;</span><span class="p">:</span> <span class="n">t_res</span><span class="o">.</span><span class="n">statistic</span><span class="p">,</span>
-            <span class="s2">&quot;p_value&quot;</span><span class="p">:</span> <span class="n">t_res</span><span class="o">.</span><span class="n">pvalue</span><span class="p">,</span>
-            <span class="s2">&quot;cohen_d&quot;</span><span class="p">:</span> <span class="n">d_val</span>
-        <span class="p">}</span>
-    <span class="p">)</span>
-
-<span class="n">per_bin_results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">comp_rows</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;bin_centers&quot;</span><span class="p">])</span>
-
-<span class="k">if</span> <span class="ow">not</span> <span class="n">per_bin_results</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-    <span class="c1"># FDR correction within each aperture</span>
-    <span class="n">per_bin_results</span><span class="p">[</span><span class="s2">&quot;p_value_corr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">per_bin_results</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;aperture&quot;</span><span class="p">)[</span><span class="s2">&quot;p_value&quot;</span><span class="p">]</span>
-        <span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">stats</span><span class="o">.</span><span class="n">false_discovery_control</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
-    <span class="p">)</span>
-    <span class="n">per_bin_results</span><span class="p">[</span><span class="s2">&quot;significant&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">per_bin_results</span><span class="p">[</span><span class="s2">&quot;p_value_corr&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.05</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plot the p-values across bins for each aperture</span>
-<span class="n">apertures_sorted</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">per_bin_results</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
-<span class="n">colors</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">colors_aperture</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">apertures_sorted</span><span class="p">)]</span>
-<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
-
-<span class="k">for</span> <span class="n">ap</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">apertures_sorted</span><span class="p">,</span> <span class="n">colors</span><span class="p">):</span>
-    <span class="n">sub</span> <span class="o">=</span> <span class="n">per_bin_results</span><span class="p">[</span><span class="n">per_bin_results</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">ap</span><span class="p">]</span>
-    
-    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">sub</span><span class="p">[</span><span class="s2">&quot;bin_centers&quot;</span><span class="p">],</span> 
-            <span class="n">sub</span><span class="p">[</span><span class="s2">&quot;p_value_corr&quot;</span><span class="p">],</span> 
-            <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> 
-            <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> 
-            <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Aperture </span><span class="si">{</span><span class="n">ap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
-            <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span>
-            <span class="p">)</span>
-    
-    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
-        <span class="n">sub</span><span class="p">[</span><span class="s2">&quot;bin_centers&quot;</span><span class="p">],</span>
-        <span class="n">sub</span><span class="p">[</span><span class="s2">&quot;p_value_corr&quot;</span><span class="p">],</span>
-        <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
-        <span class="n">s</span><span class="o">=</span><span class="n">sub</span><span class="p">[</span><span class="s2">&quot;cohen_d&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">*</span> <span class="mi">80</span><span class="p">,</span> 
-        <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
-        <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">,</span>
-        <span class="n">linewidths</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-        <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span>
-    <span class="p">)</span>
-
-<span class="c1"># Significance threshold</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-
-<span class="c1"># Formatting</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;FDR p-value&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Y bins&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
-
-<span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;supp_contrast_position_p_values_with_effect_size.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<img alt="../../../_images/faaab84c9d8aa7ffc94075766e7dffcd6178b3a0d4209f8e52701b9fea8ff0c4.png" src="../../../_images/faaab84c9d8aa7ffc94075766e7dffcd6178b3a0d4209f8e52701b9fea8ff0c4.png" />
+<img alt="../../../_images/068051ae6a12f79989134a53777afdb8bb77f29913e302ab17b550bbf372b28e.png" src="../../../_images/068051ae6a12f79989134a53777afdb8bb77f29913e302ab17b550bbf372b28e.png" />
 </div>
 </div>
 </section>
@@ -2553,9 +2349,8 @@ aperture  3.7683 4.0000 36.0000 0.0116
 <img alt="../../../_images/8c0ae51f51c4e3d259e8f7130c010dee436cc7bcdc3404f4d82f717b6d984e7f.png" src="../../../_images/8c0ae51f51c4e3d259e8f7130c010dee436cc7bcdc3404f4d82f717b6d984e7f.png" />
 </div>
 </div>
-</section>
 <section id="id1">
-<h2>Trajectory analysis<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h2>
+<h3>Trajectory analysis<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">xy_df</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2611,7 +2406,7 @@ aperture  3.7683 4.0000 36.0000 0.0116
 </div>
 </section>
 <section id="stats-on-trajectories">
-<h2>Stats on trajectories<a class="headerlink" href="#stats-on-trajectories" title="Permalink to this heading">#</a></h2>
+<h3>Stats on trajectories<a class="headerlink" href="#stats-on-trajectories" title="Permalink to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">y_binned_df</span> <span class="o">=</span> <span class="p">[]</span>
@@ -3100,6 +2895,7 @@ aperture:bin_centers   1.0311 96.0000 864.0000 0.4042
 </table>
 </div></div></div>
 </div>
+</section>
 <section id="id2">
 <h3>Velocity analysis<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
 <div class="cell docutils container">
@@ -3331,6 +3127,36 @@ aperture:trial_length  4.9314 396.0000 3564.0000 0.0000
 <h3>Prediction model<a class="headerlink" href="#prediction-model" title="Permalink to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This takes a while to fetch because we need to fetch data for all trials</span>
+<span class="n">dataset_list</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">sessions_list</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">dataset_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">((</span><span class="n">InterpolatedTrials</span><span class="p">()</span> <span class="o">&amp;</span> <span class="sa">f</span><span class="s1">&#39;dataset = &quot;</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="s2">&quot; dataset missing&quot;</span><span class="p">)</span>
+<span class="n">interpolated_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">dataset_list</span><span class="p">)</span>
+<span class="n">interpolated_df</span><span class="p">[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">interpolated_df</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Flamingo_2026-02-12_1
+Flamingo_2026-02-16_1
+Flamingo_2026-02-17_1
+Flamingo_2026-02-18_1
+Grizzly_2026-02-13_1
+Grizzly_2026-02-17_1
+Grizzly_2026-02-19_1
+Hamster_2026-02-11_1
+Hamster_2026-02-17_1
+Hamster_2026-02-18_1
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_key</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;label_set_id&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;params_id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
 </pre></div>
 </div>
@@ -3378,7 +3204,7 @@ aperture:trial_length  4.9314 396.0000 3564.0000 0.0000
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/6e864a8a2bbb2891fc4e0a49ab421bef719773da41b3f2b33f984fa279144f5e.png" src="../../../_images/6e864a8a2bbb2891fc4e0a49ab421bef719773da41b3f2b33f984fa279144f5e.png" />
+<img alt="../../../_images/13758aa5dfbb5874efc5efa022b9457a5a79fe6b0da45a2c9a7ecd4fbded8739.png" src="../../../_images/13758aa5dfbb5874efc5efa022b9457a5a79fe6b0da45a2c9a7ecd4fbded8739.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -3440,7 +3266,7 @@ aperture:trial_length  4.9314 396.0000 3564.0000 0.0000
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/602f002ad21b3da818b35a615c965303afbf0574aef14d37b07c9d51600ba5ee.png" src="../../../_images/602f002ad21b3da818b35a615c965303afbf0574aef14d37b07c9d51600ba5ee.png" />
+<img alt="../../../_images/9b373f2ee47be250d9dc336a2db43b91514b8bf804ceebced48cf99603158a11.png" src="../../../_images/9b373f2ee47be250d9dc336a2db43b91514b8bf804ceebced48cf99603158a11.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -3471,7 +3297,7 @@ aperture:trial_length  4.9314 396.0000 3564.0000 0.0000
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/e1643cab185a8faedab4e22b6950771bebe4f35308ddfe03b506ea57270244ca.png" src="../../../_images/e1643cab185a8faedab4e22b6950771bebe4f35308ddfe03b506ea57270244ca.png" />
+<img alt="../../../_images/4711f39f0a93d67fa992d8662ed7d0a89391b5809d14c614acc17900911be353.png" src="../../../_images/4711f39f0a93d67fa992d8662ed7d0a89391b5809d14c614acc17900911be353.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -3500,18 +3326,17 @@ aperture:trial_length  4.9314 396.0000 3564.0000 0.0000
 ============================================================
                           F Value   Num DF    Den DF  Pr &gt; F
 ------------------------------------------------------------
-aperture                   11.4916   4.0000   96.0000 0.0000
-trial_length_bin          474.8240  49.0000 1176.0000 0.0000
-aperture:trial_length_bin   4.3735 196.0000 4704.0000 0.0000
+aperture                    2.0097   4.0000   36.0000 0.1139
+trial_length_bin          375.9516  49.0000  441.0000 0.0000
+aperture:trial_length_bin   2.5966 196.0000 1764.0000 0.0000
 ============================================================
 </pre></div>
 </div>
 </div>
 </div>
 </section>
-</section>
 <section id="get-the-decision-points">
-<h2>Get the decision points<a class="headerlink" href="#get-the-decision-points" title="Permalink to this heading">#</a></h2>
+<h3>Get the decision points<a class="headerlink" href="#get-the-decision-points" title="Permalink to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">decision_points</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">((</span><span class="n">DecisionPoints</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">task_type_key</span> <span class="o">&amp;</span> <span class="n">model_key</span> <span class="o">&amp;</span> <span class="s2">&quot;threshold_uncertainty = 0.2&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
@@ -3523,7 +3348,7 @@ aperture:trial_length_bin   4.3735 196.0000 4704.0000 0.0000
 </div>
 </div>
 <section id="get-distance-to-screen-at-decision-point">
-<h3>Get distance to screen at decision point<a class="headerlink" href="#get-distance-to-screen-at-decision-point" title="Permalink to this heading">#</a></h3>
+<h4>Get distance to screen at decision point<a class="headerlink" href="#get-distance-to-screen-at-decision-point" title="Permalink to this heading">#</a></h4>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
@@ -3549,36 +3374,37 @@ aperture:trial_length_bin   4.3735 196.0000 4704.0000 0.0000
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>3.0-4.2: TtestResult(statistic=0.49739267320565256, pvalue=0.6234385950886467, df=24)
- mean difference:  -0.4588393517271001
-3.0-6.0: TtestResult(statistic=1.693880063404927, pvalue=0.10322884643216759, df=24)
- mean difference:  -1.4844673241082784
-3.0-8.48: TtestResult(statistic=3.1792023984838473, pvalue=0.004038831906936139, df=24)
- mean difference:  -2.471162040680559
-mean: 13.497117945523021 +/- 0.5902315830199871
-4.2-6.0: TtestResult(statistic=1.4004289297852808, pvalue=0.1741812780717876, df=24)
- mean difference:  -1.0256279723811783
-4.2-8.48: TtestResult(statistic=2.7248202118290044, pvalue=0.011813735411151478, df=24)
- mean difference:  -2.012322688953459
-mean: 13.038278593795921 +/- 0.5588690162720868
-6.0-8.48: TtestResult(statistic=1.5436863271887404, pvalue=0.135748808870696, df=24)
- mean difference:  -0.9866947165722806
-mean: 12.012650621414743 +/- 0.49183009302876524
-mean: 11.025955904842462 +/- 0.4311999013527618
-12.0-3.0: TtestResult(statistic=-3.942764100540485, pvalue=0.0006088275673617407, df=24)
- mean difference:  3.0493133709812312
-12.0-4.2: TtestResult(statistic=-3.115811254734461, pvalue=0.004705440469699779, df=24)
- mean difference:  2.590474019254131
-12.0-6.0: TtestResult(statistic=-2.7638777570771382, pvalue=0.010796122359146947, df=24)
- mean difference:  1.5648460468729528
-12.0-8.48: TtestResult(statistic=-0.9277638576401966, pvalue=0.36276719907384913, df=24)
- mean difference:  0.5781513303006722
-mean: 10.44780457454179 +/- 0.4628144770914225
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>3.0-4.2: TtestResult(statistic=0.6984624559535682, pvalue=0.5351626714828963, df=3)
+ mean difference:  -0.5717789948373273
+3.0-6.0: TtestResult(statistic=1.204356445485783, pvalue=0.3148035166748929, df=3)
+ mean difference:  -1.953839095031558
+3.0-8.48: TtestResult(statistic=2.048456177024161, pvalue=0.13296110026687527, df=3)
+ mean difference:  -2.0455684521631863
+mean: 15.005885647660868 +/- 1.203735019808169
+4.2-6.0: TtestResult(statistic=1.1925779539271346, pvalue=0.3187629895185642, df=3)
+ mean difference:  -1.3820601001942308
+4.2-8.48: TtestResult(statistic=3.8718758257403896, pvalue=0.030488917557100346, df=3)
+ mean difference:  -1.473789457325859
+mean: 14.43410665282354 +/- 0.6753299296854179
+6.0-8.48: TtestResult(statistic=0.10124180619890571, pvalue=0.9257456211671231, df=3)
+ mean difference:  -0.09172935713162822
+mean: 13.05204655262931 +/- 0.4962080501556033
+mean: 12.960317195497682 +/- 0.4189899797736198
+12.0-3.0: TtestResult(statistic=-2.379456363613985, pvalue=0.09766576214134466, df=3)
+ mean difference:  2.539690664148896
+12.0-4.2: TtestResult(statistic=-3.181796537161461, pvalue=0.05002495125779806, df=3)
+ mean difference:  1.9679116693115688
+12.0-6.0: TtestResult(statistic=-1.010009109805577, pvalue=0.38688416307568174, df=3)
+ mean difference:  0.585851569117338
+12.0-8.48: TtestResult(statistic=-1.1044439970710058, pvalue=0.35002821460910705, df=3)
+ mean difference:  0.4941222119857098
+mean: 12.466194983511972 +/- 0.18086400094152608
 </pre></div>
 </div>
-<img alt="../../../_images/f92d84b2c9751f37e510c5e809edc51cd147a521238dc506c250920e19144538.png" src="../../../_images/f92d84b2c9751f37e510c5e809edc51cd147a521238dc506c250920e19144538.png" />
+<img alt="../../../_images/ca84d588201b859618cbe7b05b895ea2a15bcd67082ebcef7e3f19eefc730f55.png" src="../../../_images/ca84d588201b859618cbe7b05b895ea2a15bcd67082ebcef7e3f19eefc730f55.png" />
 </div>
 </div>
+</section>
 </section>
 </section>
 </section>
@@ -3622,6 +3448,15 @@ mean: 10.44780457454179 +/- 0.4628144770914225
         <p class="prev-next-title">[Decision Variable Prediction] Figure 5</p>
       </div>
     </a>
+    <a class="right-next"
+       href="../../../docs/software/quickstart_local_dump.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Deploy the DataJoint database locally</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -3644,18 +3479,17 @@ mean: 10.44780457454179 +/- 0.4628144770914225
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#velocity-analysis">Velocity analysis</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#optimal-p">Optimal p</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#regression-model">Regression model</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#direct-comparison">Direct comparison</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-session-analysis">Multi-session analysis</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Trajectory analysis</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stats-on-trajectories">Stats on trajectories</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-session-analysis">Multi-session analysis</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Trajectory analysis</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stats-on-trajectories">Stats on trajectories</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Velocity analysis</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#prediction-model">Prediction model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-the-decision-points">Get the decision points</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#get-distance-to-screen-at-decision-point">Get distance to screen at decision point</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#get-the-decision-points">Get the decision points</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-distance-to-screen-at-decision-point">Get distance to screen at decision point</a></li>
 </ul>
 </li>
 </ul>

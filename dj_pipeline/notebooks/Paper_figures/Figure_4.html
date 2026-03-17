@@ -207,10 +207,11 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/build_unity_game.html">Rebuild a Unity game</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/add_new_objects.html">Add new target objects</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - DataJoint</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - VR4Mice DataJoint</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/datajoint.html">VR4Mice DataJoint Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/install_dj_pipeline.html">VR4Mice Pipeline - Full Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/install_dj_pipeline.html">Setup &amp; Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/datajoint.html">Architecture &amp; Tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/data_import_export.html">Data Import/Export</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Tests</span></p>
 <ul class="nav bd-sidenav">
@@ -239,6 +240,7 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l2"><a class="reference internal" href="Supp_Figure_control.html">Black target control</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/quickstart_local_dump.html">Deploy the DataJoint database locally</a></li>
 </ul>
 
     </div>
@@ -519,16 +521,8 @@ document.write(`
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">run</span> env_aws.py
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">run</span> env.py
 <span class="o">%</span><span class="k">run</span> run.py connect
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/datajoint/plugin.py:2: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools&lt;81.
-  import pkg_resources
-[2026-02-26 13:51:08,005][INFO]: Connecting admin@vr4mice-ar-collab.cluster-cn54f38qpzgm.eu-central-1.rds.amazonaws.com:3306
-[2026-02-26 13:51:08,182][INFO]: Connected admin@vr4mice-ar-collab.cluster-cn54f38qpzgm.eu-central-1.rds.amazonaws.com:3306
 </pre></div>
 </div>
 </div>
@@ -661,33 +655,6 @@ Pheasant_2024-08-21_1
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">box_df</span> <span class="o">=</span> <span class="n">base_analysis</span><span class="o">.</span><span class="n">BoxDataFrame</span><span class="p">()</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="s2">&quot;Pheasant_2024-08-15_2&quot;</span><span class="p">})</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[autoreload of vr4mice.schema.decision failed: Traceback (most recent call last):
-  File &quot;/app/.venv/lib/python3.9/site-packages/IPython/extensions/autoreload.py&quot;, line 276, in check
-    superreload(m, reload, self.old_objects)
-  File &quot;/app/.venv/lib/python3.9/site-packages/IPython/extensions/autoreload.py&quot;, line 500, in superreload
-    update_generic(old_obj, new_obj)
-  File &quot;/app/.venv/lib/python3.9/site-packages/IPython/extensions/autoreload.py&quot;, line 397, in update_generic
-    update(a, b)
-  File &quot;/app/.venv/lib/python3.9/site-packages/IPython/extensions/autoreload.py&quot;, line 349, in update_class
-    if update_generic(old_obj, new_obj):
-  File &quot;/app/.venv/lib/python3.9/site-packages/IPython/extensions/autoreload.py&quot;, line 397, in update_generic
-    update(a, b)
-  File &quot;/app/.venv/lib/python3.9/site-packages/IPython/extensions/autoreload.py&quot;, line 349, in update_class
-    if update_generic(old_obj, new_obj):
-  File &quot;/app/.venv/lib/python3.9/site-packages/IPython/extensions/autoreload.py&quot;, line 397, in update_generic
-    update(a, b)
-  File &quot;/app/.venv/lib/python3.9/site-packages/IPython/extensions/autoreload.py&quot;, line 349, in update_class
-    if update_generic(old_obj, new_obj):
-  File &quot;/app/.venv/lib/python3.9/site-packages/IPython/extensions/autoreload.py&quot;, line 397, in update_generic
-    update(a, b)
-  File &quot;/app/.venv/lib/python3.9/site-packages/IPython/extensions/autoreload.py&quot;, line 349, in update_class
-    if update_generic(old_obj, new_obj):
-RecursionError: maximum recursion depth exceeded while calling a Python object
-]
 </pre></div>
 </div>
 </div>
@@ -1373,9 +1340,9 @@ aperture:trial_length_bin   16.5970 49.0000 2058.0000 0.0000
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">accuracy_05_10</span> <span class="o">=</span> <span class="n">summary_df</span><span class="p">[(</span><span class="s2">&quot;accuracy&quot;</span><span class="p">,</span> <span class="s2">&quot;0.5-1.0&quot;</span><span class="p">)]</span>
 <span class="n">bic_05_10</span> <span class="o">=</span> <span class="n">summary_df</span><span class="p">[(</span><span class="s2">&quot;bic&quot;</span><span class="p">,</span> <span class="s2">&quot;0.5-1.0&quot;</span><span class="p">)]</span>
-<span class="n">delta_cv</span> <span class="o">=</span> <span class="p">(</span><span class="n">summary_df</span><span class="p">[(</span><span class="s2">&quot;coef_var_bic&quot;</span><span class="p">,</span> <span class="s2">&quot;0.0-0.5&quot;</span><span class="p">)]</span> <span class="o">-</span> <span class="n">summary_df</span><span class="p">[(</span><span class="s2">&quot;coef_var_bic&quot;</span><span class="p">,</span> <span class="s2">&quot;0.5-1.0&quot;</span><span class="p">)])</span>
+<span class="n">delta_cv</span> <span class="o">=</span> <span class="p">(</span><span class="n">summary_df</span><span class="p">[(</span><span class="s2">&quot;coef_var_bic&quot;</span><span class="p">,</span> <span class="s2">&quot;0.5-1.0&quot;</span><span class="p">)]</span> <span class="o">-</span> <span class="n">summary_df</span><span class="p">[(</span><span class="s2">&quot;coef_var_bic&quot;</span><span class="p">,</span> <span class="s2">&quot;0.0-0.5&quot;</span><span class="p">)])</span>
 
-<span class="n">s_score</span> <span class="o">=</span> <span class="p">(</span><span class="n">accuracy_05_10</span> <span class="o">/</span> <span class="n">bic_05_10</span><span class="p">)</span> <span class="o">*</span> <span class="n">delta_cv</span>
+<span class="n">s_score</span> <span class="o">=</span> <span class="p">(</span><span class="n">accuracy_05_10</span> <span class="o">/</span> <span class="n">bic_05_10</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="n">delta_cv</span><span class="p">)</span>
 <span class="n">s_score</span> <span class="o">=</span> <span class="n">s_score</span><span class="o">.</span><span class="n">replace</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
 
 <span class="n">s_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
@@ -1428,66 +1395,66 @@ aperture:trial_length_bin   16.5970 49.0000 2058.0000 0.0000
     <tr>
       <th>8</th>
       <td>Lateral Displacement</td>
-      <td>0.980991</td>
-      <td>13.090835</td>
-      <td>0.198392</td>
-      <td>1.486695e-02</td>
+      <td>0.980987</td>
+      <td>13.092029</td>
+      <td>-0.198192</td>
+      <td>1.485054e-02</td>
     </tr>
     <tr>
       <th>1</th>
       <td>Kinematics only</td>
-      <td>0.977025</td>
-      <td>13.396176</td>
-      <td>0.171673</td>
-      <td>1.252063e-02</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>Orientation only</td>
-      <td>0.975087</td>
-      <td>13.813094</td>
-      <td>0.174448</td>
-      <td>1.231452e-02</td>
+      <td>0.977062</td>
+      <td>13.391716</td>
+      <td>-0.171835</td>
+      <td>1.253708e-02</td>
     </tr>
     <tr>
       <th>3</th>
       <td>Velocity only</td>
-      <td>0.967331</td>
-      <td>9.542332</td>
-      <td>0.120936</td>
-      <td>1.225962e-02</td>
+      <td>0.967327</td>
+      <td>9.536206</td>
+      <td>-0.121486</td>
+      <td>1.232320e-02</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Orientation only</td>
+      <td>0.975070</td>
+      <td>13.808917</td>
+      <td>-0.173832</td>
+      <td>1.227457e-02</td>
     </tr>
     <tr>
       <th>5</th>
       <td>Task-related</td>
-      <td>0.981228</td>
-      <td>29.168729</td>
-      <td>0.162014</td>
-      <td>5.450090e-03</td>
+      <td>0.981135</td>
+      <td>29.165043</td>
+      <td>-0.161736</td>
+      <td>5.440912e-03</td>
     </tr>
     <tr>
       <th>6</th>
       <td>All</td>
-      <td>0.980957</td>
-      <td>36.086370</td>
-      <td>0.143747</td>
-      <td>3.907552e-03</td>
+      <td>0.980864</td>
+      <td>36.082923</td>
+      <td>-0.143414</td>
+      <td>3.898510e-03</td>
     </tr>
     <tr>
       <th>7</th>
       <td>Priors</td>
-      <td>0.554292</td>
-      <td>22.976093</td>
-      <td>-0.000001</td>
-      <td>-2.577627e-08</td>
+      <td>0.554389</td>
+      <td>22.975909</td>
+      <td>0.000001</td>
+      <td>-2.585972e-08</td>
     </tr>
     <tr>
       <th>2</th>
       <td>Position only</td>
-      <td>0.935363</td>
-      <td>11.920947</td>
-      <td>-0.009005</td>
-      <td>-7.065973e-04</td>
+      <td>0.935537</td>
+      <td>11.912853</td>
+      <td>0.009489</td>
+      <td>-7.452153e-04</td>
     </tr>
   </tbody>
 </table>
@@ -1502,17 +1469,28 @@ aperture:trial_length_bin   16.5970 49.0000 2058.0000 0.0000
 <span class="p">])]</span>
 <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;accuracy_0.5-1.0&quot;</span><span class="p">,</span> <span class="s2">&quot;bic_0.5-1.0&quot;</span><span class="p">,</span> <span class="s2">&quot;delta_cv&quot;</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">]</span>
-<span class="n">titles</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Late Trial Accuracy</span><span class="se">\n</span><span class="s2">(↑)&quot;</span><span class="p">,</span> <span class="s2">&quot;Late Trial BIC</span><span class="se">\n</span><span class="s2">(↓)&quot;</span><span class="p">,</span> <span class="s2">&quot;$\Delta$CV(BIC)</span><span class="se">\n</span><span class="s2">(↑)&quot;</span><span class="p">,</span> <span class="s2">&quot;Final Score</span><span class="se">\n</span><span class="s2">(↑)&quot;</span><span class="p">]</span>
+<span class="n">titles</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Late Accuracy (↑)&quot;</span><span class="p">,</span> <span class="s2">&quot;Late BIC (↓)&quot;</span><span class="p">,</span> <span class="s2">&quot;$\Delta$CV(BIC) (↓)&quot;</span><span class="p">,</span> <span class="s2">&quot;Final Score (↑)&quot;</span><span class="p">]</span>
 <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;#4C72B0&quot;</span><span class="p">,</span> <span class="s2">&quot;#C44E52&quot;</span><span class="p">,</span> <span class="s2">&quot;#55A868&quot;</span><span class="p">,</span> <span class="s2">&quot;black&quot;</span><span class="p">]</span>
 
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">titles</span><span class="p">,</span> <span class="n">colors</span><span class="p">)):</span>
-    <span class="c1"># Plot dots</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;label_set_name&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-    <span class="c1"># Add horizontal lines for readability</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;label_set_name&quot;</span><span class="p">],</span> <span class="n">xmin</span><span class="o">=</span><span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">xmax</span><span class="o">=</span><span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> 
-              <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
     
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+    <span class="c1"># Padding based on data range</span>
+    <span class="n">data_min</span> <span class="o">=</span> <span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="n">data_max</span> <span class="o">=</span> <span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">data_range</span> <span class="o">=</span> <span class="n">data_max</span> <span class="o">-</span> <span class="n">data_min</span>
+
+    <span class="n">padding</span> <span class="o">=</span> <span class="n">data_range</span> <span class="o">*</span> <span class="mf">0.1</span>
+    
+    <span class="k">if</span> <span class="n">col</span> <span class="o">==</span> <span class="s2">&quot;delta_cv&quot;</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;label_set_name&quot;</span><span class="p">],</span> <span class="n">xmin</span><span class="o">=</span><span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">xmax</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
+                <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;label_set_name&quot;</span><span class="p">],</span> <span class="n">xmin</span><span class="o">=</span><span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">-</span> <span class="n">padding</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> 
+                <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">-</span> <span class="n">padding</span><span class="p">,</span> <span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">padding</span><span class="p">)</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;label_set_name&quot;</span><span class="p">])))</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;label_set_name&quot;</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
 
@@ -1523,7 +1501,7 @@ aperture:trial_length_bin   16.5970 49.0000 2058.0000 0.0000
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/eb93c1eeb3cc4d4a2707b35f7229a5d93bf8bbbf3df1401798e2353b0748cfd4.png" src="../../../_images/eb93c1eeb3cc4d4a2707b35f7229a5d93bf8bbbf3df1401798e2353b0748cfd4.png" />
+<img alt="../../../_images/0a20896bc01e3bc7ea38f56b49cb997e0cf6492f281be88c3b6041130892df1d.png" src="../../../_images/0a20896bc01e3bc7ea38f56b49cb997e0cf6492f281be88c3b6041130892df1d.png" />
 </div>
 </div>
 </section>
@@ -1726,9 +1704,9 @@ Analyzing decision points with threshold_uncertainty 0.0 (normalized)...
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;information_maps/data/info_matrix_unnormalized_12.3w.npy&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;information_maps/info_maps/info_matrix_unnormalized_12.3w.npy&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
     <span class="n">info_matrix_narrow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rot90</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">),</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;information_maps/data/info_matrix_unnormalized_34.6w.npy&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;information_maps/info_maps/info_matrix_unnormalized_34.6w.npy&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
     <span class="n">info_matrix_wide</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rot90</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">),</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="n">info_matrices</span> <span class="o">=</span> <span class="p">[</span><span class="n">info_matrix_narrow</span><span class="p">,</span> <span class="n">info_matrix_wide</span><span class="p">]</span>

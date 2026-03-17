@@ -208,10 +208,11 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="software_unity_games/build_unity_game.html">Rebuild a Unity game</a></li>
 <li class="toctree-l1"><a class="reference internal" href="software_unity_games/add_new_objects.html">Add new target objects</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - DataJoint</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - VR4Mice DataJoint</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="software/datajoint.html">VR4Mice DataJoint Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="software/install_dj_pipeline.html">VR4Mice Pipeline - Full Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software/install_dj_pipeline.html">Setup &amp; Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software/datajoint.html">Architecture &amp; Tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software/data_import_export.html">Data Import/Export</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Tests</span></p>
 <ul class="nav bd-sidenav">
@@ -240,6 +241,7 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l2"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Supp_Figure_control.html">Black target control</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="software/quickstart_local_dump.html">Deploy the DataJoint database locally</a></li>
 </ul>
 
     </div>
@@ -490,9 +492,9 @@ document.write(`
 <h2>Rig Calibration checklist<a class="headerlink" href="#rig-calibration-checklist" title="Permalink to this heading">#</a></h2>
 <p>Before running a mouse on the rig make sure you complete this checklist for testing the latency and calibrating the system:</p>
 <ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Latency</span> <span class="pre">testing</span></code>: make sure that your <span class="xref myst">photodiode circuit</span> is connected and run a latency test. This can be done by running a <span class="xref myst">session</span> without the mouse being in the box. You can then compare the round trip latencies by running this jupyter notebook <code class="docutils literal notranslate"><span class="pre">mouse_task/latency_tests/Latency_test_notebook/Latency_testing.ipynb</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Calibrate</span> <span class="pre">the</span> <span class="pre">monitor</span> <span class="pre">brightness</span></code>: Follow this <span class="xref myst">doc</span> to ensure that the monitors have similar brightness across labs.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Calibrate</span> <span class="pre">the</span> <span class="pre">water</span> <span class="pre">valves</span></code>: Check that your water ports are delivering between 3-5ul of water using this <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">calibration</span> <span class="pre">method</span></code></span></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Latency</span> <span class="pre">testing</span></code>: make sure that your <a class="reference internal" href="hardware/photodiode_teensy.html"><span class="doc std std-doc">photodiode circuit</span></a> is connected and run a latency test. This can be done by running a <a class="reference internal" href="software_installation/run_a_session.html"><span class="doc std std-doc">session</span></a> without the mouse being in the box. You can then compare the round trip latencies by running this jupyter notebook <code class="docutils literal notranslate"><span class="pre">mouse_task/latency_tests/Latency_test_notebook/Latency_testing.ipynb</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Calibrate</span> <span class="pre">the</span> <span class="pre">monitor</span> <span class="pre">brightness</span></code>: Follow this <a class="reference internal" href="hardware/monitor_luminance_measurement.html"><span class="doc std std-doc">doc</span></a> to ensure that the monitors have similar brightness across labs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Calibrate</span> <span class="pre">the</span> <span class="pre">water</span> <span class="pre">valves</span></code>: Check that your water ports are delivering between 3-5ul of water using this <a class="reference internal" href="hardware/water_valve_calibration.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">calibration</span> <span class="pre">method</span></code></span></a></p></li>
 </ol>
 </section>
 <div class="toctree-wrapper compound">

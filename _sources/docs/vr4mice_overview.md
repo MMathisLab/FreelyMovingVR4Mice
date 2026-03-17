@@ -43,8 +43,8 @@ These documents provide an explanation of how to use both of these objects along
 
 Before running a mouse on the rig make sure you complete this checklist for testing the latency and calibrating the system:
 
-1. `Latency testing`: make sure that your [photodiode circuit](./Rig_building/Photodiode_circuit.md) is connected and run a latency test. This can be done by running a [session](./Installation/Run_a_session.md) without the mouse being in the box. You can then compare the round trip latencies by running this jupyter notebook `mouse_task/latency_tests/Latency_test_notebook/Latency_testing.ipynb`.
+1. `Latency testing`: make sure that your [photodiode circuit](./hardware/photodiode_teensy.md) is connected and run a latency test. This can be done by running a [session](./software_installation/run_a_session.md) without the mouse being in the box. You can then compare the round trip latencies by running this jupyter notebook `mouse_task/latency_tests/Latency_test_notebook/Latency_testing.ipynb`.
 
-2. `Calibrate the monitor brightness`: Follow this [doc](./Rig_building/Monitor_Luminance_Measurement.md) to ensure that the monitors have similar brightness across labs.
+2. `Calibrate the monitor brightness`: Follow this [doc](./hardware/monitor_luminance_measurement.md) to ensure that the monitors have similar brightness across labs.
 
-3. `Calibrate the water valves`: Check that your water ports are delivering between 3-5ul of water using this [`calibration method`](./Rig_building/Water_Valve_Calibration.md)
+3. `Calibrate the water valves`: Check that your water ports are delivering between 3-5ul of water using this [`calibration method`](./hardware/water_valve_calibration.md)

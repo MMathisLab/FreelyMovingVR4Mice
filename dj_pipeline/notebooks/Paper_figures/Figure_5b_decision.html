@@ -207,10 +207,11 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/build_unity_game.html">Rebuild a Unity game</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/add_new_objects.html">Add new target objects</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - DataJoint</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - VR4Mice DataJoint</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/datajoint.html">VR4Mice DataJoint Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/install_dj_pipeline.html">VR4Mice Pipeline - Full Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/install_dj_pipeline.html">Setup &amp; Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/datajoint.html">Architecture &amp; Tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/data_import_export.html">Data Import/Export</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Tests</span></p>
 <ul class="nav bd-sidenav">
@@ -239,6 +240,7 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l2"><a class="reference internal" href="Supp_Figure_control.html">Black target control</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/quickstart_local_dump.html">Deploy the DataJoint database locally</a></li>
 </ul>
 
     </div>
@@ -508,16 +510,8 @@ document.write(`
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">run</span> env_aws.py
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">run</span> env.py
 <span class="o">%</span><span class="k">run</span> run.py connect
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/datajoint/plugin.py:2: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools&lt;81.
-  import pkg_resources
-[2026-02-25 17:56:09,989][INFO]: Connecting admin@vr4mice-ar-collab.cluster-cn54f38qpzgm.eu-central-1.rds.amazonaws.com:3306
-[2026-02-25 17:56:10,153][INFO]: Connected admin@vr4mice-ar-collab.cluster-cn54f38qpzgm.eu-central-1.rds.amazonaws.com:3306
 </pre></div>
 </div>
 </div>
@@ -542,8 +536,6 @@ document.write(`
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">pearsonr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mpl_toolkits.axes_grid1</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_axes_locatable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvexHull</span>
-
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.analysis.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_multi_p_values_global</span><span class="p">,</span> <span class="n">get_multi_p_values_binned</span><span class="p">,</span> <span class="n">plot_aperture_heatmap</span>
 
@@ -1640,178 +1632,6 @@ aperture 33.6229 4.0000 96.0000 0.0000
 </div>
 <div class="cell_output docutils container">
 <img alt="../../../_images/edf97fce4d4fafb4b12212f4ee3e4feaa8e2fdf4e879c3dfe9dde7851d36070b.png" src="../../../_images/edf97fce4d4fafb4b12212f4ee3e4feaa8e2fdf4e879c3dfe9dde7851d36070b.png" />
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">interpolated_df</span> <span class="o">=</span> <span class="n">interpolated_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">])</span>
-
-<span class="n">session_map</span> <span class="o">=</span> <span class="n">interpolated_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">ngroup</span><span class="p">()</span>
-<span class="n">interpolated_df</span><span class="p">[</span><span class="s2">&quot;session_idx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">interpolated_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">)[</span><span class="s2">&quot;dataset&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">map</span><span class="p">({</span><span class="n">val</span><span class="p">:</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">unique</span><span class="p">())}))</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">decision_points</span><span class="p">[</span><span class="s2">&quot;trial_length&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">decision_points</span><span class="p">[</span><span class="s2">&quot;trial_length&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># for each trial, get the initial position</span>
-<span class="n">initial_positions</span> <span class="o">=</span> <span class="n">interpolated_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span>
-    <span class="p">[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;trial&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span>
-<span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()[[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;trial&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">]]</span>
-
-<span class="c1"># Get info at initial position</span>
-<span class="n">initial_positions</span><span class="p">[</span><span class="s2">&quot;info_gain&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial_positions</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
-    <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">get_info_at_position</span><span class="p">(</span>
-        <span class="n">info_map</span><span class="p">[</span><span class="n">aperture_to_occlusion</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">aperture</span><span class="p">]],</span>
-        <span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">y</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Decision point information available</span>
-<span class="n">info_at_decision_per_session</span> <span class="o">=</span> <span class="n">decision_points</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">numeric_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="n">info_at_decision_per_session</span> <span class="o">=</span> <span class="n">info_at_decision_per_session</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="kc">None</span><span class="p">:</span> <span class="s2">&quot;info_gain&quot;</span><span class="p">})</span>
-<span class="n">info_at_decision_per_session</span><span class="p">[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">info_at_decision_per_session</span><span class="p">[</span><span class="s2">&quot;info_gain&quot;</span><span class="p">]</span>
-<span class="n">info_at_decision_per_session</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">info_at_decision_per_session</span><span class="o">.</span><span class="n">reset_index</span><span class="p">())</span>
-<span class="n">info_at_decision_per_session</span><span class="o">.</span><span class="n">aperture</span> <span class="o">=</span> <span class="n">info_at_decision_per_session</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
-
-<span class="c1"># Initial position information available</span>
-<span class="n">initial_positions</span> <span class="o">=</span> <span class="n">initial_positions</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="s2">&quot;info_gain&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-<span class="n">initial_positions</span><span class="p">[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial_positions</span><span class="p">[</span><span class="s2">&quot;info_gain&quot;</span><span class="p">]</span>
-<span class="n">initial_positions</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">initial_positions</span><span class="o">.</span><span class="n">reset_index</span><span class="p">())</span>
-<span class="n">initial_positions</span><span class="o">.</span><span class="n">aperture</span> <span class="o">=</span> <span class="n">initial_positions</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
-
-<span class="c1"># Difference in information available</span>
-<span class="n">information_difference</span> <span class="o">=</span> <span class="n">info_at_decision_per_session</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="n">information_difference</span><span class="p">[</span><span class="s2">&quot;info_gain&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">information_difference</span><span class="p">[</span><span class="s2">&quot;info_gain&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">initial_positions</span><span class="p">[</span><span class="s2">&quot;info_gain&quot;</span><span class="p">]</span>
-<span class="n">information_difference</span><span class="p">[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">information_difference</span><span class="p">[</span><span class="s2">&quot;info_gain&quot;</span><span class="p">]</span>
-<span class="n">information_difference</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">information_difference</span><span class="o">.</span><span class="n">reset_index</span><span class="p">())</span>
-<span class="n">information_difference</span><span class="o">.</span><span class="n">aperture</span> <span class="o">=</span> <span class="n">information_difference</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
-
-
-<span class="n">plotting</span><span class="o">.</span><span class="n">_plot_bar_counts</span><span class="p">(</span>
-    <span class="n">counts</span><span class="o">=</span><span class="n">initial_positions</span><span class="p">,</span>
-    <span class="n">label_x</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span>
-    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
-    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-    <span class="n">per_mouse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">cmap</span><span class="o">=</span><span class="n">plotting</span><span class="o">.</span><span class="n">colors_multi_aperture</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">invert_xaxis</span><span class="p">()</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Information Content&quot;</span><span class="p">)</span>
-
-<span class="n">plotting</span><span class="o">.</span><span class="n">_plot_bar_counts</span><span class="p">(</span>
-    <span class="n">counts</span><span class="o">=</span><span class="n">info_at_decision_per_session</span><span class="p">,</span>
-    <span class="n">label_x</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span>
-    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
-    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-    <span class="n">per_mouse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">cmap</span><span class="o">=</span><span class="n">plotting</span><span class="o">.</span><span class="n">colors_multi_aperture</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">invert_xaxis</span><span class="p">()</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Information Content&quot;</span><span class="p">)</span>
-
-<span class="n">plotting</span><span class="o">.</span><span class="n">_plot_bar_counts</span><span class="p">(</span>
-    <span class="n">counts</span><span class="o">=</span><span class="n">information_difference</span><span class="p">,</span>
-    <span class="n">label_x</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span>
-    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
-    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
-    <span class="n">per_mouse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">cmap</span><span class="o">=</span><span class="n">plotting</span><span class="o">.</span><span class="n">colors_multi_aperture</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">invert_xaxis</span><span class="p">()</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Information Gain&quot;</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">)</span>
-<span class="c1">#ax[2].set_ylim(0, 0.35)</span>
-
-<span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ax</span><span class="p">:</span>
-    <span class="n">a</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">)</span>
-    <span class="n">a</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="n">aperture_to_occlusion</span><span class="o">.</span><span class="n">values</span><span class="p">())[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-    <span class="n">a</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Aperture&quot;</span><span class="p">)</span>
-    <span class="n">a</span><span class="o">.</span><span class="n">legend</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">a</span><span class="p">)</span>
-
-<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
-    <span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure4_information_quantification.svg&quot;</span><span class="p">,</span>
-    <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
-
-
-<span class="k">for</span> <span class="n">info</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="n">initial_positions</span><span class="p">,</span> <span class="n">info_at_decision_per_session</span><span class="p">,</span> <span class="n">information_difference</span><span class="p">],</span>
-                       <span class="p">[</span><span class="s2">&quot;Information at Initiation&quot;</span><span class="p">,</span> <span class="s2">&quot;Information at Decision&quot;</span><span class="p">,</span> <span class="s2">&quot;Information Difference&quot;</span><span class="p">]):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span><span class="p">:</span>
-                <span class="n">stat</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">ttest_rel</span><span class="p">(</span>
-                    <span class="n">info</span><span class="p">[</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">i</span><span class="p">][</span><span class="s2">&quot;count&quot;</span><span class="p">],</span>
-                    <span class="n">info</span><span class="p">[</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">j</span><span class="p">][</span><span class="s2">&quot;count&quot;</span><span class="p">],</span>
-                <span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">stat</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Information at Initiation
-3.0-4.2: TtestResult(statistic=-37.80348400160949, pvalue=6.693061866882944e-23, df=24)
-3.0-6.0: TtestResult(statistic=-57.47209792615331, pvalue=3.2106878572289528e-27, df=24)
-3.0-8.48: TtestResult(statistic=-86.59146850423248, pvalue=1.7965122557892684e-31, df=24)
-4.2-6.0: TtestResult(statistic=-43.78599587563031, pvalue=2.0675681321836476e-24, df=24)
-4.2-8.48: TtestResult(statistic=-72.28149584092945, pvalue=1.349674393956107e-29, df=24)
-6.0-8.48: TtestResult(statistic=-37.7001693698232, pvalue=7.139950519791088e-23, df=24)
-12.0-3.0: TtestResult(statistic=154.6961788097038, pvalue=1.6493530616857404e-37, df=24)
-12.0-4.2: TtestResult(statistic=127.15264753331448, pvalue=1.8138603437184615e-35, df=24)
-12.0-6.0: TtestResult(statistic=63.21995087979456, pvalue=3.3063276533280193e-28, df=24)
-12.0-8.48: TtestResult(statistic=8.446744543433365, pvalue=1.190253848799624e-08, df=24)
-Information at Decision
-3.0-4.2: TtestResult(statistic=-15.816750075048642, pvalue=2.5530128551249206e-07, df=8)
-3.0-6.0: TtestResult(statistic=-20.493872652573156, pvalue=3.362953816024608e-08, df=8)
-3.0-8.48: TtestResult(statistic=-45.5366635293347, pvalue=5.974586843364169e-11, df=8)
-4.2-6.0: TtestResult(statistic=-22.855248998627506, pvalue=1.4241784305246597e-08, df=8)
-4.2-8.48: TtestResult(statistic=-35.89484258754768, pvalue=3.9745090773162765e-10, df=8)
-6.0-8.48: TtestResult(statistic=-12.128173860727433, pvalue=1.977047212301208e-06, df=8)
-12.0-3.0: TtestResult(statistic=49.18147883686793, pvalue=3.233275836899934e-11, df=8)
-12.0-4.2: TtestResult(statistic=31.682428867581205, pvalue=1.0721565911076367e-09, df=8)
-12.0-6.0: TtestResult(statistic=10.957822843233787, pvalue=4.270964328507462e-06, df=8)
-12.0-8.48: TtestResult(statistic=3.5037531542159535, pvalue=0.008034769913755397, df=8)
-Information Difference
-3.0-4.2: TtestResult(statistic=-6.076480134914236, pvalue=0.0002970814039860924, df=8)
-3.0-6.0: TtestResult(statistic=-5.322101843841434, pvalue=0.0007092388919448028, df=8)
-3.0-8.48: TtestResult(statistic=-3.4962447023955696, pvalue=0.008123679598796412, df=8)
-4.2-6.0: TtestResult(statistic=-3.363776611057531, pvalue=0.00987630104525559, df=8)
-4.2-8.48: TtestResult(statistic=1.2805359782149242, pvalue=0.23623316791400165, df=8)
-6.0-8.48: TtestResult(statistic=3.210235449427638, pvalue=0.012419907829098674, df=8)
-12.0-3.0: TtestResult(statistic=1.1260232627556557, pvalue=0.2927982846047855, df=8)
-12.0-4.2: TtestResult(statistic=-3.025735506174564, pvalue=0.016415571240706188, df=8)
-12.0-6.0: TtestResult(statistic=-4.584005773593274, pvalue=0.0017925780960185514, df=8)
-12.0-8.48: TtestResult(statistic=-3.5900003678178436, pvalue=0.007084484587654069, df=8)
-</pre></div>
-</div>
-<img alt="../../../_images/3fc1182b9885b99a77db631422d2336115db92fef2b05bf59a7eb836c7fd6dd2.png" src="../../../_images/3fc1182b9885b99a77db631422d2336115db92fef2b05bf59a7eb836c7fd6dd2.png" />
 </div>
 </div>
 </section>

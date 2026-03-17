@@ -207,10 +207,11 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="software_unity_games/build_unity_game.html">Rebuild a Unity game</a></li>
 <li class="toctree-l1"><a class="reference internal" href="software_unity_games/add_new_objects.html">Add new target objects</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - DataJoint</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - VR4Mice DataJoint</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="software/datajoint.html">VR4Mice DataJoint Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="software/install_dj_pipeline.html">VR4Mice Pipeline - Full Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software/install_dj_pipeline.html">Setup &amp; Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software/datajoint.html">Architecture &amp; Tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software/data_import_export.html">Data Import/Export</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Tests</span></p>
 <ul class="nav bd-sidenav">
@@ -239,6 +240,7 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l2"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Supp_Figure_control.html">Black target control</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="software/quickstart_local_dump.html">Deploy the DataJoint database locally</a></li>
 </ul>
 
     </div>
@@ -434,11 +436,10 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#authors">Authors</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#highlights">Highlights</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-availability-and-reproducibility">Data Availability and Reproducibility</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#list-of-paper-figures">List of Paper Figures</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#authors">📝 Authors</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#highlights">✨ Highlights</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-availability-and-reproducibility">💾 Data Availability and Reproducibility</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#list-of-paper-figures">📊 List of Paper Figures</a></li>
 </ul>
             </nav>
         </div>
@@ -455,38 +456,31 @@ document.write(`
 <p>This section provides reference notebooks for figures and analyses from the paper:</p>
 <p><strong>Visual uncertainty and task demands shape active sensing strategies in mice</strong></p>
 <section id="authors">
-<h2>Authors<a class="headerlink" href="#authors" title="Permalink to this heading">#</a></h2>
+<h2>📝 Authors<a class="headerlink" href="#authors" title="Permalink to this heading">#</a></h2>
 <p>Célia Benquet*, Thomas Sainsbury*, Léo Bruneau, Yang Lin, Chenchen Cai, Mariia Popova, Kayla Ponder, Lydia Ntanavara, Rachel Froebe, Zheng Tan, Paul Fahey, Katrin Franke, Luis M. Franco, Keaton Jones, Yizhou Chen, Reece Keller, Xaq Pitkow, Cristopher M. Niell, Andreas S. Tolias, Mackenzie Weygandt Mathis</p>
 <p>* Equal contribution.</p>
 </section>
 <section id="highlights">
-<h2>Highlights<a class="headerlink" href="#highlights" title="Permalink to this heading">#</a></h2>
+<h2>✨ Highlights<a class="headerlink" href="#highlights" title="Permalink to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Mice perform active visual sensing in a free-range virtual reality-based object discrimination task.</p></li>
 <li><p>Mice perform infotaxis and select the correct object under variable visibility conditions.</p></li>
 <li><p>Trial-by-trial decisions can be decoded from head-body movements and speed, reflecting sensitivity to object occlusion (aperture width).</p></li>
 </ul>
 </section>
-<section id="summary">
-<h2>Summary<a class="headerlink" href="#summary" title="Permalink to this heading">#</a></h2>
-<p>In natural environments, animals actively sample visual information to guide behavior. Sensory feedback is dynamic and often requires active movement, whether scanning this page with saccades or walking through a cluttered environment. Although mice have relatively low-acuity vision, they still rely on sight for critical behaviors including navigation and prey capture.</p>
-<p>This work introduces a virtual reality object discrimination task to study visual decision-making under naturalistic conditions. The results show that mice perform infotaxis by actively seeking informative viewpoints to guide choices, and that this strategy is modulated by the amount of available visual information. Together, these findings indicate that mice use principled active strategies to resolve visual uncertainty, highlighting a key role for information-seeking in natural vision.</p>
-</section>
 <section id="data-availability-and-reproducibility">
-<h2>Data Availability and Reproducibility<a class="headerlink" href="#data-availability-and-reproducibility" title="Permalink to this heading">#</a></h2>
-<p>In this section, we provide reference code for reproducing the paper figures and related analyses. All figures are generated from the VR4Mice DataJoint (DJ) database.</p>
-<p>The notebooks are not offline by default: they query database tables at runtime.</p>
-<p><em>Public data release: Zotero dataset link coming soon.</em></p>
+<h2>💾 Data Availability and Reproducibility<a class="headerlink" href="#data-availability-and-reproducibility" title="Permalink to this heading">#</a></h2>
+<p>All figures are generated from the VR4Mice DataJoint (DJ) database and the notebooks need to be run by first connecting to the database. Hence, we provide the necessary code for deploying a local copy of our database and reproducing the paper figures and related analyses.</p>
+<p>🔗 Public data release on Zotero: <em>dataset link will be provided once the public archive is available.</em></p>
 <p>To reproduce the figure notebooks end-to-end:</p>
 <ol class="arabic simple">
-<li><p>Download the database data on Zotero.</p></li>
-<li><p>Install and configure the DJ pipeline following <a class="reference internal" href="software/install_dj_pipeline.html#sec-import-sql-dump"><span class="std std-ref">our installation guide</span></a>.</p></li>
+<li><p>Download the database archive from Zotero.</p></li>
+<li><p>Install and configure the DJ pipeline following <a class="reference internal" href="software/quickstart_local_dump.html#sec-import-sql-dump"><span class="std std-ref">our installation guide</span></a>.</p></li>
 <li><p>Run the figure notebooks listed below in order, after the database connection and fetch steps are complete.</p></li>
 </ol>
-<p>You can run notebooks locally if your local environment can connect to the DJ database (either a local database deployment or a remote server with credentials). Without database access, the notebooks will fail.</p>
 </section>
 <section id="list-of-paper-figures">
-<h2>List of Paper Figures<a class="headerlink" href="#list-of-paper-figures" title="Permalink to this heading">#</a></h2>
+<h2>📊 List of Paper Figures<a class="headerlink" href="#list-of-paper-figures" title="Permalink to this heading">#</a></h2>
 <p>We provide reference code for plotting all paper figures here. Note that for the paper version, panels might have been post-edited, and the figures might differ in minor typographic details.</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -566,11 +560,10 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#authors">Authors</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#highlights">Highlights</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-availability-and-reproducibility">Data Availability and Reproducibility</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#list-of-paper-figures">List of Paper Figures</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#authors">📝 Authors</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#highlights">✨ Highlights</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-availability-and-reproducibility">💾 Data Availability and Reproducibility</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#list-of-paper-figures">📊 List of Paper Figures</a></li>
 </ul>
   </nav></div>
 

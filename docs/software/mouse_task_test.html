@@ -67,7 +67,7 @@ const thebe_selector_output = ".output, .cell_output"
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Active Sensing Task" href="../software_package/active_sensing_task.html" />
-    <link rel="prev" title="VR4Mice Pipeline - Full Documentation" href="install_dj_pipeline.html" />
+    <link rel="prev" title="Data Import/Export" href="data_import_export.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -207,10 +207,11 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="../software_unity_games/build_unity_game.html">Rebuild a Unity game</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../software_unity_games/add_new_objects.html">Add new target objects</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - DataJoint</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - VR4Mice DataJoint</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="datajoint.html">VR4Mice DataJoint Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="install_dj_pipeline.html">VR4Mice Pipeline - Full Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install_dj_pipeline.html">Setup &amp; Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datajoint.html">Architecture &amp; Tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_import_export.html">Data Import/Export</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Tests</span></p>
 <ul class="current nav bd-sidenav">
@@ -239,6 +240,7 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Supp_Figure_control.html">Black target control</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart_local_dump.html">Deploy the DataJoint database locally</a></li>
 </ul>
 
     </div>
@@ -469,7 +471,8 @@ document.write(`
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading">#</a></h2>
 <section id="necessary-packages">
 <h3>Necessary packages<a class="headerlink" href="#necessary-packages" title="Permalink to this heading">#</a></h3>
-<p>To run the tests, the following packages are required. They should already be available in the conda environment created when following the installation instructions <span class="xref myst">here</span>:</p>
+<p>To run the tests, the following packages are required. They should already be
+available in the conda environment you use for the project.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">unittest</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tkinter</span></code></p></li>
@@ -521,7 +524,9 @@ The two mains files here are the following:</p>
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>It is assumed that your terminal window is open at the root of the <code class="docutils literal notranslate"><span class="pre">FreelyMovingVR4Mice</span></code> repository and that the conda environment created <span class="xref myst">here</span> is activated and has the necessary packages installed. If you are already in the <code class="docutils literal notranslate"><span class="pre">mouse_task/tests/</span></code> subfolder, you can directly run:</p>
+<p>It is assumed that your terminal window is open at the root of the <code class="docutils literal notranslate"><span class="pre">FreelyMovingVR4Mice</span></code>
+repository and that the correct conda environment is activated with the necessary
+packages installed. If you are already in the <code class="docutils literal notranslate"><span class="pre">mouse_task/tests/</span></code> subfolder, you can directly run:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>test_mouse_active_sensing.py
 </pre></div>
 </div>
@@ -547,7 +552,9 @@ The two mains files here are the following:</p>
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>It is assumed that your terminal window is open at the root of the <code class="docutils literal notranslate"><span class="pre">FreelyMovingVR4Mice</span></code> repository and that the conda environment created <span class="xref myst">here</span> is activated and has the necessary packages installed. If you are already in the <code class="docutils literal notranslate"><span class="pre">mouse_task/tests/</span></code> subfolder, you can directly run:</p>
+<p>It is assumed that your terminal window is open at the root of the <code class="docutils literal notranslate"><span class="pre">FreelyMovingVR4Mice</span></code>
+repository and that the correct conda environment is activated with the necessary
+packages installed. If you are already in the <code class="docutils literal notranslate"><span class="pre">mouse_task/tests/</span></code> subfolder, you can directly run:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>test_mouse_game_auto.py
 </pre></div>
 </div>
@@ -629,12 +636,12 @@ One important feature of the plot is that, at the end of each trajecotory, a gre
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="install_dj_pipeline.html"
+       href="data_import_export.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">VR4Mice Pipeline - Full Documentation</p>
+        <p class="prev-next-title">Data Import/Export</p>
       </div>
     </a>
     <a class="right-next"

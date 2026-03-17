@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>VR4Mice DataJoint Pipeline &#8212; FreelyMovingVR4Mice</title>
+    <title>Architecture &amp; Tables &#8212; FreelyMovingVR4Mice</title>
   
   
   
@@ -66,8 +66,8 @@ const thebe_selector_output = ".output, .cell_output"
     <link rel="shortcut icon" href="../../_static/logo.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="VR4Mice Pipeline - Full Documentation" href="install_dj_pipeline.html" />
-    <link rel="prev" title="Add new target objects" href="../software_unity_games/add_new_objects.html" />
+    <link rel="next" title="Data Import/Export" href="data_import_export.html" />
+    <link rel="prev" title="Setup &amp; Usage" href="install_dj_pipeline.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -207,10 +207,11 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="../software_unity_games/build_unity_game.html">Rebuild a Unity game</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../software_unity_games/add_new_objects.html">Add new target objects</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - DataJoint</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - VR4Mice DataJoint</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">VR4Mice DataJoint Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="install_dj_pipeline.html">VR4Mice Pipeline - Full Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install_dj_pipeline.html">Setup &amp; Usage</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Architecture &amp; Tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_import_export.html">Data Import/Export</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Tests</span></p>
 <ul class="nav bd-sidenav">
@@ -239,6 +240,7 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Supp_Figure_control.html">Black target control</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart_local_dump.html">Deploy the DataJoint database locally</a></li>
 </ul>
 
     </div>
@@ -424,7 +426,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>VR4Mice DataJoint Pipeline</h1>
+    <h1>Architecture & Tables</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -461,8 +463,8 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="vr4mice-datajoint-pipeline">
-<h1>VR4Mice DataJoint Pipeline<a class="headerlink" href="#vr4mice-datajoint-pipeline" title="Permalink to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="architecture-tables">
+<h1>Architecture &amp; Tables<a class="headerlink" href="#architecture-tables" title="Permalink to this heading">#</a></h1>
 <section id="quick-intro-resources-to-datajoint">
 <h2>Quick Intro &amp; Resources to DataJoint<a class="headerlink" href="#quick-intro-resources-to-datajoint" title="Permalink to this heading">#</a></h2>
 <p>DataJoint is an open-source data management framework designed for scientific workflows, especially in neuroscience and experimental biology. It provides a relational data model and tools for building, querying, and maintaining complex data pipelines. DataJoint enables modular, reproducible, scalable, and collaborative data analysis by organizing data into well-defined tables and automating dependencies between processing steps.</p>
@@ -481,6 +483,12 @@ document.write(`
 <li><p><a class="reference external" href="https://docs.datajoint.org/">DataJoint Documentation</a></p></li>
 <li><p><a class="reference external" href="https://github.com/datajoint/datajoint">DataJoint GitHub</a></p></li>
 </ul>
+<p><strong>Related VR4Mice docs:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">docs/software/install_dj_pipeline.md</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docs/software/quickstart_local_dump.md</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docs/software/data_import_export.md</span></code></p></li>
+</ul>
 </section>
 <section id="repository-structure-and-roles">
 <h2>Repository Structure and Roles<a class="headerlink" href="#repository-structure-and-roles" title="Permalink to this heading">#</a></h2>
@@ -490,20 +498,21 @@ document.write(`
 <li><p><strong>Graphical User Interface (GUI)</strong> for metadata and data transfer.</p></li>
 <li><p><strong>VR4mice DataJoint pipeline</strong> including table definitions, as well as external schemas for experiments and mice.</p></li>
 <li><p><strong>Data fetching and population.</strong></p></li>
-<li><p><strong>System/Docker</strong>: Uses docker-compose for deployment. <em>Please ensure that <code class="docutils literal notranslate"><span class="pre">docker-compose</span></code> is installed and that your user is added in the Docker group.</em></p></li>
+<li><p><strong>System/Docker</strong>: Uses Docker Compose for deployment. <em>Ensure Docker Compose is available (<code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code> or <code class="docutils literal notranslate"><span class="pre">docker-compose</span></code>) and your user is in the Docker group.</em></p></li>
 </ol>
 </section>
 <section id="codebase-overview">
 <h3>Codebase overview<a class="headerlink" href="#codebase-overview" title="Permalink to this heading">#</a></h3>
 <ol class="arabic simple">
-<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">base_schemas/min_base/</span></code></strong> directory contains minimal <code class="docutils literal notranslate"><span class="pre">exp</span></code> and <code class="docutils literal notranslate"><span class="pre">mice</span></code> schema definitions that are required for correct data fetching and population for the GUI dropdown menu.</p></li>
-<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">docker/client</span> <span class="pre">directory/</span></code></strong> includes the Dockerfile used to build the client’s image in <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code>, which contains the necessary environment for interacting with the DataJoint database. Any new Dockerfiles with specific environments for data analysis should be added here.</p></li>
-<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code></strong> folder contains all GUI-related information. Only this folder, as well as Python 3 and PyQt5, are needed to build the GUI on a rig computer.</p></li>
-<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">run/</span></code></strong> folder includes Bash scripts that can be run directly from the shell to launch a specific action on the database via Docker Compose service. For example, <code class="docutils literal notranslate"><span class="pre">docker-compose</span> <span class="pre">exec</span> <span class="pre">app</span> <span class="pre">python3</span> <span class="pre">scripts/minimal_run.py</span></code>.</p></li>
-<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">scripts/</span></code></strong> folder includes all scripts for interacting with the database. Each script always has a database connection part and a scenario to execute, and the simplest script only includes a connection. Scripts can be called via Bash run or via IPython, for example, <code class="docutils literal notranslate"><span class="pre">%run</span> <span class="pre">scripts/minimal_run.py</span></code> (assuming IPython is launched in the Docker via <code class="docutils literal notranslate"><span class="pre">docker-compose</span> <span class="pre">exec</span> <span class="pre">app</span> <span class="pre">ipython</span></code>).</p></li>
-<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">vr4mice/</span></code></strong> folder contains the core of the pipeline, including <code class="docutils literal notranslate"><span class="pre">vr4mice</span></code> schema (table definitions) and actions (which build the scenarios in scripts).</p></li>
-<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">Makefile</span></code></strong> provides a shortcut for calling commands.</p></li>
-<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code></strong> file contains all Docker definitions, including the database Docker and client. New services can be added if a different configuration is needed. Volumes that correspond to the locations on the drive where all data will be stored are defined here.</p></li>
+<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">base/base_min_schemas/</span></code></strong> directory contains minimal <code class="docutils literal notranslate"><span class="pre">exp</span></code> and <code class="docutils literal notranslate"><span class="pre">mice</span></code> schema definitions needed for GUI dropdowns and basic metadata.</p></li>
+<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">Dockerfile</span></code></strong> and <strong><code class="docutils literal notranslate"><span class="pre">docker/entrypoint.sh</span></code></strong> build the client image used by <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code>.</p></li>
+<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code></strong> folder contains all GUI-related information. Only this folder, plus Python 3 and PyQt5, are needed to build the GUI on a rig computer.</p></li>
+<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">run.py</span></code></strong> script is the main CLI entrypoint for running pipeline modes (populate, analysis, dlc, etc.).</p></li>
+<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">cron_scenario.py</span></code></strong> script runs the full pipeline with per-step logging (used by cron).</p></li>
+<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">quick_start.sh</span></code></strong> script interactively configures <code class="docutils literal notranslate"><span class="pre">.env</span></code>/<code class="docutils literal notranslate"><span class="pre">env.py</span></code> and starts containers.</p></li>
+<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">vr4mice/</span></code></strong> folder contains the core of the pipeline, including <code class="docutils literal notranslate"><span class="pre">vr4mice</span></code> schema (table definitions) and actions.</p></li>
+<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">Makefile</span></code></strong> provides shortcuts for Docker and common commands.</p></li>
+<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code></strong> file defines the database and client services and volume mounts.</p></li>
 </ol>
 <p><img alt="Untitled presentation(4)" src="https://user-images.githubusercontent.com/43879378/234044336-e7693e02-e8de-4000-9dd0-1716a80002db.jpg" /></p>
 </section>
@@ -627,7 +636,7 @@ All measured latencies from photodiode signal alignment.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">FailedSession</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Manual entry:</strong> Tracks failed sessions and error logging.</p>
+<p><strong>Manual entry:</strong> Tracks failed sessions and error logging; used as a skip list to prevent repeated failures.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Labels</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -727,20 +736,20 @@ All measured latencies from photodiode signal alignment.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../software_unity_games/add_new_objects.html"
+       href="install_dj_pipeline.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Add new target objects</p>
+        <p class="prev-next-title">Setup &amp; Usage</p>
       </div>
     </a>
     <a class="right-next"
-       href="install_dj_pipeline.html"
+       href="data_import_export.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">VR4Mice Pipeline - Full Documentation</p>
+        <p class="prev-next-title">Data Import/Export</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

@@ -207,10 +207,11 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/build_unity_game.html">Rebuild a Unity game</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../docs/software_unity_games/add_new_objects.html">Add new target objects</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - DataJoint</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - VR4Mice DataJoint</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/datajoint.html">VR4Mice DataJoint Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/install_dj_pipeline.html">VR4Mice Pipeline - Full Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/install_dj_pipeline.html">Setup &amp; Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/datajoint.html">Architecture &amp; Tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/data_import_export.html">Data Import/Export</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Tests</span></p>
 <ul class="nav bd-sidenav">
@@ -239,6 +240,7 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l2"><a class="reference internal" href="Supp_Figure_control.html">Black target control</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/quickstart_local_dump.html">Deploy the DataJoint database locally</a></li>
 </ul>
 
     </div>
@@ -505,16 +507,8 @@ document.write(`
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">run</span> env_aws.py
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">run</span> env.py
 <span class="o">%</span><span class="k">run</span> run.py connect
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/datajoint/plugin.py:2: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools&lt;81.
-  import pkg_resources
-[2026-03-11 11:00:26,535][INFO]: Connecting admin@vr4mice-ar-collab.cluster-cn54f38qpzgm.eu-central-1.rds.amazonaws.com:3306
-[2026-03-11 11:00:26,713][INFO]: Connected admin@vr4mice-ar-collab.cluster-cn54f38qpzgm.eu-central-1.rds.amazonaws.com:3306
 </pre></div>
 </div>
 </div>
@@ -527,14 +521,12 @@ document.write(`
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">plotting</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">base_schemas.schemas.exp</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">base_analysis</span><span class="p">,</span> <span class="n">dlc</span><span class="p">,</span> <span class="n">vr4mice</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">base_analysis</span><span class="p">,</span> <span class="n">dlc</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.analysis.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">style</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema.vr4mice</span><span class="w"> </span><span class="kn">import</span> <span class="n">SignalsPhotodiode</span><span class="p">,</span> <span class="n">Collab</span><span class="p">,</span> <span class="n">Labs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema.latency_tests</span><span class="w"> </span><span class="kn">import</span> <span class="n">AllLatencies</span><span class="p">,</span> <span class="n">SignalsPhotodiodeAligned</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.analysis.latency_testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_signals</span><span class="p">,</span> <span class="n">find_rising_edges</span><span class="p">,</span> <span class="n">get_latency</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.analysis.latency_testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_rising_edges</span><span class="p">,</span> <span class="n">get_latency</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ListedColormap</span> 
 
 <span class="n">style</span><span class="p">()</span>
