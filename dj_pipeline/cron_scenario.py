@@ -57,8 +57,6 @@ def main():
         interpolated_trajectories,
         session_metrics,
         latency_tests,
-        inputs_videos,
-        decision,
     )
 
     run_step(
@@ -126,46 +124,55 @@ def main():
         lambda: base_analysis.TrackingSummaryPlots().populate(),
     )
 
-    run_step(
-        "decision.ExperimentMember.populate",
-        lambda: decision.ExperimentMember().populate(),
-    )
-    run_step(
-        "decision.InclusionStatus.populate",
-        lambda: decision.InclusionStatus().populate(),
-    )
-    run_step("decision.LabelSet.fill", lambda: decision.LabelSet.fill())
-    run_step(
-        "decision.PredictionModel.populate",
-        lambda: decision.PredictionModel().populate(),
-    )
-    run_step(
-        "decision.DecisionPoints.populate", lambda: decision.DecisionPoints().populate()
-    )
+    if args.aws:
 
-    run_step(
-        "inputs_videos.RawVideo.populate", lambda: inputs_videos.RawVideo().populate()
-    )
-    run_step(
-        "inputs_videos.ProcessedVideo.populate",
-        lambda: inputs_videos.ProcessedVideo().populate(),
-    )
-    run_step(
-        "inputs_videos.VideoSyncSignal.populate",
-        lambda: inputs_videos.VideoSyncSignal().populate(),
-    )
-    run_step(
-        "inputs_videos.AlignedVideoFrame.populate",
-        lambda: inputs_videos.AlignedVideoFrame().populate(),
-    )
+        from vr4mice.schema import decision
 
-    run_step(
-        "fetch_data",
-        lambda: (
-            check_folder_existence("/shared"),
-            fetch_data(dst="/shared/gui_menu.npy"),
-        ),
-    )
+        run_step(
+            "decision.ExperimentMember.populate",
+            lambda: decision.ExperimentMember().populate(),
+        )
+        run_step(
+            "decision.InclusionStatus.populate",
+            lambda: decision.InclusionStatus().populate(),
+        )
+        run_step("decision.LabelSet.fill", lambda: decision.LabelSet.fill())
+        run_step(
+            "decision.PredictionModel.populate",
+            lambda: decision.PredictionModel().populate(),
+        )
+        run_step(
+            "decision.DecisionPoints.populate",
+            lambda: decision.DecisionPoints().populate(),
+        )
+    else:
+
+        from vr4mice.schema import inputs_videos
+
+        run_step(
+            "inputs_videos.RawVideo.populate",
+            lambda: inputs_videos.RawVideo().populate(),
+        )
+        run_step(
+            "inputs_videos.ProcessedVideo.populate",
+            lambda: inputs_videos.ProcessedVideo().populate(),
+        )
+        run_step(
+            "inputs_videos.VideoSyncSignal.populate",
+            lambda: inputs_videos.VideoSyncSignal().populate(),
+        )
+        run_step(
+            "inputs_videos.AlignedVideoFrame.populate",
+            lambda: inputs_videos.AlignedVideoFrame().populate(),
+        )
+
+        run_step(
+            "fetch_data",
+            lambda: (
+                check_folder_existence("/shared"),
+                fetch_data(dst="/shared/gui_menu.npy"),
+            ),
+        )
 
 
 if __name__ == "__main__":

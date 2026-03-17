@@ -146,7 +146,7 @@ class MeanXYTrajectory(dj.Computed):
                         "trial_left_choice",
                         "trial_length",
                     ],
-                )  # returns pd.DataFrame
+                )
                 mean_df = (mean_df.drop(columns=["dataset"])).to_dict()
                 self.insert1({**key, **mean_df})
 

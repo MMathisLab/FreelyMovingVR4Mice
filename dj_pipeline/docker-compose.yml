@@ -1,37 +1,40 @@
-version: "2.4"  #check version
+version: "2.4"
 services:
   db:
     image: datajoint/mysql:5.7 
-    container_name: vr4mice_db
+    container_name: ${DB_CONTAINER_NAME:-vr4mice_db}
     ports:
-            - "128.178.51.167:3309:3306"
+      - "${DB_BIND_IP:-0.0.0.0}:${DB_PORT:-3309}:3306"
     environment:
-      - MYSQL_ROOT_PASSWORD=simple
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-simple}
     volumes:
-      - /mnt/database/vr4mice/vr4mice_database/database/:/var/lib/mysql
+      - ${DB_DATA_PATH:-/mnt/database/vr4mice/vr4mice_database/database/}:/var/lib/mysql
   client:
-    image: "vr4mice_app"
-    container_name: vr4mice
+    image: ${CLIENT_IMAGE:-mmathislab/vr4mice_app:0.1.0}
+    container_name: ${CLIENT_CONTAINER_NAME:-vr4mice_${USER}}
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        - user
-        - usern
-    #network_mode: host
+    environment:
+      - PUID=${UID}
+      - PGID=${GID}
+      - USERNAME=${USER_NAME}
+      - HOME=/home/${USER_NAME}
+      - PIP_CACHE_DIR=/home/${USER_NAME}/.cache/pip
+      - PATH=/home/${USER_NAME}/.local/bin:$PATH
+      - TAG=${TAG}
+    network_mode: ${CLIENT_NETWORK_MODE:-host}
     volumes:
-        - "./:/app"
-        - "/mnt/database/shared:/shared"
-
-        - "/mnt/database/vr4mice/vr4mice_database/data:/data"
-        - "/mnt/neuropixel_data/vr4mice/raw_screen_recordings:/vr4mice_screen_recordings"
-        - "./base/base_min_schemas:/base_schemas"
-        - "./base/base_actions:/base_actions"
+      - "./:/app"
+      - "${SHARED_PATH:-/mnt/database/shared}:/shared"
+      - "${DATA_PATH:-/mnt/database/vr4mice/vr4mice_database/data}:/data"
+      - "${SCREEN_RECORDINGS_PATH:-/mnt/neuropixel_data/vr4mice/raw_screen_recordings}:/vr4mice_screen_recordings"
+      - "./base/base_min_schemas:/base_schemas"
+      - "./base/base_actions:/base_actions"
     ports: 
-        - 8887:8888
-
+      - "${JUPYTER_PORT:-8887}:8888"
     working_dir: /app
     env_file:
-        - .env
+      - .env
     stdin_open: true
     tty: true

@@ -73,6 +73,10 @@ config_path.json
 vr4mice/cfg/*
 *git_commit*
 *dj_pipline/user_*
+*.bak
+*dj_pipeline/.local/
+*dj_pipeline/local_data/
+
 
 # Test data (download separately - see README)
 test_data/
