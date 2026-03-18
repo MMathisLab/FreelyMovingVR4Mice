@@ -20,11 +20,11 @@ Célia Benquet*, Thomas Sainsbury*, Léo Bruneau, Yang Lin, Chenchen Cai, Mariia
 
 All figures are generated from the VR4Mice DataJoint (DJ) database and the notebooks need to be run by first connecting to the database. Hence, we provide the necessary code for deploying a local copy of our database and reproducing the paper figures and related analyses. 
 
-🔗 Public data release on Zotero: *dataset link will be provided once the public archive is available.*
+🔗 Public data release on [Zenodo](https://zenodo.org/uploads/19091270)
 
 To reproduce the figure notebooks end-to-end:
 
-1. Download the database archive from Zotero.
+1. Download the database archive from the [Zenodo record](https://zenodo.org/uploads/19091270).
 2. Install and configure the DJ pipeline following {ref}`our installation guide <sec:import-sql-dump>`.
 3. Run the figure notebooks listed below in order, after the database connection and fetch steps are complete.
 
