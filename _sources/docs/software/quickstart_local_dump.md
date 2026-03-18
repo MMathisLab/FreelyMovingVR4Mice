@@ -12,7 +12,7 @@
 
 ## Step 1 — Download the data archive
 
-We provide a Zenodo record containing all the files you need to reproduce our database locally.
+We provide a [Zenodo record](https://zenodo.org/uploads/19091270) containing all the files you need to reproduce our database locally.
 
 ```{note}
 The archive should be a `.zip` file. **Keep it as-is**; the quickstart script will import it directly. The archive will be extracted to a folder inside your dump directory
