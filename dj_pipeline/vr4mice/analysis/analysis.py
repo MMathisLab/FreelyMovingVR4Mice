@@ -402,8 +402,6 @@ def create_data_frame(
     df[["x", "y", "head_dir"]] = df[["x", "y", "head_dir"]].bfill()
 
     # Normalized coordinates
-    # TEMP WORKAROUND: .astype(str) because DJ 2.0 blob serialization does not
-    # support pandas.Interval objects. Revert once datajoint adds Interval support.
     df["bins_y"] = pd.cut(
         df["y"], bins=np.linspace(spatial_ybins[0], spatial_ybins[1], spatial_ybins[2])
     ).astype(str)
