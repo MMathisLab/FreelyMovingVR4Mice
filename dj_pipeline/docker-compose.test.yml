@@ -34,4 +34,4 @@ services:
       - ..:/app
     working_dir: /app
     entrypoint: []
-    command: ["bash", "-c", "pip install --no-deps /app/dj_pipeline/base/base_min_schemas /app/dj_pipeline/base/base_actions && cd tests && python -m pytest integration/ unit/ -v"]
+    command: ["bash", "-c", "cd tests && python -m pytest integration/ unit/ -v"]
