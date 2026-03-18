@@ -87,5 +87,6 @@ jobs:
             -e IMG_SRC="${IMG_SRC}" \
             -e DATABASE_USE_TLS="${DATABASE_USE_TLS}" \
             -v "$GITHUB_WORKSPACE:/app" \
+            --entrypoint bash \
             vr4mice_app:test-image \
             -lc "pip install --no-deps /app/dj_pipeline/base/base_min_schemas /app/dj_pipeline/base/base_actions && cd /app/tests && python -m pytest integration/ unit/ -v"
