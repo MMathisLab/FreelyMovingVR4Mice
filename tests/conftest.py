@@ -4,15 +4,13 @@ Shared pytest fixtures for FreelyMovingVR4Mice tests.
 This module implements the testing infrastructure pattern with:
 - Auto-marking: Tests automatically classified as unit/integration based on fixtures
 - Graceful skipping: Integration tests skip with clear messages when data unavailable
-- Environment configuration: .env.test.local for flexible data paths
 - Synthetic mock fixtures: Unit tests use fake data, no file I/O
 
-Golden dataset: Flamingo_2026-02-05_1 in test_data/golden_dataset/
+Golden dataset: Flamingo_2026-02-05_1 in dj_pipeline/tests/data/w_photodiode/
 """
 
 import os
 import sys
-import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -24,22 +22,6 @@ import pytest
 # Environment Configuration (load before anything else)
 # ==============================================================================
 
-# Load .env.test.local if it exists
-try:
-    from dotenv import load_dotenv
-    env_file = Path(__file__).parent.parent / ".env.test.local"
-    if env_file.exists():
-        load_dotenv(env_file)
-except ImportError:
-    pass  # dotenv not installed, rely on system environment
-
-# RAW_ROOT_DATA_DIR fallback to temp directory
-# This allows unit tests to run without data configured
-if "RAW_ROOT_DATA_DIR" not in os.environ:
-    raw_temp = Path(tempfile.gettempdir()) / "scene_test_raw"
-    raw_temp.mkdir(exist_ok=True)
-    os.environ["RAW_ROOT_DATA_DIR"] = str(raw_temp)
-
 # Set required environment variables for populate_rig module
 os.environ.setdefault("IMG_SRC", "Imagingsource")
 os.environ.setdefault("GUI", "false")
@@ -48,11 +30,10 @@ os.environ.setdefault("GUI", "false")
 # Path Configuration
 # ==============================================================================
 
-# Get the project root (scene-migration directory)
-# conftest.py is at scene-migration/scene/tests/conftest.py
-# So: parent=tests/, parent.parent=scene/, parent.parent.parent=scene-migration/
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-SCENE_ROOT = Path(__file__).parent.parent  # scene/ directory
+# Get the scene root directory
+# conftest.py is at scene/tests/conftest.py
+# So: parent=tests/, parent.parent=scene/
+SCENE_ROOT = Path(__file__).parent.parent
 
 # Add module paths to sys.path for imports
 ANALYSIS_PATH = SCENE_ROOT / "dj_pipeline" / "vr4mice" / "analysis"
@@ -169,25 +150,13 @@ def golden_session_info():
     return {
         "dataset_name": DATASET_NAME,
         "camera_prefix": CAMERA_PREFIX,
-        "session_dir_name": "golden_dataset",
     }
 
 
 @pytest.fixture(scope="session")
-def golden_session_path(golden_session_info):
-    """Get path to golden dataset directory."""
-    raw_dir = Path(os.environ["RAW_ROOT_DATA_DIR"])
-    # Check both possible locations:
-    # 1. Directly under RAW_ROOT_DATA_DIR (e.g., /data/Celia_Set_14012026/)
-    # 2. Via test_data subdirectory (e.g., scene-migration/test_data/Celia_Set_14012026/)
-
-    # First check if PROJECT_ROOT/test_data exists (development setup)
-    dev_path = PROJECT_ROOT / "test_data" / golden_session_info["session_dir_name"]
-    if dev_path.exists():
-        return dev_path
-
-    # Otherwise use RAW_ROOT_DATA_DIR directly
-    return raw_dir / golden_session_info["session_dir_name"]
+def golden_session_path():
+    """Get path to golden dataset directory (LFS test data in repo)."""
+    return SCENE_ROOT / "dj_pipeline" / "tests" / "data" / "w_photodiode"
 
 
 @pytest.fixture(scope="function")
@@ -196,8 +165,8 @@ def require_golden_data(golden_session_path, golden_session_info):
     Ensure golden dataset exists. Skip test if not available.
 
     Tests using this fixture will be automatically skipped if the data
-    directory doesn't exist or is missing required files. Configure
-    RAW_ROOT_DATA_DIR in .env.test.local to enable these tests.
+    directory doesn't exist or is missing required files. Run
+    `git lfs pull` to download the test data.
 
     NOTE: integration/conftest.py defines its own require_golden_data
     that shadows this one inside integration/. Both do the same thing but
@@ -209,8 +178,7 @@ def require_golden_data(golden_session_path, golden_session_info):
     if not golden_session_path.exists():
         pytest.skip(
             f"Golden dataset not found at: {golden_session_path}\n"
-            "Configure RAW_ROOT_DATA_DIR in .env.test.local to enable integration tests.\n"
-            "See .env.test.local.example for configuration instructions."
+            "Run `git lfs pull` to download test data."
         )
 
     # Check required files exist
@@ -226,7 +194,8 @@ def require_golden_data(golden_session_path, golden_session_info):
     if missing:
         pytest.skip(
             f"Golden dataset incomplete at: {golden_session_path}\n"
-            f"Missing files: {missing}"
+            f"Missing files: {missing}\n"
+            "Run `git lfs pull` to download test data."
         )
 
     return golden_session_path

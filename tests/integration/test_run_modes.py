@@ -19,8 +19,8 @@ Test Strategy:
 - Module-scoped fixtures for efficiency
 
 Dependencies:
-- Docker Desktop running (testcontainers auto-provisions MySQL)
-- Golden dataset in test_data/golden_dataset/
+- Docker Desktop running (MySQL via docker-compose)
+- Golden dataset in dj_pipeline/tests/data/w_photodiode/ (via Git LFS)
 
 Run with:
     cd scene/dj_pipeline

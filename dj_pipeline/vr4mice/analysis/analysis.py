@@ -50,41 +50,43 @@ def _categorize_columns(df: pd.DataFrame) -> Tuple[List[str], List[str], List[st
         df (pd.DataFrame): DataFrame to analyze.
 
     Returns:
-        Tuple[List[str], List[str], List[str]]: Lists of categorical, binary, and continuous column names.
+        Tuple[List[str], List[str], List[str]]: Lists of categorical, boolean, and continuous column names.
     """
     categorical_columns = df.select_dtypes(
         include=["object", "category"]
     ).columns.tolist()
+    # "time" is created inside _resample_data_frame after categorization,
+    # so it won't be present here, but exclude defensively.
     categorical_columns = [
-        col for col in categorical_columns if col not in ["step_time", "time"]
+        col for col in categorical_columns if col not in ["time"]
     ]
 
-    binary_columns = []
+    boolean_columns = []
     continuous_columns = []
 
     for col in df.columns:
-        if col in categorical_columns + ["step_time", "time"]:
+        if col in categorical_columns + ["time"]:
             continue
 
         series = df[col]
-        # Boolean dtypes are always treated as binary
+        # Boolean dtypes are always treated as boolean
         if series.dtype == "bool":
-            binary_columns.append(col)
+            boolean_columns.append(col)
         # For numeric dtypes, check whether all non-NA values are in {0, 1}
         elif pd.api.types.is_numeric_dtype(series):
             non_na = series.dropna()
             if non_na.isin((0, 1)).all():
-                binary_columns.append(col)
+                boolean_columns.append(col)
             else:
                 continuous_columns.append(col)
 
-    return categorical_columns, binary_columns, continuous_columns
+    return categorical_columns, boolean_columns, continuous_columns
 
 
 def _resample_data_frame(
     df: pd.DataFrame, resampling_period_ms: int = 20
 ) -> pd.DataFrame:  # in ms
-    categorical_columns, binary_columns, continuous_columns = _categorize_columns(df)
+    categorical_columns, boolean_columns, continuous_columns = _categorize_columns(df)
 
     t = f"{resampling_period_ms}ms"  # old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
 
@@ -94,15 +96,15 @@ def _resample_data_frame(
         df.set_index("time")
         .groupby("trial", as_index=False)[categorical_columns]
         .resample(t)  # resample to fixed time intervals {resampling_period_ms} ms
-        .first(numeric_only=False)
+        .first(numeric_only=False)  # default
         .ffill()
     )
 
-    binary_resampled = (
+    boolean_resampled = (
         df.set_index("time")
-        .groupby("trial", as_index=False)[binary_columns]
+        .groupby("trial", as_index=False)[boolean_columns]
         .resample(t)
-        .max(numeric_only=True)
+        .max()
         .ffill()
     )
 
@@ -110,11 +112,11 @@ def _resample_data_frame(
         df.set_index("time")
         .groupby("trial", as_index=False)[continuous_columns]
         .resample(t)
-        .mean(numeric_only=True)
+        .mean()
         .interpolate()
     )
     df = pd.concat(
-        [continuous_resampled, categorical_resampled, binary_resampled], axis=1
+        [continuous_resampled, categorical_resampled, boolean_resampled], axis=1
     ).reset_index()
 
     if "level_0" in df.columns:

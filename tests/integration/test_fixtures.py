@@ -3,7 +3,7 @@ Smoke tests to verify integration test fixtures work correctly.
 These tests validate the test infrastructure itself using real golden dataset.
 
 NOTE: These tests require the golden dataset to be available.
-Configure RAW_ROOT_DATA_DIR in .env.test.local to run these tests.
+Run `git lfs pull` to download test data.
 """
 
 import numpy as np

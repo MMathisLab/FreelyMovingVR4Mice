@@ -26,7 +26,10 @@ RUN pip install datajoint==2.0.1 \
     pymysql cryptography minio pydantic-settings deepdiff \
     "pandas<2.0" \
     "scipy<1.12" \
-    seaborn umap-learn black==22.6 \
+    seaborn \
+    jupyter \
+    umap-learn \
+    black==22.6 \
     pytest pytest-cov tables
 
 ARG user_name=user

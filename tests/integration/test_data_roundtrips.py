@@ -11,8 +11,8 @@ These tests validate the data transformation pipeline using the
 golden dataset (real production data).
 
 NOTE: These tests require the golden dataset to be available.
-Configure RAW_ROOT_DATA_DIR in .env.test.local to run these tests.
-Tests will skip gracefully if data is not available.
+Run `git lfs pull` to download test data. Tests will skip
+gracefully if data is not available.
 """
 
 import numpy as np

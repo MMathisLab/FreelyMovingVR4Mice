@@ -1,12 +1,19 @@
 """
-Database integration test fixtures using testcontainers.
+Database integration test fixtures.
 
 Provides:
-- MySQL container that automatically starts/stops for tests
+- MySQL connection configuration for DataJoint
 - Pipeline fixture with access to all vr4mice schema modules
 - Real data loading fixtures for the golden dataset
 
 Uses 'test_' schema prefix to isolate from any real data.
+
+Requires an external MySQL instance (via docker-compose or CI).
+Configure via environment variables:
+    DJ_HOST (default: localhost)
+    DJ_PORT (default: 3306)
+    DJ_USER (default: root)
+    DJ_PASSWORD (default: simple)
 
 NOTE: Mocks from parent conftest.py are cleared INSIDE the pipeline fixture,
 not at module level. This allows non-database integration tests (like
@@ -17,7 +24,6 @@ use real DataJoint connections.
 import json
 import os
 import sys
-import time
 from pathlib import Path
 
 import numpy as np
@@ -40,14 +46,14 @@ def pytest_addoption(parser):
 
 # Get paths
 TESTS_DIR = Path(__file__).parent.parent
-PROJECT_ROOT = TESTS_DIR.parent
+SCENE_ROOT = TESTS_DIR.parent
 
 # Add module paths - need to add the vr4mice parent so imports like "from vr4mice.schema import vr4mice" work
-VR4MICE_PARENT = PROJECT_ROOT / "dj_pipeline"
-VR4MICE_PATH = PROJECT_ROOT / "dj_pipeline" / "vr4mice"
-VR4MICE_ACTIONS_PATH = PROJECT_ROOT / "dj_pipeline" / "vr4mice" / "actions"
-BASE_SCHEMAS_PATH = PROJECT_ROOT / "dj_pipeline" / "base" / "base_min_schemas"
-BASE_ACTIONS_PATH = PROJECT_ROOT / "dj_pipeline" / "base" / "base_actions"
+VR4MICE_PARENT = SCENE_ROOT / "dj_pipeline"
+VR4MICE_PATH = SCENE_ROOT / "dj_pipeline" / "vr4mice"
+VR4MICE_ACTIONS_PATH = SCENE_ROOT / "dj_pipeline" / "vr4mice" / "actions"
+BASE_SCHEMAS_PATH = SCENE_ROOT / "dj_pipeline" / "base" / "base_min_schemas"
+BASE_ACTIONS_PATH = SCENE_ROOT / "dj_pipeline" / "base" / "base_actions"
 
 for path in [VR4MICE_PARENT, VR4MICE_PATH, VR4MICE_ACTIONS_PATH, BASE_SCHEMAS_PATH, BASE_ACTIONS_PATH]:
     if str(path) not in sys.path:
@@ -60,28 +66,12 @@ os.environ.setdefault("DJ_LAB", "test")
 os.environ.setdefault("EMAIL", "false")  # Disable email sending in tests
 
 
-
 # ==============================================================================
-# MySQL Container Fixture (with external container support)
+# MySQL Connection Fixture
 # ==============================================================================
 
-def _use_external_mysql():
-    """Check if we should use an external MySQL container instead of testcontainers."""
-    return os.environ.get("DJ_USE_EXTERNAL_CONTAINERS", "").lower() in ("1", "true", "yes")
-
-
-class ExternalMySqlContainer:
-    """
-    Wrapper that mimics testcontainers interface for external MySQL.
-
-    Allows using docker-compose MySQL or any external MySQL instance.
-    Configure via environment variables:
-        DJ_USE_EXTERNAL_CONTAINERS=1
-        DJ_HOST=localhost (default)
-        DJ_PORT=3306 (default)
-        DJ_USER=root (default)
-        DJ_PASSWORD=simple (default)
-    """
+class _MySqlConnection:
+    """MySQL connection info from environment variables."""
 
     def __init__(self):
         self.host = os.environ.get("DJ_HOST", "localhost")
@@ -95,54 +85,16 @@ class ExternalMySqlContainer:
     def get_exposed_port(self, port):
         return self.port
 
-    def start(self):
-        # External container already running
-        pass
-
-    def stop(self):
-        # Don't stop external container
-        pass
-
 
 @pytest.fixture(scope="session")
 def mysql_container():
     """
     Provide MySQL connection for database integration tests.
 
-    Supports two modes:
-    1. testcontainers (default): Automatically starts/stops MySQL container
-    2. external: Uses existing MySQL instance (set DJ_USE_EXTERNAL_CONTAINERS=1)
-
-    External mode is useful for:
-    - CI environments where Docker-in-Docker is problematic
-    - Development with docker-compose already running
-    - WSL environments with Docker connectivity issues
+    Reads connection details from environment variables.
+    Expects MySQL to be running externally (via docker-compose or CI).
     """
-    if _use_external_mysql():
-        # Use external MySQL (docker-compose or other)
-        container = ExternalMySqlContainer()
-        container.start()  # No-op for external
-        yield container
-        container.stop()  # No-op for external
-    else:
-        # Use testcontainers to start MySQL
-        from testcontainers.mysql import MySqlContainer
-
-        container = MySqlContainer(
-            image="datajoint/mysql:5.7",
-            username="root",
-            password="simple",
-            dbname="test_db",
-        )
-
-        container.start()
-
-        # Wait for MySQL to be ready (datajoint/mysql can take a moment)
-        time.sleep(5)
-
-        yield container
-
-        container.stop()
+    yield _MySqlConnection()
 
 
 @pytest.fixture(scope="session")
@@ -295,25 +247,17 @@ def pipeline(dj_config):
 @pytest.fixture(scope="session")
 def test_data_dir():
     """
-    Path to test data directory with graceful skipping.
+    Path to test data directory (LFS test data in repo).
 
-    Uses PROJECT_ROOT/test_data/golden_dataset/ for development setup.
-    Falls back to RAW_ROOT_DATA_DIR if set in environment.
+    Data lives at dj_pipeline/tests/data/w_photodiode/.
+    Run `git lfs pull` to download the test data files.
     """
-    # Primary location (inside project directory)
-    data_dir = PROJECT_ROOT / "test_data" / "golden_dataset"
-
-    if not data_dir.exists():
-        # Fallback to RAW_ROOT_DATA_DIR
-        raw_root = os.environ.get("RAW_ROOT_DATA_DIR", "")
-        if raw_root:
-            data_dir = Path(raw_root) / "golden_dataset"
+    data_dir = SCENE_ROOT / "dj_pipeline" / "tests" / "data" / "w_photodiode"
 
     if not data_dir.exists():
         pytest.skip(
             f"Test data directory not found at: {data_dir}\n"
-            "Configure RAW_ROOT_DATA_DIR in .env.test.local to enable integration tests.\n"
-            "See .env.test.local.example for configuration instructions."
+            "Run `git lfs pull` to download test data."
         )
 
     return data_dir
