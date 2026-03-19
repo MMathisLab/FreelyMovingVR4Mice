@@ -1,6 +1,5 @@
 """Analysis schema tables built on top of core VR4Mice datasets."""
 
-import subprocess
 import os
 import re
 from pathlib import Path
@@ -10,7 +9,8 @@ import datajoint as dj
 import pandas as pd
 from base_actions.send_email import email
 
-from vr4mice.schema import vr4mice
+from vr4mice.schema import base, vr4mice
+from vr4mice.analysis.summary_dj import vr4mice_summary_plots
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
 
@@ -329,9 +329,6 @@ class SummaryPlots(dj.Computed):
     filename:  varchar(255)
     """
 
-    from vr4mice.analysis.summary_dj import vr4mice_summary_plots
-    from vr4mice.schema import base
-
     def make(self, key, send=os.environ["EMAIL"]):
         """
         key: Dataset
@@ -350,7 +347,7 @@ class SummaryPlots(dj.Computed):
         if (DataFrame & key) and (BoxDataFrame & key):
             full_path = None
             try:
-                full_path = self.__class__.vr4mice_summary_plots(
+                full_path = vr4mice_summary_plots(
                     key, save_path="/data/summary_plots", database=True
                 )
             except Exception as err:
@@ -369,8 +366,8 @@ class SummaryPlots(dj.Computed):
             return False
 
         data = {**key, **{"filename": full_path}}
-        if self.__class__.base.Base() & key:
-            key = (self.__class__.base.Base() & key).fetch(as_dict=True)[0]
+        if base.Base() & key:
+            key = (base.Base() & key).fetch(as_dict=True)[0]
         else:
             key = self.parse_dataset(key["dataset"])
 
@@ -409,8 +406,8 @@ class SummaryPlots(dj.Computed):
 
     def get_name(self, key):
         name = key["dataset"]
-        if self.__class__.base.Base() & key:
-            session_info = (self.__class__.base.Base() & key).fetch(as_dict=True)[0]
+        if base.Base() & key:
+            session_info = (base.Base() & key).fetch(as_dict=True)[0]
             if len(session_info) > 0:
                 name = f'{session_info["mouse_name"]}_day{session_info["day"]}_attempt{session_info["attempt"]}'
 
@@ -439,7 +436,7 @@ class SummaryPlots(dj.Computed):
 def insert_send_email(key, filename, err_msg):
     """Insert summary plots row and optionally email recipients."""
 
-    from base_schemas.schemas import exp, mice
+    from base_schemas.schemas import exp
 
     toaddr = []
     try:
