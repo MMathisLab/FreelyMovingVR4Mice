@@ -1,6 +1,6 @@
 """
 Discrimination task without occluders.
-Mouse must report the location of the black teardrop and ignore the pacman
+Mouse must report the location of the black teardrop and ignore the pacman.
 """
 
 import os

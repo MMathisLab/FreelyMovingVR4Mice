@@ -1,5 +1,6 @@
 """
-Detection task without velocity threshold to initiate the trials.
+Discrimination task with 2 occluders of different sizes, narrower occluders.
+Mouse must report the location of the black teardrop and ignore the pacman.
 """
 
 import os
