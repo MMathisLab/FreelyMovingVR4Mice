@@ -1,118 +1,355 @@
+# Setup & Usage
 
-# Install and Run the vr4mice pipeline
+## Overview
+The VR4Mice pipeline is a DataJoint-based workflow for ingesting raw rig data,
+computing analysis tables, running DLC and interpolation, and generating summary outputs.
+It is designed to run from the client container and can be scheduled via cron.
 
-## Rig Data Transfer GUI Installation
-1. `git clone` the [`FreelyMovingVR4Mice`](https://github.com/MMathisLab/FreelyMovingVR4Mice) repo.
-2. Ensure that Python 3 and PyQt 5 are installed (else, a setup file is provided).
-3. Navigate to the `gui_transfer/` folder and locate the `config.json` file within the `config/` folder.
-4. Fill in the appropriate paths within the `config.json` file.
-5. Start the GUI:
-   - *For Linux/Mac,* execute the command `make run_gui` from the `gui_transfer/` folder root.
-   - *For Windows,* adjust the paths in the provided batch file.
+## End-to-end workflow (data acquisition → emails)
+1. **Acquisition (rig)**: `.pickle` files (and optional `.npy` metadata via GUI).
+2. **Ingest**: `run.py populate` → raw tables in `vr4mice`/`base`.
+3. **Analysis**: `run.py analysis` → `base_analysis` tables.
+4. **DLC + interpolation**: `run.py dlc` then `run.py interp`.
+5. **Latency + inputs**: `run.py latency` and `run.py inputs_videos`.
+6. **Decision + summaries**: `run.py decision` then `run.py summary`.
+7. **Emails**: sent if `EMAIL=true` and recipients are available.
 
-## DataJoint database user remote access via Jupyter Notebook
-1. Ensure that `jupyter-notebook` is installed, `vr4mice` repository is loaded, and `base_schemas` is pip-installed.
-2. Update information in the `env.py` file (IP of server, user name and password provided by administrator).
-3. From working `vr4mice` directory start Jupyter Notebook and create a new Python3 page.
-4. ```%run env.py``` to load environmental variables
-5. ```%run run.py connect``` to connect
-7. Bravo 👏! Data can be fetched ```vr4mice.Dataset()``` (relative imports were done in the run script).
+## Repository layout (dj_pipeline)
+- `run.py`: manual CLI entrypoint for running pipeline modes (user mode).
+- `cron_scenario.py`: scheduled runner for full pipeline execution (crontab call).
+- `vr4mice/`: core schema, analysis, and action code.
+- `gui_transfer/`: GUI configuration and data transfer tools.
+- `base/`: base schemas and actions (full and minimal modes: mice, exp tables, connections and email functions).
+- `backup/`: backup helpers (local/remote sync scripts).
+- `cron_*.sh`: cron wrappers for scheduled runs (standard, reboot, AWS).
+- `generators/`: small utilities to create helper tables/files (e.g., add mice).
+- `parse_mice/`: parsing helpers for mouse metadata files.
+- `mysql_access/`: SQL templates for user setup.
+- `notebooks/`: analysis and figure notebooks (research use).
+- Logs are written on the **server** in a local `logs/` folder and are not part of the repo.
 
-## DataJoint database user remote access
-> Similar to [general auxPipelines connection instructions](https://github.com/AdaptiveMotorControlLab/auxPipelines-DataJoint_Mathis?tab=readme-ov-file#connect-to-database-from-local-host-to-remote-server).
+## vr4mice module guide (key folders)
+### `vr4mice/schema`
+DataJoint table definitions for core pipeline:
+- `vr4mice`: raw/session tables and metadata.
+- `base`, `base_analysis`: analysis and summary outputs.
+- `dlc`, `interpolated_trajectories`, `latency_tests`, `decision`, `inputs_videos`: downstream modules.
 
-1. Obtain server access and database user credentials from the administrator (add them to the `.env` file).
-2. To connect to a remote database from a local host, modify the server IP address and user credentials in the `docker-compose` file.
-3. Build the client service container using the `docker-compose` file and the command `make build_client`.
-4. Run the client container to access the remote database using the command `make up_client`.
-5. To connect to the DataJoint database, launch `make ipython` and execute the minimal script `%run run.py connect`. 
+### `vr4mice/actions`
+Orchestration helpers and ingestion utilities:
+- `populate_rig.py`: main raw-data ingest for `.pickle`/`.npy`.
+- `fetch_data.py`: builds GUI dropdown `.npy` (menu).
+- `sync_days.py`: sync/backfill missing days/sessions.
+- `keys2tables_*.py`: map GUI/rig keys to table attributes.
+- `helpers_dj.py`: shared DataJoint helpers used by actions.
 
-## DataJoint database deployment (on server or locally)
-### Setup Instructions
-1. **Ensure that Docker Compose is installed and that the user is added to the Docker group.** Refer to the [Docker installation guide](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) for more info.
-    ```bash
-    # Add user to the Docker group
-   sudo usermod -aG docker <username>
-    ```
-2. **Download the current repository.** Make sure your git key is active. Else [learn how to generate a SSH key for git](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key).
-   ```bash
-   git clone git@github.com:MMathisLab/FreelyMovingVR4Mice.git
-   cd dj_pipeline
-   ```
-3. **Adjust the paths in the shared volumes for the database storage and shared volumes.**
-   ```bash
-   # Create folders if needed to store the data and database (Warning concerning permissions on /mnt, run ```sudo chmod 0777 /mnt``` if needed or change the location)
-   mkdir -p /path/to/database_directory
-   mkdir -p /path/to/data_directory
-   mkdir -p /mnt/database/vr4mice/vr4mice_database/database
-   mkdir -p /mnt/database/vr4mice/vr4mice_database/data
-   
-   # if gui is not used /data/dlc_video /data/data /data/summary_plots have to be created manually
-   mkdir -p /mnt/database/vr4mice/vr4mice_database/data/data/data
-   mkdir -p /mnt/database/vr4mice/vr4mice_database/data/data/dlc_video
-   mkdir -p /mnt/database/vr4mice/vr4mice_database/data/summary_plots
-   
-   # if gui is not used: unused
-   mkdir -p /shared
-   ```
-4. To make the database accessible from any machine in the local subnet, change the IP in `docker-compose` to the server's IP (and choose the port). Find the IP address via `ifconfig`.
+### `vr4mice/analysis`
+Computation and plotting utilities used by schema tables:
+- `analysis.py`: core session dataframe and derived metrics.
+- `latency_testing.py`, `inputs_videos.py`: latency and sync utilities.
+- `regression.py`, `stats.py`, `plotting.py`: downstream analyses and visualization.
 
-### Build and Run
-5. **Build the Docker Compose** using the command `make build_all` to create the image for the DataJoint database and client container (do not use "sudo"). 
+### `gui_transfer`
+Rig GUI and transfer utilities:
+- `gui.py` + `config/` for metadata capture.
+- `utils/` and `modules/` for GUI logic.
+- `menu.npy` generated by `fetch_data.py`.
 
-> This command will also start the containers.
+### `base` (schemas)
+- `base_schemas`: full `exp` and `mice` schema definitions.
+- `base_min_schemas`: minimal `exp`/`mice` for GUI + collab when full schemas are not available.
 
-6. **Add default MySQL credentials** to `~/.my.cnf` file. Ask the administrator for host, user, password.
-   ```bash
-   [client-vr4mice]
-   host=host
-   user=default_user
-   password=default_pwd
-   port=3309
-   ```
-   Now you can run `make mysql` to connect to the database from MySQL interface. Here you can create a new user or change the credentials of an existing one.
+## Getting Started — For Everyday Users
+This quick guide helps you connect to the database and run the pipeline without deployment experience.
 
-7. **Install base schemas inside the container.** Run `make base_install` from the host.
+### Requirements
+- Bash
+- Docker + Docker Compose
+- GNU Make
+- Database credentials (host/port, user, password)
 
-### Remote Access and Testing
-8. **To connect to the DataJoint database remotely**, follow the instructions for local or remote connection provided in the previous section. To connect from the same server under the root account, you can call `make ipython` that will place you in the container's IPython shell.
-   ```bash
-   %run run.py connect
-   # Import some schemas to play with 
-   from base_schemas.schemas import exp, mice
-   from vr4mice.schema import vr4mice
-   vr4mice.Dataset()```
-   
-9. **Test populate:**
-   Upload some files from GUI(s): `.pickle` file go to the `/mnt/database/vr4mice/vr4mice_database/data/data` folder and the `.hdf5` and `PROC.TS.npy` files in `/mnt/database/vr4mice/vr4mice_database/data/data/dlc_video` (`/data/dlc_video` path if you are in a container). Then run: 
-
+### Quick start (recommended)
+Use the interactive setup script to configure `.env`/`env.py` and start containers:
 ```bash
-   %run run.py populate
-   # Import some schemas and check that Dataset is here
-   from base_schemas.schemas import exp, mice
-   from vr4mice.schema import vr4mice
-   vr4mice.Dataset()
+bash quick_start.sh
+```
+
+### Quick start — client mode (connect to an existing DB)
+Use when the database already runs elsewhere.
+```bash
+bash quick_start.sh
+```
+Choose:
+- **Mode**: `client`
+- **DJ host**: `ip:port` or hostname (e.g., `127.0.0.1:3309`)
+- **DJ user / DJ password**
+
+This starts only the client container.
+
+### Quick start — deployment mode (DB + client on server)
+Use when deploying both database and client containers on a server.
+```bash
+bash quick_start.sh
+```
+Choose:
+- **Mode**: `deployment`
+- Provide mount paths for database, data, shared, and screen recordings
+- Set DB bind IP/port and MySQL root password
+
+Defaults shown by the script:
+- `/mnt/database/vr4mice/vr4mice_database/database` → `/var/lib/mysql`
+- `/mnt/database/shared` → `/shared`
+- `/mnt/database/vr4mice/vr4mice_database/data` → `/data`
+- `/mnt/neuropixel_data/vr4mice/raw_screen_recordings` → `/vr4mice_screen_recordings`
+- repo root (`./`) → `/app`
+- `./base/base_min_schemas` → `/base_schemas`
+- `./base/base_actions` → `/base_actions`
+
+### Quick start — import DB dumps
+Use this when you have `restricted_dump_*.sql` files or a `.zip`/`.tar.gz` archive.
+```bash
+bash quick_start.sh
+```
+When prompted:
+- **Import DB dumps now?** → `yes`
+- **Dump directory or .zip/.tar.gz archive** → path to the dump folder or archive
+
+The script creates missing databases and imports each `restricted_dump_*.sql`.
+Imports stay in the foreground and show progress (via `pv` or `dd status=progress`
+when available).
+
+### Step 1 — Clone the repo
+```bash
+git clone git@github.com:MMathisLab/FreelyMovingVR4Mice.git
+cd dj_pipeline
+```
+
+### Step 2 — Configure credentials
+Update your credentials in `.env` (or `env.py` for local conda runs).
+```bash
+vim .env
+```
+
+### Step 3 — Start the client container
+```bash
+make client_build
+make client_up
+```
+
+### Step 4 — Connect via IPython or Jupyter
+```bash
+make ipython
+%run run.py connect
+```
+
+Optional Jupyter:
+```bash
+make notebook
+```
+
+Remote Jupyter via SSH tunnel:
+```bash
+ssh -NL 8887:localhost:8887 <user>@<server>
+```
+Append `&` if you want the tunnel in the background.
+You can add an SSH config alias (e.g., `wm`) and then connect with:
+```bash
+ssh -NL 8887:localhost:8887 wm
+```
+
+### Step 5 — Verify connection
+```python
+from vr4mice.schema import vr4mice
+vr4mice.Dataset()
+```
+
+### Stop the client
+```bash
+make client_down
+```
+
+
+#### DataJoint database user remote access via Jupyter Notebook (tested with Python 3.9.5):
+1. Assuming that Jupyter Notebook and DataJoint are installed, "vr4mice" repository is loaded, and "base_schemas" are pip-installed:  
+   ```bash
+   pip install notebook datajoint==0.14.0  # later versions enforce CamelCase for class names
+   pip install base/base_actions/
+   pip install base/base_min_schemas/
+   ```
+2. Make sure the "graphviz" package is available if you want to display images (i.e. schema diagrams): `sudo apt install -y graphviz`
+3. Update the information in the `env.py` file (IP of server, username provided by administrator)
+4. From the current directory, start `jupyter notebook` and launch a Python3 kernel
+5. `%run env.py` to load environmental variables
+6. `%run run.py connect` to connect to the DJ database
+7. Bravo! Data can now be fetched with ```vr4mice.Dataset()``` (relative imports were done in the `run.py` script)
+
+
+## Deployment (server)
+
+### Server deployment (database + client containers)
+The server runs two containers:
+- **Database** (MySQL/DataJoint)
+- **Client** (pipeline runner)
+
+Note: store MySQL admin credentials in `~/.my.cnf` on the server.
+```bash
+make build_all
+make up_all
+make mysql
+make ipython
+%run run.py connect
+```
+### Mounts and storage
+In `docker-compose.yml`, map host storage for database and data volumes:
+- `/data` and `/data/summary_plots` must exist and be writable.
+- `/shared` is used for GUI menu exports.
+- Use persistent paths (e.g., `/mnt/database/...`) on the server.
+Network mode:
+- Default is `host`. Set `CLIENT_NETWORK_MODE=bridge` in `.env` if you need bridge networking.
+
+### Deployment defaults (quick_start.sh)
+When using `bash quick_start.sh` in **deployment** mode, the default host paths map to:
+- `/mnt/database/vr4mice/vr4mice_database/database` → `/var/lib/mysql`
+- `/mnt/database/shared` → `/shared`
+- `/mnt/database/vr4mice/vr4mice_database/data` → `/data`
+- `/mnt/neuropixel_data/vr4mice/raw_screen_recordings` → `/vr4mice_screen_recordings`
+- repo root (`./`) → `/app`
+- `./base/base_min_schemas` → `/base_schemas`
+- `./base/base_actions` → `/base_actions`
+
+### Database deployment notes (server)
+- Add user to Docker group:
+  ```bash
+  sudo usermod -aG docker <username>
   ```
-   > **Note:**
-   > If the subfolder name is different (not `/data/data` but `/data/rawdata` for example, change the path in `run.py` script).
+- Create host storage paths (example):
+  ```bash
+  mkdir -p /mnt/database/vr4mice/vr4mice_database/database
+  mkdir -p /mnt/database/vr4mice/vr4mice_database/data
+  mkdir -p /mnt/database/vr4mice/vr4mice_database/data/data/data
+  mkdir -p /mnt/database/vr4mice/vr4mice_database/data/data/dlc_video
+  mkdir -p /mnt/database/vr4mice/vr4mice_database/data/summary_plots
+  mkdir -p /shared
+  ```
+- Add MySQL credentials in `~/.my.cnf` for `make mysql`:
+  ```ini
+  [client-vr4mice]
+  host=127.0.0.1
+  user=root
+  password=simple
+  port=3309
+  ```
+### Environment variables
+Common variables used by the pipeline:
+- `DJ_HOST` (include port, e.g. `127.0.0.1:3309`), `DJ_USER`, `DJ_PWD`
+- `DJ_LAB`
+- `GUI` (true/false)
+- `EMAIL` (true/false)
+- `IMG_SRC`
+- `VR4MICE_EMAIL_RECIPIENTS` (comma-separated experimenter names)
+Docker-specific overrides (optional):
+- `DB_BIND_IP`, `DB_PORT`, `MYSQL_ROOT_PASSWORD`
+- `DB_DATA_PATH`, `SHARED_PATH`, `DATA_PATH`, `SCREEN_RECORDINGS_PATH`
 
-10. **To populate analysis**, run:
- ```bash
-   from vr4mice.schema import base_analysis, federated_db
-   base_analysis.DataFrame.populate()
-   base_analysis.BoxDataFrame()
-   base_analysis.OutputPlots.populate()
+Notes:
+- `VR4MICE_EMAIL_RECIPIENTS` is required if base schemas (exp/mice) are not in use,
+  because experimenter names are otherwise missing from GUI metadata.
 
- # or via run.py
-   %run run.py analysis
-```
+### Schemas (what they do)
+- `vr4mice`: core tables for datasets, raw signals, metadata, and derived features.
+- `base`: links datasets to `exp` and `mice` schema information.
+- `base_analysis`: analysis outputs and summary plots.
+- `dlc`, `interpolated_trajectories`, `latency_tests`, `decision`, `inputs_videos`: downstream analysis modules.
 
-### Additional Configurations
-11. The logs can be checked in the logs current folder.
+### Schema modes
+Two base schema modes are supported:
+- **Full base schemas**: `base_schemas` (exp/mice full definitions).
+- **Minimal schemas**: `base_min_schemas` (minimal exp/mice for collab + basic metadata).
 
-12. *(Optional)* Configure cron jobs for regular populating and menu file generation.
+Both modes work; choose minimal when only GUI dropdowns and basic metadata are needed.
+
+### Data import/export (restricted dumps)
+See `docs/software/data_import_export.md` for:
+- Exporting restricted dumps (`export_restricted_dump.sh`)
+- Importing dumps with `quick_start.sh`
+- Manual mysql import
+
+See `docs/software/quickstart_local_dump.md` for a full local deploy workflow that clones the data archive, runs quickstart, and connects Jupyter.
+
+
+## GUI vs non-GUI mode
+- **GUI mode** (`GUI=true`): expects `.pickle` + `.npy` inputs.
+- **Non-GUI** (`GUI=false`): uses `.pickle` only; metadata is reconstructed as needed.
+Use GUI mode when experiment metadata is collected via the rig GUI.
+
+## GUI installation (rig-related)
+GUI is used to transfer **experiment metadata** and files (not videos; videos remain on the rig).
+1. Clone or copy the `gui_transfer/` folder to the rig computer.
+2. Install Python 3 + PyQt5; conda environment.
+3. Edit `gui_transfer/config/config.json` (paths, host, user).
+4. Start GUI:
+   - Linux: `make run_gui` from `gui_transfer/`
+   - Windows: use the provided batch file example and adjust paths.
+
+## Manual runs (run.py)
+Typical sequence:
 ```bash
-0 2 * * * bash /mnt/database/auxPipelines-DataJoint_Mathis/vr4mice/cron_script.sh >> ~/vrlogs/cron.log 2>&1
-
-@reboot  bash /mnt/database/auxPipelines-DataJoint_Mathis/vr4mice/cron_script_reboot.sh >> ~/vrlogs/cron.log 2>&1
+%run run.py populate
+%run run.py analysis
+%run run.py summary
+...
 ```
+
+## Testing / quick sanity
+- Populate test:
+  ```python
+  %run run.py populate
+  from vr4mice.schema import vr4mice
+  vr4mice.Dataset()
+  ```
+- Analysis test:
+  ```python
+  %run run.py analysis
+  ```
+
+## Automated runs (cron)
+`cron_scenario.py` executes the full pipeline in order with per-step logging.
+It is usually invoked via a bash wrapper and added to `crontab`:
+- `cron_script.sh` (nightly)
+- `cron_script_reboot.sh` (on reboot)
+
+## AWS mode
+`--aws` mode uses `/data/processed` and disables moving raw files.
+- `run.py --aws populate`
+- `cron_scenario.py --aws`
+
+## Backup and AWS sync
+Backup helpers live in `backup/` and cron scripts:
+- `backup/backup.sh`
+- `cron_script_aws.sh`
+
+These scripts are intended for **append-only** sync to AWS or remote storage.
+If older versions should be replaced, manual cleanup may be required before re-populating.
+Update paths and credentials to match your storage backend.
+
+## Error handling and FailedSession
+Failures are recorded in `vr4mice.FailedSession`:
+- Used as a skip list to avoid repeated failures.
+- Remove entries to retry after fixing data.
+
+Example removal:
+```python
+from vr4mice.schema import vr4mice
+vr4mice.FailedSession().delete("dataset='Grizzly_2026-01-29_1'")
+```
+## GitCommit table
+`base_analysis.GitCommit` stores commit hash and modified files for provenance.
+
+## Emails
+Summary emails are sent when `EMAIL=true`.
+Recipients are derived from:
+1. `VR4MICE_EMAIL_RECIPIENTS` (experimenter names)
+2. `exp.Session` experimenter (if available)
+
+## Logs
+Runtime logs are written to the local `logs/` folder on the server/container.
