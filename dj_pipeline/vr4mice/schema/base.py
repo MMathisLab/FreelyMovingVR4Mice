@@ -1,9 +1,18 @@
+"""Base schema linking datasets to shared experiment metadata."""
+
 import re
 from pathlib import Path
 
 import datajoint as dj
 import pandas as pd
-from base_schemas.schemas import exp, mice
+
+try:
+    from base_schemas.schemas import exp, mice
+except ModuleNotFoundError:
+    import sys
+
+    sys.path.insert(0, "/base_schemas")
+    from base_schemas.schemas import exp, mice
 
 from vr4mice.schema import vr4mice
 from vr4mice.utils.logger import Logger
@@ -30,6 +39,10 @@ class Base(dj.Computed):
     """
 
     def make(self, key):
+        """Link a dataset to mouse and experiment session metadata."""
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         try:
             data = parse_filename(key["dataset"])
 
@@ -63,6 +76,7 @@ class Base(dj.Computed):
 
 
 def parse_filename(filename):
+    """Parse dataset filename into mouse name, date, and attempt."""
     pattern = r"^(?P<name>[A-Za-z\d]+)_(?P<date>\d{4}-\d{2}-\d{2})_(?P<attempt>\d+)$"
     match = re.match(pattern, filename)
 

@@ -1,12 +1,29 @@
-from .mouse_manual_water import ManualWater 
+from .manual_water import ManualWater
+
+# White target contrast task 
 from .mouse_detection_p1 import DetectionWithoutVelocityThresholdTask
 from .mouse_detection_p2 import DetectionWithVelocityThresholdTask
 from .mouse_discrim import DiscriminationTask
 from .mouse_discrim_occluders import DiscriminationWithOccludersTask
 from .mouse_discrim_multioccluders import DiscriminationWithMultiOccludersTask
-from .mouse_shape_detection_p1 import ShapeDetectionWithoutVelocityThresholdTask
-from .mouse_shape_detection_p2 import ShapeDetectionWithVelocityThresholdTask
-from .mouse_shape_discrim import ShapeDiscrim
-from .mouse_shape_discrim_occluders import ShapeDiscrimOccluders
-from .mouse_shape_discrim_narrow_occluders import ShapeDiscrimNarrowOccluders
-from .mouse_shape_discrim_multioccluders import ShapeDiscrimMultiOccluders
+
+# Black target contrast task
+from .inv_mouse_detection_p1 import InvDetectionNoVelThrTask
+from .inv_mouse_detection_p2 import InvDetectionVelThrTask
+from .inv_mouse_discrim import InvDiscrimTask
+from .inv_mouse_discrim_occluders import InvDiscrimOccludersTask
+from .inv_mouse_discrim_multioccluders import InvDiscrimMultiOccludersTask
+
+# White Pacman target shape task
+from .shape_mouse_detection_p1 import ShapeDetectionWithoutVelocityThresholdTask
+from .shape_mouse_detection_p2 import ShapeDetectionWithVelocityThresholdTask
+from .shape_mouse_discrim import ShapeDiscrim
+from .shape_mouse_discrim_occluders import ShapeDiscrimOccluders
+from .shape_mouse_discrim_narrow_occluders import ShapeDiscrimNarrowOccluders
+from .shape_mouse_discrim_multioccluders import ShapeDiscrimMultiOccluders
+
+# Black teardrop target shape task
+from .inv_shape_mouse_discrim import InvShapeDiscrim
+from .inv_shape_mouse_discrim_occluders import InvShapeDiscrimOccluders
+from .inv_shape_mouse_discrim_multioccluders import InvShapeDiscrimMultiOccluders
+from .inv_shape_mouse_discrim_narrow_occluders import InvShapeDiscrimNarrowOccluders

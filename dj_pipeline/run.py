@@ -5,7 +5,11 @@ import argparse
 import sys
 import warnings
 
-from base_actions.connect import connect
+try:
+    from base_actions.connect import connect
+except ModuleNotFoundError:
+    sys.path.insert(0, "/base_actions")
+    from base_actions.connect import connect
 from vr4mice.utils.logger import Logger, config_logger
 
 logger = Logger.get_logger()
@@ -28,6 +32,10 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
     "dlc": process DeepLabCut data: populate dlc tables
     "update": sync missing data in existing tables
     "sync_days": synchronize days in the dataset (process raw .npy files)
+    "interp": interpolate trajectories and compute kinematics
+    "latency": compute latencies based on photodiode signals
+    "inputs_videos": process input videos and extract frames
+    "decision": analyze decision-making metrics
 """
 
 
@@ -69,10 +77,13 @@ if __name__ == "__main__":
             "fetch",
             "dlc",
             "interp",
+            "ar_paper",
             "latency",
             "sync_days",
+            "inputs_videos",
+            "decision",
         ],
-        help="Mode to execute: 'connect', 'populate', 'summary', 'dlc', 'fetch', 'sync_days', 'analysis'",
+        help="Mode to execute: 'connect', 'populate', 'summary', 'dlc', 'fetch', 'sync_days', 'analysis', 'inputs_videos', 'decision'",
     )
 
     args = parser.parse_args()
@@ -97,6 +108,9 @@ if __name__ == "__main__":
             move = True
 
         check_folder_existence(path)
+        # Intentionally not calling sync_days here: day synchronization should be
+        # run explicitly via the "sync_days" mode when needed, rather than on every
+        # populate run.
         populate_rig(path=path, move=move)
         vr4mice.Collab().populate()
 
@@ -130,13 +144,30 @@ if __name__ == "__main__":
 
         from vr4mice.schema import interpolated_trajectories, session_metrics
 
+        session_metrics.SessionMetrics().populate()
+        session_metrics.TrialMetrics().populate()
+
         interpolated_trajectories.InterpolatedTrials().populate()
         interpolated_trajectories.MeanXYTrajectory().populate()
         interpolated_trajectories.YBinnedXYTrajectory().populate()
         interpolated_trajectories.MeanVelocities().populate()
 
-        session_metrics.SessionMetrics().populate()
-        session_metrics.TrialMetrics().populate()
+    elif args.mode == "ar_paper":
+
+        from vr4mice.schema import interpolated_trajectories, session_metrics, vr4mice
+
+        keys = (
+            vr4mice.Dataset() * vr4mice.Groups() * vr4mice.Labels() & "label='ar_paper'"
+        ).fetch("dataset", as_dict=True)
+
+        session_metrics.SessionMetrics().populate(keys)
+        session_metrics.TrialMetrics().populate(keys)
+
+        interpolated_trajectories.InterpolatedTrials().populate(keys)
+
+        interpolated_trajectories.MeanXYTrajectory().populate()
+        interpolated_trajectories.YBinnedXYTrajectory().populate()
+        interpolated_trajectories.MeanVelocities().populate()
 
     elif args.mode == "latency":
 
@@ -145,6 +176,23 @@ if __name__ == "__main__":
         vr4mice.SignalsPhotodiode().populate()
         latency_tests.SignalsPhotodiodeAligned().populate()
         latency_tests.AllLatencies()
+
+    elif args.mode == "inputs_videos":
+        from vr4mice.schema import inputs_videos
+
+        inputs_videos.RawVideo().populate()
+        inputs_videos.ProcessedVideo().populate()
+        inputs_videos.VideoSyncSignal().populate()
+        inputs_videos.AlignedVideoFrame().populate()
+
+    elif args.mode == "decision":
+        from vr4mice.schema import decision
+
+        decision.ExperimentMember().populate()
+        decision.InclusionStatus().populate()
+        decision.LabelSet().fill()
+        decision.PredictionModel().populate()
+        decision.DecisionPoints().populate()
 
     elif args.mode == "fetch":  # TODO: adjust path
         from vr4mice.actions.fetch_data import fetch_data

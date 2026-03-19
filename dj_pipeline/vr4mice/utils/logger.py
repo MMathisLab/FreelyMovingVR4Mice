@@ -9,6 +9,27 @@ import datajoint as dj
 """
 
 
+def _has_file_handler(logger, log_filepath: Path) -> bool:
+    target = Path(log_filepath).resolve()
+    for handler in logger.handlers:
+        if isinstance(handler, logging.FileHandler):
+            try:
+                existing = Path(handler.baseFilename).resolve()
+            except Exception:
+                continue
+            if existing == target:
+                return True
+    return False
+
+
+def _has_stream_handler(logger) -> bool:
+    return any(
+        isinstance(handler, logging.StreamHandler)
+        and not isinstance(handler, logging.FileHandler)
+        for handler in logger.handlers
+    )
+
+
 class Logger:
     __logger = None
 
@@ -27,17 +48,19 @@ class Logger:
         # TODO(ahmed) if useful: read config file and get parameters
 
         # create utils with parameters, handlers, etc
-        logger = logging.getLogger()
+        logger = logging.getLogger("vr4mice")
         logger.setLevel(logging_level)
+        logger.propagate = False
 
         file_formatter = logging.Formatter(
             ":%(asctime)s::%(levelname)s::%(filename)s::%(funcName)s::%(lineno)d::%(message)s"
         )
-        file_handler = logging.FileHandler(log_filepath, mode="a+")
-        file_handler.setFormatter(file_formatter)
-        logger.addHandler(file_handler)
+        if not _has_file_handler(logger, log_filepath):
+            file_handler = logging.FileHandler(log_filepath, mode="a+")
+            file_handler.setFormatter(file_formatter)
+            logger.addHandler(file_handler)
 
-        if write_stdout:
+        if write_stdout and not _has_stream_handler(logger):
             stream_handler = logging.StreamHandler()
             stream_formatter = formatter = logging.Formatter(
                 "%(asctime)-s::%(levelname)s::%(filename)s::%(message)s"

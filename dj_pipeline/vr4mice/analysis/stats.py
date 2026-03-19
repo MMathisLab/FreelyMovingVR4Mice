@@ -93,8 +93,11 @@ def plot_training_stats_heatmap(
         label.set_color(stage_colors[j])
 
 
-def get_p_values_multi(
-    mean_mouse: pd.DataFrame, x_var: str = "trial_length", y_var: str = "velocity"
+def get_multi_p_values_binned(
+    mean_mouse: pd.DataFrame,
+    x_var: str = "trial_length",
+    y_var: str = "velocity",
+    group_by: str = "aperture",
 ) -> pd.DataFrame:
     """Calculate p-values for performance metrics across different apertures and bins.
 
@@ -106,20 +109,21 @@ def get_p_values_multi(
             'aperture', and the performance metric.
         x_var (str): The column name of the variable to bin by (e.g., 'trial_length').
         y_var (str): The column name of the performance metric to compare across apertures.
+        group_by (str): The column name to group by (e.g., 'aperture').
 
     Returns:
         pd.DataFrame: DataFrame containing p-values for each pair of apertures within each bin,
-            with columns 'bin', 'aperture1', 'aperture2', and 'p_value'.
+            with columns 'bin', 'comp1', 'comp2', and 'p_value'.
     """
     p_values = []
     for bin_val in mean_mouse[x_var].unique():
         bin_data = mean_mouse[mean_mouse[x_var] == bin_val]
-        apertures = bin_data["aperture"].unique()
+        apertures = bin_data[group_by].unique()
 
         # Get all unique pairs of apertures
         for ap1, ap2 in itertools.combinations(apertures, 2):
-            ap1_data = bin_data[bin_data["aperture"] == ap1][y_var]
-            ap2_data = bin_data[bin_data["aperture"] == ap2][y_var]
+            ap1_data = bin_data[bin_data[group_by] == ap1][y_var]
+            ap2_data = bin_data[bin_data[group_by] == ap2][y_var]
 
             t_stat, p_val = ttest_rel(ap1_data, ap2_data)
             # print(f"Bin {bin_val}: Aperture {ap1} vs {ap2} - t = {t_stat:.3f}, p = {p_val:.4f}")
@@ -127,8 +131,8 @@ def get_p_values_multi(
                 pd.DataFrame(
                     {
                         "bin": bin_val,
-                        "aperture1": ap1,
-                        "aperture2": ap2,
+                        "comp1": ap1,
+                        "comp2": ap2,
                         "p_value": p_val,
                     },
                     index=[0],
@@ -140,7 +144,11 @@ def get_p_values_multi(
     return p_value_df
 
 
-def get_multi_performance_p_val(trial_df: pd.DataFrame, y_var: str) -> pd.DataFrame:
+def get_multi_p_values_global(
+    trial_df: pd.DataFrame,
+    y_var: str,
+    group_by: str = "aperture",
+) -> pd.DataFrame:
     """Calculate p-values for performance metrics across different apertures.
 
     This function computes paired t-tests for each pair of apertures within each dataset.
@@ -152,19 +160,21 @@ def get_multi_performance_p_val(trial_df: pd.DataFrame, y_var: str) -> pd.DataFr
 
     Returns:
         pd.DataFrame: DataFrame containing p-values for each pair of apertures with columns
-            'aperture1', 'aperture2', and 'p_value'.
+            'comp1', 'comp2', and 'p_value'.
     """
-    mean_mouse = trial_df.groupby(["dataset", "aperture"], as_index=False).mean()
+    mean_mouse = trial_df.groupby(["dataset", group_by], as_index=False).mean(
+        numeric_only=True
+    )
     p_values = []
-    for ap1, ap2 in itertools.combinations(mean_mouse.aperture.unique(), 2):
-        ap1_data = mean_mouse[mean_mouse["aperture"] == ap1][y_var]
-        ap2_data = mean_mouse[mean_mouse["aperture"] == ap2][y_var]
+    for ap1, ap2 in itertools.combinations(mean_mouse[group_by].unique(), 2):
+        ap1_data = mean_mouse[mean_mouse[group_by] == ap1][y_var]
+        ap2_data = mean_mouse[mean_mouse[group_by] == ap2][y_var]
 
         t_stat, p_val = ttest_rel(ap1_data, ap2_data)
-        # print(f"Bin {bin_val}: Aperture {ap1} vs {ap2} - t = {t_stat:.3f}, p = {p_val:.4f}")
         p_values.append(
             pd.DataFrame(
-                {"aperture1": ap1, "aperture2": ap2, "p_value": p_val}, index=[0]
+                {"comp1": ap1, "comp2": ap2, "p_value": p_val, "t-test": t_stat},
+                index=[0],
             )
         )
     p_value_df = pd.concat(p_values)
@@ -175,13 +185,13 @@ def get_multi_performance_p_val(trial_df: pd.DataFrame, y_var: str) -> pd.DataFr
 def plot_aperture_heatmap(
     df: pd.DataFrame,
     ax: plt.Axes,
-    value_col: str = "p_value",
+    value_col: str = "p_value_corr",
     title: str = "Aperture Comparison Heatmap",
-    cmap: str = "viridis_r",
+    cmap: str = "magma_r",
     annot: bool = True,
     fmt: str = ".1e",
     figsize: Tuple[int] = (8, 6),
-    symmetric: bool = True,
+    symmetric: bool = False,
     cbar_label: str = "p-value",
     mask_nan: bool = True,
     linewidths: float = 0.5,
@@ -190,7 +200,7 @@ def plot_aperture_heatmap(
     Plots a heatmap of aperture comparisons using p-values or corrected p-values.
 
     Parameters:
-        df (pd.DataFrame): Input DataFrame with columns: aperture1, aperture2, p_value, p_value_corr.
+        df (pd.DataFrame): Input DataFrame with columns: comp1, comp2, p_value, p_value_corr.
         value_col (str): Column to plot ("p_value" or "p_value_corr").
         title (str): Plot title.
         cmap (str): Matplotlib/seaborn colormap. By default, "viridis_r" (dark for low values).
@@ -203,26 +213,25 @@ def plot_aperture_heatmap(
         linewidths (float): Width of cell borders.
     """
     # Get unique apertures and initialize matrix
-    apertures = sorted(set(df["aperture1"].unique()).union(df["aperture2"].unique()))
+    apertures = sorted(set(df["comp1"].unique()).union(df["comp2"].unique()))
     matrix = pd.DataFrame(np.nan, index=apertures, columns=apertures)
 
     # Fill the matrix
     for _, row in df.iterrows():
-        a1, a2, value = row["aperture1"], row["aperture2"], row[value_col]
-        matrix.loc[a1, a2] = value
+        a1, a2, value = row["comp1"], row["comp2"], row[value_col]
+        matrix.loc[a2, a1] = value
         if symmetric:
-            matrix.loc[a2, a1] = value  # Mirror for symmetry
+            matrix.loc[a1, a2] = value  # Mirror for symmetry
 
     sns.heatmap(
         matrix,
         annot=annot,
-        fmt=fmt,
+        fmt=".3f",
         cmap=cmap,
+        vmin=0,
+        vmax=0.05,
         cbar_kws={"label": cbar_label},
         mask=matrix.isna() if mask_nan else None,
         linewidths=linewidths,
         ax=ax,
     )
-    ax.set_title(title)
-    ax.set_xlabel("Aperture 2")
-    ax.set_ylabel("Aperture 1")

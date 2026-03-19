@@ -1,3 +1,5 @@
+"""DLC-related schema tables for keypoints and derived kinematics."""
+
 from typing import List, Optional
 
 import datajoint as dj
@@ -33,12 +35,17 @@ class DLCProcessor(dj.Imported):
     """
 
     def make(self, key):
+        """Load DLC processed outputs into the DLCProcessor table."""
 
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         try:
             fpath = (vr4mice.DLC & key).fetch1("proc_filepath")
             data = np.load(fpath, allow_pickle=True)
@@ -78,11 +85,15 @@ class DLCKptsDf(dj.Computed):
     """
 
     def make(self, key: dict):
+        """Store raw DLC keypoints and metadata for a dataset."""
 
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
+            return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
@@ -136,12 +147,17 @@ class SyncDLCKptsDf(dj.Computed):
     """
 
     def make(self, key: dict):
+        """Synchronize DLC keypoints to game time and store results."""
 
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         logger.info(f"Populating {self.__class__.__name__} for {key}.")
         try:
             sync_kpts = dlc_helpers.sync_keypoint_table(
@@ -207,11 +223,15 @@ class OfflineKinematics(dj.Computed):
     """
 
     def make(self, key: dict):
+        """Compute offline kinematic features from synchronized keypoints."""
 
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
+            return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
         logger.info(f"Populating {self.__class__.__name__} for {key}.")

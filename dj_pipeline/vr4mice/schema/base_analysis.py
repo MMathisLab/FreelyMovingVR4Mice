@@ -1,3 +1,5 @@
+"""Analysis schema tables built on top of core VR4Mice datasets."""
+
 import subprocess
 import os
 import re
@@ -91,12 +93,16 @@ class DataFrame(dj.Computed):
     """
 
     def make(self, key):
+        """Build and insert the analysis DataFrame for a dataset."""
         from vr4mice.analysis.analysis import create_data_frame
 
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
+            return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
         try:
@@ -231,6 +237,7 @@ class BoxDataFrame(dj.Computed):
     """
 
     def make(self, key):
+        """Compute and store per-dataset box geometry derived from trials."""
         from vr4mice.analysis.analysis import get_box_df
 
         if self & key:
@@ -238,6 +245,10 @@ class BoxDataFrame(dj.Computed):
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         try:
             if len(DataFrame & key) > 0:
                 df = DataFrame().get_data(key)
@@ -318,14 +329,14 @@ class SummaryPlots(dj.Computed):
     filename:  varchar(255)
     """
 
+    from vr4mice.analysis.summary_dj import vr4mice_summary_plots
+    from vr4mice.schema import base
+
     def make(self, key, send=os.environ["EMAIL"]):
         """
         key: Dataset
         """
         send = os.environ.get("EMAIL", "false").lower() in ["true", "1", "yes"]
-
-        from vr4mice.analysis.summary_dj import vr4mice_summary_plots
-        from vr4mice.schema import base
 
         if self & key:
             logger.info(
@@ -333,9 +344,13 @@ class SummaryPlots(dj.Computed):
             )
             return
 
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         if (DataFrame & key) and (BoxDataFrame & key):
+            full_path = None
             try:
-                full_path = vr4mice_summary_plots(
+                full_path = self.__class__.vr4mice_summary_plots(
                     key, save_path="/data/summary_plots", database=True
                 )
             except Exception as err:
@@ -353,16 +368,33 @@ class SummaryPlots(dj.Computed):
             )
             return False
 
+        data = {**key, **{"filename": full_path}}
+        if self.__class__.base.Base() & key:
+            key = (self.__class__.base.Base() & key).fetch(as_dict=True)[0]
+        else:
+            key = self.parse_dataset(key["dataset"])
+
+        err_msg = None
+        try:
+            self.insert1(data, allow_direct_insert=True)
+            logger.info(f"Summary plots populated successfully for {key}")
+        except Exception as err:
+            table_name = self.__class__.__name__
+            dataset = key.get("dataset") if isinstance(key, dict) else None
+            if dataset:
+                vr4mice.FailedSession().add_entry(
+                    f"{dataset}", f"{table_name}", str(err)
+                )
+            err_msg = f"Can't populate {table_name}, key: {key}. Error: {err}."
+            logger.warning(err_msg)
+
         if send:
-            data = {**key, **{"filename": full_path}}
-            if base.Base() & key:
-                key = (base.Base() & key).fetch(as_dict=True)[0]
-            else:
-                key = self.parse_dataset(key["dataset"])
-                insert_send_email(key, data, SummaryPlots(), full_path, send=send)
+            insert_send_email(key, full_path, err_msg)
+        else:
+            logger.info(f"Send flag is false for {key}. No email.")
 
     def parse_dataset(self, dataset):
-        pattern = r"(\d+)?_?(\d{4}-\d{2}-\d{2})_?(\d+)?(?:\.pickle)?"
+        pattern = r"(?:(?P<mouse_name>[^_]+)_)?(?P<day>\d{4}-\d{2}-\d{2})(?:_(?P<attempt>\d+))?(?:\.pickle)?$"
         match = re.match(pattern, dataset)
 
         if match:
@@ -376,12 +408,9 @@ class SummaryPlots(dj.Computed):
             return None
 
     def get_name(self, key):
-
-        from vr4mice.schema import base
-
         name = key["dataset"]
-        if base.Base() & key:
-            session_info = (base.Base() & key).fetch(as_dict=True)[0]
+        if self.__class__.base.Base() & key:
+            session_info = (self.__class__.base.Base() & key).fetch(as_dict=True)[0]
             if len(session_info) > 0:
                 name = f'{session_info["mouse_name"]}_day{session_info["day"]}_attempt{session_info["attempt"]}'
 
@@ -407,13 +436,24 @@ class SummaryPlots(dj.Computed):
         return subtitle
 
 
-def insert_send_email(key, tuple_, table, filename, send=False):
+def insert_send_email(key, filename, err_msg):
+    """Insert summary plots row and optionally email recipients."""
 
     from base_schemas.schemas import exp, mice
 
     toaddr = []
     try:
-        for name in ["thomas", "mathislab", "yang"]:
+        default_recipient_names = os.getenv("VR4MICE_EMAIL_RECIPIENTS")
+        if default_recipient_names:
+            recipient_names = [
+                name.strip()
+                for name in default_recipient_names.split(",")
+                if name.strip()
+            ]
+        else:
+            recipient_names = ["mathislab"]
+
+        for name in recipient_names:
             user_email = (exp.Experimenter & {"experimenter_name": name}).fetch("mail")[
                 0
             ]
@@ -431,24 +471,13 @@ def insert_send_email(key, tuple_, table, filename, send=False):
         logger.warning(f"Error fetching experimenter email: {e}")
         addr = None
 
+    logger.info(f"Sending email now for {key}")
+    error = True if err_msg else False
+    email_type = "summary" if err_msg is None else "error"
     try:
-        table.insert1(tuple_, allow_direct_insert=True)
-        logger.info(f"Summary plots populated successfully for {key}")
-        if send:
-            logger.info(f"Sending email now for {key}")
-            email(key, toaddr, filename, error=False, message=None)
-        else:
-            logger.info(f"Send flag is false for {key}. No email.")
-
-    except Exception as err:
-        dataset = key["dataset"]
-        vr4mice.FailedSession().add_entry(
-            f"{dataset}", f"{self.__class__.__name__}", str(err)
-        )
-        err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
-        logger.warning(err)
-        if send:
-            email(key, toaddr, None, error=True, message=err)
+        email(key, toaddr, filename, error=error, message=err_msg)
+    except Exception as email_err:
+        logger.warning(f"Failed to send {email_type} email for {key}: {email_err}")
 
 
 @schema
@@ -462,12 +491,17 @@ class GitCommit(dj.Computed):
     """
 
     def make(self, key):
+        """Store git commit metadata for the current analysis run."""
 
         if self & key:
             logger.info(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
         try:
             ret = parse_git_commit_file()
             data = {**key, **ret}
@@ -483,6 +517,7 @@ class GitCommit(dj.Computed):
 
 
 def parse_git_commit_file(filename="git_commit"):  # TODO(mary): move to helpers
+    """Parse a git commit file into hash and modified file list."""
     commit_hash = None
     modified_files = []
 
@@ -501,7 +536,7 @@ def parse_git_commit_file(filename="git_commit"):  # TODO(mary): move to helpers
 
     except FileNotFoundError:
         logger.warning(f"Error: File '{filename}' not found.")
-        return None, []
+        return {"commit_hash": "", "changed_files": []}
 
 
 @schema
@@ -527,23 +562,35 @@ class TrackingSummaryPlots(dj.Computed):
             )
             return
 
-        if dlc.DLCKptsDf & key:
-            full_path = plot_keypoints_summary(key, save_path="/data/summary_plots")
-        else:
-            logger.warning(
-                "Populate first DLC DLCKptsDf for "
-                + str(key)
-                + "; call DLCKptsDf.populate();"
-            )
-            return False
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
 
-        if send:
-            data = {**key, **{"filename": full_path}}
-            if base.Base() & key:
-                key = (base.Base() & key).fetch(as_dict=True)[0]
+        try:
+            if dlc.DLCKptsDf & key:
+                full_path = plot_keypoints_summary(key, save_path="/data/summary_plots")
             else:
-                key = self.parse_dataset(key["dataset"])
-                insert_send_email(key, data, SummaryPlots(), full_path, send=send)
+                logger.warning(
+                    "Populate first DLC DLCKptsDf for "
+                    + str(key)
+                    + "; call DLCKptsDf.populate();"
+                )
+                return False
+
+            if send:
+                data = {**key, **{"filename": full_path}}
+                if base.Base() & key:
+                    key = (base.Base() & key).fetch(as_dict=True)[0]
+                else:
+                    key = self.parse_dataset(key["dataset"])
+                    insert_send_email(key, data, SummaryPlots(), full_path, send=send)
+        except Exception as err:
+            dataset = key.get("dataset") if isinstance(key, dict) else None
+            if dataset:
+                vr4mice.FailedSession().add_entry(
+                    f"{dataset}", f"{self.__class__.__name__}", str(err)
+                )
+            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            logger.warning(err)
 
     def parse_dataset(self, dataset):
         pattern = r"(\d+)?_?(\d{4}-\d{2}-\d{2})_?(\d+)?(?:\.pickle)?"
