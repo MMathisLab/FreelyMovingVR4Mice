@@ -30,16 +30,16 @@ os.environ.setdefault("GUI", "false")
 # Path Configuration
 # ==============================================================================
 
-# Get the scene root directory
-# conftest.py is at scene/tests/conftest.py
-# So: parent=tests/, parent.parent=scene/
-SCENE_ROOT = Path(__file__).parent.parent
+# Get the project root directory
+# conftest.py is at tests/conftest.py
+# So: parent=tests/, parent.parent=project root
+PROJECT_ROOT = Path(__file__).parent.parent
 
 # Add module paths to sys.path for imports
-ANALYSIS_PATH = SCENE_ROOT / "dj_pipeline" / "vr4mice" / "analysis"
-ACTIONS_PATH = SCENE_ROOT / "dj_pipeline" / "vr4mice" / "actions"
-BASE_SCHEMAS_PATH = SCENE_ROOT / "dj_pipeline" / "base" / "base_min_schemas"
-BASE_ACTIONS_PATH = SCENE_ROOT / "dj_pipeline" / "base" / "base_actions"
+ANALYSIS_PATH = PROJECT_ROOT / "dj_pipeline" / "vr4mice" / "analysis"
+ACTIONS_PATH = PROJECT_ROOT / "dj_pipeline" / "vr4mice" / "actions"
+BASE_SCHEMAS_PATH = PROJECT_ROOT / "dj_pipeline" / "base" / "base_min_schemas"
+BASE_ACTIONS_PATH = PROJECT_ROOT / "dj_pipeline" / "base" / "base_actions"
 
 for path in [ANALYSIS_PATH, ACTIONS_PATH, BASE_SCHEMAS_PATH, BASE_ACTIONS_PATH]:
     if str(path) not in sys.path:
@@ -156,7 +156,7 @@ def golden_session_info():
 @pytest.fixture(scope="session")
 def golden_session_path():
     """Get path to golden dataset directory (LFS test data in repo)."""
-    return SCENE_ROOT / "dj_pipeline" / "tests" / "data" / "w_photodiode"
+    return PROJECT_ROOT / "dj_pipeline" / "tests" / "data" / "w_photodiode"
 
 
 @pytest.fixture(scope="function")

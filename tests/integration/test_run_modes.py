@@ -23,7 +23,7 @@ Dependencies:
 - Golden dataset in dj_pipeline/tests/data/w_photodiode/ (via Git LFS)
 
 Run with:
-    cd scene/dj_pipeline
+    cd dj_pipeline
     docker-compose -f docker-compose.test.yml run --rm tests \\
         bash -c "cd tests && python -m pytest integration/test_run_modes.py -v"
 """

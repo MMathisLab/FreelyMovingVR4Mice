@@ -46,14 +46,14 @@ def pytest_addoption(parser):
 
 # Get paths
 TESTS_DIR = Path(__file__).parent.parent
-SCENE_ROOT = TESTS_DIR.parent
+PROJECT_ROOT = TESTS_DIR.parent
 
 # Add module paths - need to add the vr4mice parent so imports like "from vr4mice.schema import vr4mice" work
-VR4MICE_PARENT = SCENE_ROOT / "dj_pipeline"
-VR4MICE_PATH = SCENE_ROOT / "dj_pipeline" / "vr4mice"
-VR4MICE_ACTIONS_PATH = SCENE_ROOT / "dj_pipeline" / "vr4mice" / "actions"
-BASE_SCHEMAS_PATH = SCENE_ROOT / "dj_pipeline" / "base" / "base_min_schemas"
-BASE_ACTIONS_PATH = SCENE_ROOT / "dj_pipeline" / "base" / "base_actions"
+VR4MICE_PARENT = PROJECT_ROOT / "dj_pipeline"
+VR4MICE_PATH = PROJECT_ROOT / "dj_pipeline" / "vr4mice"
+VR4MICE_ACTIONS_PATH = PROJECT_ROOT / "dj_pipeline" / "vr4mice" / "actions"
+BASE_SCHEMAS_PATH = PROJECT_ROOT / "dj_pipeline" / "base" / "base_min_schemas"
+BASE_ACTIONS_PATH = PROJECT_ROOT / "dj_pipeline" / "base" / "base_actions"
 
 for path in [VR4MICE_PARENT, VR4MICE_PATH, VR4MICE_ACTIONS_PATH, BASE_SCHEMAS_PATH, BASE_ACTIONS_PATH]:
     if str(path) not in sys.path:
@@ -252,7 +252,7 @@ def test_data_dir():
     Data lives at dj_pipeline/tests/data/w_photodiode/.
     Run `git lfs pull` to download the test data files.
     """
-    data_dir = SCENE_ROOT / "dj_pipeline" / "tests" / "data" / "w_photodiode"
+    data_dir = PROJECT_ROOT / "dj_pipeline" / "tests" / "data" / "w_photodiode"
 
     if not data_dir.exists():
         pytest.skip(
