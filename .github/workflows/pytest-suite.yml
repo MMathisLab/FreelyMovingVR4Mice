@@ -28,13 +28,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          lfs: false
-
-      - name: Fetch test data (LFS)
-        run: |
-          # Only pull the files the tests actually need (~112 MB).
-          # Excludes the 380 MB VIDEO.avi which isn't used by tests.
-          git lfs pull --include="dj_pipeline/tests/data/w_photodiode/*" --exclude="*_VIDEO.avi"
+          lfs: true
 
       - name: Start MySQL
         run: |

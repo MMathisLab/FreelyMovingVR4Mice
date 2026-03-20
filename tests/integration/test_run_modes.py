@@ -11,8 +11,6 @@ Tests are organized by pipeline mode (matching run.py's mode argument):
 - latency: SignalsPhotodiode, SignalsPhotodiodeAligned, AllLatencies
 - fetch: GUI menu .npy file creation
 
-Not tested: TrackingSummaryPlots (pending deprecation, see issue #272)
-
 Test Strategy:
 - Sequential pipeline testing with shared database session
 - Golden baseline verification: row counts + sample values (first/last/middle)
@@ -1145,8 +1143,7 @@ class TestSummaryPlots:
     matching what run.py does in production (importing all schemas at
     module level before calling populate).
 
-    NOTE: TrackingSummaryPlots is not tested (pending deprecation per
-    issue #272).
+    NOTE: TrackingSummaryPlots was deprecated in PR #291.
     """
 
     @pytest.fixture(autouse=True)
@@ -1229,8 +1226,7 @@ class TestSummaryPlots:
         assert filename, "SummaryPlots filename is empty"
         assert "summary" in filename.lower(), f"Unexpected filename: {filename}"
 
-    # NOT TESTED: TrackingSummaryPlots
-    # Pending deprecation per issue #272
+    # TrackingSummaryPlots deprecated in PR #291
 
 
 # ==============================================================================
