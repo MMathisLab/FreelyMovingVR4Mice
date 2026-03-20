@@ -96,15 +96,3 @@ if __name__ == "__main__":
             base_analysis.SummaryPlots().get_path(key=t)
             base_analysis.SummaryPlots().get_subtitle(key=t)
             base_analysis.SummaryPlots().make(key=t, send=True)
-
-    elif mode == "tracking_summary_test":
-        from vr4mice.schema import base_analysis, dlc
-
-        test_datasets = [
-            # {"dataset": "Uguisu_2024-09-06_1"},
-            # {"dataset": "Jacana_2024-08-21_1"},
-            {"dataset": "Oribi_2024-08-16_1"},
-            # {"dataset": "Pheasant_2024-08-28_1"},
-        ]
-        for t in test_datasets:
-            base_analysis.TrackingSummaryPlots().make(key=t, send=False)
