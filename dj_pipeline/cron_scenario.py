@@ -119,10 +119,6 @@ def main():
         "base_analysis.SummaryPlots.populate",
         lambda: base_analysis.SummaryPlots().populate(),
     )
-    run_step(
-        "base_analysis.TrackingSummaryPlots.populate",
-        lambda: base_analysis.TrackingSummaryPlots().populate(),
-    )
 
     if args.aws:
 
