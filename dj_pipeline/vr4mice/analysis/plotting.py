@@ -876,8 +876,8 @@ def _plot_bar_counts(
     if per_mouse:
         # Compute means and standard errors
         grouped_counts = counts.groupby(groupby_list, as_index=False)["count"].mean()
-        means = grouped_counts.groupby(x_col)["count"].mean()
-        errors = grouped_counts.groupby(x_col)["count"].sem()
+        means = grouped_counts.groupby(x_col)["count"].mean(numeric_only=True)
+        errors = grouped_counts.groupby(x_col)["count"].sem(numeric_only=True)
 
         # Plot the mean line without error bars
         sns.lineplot(
@@ -917,8 +917,8 @@ def _plot_bar_counts(
     if per_lab:
         # Compute means and standard errors
         grouped_counts = counts.groupby(groupby_list, as_index=False)["count"].mean()
-        means = grouped_counts.groupby(x_col)["count"].mean()
-        errors = grouped_counts.groupby(x_col)["count"].sem()
+        means = grouped_counts.groupby(x_col)["count"].mean(numeric_only=True)
+        errors = grouped_counts.groupby(x_col)["count"].sem(numeric_only=True)
 
         # Plot the mean line without error bars
         sns.lineplot(
@@ -1053,8 +1053,8 @@ def _plot_bias_horizontal(
         )
 
         # Compute overall means
-        means = grouped_counts.groupby(label_x)["count"].mean()
-        errors = grouped_counts.groupby(label_x)["count"].sem()
+        means = grouped_counts.groupby(label_x)["count"].mean(numeric_only=True)
+        errors = grouped_counts.groupby(label_x)["count"].sem(numeric_only=True)
     elif per_lab and "lab_id" in counts.columns:
         grouped_counts = counts.groupby([label_x, "lab_id"], as_index=False)[
             "count"
@@ -1079,11 +1079,11 @@ def _plot_bias_horizontal(
         )
 
         # Compute overall means
-        means = grouped_counts.groupby(label_x)["count"].mean()
-        errors = grouped_counts.groupby(label_x)["count"].sem()
+        means = grouped_counts.groupby(label_x)["count"].mean(numeric_only=True)
+        errors = grouped_counts.groupby(label_x)["count"].sem(numeric_only=True)
     else:
-        means = counts.groupby(label_x)["count"].mean()
-        errors = counts.groupby(label_x)["count"].sem()
+        means = counts.groupby(label_x)["count"].mean(numeric_only=True)
+        errors = counts.groupby(label_x)["count"].sem(numeric_only=True)
 
     # Plot overall means with error bars
     y_positions = range(len(means.index))
@@ -1647,7 +1647,7 @@ def pairplot_average_decision_point(
                 )
                 stats_results.append((i, j, stat.statistic, stat.pvalue))
         print(
-            f"mean: {counts[counts['aperture'] == i][label_parameter].mean()} +/- {stats.sem(counts[counts['aperture'] == i][label_parameter])}"
+            f"mean: {counts[counts['aperture'] == i][label_parameter].mean(numeric_only=True)} +/- {stats.sem(counts[counts['aperture'] == i][label_parameter], nan_policy='omit')}"
         )
     return counts, stats_results
 
