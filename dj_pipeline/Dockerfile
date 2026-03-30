@@ -24,8 +24,8 @@ RUN pip install -U pip setuptools wheel packaging
 #   - scipy<1.12 (scipy.signal.gaussian removed from top-level in 1.12)
 RUN pip install datajoint==2.0.1 \
     pymysql cryptography minio pydantic-settings deepdiff \
-    "pandas<2.0" \
-    "scipy<1.12" \
+    pandas \
+    scipy \
     seaborn \
     jupyter \
     umap-learn \
