@@ -11,8 +11,8 @@ services:
 
   tests:
     build:
-      context: ..
-      dockerfile: dj_pipeline/Dockerfile
+      context: .
+      dockerfile: Dockerfile
       args:
         user_name: testuser
         uid: "1000"
