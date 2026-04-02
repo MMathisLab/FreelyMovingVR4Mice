@@ -18,7 +18,7 @@ RUN apt-get update -y && apt-get install -yy --no-install-recommends \
 
 RUN pip install -U pip setuptools wheel packaging
 
-RUN pip install datajoint==2.0.1 \
+RUN pip install "datajoint>=2.0.1" \
     pymysql cryptography minio pydantic-settings deepdiff \
     pandas \
     scipy \
