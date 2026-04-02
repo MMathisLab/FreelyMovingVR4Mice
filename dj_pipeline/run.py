@@ -128,7 +128,6 @@ if __name__ == "__main__":
         from vr4mice.schema import base_analysis
 
         base_analysis.SummaryPlots().populate()
-        base_analysis.TrackingSummaryPlots().populate()
 
     elif args.mode == "dlc":
         # NOTE: populate and analysis have to be run before

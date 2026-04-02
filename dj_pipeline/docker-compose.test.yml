@@ -11,8 +11,8 @@ services:
 
   tests:
     build:
-      context: ..
-      dockerfile: dj_pipeline/Dockerfile
+      context: .
+      dockerfile: Dockerfile
       args:
         user_name: testuser
         uid: "1000"
@@ -21,7 +21,6 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      DJ_USE_EXTERNAL_CONTAINERS: "1"
       DJ_HOST: mysql
       DJ_PORT: "3306"
       DJ_USER: root

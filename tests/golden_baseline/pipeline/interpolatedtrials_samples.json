@@ -1,0 +1,194 @@
+{
+  "aperture": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 4.3,
+    "middle": 4.3,
+    "middle_idx": 12250,
+    "last": 4.3
+  },
+  "trial": {
+    "length": 24500,
+    "dtype": "int64",
+    "first": 2,
+    "middle": 124,
+    "middle_idx": 12250,
+    "last": 250
+  },
+  "trial_length": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 0.0,
+    "middle": 0.5,
+    "middle_idx": 12250,
+    "last": 0.99
+  },
+  "trial_duration": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 1.08,
+    "middle": 1.1000000000000227,
+    "middle_idx": 12250,
+    "last": 0.9200000000000728
+  },
+  "trial_tortuosity": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 1.1289416457365833,
+    "middle": 1.3187589602461725,
+    "middle_idx": 12250,
+    "last": 1.2973108538145255
+  },
+  "trial_left_choice": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 1.0,
+    "middle": 1.0,
+    "middle_idx": 12250,
+    "last": 0.0
+  },
+  "trial_rewarded": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 1.0,
+    "middle": 1.0,
+    "middle_idx": 12250,
+    "last": 1.0
+  },
+  "x": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 6.184133291244507,
+    "middle": -3.1910759667245348,
+    "middle_idx": 12250,
+    "last": 17.059982299804688
+  },
+  "y": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 1.1929510831832886,
+    "middle": 19.880602469898715,
+    "middle_idx": 12250,
+    "last": 19.937895476818085
+  },
+  "x_flipped": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": -6.184133291244507,
+    "middle": NaN,
+    "middle_idx": 12250,
+    "last": NaN
+  },
+  "heading_dir": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": -0.9395725710532474,
+    "middle": 39.23155593731961,
+    "middle_idx": 12250,
+    "last": -79.05789619007848
+  },
+  "head_angle": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 14.03039715780767,
+    "middle": 16.0526115788927,
+    "middle_idx": 12250,
+    "last": 8.196842846207556
+  },
+  "velocity": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 26.75662527500909,
+    "middle": 39.81303234520563,
+    "middle_idx": 12250,
+    "last": 14.683498405246022
+  },
+  "velocity_x": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": -5.954191088676453,
+    "middle": -31.923308458891082,
+    "middle_idx": 12250,
+    "last": 14.486217498792485
+  },
+  "velocity_y": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 26.085716485977173,
+    "middle": 23.811693464383794,
+    "middle_idx": 12250,
+    "last": 2.3988805711291548
+  },
+  "flip_one_side": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": -1.0,
+    "middle": -1.0,
+    "middle_idx": 12250,
+    "last": 1.0
+  },
+  "distance_to_choice": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 30.734291558116166,
+    "middle": 14.598304374680545,
+    "middle_idx": 12250,
+    "last": 0.875716509519331
+  },
+  "optimal_p": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 25.0,
+    "middle": 25.0,
+    "middle_idx": 12250,
+    "last": 25.0
+  },
+  "local_tortuosity": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 1.0152813045512814,
+    "middle": 1.0003284585143872,
+    "middle_idx": 12250,
+    "last": 1.0152813045512812
+  },
+  "head_angle_sin": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 0.2424366329937254,
+    "middle": 0.27651991349941857,
+    "middle_idx": 12250,
+    "last": 0.14257439411791067
+  },
+  "head_angle_cos": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 0.9701672427899561,
+    "middle": 0.9610081880183301,
+    "middle_idx": 12250,
+    "last": 0.9897840886485854
+  },
+  "heading_dir_sin": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": -0.016397899962416248,
+    "middle": 0.6324560113417927,
+    "middle_idx": 12250,
+    "last": -0.9818194907705828
+  },
+  "heading_dir_cos": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 0.9998655453993914,
+    "middle": 0.7745962778877976,
+    "middle_idx": 12250,
+    "last": 0.18981698433752822
+  },
+  "velocity_x_fliped": {
+    "length": 24500,
+    "dtype": "float64",
+    "first": 5.954191088676453,
+    "middle": 31.923308458891082,
+    "middle_idx": 12250,
+    "last": 14.486217498792485
+  }
+}

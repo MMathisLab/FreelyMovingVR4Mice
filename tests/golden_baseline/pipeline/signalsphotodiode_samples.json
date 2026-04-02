@@ -1,0 +1,42 @@
+{
+  "photodiode_time": {
+    "length": 2007112,
+    "dtype": "float64",
+    "first": 1770280716.4425142,
+    "middle": 1770281737.0841985,
+    "middle_idx": 1003556,
+    "last": 1770282757.7664218
+  },
+  "photodiode_read": {
+    "length": 2007112,
+    "dtype": "float64",
+    "first": 46.0,
+    "middle": 69.0,
+    "middle_idx": 1003556,
+    "last": 45.0
+  },
+  "generated_frame_time": {
+    "length": 119864,
+    "dtype": "float64",
+    "first": 1770280716.5865138,
+    "middle": 1770281740.966597,
+    "middle_idx": 59932,
+    "last": 1770282757.4064214
+  },
+  "generated_send_time": {
+    "length": 119864,
+    "dtype": "float64",
+    "first": 1770280726.1785147,
+    "middle": 1770281740.9875984,
+    "middle_idx": 59932,
+    "last": 1770282757.4234219
+  },
+  "generated_signal": {
+    "length": 119864,
+    "dtype": "float64",
+    "first": 0.0,
+    "middle": 1.0,
+    "middle_idx": 59932,
+    "last": 0.0
+  }
+}

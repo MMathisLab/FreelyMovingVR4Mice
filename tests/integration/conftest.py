@@ -1,12 +1,19 @@
 """
-Database integration test fixtures using testcontainers.
+Database integration test fixtures.
 
 Provides:
-- MySQL container that automatically starts/stops for tests
+- MySQL connection configuration for DataJoint
 - Pipeline fixture with access to all vr4mice schema modules
 - Real data loading fixtures for the golden dataset
 
 Uses 'test_' schema prefix to isolate from any real data.
+
+Requires an external MySQL instance (via docker-compose or CI).
+Configure via environment variables:
+    DJ_HOST (default: localhost)
+    DJ_PORT (default: 3306)
+    DJ_USER (default: root)
+    DJ_PASSWORD (default: simple)
 
 NOTE: Mocks from parent conftest.py are cleared INSIDE the pipeline fixture,
 not at module level. This allows non-database integration tests (like
@@ -17,9 +24,9 @@ use real DataJoint connections.
 import json
 import os
 import sys
-import time
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 
@@ -59,28 +66,12 @@ os.environ.setdefault("DJ_LAB", "test")
 os.environ.setdefault("EMAIL", "false")  # Disable email sending in tests
 
 
-
 # ==============================================================================
-# MySQL Container Fixture (with external container support)
+# MySQL Connection Fixture
 # ==============================================================================
 
-def _use_external_mysql():
-    """Check if we should use an external MySQL container instead of testcontainers."""
-    return os.environ.get("DJ_USE_EXTERNAL_CONTAINERS", "").lower() in ("1", "true", "yes")
-
-
-class ExternalMySqlContainer:
-    """
-    Wrapper that mimics testcontainers interface for external MySQL.
-
-    Allows using docker-compose MySQL or any external MySQL instance.
-    Configure via environment variables:
-        DJ_USE_EXTERNAL_CONTAINERS=1
-        DJ_HOST=localhost (default)
-        DJ_PORT=3306 (default)
-        DJ_USER=root (default)
-        DJ_PASSWORD=simple (default)
-    """
+class _MySqlConnection:
+    """MySQL connection info from environment variables."""
 
     def __init__(self):
         self.host = os.environ.get("DJ_HOST", "localhost")
@@ -94,54 +85,16 @@ class ExternalMySqlContainer:
     def get_exposed_port(self, port):
         return self.port
 
-    def start(self):
-        # External container already running
-        pass
-
-    def stop(self):
-        # Don't stop external container
-        pass
-
 
 @pytest.fixture(scope="session")
 def mysql_container():
     """
     Provide MySQL connection for database integration tests.
 
-    Supports two modes:
-    1. testcontainers (default): Automatically starts/stops MySQL container
-    2. external: Uses existing MySQL instance (set DJ_USE_EXTERNAL_CONTAINERS=1)
-
-    External mode is useful for:
-    - CI environments where Docker-in-Docker is problematic
-    - Development with docker-compose already running
-    - WSL environments with Docker connectivity issues
+    Reads connection details from environment variables.
+    Expects MySQL to be running externally (via docker-compose or CI).
     """
-    if _use_external_mysql():
-        # Use external MySQL (docker-compose or other)
-        container = ExternalMySqlContainer()
-        container.start()  # No-op for external
-        yield container
-        container.stop()  # No-op for external
-    else:
-        # Use testcontainers to start MySQL
-        from testcontainers.mysql import MySqlContainer
-
-        container = MySqlContainer(
-            image="datajoint/mysql:5.7",
-            username="root",
-            password="simple",
-            dbname="test_db",
-        )
-
-        container.start()
-
-        # Wait for MySQL to be ready (datajoint/mysql can take a moment)
-        time.sleep(5)
-
-        yield container
-
-        container.stop()
+    yield _MySqlConnection()
 
 
 @pytest.fixture(scope="session")
@@ -294,47 +247,39 @@ def pipeline(dj_config):
 @pytest.fixture(scope="session")
 def test_data_dir():
     """
-    Path to test data directory with graceful skipping.
+    Path to test data directory (LFS test data in repo).
 
-    Uses PROJECT_ROOT/test_data/golden_dataset/ for development setup.
-    Falls back to RAW_ROOT_DATA_DIR if set in environment.
+    Data lives at dj_pipeline/tests/data/w_photodiode/.
+    Run `git lfs pull` to download the test data files.
     """
-    # Primary location (inside project directory)
-    data_dir = PROJECT_ROOT / "test_data" / "golden_dataset"
-
-    if not data_dir.exists():
-        # Fallback to RAW_ROOT_DATA_DIR
-        raw_root = os.environ.get("RAW_ROOT_DATA_DIR", "")
-        if raw_root:
-            data_dir = Path(raw_root) / "golden_dataset"
+    data_dir = PROJECT_ROOT / "dj_pipeline" / "tests" / "data" / "w_photodiode"
 
     if not data_dir.exists():
         pytest.skip(
             f"Test data directory not found at: {data_dir}\n"
-            "Configure RAW_ROOT_DATA_DIR in .env.test.local to enable integration tests.\n"
-            "See .env.test.local.example for configuration instructions."
+            "Run `git lfs pull` to download test data."
         )
 
     return data_dir
 
 
 @pytest.fixture(scope="function")
-def require_nightingale_data(test_data_dir, test_dataset_name, test_camera_prefix):
+def require_golden_data(test_data_dir, test_dataset_name, test_camera_prefix):
     """
-    Ensure Nightingale golden dataset exists with all required files.
+    Ensure golden dataset exists with all required files.
     Skip test if data is not available.
 
     Tests using this fixture will be automatically skipped if the data
     directory doesn't exist or is missing required files.
 
-    NOTE: This shadows the top-level conftest's require_nightingale_data
+    NOTE: This shadows the top-level conftest's require_golden_data
     within integration/. Same purpose, different fixture chain (uses
-    test_data_dir instead of nightingale_session_path).
+    test_data_dir instead of golden_session_path).
     """
     # Check required files exist
     required_files = [
         f"{test_dataset_name}.pickle",
-        f"{test_dataset_name}.json",
+        f"{test_dataset_name}.npy",
         f"{test_camera_prefix}_{test_dataset_name}_DLC.hdf5",
         f"{test_camera_prefix}_{test_dataset_name}_TS.npy",
         f"{test_camera_prefix}_{test_dataset_name}_PROC",
@@ -353,7 +298,7 @@ def require_nightingale_data(test_data_dir, test_dataset_name, test_camera_prefi
 @pytest.fixture(scope="session")
 def test_dataset_name():
     """Name of the test dataset."""
-    return "Nightingale_2024-08-16_1"
+    return "Flamingo_2026-02-05_1"
 
 
 @pytest.fixture(scope="session")
@@ -381,13 +326,17 @@ def integration_pickle_data(test_data_dir, test_dataset_name):
 
 @pytest.fixture(scope="session")
 def integration_json_metadata(test_data_dir, test_dataset_name):
-    """Load JSON metadata from golden dataset."""
+    """Load session metadata from golden dataset (.npy or .json)."""
+    npy_path = test_data_dir / f"{test_dataset_name}.npy"
     json_path = test_data_dir / f"{test_dataset_name}.json"
-    if not json_path.exists():
-        pytest.skip(f"JSON file not found: {json_path}")
 
-    with open(json_path) as f:
-        return json.load(f)
+    if npy_path.exists():
+        return np.load(npy_path, allow_pickle=True).item()
+    elif json_path.exists():
+        with open(json_path) as f:
+            return json.load(f)
+    else:
+        pytest.skip(f"Metadata file not found: {npy_path} or {json_path}")
 
 
 @pytest.fixture(scope="session")

@@ -1647,7 +1647,7 @@ def pairplot_average_decision_point(
                 )
                 stats_results.append((i, j, stat.statistic, stat.pvalue))
         print(
-            f"mean: {counts[counts['aperture'] == i][label_parameter].mean()} +/- {stats.sem(counts[counts['aperture'] == i][label_parameter])}"
+            f"mean: {counts[counts['aperture'] == i][label_parameter].mean()} +/- {stats.sem(counts[counts['aperture'] == i][label_parameter], nan_policy='omit')}"
         )
     return counts, stats_results
 
@@ -1889,15 +1889,19 @@ def plot_rolling_reward(df, ax=None, rolling_window=15, per_aperture=False):
         rolling_window /= 2
     rolling_window = max(int(rolling_window), 5)
 
-    # Sort by aperture if per_aperture for consistent color palette
     if per_aperture and num_apertures > 1:
         rewarded = rewarded.sort_values(by=["aperture", "trial"])
 
-    if per_aperture and num_apertures > 1:
         rewarded["rolling_reward"] = (
             rewarded.groupby("aperture")["reward"]
-            .rolling(rolling_window, min_periods=1, win_type="gaussian", center=True)
-            .mean(std=3)
+            .apply(
+                lambda x: x.rolling(
+                    window=rolling_window,
+                    min_periods=1,
+                    win_type="gaussian",
+                    center=True,
+                ).mean(std=3)
+            )
             .reset_index(level=0, drop=True)
         )
     else:

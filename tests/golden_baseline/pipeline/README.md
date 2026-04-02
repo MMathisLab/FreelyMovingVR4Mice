@@ -19,23 +19,17 @@ sg docker -c "bash -c 'source ../venv/bin/activate && python -m pytest integrati
 ```
 
 This will:
-1. Run the full pipeline with the Nightingale test dataset
+1. Run the full pipeline with the golden test dataset
 2. Capture actual outputs as new golden files
 3. Overwrite existing golden files
 
 ## Initial Setup Notes
 
-The initial values in these files are placeholders based on the Nightingale golden dataset specification:
-- 339,045 steps in pickle data
-- 281,748 frames in DLC DataFrame
-- 281,876 frames in PROC data
-- 455,965 timestamps
-
-Sample values (first, middle, last) are set to 0.0 as placeholders and should be updated
+Sample values (first, middle, last) and row counts should be updated
 by running `--regenerate-golden` after the first successful pipeline run.
 
 ## Dataset Info
 
-- **Dataset**: Nightingale_2024-08-16_1
+- **Dataset**: Flamingo_2026-02-05_1
 - **Camera**: Imagingsource
 - **Session**: golden_dataset

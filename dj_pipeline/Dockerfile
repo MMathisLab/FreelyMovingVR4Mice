@@ -18,12 +18,15 @@ RUN apt-get update -y && apt-get install -yy --no-install-recommends \
 
 RUN pip install -U pip setuptools wheel packaging
 
-# Install packages - base image already has numpy/pandas/jupyter from conda
-# Only override what's necessary, add test dependencies
-RUN pip install --no-cache-dir --no-deps datajoint==2.0.1 && \
-    pip install pymysql cryptography minio pydantic-settings deepdiff && \
-    pip install seaborn umap-learn black==22.6 && \
-    pip install pytest pytest-cov scipy tables 
+RUN pip install datajoint==2.0.1 \
+    pymysql cryptography minio pydantic-settings deepdiff \
+    pandas \
+    scipy \
+    seaborn \
+    jupyter \
+    umap-learn \
+    black==22.6 \
+    pytest pytest-cov tables
 
 ARG user_name=user
 ARG uid=1000

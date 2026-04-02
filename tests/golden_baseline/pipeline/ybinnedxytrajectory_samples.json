@@ -1,0 +1,34 @@
+{
+  "aperture": {
+    "length": 54,
+    "dtype": "float64",
+    "first": 4.3,
+    "middle": 4.3,
+    "middle_idx": 27,
+    "last": 12.0
+  },
+  "x_flipped": {
+    "length": 54,
+    "dtype": "float64",
+    "first": -0.1533525182010998,
+    "middle": 15.113777786459883,
+    "middle_idx": 27,
+    "last": 15.972746211099647
+  },
+  "bin_centers": {
+    "length": 54,
+    "dtype": "float64",
+    "first": 0.21449999999999997,
+    "middle": 20.602,
+    "middle_idx": 27,
+    "last": 19.8465
+  },
+  "y": {
+    "length": 54,
+    "dtype": "float64",
+    "first": 0.21733394229600417,
+    "middle": 20.355555927760108,
+    "middle_idx": 27,
+    "last": 19.803441994510987
+  }
+}

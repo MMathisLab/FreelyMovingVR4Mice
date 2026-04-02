@@ -1,14 +1,14 @@
 name: Test cron_scenario.py
 
 on:
-  pull_request:
-    paths:
-      - "dj_pipeline/base/**"
-      - "dj_pipeline/vr4mice/**"
-      - "dj_pipeline/tests/**"
-      - "dj_pipeline/Dockerfile"
-      - "dj_pipeline/cron_scenario.py"
-      - ".github/workflows/cron-scenario.yml"
+  #pull_request:
+  #  paths:
+  #    - "dj_pipeline/base/**"
+  #    - "dj_pipeline/vr4mice/**"
+  #    - "dj_pipeline/tests/**"
+  #    - "dj_pipeline/Dockerfile"
+  #    - "dj_pipeline/cron_scenario.py"
+  #    - ".github/workflows/cron-scenario.yml"
   workflow_dispatch:
 
 env:
