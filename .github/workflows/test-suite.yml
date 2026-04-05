@@ -1,11 +1,11 @@
-name: Run pytest suite
+name: Run unit and integration tests
 
 on:
   pull_request:
     paths:
       - "dj_pipeline/**"
       - "tests/**"
-      - ".github/workflows/pytest-suite.yml"
+      - ".github/workflows/test-suite.yml"
   workflow_dispatch:
 
 env:
@@ -21,7 +21,7 @@ env:
   MYSQL_IMAGE: mysql:5.7
 
 jobs:
-  pytest:
+  unit_integration_tests:
     runs-on: ubuntu-latest
 
     steps:
