@@ -18,7 +18,7 @@ env:
   EMAIL: "false"
   IMG_SRC: Imagingsource
   DATABASE_USE_TLS: "false"
-  MYSQL_IMAGE: mysql:5.7
+  MYSQL_IMAGE: mysql:8.0
 
 jobs:
   unit_integration_tests:
@@ -42,6 +42,8 @@ jobs:
             --health-timeout=5s \
             --health-retries=12 \
             "${MYSQL_IMAGE}" \
+            --character-set-server=latin1 \
+            --collation-server=latin1_swedish_ci \
             --max_allowed_packet=1G \
             --net_read_timeout=600 \
             --net_write_timeout=600

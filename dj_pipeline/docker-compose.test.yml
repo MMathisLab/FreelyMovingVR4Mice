@@ -1,6 +1,7 @@
 services:
   mysql:
-    image: datajoint/mysql:5.7
+    image: mysql:8.0
+    command: --character-set-server=latin1 --collation-server=latin1_swedish_ci
     environment:
       MYSQL_ROOT_PASSWORD: simple
     healthcheck:
