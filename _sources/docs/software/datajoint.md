@@ -85,11 +85,6 @@ class GitCommit(dj.Computed)
 **Depends on:** `DataFrame`  
 Git commit hash and changed files for reproducibility tracking.
 
-```python
-class TrackingSummaryPlots(dj.Computed)
-```
-Summary plots for tracking data analysis.
-
 ### `dlc.py`
 
 ```python
