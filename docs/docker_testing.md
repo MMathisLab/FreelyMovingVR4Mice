@@ -5,7 +5,7 @@ This guide explains how to run the pipeline tests inside Docker containers.
 ## Overview
 
 The test setup uses docker-compose to orchestrate:
-- **MySQL 5.7** container for the database (matches production schema requirements)
+- **MySQL 8.0** container for the database
 - **Test runner** container built from the pipeline Dockerfile
 
 Tests connect to the external MySQL container instead of using testcontainers,

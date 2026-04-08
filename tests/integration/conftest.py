@@ -135,7 +135,7 @@ def dj_config(mysql_container):
     dj.config["database.host"] = f"{host}:{port}"
     dj.config["database.user"] = "root"
     dj.config["database.password"] = "simple"
-    dj.config["database.use_tls"] = False  # Disable TLS for MySQL 5.7 compatibility
+    dj.config["database.use_tls"] = False  # Test containers don't have TLS certificates
     dj.config["safemode"] = False  # Allow dropping schemas in tests
 
     # Configure schema prefix
