@@ -1,5 +1,6 @@
 import datajoint as dj
 
+
 def connect_to_database(user, prefix="", create_tables=True, storage="/storage"):
     """
     Connects to a database using DataJoint.
@@ -32,8 +33,8 @@ def connect_to_database(user, prefix="", create_tables=True, storage="/storage")
     #     },
     # }
 
-    dj.config['database.database_prefix'] = prefix
-    dj.config['database.create_tables'] = create_tables
+    dj.config["database.database_prefix"] = prefix
+    dj.config["database.create_tables"] = create_tables
 
     dj.config["database.host"] = user.host
     dj.config["database.user"] = user.name
@@ -89,8 +90,8 @@ class SchemaConfig:
 
     @staticmethod
     def get_schema_key(key):
-        return str(dj.config['database.database_prefix']) + str(key)
+        return str(dj.config["database.database_prefix"]) + str(key)
 
     @staticmethod
     def create_tables():
-        return dj.config['database.create_tables']
+        return dj.config["database.create_tables"]

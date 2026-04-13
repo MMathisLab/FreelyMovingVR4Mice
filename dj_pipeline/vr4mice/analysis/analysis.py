@@ -57,9 +57,7 @@ def _categorize_columns(df: pd.DataFrame) -> Tuple[List[str], List[str], List[st
     ).columns.tolist()
     # "time" is created inside _resample_data_frame after categorization,
     # so it won't be present here, but exclude defensively.
-    categorical_columns = [
-        col for col in categorical_columns if col not in ["time"]
-    ]
+    categorical_columns = [col for col in categorical_columns if col not in ["time"]]
 
     boolean_columns = []
     continuous_columns = []

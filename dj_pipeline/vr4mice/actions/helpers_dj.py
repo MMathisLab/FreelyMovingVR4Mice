@@ -31,6 +31,7 @@ def get_session_incr(raw_data=None, **kwargs):
     if raw_data is not None:
         # Lazy import to avoid database connection on module load
         from base_schemas.schemas import mice
+
         mouse = mice.Mouse() & 'mouse_name = "%s"' % raw_data["mouse_name"]
         return mouse.get_session_increment()
     return None
