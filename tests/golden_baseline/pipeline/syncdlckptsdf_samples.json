@@ -1,0 +1,26 @@
+{
+  "nose_x": {
+    "length": 98804,
+    "dtype": "float64",
+    "first": 316.3966514587412,
+    "middle": 42.626968169212475,
+    "middle_idx": 49402,
+    "last": 287.34923782348716
+  },
+  "nose_y": {
+    "length": 98804,
+    "dtype": "float64",
+    "first": 291.00889091491825,
+    "middle": 449.6282041549697,
+    "middle_idx": 49402,
+    "last": 270.2673711776744
+  },
+  "nose_likelihood": {
+    "length": 98804,
+    "dtype": "float64",
+    "first": 0.9673648476600647,
+    "middle": 0.9846499562263489,
+    "middle_idx": 49402,
+    "last": 0.9731118083000183
+  }
+}

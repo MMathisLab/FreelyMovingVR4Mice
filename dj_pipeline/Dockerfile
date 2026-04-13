@@ -1,4 +1,4 @@
-FROM deeplabcut/deeplabcut:2.3.5-core-cuda11.7.1-cudnn8-runtime-ubuntu20.04-latest 
+FROM deeplabcut/deeplabcut:3.0.0-core-cuda12.4-cudnn9
 #mysql:debian
 
 WORKDIR /
@@ -18,17 +18,15 @@ RUN apt-get update -y && apt-get install -yy --no-install-recommends \
 
 RUN pip install -U pip setuptools wheel packaging
 
-RUN pip install --no-cache-dir datajoint==0.14 \
-    # Note: this version of seaborn, as otherwise it installs 0.12.2 and updates numpy to 1.26,
-    # and then Numba stops to work: err "Numba needs NumPy 1.24 or less" 
-    seaborn==0.13.0 \
-    pandas==1.4.3 \
-    numpy==1.22.4 \
+RUN pip install datajoint>=2.0.1 \
+    pymysql cryptography minio pydantic-settings deepdiff \
+    pandas \
+    scipy \
+    seaborn \
     jupyter \
     umap-learn \
-    black==22.6
-    # TODO: make pip via req
-    # with newer 2.0.3, tom's code fails 
+    black==22.6 \
+    pytest pytest-cov tables
 
 ARG user_name=user
 ARG uid=1000
