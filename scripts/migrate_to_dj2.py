@@ -27,6 +27,9 @@ Usage:
     # Migrate all schemas with a prefix:
     python migrate_to_dj2.py --prefix test_
 
+    # Analyze only, don't migrate:
+    python migrate_to_dj2.py --prefix test_ --analyze-only
+
 Environment Variables:
     DJ_HOST: Database host (default: localhost)
     DJ_PORT: Database port (default: 3306)
@@ -41,12 +44,6 @@ Requirements:
 import argparse
 import os
 import sys
-from pathlib import Path
-
-# Add project paths for imports
-SCRIPT_DIR = Path(__file__).parent
-SCENE_ROOT = SCRIPT_DIR.parent
-sys.path.insert(0, str(SCENE_ROOT / "dj_pipeline"))
 
 
 def configure_datajoint():
@@ -101,12 +98,7 @@ def analyze_schema(dj, schema_name):
     Returns:
         dict with analysis results
     """
-    try:
-        from datajoint.migrate import analyze_columns
-    except ImportError:
-        print("ERROR: datajoint.migrate module not available.")
-        print("Make sure you're using DataJoint 2.x")
-        sys.exit(1)
+    from datajoint.migrate import analyze_columns
 
     schema = dj.Schema(schema_name)
     analysis = analyze_columns(schema)
@@ -130,12 +122,7 @@ def migrate_schema(dj, schema_name, dry_run=True):
     Returns:
         dict with migration results
     """
-    try:
-        from datajoint.migrate import migrate_columns
-    except ImportError:
-        print("ERROR: datajoint.migrate module not available.")
-        print("Make sure you're using DataJoint 2.x")
-        sys.exit(1)
+    from datajoint.migrate import migrate_columns
 
     schema = dj.Schema(schema_name)
 

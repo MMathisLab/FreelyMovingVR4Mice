@@ -56,13 +56,18 @@ Keep this backup until you're confident everything works.
 
 ### Step 2: Merge the migration PR
 
-Merge the `dj2-minimal-migration` branch. This updates the Python code but does not touch the database.
+Merge the migration PR into main. This updates the Python code but does not touch the database.
 
 ### Step 3: Install DataJoint 2.0
 
 ```bash
-pip install "datajoint>=2.0,<3.0"
+pip install "datajoint>=2.0.1"
 ```
+
+> **MySQL version note:** DataJoint 2.0.1 works with MySQL 5.7 and 8.0+.
+> DataJoint 2.1 and later require MySQL 8.0.13+ (they query
+> `information_schema.STATISTICS.EXPRESSION`, which only exists in 8.0.13+).
+> If you're on MySQL 5.7, stay on `datajoint==2.0.1` or upgrade MySQL first.
 
 ### Step 4: Migrate the database columns
 
@@ -94,14 +99,16 @@ migrate_columns(schema, dry_run=False)
 ### Step 5: Run the test suite
 
 ```bash
-cd tests
+cd dj_pipeline
 
-# Unit tests (no database or Docker required)
-python -m pytest unit/ -v
-
-# Integration tests (requires Docker)
-python -m pytest integration/ -v
+# Run all tests (unit + integration):
+docker-compose -f docker-compose.test.yml run --rm tests bash -c "cd tests && python -m pytest integration/ unit/ -v"
 ```
+
+The test infrastructure uses MySQL 8.0 with `latin1` charset (configured in
+`docker-compose.test.yml`). The `latin1` setting is required to avoid
+exceeding the 3072-byte index key length limit that DataJoint tables with
+long composite varchar keys hit on MySQL 8.0's default `utf8mb4` charset.
 
 The integration tests spin up a MySQL container, insert the golden dataset, populate downstream tables, and verify row counts and sample values against golden baselines.
 
@@ -128,17 +135,18 @@ DJ 2.0 uses these comment markers to know which columns to deserialize. Without 
 
 ## Test Data Location
 
-The golden test dataset should be placed at:
+The golden test dataset lives in the repository (as Git LFS) at:
 ```
-{project_root}/test_data/golden_dataset/
+dj_pipeline/tests/data/w_photodiode/
 ```
 
-Required files:
-- `Nightingale_2024-08-16_1.pickle`
-- `Nightingale_2024-08-16_1.json`
-- `Imagingsource_Nightingale_2024-08-16_1_DLC.hdf5`
-- `Imagingsource_Nightingale_2024-08-16_1_TS.npy`
-- `Imagingsource_Nightingale_2024-08-16_1_PROC`
+Contains the `Flamingo_2026-02-05_1` dataset:
+- `Flamingo_2026-02-05_1.pickle`
+- `Flamingo_2026-02-05_1.json`
+- `Flamingo_2026-02-05_1.npy`
+- `Imagingsource_Flamingo_2026-02-05_1_DLC.hdf5`
+- `Imagingsource_Flamingo_2026-02-05_1_TS.npy`
+- `Imagingsource_Flamingo_2026-02-05_1_PROC`
 
 ## Summary of All Code Changes
 

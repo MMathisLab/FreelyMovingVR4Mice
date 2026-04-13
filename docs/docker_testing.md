@@ -14,7 +14,7 @@ avoiding Docker-in-Docker complexity.
 ## Prerequisites
 
 - Docker and docker-compose installed
-- Test data in `test_data/golden_dataset/`
+- Test data in `dj_pipeline/tests/data/w_photodiode/` (the `Flamingo_2026-02-05_1` golden dataset)
 
 ## Running All Tests
 
@@ -56,12 +56,12 @@ docker-compose -f docker-compose.test.yml down -v
 
 ## How It Works
 
-The tests use "external MySQL mode" via environment variables:
-- `DJ_USE_EXTERNAL_CONTAINERS=1` - bypasses testcontainers
+The tests connect to the MySQL service via environment variables set in
+`docker-compose.test.yml`:
 - `DJ_HOST=mysql` - connects to the MySQL service by Docker network name
 - `DJ_PORT=3306`, `DJ_USER=root`, `DJ_PASSWORD=simple`
 
-This is implemented in `tests/integration/conftest.py` (lines 133-170).
+This is implemented in `tests/integration/conftest.py`.
 
 ## Troubleshooting
 
@@ -73,5 +73,5 @@ increase `retries` in docker-compose.test.yml if needed.
 Check that the base image `deeplabcut/deeplabcut:latest-jupyter` is accessible.
 
 ### Test data not found
-Ensure `test_data/golden_dataset/` exists in the repository root with the
-Nightingale test dataset files.
+Ensure the golden dataset files are present at `dj_pipeline/tests/data/w_photodiode/`.
+The integration tests load the `Flamingo_2026-02-05_1` dataset from this directory.
