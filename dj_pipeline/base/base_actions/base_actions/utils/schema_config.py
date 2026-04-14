@@ -77,7 +77,7 @@ class SchemaConfig:
     - get_schema_key(key): Returns the schema key for a given key,
         using the database prefix from dj.config["database.database_prefix"].
     - create_tables(): Returns the value of dj.config["database.create_tables"],
-        which determines whether the schema object will create tables on the database.
+        which determines whether the schema object will create tables on the database if they don't already exist.
 
     Notes:
     - This class assumes that DataJoint has already been imported and configured.
