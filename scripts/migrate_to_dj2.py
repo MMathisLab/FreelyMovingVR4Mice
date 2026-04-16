@@ -15,10 +15,13 @@ The migration process:
    - etc.
 
 Usage:
-    # Dry run (preview changes without applying):
-    python migrate_to_dj2.py --schema test_vr4mice --dry-run
+    # Migrate all schemas in the database:
+    python migrate_to_dj2.py
 
-    # Apply migration:
+    # Dry run (preview changes without applying):
+    python migrate_to_dj2.py --dry-run
+
+    # Migrate a specific schema:
     python migrate_to_dj2.py --schema test_vr4mice
 
     # Migrate multiple schemas:
@@ -28,7 +31,7 @@ Usage:
     python migrate_to_dj2.py --prefix test_
 
     # Analyze only, don't migrate:
-    python migrate_to_dj2.py --prefix test_ --analyze-only
+    python migrate_to_dj2.py --analyze-only
 
 Environment Variables:
     DJ_HOST: Database host (default: localhost)
@@ -226,9 +229,6 @@ def main():
     )
 
     args = parser.parse_args()
-
-    if not args.schemas and not args.prefix:
-        parser.error("Either --schema or --prefix must be specified")
 
     # Configure DataJoint
     print("Configuring DataJoint connection...")
