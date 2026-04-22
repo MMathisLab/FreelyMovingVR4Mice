@@ -37,7 +37,7 @@ Environment Variables:
     DJ_HOST: Database host (default: localhost)
     DJ_PORT: Database port (default: 3306)
     DJ_USER: Database user (default: root)
-    DJ_PASSWORD: Database password (default: simple)
+    DJ_PASS: Database password (default: simple)
 
 Requirements:
     - DataJoint 2.x installed
@@ -48,6 +48,12 @@ import argparse
 import os
 import sys
 
+# Ensure utf-8 output on Windows (datajoint logs contain unicode arrows)
+if sys.stdout.encoding != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8")
+if sys.stderr.encoding != "utf-8":
+    sys.stderr.reconfigure(encoding="utf-8")
+
 
 def configure_datajoint():
     """Configure DataJoint connection from environment variables."""
@@ -56,9 +62,10 @@ def configure_datajoint():
     host = os.environ.get("DJ_HOST", "localhost")
     port = os.environ.get("DJ_PORT", "3306")
     user = os.environ.get("DJ_USER", "root")
-    password = os.environ.get("DJ_PASSWORD", "simple")
+    password = os.environ.get("DJ_PASS", "simple")
 
-    dj.config["database.host"] = f"{host}:{port}"
+    dj.config["database.host"] = host
+    dj.config["database.port"] = int(port)
     dj.config["database.user"] = user
     dj.config["database.password"] = password
     dj.config["safemode"] = False
@@ -81,13 +88,16 @@ def get_schemas_to_migrate(dj, schema_names=None, prefix=None):
     if schema_names:
         return schema_names
 
+    # MySQL system schemas that should never be migrated
+    system_schemas = ["mysql", "information_schema", "performance_schema", "sys"]
+
     # Get all schemas and filter by prefix
     all_schemas = dj.list_schemas()
 
     if prefix:
         return [s for s in all_schemas if s.startswith(prefix)]
 
-    return all_schemas
+    return [s for s in all_schemas if s not in system_schemas]
 
 
 def analyze_schema(dj, schema_name):
@@ -109,7 +119,7 @@ def analyze_schema(dj, schema_name):
     return {
         "schema_name": schema_name,
         "analysis": analysis,
-        "columns_to_migrate": len(analysis) if analysis else 0,
+        "columns_to_migrate": len(analysis["needs_migration"]) if analysis else 0,
     }
 
 
@@ -159,8 +169,8 @@ def print_analysis_report(analysis_results):
         print(f"  Columns needing migration: {columns}")
 
         if result["analysis"]:
-            for col_info in result["analysis"]:
-                print(f"    - {col_info}")
+            for col in result["analysis"]["needs_migration"]:
+                print(f"    - {col['table']}.{col['column']}: {col['native_type']} -> {col['core_type']}")
 
     print("\n" + "-" * 60)
     print(f"TOTAL: {total_columns} columns across {len(analysis_results)} schemas")
