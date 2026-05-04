@@ -42,6 +42,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/vr4mice-data/summary_plots"
           mkdir -p "$RUNNER_TEMP/vr4mice-shared"
           mkdir -p "$RUNNER_TEMP/vr4mice-screen-recordings/raw_screen_recordings"
+          cp -a "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/." "$RUNNER_TEMP/vr4mice-data/processed/"
           ln -sf \
             "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/Imagingsource_Flamingo_2026-02-05_1_VIDEO.avi" \
             "$RUNNER_TEMP/vr4mice-screen-recordings/raw_screen_recordings/Flamingo_2026-02-05_1.mkv"
@@ -85,6 +86,7 @@ jobs:
             --build-arg user_name="$(id -un)" \
             --build-arg uid="$(id -u)" \
             --build-arg gid="$(id -g)" \
+            --build-arg APT_MIRROR=http://azure.archive.ubuntu.com/ubuntu/ \
             -t vr4mice_app:test-image \
             ./dj_pipeline
 
@@ -109,7 +111,7 @@ jobs:
             -v "$GITHUB_WORKSPACE/dj_pipeline:/app" \
             -v "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/:/data/data/" \
             -v "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/:/data/dlc_video/" \
-            -v "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/:/data/processed/" \
+            -v "$RUNNER_TEMP/vr4mice-data/processed:/data/processed" \
             -v "$RUNNER_TEMP/vr4mice-data/summary_plots:/data/summary_plots" \
             -v "$RUNNER_TEMP/vr4mice-shared:/shared" \
             -v "$RUNNER_TEMP/vr4mice-screen-recordings:/vr4mice_screen_recordings" \

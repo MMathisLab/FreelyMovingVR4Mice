@@ -2,10 +2,13 @@ FROM deeplabcut/deeplabcut:2.3.5-core-cuda11.7.1-cudnn8-runtime-ubuntu20.04-late
 #mysql:debian
 
 WORKDIR /
-RUN sed -i \
-        -e 's|http://archive.ubuntu.com/ubuntu/|http://azure.archive.ubuntu.com/ubuntu/|g' \
-        -e 's|http://security.ubuntu.com/ubuntu/|http://azure.archive.ubuntu.com/ubuntu/|g' \
-        /etc/apt/sources.list \
+ARG APT_MIRROR=
+RUN if [ -n "$APT_MIRROR" ]; then \
+        sed -i \
+            -e "s|http://archive.ubuntu.com/ubuntu/|${APT_MIRROR}|g" \
+            -e "s|http://security.ubuntu.com/ubuntu/|${APT_MIRROR}|g" \
+            /etc/apt/sources.list; \
+    fi \
     && apt-get update -y \
     && apt-get install -yy --no-install-recommends \
     libgl1 \
