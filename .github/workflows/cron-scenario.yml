@@ -241,7 +241,7 @@ jobs:
         run: |
           experiment_member_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision._experiment_member;')"
           inclusion_status_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__inclusion_status;')"
-          label_set_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.\`#label_set\`;')"
+          label_set_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.`#label_set`;')"
           prediction_model_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__prediction_model;')"
           decision_points_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__decision_points;')"
 
