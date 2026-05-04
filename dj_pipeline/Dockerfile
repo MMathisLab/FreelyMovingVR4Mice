@@ -2,7 +2,8 @@ FROM deeplabcut/deeplabcut:2.3.5-core-cuda11.7.1-cudnn8-runtime-ubuntu20.04-late
 #mysql:debian
 
 WORKDIR /
-RUN apt-get update -y && apt-get install -yy --no-install-recommends \
+RUN apt-get -o Acquire::Retries=10 -o Acquire::http::Timeout=30 update -y \
+    && apt-get install -yy --no-install-recommends \
     libgl1 \
     build-essential make \
     perl libnet-ssleay-perl libio-socket-ssl-perl \
