@@ -42,6 +42,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/vr4mice-data/summary_plots"
           mkdir -p "$RUNNER_TEMP/vr4mice-shared"
           mkdir -p "$RUNNER_TEMP/vr4mice-screen-recordings/raw_screen_recordings"
+          cp -a "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/." "$RUNNER_TEMP/vr4mice-data/processed/"
           ln -sf \
             "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/Imagingsource_Flamingo_2026-02-05_1_VIDEO.avi" \
             "$RUNNER_TEMP/vr4mice-screen-recordings/raw_screen_recordings/Flamingo_2026-02-05_1.mkv"
@@ -85,6 +86,7 @@ jobs:
             --build-arg user_name="$(id -un)" \
             --build-arg uid="$(id -u)" \
             --build-arg gid="$(id -g)" \
+            --build-arg APT_MIRROR=http://azure.archive.ubuntu.com/ubuntu/ \
             -t vr4mice_app:test-image \
             ./dj_pipeline
 
@@ -114,7 +116,7 @@ jobs:
             -v "$RUNNER_TEMP/vr4mice-shared:/shared" \
             -v "$RUNNER_TEMP/vr4mice-screen-recordings:/vr4mice_screen_recordings" \
             vr4mice_app:test-image \
-            bash -lc "pip install --no-deps /app/base/base_min_schemas /app/base/base_actions && python cron_scenario.py"
+            bash -lc "pip install --no-deps /app/base/base_min_schemas /app/base/base_actions && python cron_scenario.py && python cron_scenario.py --aws"
 
       - name: Dump populated schemas
         run: |
@@ -127,6 +129,7 @@ jobs:
             session_metrics
             latency_tests
             inputs_videos
+            decision
             base
             mice
             exp
@@ -235,3 +238,22 @@ jobs:
           test "${state_count}" -ge 1
           test "${dataframe_count}" -ge 1
           test "${summary_plot_count}" -ge 1
+
+      - name: Verify decision tables (--aws populated)
+        run: |
+          experiment_member_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision._experiment_member;')"
+          inclusion_status_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__inclusion_status;')"
+          label_set_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.`#label_set`;')"
+          prediction_model_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__prediction_model;')"
+          decision_points_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__decision_points;')"
+
+          echo "decision._experiment_member rows: ${experiment_member_count}"
+          echo "decision.__inclusion_status rows: ${inclusion_status_count}"
+          echo "decision.#label_set rows: ${label_set_count}"
+          echo "decision.__prediction_model rows: ${prediction_model_count}"
+          echo "decision.__decision_points rows: ${decision_points_count}"
+
+          test "${experiment_member_count}" -ge 1
+          test "${inclusion_status_count}" -ge 1
+          test "${label_set_count}" -ge 1
+          # PredictionModel/DecisionPoints need multi-session data to train; logged for visibility only.
