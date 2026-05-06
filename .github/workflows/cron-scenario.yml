@@ -116,7 +116,10 @@ jobs:
             -v "$RUNNER_TEMP/vr4mice-shared:/shared" \
             -v "$RUNNER_TEMP/vr4mice-screen-recordings:/vr4mice_screen_recordings" \
             vr4mice_app:test-image \
-            bash -lc "pip install --no-deps /app/base/base_min_schemas /app/base/base_actions && python cron_scenario.py && python cron_scenario.py --aws"
+            bash -lc "pip install --no-deps /app/base/base_min_schemas /app/base/base_actions \
+              && python cron_scenario.py \
+              && mysql -h \"${DJ_HOST}\" -P \"${DJ_PORT}\" -u \"${DJ_USER}\" -p\"${DJ_PASS}\" -e 'DELETE FROM vr4mice.failed_session;' \
+              && python cron_scenario.py --aws"
 
       - name: Dump populated schemas
         run: |
