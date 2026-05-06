@@ -219,7 +219,8 @@ def plot_trajectories(
         scatter_reward (bool, optional): If True, scatter plot the reward points. Default is True.
 
     """
-    for i in range(1, np.max(df.trial)):
+    #for i in range(1, np.max(df.trial)):
+    for i in df.trial.unique():
         if per_side:
             ax.plot(
                 df[label_x][((df.trial == i) & (df.trial_left_choice == 1))],
