@@ -205,6 +205,7 @@ def plot_trajectories(
     label_x: str = "x",
     label_y: str = "y",
     scatter_reward: bool = True,
+    color: str = "black",
 ):
     """
     Plot all the trajectories.
@@ -240,8 +241,8 @@ def plot_trajectories(
             ax.plot(
                 df[label_x][(df.trial == i)],
                 df[label_y][(df.trial == i)],
-                c="black",
-                alpha=0.2,
+                c=color,
+                alpha=0.3,
                 linewidth=2,
             )
 
@@ -277,6 +278,7 @@ def _plot_session_in_arena(
     label_x: str = "x",
     label_y: str = "y",
     scatter_reward: bool = True,
+    color: str = "black",
 ):
     """Plot a session in the arena including trajectories and boxes.
 
@@ -300,6 +302,7 @@ def _plot_session_in_arena(
         label_x=label_x,
         label_y=label_y,
         scatter_reward=scatter_reward,
+        color=color,
     )
 
 
@@ -312,6 +315,7 @@ def plot_session(
     label_x: str = "x",
     label_y: str = "y",
     scatter_reward: bool = True,
+    color: str = "black",
 ):
     """
     Plots trajectories of sessions on given axes with optional initial position histograms.
@@ -384,8 +388,9 @@ def plot_session(
             label_x=label_x,
             label_y=label_y,
             scatter_reward=scatter_reward,
+            color=color,
         )
-        ax.set_title(f"{df.dataset.unique()[0]}")
+        ax.set_title(f"{df.dataset.unique()}")
 
     return ax
 
