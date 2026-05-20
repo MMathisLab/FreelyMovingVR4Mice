@@ -1653,7 +1653,7 @@ def pairplot_average_decision_point(
                 )
                 stats_results.append((i, j, stat.statistic, stat.pvalue))
         print(
-            f"mean: {counts[counts['aperture'] == i][label_parameter].mean()} +/- {stats.sem(counts[counts['aperture'] == i][label_parameter])}"
+            f"mean {i}: {counts[counts['aperture'] == i][label_parameter].mean()} +/- {stats.sem(counts[counts['aperture'] == i][label_parameter])}"
         )
     return counts, stats_results
 
