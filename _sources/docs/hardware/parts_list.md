@@ -70,8 +70,7 @@ The teensy circuit will need to be soldered to a perforated board:
 
 - [EW-06407-41 - Cole-Parmer, PTFE Tubing, 1/32"ID x 1/16"OD](cole_parmer_ew_06407_41_packof1_masterflex_transfer_p9556775) rigid tube that goes from the valves to the lickport cases.
 
-- 2 x [Lickport case](../stl_files/lickport_case.stl).
-
+- 2 x [Lickport case](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/stl_files/lickport_case.stl), *3D printed*.
 
 Additional tubing material and synringes to complete the water delivery system:
 
@@ -80,7 +79,7 @@ Additional tubing material and synringes to complete the water delivery system:
 - 2 x [20 ml syringe](https://www.eickemeyer.com/shop/050361-eickinject-3-part-syringe-20ml-50-box-sterile-14177#attr=) with needle. Used as water reservoirs.
 
  ```{hint}
- *Lick port v2:* Following a redesign of the reward ports so that all tubings are outside the arena, we designed new lick ports composed of a [first](../stl_files/lickport_v2_1.stl) and [second](../stl_files/lickport_v2_2.stl) part that needs to be threaded and screwed together. They insert in a water slot in the Perspex box directly.
+ **Lick port v2:** Following a redesign of the reward ports so that all tubings are outside the arena, we designed *3D printed* new lick ports composed of a [first](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/stl_files/lickport_v2_1.stl) and [second](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/stl_files/lickport_v2_2.stl) part that needs to be threaded and screwed together. They insert in a water slot in the Perspex box directly.
   ```
 
 ## Photodiode teensy components (optional)
