@@ -5,10 +5,10 @@ from typing import Any, Dict
 import numpy as np
 
 from dlc_utils.dlc_processor_socket_pd import dlc_inference_w_pd
-from latency_tests.Teensy_latency.TeensyLatencySync import TeensyLatency
+from latency_tests.Teensy_latency.TeensyLatencySync import TeensyLatencySync
 
 
-class DLCInferenceWithPhotodiodeTTL(dlc_inference_w_pd):
+class dlc_inference_w_pd_sync(dlc_inference_w_pd):
     def __init__(
         self,
         com="COM3",
@@ -28,7 +28,7 @@ class DLCInferenceWithPhotodiodeTTL(dlc_inference_w_pd):
         )
 
     def _create_teensy(self, com, baudrate):
-        return TeensyLatency(com, baudrate=baudrate)
+        return TeensyLatencySync(com, baudrate=baudrate)
 
     def save_latency_data(self) -> Dict[str, Any]:
         save_dict = super().save_latency_data()
