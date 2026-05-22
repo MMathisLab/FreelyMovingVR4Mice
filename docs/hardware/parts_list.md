@@ -75,7 +75,7 @@ The teensy circuit will need to be soldered to a perforated board:
 
 Additional tubing material and synringes to complete the water delivery system:
 
-- [Auxiliary silicon tubing](https://us.vwr.com/store/product/39213295/masterflex-l-s-precision-pump-tubing-peroxide-cured-silicone-avantor) for the water delivery system. Necessary to bridge syringes, valves, and lickport tubes together.
+- Auxiliary [Masterflex Peroxide-cured silicone tubing, L/S 13, 25 ft.](https://www.vwr.com/us/en/product/NA5144570/masterflex-ls-precision-pump-tubing-peroxide-cured-silicone-avantor) for the water delivery system. Necessary to bridge syringes, valves, and lickport tubes together.
 
 - 2 x [20 ml syringe](https://www.eickemeyer.com/shop/050361-eickinject-3-part-syringe-20ml-50-box-sterile-14177#attr=) with needle. Used as water reservoirs.
 
