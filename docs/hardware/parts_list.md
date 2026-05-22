@@ -66,19 +66,22 @@ The teensy circuit will need to be soldered to a perforated board:
 
 - [1N4005-E3/54 - Standard Recovery Rectifier Diode 600V 1A DO-204AL, Vishay](https://www.distrelec.ch/en/standard-recovery-rectifier-diode-600v-1a-do-204al-vishay-1n4005-e3-54/p/30151890?marketingPopup=false&no-cache=true&track=true)
 
-### Lickports
+### Lickports & Water circuitery
 
-- [EW-06407-41 - Cole-Parmer, PTFE Tubing, 1/32"ID x 1/16"OD](cole_parmer_ew_06407_41_packof1_masterflex_transfer_p9556775) that goes from the valves to the lickport cases.
+- [EW-06407-41 - Cole-Parmer, PTFE Tubing, 1/32"ID x 1/16"OD](cole_parmer_ew_06407_41_packof1_masterflex_transfer_p9556775) rigid tube that goes from the valves to the lickport cases.
 
 - 2 x [Lickport case](../stl_files/lickport_case.stl).
 
-### Water circuit
 
 Additional tubing material and synringes to complete the water delivery system:
 
-- [Auxiliary tubing](https://us.vwr.com/store/product/39213295/masterflex-l-s-precision-pump-tubing-peroxide-cured-silicone-avantor) for the water delivery system. Necessary to bridge syringes, valves, and lickport tubes together.
+- [Auxiliary silicon tubing](https://us.vwr.com/store/product/39213295/masterflex-l-s-precision-pump-tubing-peroxide-cured-silicone-avantor) for the water delivery system. Necessary to bridge syringes, valves, and lickport tubes together.
 
 - 2 x [20 ml syringe](https://www.eickemeyer.com/shop/050361-eickinject-3-part-syringe-20ml-50-box-sterile-14177#attr=) with needle. Used as water reservoirs.
+
+ ```{hint}
+ *Lick port v2:* Following a redesign of the reward ports so that all tubings are outside the arena, we designed new lick ports composed of a [first](../stl_files/lickport_v2_1.stl) and [second](../stl_files/lickport_v2_2.stl) part that needs to be threaded and screwed together. They insert in a water slot in the Perspex box directly.
+  ```
 
 ## Photodiode teensy components (optional)
 
