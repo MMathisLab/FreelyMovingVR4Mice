@@ -602,11 +602,7 @@ class TeensyExperimentGUI(object):
                 self.check_task_progress()
 
     def check_task_progress(self, info=None):
-        """
-            :priority: utils
-                This method allows track the state of task in real time on gui
-                get information from task_info dictionary
-        """
+        """Track the real time task state on GUI and get information from task_info dictionary."""
         if info is None:
             info = self.task_info
 
@@ -622,14 +618,6 @@ class TeensyExperimentGUI(object):
             for k, v in info.items():
                 self.value_labels[index]['text'] = str(v)
                 index += 1
-
-        # if not initial:
-        #     if self.task_on_button:
-        #         self.window.after(1, self.check_task_progress)
-        #     else:
-        #         self.task_on.set(0)
-        #         if self.gui_task:
-        #             self.task.window.destroy()
 
     def _reset_progress_labels(self):
         """
