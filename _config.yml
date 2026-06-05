@@ -22,7 +22,7 @@ html:
     <div>Powered by <a href="https://jupyterbook.org/">Jupyter Book</a>.</div>
 
 repository:
-  url: https://github.com/MMathisLab/FreelyMovingVR4Mice #change me
+  url: https://github.com/MMathisLab/FreelyMovingVR4Mice
   path_to_book: docs
   branch: main
 
