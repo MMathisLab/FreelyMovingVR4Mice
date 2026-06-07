@@ -41,7 +41,11 @@ def connect(tag="", db_host=os.environ["DJ_HOST"]):
         )
     else:
         connect_to_database(
-            LoginUser(),
+            LoginUser(
+                user_name=os.environ["DJ_USER"],
+                user_password=os.environ["DJ_PWD"],
+                db_host=db_host,
+            ),
             prefix=tag,
             create_tables=True,
             # storage="app"

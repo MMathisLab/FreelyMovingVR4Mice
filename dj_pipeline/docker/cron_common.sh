@@ -25,7 +25,9 @@ vr4mice_cron_init() {
   # UID is readonly in bash; pass via env(1) to docker compose instead of export.
   export GID="${GID_VAL}" USER_NAME COMPOSE_PROJECT
 
-  BASE_INSTALL='mkdir -p /app/.local /app/.cache/pip && python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/'
+  BASE_INSTALL='mkdir -p /app/.local /app/.cache/pip /app/.cache/matplotlib && python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/'
+
+  REQUIRE_DJ_ENV='test -n "${DJ_HOST:-}" && test -n "${DJ_USER:-}" && test -n "${DJ_PWD:-}" || { echo "Error: DJ_HOST, DJ_USER, and DJ_PWD must be set." >&2; exit 1; }'
 }
 
 vr4mice_compose_env() {
@@ -41,7 +43,7 @@ vr4mice_compose_up() {
 }
 
 vr4mice_exec_client() {
-  "${COMPOSE_CMD[@]}" -p "${COMPOSE_PROJECT}" exec --user "${USER_NAME}" client bash -c "$1"
+  "${COMPOSE_CMD[@]}" -p "${COMPOSE_PROJECT}" exec -T --user "${USER_NAME}" client bash -c "$1"
 }
 
 vr4mice_base_install() {
@@ -59,7 +61,12 @@ vr4mice_run_cron_scenario() {
   local aws_mode="${1:-}"
   local env_file="${2:-}"
   if [[ "${aws_mode}" == "aws" && -n "${env_file}" && ! -f "${env_file}" ]]; then
-    echo "Error: ${env_file} is required for AWS cron runs." >&2
+    echo "Error: ${env_file} is required for AWS cron runs (copy from .env-aws.example)." >&2
+    return 1
+  fi
+  if [[ "${aws_mode}" == "aws" && -f "${env_file}" ]] \
+    && grep -qE '^DJ_PWD=(your-aws-db-password|change-me)\s*$' "${env_file}" 2>/dev/null; then
+    echo "Error: set a real DJ_PWD in ${env_file} before running AWS cron." >&2
     return 1
   fi
 
@@ -69,7 +76,7 @@ vr4mice_run_cron_scenario() {
   if [[ -n "${env_prefix}" ]]; then
     cmd="${cmd} && ${env_prefix}"
   fi
-  cmd="${cmd} && python cron_scenario.py"
+  cmd="${cmd} && ${REQUIRE_DJ_ENV} && python cron_scenario.py"
   if [[ "${aws_mode}" == "aws" ]]; then
     cmd="${cmd} --aws"
   fi

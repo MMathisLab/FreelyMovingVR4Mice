@@ -38,6 +38,10 @@ def connect_to_database(user, prefix="", create_tables=True, storage="/storage")
 
     dj.config["database.host"] = user.host
     dj.config["database.user"] = user.name
+    if not user.password:
+        raise ConnectionError(
+            "Database password is empty. Set DJ_PWD in .env (local) or .env-aws (AWS cron)."
+        )
     dj.config["database.password"] = user.password
 
     dj.conn()

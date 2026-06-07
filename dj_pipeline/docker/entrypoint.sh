@@ -8,7 +8,7 @@ set -euo pipefail
 export HOME PYTHONUSERBASE PIP_CACHE_DIR PATH="/app/.local/bin:${PATH}"
 
 vr4mice_app_dirs() {
-  mkdir -p /app/.local/bin "${PIP_CACHE_DIR}" /app/processed
+  mkdir -p /app/.local/bin "${PIP_CACHE_DIR}" /app/processed /app/.cache/matplotlib
 }
 
 passwd_has_uid() {

@@ -7,46 +7,16 @@ import os
 
 
 class LoginUser:
+    """Represents a user who is authorized to log into a database."""
 
-    """Represents a user who is authorized to log into a database.
-
-    Attributes:
-        user_name (str): The user's name.
-        user_password (str): The user's password.
-        db_host (str): The IP address of the server hosting the database.
-
-    Methods:
-        __init__(self, user_name=os.environ["DJ_USER"], user_password=os.environ["DJ_PWD"],
-                 db_host=os.environ["DJ_HOST"])
-            Initializes a LoginUser instance with values from environment variables, or with
-            default values if no arguments are provided.
-
-    Properties:
-        name (str): The user's name.
-        password (str): The user's password.
-        host (str): The IP address of the server hosting the database.
-
-    """
-
-    def __init__(self, local=True):
-        self.user_name = "root"
-        self.user_password = "simple"
-        self.db_host = "127.0.0.1"  # os.environ["DJ_HOST"]
-
-    def __init__(self, db_host=os.environ["DJ_HOST"]):
-        self.user_name = "root"
-        self.user_password = "simple"
-        self.db_host = db_host.replace('"', "")
-
-    def __init__(
-        self,
-        user_name=os.environ["DJ_USER"],
-        user_password=os.environ["DJ_PWD"],
-        db_host=os.environ["DJ_HOST"],
-    ):
-        self.user_name = user_name
-        self.user_password = user_password
-        self.db_host = db_host.replace('"', "")
+    def __init__(self, user_name=None, user_password=None, db_host=None):
+        self.user_name = user_name if user_name is not None else os.environ["DJ_USER"]
+        self.user_password = (
+            user_password if user_password is not None else os.environ["DJ_PWD"]
+        )
+        self.db_host = (db_host if db_host is not None else os.environ["DJ_HOST"]).replace(
+            '"', ""
+        )
 
     @property
     def name(self) -> str:
