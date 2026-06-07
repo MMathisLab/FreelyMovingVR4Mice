@@ -20,9 +20,14 @@ vr4mice_cron_init() {
   UID_VAL="${UID:-$(id -u)}"
   GID_VAL="${GID:-$(id -g)}"
   USER_NAME="${USER_NAME:-$(id -un)}"
-  export UID="${UID_VAL}" GID="${GID_VAL}" USER_NAME COMPOSE_PROJECT
+  # UID is readonly in bash; pass via env(1) to docker compose instead of export.
+  export GID="${GID_VAL}" USER_NAME COMPOSE_PROJECT
 
   BASE_INSTALL='mkdir -p /app/.local /app/.cache/pip && python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/'
+}
+
+vr4mice_compose_env() {
+  env UID="${UID_VAL}" GID="${GID_VAL}" USER_NAME="${USER_NAME}"
 }
 
 vr4mice_git_info() {
@@ -30,8 +35,7 @@ vr4mice_git_info() {
 }
 
 vr4mice_compose_up() {
-  UID="${UID_VAL}" GID="${GID_VAL}" USER_NAME="${USER_NAME}" \
-    ${DOCKER_COMPOSE} -p "${COMPOSE_PROJECT}" up -d "$@"
+  vr4mice_compose_env ${DOCKER_COMPOSE} -p "${COMPOSE_PROJECT}" up -d "$@"
 }
 
 vr4mice_exec_client() {
