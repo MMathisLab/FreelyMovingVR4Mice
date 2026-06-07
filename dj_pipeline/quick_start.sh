@@ -184,7 +184,7 @@ if [ -f "${REPO_DIR}/Makefile" ]; then
 else
   echo "${C_YELLOW}Makefile not found in ${REPO_DIR}. Using default project name.${C_RESET}"
 fi
-COMPOSE_PROJECT_DEFAULT="${COMPOSE_PROJECT_DEFAULT:-mysqltest}"
+COMPOSE_PROJECT_DEFAULT="${COMPOSE_PROJECT_DEFAULT:-vr4mice}"
 COMPOSE_PROJECT="${COMPOSE_PROJECT_DEFAULT}"
 
 if [ "${MODE}" = "deployment" ]; then

@@ -3,7 +3,7 @@ mount ?= $(CURDIR)
 base_schemas_path="$(mount)/$(git_repo)/base_schemas"
 base_actions_path="$(mount)/$(git_repo)/base_actions"
 
-COMPOSE_PROJECT ?= mysqltest
+COMPOSE_PROJECT ?= vr4mice
 DOCKER_COMPOSE ?= docker compose
 
 UID ?= $(shell id -u)
