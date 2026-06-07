@@ -27,6 +27,8 @@ def main():
     )
     args = parser.parse_args()
 
+    failed_steps = []
+
     def run_step(name, func):
         logger.info(f"[cron] start {name}")
         try:
@@ -34,6 +36,7 @@ def main():
             logger.info(f"[cron] done {name}")
         except Exception:
             logger.exception(f"[cron] failed {name}")
+            failed_steps.append(name)
 
     if args.aws:
         path = "/data/processed"
@@ -177,6 +180,11 @@ def main():
                 fetch_data(dst="/shared/gui_menu.npy"),
             ),
         )
+
+
+    if failed_steps:
+        logger.error("[cron] failed steps: %s", ", ".join(failed_steps))
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

@@ -248,8 +248,13 @@ Common variables used by the pipeline:
 - `IMG_SRC`
 - `VR4MICE_EMAIL_RECIPIENTS` (comma-separated experimenter names)
 Docker-specific overrides (optional):
+- `COMPOSE_PROJECT` (default `vr4mice`) — Docker Compose project name; must match between `make`, cron scripts, and manual `docker compose -p …` calls
 - `DB_BIND_IP`, `DB_PORT`, `MYSQL_ROOT_PASSWORD`
 - `DB_DATA_PATH`, `SHARED_PATH`, `DATA_PATH`, `SCREEN_RECORDINGS_PATH`
+- `CLIENT_IMAGE`, `CLIENT_CONTAINER_NAME`, `DB_CONTAINER_NAME`, `CLIENT_NETWORK_MODE`
+
+Local DB credentials live in `.env` (loaded by `docker-compose.yml` `env_file`).
+Remote/AWS DB credentials for scheduled AWS runs live in `.env-aws` (copy from `.env-aws.example`); this file is **not** committed.
 
 Notes:
 - `VR4MICE_EMAIL_RECIPIENTS` is required if base schemas (exp/mice) are not in use,
@@ -312,13 +317,83 @@ Typical sequence:
   %run run.py analysis
   ```
 
-## Automated runs (cron)
-`cron_scenario.py` executes the full pipeline in order with per-step logging.
-It is usually invoked via a bash wrapper and added to `crontab`:
-- `cron_script.sh` (nightly)
-- `cron_script_reboot.sh` (on reboot)
+## Cron and Docker operations
 
-## AWS mode
+Scheduled pipeline runs use wrapper shell scripts that call `docker compose` with project name **`vr4mice`** (override via `COMPOSE_PROJECT` in `.env` or the environment). Shared logic lives in `docker/cron_common.sh`.
+
+### Architecture
+
+| Component | Role |
+|-----------|------|
+| `cron_scenario.py` | Runs populate → analysis → DLC → … with per-step logging; exits non-zero if any step fails |
+| `docker/cron_common.sh` | Shared compose/exec helpers (project name, UID/GID, pip install) |
+| `cron_script.sh` | Local nightly run (`/data/data`, video tables, shared export) |
+| `cron_script_aws.sh` | AWS/remote run (`/data/processed`, decision tables); requires `.env-aws` |
+| `cron_script_reboot.sh` | After host reboot: wait 120s, start `db` + `client`, install base packages |
+| `Makefile` | Same compose project and exec pattern as cron scripts |
+
+**Docker client vs host conda:** the client container uses system Python + pip (DeepLabCut base image). Conda on the rig or laptop (`env.py`, `vr4mice_env`, DLCliveGUI) is a separate install path and is not used inside the Docker client.
+
+### Makefile targets (common)
+
+| Target | Purpose |
+|--------|---------|
+| `make client_up` | Start client, install `base_schemas` / `base_actions` |
+| `make up_all` | Start `db` + `client`, install base packages |
+| `make base_install` | Re-install base packages in running client |
+| `make ipython` / `make notebook` | Interactive session in client |
+| `make add-cron` | Install/update crontab entries (see below) |
+| `make cron-local` | Manual local cron run |
+| `make cron-aws` | Manual AWS cron run |
+| `make cron-reboot` | Manual reboot startup script |
+
+All compose commands use `docker compose -p vr4mice` by default (`COMPOSE_PROJECT` in `Makefile` / `.env`).
+
+### Crontab setup
+
+From `dj_pipeline/` on the server:
+
+```bash
+make add-cron
+```
+
+This merges (does not wipe) your crontab and registers:
+
+| Schedule | Script | Log |
+|----------|--------|-----|
+| `@reboot` | `cron_script_reboot.sh` | `~/vr4mice_logs/cron_reboot.log` |
+| `0 2 * * *` | `cron_script.sh && cron_script_aws.sh` | `~/vr4mice_logs/cron.log` then `~/vr4mice_logs/cron_aws.log` |
+
+The nightly job runs **local first**; **AWS runs only if local exits successfully** (`&&` chain). `cron_scenario.py` must exit 0 (no failed steps) for AWS to start.
+
+### Prerequisites on the server
+
+1. `.env` — local DB credentials and compose overrides (see `.env.example`)
+2. `.env-aws` — remote DB credentials for AWS runs (see `.env-aws.example`)
+3. Docker daemon running; cron user in the `docker` group
+4. Run `make add-cron` from `dj_pipeline/` (paths are resolved from that directory)
+
+### Manual test (before enabling cron)
+
+```bash
+cd dj_pipeline
+make cron-local && make cron-aws
+# or:
+bash cron_script.sh && bash cron_script_aws.sh
+```
+
+### Migrating compose project name
+
+Older setups may have containers under project `mysqltest`. After updating to `vr4mice`:
+
+```bash
+COMPOSE_PROJECT=mysqltest make down_all   # stop old stack
+make up_all                               # start under vr4mice
+```
+
+Or temporarily override: `COMPOSE_PROJECT=mysqltest make ipython`.
+
+### AWS mode (pipeline behaviour)
 `--aws` mode uses `/data/processed` and disables moving raw files.
 - `run.py --aws populate`
 - `cron_scenario.py --aws`

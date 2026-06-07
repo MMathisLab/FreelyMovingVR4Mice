@@ -10,10 +10,14 @@ UID ?= $(shell id -u)
 GID ?= $(shell id -g)
 USER_NAME ?= $(shell id -un)
 TAG ?=
-export UID GID USER_NAME TAG
+export UID GID USER_NAME TAG COMPOSE_PROJECT
 
-cron_script_path := $(mount)/$(git_repo)/cron_script.sh
-cron_script_aws_path := $(mount)/$(git_repo)/cron_script_aws.sh
+BASE_INSTALL_CMD = export HOME=/app; export PYTHONUSERBASE=/app/.local; export PIP_CACHE_DIR=/app/.cache/pip; mkdir -p /app/.local /app/.cache/pip; python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/
+CLIENT_EXEC = $(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c
+
+cron_script_path := $(CURDIR)/cron_script.sh
+cron_script_aws_path := $(CURDIR)/cron_script_aws.sh
+cron_script_reboot_path := $(CURDIR)/cron_script_reboot.sh
 
 BUILD_ARGS := \
 	--build-arg mysql_config=.my.cnf_vr4mice \
@@ -24,32 +28,32 @@ BUILD_ARGS := \
 
 .PHONY: build_all git_info up_all base_install down_all client_build client_up \
 	client_stop client_rm client_down ipython bash mysql aws notebook sync_build \
-	sync_up add-cron import-dumps export-dumps
+	sync_up add-cron cron-local cron-aws cron-reboot import-dumps export-dumps
 
 build_all:
-	@$(DOCKER_COMPOSE) build
+	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) build
 
 up_all: 
 	#git_info
 	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) up -d
-	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c "export HOME=/app; export PYTHONUSERBASE=/app/.local; export PIP_CACHE_DIR=/app/.cache/pip; mkdir -p /app/.local /app/.cache/pip; python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/"
+	@$(CLIENT_EXEC) "$(BASE_INSTALL_CMD)"
 
 git_info:
 	@git log -n 1 | grep commit > git_commit && git status --porcelain  >> git_commit
 
 
 base_install:
-	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c "export HOME=/app; export PYTHONUSERBASE=/app/.local; export PIP_CACHE_DIR=/app/.cache/pip; mkdir -p /app/.local /app/.cache/pip; python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/"
+	@$(CLIENT_EXEC) "$(BASE_INSTALL_CMD)"
 
 down_all:
 	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) down
 
 client_build:
-	$(DOCKER_COMPOSE) build client #&& \
+	$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) build client #&& \
 
 client_up: git_info
 	@UID=$(UID) GID=$(GID) USER_NAME=$(USER_NAME) $(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) up -d client
-	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c "export HOME=/app; export PYTHONUSERBASE=/app/.local; export PIP_CACHE_DIR=/app/.cache/pip; mkdir -p /app/.local /app/.cache/pip; python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/"
+	@$(CLIENT_EXEC) "$(BASE_INSTALL_CMD)"
 
 client_stop:
 	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) stop client
@@ -83,7 +87,21 @@ sync_up:
 	$(DOCKER_COMPOSE) up -d aws_sync
 
 add-cron:
-	echo "0 2 * * * bash $(cron_script_path) && bash $(cron_script_aws_path) >> ~/vr4mice_logs/cron.log 2>&1" | crontab -
+	@mkdir -p ~/vr4mice_logs
+	@(crontab -l 2>/dev/null | grep -vE 'cron_script(_aws|_reboot)?\.sh' || true; \
+	  echo "@reboot bash $(cron_script_reboot_path) >> ~/vr4mice_logs/cron_reboot.log 2>&1"; \
+	  echo "0 2 * * * bash $(cron_script_path) >> ~/vr4mice_logs/cron.log 2>&1 && bash $(cron_script_aws_path) >> ~/vr4mice_logs/cron_aws.log 2>&1") | crontab -
+	@echo "Installed crontab:"
+	@crontab -l
+
+cron-local:
+	@bash $(cron_script_path)
+
+cron-aws:
+	@bash $(cron_script_aws_path)
+
+cron-reboot:
+	@bash $(cron_script_reboot_path)
 
 DUMP_DIR := /home/mariiapopova/FreelyMovingVR4Mice/dj_pipeline/local_dumps
 #/mnt/data_storage/vr4mice_database_dump/restricted_dump_20260311_141041

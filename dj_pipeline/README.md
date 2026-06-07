@@ -249,10 +249,18 @@ Typical sequence:
   ```
 
 ## Automated runs (cron)
-`cron_scenario.py` executes the full pipeline in order with per-step logging.
-It is usually invoked via a bash wrapper and added to `crontab`:
-- `cron_script.sh` (nightly)
-- `cron_script_reboot.sh` (on reboot)
+
+See **[Cron and Docker operations](../docs/software/install_dj_pipeline.md#cron-and-docker-operations)** in the install guide for:
+
+- wrapper scripts (`cron_script.sh`, `cron_script_aws.sh`, `cron_script_reboot.sh`)
+- `make add-cron`, `make cron-local`, `make cron-aws`
+- `.env` / `.env-aws`, compose project `vr4mice`, logs, and migration notes
+
+Quick install from `dj_pipeline/`:
+
+```bash
+make add-cron
+```
 
 ## AWS mode
 `--aws` mode uses `/data/processed` and disables moving raw files.
