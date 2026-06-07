@@ -23,7 +23,7 @@ TAG ?=
 export UID GID USER_NAME TAG COMPOSE_PROJECT
 
 BASE_INSTALL_CMD = mkdir -p /app/.local /app/.cache/pip && python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/
-CLIENT_EXEC = $(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c
+CLIENT_EXEC = $(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(USER_NAME)" client bash -c
 
 cron_script_path := $(CURDIR)/cron_script.sh
 cron_script_aws_path := $(CURDIR)/cron_script_aws.sh
@@ -130,10 +130,10 @@ client_down: client_stop
 	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) rm client
 
 ipython: git_info
-	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c "ipython"
+	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(USER_NAME)" client bash -c "ipython"
 
 bash: git_info
-	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash
+	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(USER_NAME)" client bash
 
 mysql: git_info
 	@mysql --defaults-group-suffix=-vr4mice -A
@@ -142,7 +142,7 @@ aws:
 	@mysql --defaults-group-suffix=-aws_vr4mice -A
 
 notebook:
-	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c "jupyter notebook --ip 0.0.0.0 --port=8887"
+	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(USER_NAME)" client bash -c "jupyter notebook --ip 0.0.0.0 --port=8887"
 
 sync_build:
 	cp ~/.my.cnf_vr4mice ./.my.cnf_vr4mice
@@ -182,5 +182,5 @@ import-dumps:
 	done
 
 export-dumps:
-	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client \
+	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(USER_NAME)" client \
 	  bash -c "cd /app && bash export_restricted_dump.sh"

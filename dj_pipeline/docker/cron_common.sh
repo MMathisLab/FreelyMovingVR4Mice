@@ -35,7 +35,7 @@ vr4mice_compose_up() {
 }
 
 vr4mice_exec_client() {
-  ${DOCKER_COMPOSE} -p "${COMPOSE_PROJECT}" exec --user "${UID_VAL}:${GID_VAL}" client bash -c "$1"
+  ${DOCKER_COMPOSE} -p "${COMPOSE_PROJECT}" exec --user "${USER_NAME}" client bash -c "$1"
 }
 
 vr4mice_base_install() {
