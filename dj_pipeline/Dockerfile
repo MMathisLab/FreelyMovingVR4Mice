@@ -18,6 +18,7 @@ RUN if [ -n "$APT_MIRROR" ]; then \
     mysql-client \
     graphviz \
     gosu \
+    passwd \
     vim \
     && apt-get -y autoclean \
     && apt-get -y autoremove \

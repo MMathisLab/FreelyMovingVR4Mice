@@ -51,6 +51,9 @@ define verify_client_running
 	  $(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) ps -a >&2 || true; \
 	  echo "Recent client logs:" >&2; \
 	  $(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) logs --tail 40 client >&2 || true; \
+	  if $(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) logs --tail 5 client 2>&1 | grep -q 'groupadd: command not found'; then \
+	    echo "Hint: pull latest repo (entrypoint is mounted from ./docker/entrypoint.sh) and run: make up_all" >&2; \
+	  fi; \
 	  echo "If containers belong to another compose project (e.g. mysqltest), either:" >&2; \
 	  echo "  COMPOSE_PROJECT=mysqltest make up_all" >&2; \
 	  echo "or remove the old stack and set a unique COMPOSE_PROJECT in .env.compose." >&2; \

@@ -25,6 +25,7 @@ services:
       - TAG=${TAG}
     network_mode: ${CLIENT_NETWORK_MODE:-host}
     volumes:
+      - "./docker/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro"
       - "./:/app"
       - "${SHARED_PATH:-/mnt/database/shared}:/shared"
       - "${DATA_PATH:-/mnt/database/vr4mice/vr4mice_database/data}:/data"
