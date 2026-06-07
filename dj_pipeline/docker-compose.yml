@@ -19,9 +19,10 @@ services:
       - PUID=${UID}
       - PGID=${GID}
       - USERNAME=${USER_NAME}
-      - HOME=/home/${USER_NAME}
-      - PIP_CACHE_DIR=/home/${USER_NAME}/.cache/pip
-      - PATH=/home/${USER_NAME}/.local/bin:$PATH
+      - HOME=/app
+      - PYTHONUSERBASE=/app/.local
+      - PIP_CACHE_DIR=/app/.cache/pip
+      - PATH=/app/.local/bin:/usr/local/bin:/usr/bin:/bin
       - TAG=${TAG}
     network_mode: ${CLIENT_NETWORK_MODE:-host}
     volumes:

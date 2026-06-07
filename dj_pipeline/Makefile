@@ -12,7 +12,7 @@ USER_NAME ?= $(shell id -un)
 TAG ?=
 export UID GID USER_NAME TAG COMPOSE_PROJECT
 
-BASE_INSTALL_CMD = export HOME=/app; export PYTHONUSERBASE=/app/.local; export PIP_CACHE_DIR=/app/.cache/pip; mkdir -p /app/.local /app/.cache/pip; python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/
+BASE_INSTALL_CMD = mkdir -p /app/.local /app/.cache/pip && python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/
 CLIENT_EXEC = $(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c
 
 cron_script_path := $(CURDIR)/cron_script.sh

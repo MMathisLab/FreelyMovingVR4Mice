@@ -2,16 +2,24 @@
 set -euo pipefail
 
 : "${USERNAME:=app}"; : "${PUID:=1000}"; : "${PGID:=1000}"
-: "${HOME:=/home/${USERNAME}}"; : "${PIP_CACHE_DIR:=${HOME}/.cache/pip}"
-export HOME USER PATH="${HOME}/.local/bin:${PATH}"
+: "${HOME:=/app}"
+: "${PYTHONUSERBASE:=/app/.local}"
+: "${PIP_CACHE_DIR:=/app/.cache/pip}"
+export HOME USER PYTHONUSERBASE PIP_CACHE_DIR PATH="/app/.local/bin:${PATH}"
+
+vr4mice_app_dirs() {
+  mkdir -p /app/.local/bin "${PIP_CACHE_DIR}" /app/processed
+}
 
 if [ "$(id -u)" -eq 0 ]; then
   getent group "${PGID}" >/dev/null || groupadd -g "${PGID}" "${USERNAME}" || groupadd -g "${PGID}" "grp${PGID}"
-  getent passwd "${PUID}" >/dev/null || useradd -u "${PUID}" -g "${PGID}" -d "${HOME}" -s /bin/bash "${USERNAME}" \
-    || useradd -u "${PUID}" -g "${PGID}" -d "${HOME}" -s /bin/sh "${USERNAME}"
+  if ! getent passwd "${PUID}" >/dev/null; then
+    useradd -u "${PUID}" -g "${PGID}" -d "${HOME}" -s /bin/bash "${USERNAME}" \
+      || useradd -u "${PUID}" -g "${PGID}" -d "${HOME}" -s /bin/sh "${USERNAME}"
+  fi
 
-  mkdir -p /app/processed
-  chown -R "${PUID}:${PGID}" /app/processed
+  vr4mice_app_dirs
+  chown -R "${PUID}:${PGID}" /app/.local "${PIP_CACHE_DIR}" /app/processed
 
   if command -v python3 &>/dev/null || command -v python &>/dev/null; then
     checkpoint_dir=$(
@@ -40,10 +48,8 @@ print(checkpoint_dir)
     fi
   fi
 
-  mkdir -p "${HOME}/.local/bin" "${PIP_CACHE_DIR}"
-  chown -R "${PUID}:${PGID}" "${HOME}"
   exec gosu "${PUID}:${PGID}" "$@"
 else
-  mkdir -p "${HOME}/.local/bin" "${PIP_CACHE_DIR}" || true
+  vr4mice_app_dirs || true
   exec "$@"
 fi

@@ -213,7 +213,7 @@ python -m pip install --user --no-deps /base_schemas/
 python -m pip install --user --no-deps /base_actions/
 ```
 
-`make client_up`, `make base_install`, and the cron scripts also set `HOME=/app` and `PYTHONUSERBASE=/app/.local` so packages install into the mounted repo directory with correct ownership.
+`make client_up`, `make base_install`, and the cron scripts run pip as the caller's UID/GID; packages and cache live under `/app/.local` and `/app/.cache/pip` on the bind-mounted repo (not under `/home/<username>`), so any user with access to the repo can run the client.
 
 **Running as your host user** (file permissions on `/app`, `/data`, etc.) is handled by Docker, not conda:
 

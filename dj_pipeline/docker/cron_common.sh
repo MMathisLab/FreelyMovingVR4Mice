@@ -12,7 +12,7 @@ vr4mice_cron_init() {
   USER_NAME="${USER_NAME:-$(id -un)}"
   export UID="${UID_VAL}" GID="${GID_VAL}" USER_NAME COMPOSE_PROJECT
 
-  BASE_INSTALL='export HOME=/app; export PYTHONUSERBASE=/app/.local; export PIP_CACHE_DIR=/app/.cache/pip; mkdir -p /app/.local /app/.cache/pip; python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/'
+  BASE_INSTALL='mkdir -p /app/.local /app/.cache/pip && python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/'
 }
 
 vr4mice_git_info() {
