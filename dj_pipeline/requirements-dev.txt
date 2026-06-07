@@ -1,0 +1,2 @@
+# Dev tools for contributors (optional)
+nbstripout>=0.6

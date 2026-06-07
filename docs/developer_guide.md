@@ -51,6 +51,25 @@ Use type hints to make the code more readable and to help with catching potentia
 - Use inline comments to explain non-obvious code logic or important context. Make sure they are clear and concise. Avoid comments that state the obvious, as they clutter the code. 
 - When using TODO or NOTE comments, always include the name of the person responsible for addressing it (e.g., TODO(username): Refactor this section). From Google style guidelines, TODO comments are for code that is temporary, a short-term solution, or good-enough but not perfect. Provide enough context for the TODO or NOTE to be actionable. Avoid vague comments like "TODO: fix this". Instead, specify what needs to be fixed and why. Do not leave TODO or NOTE comments unresolved in the codebase if they are unclear or outdated. Regularly review and address them to maintain code quality. 
 
+### Jupyter notebooks (`nbstripout`)
+
+Do **not** commit notebook **outputs** (they often contain DB hostnames, connection logs, or local paths).
+
+After cloning, enable the repo filter once:
+
+```bash
+pip install -r dj_pipeline/requirements-dev.txt
+nbstripout --install --attributes .gitattributes
+```
+
+Strip all notebooks manually before a PR if needed:
+
+```bash
+find dj_pipeline mouse_task -name '*.ipynb' -exec nbstripout {} +
+```
+
+Never commit `.env`, `.env-aws`, or `gui_transfer/config/local_config.json` (use `config.json` / `.env.example` as templates).
+
 ## GitHub Branching, Commits, & Other Guidelines
 
 ### Branching Model

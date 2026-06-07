@@ -135,7 +135,7 @@ cron-aws:
 cron-reboot:
 	@bash $(cron_script_reboot_path)
 
-DUMP_DIR := /home/mariiapopova/FreelyMovingVR4Mice/dj_pipeline/local_dumps
+DUMP_DIR := $(CURDIR)/local_dumps
 #/mnt/data_storage/vr4mice_database_dump/restricted_dump_20260311_141041
 
 import-dumps:
