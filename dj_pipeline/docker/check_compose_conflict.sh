@@ -96,6 +96,8 @@ fi
 echo >&2
 if [ "${VR4MICE_COMPOSE_FORCE:-}" = "1" ]; then
   warn "VR4MICE_COMPOSE_FORCE=1 set — continuing despite conflicts."
+  warn "If client/db containers belong to another compose project, up may succeed but exec will fail."
+  warn "Prefer fixing .env.compose (COMPOSE_PROJECT + container names) over forcing."
   exit 0
 fi
 

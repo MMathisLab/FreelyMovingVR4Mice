@@ -44,12 +44,27 @@ BUILD_ARGS := \
 check-compose-project:
 	@bash docker/check_compose_conflict.sh "$(COMPOSE_PROJECT)"
 
+# Fail with logs if the client service is not running (common after compose project / name mismatch).
+define verify_client_running
+	@if [ "$$($(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) ps --status running -q client 2>/dev/null | wc -l | tr -d ' ')" = "0" ]; then \
+	  echo "Error: client service is not running (compose project '$(COMPOSE_PROJECT)')." >&2; \
+	  $(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) ps -a >&2 || true; \
+	  echo "Recent client logs:" >&2; \
+	  $(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) logs --tail 40 client >&2 || true; \
+	  echo "If containers belong to another compose project (e.g. mysqltest), either:" >&2; \
+	  echo "  COMPOSE_PROJECT=mysqltest make up_all" >&2; \
+	  echo "or remove the old stack and set a unique COMPOSE_PROJECT in .env.compose." >&2; \
+	  exit 1; \
+	fi
+endef
+
 build_all:
 	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) build
 
 up_all: check-compose-project
 	#git_info
 	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) up -d
+	$(verify_client_running)
 	@$(CLIENT_EXEC) "$(BASE_INSTALL_CMD)"
 
 git_info:
@@ -99,6 +114,7 @@ client_build:
 
 client_up: git_info check-compose-project
 	@UID=$(UID) GID=$(GID) USER_NAME=$(USER_NAME) $(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) up -d client
+	$(verify_client_running)
 	@$(CLIENT_EXEC) "$(BASE_INSTALL_CMD)"
 
 client_stop:

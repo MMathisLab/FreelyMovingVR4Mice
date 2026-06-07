@@ -1,4 +1,3 @@
-version: "2.4"
 services:
   db:
     image: datajoint/mysql:5.7 
@@ -39,3 +38,5 @@ services:
       - .env
     stdin_open: true
     tty: true
+    # Keep the client alive under `docker compose up -d` (plain bash may exit without a TTY).
+    command: ["sleep", "infinity"]
