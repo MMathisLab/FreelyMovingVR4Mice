@@ -1,24 +1,21 @@
+import logging
 import os
+import warnings
 import argparse
+
 from base_actions.connect import connect
-
-connect(tag="", db_host=os.environ["DJ_HOST"])
-
-
 from vr4mice.actions.populate_rig import populate_rig
 from vr4mice.actions.fetch_data import fetch_data
-from vr4mice.utils.logger import Logger
+from vr4mice.utils.logger import Logger, config_logger
 from run import check_folder_existence, create_folder_if_not_exist
-
 
 logger = Logger.get_logger()
 
-# note: paths and args are set here to default (same as in the source file),
-# here to show up the specs
+logging.getLogger("settings").setLevel(logging.ERROR)
+warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
 def main():
-    # Parse command-line arguments
     parser = argparse.ArgumentParser(
         description="Script to handle AWS or local execution."
     )
@@ -26,6 +23,9 @@ def main():
         "--aws", action="store_true", help="Enable AWS-specific execution."
     )
     args = parser.parse_args()
+
+    config_logger(level="INFO", debug=False)
+    connect(tag="")
 
     failed_steps = []
 
@@ -124,7 +124,6 @@ def main():
     )
 
     if args.aws:
-
         from vr4mice.schema import decision
 
         run_step(
@@ -153,7 +152,6 @@ def main():
             lambda: decision.DecisionPoints10Windows().populate(),
         )
     else:
-
         from vr4mice.schema import inputs_videos
 
         run_step(
@@ -180,7 +178,6 @@ def main():
                 fetch_data(dst="/shared/gui_menu.npy"),
             ),
         )
-
 
     if failed_steps:
         logger.error("[cron] failed steps: %s", ", ".join(failed_steps))

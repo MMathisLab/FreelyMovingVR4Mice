@@ -5,11 +5,7 @@ import argparse
 import sys
 import warnings
 
-try:
-    from base_actions.connect import connect
-except ModuleNotFoundError:
-    sys.path.insert(0, "/base_actions")
-    from base_actions.connect import connect
+from base_actions.connect import connect
 from vr4mice.utils.logger import Logger, config_logger
 
 logger = Logger.get_logger()
@@ -111,7 +107,7 @@ if __name__ == "__main__":
         # Intentionally not calling sync_days here: day synchronization should be
         # run explicitly via the "sync_days" mode when needed, rather than on every
         # populate run.
-        populate_rig(path=path, move=move)
+        populate_rig(path=path, gui=os.environ["GUI"], move=move)
         vr4mice.Collab().populate()
 
     elif args.mode == "analysis":
@@ -174,7 +170,7 @@ if __name__ == "__main__":
 
         vr4mice.SignalsPhotodiode().populate()
         latency_tests.SignalsPhotodiodeAligned().populate()
-        latency_tests.AllLatencies()
+        latency_tests.AllLatencies().populate()
 
     elif args.mode == "inputs_videos":
         from vr4mice.schema import inputs_videos
@@ -192,6 +188,8 @@ if __name__ == "__main__":
         decision.LabelSet().fill()
         decision.PredictionModel().populate()
         decision.DecisionPoints().populate()
+        decision.PredictionModel10Windows().populate()
+        decision.DecisionPoints10Windows().populate()
 
     elif args.mode == "fetch":  # TODO: adjust path
         from vr4mice.actions.fetch_data import fetch_data
