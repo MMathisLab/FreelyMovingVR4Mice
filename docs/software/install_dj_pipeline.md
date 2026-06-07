@@ -420,34 +420,18 @@ Older setups may have containers under project `mysqltest`. After updating:
 COMPOSE_PROJECT=mysqltest make down_all   # stop old stack
 ```
 
-On a **shared server** where another `vr4mice_*` compose project already runs (e.g. `vr4mice_dj2`), do **not** use the default `COMPOSE_PROJECT=vr4mice`. Set a unique name in `.env.compose` first, then:
-
-```bash
-make up_all
-```
-
-Example for user `mariia` on a shared host:
-
-```bash
-COMPOSE_PROJECT=vr4mice_mariia
-DB_CONTAINER_NAME=vr4mice_db_mariia
-CLIENT_CONTAINER_NAME=vr4mice_mariia
-DB_PORT=3310
-DJ_HOST=127.0.0.1:3310
-```
-
-Or temporarily override: `COMPOSE_PROJECT=mysqltest make ipython`.
+Then start with your project name in `.env.compose` (or legacy `COMPOSE_PROJECT=mysqltest make up_all` if you have not migrated yet).
 
 ### Multiple deployments on one server
 
-Do **not** use the default `COMPOSE_PROJECT=vr4mice` if another vr4mice stack is already running. Collisions happen on:
+Other `vr4mice_*` compose projects on the same host are **fine** for the primary stack (`COMPOSE_PROJECT=vr4mice`) as long as **container names** and **`DB_PORT`** do not clash.
 
-- container names (`vr4mice_db`, `vr4mice_${USER}`)
-- host port (`DB_PORT`, default `3309`)
+`make check-compose-project` blocks only real collisions:
 
-Before `make up_all` or `make client_up`, the Makefile runs **`make check-compose-project`** (see `docker/check_compose_conflict.sh`). If a conflict is detected it aborts with instructions.
+- container names (`vr4mice_db`, `vr4mice_${USER}`) already used by another compose project
+- host port (`DB_PORT`, default `3309`) already in use by another stack
 
-Example `.env.compose` for a second instance (dev / personal sandbox):
+For a **second** deployment (sandbox / personal DB), use unique values in `.env.compose`:
 
 ```bash
 COMPOSE_PROJECT=vr4mice_dev

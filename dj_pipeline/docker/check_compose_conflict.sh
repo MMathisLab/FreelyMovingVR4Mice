@@ -52,7 +52,7 @@ check_named_container() {
     hint "Your COMPOSE_PROJECT is '${COMPOSE_PROJECT}' — pick a new project name to avoid replacing it."
     if [ "${other_project}" = "mysqltest" ]; then
       hint "Legacy stack: stop it with  COMPOSE_PROJECT=mysqltest make down_all"
-      hint "Then set a unique COMPOSE_PROJECT in .env.compose before make up_all (required if other vr4mice_* projects exist on this host)."
+      hint "Then set COMPOSE_PROJECT in .env.compose to match your stack (or stop the legacy stack first)."
     fi
     conflicts=1
   fi
@@ -72,21 +72,17 @@ if command -v ss >/dev/null 2>&1; then
   fi
 fi
 
+# Informational only: other vr4mice_* projects on the host are fine if container names and DB_PORT differ.
 other_projects="$(docker ps -a \
   --filter 'label=com.docker.compose.project' \
   --format '{{.Label "com.docker.compose.project"}}' 2>/dev/null \
   | grep -E '^vr4mice' | sort -u | grep -vx "${COMPOSE_PROJECT}" || true)"
 if [ -n "${other_projects}" ] && [ "${COMPOSE_PROJECT}" = "vr4mice" ]; then
-  warn "Other vr4mice compose project(s) already on this server:"
+  warn "Other vr4mice compose project(s) on this host (OK if you reuse your own container names):"
   while IFS= read -r p; do
     [ -n "${p}" ] && hint "'${p}'"
   done <<< "${other_projects}"
-  hint "If this is a second deployment, set in .env.compose before make up_all:"
-  hint "  COMPOSE_PROJECT=vr4mice_<yourname>"
-  hint "  DB_CONTAINER_NAME=vr4mice_db_<yourname>"
-  hint "  CLIENT_CONTAINER_NAME=vr4mice_\${USER}_<yourname>"
-  hint "  DB_PORT=<free port>"
-  conflicts=1
+  hint "For an additional deployment, use unique names in .env.compose (COMPOSE_PROJECT, DB_CONTAINER_NAME, CLIENT_CONTAINER_NAME, DB_PORT)."
 fi
 
 if [ "${conflicts}" -eq 0 ]; then
