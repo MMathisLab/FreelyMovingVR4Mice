@@ -32,14 +32,14 @@ build_all:
 up_all: 
 	#git_info
 	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) up -d
-	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c "export HOME=/app; export PYTHONUSERBASE=/app/.local; export PIP_CACHE_DIR=/app/.cache/pip; mkdir -p /app/.local /app/.cache/pip; if [ -f /opt/conda/etc/profile.d/conda.sh ]; then source /opt/conda/etc/profile.d/conda.sh && conda activate base; fi; python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/"
+	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c "export HOME=/app; export PYTHONUSERBASE=/app/.local; export PIP_CACHE_DIR=/app/.cache/pip; mkdir -p /app/.local /app/.cache/pip; python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/"
 
 git_info:
 	@git log -n 1 | grep commit > git_commit && git status --porcelain  >> git_commit
 
 
 base_install:
-	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c "export HOME=/app; export PYTHONUSERBASE=/app/.local; export PIP_CACHE_DIR=/app/.cache/pip; mkdir -p /app/.local /app/.cache/pip; if [ -f /opt/conda/etc/profile.d/conda.sh ]; then source /opt/conda/etc/profile.d/conda.sh && conda activate base; fi; python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/"
+	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c "export HOME=/app; export PYTHONUSERBASE=/app/.local; export PIP_CACHE_DIR=/app/.cache/pip; mkdir -p /app/.local /app/.cache/pip; python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/"
 
 down_all:
 	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) down
@@ -49,7 +49,7 @@ client_build:
 
 client_up: git_info
 	@UID=$(UID) GID=$(GID) USER_NAME=$(USER_NAME) $(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) up -d client
-	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c "export HOME=/app; export PYTHONUSERBASE=/app/.local; export PIP_CACHE_DIR=/app/.cache/pip; mkdir -p /app/.local /app/.cache/pip; if [ -f /opt/conda/etc/profile.d/conda.sh ]; then source /opt/conda/etc/profile.d/conda.sh && conda activate base; fi; python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/"
+	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c "export HOME=/app; export PYTHONUSERBASE=/app/.local; export PIP_CACHE_DIR=/app/.cache/pip; mkdir -p /app/.local /app/.cache/pip; python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/"
 
 client_stop:
 	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) stop client
@@ -61,7 +61,7 @@ client_down: client_stop
 	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) rm client
 
 ipython: git_info
-	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c "if [ -f /opt/conda/etc/profile.d/conda.sh ]; then source /opt/conda/etc/profile.d/conda.sh && conda activate base; fi; ipython"
+	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c "ipython"
 
 bash: git_info
 	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash
@@ -73,7 +73,7 @@ aws:
 	@mysql --defaults-group-suffix=-aws_vr4mice -A
 
 notebook:
-	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c "if [ -f /opt/conda/etc/profile.d/conda.sh ]; then source /opt/conda/etc/profile.d/conda.sh && conda activate base; fi; jupyter notebook --ip 0.0.0.0 --port=8887"
+	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) exec --user "$(UID):$(GID)" client bash -c "jupyter notebook --ip 0.0.0.0 --port=8887"
 
 sync_build:
 	cp ~/.my.cnf_vr4mice ./.my.cnf_vr4mice

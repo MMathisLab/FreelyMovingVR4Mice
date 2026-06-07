@@ -13,10 +13,6 @@ if [ "$(id -u)" -eq 0 ]; then
   mkdir -p /app/processed
   chown -R "${PUID}:${PGID}" /app/processed
 
-  if [ -f /opt/conda/etc/profile.d/conda.sh ]; then
-    source /opt/conda/etc/profile.d/conda.sh
-    conda activate base 2>/dev/null || true
-  fi
   if command -v python3 &>/dev/null || command -v python &>/dev/null; then
     checkpoint_dir=$(
       python3 -c "
