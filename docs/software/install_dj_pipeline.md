@@ -443,6 +443,97 @@ Use separate data paths so MySQL volumes do not overwrite each other.
 
 To skip the check (not recommended): `VR4MICE_COMPOSE_FORCE=1 make up_all`.
 
+### Shared repo checkout (another user, same server)
+
+When the pipeline lives in a **shared folder** (e.g. `/mnt/database/shared/FreelyMovingVR4Mice/dj_pipeline`) and was first set up under someone else's account:
+
+**Do not** run `git config --local user.*` in that tree — it is stored inside `.git/` and affects everyone using the same checkout. Prefer per-session env vars or a personal clone for heavy git work.
+
+#### Git — use your own credentials
+
+There is **no** `make` target that changes GitHub SSH keys (those live in `~/.ssh/`). Use:
+
+| Command | Purpose |
+|---------|---------|
+| `make git-whoami` | Show remote, local/global git name, env overrides |
+| `eval "$$(make git-user-env NAME='…' EMAIL='…')"` | Set identity **for this shell only** (shared checkout) |
+| `make git-user-local NAME='…' EMAIL='…'` | Set `--local` config (personal clone only; affects all users on a shared tree) |
+
+SSH remotes use **`~/.ssh/` of the logged-in user**, not the repo owner. As the new user:
+
+```bash
+cd /path/to/shared/FreelyMovingVR4Mice/dj_pipeline
+
+make git-whoami
+ssh -T git@github.com
+
+# Shared checkout (recommended):
+eval "$$(make git-user-env NAME='Your Name' EMAIL='you@example.com')"
+git pull
+```
+
+Personal clone only:
+
+```bash
+make git-user-local NAME='Your Name' EMAIL='you@example.com'
+```
+
+If `git pull` / `git push` fails with permissions on `.git/`, ask the admin to fix group write access on the repo, or **clone your own copy** elsewhere:
+
+```bash
+git clone git@github.com:MMathisLab/FreelyMovingVR4Mice.git ~/FreelyMovingVR4Mice
+cd ~/FreelyMovingVR4Mice/dj_pipeline
+```
+
+#### Docker — client under your username
+
+Each user should have their **own client container** and (if needed) **compose project**. Production DB is often shared; client containers are per user.
+
+**Client only** (connect to an existing DB — typical on a shared server):
+
+```bash
+cd /path/to/shared/FreelyMovingVR4Mice/dj_pipeline
+
+# Per-user compose project (avoids clashing with others' containers)
+export COMPOSE_PROJECT="vr4mice_${USER}"
+
+# Optional: personal .env overrides — if the shared .env is not yours, export instead:
+# export DJ_HOST=127.0.0.1:3309
+# export DJ_USER=...
+# export DJ_PWD=...
+
+make check-compose-project
+make client_up          # container name defaults to vr4mice_${USER}
+make ipython
+```
+
+**Full stack** (your own DB + client — dev / sandbox):
+
+```bash
+cd /path/to/shared/FreelyMovingVR4Mice/dj_pipeline
+
+export COMPOSE_PROJECT="vr4mice_${USER}"
+export DB_PORT=3310     # pick a free port; check with: ss -ltn | grep 3309
+
+# Point to your own data dirs in .env or quick_start.sh, then:
+make check-compose-project
+make up_all
+```
+
+To persist settings, add to the shared or personal `.env` (file is gitignored):
+
+```bash
+COMPOSE_PROJECT=vr4mice_${USER}
+CLIENT_CONTAINER_NAME=vr4mice_${USER}
+# DB_CONTAINER_NAME / DB_PORT / DB_DATA_PATH only if you run your own database
+```
+
+Stop **your** client without touching others:
+
+```bash
+COMPOSE_PROJECT=vr4mice_${USER} make client_down
+```
+
 ### AWS mode (pipeline behaviour)
 `--aws` mode uses `/data/processed` and disables moving raw files.
 - `run.py --aws populate`

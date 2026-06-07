@@ -27,7 +27,7 @@ BUILD_ARGS := \
 	#--build-arg base_actions_path="." #\
 
 
-.PHONY: build_all git_info up_all base_install down_all client_build client_up \
+.PHONY: build_all git_info git-whoami git-user-env git-user-local up_all base_install down_all client_build client_up \
 	client_stop client_rm client_down ipython bash mysql aws notebook sync_build \
 	sync_up add-cron cron-local cron-aws cron-reboot import-dumps export-dumps \
 	check-compose-project
@@ -46,6 +46,33 @@ up_all: check-compose-project
 git_info:
 	@git log -n 1 | grep commit > git_commit && git status --porcelain  >> git_commit
 
+# Show git remote + effective identity (local config, global, env). Does not change anything.
+git-whoami:
+	@echo "remote:"; git remote -v 2>/dev/null | sed 's/^/  /' || true
+	@echo "local user.name:  $$(git config --local --get user.name 2>/dev/null || echo '(unset)')"
+	@echo "local user.email: $$(git config --local --get user.email 2>/dev/null || echo '(unset)')"
+	@echo "global user.name: $$(git config --global --get user.name 2>/dev/null || echo '(unset)')"
+	@echo "global user.email: $$(git config --global --get user.email 2>/dev/null || echo '(unset)')"
+	@echo "GIT_AUTHOR_NAME:  $${GIT_AUTHOR_NAME:-(unset)}"
+	@echo "GIT_AUTHOR_EMAIL: $${GIT_AUTHOR_EMAIL:-(unset)}"
+	@echo "SSH GitHub: run  ssh -T git@github.com"
+
+# Print shell exports for this session (safe on shared checkouts). Usage:
+#   eval "$$(make git-user-env NAME='Your Name' EMAIL='you@example.com')"
+git-user-env:
+	@test -n "$(NAME)" -a -n "$(EMAIL)" || (echo "Usage: eval \"\$$(make git-user-env NAME='Your Name' EMAIL='you@example.com')\"" >&2; exit 1)
+	@echo "export GIT_AUTHOR_NAME='$(NAME)'"
+	@echo "export GIT_AUTHOR_EMAIL='$(EMAIL)'"
+	@echo "export GIT_COMMITTER_NAME='$(NAME)'"
+	@echo "export GIT_COMMITTER_EMAIL='$(EMAIL)'"
+
+# Set git identity in this repo only (.git/config). Affects all users of a shared checkout.
+git-user-local:
+	@test -n "$(NAME)" -a -n "$(EMAIL)" || (echo "Usage: make git-user-local NAME='Your Name' EMAIL='you@example.com'" >&2; exit 1)
+	@echo "WARNING: git config --local affects everyone using this shared checkout." >&2
+	@git config --local user.name "$(NAME)"
+	@git config --local user.email "$(EMAIL)"
+	@echo "Set local git user to $(NAME) <$(EMAIL)>"
 
 base_install:
 	@$(CLIENT_EXEC) "$(BASE_INSTALL_CMD)"
