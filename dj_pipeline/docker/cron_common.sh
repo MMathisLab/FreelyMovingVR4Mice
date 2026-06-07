@@ -13,10 +13,12 @@ vr4mice_cron_init() {
   fi
 
   COMPOSE_PROJECT="${COMPOSE_PROJECT:-vr4mice}"
-  DOCKER_COMPOSE="${DOCKER_COMPOSE:-docker compose}"
   if [[ -f .env.compose ]]; then
-    DOCKER_COMPOSE="docker compose --env-file .env.compose"
+    COMPOSE_CMD=(docker compose --env-file .env.compose)
+  else
+    COMPOSE_CMD=(docker compose)
   fi
+
   UID_VAL="${UID:-$(id -u)}"
   GID_VAL="${GID:-$(id -g)}"
   USER_NAME="${USER_NAME:-$(id -un)}"
@@ -27,7 +29,7 @@ vr4mice_cron_init() {
 }
 
 vr4mice_compose_env() {
-  env UID="${UID_VAL}" GID="${GID_VAL}" USER_NAME="${USER_NAME}"
+  env UID="${UID_VAL}" GID="${GID_VAL}" USER_NAME="${USER_NAME}" "$@"
 }
 
 vr4mice_git_info() {
@@ -35,11 +37,11 @@ vr4mice_git_info() {
 }
 
 vr4mice_compose_up() {
-  vr4mice_compose_env ${DOCKER_COMPOSE} -p "${COMPOSE_PROJECT}" up -d "$@"
+  vr4mice_compose_env "${COMPOSE_CMD[@]}" -p "${COMPOSE_PROJECT}" up -d "$@"
 }
 
 vr4mice_exec_client() {
-  ${DOCKER_COMPOSE} -p "${COMPOSE_PROJECT}" exec --user "${USER_NAME}" client bash -c "$1"
+  "${COMPOSE_CMD[@]}" -p "${COMPOSE_PROJECT}" exec --user "${USER_NAME}" client bash -c "$1"
 }
 
 vr4mice_base_install() {
@@ -49,7 +51,7 @@ vr4mice_base_install() {
 vr4mice_source_env_file() {
   local env_file="$1"
   if [[ -f "${env_file}" ]]; then
-    echo "set -a && source \"${env_file}\" && set +a &&"
+    echo "set -a && source \"${env_file}\" && set +a"
   fi
 }
 
@@ -60,8 +62,14 @@ vr4mice_run_cron_scenario() {
     echo "Error: ${env_file} is required for AWS cron runs." >&2
     return 1
   fi
+
   local cmd="${BASE_INSTALL}"
-  cmd="${cmd} $(vr4mice_source_env_file "${env_file}") python cron_scenario.py"
+  local env_prefix
+  env_prefix="$(vr4mice_source_env_file "${env_file}")"
+  if [[ -n "${env_prefix}" ]]; then
+    cmd="${cmd} && ${env_prefix}"
+  fi
+  cmd="${cmd} && python cron_scenario.py"
   if [[ "${aws_mode}" == "aws" ]]; then
     cmd="${cmd} --aws"
   fi
