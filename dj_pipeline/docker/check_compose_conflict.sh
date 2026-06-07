@@ -42,6 +42,10 @@ check_named_container() {
   if [ -n "${other_project}" ] && [ "${other_project}" != "${COMPOSE_PROJECT}" ]; then
     warn "${kind} container '${name}' already exists (compose project '${other_project}')."
     hint "Your COMPOSE_PROJECT is '${COMPOSE_PROJECT}' — pick a new project name to avoid replacing it."
+    if [ "${other_project}" = "mysqltest" ]; then
+      hint "Legacy stack: stop it with  COMPOSE_PROJECT=mysqltest make down_all"
+      hint "Then set a unique COMPOSE_PROJECT in .env before make up_all (required if other vr4mice_* projects exist on this host)."
+    fi
     conflicts=1
   fi
 }

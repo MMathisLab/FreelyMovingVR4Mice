@@ -410,11 +410,26 @@ bash cron_script.sh && bash cron_script_aws.sh
 
 ### Migrating compose project name
 
-Older setups may have containers under project `mysqltest`. After updating to `vr4mice`:
+Older setups may have containers under project `mysqltest`. After updating:
 
 ```bash
 COMPOSE_PROJECT=mysqltest make down_all   # stop old stack
-make up_all                               # start under vr4mice
+```
+
+On a **shared server** where another `vr4mice_*` compose project already runs (e.g. `vr4mice_dj2`), do **not** use the default `COMPOSE_PROJECT=vr4mice`. Set a unique name in `.env` first, then:
+
+```bash
+make up_all
+```
+
+Example for user `mariia` on a shared host:
+
+```bash
+COMPOSE_PROJECT=vr4mice_mariia
+DB_CONTAINER_NAME=vr4mice_db_mariia
+CLIENT_CONTAINER_NAME=vr4mice_mariia
+DB_PORT=3310
+DJ_HOST=127.0.0.1:3310
 ```
 
 Or temporarily override: `COMPOSE_PROJECT=mysqltest make ipython`.

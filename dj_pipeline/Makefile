@@ -81,7 +81,12 @@ base_install:
 	@$(CLIENT_EXEC) "$(BASE_INSTALL_CMD)"
 
 down_all:
-	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) down
+	@out=$$($(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) down 2>&1); \
+	 printf '%s\n' "$$out"; \
+	 if printf '%s\n' "$$out" | grep -q 'No resource found to remove'; then \
+	   echo "Hint: no stack for project '$(COMPOSE_PROJECT)'. Legacy name is often 'mysqltest':" >&2; \
+	   echo "  COMPOSE_PROJECT=mysqltest make down_all" >&2; \
+	 fi
 
 client_build:
 	$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) build client #&& \
