@@ -33,6 +33,7 @@ __pycache__/
 *cache.json
 *.npy
 *.env
+.env.compose
 *git_commit
 *config.ini*
 

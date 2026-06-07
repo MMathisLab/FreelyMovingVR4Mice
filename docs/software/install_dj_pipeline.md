@@ -231,7 +231,7 @@ In `docker-compose.yml`, map host storage for database and data volumes:
 - `/shared` is used for GUI menu exports.
 - Use persistent paths (e.g., `/mnt/database/...`) on the server.
 Network mode:
-- Default is `host`. Set `CLIENT_NETWORK_MODE=bridge` in `.env` if you need bridge networking.
+- Default is `host`. Set `CLIENT_NETWORK_MODE=bridge` in `.env.compose` if you need bridge networking.
 
 ### Deployment defaults (quick_start.sh)
 When using `bash quick_start.sh` in **deployment** mode, the default host paths map to:
@@ -266,21 +266,24 @@ When using `bash quick_start.sh` in **deployment** mode, the default host paths 
   port=3309
   ```
 ### Environment variables
-Common variables used by the pipeline:
+
+**Pipeline** (`.env` — copy from `.env.example`; loaded into the client container):
+
 - `DJ_HOST` (include port, e.g. `127.0.0.1:3309`), `DJ_USER`, `DJ_PWD`
-- `DJ_LAB`
-- `GUI` (true/false)
-- `EMAIL` (true/false)
-- `IMG_SRC`
-- `VR4MICE_EMAIL_RECIPIENTS` (comma-separated experimenter names)
-Docker-specific overrides (optional):
-- `COMPOSE_PROJECT` (default `vr4mice`) — Docker Compose project name; must match between `make`, cron scripts, and manual `docker compose -p …` calls
+- `DJ_LAB`, `GUI`, `EMAIL`, `IMG_SRC`, `VR4MICE_EMAIL_RECIPIENTS`
+
+When using the local Docker database, `DJ_HOST` port must match `DB_PORT` in `.env.compose`.
+
+**Docker Compose** (`.env.compose` — copy from `.env.compose.example`; used by `make`, cron, and `docker compose` only):
+
+- `COMPOSE_PROJECT` (default `vr4mice`) — must match between `make`, cron scripts, and manual `docker compose -p …` calls
 - `DB_BIND_IP`, `DB_PORT`, `MYSQL_ROOT_PASSWORD`
 - `DB_DATA_PATH`, `SHARED_PATH`, `DATA_PATH`, `SCREEN_RECORDINGS_PATH`
-- `CLIENT_IMAGE`, `CLIENT_CONTAINER_NAME`, `DB_CONTAINER_NAME`, `CLIENT_NETWORK_MODE`
+- `CLIENT_IMAGE`, `CLIENT_CONTAINER_NAME`, `DB_CONTAINER_NAME`, `CLIENT_NETWORK_MODE`, `JUPYTER_PORT`
 
-Local DB credentials live in `.env` (loaded by `docker-compose.yml` `env_file`).
 Remote/AWS DB credentials for scheduled AWS runs live in `.env-aws` (copy from `.env-aws.example`); this file is **not** committed.
+
+If you still have Docker settings in `.env` from an older setup, move them to `.env.compose` (Makefile falls back to `.env` for `COMPOSE_PROJECT` only during migration).
 
 Notes:
 - `VR4MICE_EMAIL_RECIPIENTS` is required if base schemas (exp/mice) are not in use,
@@ -345,7 +348,7 @@ Typical sequence:
 
 ## Cron and Docker operations
 
-Scheduled pipeline runs use wrapper shell scripts that call `docker compose` with project name **`vr4mice`** (override via `COMPOSE_PROJECT` in `.env` or the environment). Shared logic lives in `docker/cron_common.sh`.
+Scheduled pipeline runs use wrapper shell scripts that call `docker compose` with project name **`vr4mice`** (override via `COMPOSE_PROJECT` in `.env.compose` or the environment). Shared logic lives in `docker/cron_common.sh`.
 
 ### Architecture
 
@@ -373,7 +376,7 @@ Scheduled pipeline runs use wrapper shell scripts that call `docker compose` wit
 | `make cron-aws` | Manual AWS cron run |
 | `make cron-reboot` | Manual reboot startup script |
 
-All compose commands use `docker compose -p vr4mice` by default (`COMPOSE_PROJECT` in `Makefile` / `.env`).
+All compose commands use `docker compose -p vr4mice` by default (`COMPOSE_PROJECT` in `Makefile` / `.env.compose`).
 
 ### Crontab setup
 
@@ -394,8 +397,9 @@ The nightly job runs **local first**; **AWS runs only if local exits successfull
 
 ### Prerequisites on the server
 
-1. `.env` — local DB credentials and compose overrides (see `.env.example`)
-2. `.env-aws` — remote DB credentials for AWS runs (see `.env-aws.example`)
+1. `.env` — pipeline / DataJoint credentials (see `.env.example`)
+2. `.env.compose` — Docker Compose settings (see `.env.compose.example`)
+3. `.env-aws` — remote DB credentials for AWS runs (see `.env-aws.example`)
 3. Docker daemon running; cron user in the `docker` group
 4. Run `make add-cron` from `dj_pipeline/` (paths are resolved from that directory)
 
@@ -416,7 +420,7 @@ Older setups may have containers under project `mysqltest`. After updating:
 COMPOSE_PROJECT=mysqltest make down_all   # stop old stack
 ```
 
-On a **shared server** where another `vr4mice_*` compose project already runs (e.g. `vr4mice_dj2`), do **not** use the default `COMPOSE_PROJECT=vr4mice`. Set a unique name in `.env` first, then:
+On a **shared server** where another `vr4mice_*` compose project already runs (e.g. `vr4mice_dj2`), do **not** use the default `COMPOSE_PROJECT=vr4mice`. Set a unique name in `.env.compose` first, then:
 
 ```bash
 make up_all
@@ -443,7 +447,7 @@ Do **not** use the default `COMPOSE_PROJECT=vr4mice` if another vr4mice stack is
 
 Before `make up_all` or `make client_up`, the Makefile runs **`make check-compose-project`** (see `docker/check_compose_conflict.sh`). If a conflict is detected it aborts with instructions.
 
-Example `.env` for a second instance (dev / personal sandbox):
+Example `.env.compose` for a second instance (dev / personal sandbox):
 
 ```bash
 COMPOSE_PROJECT=vr4mice_dev
@@ -509,13 +513,10 @@ Each user should have their **own client container** and (if needed) **compose p
 ```bash
 cd /path/to/shared/FreelyMovingVR4Mice/dj_pipeline
 
-# Per-user compose project (avoids clashing with others' containers)
+# Per-user compose project (avoids clashing with others' containers) — in .env.compose or export:
 export COMPOSE_PROJECT="vr4mice_${USER}"
 
-# Optional: personal .env overrides — if the shared .env is not yours, export instead:
-# export DJ_HOST=127.0.0.1:3309
-# export DJ_USER=...
-# export DJ_PWD=...
+# Pipeline credentials stay in .env (or export DJ_* if the shared .env is not yours)
 
 make check-compose-project
 make client_up          # container name defaults to vr4mice_${USER}
@@ -530,12 +531,12 @@ cd /path/to/shared/FreelyMovingVR4Mice/dj_pipeline
 export COMPOSE_PROJECT="vr4mice_${USER}"
 export DB_PORT=3310     # pick a free port; check with: ss -ltn | grep 3309
 
-# Point to your own data dirs in .env or quick_start.sh, then:
+# Point to your own data dirs in .env.compose (or quick_start.sh), then:
 make check-compose-project
 make up_all
 ```
 
-To persist settings, add to the shared or personal `.env` (file is gitignored):
+To persist settings, add to `.env.compose` (file is gitignored):
 
 ```bash
 COMPOSE_PROJECT=vr4mice_${USER}

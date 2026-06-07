@@ -9,7 +9,12 @@ COMPOSE_PROJECT="${1:-vr4mice}"
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "${REPO_DIR}"
 
-if [ -f .env ]; then
+if [ -f .env.compose ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source .env.compose
+  set +a
+elif [ -f .env ]; then
   set -a
   # shellcheck disable=SC1091
   source .env
@@ -17,6 +22,9 @@ if [ -f .env ]; then
 fi
 
 DOCKER_COMPOSE="${DOCKER_COMPOSE:-docker compose}"
+if [ -f .env.compose ]; then
+  DOCKER_COMPOSE="docker compose --env-file .env.compose"
+fi
 DB_NAME="${DB_CONTAINER_NAME:-vr4mice_db}"
 CLIENT_NAME="${CLIENT_CONTAINER_NAME:-vr4mice_${USER}}"
 CLIENT_NAME="${CLIENT_NAME//\$\{USER\}/${USER:-unknown}}"
@@ -44,7 +52,7 @@ check_named_container() {
     hint "Your COMPOSE_PROJECT is '${COMPOSE_PROJECT}' — pick a new project name to avoid replacing it."
     if [ "${other_project}" = "mysqltest" ]; then
       hint "Legacy stack: stop it with  COMPOSE_PROJECT=mysqltest make down_all"
-      hint "Then set a unique COMPOSE_PROJECT in .env before make up_all (required if other vr4mice_* projects exist on this host)."
+      hint "Then set a unique COMPOSE_PROJECT in .env.compose before make up_all (required if other vr4mice_* projects exist on this host)."
     fi
     conflicts=1
   fi
@@ -58,7 +66,7 @@ if command -v ss >/dev/null 2>&1; then
     ours="$(${DOCKER_COMPOSE} -p "${COMPOSE_PROJECT}" ps -q db 2>/dev/null | wc -l | tr -d ' ')"
     if [ "${ours}" = "0" ]; then
       warn "Port ${DB_PORT} is already in use on this host."
-      hint "Another MySQL/vr4mice stack may be running. Use a different DB_PORT and COMPOSE_PROJECT in .env."
+      hint "Another MySQL/vr4mice stack may be running. Use a different DB_PORT and COMPOSE_PROJECT in .env.compose."
       conflicts=1
     fi
   fi
@@ -73,7 +81,7 @@ if [ -n "${other_projects}" ] && [ "${COMPOSE_PROJECT}" = "vr4mice" ]; then
   while IFS= read -r p; do
     [ -n "${p}" ] && hint "'${p}'"
   done <<< "${other_projects}"
-  hint "If this is a second deployment, set in .env before make up_all:"
+  hint "If this is a second deployment, set in .env.compose before make up_all:"
   hint "  COMPOSE_PROJECT=vr4mice_<yourname>"
   hint "  DB_CONTAINER_NAME=vr4mice_db_<yourname>"
   hint "  CLIENT_CONTAINER_NAME=vr4mice_\${USER}_<yourname>"

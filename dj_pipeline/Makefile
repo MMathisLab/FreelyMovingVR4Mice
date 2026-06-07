@@ -3,12 +3,18 @@ mount ?= $(CURDIR)
 base_schemas_path="$(mount)/$(git_repo)/base_schemas"
 base_actions_path="$(mount)/$(git_repo)/base_actions"
 
-# Empty .env value must not override the default (Make ?= treats "" as already set).
-COMPOSE_PROJECT ?= $(shell grep -E '^COMPOSE_PROJECT=' .env 2>/dev/null | tail -1 | cut -d= -f2- | tr -d ' ')
+# Docker Compose settings live in .env.compose (see .env.compose.example).
+# Empty value must not override the default (Make ?= treats "" as already set).
+COMPOSE_ENV_FILE ?= .env.compose
+COMPOSE_ENV_FLAGS := $(if $(wildcard $(COMPOSE_ENV_FILE)),--env-file $(COMPOSE_ENV_FILE),)
+COMPOSE_PROJECT ?= $(shell grep -E '^COMPOSE_PROJECT=' $(COMPOSE_ENV_FILE) 2>/dev/null | tail -1 | cut -d= -f2- | tr -d ' ')
+ifeq ($(strip $(COMPOSE_PROJECT)),)
+COMPOSE_PROJECT := $(shell grep -E '^COMPOSE_PROJECT=' .env 2>/dev/null | tail -1 | cut -d= -f2- | tr -d ' ')
+endif
 ifeq ($(strip $(COMPOSE_PROJECT)),)
 COMPOSE_PROJECT := vr4mice
 endif
-DOCKER_COMPOSE ?= docker compose
+DOCKER_COMPOSE ?= docker compose $(COMPOSE_ENV_FLAGS)
 
 UID ?= $(shell id -u)
 GID ?= $(shell id -g)

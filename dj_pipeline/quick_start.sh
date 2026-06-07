@@ -178,8 +178,16 @@ if [ ! -d "${REPO_DIR}" ]; then
   echo "Repo dir not found: ${REPO_DIR}"
   exit 1
 fi
+if [ -f "${REPO_DIR}/.env.compose" ]; then
+  DOCKER_COMPOSE_CMD="${DOCKER_COMPOSE_CMD} --env-file ${REPO_DIR}/.env.compose"
+fi
 COMPOSE_PROJECT_DEFAULT=""
-if [ -f "${REPO_DIR}/Makefile" ]; then
+if [ -f "${REPO_DIR}/.env.compose" ]; then
+  COMPOSE_PROJECT_DEFAULT="$({ grep -E '^COMPOSE_PROJECT=' "${REPO_DIR}/.env.compose" || true; } | tail -n1 | cut -d= -f2- | tr -d ' ')"
+elif [ -f "${REPO_DIR}/.env" ]; then
+  COMPOSE_PROJECT_DEFAULT="$({ grep -E '^COMPOSE_PROJECT=' "${REPO_DIR}/.env" || true; } | tail -n1 | cut -d= -f2- | tr -d ' ')"
+fi
+if [ -z "${COMPOSE_PROJECT_DEFAULT}" ] && [ -f "${REPO_DIR}/Makefile" ]; then
   COMPOSE_PROJECT_DEFAULT="$(awk -F'=' '/^COMPOSE_PROJECT/ {gsub(/ /,"",$2); print $2}' "${REPO_DIR}/Makefile" | tail -n1)"
 else
   echo "${C_YELLOW}Makefile not found in ${REPO_DIR}. Using default project name.${C_RESET}"
@@ -259,7 +267,11 @@ else
   DJ_PWD="${MYSQL_ROOT_PASSWORD}"
 fi
 
-if [ -f "${REPO_DIR}/.env" ]; then
+ENV_COMPOSE_FILE="${REPO_DIR}/.env.compose"
+if [ -f "${ENV_COMPOSE_FILE}" ]; then
+  CURRENT_CLIENT_NAME="$({ grep -E '^CLIENT_CONTAINER_NAME=' "${ENV_COMPOSE_FILE}" || true; } | tail -n1 | cut -d= -f2-)"
+  CURRENT_DB_NAME="$({ grep -E '^DB_CONTAINER_NAME=' "${ENV_COMPOSE_FILE}" || true; } | tail -n1 | cut -d= -f2-)"
+elif [ -f "${REPO_DIR}/.env" ]; then
   CURRENT_CLIENT_NAME="$({ grep -E '^CLIENT_CONTAINER_NAME=' "${REPO_DIR}/.env" || true; } | tail -n1 | cut -d= -f2-)"
   CURRENT_DB_NAME="$({ grep -E '^DB_CONTAINER_NAME=' "${REPO_DIR}/.env" || true; } | tail -n1 | cut -d= -f2-)"
 else
@@ -306,12 +318,17 @@ if [ ! -d "${REPO_DIR}" ]; then
 fi
 
 ENV_FILE="${REPO_DIR}/.env"
+ENV_COMPOSE_FILE="${REPO_DIR}/.env.compose"
 ENV_PY="${REPO_DIR}/env.py"
 MAKEFILE="${REPO_DIR}/Makefile"
 
 if [ -f "${ENV_FILE}" ]; then
   cp "${ENV_FILE}" "${ENV_FILE}.bak"
   echo "${C_YELLOW}Backed up .env to .env.bak${C_RESET}"
+fi
+if [ -f "${ENV_COMPOSE_FILE}" ]; then
+  cp "${ENV_COMPOSE_FILE}" "${ENV_COMPOSE_FILE}.bak"
+  echo "${C_YELLOW}Backed up .env.compose to .env.compose.bak${C_RESET}"
 fi
 
 mkdir -p "${DB_ROOT}" "${DATA_ROOT}" "${SHARED_ROOT}" "${SCREEN_ROOT}" || true
@@ -329,8 +346,9 @@ GUI=$( [ "${GUI_FLAG}" = "yes" ] && echo "True" || echo "False" )
 EMAIL=$( [ "${EMAIL_FLAG}" = "yes" ] && echo "True" || echo "False" )
 DJ_SUPPORT_FILEPATH_MANAGEMENT=TRUE
 DJ_SUPPORT_ADAPTED_TYPES=TRUE
+EOF
 
-# Docker-compose overrides (optional)
+cat > "${ENV_COMPOSE_FILE}" <<EOF
 COMPOSE_PROJECT=${COMPOSE_PROJECT}
 DB_BIND_IP=${DB_BIND_IP}
 DB_PORT=${DB_PORT}
@@ -343,6 +361,7 @@ JUPYTER_PORT=8887
 CLIENT_IMAGE=mmathislab/vr4mice_app:0.1.0
 DB_CONTAINER_NAME=${CURRENT_DB_NAME}
 CLIENT_CONTAINER_NAME=${CURRENT_CLIENT_NAME}
+CLIENT_NETWORK_MODE=host
 EOF
 
 cat > "${ENV_PY}" <<EOF

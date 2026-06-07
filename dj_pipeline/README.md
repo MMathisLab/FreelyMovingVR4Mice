@@ -185,16 +185,10 @@ Network mode:
   port=3309
   ```
 ### Environment variables
-Common variables used by the pipeline:
-- `DJ_HOST` (include port, e.g. `127.0.0.1:3309`), `DJ_USER`, `DJ_PWD`
-- `DJ_LAB`
-- `GUI` (true/false)
-- `EMAIL` (true/false)
-- `IMG_SRC`
-- `VR4MICE_EMAIL_RECIPIENTS` (comma-separated experimenter names)
-Docker-specific overrides (optional):
-- `DB_BIND_IP`, `DB_PORT`, `MYSQL_ROOT_PASSWORD`
-- `DB_DATA_PATH`, `SHARED_PATH`, `DATA_PATH`, `SCREEN_RECORDINGS_PATH`
+
+**Pipeline** (`.env`): `DJ_HOST`, `DJ_USER`, `DJ_PWD`, `DJ_LAB`, `GUI`, `EMAIL`, `IMG_SRC`, `VR4MICE_EMAIL_RECIPIENTS`
+
+**Docker Compose** (`.env.compose`): `COMPOSE_PROJECT`, `DB_BIND_IP`, `DB_PORT`, `MYSQL_ROOT_PASSWORD`, `DB_DATA_PATH`, `SHARED_PATH`, `DATA_PATH`, `SCREEN_RECORDINGS_PATH`, container names, etc.
 
 Notes:
 - `VR4MICE_EMAIL_RECIPIENTS` is required if base schemas (exp/mice) are not in use,
@@ -254,7 +248,7 @@ See **[Cron and Docker operations](../docs/software/install_dj_pipeline.md#cron-
 
 - wrapper scripts (`cron_script.sh`, `cron_script_aws.sh`, `cron_script_reboot.sh`)
 - `make add-cron`, `make cron-local`, `make cron-aws`
-- `.env` / `.env-aws`, compose project `vr4mice`, logs, and migration notes
+- `.env` / `.env.compose` / `.env-aws`, compose project `vr4mice`, logs, and migration notes
 
 Quick install from `dj_pipeline/`:
 

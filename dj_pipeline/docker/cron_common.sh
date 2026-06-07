@@ -5,8 +5,18 @@ vr4mice_cron_init() {
   CRON_DIR="$(cd "$(dirname "${BASH_SOURCE[1]}")" && pwd)"
   cd "${CRON_DIR}"
 
+  if [[ -f .env.compose ]]; then
+    set -a
+    # shellcheck disable=SC1091
+    source .env.compose
+    set +a
+  fi
+
   COMPOSE_PROJECT="${COMPOSE_PROJECT:-vr4mice}"
   DOCKER_COMPOSE="${DOCKER_COMPOSE:-docker compose}"
+  if [[ -f .env.compose ]]; then
+    DOCKER_COMPOSE="docker compose --env-file .env.compose"
+  fi
   UID_VAL="${UID:-$(id -u)}"
   GID_VAL="${GID:-$(id -g)}"
   USER_NAME="${USER_NAME:-$(id -un)}"
