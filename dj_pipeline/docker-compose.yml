@@ -24,6 +24,8 @@ services:
       - PATH=/app/.local/bin:/usr/local/bin:/usr/bin:/bin
       - TAG=${TAG}
     network_mode: ${CLIENT_NETWORK_MODE:-host}
+    # Run via bash so the bind-mounted script does not need +x on shared/NFS checkouts.
+    entrypoint: ["/bin/bash", "/usr/local/bin/entrypoint.sh"]
     volumes:
       - "./docker/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro"
       - "./:/app"
