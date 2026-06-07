@@ -419,6 +419,30 @@ make up_all                               # start under vr4mice
 
 Or temporarily override: `COMPOSE_PROJECT=mysqltest make ipython`.
 
+### Multiple deployments on one server
+
+Do **not** use the default `COMPOSE_PROJECT=vr4mice` if another vr4mice stack is already running. Collisions happen on:
+
+- container names (`vr4mice_db`, `vr4mice_${USER}`)
+- host port (`DB_PORT`, default `3309`)
+
+Before `make up_all` or `make client_up`, the Makefile runs **`make check-compose-project`** (see `docker/check_compose_conflict.sh`). If a conflict is detected it aborts with instructions.
+
+Example `.env` for a second instance (dev / personal sandbox):
+
+```bash
+COMPOSE_PROJECT=vr4mice_dev
+DB_CONTAINER_NAME=vr4mice_db_dev
+CLIENT_CONTAINER_NAME=vr4mice_${USER}_dev
+DB_PORT=3310
+DB_DATA_PATH=/path/to/dev/database/
+DATA_PATH=/path/to/dev/data/
+```
+
+Use separate data paths so MySQL volumes do not overwrite each other.
+
+To skip the check (not recommended): `VR4MICE_COMPOSE_FORCE=1 make up_all`.
+
 ### AWS mode (pipeline behaviour)
 `--aws` mode uses `/data/processed` and disables moving raw files.
 - `run.py --aws populate`

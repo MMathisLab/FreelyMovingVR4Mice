@@ -272,6 +272,8 @@ CLIENT_EXISTS="$(docker ps -a --format '{{.Names}}' | grep -x "${CURRENT_CLIENT_
 DB_EXISTS="$(docker ps -a --format '{{.Names}}' | grep -x "${CURRENT_DB_NAME}" >/dev/null 2>&1 && echo yes || echo no)"
 
 if [ "${PROJECT_RUNNING}" != "0" ] || [ "${CLIENT_EXISTS}" = "yes" ] || [ "${DB_EXISTS}" = "yes" ]; then
+  echo "${C_YELLOW}Existing vr4mice containers detected on this server.${C_RESET}"
+  echo "${C_YELLOW}Choose 'new' with a different COMPOSE_PROJECT to avoid replacing production.${C_RESET}"
   ACTION="$(prompt "Containers already exist. Action (reuse/recreate/new)" "reuse")"
   ACTION="$(echo "${ACTION}" | tr '[:upper:]' '[:lower:]')"
   case "${ACTION}" in
@@ -329,6 +331,7 @@ DJ_SUPPORT_FILEPATH_MANAGEMENT=TRUE
 DJ_SUPPORT_ADAPTED_TYPES=TRUE
 
 # Docker-compose overrides (optional)
+COMPOSE_PROJECT=${COMPOSE_PROJECT}
 DB_BIND_IP=${DB_BIND_IP}
 DB_PORT=${DB_PORT}
 MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
@@ -338,7 +341,6 @@ DATA_PATH=${DATA_ROOT}
 SCREEN_RECORDINGS_PATH=${SCREEN_ROOT}
 JUPYTER_PORT=8887
 CLIENT_IMAGE=mmathislab/vr4mice_app:0.1.0
-CLIENT_CONTAINER_NAME=vr4mice_\${USER}
 DB_CONTAINER_NAME=${CURRENT_DB_NAME}
 CLIENT_CONTAINER_NAME=${CURRENT_CLIENT_NAME}
 EOF

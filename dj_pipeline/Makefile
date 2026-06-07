@@ -3,6 +3,7 @@ mount ?= $(CURDIR)
 base_schemas_path="$(mount)/$(git_repo)/base_schemas"
 base_actions_path="$(mount)/$(git_repo)/base_actions"
 
+COMPOSE_PROJECT ?= $(shell grep -E '^COMPOSE_PROJECT=' .env 2>/dev/null | tail -1 | cut -d= -f2- | tr -d ' ')
 COMPOSE_PROJECT ?= vr4mice
 DOCKER_COMPOSE ?= docker compose
 
@@ -28,12 +29,16 @@ BUILD_ARGS := \
 
 .PHONY: build_all git_info up_all base_install down_all client_build client_up \
 	client_stop client_rm client_down ipython bash mysql aws notebook sync_build \
-	sync_up add-cron cron-local cron-aws cron-reboot import-dumps export-dumps
+	sync_up add-cron cron-local cron-aws cron-reboot import-dumps export-dumps \
+	check-compose-project
+
+check-compose-project:
+	@bash docker/check_compose_conflict.sh "$(COMPOSE_PROJECT)"
 
 build_all:
 	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) build
 
-up_all: 
+up_all: check-compose-project
 	#git_info
 	@$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) up -d
 	@$(CLIENT_EXEC) "$(BASE_INSTALL_CMD)"
@@ -51,7 +56,7 @@ down_all:
 client_build:
 	$(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) build client #&& \
 
-client_up: git_info
+client_up: git_info check-compose-project
 	@UID=$(UID) GID=$(GID) USER_NAME=$(USER_NAME) $(DOCKER_COMPOSE) -p $(COMPOSE_PROJECT) up -d client
 	@$(CLIENT_EXEC) "$(BASE_INSTALL_CMD)"
 
