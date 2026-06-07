@@ -95,6 +95,7 @@ class ExperimentSet(dj.Lookup):
         ("contrast_black_target", "Contrast task, black target"),
         ("shape_pacman_target", "Shape task, pacman target"),
         ("shape_black_teardrop_target", "Shape task, black teardrop target"),
+        ("random", "Excluded / random-occluder sessions (not in main experiment sets)"),
     ]
 
 
@@ -109,6 +110,7 @@ class ExperimentStage(dj.Lookup):
         ("training", "Training sessions"),
         ("dual_occlusion", "Dual occluder sessions"),
         ("multi_occlusion", "Multi occluder sessions"),
+        ("random_occlusion", "Random occluder sessions (excluded from main sets)"),
     ]
 
 

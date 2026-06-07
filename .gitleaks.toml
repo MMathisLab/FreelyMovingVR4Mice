@@ -2,16 +2,25 @@
 title = "vr4mice gitleaks config"
 
 [allowlist]
-description = "Documented dev defaults and CI test credentials"
+description = "Dev defaults in config/templates and documented placeholder examples"
 paths = [
   '''\.github/workflows/cron-scenario\.yml''',
   '''\.github/workflows/security\.yml''',
   '''dj_pipeline/docker-compose\.yml''',
   '''dj_pipeline/\.env\.example''',
   '''dj_pipeline/\.env-aws\.example''',
+  '''dj_pipeline/\.env\.compose\.example''',
   '''dj_pipeline/env\.py''',
   '''dj_pipeline/quick_start\.sh''',
   '''dj_pipeline/Makefile''',
-  '''docs/''',
-  '''dj_pipeline/README\.md''',
+]
+# Documented placeholders in prose/docs (not whole-tree exclusions).
+regexTarget = "line"
+regexes = [
+  '''(?i)password\s*=\s*["']?simple["']?''',
+  '''-uroot\s+-psimple\b''',
+  '''(?i)DJ_PWD\s*=\s*(your[-_].*password|change-me|simple)\b''',
+  '''(?i)MYSQL_ROOT_PASSWORD\s*=\s*simple\b''',
+  '''(?i)DJ_HOST\s*=\s*your[-_]''',
+  '''\?token=\.\.\.''',
 ]

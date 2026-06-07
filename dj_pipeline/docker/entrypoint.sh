@@ -15,6 +15,10 @@ passwd_has_uid() {
   grep -q "^[^:]*:[^:]*:${PUID}:" /etc/passwd 2>/dev/null
 }
 
+passwd_has_name() {
+  grep -q "^${USERNAME}:" /etc/passwd 2>/dev/null
+}
+
 group_has_gid() {
   grep -q "^[^:]*:[^:]*:${PGID}:" /etc/group 2>/dev/null
 }
@@ -51,7 +55,7 @@ ensure_runtime_user() {
 run_as_user() {
   export USER="${USERNAME}" LOGNAME="${USERNAME}"
   if command -v gosu >/dev/null 2>&1; then
-    if passwd_has_uid && getent passwd "${USERNAME}" >/dev/null 2>&1; then
+    if passwd_has_uid && passwd_has_name; then
       exec gosu "${USERNAME}" "$@"
     fi
     exec gosu "${PUID}:${PGID}" "$@"

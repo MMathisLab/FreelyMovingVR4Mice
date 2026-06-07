@@ -58,7 +58,7 @@ def main():
         "populate_rig",
         lambda: (
             check_folder_existence(path),
-            populate_rig(path=path, gui=os.environ["GUI"], move=move),
+            populate_rig(path=path, move=move),
         ),
     )
 

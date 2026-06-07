@@ -5,29 +5,16 @@
 
 set -euo pipefail
 
-COMPOSE_PROJECT="${1:-vr4mice}"
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "${REPO_DIR}"
 
-if [ -f .env.compose ]; then
-  set -a
-  # shellcheck disable=SC1091
-  source .env.compose
-  set +a
-elif [ -f .env ]; then
-  set -a
-  # shellcheck disable=SC1091
-  source .env
-  set +a
+if [[ -n "${1:-}" ]]; then
+  export COMPOSE_PROJECT="$1"
 fi
+eval "$(bash docker/compose_env.sh load)"
 
-DOCKER_COMPOSE="${DOCKER_COMPOSE:-docker compose}"
-if [ -f .env.compose ]; then
-  DOCKER_COMPOSE="docker compose --env-file .env.compose"
-fi
 DB_NAME="${DB_CONTAINER_NAME:-vr4mice_db}"
 CLIENT_NAME="${CLIENT_CONTAINER_NAME:-vr4mice_${USER}}"
-CLIENT_NAME="${CLIENT_NAME//\$\{USER\}/${USER:-unknown}}"
 DB_PORT="${DB_PORT:-3309}"
 
 warn() { printf 'WARNING: %s\n' "$*" >&2; }
@@ -63,7 +50,7 @@ check_named_container "${CLIENT_NAME}" "Client"
 
 if command -v ss >/dev/null 2>&1; then
   if ss -ltn | awk '{print $4}' | grep -q ":${DB_PORT}$"; then
-    ours="$(${DOCKER_COMPOSE} -p "${COMPOSE_PROJECT}" ps -q db 2>/dev/null | wc -l | tr -d ' ')"
+    ours="$(bash docker/compose_env.sh compose ps -q db 2>/dev/null | wc -l | tr -d ' ')"
     if [ "${ours}" = "0" ]; then
       warn "Port ${DB_PORT} is already in use on this host."
       hint "Another MySQL/vr4mice stack may be running. Use a different DB_PORT and COMPOSE_PROJECT in .env.compose."

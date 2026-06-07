@@ -5,31 +5,15 @@ vr4mice_cron_init() {
   CRON_DIR="$(cd "$(dirname "${BASH_SOURCE[1]}")" && pwd)"
   cd "${CRON_DIR}"
 
-  if [[ -f .env.compose ]]; then
-    set -a
-    # shellcheck disable=SC1091
-    source .env.compose
-    set +a
-  fi
-
-  COMPOSE_PROJECT="${COMPOSE_PROJECT:-vr4mice}"
-  if [[ -f .env.compose ]]; then
-    COMPOSE_CMD=(docker compose --env-file .env.compose)
-  else
-    COMPOSE_CMD=(docker compose)
-  fi
+  eval "$(bash docker/compose_env.sh load)"
 
   UID_VAL="${UID:-$(id -u)}"
   GID_VAL="${GID:-$(id -g)}"
   USER_NAME="${USER_NAME:-$(id -un)}"
   # UID is readonly in bash; pass via env(1) to docker compose instead of export.
-  export GID="${GID_VAL}" USER_NAME COMPOSE_PROJECT
+  export GID="${GID_VAL}" USER_NAME COMPOSE_PROJECT USER
 
   BASE_INSTALL='mkdir -p /app/.local /app/.cache/pip /app/.cache/matplotlib && python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/'
-}
-
-vr4mice_compose_env() {
-  env UID="${UID_VAL}" GID="${GID_VAL}" USER_NAME="${USER_NAME}" TAG="${TAG:-}" "$@"
 }
 
 vr4mice_git_info() {
@@ -37,11 +21,11 @@ vr4mice_git_info() {
 }
 
 vr4mice_compose_up() {
-  vr4mice_compose_env "${COMPOSE_CMD[@]}" -p "${COMPOSE_PROJECT}" up -d "$@"
+  bash docker/compose_env.sh compose up -d "$@"
 }
 
 vr4mice_exec_client() {
-  "${COMPOSE_CMD[@]}" -p "${COMPOSE_PROJECT}" exec -T --user "${USER_NAME}" client bash -c "$1"
+  bash docker/compose_env.sh compose exec -T --user "${USER_NAME}" client bash -c "$1"
 }
 
 vr4mice_base_install() {
