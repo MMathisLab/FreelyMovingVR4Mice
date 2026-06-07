@@ -70,6 +70,8 @@ find dj_pipeline mouse_task -name '*.ipynb' -exec nbstripout {} +
 
 Never commit `.env`, `.env-aws`, or `gui_transfer/config/local_config.json` (use `config.json` / `.env.example` as templates).
 
+CI runs `.github/workflows/security.yml` on PRs to main: **gitleaks**, **nbstripout --verify**, blocklisted tracked files, and internal host pattern checks.
+
 ## GitHub Branching, Commits, & Other Guidelines
 
 ### Branching Model
