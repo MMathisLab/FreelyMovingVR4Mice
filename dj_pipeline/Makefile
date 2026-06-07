@@ -3,8 +3,11 @@ mount ?= $(CURDIR)
 base_schemas_path="$(mount)/$(git_repo)/base_schemas"
 base_actions_path="$(mount)/$(git_repo)/base_actions"
 
+# Empty .env value must not override the default (Make ?= treats "" as already set).
 COMPOSE_PROJECT ?= $(shell grep -E '^COMPOSE_PROJECT=' .env 2>/dev/null | tail -1 | cut -d= -f2- | tr -d ' ')
-COMPOSE_PROJECT ?= vr4mice
+ifeq ($(strip $(COMPOSE_PROJECT)),)
+COMPOSE_PROJECT := vr4mice
+endif
 DOCKER_COMPOSE ?= docker compose
 
 UID ?= $(shell id -u)
