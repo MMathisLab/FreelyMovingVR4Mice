@@ -26,12 +26,10 @@ vr4mice_cron_init() {
   export GID="${GID_VAL}" USER_NAME COMPOSE_PROJECT
 
   BASE_INSTALL='mkdir -p /app/.local /app/.cache/pip /app/.cache/matplotlib && python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/'
-
-  REQUIRE_DJ_ENV='test -n "${DJ_HOST:-}" && test -n "${DJ_USER:-}" && test -n "${DJ_PWD:-}" || { echo "Error: DJ_HOST, DJ_USER, and DJ_PWD must be set." >&2; exit 1; }'
 }
 
 vr4mice_compose_env() {
-  env UID="${UID_VAL}" GID="${GID_VAL}" USER_NAME="${USER_NAME}" "$@"
+  env UID="${UID_VAL}" GID="${GID_VAL}" USER_NAME="${USER_NAME}" TAG="${TAG:-}" "$@"
 }
 
 vr4mice_git_info() {
@@ -50,33 +48,30 @@ vr4mice_base_install() {
   vr4mice_exec_client "${BASE_INSTALL}"
 }
 
-vr4mice_source_env_file() {
+vr4mice_check_env_file() {
   local env_file="$1"
-  if [[ -f "${env_file}" ]]; then
-    echo "set -a && source \"${env_file}\" && set +a"
+  local example_file="$2"
+  if [[ ! -f "${env_file}" ]]; then
+    echo "Error: ${env_file} is required (copy from ${example_file})." >&2
+    return 1
+  fi
+  if grep -qE '^DJ_PWD=(your-.*-password|change-me|simple)\s*$' "${env_file}" 2>/dev/null \
+    && grep -qE '^DJ_HOST=your-' "${env_file}" 2>/dev/null; then
+    echo "Error: set real DJ_HOST / DJ_USER / DJ_PWD in ${env_file} before running cron." >&2
+    return 1
   fi
 }
 
 vr4mice_run_cron_scenario() {
-  local aws_mode="${1:-}"
-  local env_file="${2:-}"
-  if [[ "${aws_mode}" == "aws" && -n "${env_file}" && ! -f "${env_file}" ]]; then
-    echo "Error: ${env_file} is required for AWS cron runs (copy from .env-aws.example)." >&2
-    return 1
-  fi
-  if [[ "${aws_mode}" == "aws" && -f "${env_file}" ]] \
-    && grep -qE '^DJ_PWD=(your-aws-db-password|change-me)\s*$' "${env_file}" 2>/dev/null; then
-    echo "Error: set a real DJ_PWD in ${env_file} before running AWS cron." >&2
-    return 1
+  local aws_mode="${1:-local}"
+
+  if [[ "${aws_mode}" == "aws" ]]; then
+    vr4mice_check_env_file ".env-aws" ".env-aws.example"
+  else
+    vr4mice_check_env_file ".env" ".env.example"
   fi
 
-  local cmd="${BASE_INSTALL}"
-  local env_prefix
-  env_prefix="$(vr4mice_source_env_file "${env_file}")"
-  if [[ -n "${env_prefix}" ]]; then
-    cmd="${cmd} && ${env_prefix}"
-  fi
-  cmd="${cmd} && ${REQUIRE_DJ_ENV} && python cron_scenario.py"
+  local cmd="${BASE_INSTALL} && python cron_scenario.py"
   if [[ "${aws_mode}" == "aws" ]]; then
     cmd="${cmd} --aws"
   fi

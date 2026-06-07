@@ -3,14 +3,6 @@ import os
 import warnings
 import argparse
 
-from base_actions.connect import connect
-from vr4mice.actions.populate_rig import populate_rig
-from vr4mice.actions.fetch_data import fetch_data
-from vr4mice.utils.logger import Logger, config_logger
-from run import check_folder_existence, create_folder_if_not_exist
-
-logger = Logger.get_logger()
-
 logging.getLogger("settings").setLevel(logging.ERROR)
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
@@ -24,9 +16,26 @@ def main():
     )
     args = parser.parse_args()
 
+    repo_dir = os.path.dirname(os.path.abspath(__file__))
+    from vr4mice.utils.env_files import load_env_file, require_dj_env
+
+    if args.aws:
+        load_env_file(os.path.join(repo_dir, ".env-aws"), override=True)
+    else:
+        load_env_file(os.path.join(repo_dir, ".env"), override=True)
+    require_dj_env()
+
+    from base_actions.connect import connect
+    from vr4mice.utils.logger import Logger, config_logger
+
     config_logger(level="INFO", debug=False)
     connect(tag="")
 
+    from vr4mice.actions.populate_rig import populate_rig
+    from vr4mice.actions.fetch_data import fetch_data
+    from run import check_folder_existence, create_folder_if_not_exist
+
+    logger = Logger.get_logger()
     failed_steps = []
 
     def run_step(name, func):

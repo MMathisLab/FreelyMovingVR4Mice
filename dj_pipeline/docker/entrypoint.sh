@@ -63,7 +63,7 @@ if [ "$(id -u)" -eq 0 ]; then
   ensure_runtime_user
 
   vr4mice_app_dirs
-  chown -R "${PUID}:${PGID}" /app/.local "${PIP_CACHE_DIR}" /app/processed 2>/dev/null || true
+  chown -R "${PUID}:${PGID}" /app/.local "${PIP_CACHE_DIR}" /app/processed /app/.cache 2>/dev/null || true
 
   if command -v python3 &>/dev/null || command -v python &>/dev/null; then
     checkpoint_dir=$(
