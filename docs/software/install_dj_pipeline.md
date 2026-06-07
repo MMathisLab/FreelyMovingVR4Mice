@@ -22,6 +22,8 @@ It is designed to run from the client container and can be scheduled via cron.
 - `base/`: base schemas and actions (full and minimal modes: mice, exp tables, connections and email functions).
 - `backup/`: backup helpers (local/remote sync scripts).
 - `cron_*.sh`: cron wrappers for scheduled runs (standard, reboot, AWS).
+- `docker/entrypoint.sh`: creates runtime user (PUID/PGID) and drops privileges with `gosu`.
+- `docker/cron_common.sh`: shared helpers for cron scripts and compose exec.
 - `generators/`: small utilities to create helper tables/files (e.g., add mice).
 - `parse_mice/`: parsing helpers for mouse metadata files.
 - `mysql_access/`: SQL templates for user setup.
@@ -199,6 +201,30 @@ make mysql
 make ipython
 %run run.py connect
 ```
+
+### Docker client: base packages and user mapping
+
+The client image is built from DeepLabCut’s pip-based Docker image (system Python at `/usr/bin/python`, **not** conda).
+
+**`base_schemas` / `base_actions`** are bind-mounted from the repo and installed at runtime with pip:
+
+```bash
+python -m pip install --user --no-deps /base_schemas/
+python -m pip install --user --no-deps /base_actions/
+```
+
+`make client_up`, `make base_install`, and the cron scripts also set `HOME=/app` and `PYTHONUSERBASE=/app/.local` so packages install into the mounted repo directory with correct ownership.
+
+**Running as your host user** (file permissions on `/app`, `/data`, etc.) is handled by Docker, not conda:
+
+| Layer | Mechanism |
+|-------|-----------|
+| Container start | `docker/entrypoint.sh` — `useradd` with `PUID`/`PGID`/`USERNAME`, then `gosu` |
+| Compose | passes `UID`, `GID`, `USER_NAME` from the host (`Makefile` exports these) |
+| `make` / cron exec | `docker compose exec --user "$(UID):$(GID)" client …` |
+
+**Host conda** (`env.py`, `vr4mice_env` on the rig, DLCliveGUI) is a separate install path for non-Docker workflows. It is not used inside the client container.
+
 ### Mounts and storage
 In `docker-compose.yml`, map host storage for database and data volumes:
 - `/data` and `/data/summary_plots` must exist and be writable.
@@ -332,7 +358,7 @@ Scheduled pipeline runs use wrapper shell scripts that call `docker compose` wit
 | `cron_script_reboot.sh` | After host reboot: wait 120s, start `db` + `client`, install base packages |
 | `Makefile` | Same compose project and exec pattern as cron scripts |
 
-**Docker client vs host conda:** the client container uses system Python + pip (DeepLabCut base image). Conda on the rig or laptop (`env.py`, `vr4mice_env`, DLCliveGUI) is a separate install path and is not used inside the Docker client.
+**Docker client vs host conda:** the client container uses system Python + pip (DeepLabCut base image). Conda on the rig or laptop (`env.py`, `vr4mice_env`, DLCliveGUI) is a separate install path and is not used inside the Docker client. Base package install and user mapping are described under [Docker client: base packages and user mapping](#docker-client-base-packages-and-user-mapping).
 
 ### Makefile targets (common)
 
