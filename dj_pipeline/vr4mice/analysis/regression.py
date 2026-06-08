@@ -53,7 +53,7 @@ def predict_decision(
     max_iter: int = 100,
     scale_data: bool = True,
     random_state: Optional[int] = None,
-) -> Tuple[pd.DataFrame, npt.NDArray]:
+) -> Tuple[pd.DataFrame, npt.NDArray, List[dict]]:
     """Predict the animal's decision based on the `label` data, through a logistic regression.
 
     Args:
@@ -68,7 +68,8 @@ def predict_decision(
 
     Returns:
         The initial dataframe with an extra `pred` column, containing the probability that the
-        animal went to the right.
+        animal went to the right, the coefficients of the model, and the scalers used for each fold
+        (if `scale_data` is `True` else None).
 
     Example:
         ```
@@ -94,33 +95,58 @@ def predict_decision(
         max_iter=max_iter, random_state=random_state
     )
 
-    if scale_data:
-        data = sklearn.preprocessing.StandardScaler().fit_transform(data)
-
     if per_mouse:
         sessions = df.dataset.values
         coefs = np.empty((len(np.unique(sessions)), n_features + 1))
+        scalers = []
 
         logo = sklearn.model_selection.LeaveOneGroupOut()
         for i, (train_index, test_index) in enumerate(
             logo.split(data, labels, sessions)
         ):
-            model.fit(data[train_index], labels[train_index])
-            pred[test_index] = model.predict_proba(data[test_index])
-            scores[test_index] = model.predict(data[test_index]) == labels[test_index]
+            X_train = data[train_index]
+            X_test = data[test_index]
+
+            if scale_data:
+                scaler = sklearn.preprocessing.StandardScaler().fit(X_train)
+                X_train = scaler.transform(X_train)
+                X_test = scaler.transform(X_test)
+                scalers.append(
+                    {"mean": scaler.mean_.tolist(), "scale": scaler.scale_.tolist()}
+                )
+            else:
+                scalers.append(None)
+
+            model.fit(X_train, labels[train_index])
+            pred[test_index] = model.predict_proba(X_test)
+            scores[test_index] = model.predict(X_test) == labels[test_index]
 
             # Coeffs
             coefs[i] = np.concatenate([[model.intercept_[0]], model.coef_[0]])
 
     else:
         coefs = np.empty((1, n_features + 1))
+        scalers = []
         kf = sklearn.model_selection.KFold(
             n_splits=n_splits, random_state=random_state, shuffle=True
         )
         for i, (train_index, test_index) in enumerate(kf.split(data)):
-            model.fit(data[train_index], labels[train_index])
-            pred[test_index] = model.predict_proba(data[test_index])
-            scores[test_index] = model.predict(data[test_index]) == labels[test_index]
+            X_train = data[train_index]
+            X_test = data[test_index]
+
+            if scale_data:
+                scaler = sklearn.preprocessing.StandardScaler().fit(X_train)
+                X_train = scaler.transform(X_train)
+                X_test = scaler.transform(X_test)
+                scalers.append(
+                    {"mean": scaler.mean_.tolist(), "scale": scaler.scale_.tolist()}
+                )
+            else:
+                scalers.append(None)
+
+            model.fit(X_train, labels[train_index])
+            pred[test_index] = model.predict_proba(X_test)
+            scores[test_index] = model.predict(X_test) == labels[test_index]
 
         # Store final model coefficients
         coefs[0] = np.concatenate([[model.intercept_[0]], model.coef_[0]])
@@ -129,7 +155,7 @@ def predict_decision(
     ret.loc[:, "accuracy"] = scores
     ret.loc[:, "proba_left"] = pred[:, 1]
 
-    return ret, coefs
+    return ret, coefs, scalers
 
 
 def compute_bic(probs: npt.NDArray, y: npt.NDArray, n_params: int):
@@ -777,6 +803,17 @@ def _fisher_combine(p_values: Union[pd.Series, np.ndarray]) -> float:
         ) from exc
 
 
+def _minmax_scale_series(series: pd.Series) -> pd.Series:
+    """Min-max scale a numeric series to [0, 1], preserving NaNs."""
+    min_val = series.min(skipna=True)
+    max_val = series.max(skipna=True)
+    if pd.isna(min_val) or pd.isna(max_val):
+        return series * np.nan
+    if np.isclose(max_val, min_val):
+        return series.where(series.isna(), 0.0)
+    return (series - min_val) / (max_val - min_val)
+
+
 def select_threshold(
     all_decision_points: pd.DataFrame,
     interpolated_df: pd.DataFrame,
@@ -876,5 +913,25 @@ def select_threshold(
     if "p_value" in eval_df_norm.columns:
         combined_p = eval_df_norm.groupby("threshold")["p_value"].apply(_fisher_combine)
         eval_df_norm["p_value_fisher"] = eval_df_norm["threshold"].map(combined_p)
+
+    # Add min-max standardized versions of all z-score columns.
+    z_cols = [col for col in eval_df_norm.columns if col.startswith("z_")]
+    for col in z_cols:
+        eval_df_norm[f"{col}_minmax"] = _minmax_scale_series(eval_df_norm[col])
+
+    # Compute a resulting score from min-max standardized z-score columns.
+    required_cols = [
+        "z_vx_minmax",
+        "z_vy_minmax",
+        "z_ang_minmax",
+        "z_dir_minmax",
+    ]
+    if all(col in eval_df_norm.columns for col in required_cols):
+        eval_df_norm["jump_score_norm_minmax"] = (
+            eval_df_norm["z_vx_minmax"]
+            - eval_df_norm["z_vy_minmax"]
+            + eval_df_norm["z_ang_minmax"]
+            + eval_df_norm["z_dir_minmax"]
+        )
 
     return eval_df_norm

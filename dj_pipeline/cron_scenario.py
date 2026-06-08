@@ -141,6 +141,14 @@ def main():
             "decision.DecisionPoints.populate",
             lambda: decision.DecisionPoints().populate(),
         )
+        run_step(
+            "decision.PredictionModel10Windows.populate",
+            lambda: decision.PredictionModel10Windows().populate(),
+        )
+        run_step(
+            "decision.DecisionPoints10Windows.populate",
+            lambda: decision.DecisionPoints10Windows().populate(),
+        )
     else:
 
         from vr4mice.schema import inputs_videos
