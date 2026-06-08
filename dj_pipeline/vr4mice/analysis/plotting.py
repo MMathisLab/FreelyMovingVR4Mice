@@ -218,9 +218,9 @@ def plot_trajectories(
         label_x (str, optional): Column name for the x-axis data. Default is "x".
         label_y (str, optional): Column name for the y-axis data. Default is "y".
         scatter_reward (bool, optional): If True, scatter plot the reward points. Default is True.
+        color (str, optional): Color to use for trajectories if per_side is False. Default is "black".
 
     """
-    #for i in range(1, np.max(df.trial)):
     for i in df.trial.unique():
         if per_side:
             ax.plot(
@@ -390,7 +390,7 @@ def plot_session(
             scatter_reward=scatter_reward,
             color=color,
         )
-        ax.set_title(f"{df.dataset.unique()}")
+        ax.set_title(f"{df.dataset.unique()[0]}")
 
     return ax
 
