@@ -42,7 +42,7 @@ The videos below show representative sessions from the supplementary material.
 <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start; margin-top: 1rem;">
   <figure style="flex: 1 1 360px; min-width: 280px; margin: 0;">
     <video controls playsinline preload="metadata" style="width: 100%; height: auto; display: block; border-radius: 0.5rem; background: #000;">
-      <source src="images/Video%20S1.mp4" type="video/mp4">
+      <source src="../_static/videos/Video%20S1.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
     <figcaption style="margin-top: 0.75rem;">
@@ -53,7 +53,7 @@ The videos below show representative sessions from the supplementary material.
 
   <figure style="flex: 1 1 360px; min-width: 280px; margin: 0;">
     <video controls playsinline preload="metadata" style="width: 100%; height: auto; display: block; border-radius: 0.5rem; background: #000;">
-      <source src="images/Video%20S2.mp4" type="video/mp4">
+      <source src="../_static/videos/Video%20S2.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
     <figcaption style="margin-top: 0.75rem;">
