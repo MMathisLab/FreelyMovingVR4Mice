@@ -249,14 +249,18 @@ jobs:
           label_set_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.`#label_set`;')"
           prediction_model_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__prediction_model;')"
           decision_points_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__decision_points;')"
+          prediction_model10_windows_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__prediction_model10_windows;')"
+          decision_points10_windows_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__decision_points10_windows;')"
 
           echo "decision._experiment_member rows: ${experiment_member_count}"
           echo "decision.__inclusion_status rows: ${inclusion_status_count}"
           echo "decision.#label_set rows: ${label_set_count}"
           echo "decision.__prediction_model rows: ${prediction_model_count}"
           echo "decision.__decision_points rows: ${decision_points_count}"
+          echo "decision.__prediction_model10_windows rows: ${prediction_model10_windows_count}"
+          echo "decision.__decision_points10_windows rows: ${decision_points10_windows_count}"
 
           test "${experiment_member_count}" -ge 1
           test "${inclusion_status_count}" -ge 1
           test "${label_set_count}" -ge 1
-          # PredictionModel/DecisionPoints need multi-session data to train; logged for visibility only.
+          # PredictionModel/DecisionPoints and PreditionModel10Windows/DecisionPoints10Windows need multi-session data to train so no test; logged for visibility only
