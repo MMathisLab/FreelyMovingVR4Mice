@@ -22,19 +22,6 @@ schema = get_schema(schema_name, locals())
 logger = Logger.get_logger()
 
 
-def safe_schema(table_cls):
-    """Decorate DataJoint tables without failing module import on declaration errors."""
-    try:
-        return schema(table_cls)
-    except Exception as err:
-        logger.warning(
-            "Skipping schema declaration for %s due to error: %s",
-            table_cls.__name__,
-            err,
-        )
-        return table_cls
-
-
 @schema
 class SessionLabel(dj.Lookup):
     definition = """
@@ -475,7 +462,7 @@ class PredictionModel(dj.Computed):
             random_state = 42
 
             # Train model using LOGO cross-validation across sessions
-            df_model, coef = regression.predict_decision(
+            df_model, coef, _ = regression.predict_decision(
                 df=interpolated_df,
                 label=label_set,
                 per_mouse=True,
@@ -528,13 +515,13 @@ class PredictionModel(dj.Computed):
                     trial_df = dataset_trials[dataset_trials["trial"] == trial]
 
                     # Compute BIC per timestep using sliding window
-                    bic_per_timestep[trial_df.index] = (
-                        regression.compute_bic_sliding_window(
-                            trial_df["proba_left"].values,
-                            trial_df["trial_left_choice"].values,
-                            n_params=len(label_set) + 1,
-                            window_size=10,
-                        )
+                    bic_per_timestep[
+                        trial_df.index
+                    ] = regression.compute_bic_sliding_window(
+                        trial_df["proba_left"].values,
+                        trial_df["trial_left_choice"].values,
+                        n_params=len(label_set) + 1,
+                        window_size=10,
                     )
 
                 self.SessionPrediction.insert1(
@@ -566,7 +553,7 @@ class PredictionModel(dj.Computed):
 WINDOW_COUNT = 10
 
 
-@safe_schema
+@schema
 class PredictionModel10Windows(dj.Computed):
     """Train LOGO regression models on 10 equally-spaced trial progress windows."""
 
@@ -827,13 +814,13 @@ class PredictionModel10Windows(dj.Computed):
                     for trial in dataset_trials["trial"].unique():
                         trial_df = dataset_trials[dataset_trials["trial"] == trial]
 
-                        bic_per_timestep[trial_df.index] = (
-                            regression.compute_bic_sliding_window(
-                                trial_df["proba_left"].values,
-                                trial_df["trial_left_choice"].values,
-                                n_params=len(label_set) + 1,
-                                window_size=10,
-                            )
+                        bic_per_timestep[
+                            trial_df.index
+                        ] = regression.compute_bic_sliding_window(
+                            trial_df["proba_left"].values,
+                            trial_df["trial_left_choice"].values,
+                            n_params=len(label_set) + 1,
+                            window_size=10,
                         )
 
                     session_df = pd.DataFrame(
@@ -1024,7 +1011,7 @@ class DecisionPoints(dj.Computed):
             return None
 
 
-@safe_schema
+@schema
 class DecisionPoints10Windows(dj.Computed):
     """Decision points computed from 10-window model predictions."""
 
