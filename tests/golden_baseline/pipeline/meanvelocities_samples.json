@@ -1,0 +1,50 @@
+{
+  "aperture": {
+    "length": 200,
+    "dtype": "float64",
+    "first": 4.3,
+    "middle": 12.0,
+    "middle_idx": 100,
+    "last": 12.0
+  },
+  "trial_length": {
+    "length": 200,
+    "dtype": "float64",
+    "first": 0.0,
+    "middle": 0.0,
+    "middle_idx": 100,
+    "last": 0.99
+  },
+  "velocity": {
+    "length": 200,
+    "dtype": "float64",
+    "first": 43.446492136547974,
+    "middle": 43.1550715996276,
+    "middle_idx": 100,
+    "last": 23.519951608976967
+  },
+  "velocity_x": {
+    "length": 200,
+    "dtype": "float64",
+    "first": -5.873707307840338,
+    "middle": -6.844369062962279,
+    "middle_idx": 100,
+    "last": 5.383944664247438
+  },
+  "velocity_y": {
+    "length": 200,
+    "dtype": "float64",
+    "first": 41.56808448023632,
+    "middle": 41.12176711742062,
+    "middle_idx": 100,
+    "last": 4.060680132645081
+  },
+  "velocity_x_fliped": {
+    "length": 200,
+    "dtype": "float64",
+    "first": -1.9806013290485418,
+    "middle": -1.932607778610597,
+    "middle_idx": 100,
+    "last": 22.277462329620153
+  }
+}
