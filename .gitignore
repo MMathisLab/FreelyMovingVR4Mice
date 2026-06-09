@@ -77,3 +77,7 @@ vr4mice/cfg/*
 *dj_pipeline/.local/
 *dj_pipeline/local_data/
 
+# Test artifacts
+tests/logs/
+tests/.coverage
+.coverage

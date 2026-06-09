@@ -356,9 +356,9 @@ class PredictionModel(dj.Computed):
     -> ExperimentSet
     -> ExperimentStage
     ---
-    coefficients : longblob     # coefficients per session (per_mouse=True)
+    coefficients : <blob>     # coefficients per session (per_mouse=True)
     n_sessions : int            # number of sessions included
-    sessions : longblob         # list of session dataset names
+    sessions : <blob>         # list of session dataset names
     random_state : int          # random state used for reproducibility
     mean_accuracy : float       # mean accuracy across sessions
     bic : float                 # Bayesian Information Criterion for the model
@@ -372,12 +372,12 @@ class PredictionModel(dj.Computed):
         n_samples : int                # number of samples in the session
         mean_accuracy : float          # mean accuracy for this session
         mean_proba_left: float         # mean predicted probability for left choice
-        trial : longblob               # trial numbers
-        trial_length: longblob         # trial progression
-        proba_left : longblob          # predicted probabilities for left choice
-        accuracy : longblob            # per-trial accuracy values
-        trial_left_choice : longblob   # ground truth left choice
-        bic : longblob                 # Bayesian Information Criterion per timestep
+        trial : <blob>               # trial numbers
+        trial_length: <blob>         # trial progression
+        proba_left : <blob>          # predicted probabilities for left choice
+        accuracy : <blob>            # per-trial accuracy values
+        trial_left_choice : <blob>   # ground truth left choice
+        bic : <blob>                 # Bayesian Information Criterion per timestep
         """
 
     def make(self, key):
@@ -935,14 +935,14 @@ class DecisionPoints(dj.Computed):
     -> PredictionModel.SessionPrediction
     -> DecisionThreshold
     ---
-    trial: longblob                 # trial corresponding to the timestamp
-    proba_left: longblob            # pred proba of the regression on decision side
-    aperture: longblob              # occlusion size for the corresponding trial
-    trial_left_choice: longblob     # ground truth on the decision side
-    trial_rewarded: longblob        # 1 if trial was rewarded, else 0
-    trial_length: longblob          # length of the trial at which decision was made
-    x: longblob                     # x position of the decision point in the trial
-    y: longblob                     # y position of the decision point in the trial
+    trial: <blob>                 # trial corresponding to the timestamp
+    proba_left: <blob>            # pred proba of the regression on decision side
+    aperture: <blob>              # occlusion size for the corresponding trial
+    trial_left_choice: <blob>     # ground truth on the decision side
+    trial_rewarded: <blob>        # 1 if trial was rewarded, else 0
+    trial_length: <blob>          # length of the trial at which decision was made
+    x: <blob>                     # x position of the decision point in the trial
+    y: <blob>                     # y position of the decision point in the trial
     """
 
     def make(self, key):

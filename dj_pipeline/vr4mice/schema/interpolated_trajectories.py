@@ -25,30 +25,30 @@ class InterpolatedTrials(dj.Computed):
     definition = """
     -> base_analysis.DataFrame
     ---
-    aperture: longblob          # occlusion aperture size
-    trial: longblob             # trial number
-    trial_length: longblob      # the trial progression points
-    trial_duration: longblob    # trial duration
-    trial_tortuosity: longblob  # trial tortuosity
-    trial_left_choice: longblob # left or right choice for each trial
-    trial_rewarded: longblob    # whether the trial was rewarded
-    x: longblob                 # x-coordinate of each trial progression point
-    y: longblob                 # y-coordinate of each trial progression point
-    x_flipped: longblob         # x-coordinate of each trial progression point flipped
-    heading_dir: longblob       # heading direction of the mouse
-    head_angle: longblob        # head angle of the mouse
-    velocity: longblob          # velocity of each trial progression point
-    velocity_x: longblob        # x-velocity of each trial progression point
-    velocity_y: longblob        # y-velocity of each trial progression point
-    flip_one_side: longblob     # vector to flip trajectories across the mid line to align choices
-    distance_to_choice: longblob # distance to the choice point
-    optimal_p: longblob         # optimal p parameter from LP curve fitting
-    local_tortuosity: longblob  # local tortuosity of the mouse trajectory
-    head_angle_sin: longblob    # sin of the head angle
-    head_angle_cos: longblob    # cos of the head angle
-    heading_dir_sin: longblob   # sin of the heading direction
-    heading_dir_cos: longblob   # cos of the heading direction
-    velocity_x_fliped: longblob # x-velocity of each trial progression point flipped
+    aperture: <blob>          # occlusion aperture size
+    trial: <blob>             # trial number
+    trial_length: <blob>      # the trial progression points
+    trial_duration: <blob>    # trial duration
+    trial_tortuosity: <blob>  # trial tortuosity
+    trial_left_choice: <blob> # left or right choice for each trial
+    trial_rewarded: <blob>    # whether the trial was rewarded
+    x: <blob>                 # x-coordinate of each trial progression point
+    y: <blob>                 # y-coordinate of each trial progression point
+    x_flipped: <blob>         # x-coordinate of each trial progression point flipped
+    heading_dir: <blob>       # heading direction of the mouse
+    head_angle: <blob>        # head angle of the mouse
+    velocity: <blob>          # velocity of each trial progression point
+    velocity_x: <blob>        # x-velocity of each trial progression point
+    velocity_y: <blob>        # y-velocity of each trial progression point
+    flip_one_side: <blob>     # vector to flip trajectories across the mid line to align choices
+    distance_to_choice: <blob> # distance to the choice point
+    optimal_p: <blob>         # optimal p parameter from LP curve fitting
+    local_tortuosity: <blob>  # local tortuosity of the mouse trajectory
+    head_angle_sin: <blob>    # sin of the head angle
+    head_angle_cos: <blob>    # cos of the head angle
+    heading_dir_sin: <blob>   # sin of the heading direction
+    heading_dir_cos: <blob>   # cos of the heading direction
+    velocity_x_fliped: <blob> # x-velocity of each trial progression point flipped
     """
 
     def make(self, key):
@@ -99,15 +99,15 @@ class MeanXYTrajectory(dj.Computed):
     definition = """
     -> InterpolatedTrials
     ---
-    aperture: longblob          # occlusion aperture size for each trial progression point
-    trial_left_choice: longblob # left or right choice for each trial
-    trial_length: longblob      # the trial progression points
-    x: longblob                 # mean x-coordinate of each trial progression point
-    y: longblob                 # mean y-coordinate of each trial progression point
-    sem_x: longblob             # standard error of the mean x-coordinate of each trial progression point
-    sem_y: longblob             # standard error of the mean y-coordinate of each trial progression point
-    std_x: longblob             # standard deviation of the x-coordinate of each trial progression point
-    std_y: longblob             # standard deviation of the y-coordinate of each trial progression point
+    aperture: <blob>          # occlusion aperture size for each trial progression point
+    trial_left_choice: <blob> # left or right choice for each trial
+    trial_length: <blob>      # the trial progression points
+    x: <blob>                 # mean x-coordinate of each trial progression point
+    y: <blob>                 # mean y-coordinate of each trial progression point
+    sem_x: <blob>             # standard error of the mean x-coordinate of each trial progression point
+    sem_y: <blob>             # standard error of the mean y-coordinate of each trial progression point
+    std_x: <blob>             # standard deviation of the x-coordinate of each trial progression point
+    std_y: <blob>             # standard deviation of the y-coordinate of each trial progression point
     """
 
     def make(self, key):
@@ -164,10 +164,10 @@ class YBinnedXYTrajectory(dj.Computed):
     definition = """
     -> InterpolatedTrials
     ---
-    aperture: longblob # occlusion aperture size 
-    x_flipped: longblob # x-coordinate for each y bin center
-    bin_centers: longblob # y bin centers
-    y: longblob # y
+    aperture: <blob> # occlusion aperture size 
+    x_flipped: <blob> # x-coordinate for each y bin center
+    bin_centers: <blob> # y bin centers
+    y: <blob> # y
     """
 
     def make(self, key):
@@ -226,12 +226,12 @@ class MeanVelocities(dj.Computed):
     definition = """
     -> InterpolatedTrials
     ---
-    aperture: longblob # occlusion aperture size 
-    trial_length: longblob # trial length
-    velocity: longblob # mean velocity of each trial progression point
-    velocity_x: longblob # mean x-velocity of each trial progression point
-    velocity_y: longblob # mean y-velocity of each trial progression point
-    velocity_x_fliped: longblob # mean x-velocity of each trial progression point flipped
+    aperture: <blob> # occlusion aperture size 
+    trial_length: <blob> # trial length
+    velocity: <blob> # mean velocity of each trial progression point
+    velocity_x: <blob> # mean x-velocity of each trial progression point
+    velocity_y: <blob> # mean y-velocity of each trial progression point
+    velocity_x_fliped: <blob> # mean x-velocity of each trial progression point flipped
     """
 
     def make(self, key):

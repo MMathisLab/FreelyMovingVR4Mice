@@ -33,63 +33,63 @@ class DataFrame(dj.Computed):
     definition = """
     -> vr4mice.Dataset
     ---
-    step: longblob                      # TO DEPRECATE
-    step_time: longblob                 # TO DEPRECATE 
-    trial: longblob 
-    reward: longblob                    # TO DEPRECATE
+    step: <blob>                      # TO DEPRECATE
+    step_time: <blob>                 # TO DEPRECATE 
+    trial: <blob> 
+    reward: <blob>                    # TO DEPRECATE
    
-    x: longblob
-    y: longblob
+    x: <blob>
+    y: <blob>
 
-    bins_y=NULL: longblob               # NEW, do we need to 'store' too?
-    norm_y=NULL: longblob               # NEW, do we need to store 'trial' too?
+    bins_y=NULL: <blob>               # NEW, do we need to 'store' too?
+    norm_y=NULL: <blob>               # NEW, do we need to store 'trial' too?
 
-    mouse_can_report=NULL: longblob     # TO DEPRECATE
-    iti: longblob
-    iti_duration=NULL: longblob
-    mouse_correct: longblob             # TO DEPRECATE
-    object_on_left: longblob
-    mouse_in_left: longblob
-    mouse_in_right: longblob
+    mouse_can_report=NULL: <blob>     # TO DEPRECATE
+    iti: <blob>
+    iti_duration=NULL: <blob>
+    mouse_correct: <blob>             # TO DEPRECATE
+    object_on_left: <blob>
+    mouse_in_left: <blob>
+    mouse_in_right: <blob>
     
-    velocity: longblob
-    velocity_x=NULL: longblob           # NEW --> to think about separate table
-    velocity_y=NULL: longblob           # NEW
+    velocity: <blob>
+    velocity_x=NULL: <blob>           # NEW --> to think about separate table
+    velocity_y=NULL: <blob>           # NEW
 
-    acceleration_x=NULL: longblob      # NEW
-    acceleration_y=NULL: longblob      # NEW
+    acceleration_x=NULL: <blob>      # NEW
+    acceleration_y=NULL: <blob>      # NEW
 
-    head_dir=NULL: longblob             # TO DEPRECATE
+    head_dir=NULL: <blob>             # TO DEPRECATE
 
-    trial_duration=NULL: longblob          # NEW
-    distance=NULL: longblob                # NEW
-    trial_traj_path_length=NULL: longblob  # NEW
+    trial_duration=NULL: <blob>          # NEW
+    distance=NULL: <blob>                # NEW
+    trial_traj_path_length=NULL: <blob>  # NEW
 
-    trial_init_x=NULL: longblob             # NEW --> to method maybe
-    trial_init_y=NULL: longblob             # NEW
-    trial_end_x=NULL: longblob              # NEW
-    trial_end_y=NULL: longblob              # NEW
+    trial_init_x=NULL: <blob>             # NEW --> to method maybe
+    trial_init_y=NULL: <blob>             # NEW
+    trial_end_x=NULL: <blob>              # NEW
+    trial_end_y=NULL: <blob>              # NEW
 
-    trial_direct_path=NULL: longblob        # NEW
-    trial_tortuosity=NULL: longblob         # NEW
-    trial_step: longblob
+    trial_direct_path=NULL: <blob>        # NEW
+    trial_tortuosity=NULL: <blob>         # NEW
+    trial_step: <blob>
 
-    trial_step_time=NULL: longblob          # OLD TO DEPRECATE? (same as time?)
-    trial_step_fraction=NULL: longblob
+    trial_step_time=NULL: <blob>          # OLD TO DEPRECATE? (same as time?)
+    trial_step_fraction=NULL: <blob>
     
-    choice=NULL: longblob                   # NEW --> to method?
-    flip_one_side=NULL: longblob            # NEW
+    choice=NULL: <blob>                   # NEW --> to method?
+    flip_one_side=NULL: <blob>            # NEW
     
-    trial_right_choice: longblob
-    trial_left_choice: longblob
+    trial_right_choice: <blob>
+    trial_left_choice: <blob>
 
-    trial_step_fraction=NULL: longblob      # OLD: TO DEPRECATE (same as trial_step?)
+    trial_step_fraction=NULL: <blob>      # OLD: TO DEPRECATE (same as trial_step?)
    
-    aperture=NULL: longblob                 # NEW
-    time=NULL: longblob                     # NEW
-    time_elapsed=NULL: longblob             # NEW
+    aperture=NULL: <blob>                 # NEW
+    time=NULL: <blob>                     # NEW
+    time_elapsed=NULL: <blob>             # NEW
 
-    interpolation: longblob
+    interpolation: <blob>
     """
 
     def make(self, key):
@@ -212,27 +212,27 @@ class BoxDataFrame(dj.Computed):
     definition = """
     -> DataFrame
     ---
-    l_box_x_min: blob
-    l_box_x_max: blob
-    l_box_z_min: blob
-    l_box_z_max: blob
+    l_box_x_min: <blob>
+    l_box_x_max: <blob>
+    l_box_z_min: <blob>
+    l_box_z_max: <blob>
     
-    r_box_x_min: blob
-    r_box_x_max: blob
-    r_box_z_min: blob
-    r_box_z_max: blob
+    r_box_x_min: <blob>
+    r_box_x_max: <blob>
+    r_box_z_min: <blob>
+    r_box_z_max: <blob>
 
-    tt_box_x_min: blob
-    tt_box_x_max: blob
-    tt_box_z_min: blob
-    tt_box_z_max: blob
+    tt_box_x_min: <blob>
+    tt_box_x_max: <blob>
+    tt_box_z_min: <blob>
+    tt_box_z_max: <blob>
 
-    tt_box_angle: blob
+    tt_box_angle: <blob>
     
-    l_reward_x=NULL: blob    # NEW  
-    l_reward_z=NULL: blob    # NEW  
-    r_reward_x= NULL: blob  # NEW
-    r_reward_z=NULL: blob    # NEW  
+    l_reward_x=NULL: <blob>    # NEW  
+    l_reward_z=NULL: <blob>    # NEW  
+    r_reward_x= NULL: <blob>  # NEW
+    r_reward_z=NULL: <blob>    # NEW  
     
     """
 
@@ -484,7 +484,7 @@ class GitCommit(dj.Computed):
     -> DataFrame
     ---
     commit_hash: varchar(256)
-    changed_files: blob
+    changed_files: <blob>
     """
 
     def make(self, key):

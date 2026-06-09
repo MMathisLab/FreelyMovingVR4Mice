@@ -1,0 +1,58 @@
+{
+  "aperture": {
+    "length": 249,
+    "dtype": "float64",
+    "first": 4.3,
+    "middle": 12.0,
+    "middle_idx": 124,
+    "last": 4.3
+  },
+  "trial": {
+    "length": 249,
+    "dtype": "int64",
+    "first": 2,
+    "middle": 126,
+    "middle_idx": 124,
+    "last": 250
+  },
+  "trial_left_choice": {
+    "length": 249,
+    "dtype": "float64",
+    "first": 1.0,
+    "middle": 0.0,
+    "middle_idx": 124,
+    "last": 0.0
+  },
+  "trial_rewarded": {
+    "length": 249,
+    "dtype": "float64",
+    "first": 1.0,
+    "middle": 1.0,
+    "middle_idx": 124,
+    "last": 1.0
+  },
+  "trial_tortuosity": {
+    "length": 249,
+    "dtype": "float64",
+    "first": 1.1289416457365833,
+    "middle": 1.4786884494205106,
+    "middle_idx": 124,
+    "last": 1.2973108538145255
+  },
+  "trial_duration": {
+    "length": 249,
+    "dtype": "float64",
+    "first": 1.08,
+    "middle": 0.6599999999999682,
+    "middle_idx": 124,
+    "last": 0.9200000000000728
+  },
+  "trial_jshaped": {
+    "length": 249,
+    "dtype": "float64",
+    "first": 1.0,
+    "middle": 1.0,
+    "middle_idx": 124,
+    "last": 1.0
+  }
+}
