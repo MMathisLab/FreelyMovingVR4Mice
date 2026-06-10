@@ -155,7 +155,7 @@ class InclusionStatus(dj.Computed):
     definition = """
     -> ExperimentMember
     ---
-    included : boolean
+    included : bool
     """
 
     def make(self, key):
