@@ -46,6 +46,8 @@ Two cameras are necessary if you would like to use 3d reconstruction.
 
 1 x [1/4\"-20 Low-Profile Channel Screw, 5/8\" Long, 50 Pack](http://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=4101)
 
+2 x [Hinge for 25 mm Rail Enclosures](https://www.thorlabs.com/item/XE25H) (for access door on back side)
+
 ### 3D printed parts
 
 8 x [Top monitor holder](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/docs/stl_files/top_monitor_holder.stl)
