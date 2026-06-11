@@ -53,7 +53,8 @@ for path in [ANALYSIS_PATH, ACTIONS_PATH, BASE_SCHEMAS_PATH, BASE_ACTIONS_PATH]:
 # module-level imports of base_schemas and vr4mice.schema that connect to MySQL
 # at import time. These mocks let unit tests import those modules without a DB.
 # Integration tests clear these mocks in dj_config/pipeline fixtures (see
-# integration/conftest.py) before importing the real modules.
+# integration/conftest.py) before importing the real modules. When adding
+# mocks here, add the same module names to integration/conftest.py.
 mock_mice = MagicMock()
 mock_schemas = MagicMock()
 mock_schemas.mice = mock_mice
