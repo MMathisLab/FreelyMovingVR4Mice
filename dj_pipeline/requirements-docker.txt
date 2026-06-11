@@ -1,0 +1,10 @@
+# Docker runtime dependencies (pinned for DeepLabCut base image compatibility).
+# seaborn==0.13.0: newer seaborn pulls numpy 1.26 and breaks Numba ("NumPy 1.24 or less").
+# black==22.6: newer 2.0.3 breaks tom's code.
+datajoint==0.14
+seaborn==0.13.0
+pandas==1.4.3
+numpy==1.22.4
+jupyter
+umap-learn
+black==22.6
