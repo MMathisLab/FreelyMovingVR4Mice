@@ -68,7 +68,8 @@ def predict_decision(
 
     Returns:
         The initial dataframe with an extra `pred` column, containing the probability that the
-        animal went to the right.
+        animal went to the right, the coefficients of the model, and the scalers used for each fold
+        (if `scale_data` is `True` else None).
 
     Example:
         ```
@@ -809,7 +810,7 @@ def _minmax_scale_series(series: pd.Series) -> pd.Series:
     if pd.isna(min_val) or pd.isna(max_val):
         return series * np.nan
     if np.isclose(max_val, min_val):
-        return pd.Series(0.0, index=series.index)
+        return series.where(series.isna(), 0.0)
     return (series - min_val) / (max_val - min_val)
 
 
