@@ -152,8 +152,7 @@ class Config:
                 cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE
             )
             stdout, stderr = process.communicate()
-            exit_code = process.wait()
-            if exit_code != 0:
+            exit_code = process.returncode
                 logger.warning(f"{cmd} failed: {stdout} {stderr}")
                 return False
             self.config_dict["dropdown_menu"] = dst
