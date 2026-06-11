@@ -468,7 +468,10 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mounts-and-storage">Mounts and storage</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment-defaults-quick-start-sh">Deployment defaults (quick_start.sh)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#database-deployment-notes-server">Database deployment notes (server)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-variables">Environment variables</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-variables">Environment variables</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mysql-version-5-7-and-8-0">MySQL version (5.7 and 8.0)</a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#schemas-what-they-do">Schemas (what they do)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#schema-modes">Schema modes</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-import-export-restricted-dumps">Data import/export (restricted dumps)</a></li>
@@ -852,8 +855,47 @@ mkdir<span class="w"> </span>-p<span class="w"> </span>/shared
 <li><p><code class="docutils literal notranslate"><span class="pre">COMPOSE_PROJECT</span></code> (default <code class="docutils literal notranslate"><span class="pre">vr4mice</span></code>) — must match between <code class="docutils literal notranslate"><span class="pre">make</span></code>, cron scripts, and manual <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">-p</span> <span class="pre">…</span></code> calls</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">DB_BIND_IP</span></code>, <code class="docutils literal notranslate"><span class="pre">DB_PORT</span></code>, <code class="docutils literal notranslate"><span class="pre">MYSQL_ROOT_PASSWORD</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">DB_DATA_PATH</span></code>, <code class="docutils literal notranslate"><span class="pre">SHARED_PATH</span></code>, <code class="docutils literal notranslate"><span class="pre">DATA_PATH</span></code>, <code class="docutils literal notranslate"><span class="pre">SCREEN_RECORDINGS_PATH</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DB_IMAGE</span></code> — Docker image for the local database service (see below)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CLIENT_IMAGE</span></code>, <code class="docutils literal notranslate"><span class="pre">CLIENT_CONTAINER_NAME</span></code>, <code class="docutils literal notranslate"><span class="pre">DB_CONTAINER_NAME</span></code>, <code class="docutils literal notranslate"><span class="pre">CLIENT_NETWORK_MODE</span></code>, <code class="docutils literal notranslate"><span class="pre">JUPYTER_PORT</span></code></p></li>
 </ul>
+<section id="mysql-version-5-7-and-8-0">
+<span id="sec-mysql-version"></span><h4>MySQL version (5.7 and 8.0)<a class="headerlink" href="#mysql-version-5-7-and-8-0" title="Permalink to this heading">#</a></h4>
+<p>The database service in <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> uses <code class="docutils literal notranslate"><span class="pre">${DB_IMAGE:-mysql:8.0}</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Situation</p></th>
+<th class="head"><p>What to use</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>New install (empty <code class="docutils literal notranslate"><span class="pre">DB_DATA_PATH</span></code>)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mysql:8.0</span></code> (default)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Existing on-disk datadir from MySQL 5.7</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mysql:5.7</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">DB_IMAGE</span></code> is <strong>not</strong> set in <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code>, <code class="docutils literal notranslate"><span class="pre">docker/compose_env.sh</span></code> (used by <code class="docutils literal notranslate"><span class="pre">make</span></code> and cron) auto-detects the image from <code class="docutils literal notranslate"><span class="pre">DB_DATA_PATH</span></code> via <code class="docutils literal notranslate"><span class="pre">docker/detect_mysql_image.sh</span></code>. <code class="docutils literal notranslate"><span class="pre">quick_start.sh</span></code> writes the detected value into <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code>.</p>
+<p>Manual override in <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">DB_IMAGE</span><span class="o">=</span>mysql:5.7<span class="w">   </span><span class="c1"># legacy datadir</span>
+<span class="c1"># DB_IMAGE=mysql:8.0 # new installs</span>
+</pre></div>
+</div>
+<p>Check what Compose will use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bash<span class="w"> </span>docker/compose_env.sh<span class="w"> </span>get<span class="w"> </span>DB_IMAGE
+</pre></div>
+</div>
+<p><strong>Upgrading 5.7 → 8.0</strong> (keep data): run MySQL 5.7 against the datadir, shut down cleanly, then switch to 8.0:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>db<span class="w"> </span>mysql<span class="w"> </span>-uroot<span class="w"> </span>-p<span class="s2">&quot;</span><span class="si">${</span><span class="nv">MYSQL_ROOT_PASSWORD</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-e<span class="w"> </span><span class="s2">&quot;SET GLOBAL innodb_fast_shutdown=0; SHUTDOWN;&quot;</span>
+<span class="c1"># set DB_IMAGE=mysql:8.0 in .env.compose, then:</span>
+make<span class="w"> </span>up_all
+</pre></div>
+</div>
+<p><strong>Fresh start</strong> (discard local datadir): stop the stack, move or delete <code class="docutils literal notranslate"><span class="pre">DB_DATA_PATH</span></code>, then start with <code class="docutils literal notranslate"><span class="pre">DB_IMAGE=mysql:8.0</span></code>.</p>
+<p>If the <code class="docutils literal notranslate"><span class="pre">db</span></code> container exits immediately with code 1 and logs mention a failed upgrade from MySQL 5.7, the datadir version likely does not match <code class="docutils literal notranslate"><span class="pre">DB_IMAGE</span></code> — set <code class="docutils literal notranslate"><span class="pre">DB_IMAGE=mysql:5.7</span></code> or wipe the datadir for a new 8.0 install.</p>
 <p>Remote/AWS DB credentials for scheduled AWS runs live in <code class="docutils literal notranslate"><span class="pre">.env-aws</span></code> (copy from <code class="docutils literal notranslate"><span class="pre">.env-aws.example</span></code>); this file is <strong>not</strong> committed.</p>
 <p>If you still have Docker settings in <code class="docutils literal notranslate"><span class="pre">.env</span></code> from an older setup, move them to <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code> (Makefile falls back to <code class="docutils literal notranslate"><span class="pre">.env</span></code> for <code class="docutils literal notranslate"><span class="pre">COMPOSE_PROJECT</span></code> only during migration).</p>
 <p>Notes:</p>
@@ -861,6 +903,7 @@ mkdir<span class="w"> </span>-p<span class="w"> </span>/shared
 <li><p><code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS</span></code> is required if base schemas (exp/mice) are not in use,
 because experimenter names are otherwise missing from GUI metadata.</p></li>
 </ul>
+</section>
 </section>
 <section id="schemas-what-they-do">
 <h3>Schemas (what they do)<a class="headerlink" href="#schemas-what-they-do" title="Permalink to this heading">#</a></h3>
@@ -1403,7 +1446,10 @@ Recipients are derived from:</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mounts-and-storage">Mounts and storage</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment-defaults-quick-start-sh">Deployment defaults (quick_start.sh)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#database-deployment-notes-server">Database deployment notes (server)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-variables">Environment variables</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-variables">Environment variables</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mysql-version-5-7-and-8-0">MySQL version (5.7 and 8.0)</a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#schemas-what-they-do">Schemas (what they do)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#schema-modes">Schema modes</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-import-export-restricted-dumps">Data import/export (restricted dumps)</a></li>
