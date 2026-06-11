@@ -44,6 +44,14 @@ vr4mice_load_compose_env() {
 
   COMPOSE_PROJECT="${COMPOSE_PROJECT:-vr4mice}"
   export COMPOSE_PROJECT
+
+  local detect_script
+  detect_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/detect_mysql_image.sh"
+  if [[ -z "${DB_IMAGE:-}" ]]; then
+    DB_IMAGE="$(bash "${detect_script}" "${DB_DATA_PATH:-}")"
+  fi
+  export DB_IMAGE
+  bash "${detect_script}" check "${DB_DATA_PATH:-}" "${DB_IMAGE}" 2>/dev/null || true
 }
 
 vr4mice_compose_exec() {
@@ -65,6 +73,7 @@ vr4mice_compose_exec() {
     COMPOSE_PROJECT="${COMPOSE_PROJECT}" \
     CLIENT_CONTAINER_NAME="${CLIENT_CONTAINER_NAME:-}" \
     DB_CONTAINER_NAME="${DB_CONTAINER_NAME:-}" \
+    DB_IMAGE="${DB_IMAGE:-mysql:8.0}" \
     docker compose "${args[@]}" "$@"
 }
 
@@ -77,7 +86,7 @@ case "${1:-}" in
   load)
     vr4mice_load_compose_env
     # shellcheck disable=SC2013
-    for name in COMPOSE_PROJECT CLIENT_CONTAINER_NAME DB_CONTAINER_NAME DB_PORT; do
+    for name in COMPOSE_PROJECT CLIENT_CONTAINER_NAME DB_CONTAINER_NAME DB_PORT DB_IMAGE; do
       if [[ -n "${!name:-}" ]]; then
         printf 'export %s=%q\n' "${name}" "${!name}"
       fi

@@ -217,7 +217,11 @@ if [ "${MODE}" = "deployment" ]; then
     fi
   fi
   if [ -d "${DB_ROOT}" ] && [ "$(ls -A "${DB_ROOT}" 2>/dev/null)" ]; then
-    echo "Warning: ${DB_ROOT} is not empty. Ensure this is the intended MySQL data directory."
+    DB_IMAGE_DETECTED="$(bash "${REPO_DIR}/docker/detect_mysql_image.sh" "${DB_ROOT}")"
+    echo "Warning: ${DB_ROOT} is not empty. Detected MySQL datadir: ${DB_IMAGE_DETECTED}."
+    echo "  DB_IMAGE will be set accordingly in .env.compose (override with DB_IMAGE=... if needed)."
+  else
+    DB_IMAGE_DETECTED="mysql:8.0"
   fi
 elif [ "${MODE}" = "client" ]; then
   DB_ROOT="${REPO_DIR}/local_data/database"
@@ -253,6 +257,11 @@ else
   DJ_HOST="127.0.0.1"
   DJ_USER="root"
   DJ_PWD="${MYSQL_ROOT_PASSWORD}"
+  if [ -d "${DB_ROOT}" ] && [ "$(ls -A "${DB_ROOT}" 2>/dev/null)" ]; then
+    DB_IMAGE_DETECTED="$(bash "${REPO_DIR}/docker/detect_mysql_image.sh" "${DB_ROOT}")"
+  else
+    DB_IMAGE_DETECTED="mysql:8.0"
+  fi
 fi
 
 CURRENT_CLIENT_NAME="${CLIENT_CONTAINER_NAME:-vr4mice_${USER}}"
@@ -331,6 +340,7 @@ cat > "${ENV_COMPOSE_FILE}" <<EOF
 COMPOSE_PROJECT=${COMPOSE_PROJECT}
 DB_BIND_IP=${DB_BIND_IP}
 DB_PORT=${DB_PORT}
+DB_IMAGE=${DB_IMAGE_DETECTED:-mysql:8.0}
 MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
 DB_DATA_PATH=${DB_ROOT}/
 SHARED_PATH=${SHARED_ROOT}
