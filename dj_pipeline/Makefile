@@ -166,8 +166,7 @@ cron-aws:
 cron-reboot:
 	@bash $(cron_script_reboot_path)
 
-DUMP_DIR := $(CURDIR)/local_dumps
-#/mnt/data_storage/vr4mice_database_dump/restricted_dump_20260311_141041
+DUMP_DIR ?= $(CURDIR)/local_dumps
 
 import-dumps:
 	for f in $(DUMP_DIR)/restricted_dump_*.sql; do \

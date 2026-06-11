@@ -266,4 +266,4 @@ jobs:
           test "${experiment_member_count}" -ge 1
           test "${inclusion_status_count}" -ge 1
           test "${label_set_count}" -ge 1
-          # PredictionModel/DecisionPoints and PreditionModel10Windows/DecisionPoints10Windows need multi-session data to train so no test; logged for visibility only
+          # PredictionModel/DecisionPoints and PredictionModel10Windows/DecisionPoints10Windows need multi-session data to train so no test; logged for visibility only

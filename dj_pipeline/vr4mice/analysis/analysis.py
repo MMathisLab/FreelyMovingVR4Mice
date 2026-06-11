@@ -282,6 +282,45 @@ def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
     return group
 
 
+DEFAULT_UNITY_ARENA_SIZE = np.array([-9.0, 9.0, -10.0, -2.0])
+
+
+def resolve_unity_arena_size(key: dict) -> np.ndarray:
+    """Return Unity arena bounds [x_min, x_max, z_max, z_min] for a dataset.
+
+    Reads ``GuiParams.unity_arena_size``. Falls back to ``DEFAULT_UNITY_ARENA_SIZE``
+    (standard rig default used before GuiParams was wired in) when the row or
+    field is missing, with a warning. Raises ``ValueError`` if the stored value
+    is present but does not have length 4.
+    """
+    dataset = key.get("dataset", key)
+    gui_params = vr4mice.GuiParams() & key
+
+    if len(gui_params) == 0:
+        logger.warning(
+            "GuiParams missing for %s; using default unity_arena_size %s",
+            dataset,
+            DEFAULT_UNITY_ARENA_SIZE.tolist(),
+        )
+        return DEFAULT_UNITY_ARENA_SIZE.copy()
+
+    value = gui_params.fetch1("unity_arena_size")
+    if value is None:
+        logger.warning(
+            "unity_arena_size is NULL for %s; using default %s",
+            dataset,
+            DEFAULT_UNITY_ARENA_SIZE.tolist(),
+        )
+        return DEFAULT_UNITY_ARENA_SIZE.copy()
+
+    arr = np.asarray(value, dtype=float).reshape(-1)
+    if arr.shape != (4,):
+        raise ValueError(
+            f"unity_arena_size for {dataset} must have length 4, got shape {arr.shape}"
+        )
+    return arr
+
+
 def create_data_frame(
     key: dict,
     iti: bool = True,
@@ -309,8 +348,7 @@ def create_data_frame(
 
     logger.info(f"Creating dataframe for: {key}")
 
-    # Note:
-    # all attributes are used for MouseState, the implementation could be:
+    # NOTE: all attributes are used for MouseState, the implementation could be:
     # df = pd.DataFrame((vr4mice.MouseState & {"dataset": dataset}).fetch1())
     # but with fetch1 it looks faster and more control on keys
     # TODO:(mary) checks if exists, try-catch
@@ -318,7 +356,7 @@ def create_data_frame(
     slit_size = np.array(
         (vr4mice.Metadata & key).fetch1("slit_size")
     )  # TODO: check type-s
-    trial = (vr4mice.State & key).fetch("episode")  # change of name
+    trial = (vr4mice.State & key).fetch("episode")
     trial = np.array(np.array(trial)[0], dtype=np.int32)
 
     aperture = slit_size[trial - 1]  # TODO check type-s
@@ -358,12 +396,13 @@ def create_data_frame(
         df.trial != 1
     ]  # NOTE(celia): drop first trial which is DLC-live initialization trial
 
-    unity_to_physical_arena_size = dict(
-        unity_arena_size_x_min=9,
-        unity_arena_size_z_max=-10,
-        unity_arena_size_z_min=-2,
-        physical_arena_size=27,
-    )
+    unity_arena_size = resolve_unity_arena_size(key)
+    unity_to_physical_arena_size = {
+        "unity_arena_size_x_min": abs(unity_arena_size[0]),
+        "unity_arena_size_z_max": unity_arena_size[2],
+        "unity_arena_size_z_min": unity_arena_size[3],
+        "physical_arena_size": 27,
+    }
 
     df["x"] = np.interp(
         df.x,
