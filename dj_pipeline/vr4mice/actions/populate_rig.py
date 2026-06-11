@@ -95,8 +95,6 @@ def check_keys(value, raw_data, key, schema, none=True) -> bool:
         - If a key in `value` is not found in `raw_data`, the function checks whether it is defined in
           the `local_def` dictionary. If not, it checks whether it can be derived from `raw_data` using
           the `transformer` dictionary. If it can't be derived, the function logs an alert and returns False.
-
-    todo: optimize, make list of potential none
     """
     if none:
         none_vals = dict()
@@ -118,7 +116,6 @@ def check_keys(value, raw_data, key, schema, none=True) -> bool:
                         v in transformers_schema.keys()
                         and (transformers_schema[v] not in raw_data.keys())
                     ):
-                        # todo: add check exceptions
                         if none:
                             logger.warning(
                                 f"{v} not found; {v} will be presented as None."
@@ -189,10 +186,10 @@ def populate(
                     if change:
                         logger.info(f"Note: {label} variable name changed to {a}")
 
-    logger.info(f"Populating: {table_name}")  # todo check return code
+    logger.info(f"Populating: {table_name}")
 
     schema["dj_tables"][table_name].insert1(data, skip_duplicates=SKIP_DUPLICATES)
-    logger.info(f"[POPULATED OK] {table_name}")  # todo check return code
+    logger.info(f"[POPULATED OK] {table_name}")
 
 
 def parse_date(filename):

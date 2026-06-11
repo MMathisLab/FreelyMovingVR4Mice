@@ -27,8 +27,8 @@ logger = Logger.get_logger()
 @schema
 class Base(dj.Computed):
     """
-    VR4Mice definition table:
-    links together Dataset with base Mouse, Exp schemas
+    Base definition table:
+    links together Dataset with base Mouse and Exp schemas
     """
 
     definition = """

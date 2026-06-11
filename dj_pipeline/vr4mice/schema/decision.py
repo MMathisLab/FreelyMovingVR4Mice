@@ -24,6 +24,11 @@ logger = Logger.get_logger()
 
 @schema
 class SessionLabel(dj.Lookup):
+    """
+    SessionLabel definition table:
+    maps session labels to experiment set and stage
+    """
+
     definition = """
     session_label : varchar(64)
     ---
@@ -72,6 +77,11 @@ class SessionLabel(dj.Lookup):
 
 @schema
 class ExperimentSet(dj.Lookup):
+    """
+    ExperimentSet definition table:
+    stores experiment set names and descriptions
+    """
+
     definition = """
     set_name : varchar(64)
     ---
@@ -88,6 +98,11 @@ class ExperimentSet(dj.Lookup):
 
 @schema
 class ExperimentStage(dj.Lookup):
+    """
+    ExperimentStage definition table:
+    stores experiment stage names and descriptions
+    """
+
     definition = """
     stage_name : varchar(32)
     ---
@@ -115,6 +130,11 @@ def sync_lookup_contents():
 
 @schema
 class ExperimentMember(dj.Imported):
+    """
+    ExperimentMember definition table:
+    links each dataset to an experiment set, stage, and session label
+    """
+
     definition = """
     -> Dataset
     ---
@@ -236,6 +256,11 @@ class InclusionStatus(dj.Computed):
 
 @schema
 class Label(dj.Lookup):
+    """
+    Label definition table:
+    stores regression feature names used in decision analysis
+    """
+
     definition = """
     label_key : varchar(32)    # internal short name (e.g., 'velocity_x')
     ---
@@ -261,6 +286,11 @@ class Label(dj.Lookup):
 
 @schema
 class LabelSet(dj.Lookup):
+    """
+    LabelSet definition table:
+    stores named sets of regression labels for model training
+    """
+
     definition = """
     label_set_id : int
     ---
@@ -349,6 +379,11 @@ class LabelSet(dj.Lookup):
 
 @schema
 class ModelParams(dj.Lookup):
+    """
+    ModelParams definition table:
+    stores logistic regression hyperparameter combinations
+    """
+
     definition = """
     param_id : int          # unique ID for hyperparam combo
     ---

@@ -58,8 +58,6 @@ def get_system_config(
     - If the configuration file is not found, the function returns False.
     - If the configuration file is found but there is an error loading it,
     an error message will be printed to the console and the function will return None.
-
-    Todo: config not found error
     """
     if config_path == "default":
         config_path = Path(__file__).parent.absolute().joinpath(config_name)
@@ -92,7 +90,7 @@ class Config:
         Returns the host address of the configured system.
     get_dst_path()
         Returns the destination path for remote files.
-    get_menu_path()
+    get_menu_path (property)
         Copies the remote dropdown menu to the local host and returns its path.
     get_gui_output_folder_path()
         Returns the path to the configured GUI output folder.
@@ -106,8 +104,6 @@ class Config:
         Returns the configuration value for a given key.
     update(key, value)
         Updates the value for a given configuration key.
-
-     Todo: check that all default paths exist
     """
 
     config_dict = get_system_config()
@@ -123,7 +119,7 @@ class Config:
 
     @property
     def get_dst_path(self):
-        return self.config_dict["remote_dst"]  # todo make here : video/data
+        return self.config_dict["remote_dst"]
 
     @property
     def get_menu_path(self):
@@ -148,19 +144,24 @@ class Config:
             dst = str(dst).replace("\\", "/")
             cmd = ["scp", src, dst]
 
-            if Path(src).exists():
-                process = subprocess.Popen(
-                    cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE
+            process = subprocess.Popen(
+                cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE
+            )
+            stdout, stderr = process.communicate()
+            if process.returncode != 0:
+                stdout_s = (
+                    stdout.decode(errors="replace")
+                    if isinstance(stdout, (bytes, bytearray))
+                    else str(stdout)
                 )
-                stdout, stderr = process.communicate()
-                exit_code = process.wait()
-                if exit_code != 0:
-                    logger.warning(f"{cmd} failed: {stdout} {stderr}")
-                    return False
-                self.config_dict["dropdown_menu"] = dst
-            else:
-                logger.warning(f"{src} doesn't exist.")
+                stderr_s = (
+                    stderr.decode(errors="replace")
+                    if isinstance(stderr, (bytes, bytearray))
+                    else str(stderr)
+                )
+                logger.warning(f"{cmd} failed: {stdout_s} {stderr_s}")
                 return False
+            self.config_dict["dropdown_menu"] = dst
 
         return self.config_dict["dropdown_menu"]
 

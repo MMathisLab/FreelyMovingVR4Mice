@@ -36,7 +36,7 @@ def get_type(filename):
     for key, value in types.items():
         if value in filename:
             return key
-    return "teensy_path"  # todo general
+    return "teensy_path"
 
 
 def _set_path_format():
@@ -69,15 +69,15 @@ def _set_labels():
     """
     return {
         "teensy_path": "teensy",
-        "dlc_path": "dlc",  # todo add model name, add proc
+        "dlc_path": "dlc",
         "camera_path": "camera",  # ts
         "video_path": "video",
         "proc_path": "proc",
-        # "self_path" todo
+        # "self_path"
     }
 
 
-def _path_is_remote(key):  # todo better
+def _path_is_remote(key):
     """
     Determines whether the specified file type is expected to have a remote path or not.
     Currently, it's the case only of video_path-typed file
@@ -93,7 +93,7 @@ def _path_is_remote(key):  # todo better
     return False
 
 
-def get_dst_folder(key):  # todo config
+def get_dst_folder(key):
     """
     Determines the name of destination folder for every file type.
     (used to define the destination remote directory for file transfer)
@@ -159,7 +159,7 @@ class Transfer(Template):
             return self.path_format[key]
         return self.path_format
 
-    def get_labels(self, key=None):  # todo check miss
+    def get_labels(self, key=None):
         """
         Get the label(s) for the specified key.
 
@@ -261,7 +261,7 @@ class Transfer(Template):
 
             # no_file = QCheckBox(self)
             # no_file.setText("no file")
-            # layout.addWidget(no_file, i, j) #todo(mary)
+            # layout.addWidget(no_file, i, j)
 
             msg = "Add " + self.get_labels(key) + " file"
             file_browse = QPushButton(msg)
@@ -302,14 +302,11 @@ class Transfer(Template):
         mouse = args["mouse"]
         exp = args["exp"]
         # cache = args["cache"]
-        # todo: check key miss
 
         format = self.get_format(key)
         multiple_on = False
 
-        if (
-            multiple_on and key == "dlc_path"
-        ):  # todo automatically for certain cases/pre-selection
+        if multiple_on and key == "dlc_path":
             filenames, _ = QFileDialog.getOpenFileNames(
                 self.widget,
                 "Select Files",
@@ -327,10 +324,10 @@ class Transfer(Template):
         if filenames is not None and len(filenames) > 0:
             mice_part = mouse.values != dict()
 
-            if mice_part:  # mouse was already set  #TODO for all cases re-new
+            if mice_part:  # mouse was already set
                 current_mouse = mouse.values["mouse_name"].currentText()
 
-            ret = check_files(key, filenames, self.get_format(key))  # todo adjust
+            ret = check_files(key, filenames, self.get_format(key))
 
             if isinstance(ret, bool) and ret is False:  # update
                 return False
@@ -400,7 +397,6 @@ class Transfer(Template):
         Returns:
             list: List of processed keys.
         """
-        # todo for pickle too
         parent = Path(config.get_config("dlc_path"))
         filename = Path(filenames).name
         name = filename.split(".")[0]

@@ -21,7 +21,7 @@ from vr4mice.schema import vr4mice
     Define tables, attributes and order of population
 """
 
-transformer = {  # todo add file preprocessing
+transformer = {
     "prop_obj_on_left": "probGreenLeft",
     # "slit_size": "slitSize",  # don't use
     "target_from_midline": "targetsFromMidline",
@@ -58,9 +58,6 @@ transformer = {  # todo add file preprocessing
     # Grey_screen_active : #skip (@tom) => use the grey_screen_active value only
 }
 
-# todo: optimize this part of parcing (auto)
-# todo: add check about rows in database in .pickle file
-
 local_def = {
     "state": no_value,  # empty value
     "x_pos": get_state,
@@ -87,7 +84,7 @@ local_def = {
     "width": get_video_meta,
     "height": get_video_meta,
     "camera_idx": get_camera_idx,
-    "l_box_x_min": get_box,  # TODO: maybe organize better, as
+    "l_box_x_min": get_box,
     "l_box_x_max": get_box,
     "l_box_z_min": get_box,
     "l_box_z_max": get_box,
@@ -125,7 +122,6 @@ video = [
     "timestamp_filepath",
 ]
 
-# TODO: check
 keypoints = [
     "dataset",  #
     "camera",  #
@@ -241,7 +237,6 @@ tables = {  # order matters (dependencies))
     "Metadata": metadata,
     "Box": box,
     "Video": video,
-    # TODO: check
     "DLC": keypoints,
     "GuiParams": gui,
     # "VR4Mice": vr4mice_table, # note: old version artefact
@@ -253,7 +248,7 @@ dj_tables = {  # in order
     "State": vr4mice.State(),
     "Metadata": vr4mice.Metadata(),
     "Box": vr4mice.Box(),
-    "DLC": vr4mice.DLC(),  # .npy #TODO check
+    "DLC": vr4mice.DLC(),
     "Video": vr4mice.Video(),  # .npy
     "GuiParams": vr4mice.GuiParams(),
     # "VR4Mice": vr4mice.VR4Mice(),  # old version artefact

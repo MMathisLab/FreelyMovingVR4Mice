@@ -192,7 +192,7 @@ if __name__ == "__main__":
         decision.PredictionModel10Windows().populate()
         decision.DecisionPoints10Windows().populate()
 
-    elif args.mode == "fetch":  # TODO: adjust path
+    elif args.mode == "fetch":
         from vr4mice.actions.fetch_data import fetch_data
 
         path = "/shared"

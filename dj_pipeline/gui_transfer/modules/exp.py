@@ -152,16 +152,13 @@ class Exp(Template):
             else:
                 label = QLabel(labels[key])
                 layout.addWidget(label, i, j, alignment=Qt.AlignLeft)
-                # todo general "no option"
                 choices = self.get_choices()
                 if key in choices.keys():  # combobox
                     choices = self._filter_choices(choices, key)
                     self._create_combobox(key, choices, layout, json_dict, i, j)
                 else:
                     self._create_input_field(key, layout, i, j)
-
-                    # todo special fields
-                    if key == "attempt":  # TODO check and init
+                    if key == "attempt":  # default first attempt for new sessions
                         self.values[key].setText("1")
 
             i, j = get_idx(i, j, self.max, step=2)
@@ -192,7 +189,7 @@ class Exp(Template):
                 for d in delete:
                     choices[key].remove(d)
 
-        # if key == "Rig":  # todo general
+        # if key == "Rig":
         #    choices[key] = [choices[key][11]]
         return choices
 
@@ -210,7 +207,7 @@ class Exp(Template):
         self.values[key] = QLabel(date)
         return True
 
-    def _session_notes(self, key, label, **kwargs):  # todo(mary) generate: + surgery
+    def _session_notes(self, key, label, **kwargs):
         """
         Create session notes layout.
 

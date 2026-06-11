@@ -161,6 +161,11 @@ class FailedSession(dj.Manual):
 
 @schema
 class Labels(dj.Lookup):
+    """
+    Labels definition table:
+    stores custom group labels assigned to datasets
+    """
+
     definition = """
     idx: int
     ---
@@ -181,6 +186,11 @@ class Labels(dj.Lookup):
 
 @schema
 class Groups(dj.Manual):
+    """
+    Groups definition table:
+    links datasets to custom Labels entries
+    """
+
     definition = """
     -> Dataset
     -> Labels
@@ -214,6 +224,11 @@ class Groups(dj.Manual):
 
 @schema
 class Labs(dj.Lookup):
+    """
+    Labs definition table:
+    stores collaborating lab identifiers
+    """
+
     definition = """
     idx: int
     ---
@@ -225,6 +240,11 @@ class Labs(dj.Lookup):
 
 @schema
 class Collab(dj.Computed):
+    """
+    Collab definition table:
+    links each dataset to a collaborating lab
+    """
+
     definition = """
     -> Dataset
     ---
@@ -407,7 +427,7 @@ class DLC(dj.Manual):
 class MouseState(dj.Manual):  # variable State
     """
     MouseState definition table:
-    stores mouse game-related position and events @todo(check thomas)
+    stores mouse game-related position and events (see State for overlap).
     fetched from teensy output pickle file
     """
 
@@ -427,7 +447,6 @@ class MouseState(dj.Manual):  # variable State
     velocity=NULL: <blob>      # new
     frame_flip=NULL: <blob>    # new to check?
     """
-    # TODO: make populate from file...
 
 
 @schema
@@ -487,6 +506,10 @@ class Metadata(dj.Manual):
 
 @schema
 class SignalsPhotodiode(dj.Computed):
+    """
+    SignalsPhotodiode definition table:
+    stores photodiode and generated sync signals from the PROC file
+    """
 
     definition = """
     -> Dataset
@@ -554,6 +577,10 @@ class SignalsPhotodiode(dj.Computed):
 
 @schema
 class GuiParams(dj.Manual):
+    """
+    GuiParams definition table:
+    stores Unity game parameters fetched from the teensy output pickle file
+    """
 
     definition = """
     -> Dataset
@@ -592,6 +619,11 @@ class GuiParams(dj.Manual):
 
 @schema
 class TrainingPhaseType(dj.Lookup):
+    """
+    TrainingPhaseType definition table:
+    stores training phase categories used to classify datasets
+    """
+
     definition = """
     idx: int
     ---
@@ -615,13 +647,18 @@ class TrainingPhaseType(dj.Lookup):
 
 @schema
 class DatasetType(dj.Computed):
+    """
+    DatasetType definition table:
+    assigns each dataset to a training phase based on metadata and state
+    """
+
     definition = """
     -> Metadata
     ---
     -> TrainingPhaseType
     """
 
-    def make(self, key):  # TODO(mary): refactor to a separate compact function
+    def make(self, key):
         """Assign a dataset to a training phase based on metadata and state."""
         if FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
@@ -706,7 +743,7 @@ class DatasetType(dj.Computed):
 class Box(dj.Manual):
     """
     Box definition table:
-    stores box positions @todo(thomas)
+    stores box positions derived from teensy output pickle file.
     fetched from teensy output pickle file
     """
 
@@ -731,6 +768,11 @@ class Box(dj.Manual):
 
 @schema
 class Object(dj.Lookup):
+    """
+    Object definition table:
+    stores target and distractor object names used in the game
+    """
+
     definition = """
     idx: int
     ---

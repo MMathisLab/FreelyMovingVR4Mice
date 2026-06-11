@@ -22,6 +22,11 @@ logger = Logger.get_logger()
 
 @schema
 class InterpolatedTrials(dj.Computed):
+    """
+    InterpolatedTrials definition table:
+    stores J-shaped interpolated per-trial trajectories and kinematics
+    """
+
     definition = """
     -> base_analysis.DataFrame
     ---
@@ -96,6 +101,11 @@ class InterpolatedTrials(dj.Computed):
 
 @schema
 class MeanXYTrajectory(dj.Computed):
+    """
+    MeanXYTrajectory definition table:
+    stores mean x/y trajectories across trials for each aperture
+    """
+
     definition = """
     -> InterpolatedTrials
     ---
@@ -161,6 +171,11 @@ class MeanXYTrajectory(dj.Computed):
 
 @schema
 class YBinnedXYTrajectory(dj.Computed):
+    """
+    YBinnedXYTrajectory definition table:
+    stores y-binned mean trajectories for each aperture
+    """
+
     definition = """
     -> InterpolatedTrials
     ---
@@ -223,6 +238,11 @@ class YBinnedXYTrajectory(dj.Computed):
 
 @schema
 class MeanVelocities(dj.Computed):
+    """
+    MeanVelocities definition table:
+    stores mean velocities across trials for each aperture and trial length
+    """
+
     definition = """
     -> InterpolatedTrials
     ---

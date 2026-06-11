@@ -145,7 +145,8 @@ def get_path(
     Returns:
     str: The file path for the specified key or False if problem
 
-    Todo: support of multiple paths
+    Note:
+        Assumes a single source path per file key.
     """
     flag = False
 
@@ -158,7 +159,7 @@ def get_path(
     file_info = raw_data[raw_key]
     filename = file_info["filename"]
 
-    if flag:  # todo properly
+    if flag:  # session filepath shares teensy stem with .npy extension
         filename = Path(filename).stem
         filename = str(filename) + ".npy"
 
@@ -184,12 +185,12 @@ def get_path(
         return path
     else:
         logger.warning("Path doesn not exist: " + str(path))
-        return False  # todo err
+        return False
 
 
 def get_remote_path(raw_data=None, key=None, transformer=None, **kwargs):
     raw_key = transformer[key]
-    file_info = raw_data[raw_key]  # todo multiple paths... ? for dlc
+    file_info = raw_data[raw_key]
     filename = file_info["filename"]
     src = file_info["src"]
     if src:
@@ -201,7 +202,6 @@ def get_remote_path(raw_data=None, key=None, transformer=None, **kwargs):
 def get_model_name(raw_data=None, key=None, transformer=None, **kwargs):
     """
     Extracts the model name from the dlc file name
-    todo: if multiple paths/make user select model
     """
     file_info = raw_data["dlc_path"]
     filename = file_info["filename"]
@@ -213,7 +213,6 @@ def get_model_name(raw_data=None, key=None, transformer=None, **kwargs):
 def get_camera(raw_data=None, key=None, transformer=None, **kwargs):
     """
     Extracts the camera name from the dlc file name
-    todo: if multiple paths/make user select camera name
     """
     file_info = raw_data["dlc_path"]
     filename = file_info["filename"]

@@ -81,7 +81,6 @@ def fetch_tables() -> dict:
     - Some tables have 'LT' comments next to them, indicating that they are Lookup tables
     - Some tables have been commented out entirely, indicating that they are not currently used in the pipeline
 
-    # todo: optimize menu generation to avoid constant fetching of same data
     """
     all_mice = (mice.Mouse() - mice.Sacrificed() - mice.Breed()).fetch(as_dict=True)
 

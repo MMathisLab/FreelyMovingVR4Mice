@@ -11,6 +11,7 @@ from base_actions.send_email import email
 
 from vr4mice.schema import base, vr4mice
 from vr4mice.analysis.summary_dj import vr4mice_summary_plots
+from vr4mice.utils.git_helpers import parse_git_commit_file
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
 
@@ -22,7 +23,10 @@ logger = Logger.get_logger()
 
 @schema
 class DataFrame(dj.Computed):
-    """Host main dataframe for analysis."""
+    """
+    DataFrame definition table:
+    hosts the main per-step analysis dataframe for a dataset
+    """
 
     # NOTE(mary): This used to point to vr4mice.VR4Mice
     #       will probably point this to the next version when it's available
@@ -165,6 +169,11 @@ class DataFrame(dj.Computed):
 
 @schema
 class BoxDataFrame(dj.Computed):
+    """
+    BoxDataFrame definition table:
+    stores per-trial report and target box coordinates derived from DataFrame
+    """
+
     definition = """
     -> DataFrame
     ---
@@ -262,6 +271,11 @@ class BoxDataFrame(dj.Computed):
 
 @schema
 class SummaryPlots(dj.Computed):
+    """
+    SummaryPlots definition table:
+    stores paths to generated per-session summary plot figures
+    """
+
     definition = """
     -> vr4mice.Dataset
     ---
@@ -418,6 +432,10 @@ def insert_send_email(key, filename, err_msg):
 
 @schema
 class GitCommit(dj.Computed):
+    """
+    GitCommit definition table:
+    stores git commit hash and changed files for analysis reproducibility
+    """
 
     definition = """
     -> DataFrame
@@ -450,26 +468,3 @@ class GitCommit(dj.Computed):
             )
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
-
-
-def parse_git_commit_file(filename="git_commit"):
-    """Parse a git commit file into hash and modified file list."""
-    commit_hash = None
-    modified_files = []
-
-    try:
-        with open(filename, "r") as file:
-            lines = file.readlines()
-
-            for line in lines:
-                line = line.strip()
-                if line.startswith("commit "):
-                    commit_hash = line.split()[1]
-                elif line.startswith("M "):
-                    modified_files.append(line)
-
-        return {"commit_hash": commit_hash, "changed_files": modified_files}
-
-    except FileNotFoundError:
-        logger.warning(f"Error: File '{filename}' not found.")
-        return {"commit_hash": "", "changed_files": []}

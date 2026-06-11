@@ -48,7 +48,7 @@ class Template(ABC):
         self.widget = widget
         self.main_layout = self.widget.main_layout
 
-        self.nick = nick  # todo check of init in child
+        self.nick = nick
         self.labels = labels
         self.choices = choices
 

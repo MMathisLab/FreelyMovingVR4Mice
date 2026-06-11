@@ -1517,7 +1517,7 @@ def pairplot_std_decision_point(
         df (pd.DataFrame): DataFrame containing the data to plot.
         label_parameter (str): Column label for the parameter to plot.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
-        per_mouse (bool): TODO
+        per_mouse (bool): If True, group plots by mouse_name.
     """
     ax = _create_axes(ax=ax, per_aperture=False, num_aperture=1)
 
