@@ -16,6 +16,20 @@ schema = schema_config.get_schema(schema_name, locals())
 logger = logger.Logger.get_logger()
 
 
+def _complete_dlc_key(key: dict) -> dict:
+    """Return the full `vr4mice.DLC` primary key for `key` when needed."""
+    if "camera" not in key or "doe" not in key:
+        matches = (vr4mice.DLC() & key).fetch(
+            *vr4mice.DLC().primary_key, as_dict=True
+        )
+        if len(matches) == 0:
+            raise KeyError(
+                f"No vr4mice.DLC entry found to complete key from partial key: {key}"
+            )
+        return matches[0]
+    return key
+
+
 @schema
 class DLCProcessor(dj.Imported):
     definition = """
@@ -50,12 +64,7 @@ class DLCProcessor(dj.Imported):
             fpath = (vr4mice.DLC & key).fetch1("proc_filepath")
             data = np.load(fpath, allow_pickle=True)
 
-            if (
-                not "camera" in key or not "doe" in key
-            ):  # TODO: add allow_direct_insert in arg
-                key = (vr4mice.DLC() & key).fetch(
-                    *vr4mice.DLC().primary_key, as_dict=True
-                )[0]
+            key = _complete_dlc_key(key)  # TODO: add allow_direct_insert in arg
 
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
@@ -100,10 +109,7 @@ class DLCKptsDf(dj.Computed):
         try:
             h5_path = (vr4mice.DLC & key).fetch1("keypoints_filepath")
             data = dlc_helpers.h5_to_dj(h5_path)
-            if not "camera" in key or not "doe" in key:
-                key = (vr4mice.DLC() & key).fetch(
-                    *vr4mice.DLC().primary_key, as_dict=True
-                )[0]
+            key = _complete_dlc_key(key)
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
@@ -165,12 +171,7 @@ class SyncDLCKptsDf(dj.Computed):
             )
             data = dlc_helpers.df_to_dj(sync_kpts)
 
-            if (
-                not "camera" in key or not "doe" in key
-            ):  # TODO: add allow_direct_insert in arg
-                key = (vr4mice.DLC() & key).fetch(
-                    *vr4mice.DLC().primary_key, as_dict=True
-                )[0]
+            key = _complete_dlc_key(key)  # TODO: add allow_direct_insert in arg
 
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)
@@ -204,7 +205,6 @@ class SyncDLCKptsDf(dj.Computed):
 
 @schema
 class OfflineKinematics(dj.Computed):
-
     """Stores the mouse body kinematics that are computed offline.
     This table pulls data from the synchronized and interpolated DLC keypoint table
     and recomputes various kinematic variables.
@@ -247,12 +247,7 @@ class OfflineKinematics(dj.Computed):
 
             data = dlc_helpers.get_offline_dlc_variables(sync_keypoints)
             data = data.to_dict(orient="list")
-            if (
-                not "camera" in key or not "doe" in key
-            ):  # TODO: add allow_direct_insert in arg
-                key = (vr4mice.DLC() & key).fetch(
-                    *vr4mice.DLC().primary_key, as_dict=True
-                )[0]
+            key = _complete_dlc_key(key)  # TODO: add allow_direct_insert in arg
 
             data = {**key, **data}
             self.insert1(data, allow_direct_insert=True)

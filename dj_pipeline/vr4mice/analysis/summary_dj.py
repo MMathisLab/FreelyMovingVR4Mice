@@ -108,7 +108,6 @@ def get_subtitle(key: Dict, task_name: str = "AR Task"):
     Returns:
         The title of the summary plot.
     """
-    # TODO: add parcing of filename
     return task_name + ": Dataset: " + str(key["dataset"])
 
 

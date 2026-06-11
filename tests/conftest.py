@@ -112,6 +112,8 @@ def pytest_collection_modifyitems(config, items):
 
     Run unit tests only: pytest -m "not integration"
     Run integration tests only: pytest -m integration
+    Skip slow tests (CI default): pytest -m "not slow"
+    Run slow pipeline tests only: pytest -m slow
     """
     integration_fixtures = {
         # MySQL/DataJoint fixtures
@@ -123,12 +125,20 @@ def pytest_collection_modifyitems(config, items):
         "require_golden_data",
         "golden_session_path",
     }
+    slow_fixtures = {
+        # Full pipeline populate on golden session (test_run_modes, etc.)
+        "populated_db",
+        "populated_base_tables",
+    }
 
     for item in items:
-        if set(item.fixturenames) & integration_fixtures:
+        fixturenames = set(item.fixturenames)
+        if fixturenames & integration_fixtures:
             item.add_marker(pytest.mark.integration)
         else:
             item.add_marker(pytest.mark.unit)
+        if fixturenames & slow_fixtures:
+            item.add_marker(pytest.mark.slow)
 
 
 # ==============================================================================

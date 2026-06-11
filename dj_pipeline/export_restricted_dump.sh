@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Restrict downstream CUDA-aware commands to GPU 2 by default.
-CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-2}"
-export CUDA_VISIBLE_DEVICES
-
 # Load credentials from .env file (not tracked in git)
 if [[ -f .env ]]; then
   set -a
