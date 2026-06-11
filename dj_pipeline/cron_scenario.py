@@ -114,22 +114,16 @@ def main():
         )
 
         run_step("vr4mice.Collab.populate", lambda: vr4mice.Collab().populate())
-        run_step(
-            "base_analysis.DataFrame.populate", base_analysis.DataFrame.populate
-        )
+        run_step("base_analysis.DataFrame.populate", base_analysis.DataFrame.populate)
         run_step(
             "base_analysis.BoxDataFrame.populate",
             base_analysis.BoxDataFrame.populate,
         )
-        run_step(
-            "base_analysis.GitCommit.populate", base_analysis.GitCommit.populate
-        )
+        run_step("base_analysis.GitCommit.populate", base_analysis.GitCommit.populate)
 
         run_step("dlc.DLCProcessor.populate", lambda: dlc.DLCProcessor().populate())
         run_step("dlc.DLCKptsDf.populate", lambda: dlc.DLCKptsDf().populate())
-        run_step(
-            "dlc.SyncDLCKptsDf.populate", lambda: dlc.SyncDLCKptsDf().populate()
-        )
+        run_step("dlc.SyncDLCKptsDf.populate", lambda: dlc.SyncDLCKptsDf().populate())
         run_step(
             "dlc.OfflineKinematics.populate",
             lambda: dlc.OfflineKinematics().populate(),
