@@ -76,7 +76,7 @@ def predict_decision(
         label = ["norm_x", "y", "heading_dir", "head_angle", "trial_tortuosity", "trial_init_x",
                 "trial_length", "trial_init_y", "aperture"]
         df["aperture"] = (df["aperture"] > 7).astype(int)
-        df, clf = regression.predict_decision(df, label=label)
+        df, clf, _ = regression.predict_decision(df, label=label)
         names = ["x", "y", "head", "body",  "tort", "init_x", "length", "init_y", "aperture"]
         plt.figure(figsize=(20,8))
         plt.bar(names, clf.coef_[0,:])

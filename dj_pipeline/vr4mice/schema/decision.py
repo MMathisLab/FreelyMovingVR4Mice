@@ -758,7 +758,7 @@ class PredictionModel10Windows(dj.Computed):
             bic_by_window = {}
             session_prediction_by_dataset = {}
 
-            for window_id in range(10):
+            for window_id in range(WINDOW_COUNT):
                 window_df = interpolated_df[
                     interpolated_df["trial_window"] == window_id
                 ].copy()
@@ -850,8 +850,8 @@ class PredictionModel10Windows(dj.Computed):
             )
             off_diag_scores = [
                 cross_window_accuracy_matrix[i][j]
-                for i in range(10)
-                for j in range(10)
+                for i in range(WINDOW_COUNT)
+                for j in range(WINDOW_COUNT)
                 if i != j and np.isfinite(cross_window_accuracy_matrix[i][j])
             ]
             cross_window_accuracy_mean = (

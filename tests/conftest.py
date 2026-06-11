@@ -82,6 +82,10 @@ mock_vr4mice.actions.keys2tables_vr4mice = mock_keys2tables_vr4mice
 mock_dj_schema = MagicMock()
 mock_vr4mice.schema = mock_dj_schema
 
+# Mock vr4mice.analysis for regression.py imports
+mock_vr4mice.analysis = MagicMock()
+mock_vr4mice.analysis.plotting = MagicMock()
+
 # Apply mocks to sys.modules before any imports
 sys.modules['base_schemas'] = mock_base_schemas
 sys.modules['base_schemas.schemas'] = mock_schemas
@@ -93,6 +97,8 @@ sys.modules['vr4mice.actions'] = mock_vr4mice.actions
 sys.modules['vr4mice.actions.keys2tables_base'] = mock_keys2tables_base
 sys.modules['vr4mice.actions.keys2tables_vr4mice'] = mock_keys2tables_vr4mice
 sys.modules['vr4mice.schema'] = mock_dj_schema
+sys.modules['vr4mice.analysis'] = mock_vr4mice.analysis
+sys.modules['vr4mice.analysis.plotting'] = mock_vr4mice.analysis.plotting
 
 # Dataset identifiers (golden dataset)
 DATASET_NAME = "Flamingo_2026-02-05_1"

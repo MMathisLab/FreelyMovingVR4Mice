@@ -85,8 +85,7 @@ sync_up:
 add-cron:
 	echo "0 2 * * * bash $(cron_script_path) && bash $(cron_script_aws_path) >> ~/vr4mice_logs/cron.log 2>&1" | crontab -
 
-DUMP_DIR := /home/mariiapopova/FreelyMovingVR4Mice/dj_pipeline/local_dumps
-#/mnt/data_storage/vr4mice_database_dump/restricted_dump_20260311_141041
+DUMP_DIR ?= $(CURDIR)/local_dumps
 
 import-dumps:
 	for f in $(DUMP_DIR)/restricted_dump_*.sql; do \
