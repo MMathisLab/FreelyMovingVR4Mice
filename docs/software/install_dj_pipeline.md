@@ -204,7 +204,7 @@ make ipython
 
 ### Docker client: base packages and user mapping
 
-The client image is built from DeepLabCut’s pip-based Docker image (system Python at `/usr/bin/python`, **not** conda).
+The client image is built from DeepLabCut’s Docker image. Pipeline commands use plain `python -m pip` (**no** `conda activate`). At build time and container start, `docker/ensure_python_shims.sh` symlinks the base image’s Python into `/usr/local/bin` so `make`, cron, and `docker compose exec` all find `python` on the compose `PATH`.
 
 **`base_schemas` / `base_actions`** are bind-mounted from the repo and installed at runtime with pip:
 
