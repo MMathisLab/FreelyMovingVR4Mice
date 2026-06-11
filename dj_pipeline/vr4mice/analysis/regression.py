@@ -53,7 +53,7 @@ def predict_decision(
     max_iter: int = 100,
     scale_data: bool = True,
     random_state: Optional[int] = None,
-) -> Tuple[pd.DataFrame, npt.NDArray, List[dict]]:
+) -> Tuple[pd.DataFrame, npt.NDArray, List[Optional[dict]]]:
     """Predict the animal's decision based on the `label` data, through a logistic regression.
 
     Args:
@@ -67,9 +67,11 @@ def predict_decision(
         random_state: Random state for reproducibility.
 
     Returns:
-        The initial dataframe with an extra `pred` column, containing the probability that the
-        animal went to the right, the coefficients of the model, and the scalers used for each fold
-        (if `scale_data` is `True` else None).
+        A tuple of the input dataframe with added ``accuracy`` and ``proba_left`` columns,
+        the model coefficients (one row per LOGO fold or KFold split), and a list of scaler
+        parameter dicts (``{"mean": ..., "scale": ...}``) with one entry per fold when
+        ``scale_data`` is ``True``, or ``None`` placeholders per fold when ``scale_data`` is
+        ``False``.
 
     Example:
         ```
