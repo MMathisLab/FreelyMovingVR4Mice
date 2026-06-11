@@ -43,9 +43,10 @@ class Teensy(object):
             self.start_read_buffer()
 
     def connect_serial(self):
-        """
-            method initiates serial communication protocol and reset buffer
+        """Initiates serial communication protocol and reset buffer.
+            
             default timeout = 0
+            
             Exceptions:
                 ignored
         """
@@ -64,7 +65,7 @@ class Teensy(object):
         while self.reading:
             if self.ser.inWaiting() > delta:
                 if buffer:
-                    buffer = buffer + self.ser.read()#(self.ser.in_waiting)
+                    buffer = buffer + self.ser.read()
                 else:
                     buffer = self.ser.read()
                 if self.end_bytes in buffer:
@@ -79,7 +80,7 @@ class Teensy(object):
             saves the time of start
         """
         self.start_read_time = time.time()
-        self.reading = False #True
+        self.reading = True
         threading.Thread(target=self.read_on_thread, daemon=True).start()
 
     def read(self, index=-1, input=None):
