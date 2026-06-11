@@ -1,10 +1,19 @@
 # Docker runtime dependencies (pinned for DeepLabCut base image compatibility).
-# seaborn==0.13.0: newer seaborn pulls numpy 1.26 and breaks Numba ("NumPy 1.24 or less").
-# black==22.6: newer 2.0.3 breaks tom's code.
-datajoint==0.14
-seaborn==0.13.0
-pandas==1.4.3
-numpy==1.22.4
-jupyter
-umap-learn
-black==22.6
+# Base image: deeplabcut/deeplabcut:3.0.0-core-cuda12.4-cudnn9
+# Installed by dj_pipeline/Dockerfile: pip install -r requirements-docker.txt
+#
+# black==22.6.0: newer 2.0.x breaks tom's code.
+# numpy/pandas/scipy/seaborn pinned as a set — unpinned installs drift and can
+# break Numba / DeepLabCut on base-image upgrades.
+datajoint==2.2.4
+cryptography==48.0.1
+numpy==1.26.4
+pandas==2.2.3
+scipy==1.15.2
+seaborn==0.13.2
+jupyter==1.1.1
+umap-learn==0.5.12
+black==22.6.0
+pytest==9.0.3
+pytest-cov==7.1.0
+tables==3.8.0

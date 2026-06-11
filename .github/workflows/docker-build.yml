@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'dj_pipeline/Dockerfile'
+      - 'dj_pipeline/requirements-docker.txt'
       - '.github/workflows/docker-build.yml'
 
 jobs:

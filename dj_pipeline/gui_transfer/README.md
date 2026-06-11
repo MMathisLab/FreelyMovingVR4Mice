@@ -32,7 +32,11 @@ PyQt5 GUI for capturing experiment metadata on the rig and transferring session 
    make run_gui
    ```
 
-On startup, `Config.get_menu_path` copies the server dropdown menu (`gui_menu.npy`) to the rig so mice, experimenters, rigs, and tasks populate from DataJoint.
+On startup, `config.get_menu_path` copies the server dropdown menu (`gui_menu.npy`) to the rig:
+- **`localhost`**: copies `remote_dropdown_menu` → `host_dropdown_menu` locally
+- **remote server**: `scp host@ip:remote_dropdown_menu` → `host_dropdown_menu`
+
+If the copy or `scp` fails, the GUI logs a warning and exits. Run `python run.py fetch` on the server first (see **Server-side prerequisite** below).
 
 ## GUI modules
 

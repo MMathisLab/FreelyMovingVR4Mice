@@ -25,17 +25,13 @@ RUN if [ -n "$APT_MIRROR" ]; then \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-RUN pip install -U pip setuptools wheel packaging
+COPY requirements-docker.txt /requirements-docker.txt
+RUN pip install -U pip setuptools wheel packaging \
+    && pip install -r /requirements-docker.txt
 
-RUN pip install "datajoint>=2.0.1" \
-    cryptography \
-    pandas \
-    scipy \
-    seaborn \
-    jupyter \
-    umap-learn \
-    black==22.6 \
-    pytest pytest-cov tables
+COPY docker/ensure_python_shims.sh /usr/local/bin/ensure_python_shims.sh
+RUN chmod +x /usr/local/bin/ensure_python_shims.sh \
+    && bash -c '. /usr/local/bin/ensure_python_shims.sh && ensure_python_shims'
 
 COPY docker/ensure_python_shims.sh /usr/local/bin/ensure_python_shims.sh
 RUN chmod +x /usr/local/bin/ensure_python_shims.sh \

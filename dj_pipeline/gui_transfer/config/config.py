@@ -90,7 +90,7 @@ class Config:
         Returns the host address of the configured system.
     get_dst_path()
         Returns the destination path for remote files.
-    get_menu_path()
+    get_menu_path (property)
         Copies the remote dropdown menu to the local host and returns its path.
     get_gui_output_folder_path()
         Returns the path to the configured GUI output folder.
@@ -148,7 +148,7 @@ class Config:
                 cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE
             )
             stdout, stderr = process.communicate()
-            exit_code = process.returncode
+            if process.returncode != 0:
                 logger.warning(f"{cmd} failed: {stdout} {stderr}")
                 return False
             self.config_dict["dropdown_menu"] = dst
