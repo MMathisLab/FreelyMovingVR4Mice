@@ -83,6 +83,8 @@ class DataFrame(dj.Computed):
     trial_right_choice: <blob>
     trial_left_choice: <blob>
 
+    trial_step_fraction=NULL: <blob>      # OLD: TO DEPRECATE (same as trial_step?)
+   
     aperture=NULL: <blob>                 # NEW
     time=NULL: <blob>                     # NEW
     time_elapsed=NULL: <blob>             # NEW
