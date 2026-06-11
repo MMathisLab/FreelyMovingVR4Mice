@@ -19,9 +19,7 @@ logger = logger.Logger.get_logger()
 def _complete_dlc_key(key: dict) -> dict:
     """Return the full `vr4mice.DLC` primary key for `key` when needed."""
     if "camera" not in key or "doe" not in key:
-        matches = (vr4mice.DLC() & key).fetch(
-            *vr4mice.DLC().primary_key, as_dict=True
-        )
+        matches = (vr4mice.DLC() & key).fetch(*vr4mice.DLC().primary_key, as_dict=True)
         if len(matches) == 0:
             raise KeyError(
                 f"No vr4mice.DLC entry found to complete key from partial key: {key}"
