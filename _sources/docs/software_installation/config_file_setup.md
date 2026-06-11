@@ -11,10 +11,14 @@ The local `vr4mice/cfg` is the default "config folder" (in case of absence of _c
 
 
 ## Task config file 
-This config file specifies the paths to dlc models and the unity game
-Adjust absolute paths in [mouse_task/task_config.json](mouse_task/task_config.json)
+This config file specifies the paths to DLC models and the Unity game.  Please create it in the `mouse_task/` directory as `task_config.json`. Then specify absolute paths using the following template:
 
-"ar_env_unity_absolute_path": path to unity binary environment</br>
+```{json}
+{
+    "model_absolute_path": "path/to/dlc/model/weights",
+    "ar_env_unity_absolute_path": "path/to/unity/build"
+}
+```
 
 ***Note: don't modify config file location and key-words in .json***
 
