@@ -1,5 +1,4 @@
 import logging
-import os
 import warnings
 import argparse
 
@@ -15,15 +14,6 @@ def main():
         "--aws", action="store_true", help="Enable AWS-specific execution."
     )
     args = parser.parse_args()
-
-    repo_dir = os.path.dirname(os.path.abspath(__file__))
-    from vr4mice.utils.env_files import load_env_file, require_dj_env
-
-    if args.aws:
-        load_env_file(os.path.join(repo_dir, ".env-aws"), override=True)
-    else:
-        load_env_file(os.path.join(repo_dir, ".env"), override=True)
-    require_dj_env()
 
     from base_actions.connect import connect
     from vr4mice.utils.logger import Logger, config_logger

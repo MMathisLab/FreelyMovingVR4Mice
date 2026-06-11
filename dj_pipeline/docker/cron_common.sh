@@ -55,7 +55,12 @@ vr4mice_run_cron_scenario() {
     vr4mice_check_env_file ".env" ".env.example"
   fi
 
-  local cmd="${BASE_INSTALL} && python cron_scenario.py"
+  local env_file=".env"
+  if [[ "${aws_mode}" == "aws" ]]; then
+    env_file=".env-aws"
+  fi
+
+  local cmd="${BASE_INSTALL} && set -a && source ${env_file} && set +a && python cron_scenario.py"
   if [[ "${aws_mode}" == "aws" ]]; then
     cmd="${cmd} --aws"
   fi
