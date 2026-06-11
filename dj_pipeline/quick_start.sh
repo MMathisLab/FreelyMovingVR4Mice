@@ -218,7 +218,7 @@ if [ "${MODE}" = "deployment" ]; then
   fi
   if [ -d "${DB_ROOT}" ] && [ "$(ls -A "${DB_ROOT}" 2>/dev/null)" ]; then
     DB_IMAGE_DETECTED="$(bash "${REPO_DIR}/docker/detect_mysql_image.sh" "${DB_ROOT}")"
-    echo "Warning: ${DB_ROOT} is not empty. Detected MySQL datadir: ${DB_IMAGE_DETECTED}."
+    echo "Warning: ${DB_ROOT} is not empty. Detected MySQL image: ${DB_IMAGE_DETECTED}."
     echo "  DB_IMAGE will be set accordingly in .env.compose (override with DB_IMAGE=... if needed)."
   else
     DB_IMAGE_DETECTED="mysql:8.0"

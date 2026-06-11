@@ -51,8 +51,7 @@ vr4mice_load_compose_env() {
     DB_IMAGE="$(bash "${detect_script}" "${DB_DATA_PATH:-}")"
   fi
   export DB_IMAGE
-  bash "${detect_script}" check "${DB_DATA_PATH:-}" "${DB_IMAGE}" 2>/dev/null || true
-}
+  bash "${detect_script}" check "${DB_DATA_PATH:-}" "${DB_IMAGE}" || true
 
 vr4mice_compose_exec() {
   vr4mice_load_compose_env
