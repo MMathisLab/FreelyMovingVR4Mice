@@ -26,6 +26,7 @@ It is designed to run from the client container and can be scheduled via cron.
 - `base/`: base schemas and actions (full and minimal modes: mice, exp tables, connections and email functions).
 - `backup/`: backup helpers (local/remote sync scripts).
 - `cron_*.sh`: cron wrappers for scheduled runs (standard, reboot, AWS).
+- `Dockerfile` + `requirements-docker.txt`: client image build and pinned runtime dependencies.
 - `docker/entrypoint.sh`: creates runtime user (PUID/PGID) and drops privileges with `gosu`.
 - `docker/cron_common.sh`: shared helpers for cron scripts and compose exec.
 - `generators/`: small utilities to create helper tables/files (e.g., add mice).
@@ -34,26 +35,14 @@ It is designed to run from the client container and can be scheduled via cron.
 - `notebooks/`: analysis and figure notebooks (research use).
 - Logs are written on the **server** in a local `logs/` folder and are not part of the repo.
 
-## vr4mice module guide (key folders)
-### `vr4mice/schema`
-DataJoint table definitions for core pipeline:
-- `vr4mice`: raw/session tables and metadata.
-- `base`, `base_analysis`: analysis and summary outputs.
-- `dlc`, `interpolated_trajectories`, `latency_tests`, `decision`, `inputs_videos`: downstream modules.
+## vr4mice module guide
 
-### `vr4mice/actions`
-Orchestration helpers and ingestion utilities:
-- `populate_rig.py`: main raw-data ingest for `.pickle`/`.npy`.
-- `fetch_data.py`: builds GUI dropdown `.npy` (menu).
-- `sync_days.py`: sync/backfill missing days/sessions.
-- `keys2tables_*.py`: map GUI/rig keys to table attributes.
-- `helpers_dj.py`: shared DataJoint helpers used by actions.
+See [`vr4mice/README.md`](vr4mice/README.md). Key components:
 
-### `vr4mice/analysis`
-Computation and plotting utilities used by schema tables:
-- `analysis.py`: core session dataframe and derived metrics.
-- `latency_testing.py`, `inputs_videos.py`: latency and sync utilities.
-- `regression.py`, `stats.py`, `plotting.py`: downstream analyses and visualization.
+- `schema/`: DataJoint table definitions.
+- `analysis/`: analysis helpers and plotting.
+- `actions/`: orchestration helpers (ingest, sync, fetch).
+- `utils/`: logging, schema config, connections.
 
 ### `gui_transfer`
 Rig GUI and transfer utilities:
@@ -175,19 +164,27 @@ make client_down
 ```
 
 
-#### DataJoint database user remote access via Jupyter Notebook (tested with Python 3.9.5):
-1. Assuming that Jupyter Notebook and DataJoint are installed, "vr4mice" repository is loaded, and "base_schemas" are pip-installed:  
+#### Jupyter / IPython access (recommended: Docker client)
+
+Use `make notebook` or `make ipython` in the client container — dependencies match `requirements-docker.txt` (DataJoint 2.x).
+
+#### Host Jupyter (legacy / outside Docker)
+
+1. Install matching packages and base schemas:
    ```bash
-   pip install notebook datajoint==0.14.0  # later versions enforce CamelCase for class names
+   pip install notebook "datajoint>=2.0.1"
    pip install base/base_actions/
    pip install base/base_min_schemas/
    ```
-2. Make sure the "graphviz" package is available if you want to display images (i.e. schema diagrams): `sudo apt install -y graphviz`
-3. Update the information in the `env.py` file (IP of server, username provided by administrator)
-4. From the current directory, start `jupyter notebook` and launch a Python3 kernel
-5. `%run env.py` to load environmental variables
-6. `%run run.py connect` to connect to the DJ database
-7. Bravo! Data can now be fetched with ```vr4mice.Dataset()``` (relative imports were done in the `run.py` script)
+2. Install graphviz if you want schema diagrams: `sudo apt install -y graphviz`
+3. Update `env.py` (server IP, credentials from your administrator)
+4. Start `jupyter notebook`, open a Python 3 kernel, then:
+   ```python
+   %run env.py
+   %run run.py connect
+   from vr4mice.schema import vr4mice
+   vr4mice.Dataset()
+   ```
 
 
 ## Deployment (server)
@@ -208,7 +205,7 @@ make ipython
 
 ### Docker client: base packages and user mapping
 
-The client image is built from DeepLabCut’s Docker image. Pipeline commands use plain `python -m pip` (**no** `conda activate`). At build time and container start, `docker/ensure_python_shims.sh` symlinks the base image’s Python into `/usr/local/bin` so `make`, cron, and `docker compose exec` all find `python` on the compose `PATH`.
+The client image is built from DeepLabCut’s Docker image. Build-time Python dependencies are pinned in `requirements-docker.txt` and installed by `Dockerfile` (`pip install -r requirements-docker.txt`). Pipeline commands use plain `python -m pip` (**no** `conda activate`). At build time and container start, `docker/ensure_python_shims.sh` symlinks the base image’s Python into `/usr/local/bin` so `make`, cron, and `docker compose exec` all find `python` on the compose `PATH`.
 
 **`base_schemas` / `base_actions`** are bind-mounted from the repo and installed at runtime with pip:
 
@@ -365,7 +362,7 @@ mkdir -p /mnt/database/shared   # or your SHARED_PATH
    | `remote_dropdown_menu` | Path to menu file **on the server** | `/shared/gui_menu.npy` |
    | `host_dropdown_menu` | Local copy path on the rig | `./gui_menu.npy` |
 
-   On startup, `config.get_menu_path()` copies the remote file to the rig:
+   On startup, `config.get_menu_path` (a property on the `Config` instance) copies the menu file to the rig:
    - **`localhost`**: local file copy from `remote_dropdown_menu` to `host_dropdown_menu` (both paths must be readable on the same machine)
    - **remote server**: `scp host@ip:remote_dropdown_menu` → `host_dropdown_menu` (requires SSH access and the menu file on the server)
 
@@ -375,7 +372,7 @@ mkdir -p /mnt/database/shared   # or your SHARED_PATH
    - Linux: `make run_gui` from `gui_transfer/`
    - Windows: use the provided batch file example and adjust paths.
 
-If the menu file is missing or `scp` fails, the GUI logs a warning and dropdowns will be empty until `run.py fetch` has been run on the server and paths/credentials are correct.
+If the menu file is missing or `scp` fails, the GUI logs a warning and exits — fix paths/credentials and ensure `run.py fetch` has been run on the server before restarting the GUI.
 
 Further GUI module details: `gui_transfer/README.md`.
 
@@ -387,6 +384,7 @@ Typical sequence:
 %run run.py populate
 %run run.py analysis
 %run run.py summary
+%run run.py fetch    # refresh GUI dropdown menu on /shared
 ...
 ```
 

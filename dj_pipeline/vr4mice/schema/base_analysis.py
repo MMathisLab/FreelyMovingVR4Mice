@@ -11,6 +11,7 @@ from base_actions.send_email import email
 
 from vr4mice.schema import base, vr4mice
 from vr4mice.analysis.summary_dj import vr4mice_summary_plots
+from vr4mice.utils.git_helpers import parse_git_commit_file
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
 
@@ -450,26 +451,3 @@ class GitCommit(dj.Computed):
             )
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
-
-
-def parse_git_commit_file(filename="git_commit"):
-    """Parse a git commit file into hash and modified file list."""
-    commit_hash = None
-    modified_files = []
-
-    try:
-        with open(filename, "r") as file:
-            lines = file.readlines()
-
-            for line in lines:
-                line = line.strip()
-                if line.startswith("commit "):
-                    commit_hash = line.split()[1]
-                elif line.startswith("M "):
-                    modified_files.append(line)
-
-        return {"commit_hash": commit_hash, "changed_files": modified_files}
-
-    except FileNotFoundError:
-        logger.warning(f"Error: File '{filename}' not found.")
-        return {"commit_hash": "", "changed_files": []}

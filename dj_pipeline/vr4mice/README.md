@@ -2,14 +2,12 @@
 
 DataJoint schemas, ingestion actions, and analysis helpers for the pipeline.
 
-## Layout
+## Key components
 
-| Folder | Contents |
-|--------|----------|
-| `schema/` | Table definitions (`vr4mice`, `base_analysis`, `dlc`, `decision`, …) |
-| `actions/` | Ingest, sync, GUI menu export (`populate_rig.py`, `fetch_data.py`, …) |
-| `analysis/` | Session metrics, plotting, regression utilities |
-| `utils/` | Logging, env loading, shared helpers |
+- `schema/`: DataJoint table definitions.
+- `analysis/`: analysis helpers and plotting.
+- `actions/`: orchestration helpers (ingest, sync, fetch).
+- `utils/`: logging, schema config, connections.
 
 ## Entry points
 

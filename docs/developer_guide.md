@@ -68,7 +68,7 @@ Strip all notebooks manually before a PR if needed:
 find dj_pipeline mouse_task -name '*.ipynb' -exec nbstripout {} +
 ```
 
-Never commit `.env`, `.env.compose`, `.env-aws`, or `gui_transfer/config/local_config.json` (use the matching `*.example` templates).
+Never commit `.env`, `.env.compose`, `.env-aws`, or rig-specific GUI config (`gui_transfer/config/config.json` — copy from `local_config.json.example`).
 
 CI runs `.github/workflows/security.yml` on PRs to main: **gitleaks**, **nbstripout --verify**, blocklisted tracked files, and internal host pattern checks.
 
