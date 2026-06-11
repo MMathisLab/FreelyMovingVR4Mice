@@ -149,7 +149,17 @@ class Config:
             )
             stdout, stderr = process.communicate()
             if process.returncode != 0:
-                logger.warning(f"{cmd} failed: {stdout} {stderr}")
+                stdout_s = (
+                    stdout.decode(errors="replace")
+                    if isinstance(stdout, (bytes, bytearray))
+                    else str(stdout)
+                )
+                stderr_s = (
+                    stderr.decode(errors="replace")
+                    if isinstance(stderr, (bytes, bytearray))
+                    else str(stderr)
+                )
+                logger.warning(f"{cmd} failed: {stdout_s} {stderr_s}")
                 return False
             self.config_dict["dropdown_menu"] = dst
 
