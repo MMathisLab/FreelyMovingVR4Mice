@@ -216,9 +216,7 @@ def check_files(key, filename, format, current_mouse=None):
     return ret
 
 
-def check_file_format(
-    key, filename, format, current_mouse=None
-):
+def check_file_format(key, filename, format, current_mouse=None):
     """
     Check if the file format of the given file matches the expected format for the given key.
 

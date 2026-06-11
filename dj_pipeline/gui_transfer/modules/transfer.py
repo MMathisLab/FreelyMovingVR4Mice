@@ -306,9 +306,7 @@ class Transfer(Template):
         format = self.get_format(key)
         multiple_on = False
 
-        if (
-            multiple_on and key == "dlc_path"
-        ):
+        if multiple_on and key == "dlc_path":
             filenames, _ = QFileDialog.getOpenFileNames(
                 self.widget,
                 "Select Files",

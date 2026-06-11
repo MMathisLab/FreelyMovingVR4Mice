@@ -144,9 +144,7 @@ class Mouse(Template):
                     lambda evt, temp=dj_dict: self._selected_mouse_callback(evt, temp)
                 )
                 if key in json_dict.keys():
-                    self.values[key].setCurrentText(
-                        json_dict[key]
-                    )
+                    self.values[key].setCurrentText(json_dict[key])
 
             else:
                 self.values[key] = QLabel("")
@@ -198,9 +196,7 @@ class Mouse(Template):
                 options = list(dj_dict["MouseDict"])
                 tmp = [x.lower() for x in options]
                 if mouse.lower() not in tmp:
-                    msg = (
-                        "Mouse " + mouse + " doesn't exist in the database!"
-                    )
+                    msg = "Mouse " + mouse + " doesn't exist in the database!"
                     AlertMsg(self.widget, msg).exec()
                     return False
                 for x in options:
