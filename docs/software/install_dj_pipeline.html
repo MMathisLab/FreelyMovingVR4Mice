@@ -466,6 +466,7 @@ document.write(`
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment-server">Deployment (server)</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#server-deployment-database-client-containers">Server deployment (database + client containers)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-client-base-packages-and-user-mapping">Docker client: base packages and user mapping</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mounts-and-storage">Mounts and storage</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment-defaults-quick-start-sh">Deployment defaults (quick_start.sh)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#database-deployment-notes-server">Database deployment notes (server)</a></li>
@@ -479,8 +480,22 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-installation-rig-related">GUI installation (rig-related)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manual-runs-run-py">Manual runs (run.py)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-quick-sanity">Testing / quick sanity</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#automated-runs-cron">Automated runs (cron)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#aws-mode">AWS mode</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-and-docker-operations">Cron and Docker operations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#architecture">Architecture</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#makefile-targets-common">Makefile targets (common)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crontab-setup">Crontab setup</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites-on-the-server">Prerequisites on the server</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#manual-test-before-enabling-cron">Manual test (before enabling cron)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#migrating-compose-project-name">Migrating compose project name</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-deployments-on-one-server">Multiple deployments on one server</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#shared-repo-checkout-another-user-same-server">Shared repo checkout (another user, same server)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#git-use-your-own-credentials">Git — use your own credentials</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-client-under-your-username">Docker — client under your username</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#aws-mode-pipeline-behaviour">AWS mode (pipeline behaviour)</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backup-and-aws-sync">Backup and AWS sync</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling-and-failedsession">Error handling and FailedSession</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gitcommit-table">GitCommit table</a></li>
@@ -527,6 +542,8 @@ It is designed to run from the client container and can be scheduled via cron.</
 <li><p><code class="docutils literal notranslate"><span class="pre">base/</span></code>: base schemas and actions (full and minimal modes: mice, exp tables, connections and email functions).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">backup/</span></code>: backup helpers (local/remote sync scripts).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">cron_*.sh</span></code>: cron wrappers for scheduled runs (standard, reboot, AWS).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docker/entrypoint.sh</span></code>: creates runtime user (PUID/PGID) and drops privileges with <code class="docutils literal notranslate"><span class="pre">gosu</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docker/cron_common.sh</span></code>: shared helpers for cron scripts and compose exec.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">generators/</span></code>: small utilities to create helper tables/files (e.g., add mice).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">parse_mice/</span></code>: parsing helpers for mouse metadata files.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">mysql_access/</span></code>: SQL templates for user setup.</p></li>
@@ -744,6 +761,37 @@ make<span class="w"> </span>ipython
 </pre></div>
 </div>
 </section>
+<section id="docker-client-base-packages-and-user-mapping">
+<h3>Docker client: base packages and user mapping<a class="headerlink" href="#docker-client-base-packages-and-user-mapping" title="Permalink to this heading">#</a></h3>
+<p>The client image is built from DeepLabCut’s Docker image. Pipeline commands use plain <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span></code> (<strong>no</strong> <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span></code>). At build time and container start, <code class="docutils literal notranslate"><span class="pre">docker/ensure_python_shims.sh</span></code> symlinks the base image’s Python into <code class="docutils literal notranslate"><span class="pre">/usr/local/bin</span></code> so <code class="docutils literal notranslate"><span class="pre">make</span></code>, cron, and <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">exec</span></code> all find <code class="docutils literal notranslate"><span class="pre">python</span></code> on the compose <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">base_schemas</span></code> / <code class="docutils literal notranslate"><span class="pre">base_actions</span></code></strong> are bind-mounted from the repo and installed at runtime with pip:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>--no-deps<span class="w"> </span>/base_schemas/
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>--no-deps<span class="w"> </span>/base_actions/
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">client_up</span></code>, <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">base_install</span></code>, and the cron scripts run pip as the caller’s UID/GID; packages and cache live under <code class="docutils literal notranslate"><span class="pre">/app/.local</span></code> and <code class="docutils literal notranslate"><span class="pre">/app/.cache/pip</span></code> on the bind-mounted repo (not under <code class="docutils literal notranslate"><span class="pre">/home/&lt;username&gt;</span></code>), so any user with access to the repo can run the client.</p>
+<p><strong>Running as your host user</strong> (file permissions on <code class="docutils literal notranslate"><span class="pre">/app</span></code>, <code class="docutils literal notranslate"><span class="pre">/data</span></code>, etc.) is handled by Docker, not conda:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Layer</p></th>
+<th class="head"><p>Mechanism</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Container start</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">docker/entrypoint.sh</span></code> — <code class="docutils literal notranslate"><span class="pre">useradd</span></code> with <code class="docutils literal notranslate"><span class="pre">PUID</span></code>/<code class="docutils literal notranslate"><span class="pre">PGID</span></code>/<code class="docutils literal notranslate"><span class="pre">USERNAME</span></code>, then <code class="docutils literal notranslate"><span class="pre">gosu</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Compose</p></td>
+<td><p>passes <code class="docutils literal notranslate"><span class="pre">UID</span></code>, <code class="docutils literal notranslate"><span class="pre">GID</span></code>, <code class="docutils literal notranslate"><span class="pre">USER_NAME</span></code> from the host (<code class="docutils literal notranslate"><span class="pre">Makefile</span></code> exports these)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">make</span></code> / cron exec</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">exec</span> <span class="pre">--user</span> <span class="pre">&quot;$(UID):$(GID)&quot;</span> <span class="pre">client</span> <span class="pre">…</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Host conda</strong> (<code class="docutils literal notranslate"><span class="pre">env.py</span></code>, <code class="docutils literal notranslate"><span class="pre">vr4mice_env</span></code> on the rig, DLCliveGUI) is a separate install path for non-Docker workflows. It is not used inside the client container.</p>
+</section>
 <section id="mounts-and-storage">
 <h3>Mounts and storage<a class="headerlink" href="#mounts-and-storage" title="Permalink to this heading">#</a></h3>
 <p>In <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code>, map host storage for database and data volumes:</p>
@@ -752,7 +800,7 @@ make<span class="w"> </span>ipython
 <li><p><code class="docutils literal notranslate"><span class="pre">/shared</span></code> is used for GUI menu exports.</p></li>
 <li><p>Use persistent paths (e.g., <code class="docutils literal notranslate"><span class="pre">/mnt/database/...</span></code>) on the server.
 Network mode:</p></li>
-<li><p>Default is <code class="docutils literal notranslate"><span class="pre">host</span></code>. Set <code class="docutils literal notranslate"><span class="pre">CLIENT_NETWORK_MODE=bridge</span></code> in <code class="docutils literal notranslate"><span class="pre">.env</span></code> if you need bridge networking.</p></li>
+<li><p>Default is <code class="docutils literal notranslate"><span class="pre">host</span></code>. Set <code class="docutils literal notranslate"><span class="pre">CLIENT_NETWORK_MODE=bridge</span></code> in <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code> if you need bridge networking.</p></li>
 </ul>
 </section>
 <section id="deployment-defaults-quick-start-sh">
@@ -799,18 +847,21 @@ mkdir<span class="w"> </span>-p<span class="w"> </span>/shared
 </section>
 <section id="environment-variables">
 <h3>Environment variables<a class="headerlink" href="#environment-variables" title="Permalink to this heading">#</a></h3>
-<p>Common variables used by the pipeline:</p>
+<p><strong>Pipeline</strong> (<code class="docutils literal notranslate"><span class="pre">.env</span></code> — copy from <code class="docutils literal notranslate"><span class="pre">.env.example</span></code>; loaded into the client container):</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">DJ_HOST</span></code> (include port, e.g. <code class="docutils literal notranslate"><span class="pre">127.0.0.1:3309</span></code>), <code class="docutils literal notranslate"><span class="pre">DJ_USER</span></code>, <code class="docutils literal notranslate"><span class="pre">DJ_PWD</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DJ_LAB</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">GUI</span></code> (true/false)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">EMAIL</span></code> (true/false)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">IMG_SRC</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS</span></code> (comma-separated experimenter names)
-Docker-specific overrides (optional):</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DJ_LAB</span></code>, <code class="docutils literal notranslate"><span class="pre">GUI</span></code>, <code class="docutils literal notranslate"><span class="pre">EMAIL</span></code>, <code class="docutils literal notranslate"><span class="pre">IMG_SRC</span></code>, <code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS</span></code></p></li>
+</ul>
+<p>When using the local Docker database, <code class="docutils literal notranslate"><span class="pre">DJ_HOST</span></code> port must match <code class="docutils literal notranslate"><span class="pre">DB_PORT</span></code> in <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code>.</p>
+<p><strong>Docker Compose</strong> (<code class="docutils literal notranslate"><span class="pre">.env.compose</span></code> — copy from <code class="docutils literal notranslate"><span class="pre">.env.compose.example</span></code>; used by <code class="docutils literal notranslate"><span class="pre">make</span></code>, cron, and <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code> only):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">COMPOSE_PROJECT</span></code> (default <code class="docutils literal notranslate"><span class="pre">vr4mice</span></code>) — must match between <code class="docutils literal notranslate"><span class="pre">make</span></code>, cron scripts, and manual <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">-p</span> <span class="pre">…</span></code> calls</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">DB_BIND_IP</span></code>, <code class="docutils literal notranslate"><span class="pre">DB_PORT</span></code>, <code class="docutils literal notranslate"><span class="pre">MYSQL_ROOT_PASSWORD</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">DB_DATA_PATH</span></code>, <code class="docutils literal notranslate"><span class="pre">SHARED_PATH</span></code>, <code class="docutils literal notranslate"><span class="pre">DATA_PATH</span></code>, <code class="docutils literal notranslate"><span class="pre">SCREEN_RECORDINGS_PATH</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CLIENT_IMAGE</span></code>, <code class="docutils literal notranslate"><span class="pre">CLIENT_CONTAINER_NAME</span></code>, <code class="docutils literal notranslate"><span class="pre">DB_CONTAINER_NAME</span></code>, <code class="docutils literal notranslate"><span class="pre">CLIENT_NETWORK_MODE</span></code>, <code class="docutils literal notranslate"><span class="pre">JUPYTER_PORT</span></code></p></li>
 </ul>
+<p>Remote/AWS DB credentials for scheduled AWS runs live in <code class="docutils literal notranslate"><span class="pre">.env-aws</span></code> (copy from <code class="docutils literal notranslate"><span class="pre">.env-aws.example</span></code>); this file is <strong>not</strong> committed.</p>
+<p>If you still have Docker settings in <code class="docutils literal notranslate"><span class="pre">.env</span></code> from an older setup, move them to <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code> (Makefile falls back to <code class="docutils literal notranslate"><span class="pre">.env</span></code> for <code class="docutils literal notranslate"><span class="pre">COMPOSE_PROJECT</span></code> only during migration).</p>
 <p>Notes:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS</span></code> is required if base schemas (exp/mice) are not in use,
@@ -896,22 +947,248 @@ Use GUI mode when experiment metadata is collected via the rig GUI.</p></li>
 </li>
 </ul>
 </section>
-<section id="automated-runs-cron">
-<h2>Automated runs (cron)<a class="headerlink" href="#automated-runs-cron" title="Permalink to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">cron_scenario.py</span></code> executes the full pipeline in order with per-step logging.
-It is usually invoked via a bash wrapper and added to <code class="docutils literal notranslate"><span class="pre">crontab</span></code>:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">cron_script.sh</span></code> (nightly)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cron_script_reboot.sh</span></code> (on reboot)</p></li>
-</ul>
+<section id="cron-and-docker-operations">
+<h2>Cron and Docker operations<a class="headerlink" href="#cron-and-docker-operations" title="Permalink to this heading">#</a></h2>
+<p>Scheduled pipeline runs use wrapper shell scripts that call <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code> with project name <strong><code class="docutils literal notranslate"><span class="pre">vr4mice</span></code></strong> (override via <code class="docutils literal notranslate"><span class="pre">COMPOSE_PROJECT</span></code> in <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code> or the environment). Shared logic lives in <code class="docutils literal notranslate"><span class="pre">docker/cron_common.sh</span></code>.</p>
+<section id="architecture">
+<h3>Architecture<a class="headerlink" href="#architecture" title="Permalink to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Component</p></th>
+<th class="head"><p>Role</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cron_scenario.py</span></code></p></td>
+<td><p>Runs populate → analysis → DLC → … with per-step logging; exits non-zero if any step fails</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">docker/cron_common.sh</span></code></p></td>
+<td><p>Shared compose/exec helpers (project name, UID/GID, pip install)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cron_script.sh</span></code></p></td>
+<td><p>Local nightly run (<code class="docutils literal notranslate"><span class="pre">/data/data</span></code>, video tables, shared export)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cron_script_aws.sh</span></code></p></td>
+<td><p>AWS/remote run (<code class="docutils literal notranslate"><span class="pre">/data/processed</span></code>, decision tables); requires <code class="docutils literal notranslate"><span class="pre">.env-aws</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cron_script_reboot.sh</span></code></p></td>
+<td><p>After host reboot: wait 120s, start <code class="docutils literal notranslate"><span class="pre">db</span></code> + <code class="docutils literal notranslate"><span class="pre">client</span></code>, install base packages</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Makefile</span></code></p></td>
+<td><p>Same compose project and exec pattern as cron scripts</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Docker client vs host conda:</strong> the client container uses system Python + pip (DeepLabCut base image). Conda on the rig or laptop (<code class="docutils literal notranslate"><span class="pre">env.py</span></code>, <code class="docutils literal notranslate"><span class="pre">vr4mice_env</span></code>, DLCliveGUI) is a separate install path and is not used inside the Docker client. Base package install and user mapping are described under <span class="xref myst">Docker client: base packages and user mapping</span>.</p>
 </section>
-<section id="aws-mode">
-<h2>AWS mode<a class="headerlink" href="#aws-mode" title="Permalink to this heading">#</a></h2>
+<section id="makefile-targets-common">
+<h3>Makefile targets (common)<a class="headerlink" href="#makefile-targets-common" title="Permalink to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Target</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">client_up</span></code></p></td>
+<td><p>Start client, install <code class="docutils literal notranslate"><span class="pre">base_schemas</span></code> / <code class="docutils literal notranslate"><span class="pre">base_actions</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">up_all</span></code></p></td>
+<td><p>Start <code class="docutils literal notranslate"><span class="pre">db</span></code> + <code class="docutils literal notranslate"><span class="pre">client</span></code>, install base packages</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">base_install</span></code></p></td>
+<td><p>Re-install base packages in running client</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">ipython</span></code> / <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">notebook</span></code></p></td>
+<td><p>Interactive session in client</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">add-cron</span></code></p></td>
+<td><p>Install/update crontab entries (see below)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">cron-local</span></code></p></td>
+<td><p>Manual local cron run</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">cron-aws</span></code></p></td>
+<td><p>Manual AWS cron run</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">cron-reboot</span></code></p></td>
+<td><p>Manual reboot startup script</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>All compose commands use <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">-p</span> <span class="pre">vr4mice</span></code> by default (<code class="docutils literal notranslate"><span class="pre">COMPOSE_PROJECT</span></code> in <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> / <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code>).</p>
+</section>
+<section id="crontab-setup">
+<h3>Crontab setup<a class="headerlink" href="#crontab-setup" title="Permalink to this heading">#</a></h3>
+<p>From <code class="docutils literal notranslate"><span class="pre">dj_pipeline/</span></code> on the server:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>add-cron
+</pre></div>
+</div>
+<p>This merges (does not wipe) your crontab and registers:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Schedule</p></th>
+<th class="head"><p>Script</p></th>
+<th class="head"><p>Log</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;reboot</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cron_script_reboot.sh</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">~/vr4mice_logs/cron_reboot.log</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">2</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">*</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cron_script.sh</span> <span class="pre">&amp;&amp;</span> <span class="pre">cron_script_aws.sh</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">~/vr4mice_logs/cron.log</span></code> then <code class="docutils literal notranslate"><span class="pre">~/vr4mice_logs/cron_aws.log</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The nightly job runs <strong>local first</strong>; <strong>AWS runs only if local exits successfully</strong> (<code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code> chain). <code class="docutils literal notranslate"><span class="pre">cron_scenario.py</span></code> must exit 0 (no failed steps) for AWS to start.</p>
+</section>
+<section id="prerequisites-on-the-server">
+<h3>Prerequisites on the server<a class="headerlink" href="#prerequisites-on-the-server" title="Permalink to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">.env</span></code> — pipeline / DataJoint credentials (see <code class="docutils literal notranslate"><span class="pre">.env.example</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.env.compose</span></code> — Docker Compose settings (see <code class="docutils literal notranslate"><span class="pre">.env.compose.example</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.env-aws</span></code> — remote DB credentials for AWS runs (see <code class="docutils literal notranslate"><span class="pre">.env-aws.example</span></code>)</p></li>
+<li><p>Docker daemon running; cron user in the <code class="docutils literal notranslate"><span class="pre">docker</span></code> group</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">add-cron</span></code> from <code class="docutils literal notranslate"><span class="pre">dj_pipeline/</span></code> (paths are resolved from that directory)</p></li>
+</ol>
+</section>
+<section id="manual-test-before-enabling-cron">
+<h3>Manual test (before enabling cron)<a class="headerlink" href="#manual-test-before-enabling-cron" title="Permalink to this heading">#</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>dj_pipeline
+make<span class="w"> </span>cron-local<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span>cron-aws
+<span class="c1"># or:</span>
+bash<span class="w"> </span>cron_script.sh<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>bash<span class="w"> </span>cron_script_aws.sh
+</pre></div>
+</div>
+</section>
+<section id="migrating-compose-project-name">
+<h3>Migrating compose project name<a class="headerlink" href="#migrating-compose-project-name" title="Permalink to this heading">#</a></h3>
+<p>Older setups may have containers under project <code class="docutils literal notranslate"><span class="pre">mysqltest</span></code>. After updating:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">COMPOSE_PROJECT</span><span class="o">=</span>mysqltest<span class="w"> </span>make<span class="w"> </span>down_all<span class="w">   </span><span class="c1"># stop old stack</span>
+</pre></div>
+</div>
+<p>Then start with your project name in <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code> (or legacy <code class="docutils literal notranslate"><span class="pre">COMPOSE_PROJECT=mysqltest</span> <span class="pre">make</span> <span class="pre">up_all</span></code> if you have not migrated yet).</p>
+</section>
+<section id="multiple-deployments-on-one-server">
+<h3>Multiple deployments on one server<a class="headerlink" href="#multiple-deployments-on-one-server" title="Permalink to this heading">#</a></h3>
+<p>Other <code class="docutils literal notranslate"><span class="pre">vr4mice_*</span></code> compose projects on the same host are <strong>fine</strong> for the primary stack (<code class="docutils literal notranslate"><span class="pre">COMPOSE_PROJECT=vr4mice</span></code>) as long as <strong>container names</strong> and <strong><code class="docutils literal notranslate"><span class="pre">DB_PORT</span></code></strong> do not clash.</p>
+<p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">check-compose-project</span></code> blocks only real collisions:</p>
+<ul class="simple">
+<li><p>container names (<code class="docutils literal notranslate"><span class="pre">vr4mice_db</span></code>, <code class="docutils literal notranslate"><span class="pre">vr4mice_${USER}</span></code>) already used by another compose project</p></li>
+<li><p>host port (<code class="docutils literal notranslate"><span class="pre">DB_PORT</span></code>, default <code class="docutils literal notranslate"><span class="pre">3309</span></code>) already in use by another stack</p></li>
+</ul>
+<p>For a <strong>second</strong> deployment (sandbox / personal DB), use unique values in <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">COMPOSE_PROJECT</span><span class="o">=</span>vr4mice_dev
+<span class="nv">DB_CONTAINER_NAME</span><span class="o">=</span>vr4mice_db_dev
+<span class="nv">CLIENT_CONTAINER_NAME</span><span class="o">=</span>vr4mice_<span class="si">${</span><span class="nv">USER</span><span class="si">}</span>_dev
+<span class="nv">DB_PORT</span><span class="o">=</span><span class="m">3310</span>
+<span class="nv">DB_DATA_PATH</span><span class="o">=</span>/path/to/dev/database/
+<span class="nv">DATA_PATH</span><span class="o">=</span>/path/to/dev/data/
+</pre></div>
+</div>
+<p>Use separate data paths so MySQL volumes do not overwrite each other.</p>
+<p>To skip the check (not recommended): <code class="docutils literal notranslate"><span class="pre">VR4MICE_COMPOSE_FORCE=1</span> <span class="pre">make</span> <span class="pre">up_all</span></code>.</p>
+</section>
+<section id="shared-repo-checkout-another-user-same-server">
+<h3>Shared repo checkout (another user, same server)<a class="headerlink" href="#shared-repo-checkout-another-user-same-server" title="Permalink to this heading">#</a></h3>
+<p>When the pipeline lives in a <strong>shared folder</strong> (e.g. <code class="docutils literal notranslate"><span class="pre">/mnt/database/shared/FreelyMovingVR4Mice/dj_pipeline</span></code>) and was first set up under someone else’s account:</p>
+<p><strong>Do not</strong> run <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">config</span> <span class="pre">--local</span> <span class="pre">user.*</span></code> in that tree — it is stored inside <code class="docutils literal notranslate"><span class="pre">.git/</span></code> and affects everyone using the same checkout. Prefer per-session env vars or a personal clone for heavy git work.</p>
+<section id="git-use-your-own-credentials">
+<h4>Git — use your own credentials<a class="headerlink" href="#git-use-your-own-credentials" title="Permalink to this heading">#</a></h4>
+<p>There is <strong>no</strong> <code class="docutils literal notranslate"><span class="pre">make</span></code> target that changes GitHub SSH keys (those live in <code class="docutils literal notranslate"><span class="pre">~/.ssh/</span></code>). Use:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Command</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">git-whoami</span></code></p></td>
+<td><p>Show remote, local/global git name, env overrides</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">eval</span> <span class="pre">&quot;$$(make</span> <span class="pre">git-user-env</span> <span class="pre">NAME='…'</span> <span class="pre">EMAIL='…')&quot;</span></code></p></td>
+<td><p>Set identity <strong>for this shell only</strong> (shared checkout)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">git-user-local</span> <span class="pre">NAME='…'</span> <span class="pre">EMAIL='…'</span></code></p></td>
+<td><p>Set <code class="docutils literal notranslate"><span class="pre">--local</span></code> config (personal clone only; affects all users on a shared tree)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>SSH remotes use <strong><code class="docutils literal notranslate"><span class="pre">~/.ssh/</span></code> of the logged-in user</strong>, not the repo owner. As the new user:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/path/to/shared/FreelyMovingVR4Mice/dj_pipeline
+
+make<span class="w"> </span>git-whoami
+ssh<span class="w"> </span>-T<span class="w"> </span>git@github.com
+
+<span class="c1"># Shared checkout (recommended):</span>
+<span class="nb">eval</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$$</span><span class="s2">(make git-user-env NAME=&#39;Your Name&#39; EMAIL=&#39;you@example.com&#39;)&quot;</span>
+git<span class="w"> </span>pull
+</pre></div>
+</div>
+<p>Personal clone only:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>git-user-local<span class="w"> </span><span class="nv">NAME</span><span class="o">=</span><span class="s1">&#39;Your Name&#39;</span><span class="w"> </span><span class="nv">EMAIL</span><span class="o">=</span><span class="s1">&#39;you@example.com&#39;</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">pull</span></code> / <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span></code> fails with permissions on <code class="docutils literal notranslate"><span class="pre">.git/</span></code>, ask the admin to fix group write access on the repo, or <strong>clone your own copy</strong> elsewhere:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:MMathisLab/FreelyMovingVR4Mice.git<span class="w"> </span>~/FreelyMovingVR4Mice
+<span class="nb">cd</span><span class="w"> </span>~/FreelyMovingVR4Mice/dj_pipeline
+</pre></div>
+</div>
+</section>
+<section id="docker-client-under-your-username">
+<h4>Docker — client under your username<a class="headerlink" href="#docker-client-under-your-username" title="Permalink to this heading">#</a></h4>
+<p>Each user should have their <strong>own client container</strong> and (if needed) <strong>compose project</strong>. Production DB is often shared; client containers are per user.</p>
+<p><strong>Client only</strong> (connect to an existing DB — typical on a shared server):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/path/to/shared/FreelyMovingVR4Mice/dj_pipeline
+
+<span class="c1"># Per-user compose project (avoids clashing with others&#39; containers) — in .env.compose or export:</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">COMPOSE_PROJECT</span><span class="o">=</span><span class="s2">&quot;vr4mice_</span><span class="si">${</span><span class="nv">USER</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<span class="c1"># Pipeline credentials stay in .env (or export DJ_* if the shared .env is not yours)</span>
+
+make<span class="w"> </span>check-compose-project
+make<span class="w"> </span>client_up<span class="w">          </span><span class="c1"># container name defaults to vr4mice_${USER}</span>
+make<span class="w"> </span>ipython
+</pre></div>
+</div>
+<p><strong>Full stack</strong> (your own DB + client — dev / sandbox):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/path/to/shared/FreelyMovingVR4Mice/dj_pipeline
+
+<span class="nb">export</span><span class="w"> </span><span class="nv">COMPOSE_PROJECT</span><span class="o">=</span><span class="s2">&quot;vr4mice_</span><span class="si">${</span><span class="nv">USER</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">DB_PORT</span><span class="o">=</span><span class="m">3310</span><span class="w">     </span><span class="c1"># pick a free port; check with: ss -ltn | grep 3309</span>
+
+<span class="c1"># Point to your own data dirs in .env.compose (or quick_start.sh), then:</span>
+make<span class="w"> </span>check-compose-project
+make<span class="w"> </span>up_all
+</pre></div>
+</div>
+<p>To persist settings, add to <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code> (file is gitignored):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">COMPOSE_PROJECT</span><span class="o">=</span>vr4mice_<span class="si">${</span><span class="nv">USER</span><span class="si">}</span>
+<span class="nv">CLIENT_CONTAINER_NAME</span><span class="o">=</span>vr4mice_<span class="si">${</span><span class="nv">USER</span><span class="si">}</span>
+<span class="c1"># DB_CONTAINER_NAME / DB_PORT / DB_DATA_PATH only if you run your own database</span>
+</pre></div>
+</div>
+<p>Stop <strong>your</strong> client without touching others:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">COMPOSE_PROJECT</span><span class="o">=</span>vr4mice_<span class="si">${</span><span class="nv">USER</span><span class="si">}</span><span class="w"> </span>make<span class="w"> </span>client_down
+</pre></div>
+</div>
+</section>
+</section>
+<section id="aws-mode-pipeline-behaviour">
+<h3>AWS mode (pipeline behaviour)<a class="headerlink" href="#aws-mode-pipeline-behaviour" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">--aws</span></code> mode uses <code class="docutils literal notranslate"><span class="pre">/data/processed</span></code> and disables moving raw files.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">--aws</span> <span class="pre">populate</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">cron_scenario.py</span> <span class="pre">--aws</span></code></p></li>
 </ul>
+</section>
 </section>
 <section id="backup-and-aws-sync">
 <h2>Backup and AWS sync<a class="headerlink" href="#backup-and-aws-sync" title="Permalink to this heading">#</a></h2>
@@ -1050,6 +1327,7 @@ Recipients are derived from:</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment-server">Deployment (server)</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#server-deployment-database-client-containers">Server deployment (database + client containers)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-client-base-packages-and-user-mapping">Docker client: base packages and user mapping</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mounts-and-storage">Mounts and storage</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment-defaults-quick-start-sh">Deployment defaults (quick_start.sh)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#database-deployment-notes-server">Database deployment notes (server)</a></li>
@@ -1063,8 +1341,22 @@ Recipients are derived from:</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-installation-rig-related">GUI installation (rig-related)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manual-runs-run-py">Manual runs (run.py)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-quick-sanity">Testing / quick sanity</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#automated-runs-cron">Automated runs (cron)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#aws-mode">AWS mode</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-and-docker-operations">Cron and Docker operations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#architecture">Architecture</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#makefile-targets-common">Makefile targets (common)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crontab-setup">Crontab setup</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites-on-the-server">Prerequisites on the server</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#manual-test-before-enabling-cron">Manual test (before enabling cron)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#migrating-compose-project-name">Migrating compose project name</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-deployments-on-one-server">Multiple deployments on one server</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#shared-repo-checkout-another-user-same-server">Shared repo checkout (another user, same server)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#git-use-your-own-credentials">Git — use your own credentials</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-client-under-your-username">Docker — client under your username</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#aws-mode-pipeline-behaviour">AWS mode (pipeline behaviour)</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backup-and-aws-sync">Backup and AWS sync</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling-and-failedsession">Error handling and FailedSession</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gitcommit-table">GitCommit table</a></li>

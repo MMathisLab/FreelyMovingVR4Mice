@@ -447,6 +447,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#docstrings">Docstrings</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-annotations">Type Annotations</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inline-comments">Inline comments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#jupyter-notebooks-nbstripout">Jupyter notebooks (<code class="docutils literal notranslate"><span class="pre">nbstripout</span></code>)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#github-branching-commits-other-guidelines">GitHub Branching, Commits, &amp; Other Guidelines</a><ul class="nav section-nav flex-column">
@@ -525,6 +526,21 @@ document.write(`
 <li><p>Use inline comments to explain non-obvious code logic or important context. Make sure they are clear and concise. Avoid comments that state the obvious, as they clutter the code.</p></li>
 <li><p>When using TODO or NOTE comments, always include the name of the person responsible for addressing it (e.g., TODO(username): Refactor this section). From Google style guidelines, TODO comments are for code that is temporary, a short-term solution, or good-enough but not perfect. Provide enough context for the TODO or NOTE to be actionable. Avoid vague comments like “TODO: fix this”. Instead, specify what needs to be fixed and why. Do not leave TODO or NOTE comments unresolved in the codebase if they are unclear or outdated. Regularly review and address them to maintain code quality.</p></li>
 </ul>
+</section>
+<section id="jupyter-notebooks-nbstripout">
+<h3>Jupyter notebooks (<code class="docutils literal notranslate"><span class="pre">nbstripout</span></code>)<a class="headerlink" href="#jupyter-notebooks-nbstripout" title="Permalink to this heading">#</a></h3>
+<p>Do <strong>not</strong> commit notebook <strong>outputs</strong> (they often contain DB hostnames, connection logs, or local paths).</p>
+<p>After cloning, enable the repo filter once:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>dj_pipeline/requirements-dev.txt
+nbstripout<span class="w"> </span>--install<span class="w"> </span>--attributes<span class="w"> </span>.gitattributes
+</pre></div>
+</div>
+<p>Strip all notebooks manually before a PR if needed:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>find<span class="w"> </span>dj_pipeline<span class="w"> </span>mouse_task<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.ipynb&#39;</span><span class="w"> </span>-exec<span class="w"> </span>nbstripout<span class="w"> </span><span class="o">{}</span><span class="w"> </span>+
+</pre></div>
+</div>
+<p>Never commit <code class="docutils literal notranslate"><span class="pre">.env</span></code>, <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code>, <code class="docutils literal notranslate"><span class="pre">.env-aws</span></code>, or <code class="docutils literal notranslate"><span class="pre">gui_transfer/config/local_config.json</span></code> (use the matching <code class="docutils literal notranslate"><span class="pre">*.example</span></code> templates).</p>
+<p>CI runs <code class="docutils literal notranslate"><span class="pre">.github/workflows/security.yml</span></code> on PRs to main: <strong>gitleaks</strong>, <strong>nbstripout –verify</strong>, blocklisted tracked files, and internal host pattern checks.</p>
 </section>
 </section>
 <section id="github-branching-commits-other-guidelines">
@@ -635,6 +651,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#docstrings">Docstrings</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-annotations">Type Annotations</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inline-comments">Inline comments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#jupyter-notebooks-nbstripout">Jupyter notebooks (<code class="docutils literal notranslate"><span class="pre">nbstripout</span></code>)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#github-branching-commits-other-guidelines">GitHub Branching, Commits, &amp; Other Guidelines</a><ul class="nav section-nav flex-column">

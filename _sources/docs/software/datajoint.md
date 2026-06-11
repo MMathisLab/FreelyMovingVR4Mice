@@ -36,7 +36,7 @@ DataJoint is an open-source data management framework designed for scientific wo
 2. The **`Dockerfile`** and **`docker/entrypoint.sh`** build the client image used by `docker-compose.yml`.
 3. The **`gui_transfer/`** folder contains all GUI-related information. Only this folder, plus Python 3 and PyQt5, are needed to build the GUI on a rig computer.
 4. The **`run.py`** script is the main CLI entrypoint for running pipeline modes (populate, analysis, dlc, etc.).
-5. The **`cron_scenario.py`** script runs the full pipeline with per-step logging (used by cron).
+5. The **`cron_scenario.py`** script runs the full pipeline with per-step logging (used by cron). See [Cron and Docker operations](install_dj_pipeline.md#cron-and-docker-operations) for wrapper scripts, crontab setup, and compose project naming.
 6. The **`quick_start.sh`** script interactively configures `.env`/`env.py` and starts containers.
 7. The **`vr4mice/`** folder contains the core of the pipeline, including `vr4mice` schema (table definitions) and actions.
 8. The **`Makefile`** provides shortcuts for Docker and common commands.

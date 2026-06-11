@@ -528,12 +528,6 @@ document.write(`
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-  from .autonotebook import tqdm as notebook_tqdm
-</pre></div>
-</div>
-</div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -556,11 +550,6 @@ document.write(`
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(9, 25)
-</pre></div>
-</div>
-</div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -568,39 +557,10 @@ document.write(`
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>mouse_name
-31726          2
-31728          2
-J729           4
-Jacana         2
-Kiwi           3
-Lemming        3
-Nightingale    4
-Oribi          3
-Pheasant       2
-Name: dataset, dtype: int64
-</pre></div>
-</div>
-</div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trial_df</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>array([&#39;31726_2025-03-27_1&#39;, &#39;31726_2025-03-28_1&#39;, &#39;31728_2025-03-11_1&#39;,
-       &#39;31728_2025-03-14_1&#39;, &#39;J729_2024-12-11_1&#39;, &#39;J729_2024-12-12_1&#39;,
-       &#39;J729_2024-12-13_1&#39;, &#39;J729_2024-12-15_1&#39;, &#39;Jacana_2024-08-21_1&#39;,
-       &#39;Jacana_2024-08-22_1&#39;, &#39;Kiwi_2024-08-19_1&#39;, &#39;Kiwi_2024-08-20_1&#39;,
-       &#39;Kiwi_2024-08-21_1&#39;, &#39;Lemming_2024-08-14_1&#39;,
-       &#39;Lemming_2024-08-15_1&#39;, &#39;Lemming_2024-08-19_1&#39;,
-       &#39;Nightingale_2024-08-15_1&#39;, &#39;Nightingale_2024-08-16_1&#39;,
-       &#39;Nightingale_2024-08-21_1&#39;, &#39;Nightingale_2024-08-22_1&#39;,
-       &#39;Oribi_2024-08-26_1&#39;, &#39;Oribi_2024-08-27_1&#39;, &#39;Oribi_2024-08-29_1&#39;,
-       &#39;Pheasant_2024-08-26_1&#39;, &#39;Pheasant_2024-08-28_1&#39;], dtype=object)
 </pre></div>
 </div>
 </div>
@@ -635,13 +595,6 @@ Name: dataset, dtype: int64
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Justification: Mouse identity does not significantly improve the model. Independent ANOVA is valid.&quot;</span><span class="p">)</span>
 <span class="k">else</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Caution: Mouse identity explains significant variance.&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>LRT Statistic: 258.5593
-P-value for Mouse effect: 0.0000
-Caution: Mouse identity explains significant variance.
 </pre></div>
 </div>
 </div>
@@ -751,17 +704,6 @@ Caution: Mouse identity explains significant variance.
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                Anova
-======================================
-         F Value Num DF  Den DF Pr &gt; F
---------------------------------------
-aperture  0.0901 4.0000 96.0000 0.9854
-======================================
-</pre></div>
-</div>
-<img alt="../../../_images/8e22a92b97a212ce52bbbf9408075e86c65eb05f9acdde848f8bf9c16c02f96c.png" src="../../../_images/8e22a92b97a212ce52bbbf9408075e86c65eb05f9acdde848f8bf9c16c02f96c.png" />
-</div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -797,32 +739,6 @@ aperture  0.0901 4.0000 96.0000 0.9854
 <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure5_rewards_per_mouse.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>3.0-4.2: TtestResult(statistic=-2.493988124742931, pvalue=0.019918841916005924, df=24)
-3.0-6.0: TtestResult(statistic=-4.3481596890469, pvalue=0.00021792423175303471, df=24)
-3.0-8.48: TtestResult(statistic=-5.936285133499774, pvalue=3.986044948258331e-06, df=24)
-3.0: mean=0.749 ± 0.021
-4.2-6.0: TtestResult(statistic=-2.1904409874229156, pvalue=0.03844327894682323, df=24)
-4.2-8.48: TtestResult(statistic=-2.8444593290376323, pvalue=0.008952505101484732, df=24)
-4.2: mean=0.819 ± 0.024
-6.0-8.48: TtestResult(statistic=-0.4633245496675397, pvalue=0.6473060246641702, df=24)
-6.0: mean=0.891 ± 0.021
-8.48: mean=0.905 ± 0.017
-12.0-3.0: TtestResult(statistic=4.847181901915849, pvalue=6.12561974792148e-05, df=24)
-12.0-4.2: TtestResult(statistic=2.6168388007399845, pvalue=0.015117166807783985, df=24)
-12.0-6.0: TtestResult(statistic=0.04065996451030943, pvalue=0.9679033410169438, df=24)
-12.0-8.48: TtestResult(statistic=-0.5678700816992147, pvalue=0.5753978552200469, df=24)
-12.0: mean=0.892 ± 0.019
-                Anova
-======================================
-         F Value Num DF  Den DF Pr &gt; F
---------------------------------------
-aperture  0.0901 4.0000 96.0000 0.9854
-======================================
-</pre></div>
-</div>
-<img alt="../../../_images/98a487d41f821f6c3dc8c550710789a1be0bf792bba775bbdd9f7d8e19a5ecf3.png" src="../../../_images/98a487d41f821f6c3dc8c550710789a1be0bf792bba775bbdd9f7d8e19a5ecf3.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -865,32 +781,6 @@ aperture  0.0901 4.0000 96.0000 0.9854
 <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure5_rewards.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>3.0-4.2: TtestResult(statistic=-4.294775142156709, pvalue=0.000249592248485294, df=24)
-3.0-6.0: TtestResult(statistic=-8.63596674410741, pvalue=7.938488027221137e-09, df=24)
-3.0-8.48: TtestResult(statistic=-9.922891044401927, pvalue=5.716543717984163e-10, df=24)
-3.0: mean=0.749 ± 0.021
-4.2-6.0: TtestResult(statistic=-4.96095944839423, pvalue=4.5893003535062247e-05, df=24)
-4.2-8.48: TtestResult(statistic=-5.653014738081343, pvalue=8.04406204065893e-06, df=24)
-4.2: mean=0.819 ± 0.024
-6.0-8.48: TtestResult(statistic=-0.9143341342926102, pvalue=0.36963645105671183, df=24)
-6.0: mean=0.891 ± 0.021
-8.48: mean=0.905 ± 0.017
-12.0-3.0: TtestResult(statistic=9.908373156320879, pvalue=5.88184256287188e-10, df=24)
-12.0-4.2: TtestResult(statistic=4.653696076204195, pvalue=0.00010017441571757577, df=24)
-12.0-6.0: TtestResult(statistic=0.07659887976618203, pvalue=0.9395776368965353, df=24)
-12.0-8.48: TtestResult(statistic=-0.931285761959232, pvalue=0.36097991128194373, df=24)
-12.0: mean=0.892 ± 0.019
-                Anova
-======================================
-         F Value Num DF  Den DF Pr &gt; F
---------------------------------------
-aperture 37.5249 4.0000 96.0000 0.0000
-======================================
-</pre></div>
-</div>
-<img alt="../../../_images/960ce348ad982694f48406827289ad1bcbb8e51983982f1dae71f2f31d06ed4d.png" src="../../../_images/960ce348ad982694f48406827289ad1bcbb8e51983982f1dae71f2f31d06ed4d.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -987,54 +877,6 @@ aperture 37.5249 4.0000 96.0000 0.0000
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>3.0-4.2: TtestResult(statistic=0.16336372813892353, pvalue=0.8715999221309235, df=24)
-3.0-6.0: TtestResult(statistic=0.4605874808001341, pvalue=0.6492408672893397, df=24)
-3.0-8.48: TtestResult(statistic=-0.21695206601737546, pvalue=0.8300793967741364, df=24)
-3.0: mean=-0.015 ± 0.058
-4.2-6.0: TtestResult(statistic=0.24990922807693325, pvalue=0.8047842776180888, df=24)
-4.2-8.48: TtestResult(statistic=-0.4639523528123425, pvalue=0.6468625851577114, df=24)
-4.2: mean=-0.029 ± 0.050
-6.0-8.48: TtestResult(statistic=-0.8071400388375911, pvalue=0.4275128960568405, df=24)
-6.0: mean=-0.044 ± 0.029
-8.48: mean=-0.002 ± 0.037
-12.0-3.0: TtestResult(statistic=1.039734229048693, pvalue=0.30882528560258005, df=24)
-12.0-4.2: TtestResult(statistic=1.4772944346317236, pvalue=0.15260002867784161, df=24)
-12.0-6.0: TtestResult(statistic=2.278039263657111, pvalue=0.031918811598357646, df=24)
-12.0-8.48: TtestResult(statistic=1.0817185531546654, pvalue=0.2901272683683604, df=24)
-12.0: mean=0.049 ± 0.034
-3.0-4.2: TtestResult(statistic=0.3303329546903208, pvalue=0.7440147221911171, df=24)
-3.0-6.0: TtestResult(statistic=0.5474973379875565, pvalue=0.5890929385696668, df=24)
-3.0-8.48: TtestResult(statistic=-0.28162984226312127, pvalue=0.7806414478763297, df=24)
-3.0: mean=-0.015 ± 0.058
-4.2-6.0: TtestResult(statistic=0.33326551431673085, pvalue=0.7418278714668143, df=24)
-4.2-8.48: TtestResult(statistic=-0.6351285779922629, pvalue=0.5313537966029576, df=24)
-4.2: mean=-0.029 ± 0.050
-6.0-8.48: TtestResult(statistic=-1.08954063479577, pvalue=0.28673501955019925, df=24)
-6.0: mean=-0.044 ± 0.029
-8.48: mean=-0.002 ± 0.037
-12.0-3.0: TtestResult(statistic=1.4802509019087695, pvalue=0.15181514125284346, df=24)
-12.0-4.2: TtestResult(statistic=1.8501849075249917, pvalue=0.07663684708004127, df=24)
-12.0-6.0: TtestResult(statistic=2.5416645549429004, pvalue=0.017907792162877075, df=24)
-12.0-8.48: TtestResult(statistic=1.279571292169318, pvalue=0.2129281449325434, df=24)
-12.0: mean=0.049 ± 0.034
-One-sample t-tests vs 0 (bias)
-   aperture   n  mean_bias    t_stat  df   p_value
-0      3.00  25  -0.014895 -0.258352  24  0.798338
-1      4.20  25  -0.029098 -0.578491  24  0.568322
-2      6.00  25  -0.043690 -1.497616  24  0.147271
-3      8.48  25  -0.001692 -0.046162  24  0.963563
-4     12.00  25   0.049098  1.450087  24  0.159978
-                Anova
-======================================
-         F Value Num DF  Den DF Pr &gt; F
---------------------------------------
-aperture  1.3589 4.0000 96.0000 0.2540
-======================================
-</pre></div>
-</div>
-<img alt="../../../_images/9c4790492598914afd99c3c5a0058db4209058b34879c158471f7c16bb92b018.png" src="../../../_images/9c4790492598914afd99c3c5a0058db4209058b34879c158471f7c16bb92b018.png" />
-</div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -1080,17 +922,6 @@ aperture  1.3589 4.0000 96.0000 0.2540
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                Anova
-======================================
-         F Value Num DF  Den DF Pr &gt; F
---------------------------------------
-aperture 11.8531 4.0000 96.0000 0.0000
-======================================
-</pre></div>
-</div>
-<img alt="../../../_images/7aeef90ba1a9ab348e2344ed6846e2a220d25f9d77d91363a555600bbbbfdb17.png" src="../../../_images/7aeef90ba1a9ab348e2344ed6846e2a220d25f9d77d91363a555600bbbbfdb17.png" />
-</div>
 </div>
 </section>
 <section id="trajectory-analysis">
@@ -1122,17 +953,6 @@ aperture 11.8531 4.0000 96.0000 0.0000
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<img alt="../../../_images/683d6ef20c98af350b0b875a0c997e5bd027e891bacd7e266415dc528fca82c5.png" src="../../../_images/683d6ef20c98af350b0b875a0c997e5bd027e891bacd7e266415dc528fca82c5.png" />
-<img alt="../../../_images/6ef1b863e914f193f322a284eae3a6a50a56305b3aac33effd352bcb2c870933.png" src="../../../_images/6ef1b863e914f193f322a284eae3a6a50a56305b3aac33effd352bcb2c870933.png" />
-<img alt="../../../_images/076218dfd6149918657047795ebd57c7b15090253dc411dbb3fcf80ba872db63.png" src="../../../_images/076218dfd6149918657047795ebd57c7b15090253dc411dbb3fcf80ba872db63.png" />
-<img alt="../../../_images/82d0149e10848ccda41c95602e417543b6a73f46e3d8689b96c1c5990790f5c5.png" src="../../../_images/82d0149e10848ccda41c95602e417543b6a73f46e3d8689b96c1c5990790f5c5.png" />
-<img alt="../../../_images/346b6adb8e7ea3eebbc85cb9e212bc54e9cadf373f4964d145220988919e7092.png" src="../../../_images/346b6adb8e7ea3eebbc85cb9e212bc54e9cadf373f4964d145220988919e7092.png" />
-<img alt="../../../_images/2a77503d13184f5a9f2e7a30a7dc0fc6771f51cf6da46a80b4ec5b8c70b0e77c.png" src="../../../_images/2a77503d13184f5a9f2e7a30a7dc0fc6771f51cf6da46a80b4ec5b8c70b0e77c.png" />
-<img alt="../../../_images/1394f055404c3ec200aa0cbeb646bb680633427838d48bb7a53351d4b97e1df2.png" src="../../../_images/1394f055404c3ec200aa0cbeb646bb680633427838d48bb7a53351d4b97e1df2.png" />
-<img alt="../../../_images/427741f54725b9218c4e904f304378c666ae4a8e0b95294bcef0e6eb7a893451.png" src="../../../_images/427741f54725b9218c4e904f304378c666ae4a8e0b95294bcef0e6eb7a893451.png" />
-<img alt="../../../_images/cf52e336787aa7e889f246338c8f8cac2d894ffc28f3ab136882f22e97a03890.png" src="../../../_images/cf52e336787aa7e889f246338c8f8cac2d894ffc28f3ab136882f22e97a03890.png" />
-</div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -1149,9 +969,6 @@ aperture 11.8531 4.0000 96.0000 0.0000
 <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure5_trajectories_time.png&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="cell_output docutils container">
-<img alt="../../../_images/538b21b9809d2a90d488e175948ef659bb80ee2af72dab0c5fdad63b1dc54242.png" src="../../../_images/538b21b9809d2a90d488e175948ef659bb80ee2af72dab0c5fdad63b1dc54242.png" />
 </div>
 </div>
 </section>
@@ -1212,19 +1029,6 @@ aperture 11.8531 4.0000 96.0000 0.0000
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                        Anova
-======================================================
-                     F Value   Num DF   Den DF  Pr &gt; F
-------------------------------------------------------
-aperture               8.8064  4.0000   96.0000 0.0000
-bin_centers          145.7173 24.0000  576.0000 0.0000
-aperture:bin_centers   2.5887 96.0000 2304.0000 0.0000
-======================================================
-</pre></div>
-</div>
-<img alt="../../../_images/80b513e826f992d2263ecd2c5ceb0e4062872d3575fa7b14f7dcb1f4f0cc623f.png" src="../../../_images/80b513e826f992d2263ecd2c5ceb0e4062872d3575fa7b14f7dcb1f4f0cc623f.png" />
-</div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -1246,9 +1050,6 @@ aperture:bin_centers   2.5887 96.0000 2304.0000 0.0000
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<img alt="../../../_images/10e8f978f0afe02aee5ae0d751d3eef47a3dfa2fa79a98a3bf62a4fa98c506e2.png" src="../../../_images/10e8f978f0afe02aee5ae0d751d3eef47a3dfa2fa79a98a3bf62a4fa98c506e2.png" />
-</div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -1256,394 +1057,6 @@ aperture:bin_centers   2.5887 96.0000 2304.0000 0.0000
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output text_html"><div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead tr th {
-        text-align: left;
-    }
-
-    .dataframe thead tr:last-of-type th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr>
-      <th></th>
-      <th colspan="10" halign="left">p_value_corr</th>
-    </tr>
-    <tr>
-      <th>comp1</th>
-      <th colspan="4" halign="left">0</th>
-      <th colspan="3" halign="left">10</th>
-      <th colspan="2" halign="left">35</th>
-      <th>72</th>
-    </tr>
-    <tr>
-      <th>comp2</th>
-      <th>10</th>
-      <th>35</th>
-      <th>72</th>
-      <th>99</th>
-      <th>35</th>
-      <th>72</th>
-      <th>99</th>
-      <th>72</th>
-      <th>99</th>
-      <th>99</th>
-    </tr>
-    <tr>
-      <th>bin</th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0.2145</th>
-      <td>0.192174</td>
-      <td>0.956419</td>
-      <td>0.973089</td>
-      <td>0.344165</td>
-      <td>0.097154</td>
-      <td>0.079531</td>
-      <td>0.060769</td>
-      <td>0.971913</td>
-      <td>0.295388</td>
-      <td>0.362481</td>
-    </tr>
-    <tr>
-      <th>0.9695</th>
-      <td>0.195309</td>
-      <td>0.788674</td>
-      <td>0.936356</td>
-      <td>0.182775</td>
-      <td>0.057112</td>
-      <td>0.136433</td>
-      <td>0.049608</td>
-      <td>0.552200</td>
-      <td>0.321979</td>
-      <td>0.154970</td>
-    </tr>
-    <tr>
-      <th>1.7245</th>
-      <td>0.427642</td>
-      <td>0.420168</td>
-      <td>0.353099</td>
-      <td>0.047190</td>
-      <td>0.135254</td>
-      <td>0.226977</td>
-      <td>0.048715</td>
-      <td>0.936356</td>
-      <td>0.265880</td>
-      <td>0.269191</td>
-    </tr>
-    <tr>
-      <th>2.4795</th>
-      <td>0.668287</td>
-      <td>0.854669</td>
-      <td>0.332668</td>
-      <td>0.119972</td>
-      <td>0.471501</td>
-      <td>0.195309</td>
-      <td>0.081074</td>
-      <td>0.375018</td>
-      <td>0.194958</td>
-      <td>0.416613</td>
-    </tr>
-    <tr>
-      <th>3.2345</th>
-      <td>0.831765</td>
-      <td>0.723907</td>
-      <td>0.552567</td>
-      <td>0.195309</td>
-      <td>0.436272</td>
-      <td>0.403973</td>
-      <td>0.108547</td>
-      <td>0.882090</td>
-      <td>0.214212</td>
-      <td>0.267612</td>
-    </tr>
-    <tr>
-      <th>3.9895</th>
-      <td>0.987504</td>
-      <td>0.532996</td>
-      <td>0.060248</td>
-      <td>0.086630</td>
-      <td>0.610762</td>
-      <td>0.195309</td>
-      <td>0.098347</td>
-      <td>0.177661</td>
-      <td>0.201915</td>
-      <td>0.485269</td>
-    </tr>
-    <tr>
-      <th>4.7445</th>
-      <td>0.749459</td>
-      <td>0.642495</td>
-      <td>0.223488</td>
-      <td>0.019187</td>
-      <td>0.448858</td>
-      <td>0.151232</td>
-      <td>0.035700</td>
-      <td>0.262764</td>
-      <td>0.067216</td>
-      <td>0.217900</td>
-    </tr>
-    <tr>
-      <th>5.5000</th>
-      <td>0.810183</td>
-      <td>0.471501</td>
-      <td>0.195309</td>
-      <td>0.035700</td>
-      <td>0.476597</td>
-      <td>0.194958</td>
-      <td>0.066373</td>
-      <td>0.468058</td>
-      <td>0.146549</td>
-      <td>0.468699</td>
-    </tr>
-    <tr>
-      <th>6.2555</th>
-      <td>0.165944</td>
-      <td>0.819766</td>
-      <td>0.236456</td>
-      <td>0.194958</td>
-      <td>0.236456</td>
-      <td>0.050104</td>
-      <td>0.014307</td>
-      <td>0.077088</td>
-      <td>0.111940</td>
-      <td>0.574385</td>
-    </tr>
-    <tr>
-      <th>7.0105</th>
-      <td>0.237446</td>
-      <td>0.460770</td>
-      <td>0.163390</td>
-      <td>0.054519</td>
-      <td>0.053834</td>
-      <td>0.040002</td>
-      <td>0.011031</td>
-      <td>0.427642</td>
-      <td>0.079953</td>
-      <td>0.405357</td>
-    </tr>
-    <tr>
-      <th>7.7655</th>
-      <td>0.236456</td>
-      <td>0.691595</td>
-      <td>0.382658</td>
-      <td>0.154868</td>
-      <td>0.214212</td>
-      <td>0.049608</td>
-      <td>0.036423</td>
-      <td>0.201915</td>
-      <td>0.042309</td>
-      <td>0.552200</td>
-    </tr>
-    <tr>
-      <th>8.5205</th>
-      <td>0.214212</td>
-      <td>0.696030</td>
-      <td>0.236456</td>
-      <td>0.135254</td>
-      <td>0.232779</td>
-      <td>0.065505</td>
-      <td>0.020740</td>
-      <td>0.136433</td>
-      <td>0.035700</td>
-      <td>0.520192</td>
-    </tr>
-    <tr>
-      <th>9.2755</th>
-      <td>0.422486</td>
-      <td>0.856608</td>
-      <td>0.208157</td>
-      <td>0.049608</td>
-      <td>0.391246</td>
-      <td>0.154868</td>
-      <td>0.040284</td>
-      <td>0.159660</td>
-      <td>0.035700</td>
-      <td>0.344165</td>
-    </tr>
-    <tr>
-      <th>10.0305</th>
-      <td>0.109896</td>
-      <td>0.511517</td>
-      <td>0.332668</td>
-      <td>0.081022</td>
-      <td>0.182355</td>
-      <td>0.018579</td>
-      <td>0.002283</td>
-      <td>0.053131</td>
-      <td>0.019187</td>
-      <td>0.264710</td>
-    </tr>
-    <tr>
-      <th>10.7855</th>
-      <td>0.145267</td>
-      <td>0.882090</td>
-      <td>0.082383</td>
-      <td>0.017654</td>
-      <td>0.059304</td>
-      <td>0.005374</td>
-      <td>0.004979</td>
-      <td>0.036423</td>
-      <td>0.024577</td>
-      <td>0.201915</td>
-    </tr>
-    <tr>
-      <th>11.5405</th>
-      <td>0.211958</td>
-      <td>0.771127</td>
-      <td>0.136726</td>
-      <td>0.053834</td>
-      <td>0.262764</td>
-      <td>0.023512</td>
-      <td>0.028312</td>
-      <td>0.022509</td>
-      <td>0.034795</td>
-      <td>0.522318</td>
-    </tr>
-    <tr>
-      <th>12.2955</th>
-      <td>0.390403</td>
-      <td>0.471501</td>
-      <td>0.089899</td>
-      <td>0.009237</td>
-      <td>0.769869</td>
-      <td>0.023583</td>
-      <td>0.009513</td>
-      <td>0.014921</td>
-      <td>0.005019</td>
-      <td>0.218224</td>
-    </tr>
-    <tr>
-      <th>13.0510</th>
-      <td>0.402682</td>
-      <td>0.902802</td>
-      <td>0.154868</td>
-      <td>0.011433</td>
-      <td>0.201915</td>
-      <td>0.012047</td>
-      <td>0.003978</td>
-      <td>0.062014</td>
-      <td>0.003149</td>
-      <td>0.109896</td>
-    </tr>
-    <tr>
-      <th>13.8065</th>
-      <td>0.129775</td>
-      <td>0.977774</td>
-      <td>0.062885</td>
-      <td>0.017654</td>
-      <td>0.136433</td>
-      <td>0.002223</td>
-      <td>0.002040</td>
-      <td>0.053159</td>
-      <td>0.006096</td>
-      <td>0.271056</td>
-    </tr>
-    <tr>
-      <th>14.5615</th>
-      <td>0.307954</td>
-      <td>0.448858</td>
-      <td>0.040284</td>
-      <td>0.000643</td>
-      <td>0.136433</td>
-      <td>0.003968</td>
-      <td>0.000643</td>
-      <td>0.077088</td>
-      <td>0.000181</td>
-      <td>0.089899</td>
-    </tr>
-    <tr>
-      <th>15.3165</th>
-      <td>0.410721</td>
-      <td>0.540532</td>
-      <td>0.019861</td>
-      <td>0.000100</td>
-      <td>0.192174</td>
-      <td>0.002283</td>
-      <td>0.000421</td>
-      <td>0.019044</td>
-      <td>0.000100</td>
-      <td>0.053834</td>
-    </tr>
-    <tr>
-      <th>16.0715</th>
-      <td>0.909310</td>
-      <td>0.236456</td>
-      <td>0.002027</td>
-      <td>0.000071</td>
-      <td>0.403973</td>
-      <td>0.019187</td>
-      <td>0.001329</td>
-      <td>0.034795</td>
-      <td>0.000095</td>
-      <td>0.051742</td>
-    </tr>
-    <tr>
-      <th>16.8265</th>
-      <td>0.907086</td>
-      <td>0.154970</td>
-      <td>0.003869</td>
-      <td>0.000568</td>
-      <td>0.111218</td>
-      <td>0.002027</td>
-      <td>0.000421</td>
-      <td>0.012141</td>
-      <td>0.000157</td>
-      <td>0.049608</td>
-    </tr>
-    <tr>
-      <th>17.5815</th>
-      <td>0.539659</td>
-      <td>0.136159</td>
-      <td>0.006096</td>
-      <td>0.000095</td>
-      <td>0.029046</td>
-      <td>0.000434</td>
-      <td>0.000100</td>
-      <td>0.010084</td>
-      <td>0.000307</td>
-      <td>0.054841</td>
-    </tr>
-    <tr>
-      <th>18.3365</th>
-      <td>0.448858</td>
-      <td>0.029046</td>
-      <td>0.000643</td>
-      <td>0.000071</td>
-      <td>0.054841</td>
-      <td>0.003149</td>
-      <td>0.000324</td>
-      <td>0.081518</td>
-      <td>0.000643</td>
-      <td>0.046315</td>
-    </tr>
-  </tbody>
-</table>
-</div></div></div>
 </div>
 </section>
 <section id="velocity-analysis">
@@ -1692,9 +1105,6 @@ aperture:bin_centers   2.5887 96.0000 2304.0000 0.0000
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<img alt="../../../_images/5b594618b670d44a64f3d87e1354c7a3f890be51e26273744dd8d2f415beab74.png" src="../../../_images/5b594618b670d44a64f3d87e1354c7a3f890be51e26273744dd8d2f415beab74.png" />
-</div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -1706,18 +1116,6 @@ aperture:bin_centers   2.5887 96.0000 2304.0000 0.0000
         <span class="n">within</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_length&quot;</span><span class="p">],</span>
     <span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
 <span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                         Anova
-=======================================================
-                      F Value  Num DF    Den DF  Pr &gt; F
--------------------------------------------------------
-aperture              14.1673   4.0000   96.0000 0.0000
-trial_length          41.8922  99.0000 2376.0000 0.0000
-aperture:trial_length  5.3963 396.0000 9504.0000 0.0000
-=======================================================
 </pre></div>
 </div>
 </div>
@@ -1735,125 +1133,6 @@ aperture:trial_length  5.3963 396.0000 9504.0000 0.0000
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output text_html"><div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>bin</th>
-      <th>comp1</th>
-      <th>comp2</th>
-      <th>p_value</th>
-      <th>p_value_corr</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>0.00</td>
-      <td>0</td>
-      <td>10</td>
-      <td>0.756933</td>
-      <td>0.848580</td>
-    </tr>
-    <tr>
-      <th>0</th>
-      <td>0.00</td>
-      <td>0</td>
-      <td>35</td>
-      <td>0.640678</td>
-      <td>0.772832</td>
-    </tr>
-    <tr>
-      <th>0</th>
-      <td>0.00</td>
-      <td>0</td>
-      <td>72</td>
-      <td>0.660219</td>
-      <td>0.784108</td>
-    </tr>
-    <tr>
-      <th>0</th>
-      <td>0.00</td>
-      <td>0</td>
-      <td>99</td>
-      <td>0.122099</td>
-      <td>0.264738</td>
-    </tr>
-    <tr>
-      <th>0</th>
-      <td>0.00</td>
-      <td>10</td>
-      <td>35</td>
-      <td>0.830888</td>
-      <td>0.899229</td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-    </tr>
-    <tr>
-      <th>0</th>
-      <td>0.99</td>
-      <td>10</td>
-      <td>72</td>
-      <td>0.144746</td>
-      <td>0.295400</td>
-    </tr>
-    <tr>
-      <th>0</th>
-      <td>0.99</td>
-      <td>10</td>
-      <td>99</td>
-      <td>0.043505</td>
-      <td>0.120180</td>
-    </tr>
-    <tr>
-      <th>0</th>
-      <td>0.99</td>
-      <td>35</td>
-      <td>72</td>
-      <td>0.411949</td>
-      <td>0.598763</td>
-    </tr>
-    <tr>
-      <th>0</th>
-      <td>0.99</td>
-      <td>35</td>
-      <td>99</td>
-      <td>0.221908</td>
-      <td>0.404205</td>
-    </tr>
-    <tr>
-      <th>0</th>
-      <td>0.99</td>
-      <td>72</td>
-      <td>99</td>
-      <td>0.506777</td>
-      <td>0.683909</td>
-    </tr>
-  </tbody>
-</table>
-<p>1000 rows × 5 columns</p>
-</div></div></div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -1867,9 +1146,6 @@ aperture:trial_length  5.3963 396.0000 9504.0000 0.0000
 <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure5_velocity_pvalue.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="cell_output docutils container">
-<img alt="../../../_images/5287b2ed1d7773df3395bdfc83395cdd5ded97c7e53f761802dc3ffab1c26c36.png" src="../../../_images/5287b2ed1d7773df3395bdfc83395cdd5ded97c7e53f761802dc3ffab1c26c36.png" />
 </div>
 </div>
 </section>
