@@ -101,6 +101,18 @@ class ExperimentStage(dj.Lookup):
     ]
 
 
+def sync_lookup_contents():
+    """Insert Lookup rows from class ``contents`` that are missing in the DB.
+
+    DataJoint only loads ``contents`` when a Lookup table is first created.
+    On deployed databases, new rows added to ``contents`` in code must be
+    back-filled explicitly (parent rows before ``ExperimentMember.populate``).
+    """
+    for table in (ExperimentSet, ExperimentStage, SessionLabel):
+        if table.contents:
+            table.insert(table.contents, skip_duplicates=True)
+
+
 @schema
 class ExperimentMember(dj.Imported):
     definition = """

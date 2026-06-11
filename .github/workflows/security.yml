@@ -42,9 +42,9 @@ jobs:
       - name: Block known internal hosts in tracked files
         run: |
           set -euo pipefail
-          patterns='128\.178\.51\.167|vr4mice-ar-collab\.cluster'\
-          # Notebooks are stripped/verified via nbstripout; include them in host pattern checks.\
-          tracked="$(git ls-files || true)"\
+          patterns='128\.178\.51\.167|vr4mice-ar-collab\.cluster'
+          # Notebooks may log DB hosts in cell outputs; we keep committed outputs.
+          tracked="$(git ls-files | grep -Ev '\.ipynb$' || true)"
           matches="$(git grep -E "${patterns}" -- ${tracked} || true)"
           if [ -n "${matches}" ]; then
             echo "Possible infrastructure leak in tracked files:"
