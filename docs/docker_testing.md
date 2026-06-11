@@ -30,7 +30,21 @@ This command:
 4. Stops all containers when tests complete
 5. Returns the test exit code (for CI integration)
 
+**CI note:** Pull-request runs use `pytest -m "not slow"` (unit tests plus light
+integration). Full pipeline integration tests are marked `slow` and run locally
+or via manual **workflow_dispatch** on the test-suite workflow.
+
 ## Running Specific Tests
+
+### Fast tests only (matches PR CI)
+```bash
+docker-compose -f docker-compose.test.yml run tests bash -c "cd tests && python -m pytest integration/ unit/ -m 'not slow' -v"
+```
+
+### Slow pipeline tests only
+```bash
+docker-compose -f docker-compose.test.yml run tests bash -c "cd tests && python -m pytest -m slow -v"
+```
 
 ### Unit tests only
 ```bash

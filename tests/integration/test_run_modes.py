@@ -37,14 +37,15 @@ import pytest
 # Golden dataset sizes (Flamingo_2026-02-05_1).
 # These are properties of the golden dataset, not configuration.
 # If the golden dataset changes, update these values here.
-GOLDEN_STATE_ROWS = 151737      # rows in pickle state array
-GOLDEN_DLC_FRAMES = 119755      # frames in DLC HDF5 file
-GOLDEN_PROC_FRAMES = 119864     # frames in PROC file (DLCProcessor output)
+GOLDEN_STATE_ROWS = 151737  # rows in pickle state array
+GOLDEN_DLC_FRAMES = 119755  # frames in DLC HDF5 file
+GOLDEN_PROC_FRAMES = 119864  # frames in PROC file (DLCProcessor output)
 
 
 # ==============================================================================
 # Golden Baseline Fixtures
 # ==============================================================================
+
 
 @pytest.fixture(scope="module")
 def golden_baseline_dir():
@@ -92,11 +93,13 @@ def golden_baseline(golden_baseline_dir, request):
                 expected = json.load(f)["row_count"]
 
             if tolerance > 0:
-                assert abs(actual_count - expected) <= tolerance, \
-                    f"{table_name}: row count {actual_count} != {expected} (tolerance: {tolerance})"
+                assert (
+                    abs(actual_count - expected) <= tolerance
+                ), f"{table_name}: row count {actual_count} != {expected} (tolerance: {tolerance})"
             else:
-                assert actual_count == expected, \
-                    f"{table_name}: row count {actual_count} != {expected}"
+                assert (
+                    actual_count == expected
+                ), f"{table_name}: row count {actual_count} != {expected}"
             return True
 
         def check_sample_values(self, table_name, data_dict, keys_to_check=None):
@@ -123,7 +126,13 @@ def golden_baseline(golden_baseline_dir, request):
                         else:
                             return {"scalar_object": True}
                     else:
-                        return {"scalar": float(arr) if np.issubdtype(arr.dtype, np.floating) else int(arr)}
+                        return {
+                            "scalar": (
+                                float(arr)
+                                if np.issubdtype(arr.dtype, np.floating)
+                                else int(arr)
+                            )
+                        }
                 if len(arr) == 0:
                     return {"empty": True}
 
@@ -134,21 +143,21 @@ def golden_baseline(golden_baseline_dir, request):
 
                 # First value
                 first_val = arr[0]
-                if hasattr(first_val, 'tolist'):
+                if hasattr(first_val, "tolist"):
                     first_val = first_val.tolist()
                 samples["first"] = first_val
 
                 # Middle value
                 mid_idx = len(arr) // 2
                 mid_val = arr[mid_idx]
-                if hasattr(mid_val, 'tolist'):
+                if hasattr(mid_val, "tolist"):
                     mid_val = mid_val.tolist()
                 samples["middle"] = mid_val
                 samples["middle_idx"] = mid_idx
 
                 # Last value
                 last_val = arr[-1]
-                if hasattr(last_val, 'tolist'):
+                if hasattr(last_val, "tolist"):
                     last_val = last_val.tolist()
                 samples["last"] = last_val
 
@@ -186,8 +195,9 @@ def golden_baseline(golden_baseline_dir, request):
 
                 # Check length
                 if "length" in expected:
-                    assert actual.get("length") == expected["length"], \
-                        f"{table_name}.{key}: length {actual.get('length')} != {expected['length']}"
+                    assert (
+                        actual.get("length") == expected["length"]
+                    ), f"{table_name}.{key}: length {actual.get('length')} != {expected['length']}"
 
                 # Check values with floating point tolerance
                 for pos in ["first", "middle", "last", "scalar"]:
@@ -196,16 +206,20 @@ def golden_baseline(golden_baseline_dir, request):
                         expected_val = expected[pos]
 
                         if isinstance(expected_val, float):
-                            assert actual_val == pytest.approx(expected_val, rel=1e-5, nan_ok=True), \
-                                f"{table_name}.{key}[{pos}]: {actual_val} != {expected_val}"
+                            assert actual_val == pytest.approx(
+                                expected_val, rel=1e-5, nan_ok=True
+                            ), f"{table_name}.{key}[{pos}]: {actual_val} != {expected_val}"
                         elif isinstance(expected_val, list):
                             np.testing.assert_array_almost_equal(
-                                actual_val, expected_val, decimal=5,
-                                err_msg=f"{table_name}.{key}[{pos}] mismatch"
+                                actual_val,
+                                expected_val,
+                                decimal=5,
+                                err_msg=f"{table_name}.{key}[{pos}] mismatch",
                             )
                         else:
-                            assert actual_val == expected_val, \
-                                f"{table_name}.{key}[{pos}]: {actual_val} != {expected_val}"
+                            assert (
+                                actual_val == expected_val
+                            ), f"{table_name}.{key}[{pos}]: {actual_val} != {expected_val}"
 
             return True
 
@@ -226,8 +240,9 @@ def golden_baseline(golden_baseline_dir, request):
                 expected = json.load(f)["value"]
 
             if isinstance(expected, float):
-                assert actual_value == pytest.approx(expected, rel=1e-5), \
-                    f"{name}: {actual_value} != {expected}"
+                assert actual_value == pytest.approx(
+                    expected, rel=1e-5
+                ), f"{name}: {actual_value} != {expected}"
             else:
                 assert actual_value == expected, f"{name}: {actual_value} != {expected}"
 
@@ -240,8 +255,11 @@ def golden_baseline(golden_baseline_dir, request):
 # Pipeline Fixtures (Module-Scoped for Efficiency)
 # ==============================================================================
 
+
 @pytest.fixture(scope="module")
-def pipeline_test_data(test_data_dir, test_dataset_name, test_camera_prefix, tmp_path_factory):
+def pipeline_test_data(
+    test_data_dir, test_dataset_name, test_camera_prefix, tmp_path_factory
+):
     """
     Prepare test data in a temporary directory structure.
 
@@ -378,13 +396,26 @@ def populated_db(dj_config, pipeline_test_data, test_dataset_name, test_camera_p
 
     # Build keys for downstream test lookups.
     # parse_date() returns datetime; convert to date for key matching.
-    doe = files_info["doe"].date() if hasattr(files_info["doe"], "date") else files_info["doe"]
+    doe = (
+        files_info["doe"].date()
+        if hasattr(files_info["doe"], "date")
+        else files_info["doe"]
+    )
 
     return {
         "vr4mice": vr4mice,
         "dataset_key": {"dataset": test_dataset_name},
-        "video_key": {"dataset": test_dataset_name, "camera": test_camera_prefix, "doe": doe},
-        "dlc_key": {"dataset": test_dataset_name, "camera": test_camera_prefix, "doe": doe, "model_name": "DLC"},
+        "video_key": {
+            "dataset": test_dataset_name,
+            "camera": test_camera_prefix,
+            "doe": doe,
+        },
+        "dlc_key": {
+            "dataset": test_dataset_name,
+            "camera": test_camera_prefix,
+            "doe": doe,
+            "model_name": "DLC",
+        },
         "pickle_data": pickle_data,
         "session_metadata": session_metadata,
         "test_data": pipeline_test_data,
@@ -395,6 +426,7 @@ def populated_db(dj_config, pipeline_test_data, test_dataset_name, test_camera_p
 # Connect Mode Tests
 # ==============================================================================
 
+
 class TestConnectMode:
     """Tests for connect mode - verifies schema imports."""
 
@@ -402,63 +434,64 @@ class TestConnectMode:
         """Verify vr4mice schema imports without error."""
         from vr4mice.schema import vr4mice
 
-        assert hasattr(vr4mice, 'Dataset')
-        assert hasattr(vr4mice, 'MouseState')
-        assert hasattr(vr4mice, 'State')
-        assert hasattr(vr4mice, 'Video')
-        assert hasattr(vr4mice, 'DLC')
+        assert hasattr(vr4mice, "Dataset")
+        assert hasattr(vr4mice, "MouseState")
+        assert hasattr(vr4mice, "State")
+        assert hasattr(vr4mice, "Video")
+        assert hasattr(vr4mice, "DLC")
 
     def test_base_analysis_schema_imports(self, dj_config):
         """Verify base_analysis schema imports without error."""
         from vr4mice.schema import base_analysis
 
-        assert hasattr(base_analysis, 'DataFrame')
-        assert hasattr(base_analysis, 'BoxDataFrame')
-        assert hasattr(base_analysis, 'SummaryPlots')
-        assert hasattr(base_analysis, 'GitCommit')
+        assert hasattr(base_analysis, "DataFrame")
+        assert hasattr(base_analysis, "BoxDataFrame")
+        assert hasattr(base_analysis, "SummaryPlots")
+        assert hasattr(base_analysis, "GitCommit")
 
     def test_dlc_schema_imports(self, dj_config):
         """Verify dlc schema imports without error."""
         from vr4mice.schema import dlc
 
-        assert hasattr(dlc, 'DLCProcessor')
-        assert hasattr(dlc, 'DLCKptsDf')
-        assert hasattr(dlc, 'SyncDLCKptsDf')
-        assert hasattr(dlc, 'OfflineKinematics')
+        assert hasattr(dlc, "DLCProcessor")
+        assert hasattr(dlc, "DLCKptsDf")
+        assert hasattr(dlc, "SyncDLCKptsDf")
+        assert hasattr(dlc, "OfflineKinematics")
 
     def test_interpolated_trajectories_schema_imports(self, dj_config):
         """Verify interpolated_trajectories schema imports without error."""
         from vr4mice.schema import interpolated_trajectories
 
-        assert hasattr(interpolated_trajectories, 'InterpolatedTrials')
-        assert hasattr(interpolated_trajectories, 'MeanXYTrajectory')
-        assert hasattr(interpolated_trajectories, 'YBinnedXYTrajectory')
-        assert hasattr(interpolated_trajectories, 'MeanVelocities')
+        assert hasattr(interpolated_trajectories, "InterpolatedTrials")
+        assert hasattr(interpolated_trajectories, "MeanXYTrajectory")
+        assert hasattr(interpolated_trajectories, "YBinnedXYTrajectory")
+        assert hasattr(interpolated_trajectories, "MeanVelocities")
 
     def test_session_metrics_schema_imports(self, dj_config):
         """Verify session_metrics schema imports without error."""
         from vr4mice.schema import session_metrics
 
-        assert hasattr(session_metrics, 'SessionMetrics')
-        assert hasattr(session_metrics, 'TrialMetrics')
+        assert hasattr(session_metrics, "SessionMetrics")
+        assert hasattr(session_metrics, "TrialMetrics")
 
     def test_latency_tests_schema_imports(self, dj_config):
         """Verify latency_tests schema imports without error."""
         from vr4mice.schema import latency_tests
 
-        assert hasattr(latency_tests, 'SignalsPhotodiodeAligned')
-        assert hasattr(latency_tests, 'AllLatencies')
+        assert hasattr(latency_tests, "SignalsPhotodiodeAligned")
+        assert hasattr(latency_tests, "AllLatencies")
 
     def test_base_schema_imports(self, dj_config):
         """Verify base schema imports without CamelCase errors."""
         from vr4mice.schema import base
 
-        assert hasattr(base, 'Base')
+        assert hasattr(base, "Base")
 
 
 # ==============================================================================
 # Populate Mode Tests
 # ==============================================================================
+
 
 class TestPopulateMode:
     """Tests for populate mode - foundation of the pipeline."""
@@ -493,7 +526,9 @@ class TestPopulateMode:
         x_pos = np.array(result["x_pos"])
 
         # Expected from golden dataset
-        assert len(x_pos) == GOLDEN_STATE_ROWS, f"x_pos length {len(x_pos)} != {GOLDEN_STATE_ROWS}"
+        assert (
+            len(x_pos) == GOLDEN_STATE_ROWS
+        ), f"x_pos length {len(x_pos)} != {GOLDEN_STATE_ROWS}"
 
         # Check sample values
         golden_baseline.check_sample_values("mousestate_x_pos", {"x_pos": x_pos})
@@ -572,6 +607,7 @@ class TestPopulateMode:
 # Analysis Mode Tests
 # ==============================================================================
 
+
 class TestAnalysisMode:
     """Tests for analysis mode - requires populate."""
 
@@ -596,15 +632,44 @@ class TestAnalysisMode:
         # Get data
         df = base_analysis.DataFrame().get_data(key)
 
-        assert df is not False and df is not None, "DataFrame not populated - expected rows after populate()"
+        assert (
+            df is not False and df is not None
+        ), "DataFrame not populated - expected rows after populate()"
 
         expected_columns = [
-            "x", "y", "trial", "iti", "velocity",
-            "object_on_left", "mouse_in_left", "mouse_in_right"
+            "x",
+            "y",
+            "trial",
+            "iti",
+            "velocity",
+            "object_on_left",
+            "mouse_in_left",
+            "mouse_in_right",
         ]
 
         for col in expected_columns:
             assert col in df.columns, f"Missing column: {col}"
+
+    def test_dataframe_keys_match_columns(self, populated_db):
+        """Verify inserted DataFrame keys match the stored dataframe columns."""
+        from vr4mice.schema import base_analysis
+
+        key = populated_db["dataset_key"]
+
+        df = base_analysis.DataFrame().get_data(key)
+        row = (base_analysis.DataFrame & key).fetch1()
+
+        assert (
+            df is not False and df is not None
+        ), "DataFrame not populated - expected rows after populate()"
+
+        row_columns = {
+            col for col in row.keys() if col not in {"interpolation"}
+        }
+
+        assert (
+            set(df.columns) == row_columns
+        ), "DataFrame column names do not match inserted data keys"
 
     def test_dataframe_sample_values(self, populated_db, golden_baseline):
         """Verify DataFrame sample values match golden."""
@@ -613,7 +678,9 @@ class TestAnalysisMode:
         key = populated_db["dataset_key"]
         df = base_analysis.DataFrame().get_data(key)
 
-        assert df is not False and df is not None, "DataFrame not populated - expected rows after populate()"
+        assert (
+            df is not False and df is not None
+        ), "DataFrame not populated - expected rows after populate()"
 
         # Check key columns
         data_dict = {
@@ -643,7 +710,9 @@ class TestAnalysisMode:
 
         box_df = base_analysis.BoxDataFrame().get_data(key)
 
-        assert box_df is not False and box_df is not None, "BoxDataFrame not populated - expected rows after populate()"
+        assert (
+            box_df is not False and box_df is not None
+        ), "BoxDataFrame not populated - expected rows after populate()"
 
         # Should have box coordinates
         assert "l_box_x_min" in box_df.columns
@@ -657,18 +726,25 @@ class TestAnalysisMode:
         key = populated_db["dataset_key"]
         box_df = base_analysis.BoxDataFrame().get_data(key)
 
-        assert box_df is not False and box_df is not None, "BoxDataFrame not populated - expected rows after populate()"
+        assert (
+            box_df is not False and box_df is not None
+        ), "BoxDataFrame not populated - expected rows after populate()"
 
         key_columns = {"dataset"}
         golden_baseline.check_sample_values(
             "boxdataframe",
-            {col: box_df[col].values for col in box_df.columns if col not in key_columns}
+            {
+                col: box_df[col].values
+                for col in box_df.columns
+                if col not in key_columns
+            },
         )
 
 
 # ==============================================================================
 # DLC Mode Tests
 # ==============================================================================
+
 
 class TestDlcMode:
     """Tests for dlc mode - requires populate."""
@@ -696,11 +772,13 @@ class TestDlcMode:
         heading = np.array(result["heading_direction"])
 
         # Check against golden dataset PROC frame count
-        assert len(x_pos) == GOLDEN_PROC_FRAMES, f"x_pos length {len(x_pos)} != {GOLDEN_PROC_FRAMES}"
+        assert (
+            len(x_pos) == GOLDEN_PROC_FRAMES
+        ), f"x_pos length {len(x_pos)} != {GOLDEN_PROC_FRAMES}"
 
         golden_baseline.check_sample_values(
             "dlcprocessor_kinematics",
-            {"x_pos": x_pos, "y_pos": y_pos, "heading_direction": heading}
+            {"x_pos": x_pos, "y_pos": y_pos, "heading_direction": heading},
         )
 
     def test_dlckptsdf_populates(self, populated_db, golden_baseline):
@@ -721,10 +799,15 @@ class TestDlcMode:
         df = dlc.DLCKptsDf().get_data(key)
 
         # Check against golden dataset DLC frame count
-        assert len(df) == GOLDEN_DLC_FRAMES, f"DLC DataFrame length {len(df)} != {GOLDEN_DLC_FRAMES}"
+        assert (
+            len(df) == GOLDEN_DLC_FRAMES
+        ), f"DLC DataFrame length {len(df)} != {GOLDEN_DLC_FRAMES}"
 
         # Should have bodypart columns (MultiIndex: bodypart, coord)
-        assert ("nose", "x") in df.columns, "Missing expected bodypart column ('nose', 'x')"
+        assert (
+            "nose",
+            "x",
+        ) in df.columns, "Missing expected bodypart column ('nose', 'x')"
 
     def test_dlckptsdf_sample_values(self, populated_db, golden_baseline):
         """Verify DLCKptsDf sample values match golden."""
@@ -733,7 +816,9 @@ class TestDlcMode:
         key = populated_db["dlc_key"]
         df = dlc.DLCKptsDf().get_data(key)
 
-        assert df is not None, "DLCKptsDf not populated - expected rows after populate()"
+        assert (
+            df is not None
+        ), "DLCKptsDf not populated - expected rows after populate()"
 
         # Flatten MultiIndex columns for a few representative bodyparts
         data_dict = {
@@ -760,7 +845,9 @@ class TestDlcMode:
         key = populated_db["dlc_key"]
         df = dlc.SyncDLCKptsDf().get_data(key)
 
-        assert df is not None, "SyncDLCKptsDf not populated - expected rows after populate()"
+        assert (
+            df is not None
+        ), "SyncDLCKptsDf not populated - expected rows after populate()"
 
         # Flatten MultiIndex columns for a few representative bodyparts
         data_dict = {
@@ -789,7 +876,9 @@ class TestDlcMode:
 
         df = dlc.OfflineKinematics().get_data(key)
 
-        assert df is not False and df is not None, "OfflineKinematics not populated - expected rows after populate()"
+        assert (
+            df is not False and df is not None
+        ), "OfflineKinematics not populated - expected rows after populate()"
 
         # Should have both kinematic columns (defined in OfflineKinematics schema)
         assert "heading_dir" in df.columns, "Missing expected column 'heading_dir'"
@@ -800,13 +889,14 @@ class TestDlcMode:
         key_columns = {"dataset", "camera", "doe", "model_name"}
         golden_baseline.check_sample_values(
             "offlinekinematics",
-            {col: df[col].values for col in df.columns if col not in key_columns}
+            {col: df[col].values for col in df.columns if col not in key_columns},
         )
 
 
 # ==============================================================================
 # Interp Mode Tests
 # ==============================================================================
+
 
 class TestInterpMode:
     """Tests for interp mode - requires analysis + dlc."""
@@ -847,9 +937,13 @@ class TestInterpMode:
 
         key = populated_db["dataset_key"]
 
-        result = (interpolated_trajectories.InterpolatedTrials & key).fetch(as_dict=True)
+        result = (interpolated_trajectories.InterpolatedTrials & key).fetch(
+            as_dict=True
+        )
 
-        assert len(result) > 0, "InterpolatedTrials not populated - expected rows after populate()"
+        assert (
+            len(result) > 0
+        ), "InterpolatedTrials not populated - expected rows after populate()"
 
         data = result[0]
         expected_keys = ["x", "y", "trial", "velocity", "aperture"]
@@ -861,15 +955,19 @@ class TestInterpMode:
         from vr4mice.schema import interpolated_trajectories
 
         key = populated_db["dataset_key"]
-        result = (interpolated_trajectories.InterpolatedTrials & key).fetch(as_dict=True)
+        result = (interpolated_trajectories.InterpolatedTrials & key).fetch(
+            as_dict=True
+        )
 
-        assert len(result) > 0, "InterpolatedTrials not populated - expected rows after populate()"
+        assert (
+            len(result) > 0
+        ), "InterpolatedTrials not populated - expected rows after populate()"
 
         data = result[0]
         key_columns = {"dataset"}
         golden_baseline.check_sample_values(
             "interpolatedtrials",
-            {k: np.array(v) for k, v in data.items() if k not in key_columns}
+            {k: np.array(v) for k, v in data.items() if k not in key_columns},
         )
 
     def test_meanxytrajectory_populates(self, populated_db, golden_baseline):
@@ -889,13 +987,15 @@ class TestInterpMode:
         key = populated_db["dataset_key"]
         result = (interpolated_trajectories.MeanXYTrajectory & key).fetch(as_dict=True)
 
-        assert len(result) > 0, "MeanXYTrajectory not populated - expected rows after populate()"
+        assert (
+            len(result) > 0
+        ), "MeanXYTrajectory not populated - expected rows after populate()"
 
         data = result[0]
         key_columns = {"dataset"}
         golden_baseline.check_sample_values(
             "meanxytrajectory",
-            {k: np.array(v) for k, v in data.items() if k not in key_columns}
+            {k: np.array(v) for k, v in data.items() if k not in key_columns},
         )
 
     def test_sessionmetrics_populates(self, populated_db, golden_baseline):
@@ -915,7 +1015,9 @@ class TestInterpMode:
 
         result = (session_metrics.SessionMetrics & key).fetch(as_dict=True)
 
-        assert len(result) > 0, "SessionMetrics not populated - expected rows after populate()"
+        assert (
+            len(result) > 0
+        ), "SessionMetrics not populated - expected rows after populate()"
 
         data = result[0]
 
@@ -925,7 +1027,9 @@ class TestInterpMode:
         assert "session_max_trial_number" in data
 
         golden_baseline.check_scalar("session_reward", data["session_reward"])
-        golden_baseline.check_scalar("session_max_trial_number", data["session_max_trial_number"])
+        golden_baseline.check_scalar(
+            "session_max_trial_number", data["session_max_trial_number"]
+        )
 
     def test_trialmetrics_populates(self, populated_db, golden_baseline):
         """Verify TrialMetrics.populate() creates entry."""
@@ -943,13 +1047,15 @@ class TestInterpMode:
         key = populated_db["dataset_key"]
         result = (session_metrics.TrialMetrics & key).fetch(as_dict=True)
 
-        assert len(result) > 0, "TrialMetrics not populated - expected rows after populate()"
+        assert (
+            len(result) > 0
+        ), "TrialMetrics not populated - expected rows after populate()"
 
         data = result[0]
         key_columns = {"dataset"}
         golden_baseline.check_sample_values(
             "trialmetrics",
-            {k: np.array(v) for k, v in data.items() if k not in key_columns}
+            {k: np.array(v) for k, v in data.items() if k not in key_columns},
         )
 
     def test_ybinnedxytrajectory_populates(self, populated_db, golden_baseline):
@@ -967,9 +1073,13 @@ class TestInterpMode:
         from vr4mice.schema import interpolated_trajectories
 
         key = populated_db["dataset_key"]
-        result = (interpolated_trajectories.YBinnedXYTrajectory & key).fetch(as_dict=True)
+        result = (interpolated_trajectories.YBinnedXYTrajectory & key).fetch(
+            as_dict=True
+        )
 
-        assert len(result) > 0, "YBinnedXYTrajectory not populated - expected rows after populate()"
+        assert (
+            len(result) > 0
+        ), "YBinnedXYTrajectory not populated - expected rows after populate()"
 
         data = result[0]
         for k in ["aperture", "bin_centers", "x_flipped", "y"]:
@@ -980,15 +1090,19 @@ class TestInterpMode:
         from vr4mice.schema import interpolated_trajectories
 
         key = populated_db["dataset_key"]
-        result = (interpolated_trajectories.YBinnedXYTrajectory & key).fetch(as_dict=True)
+        result = (interpolated_trajectories.YBinnedXYTrajectory & key).fetch(
+            as_dict=True
+        )
 
-        assert len(result) > 0, "YBinnedXYTrajectory not populated - expected rows after populate()"
+        assert (
+            len(result) > 0
+        ), "YBinnedXYTrajectory not populated - expected rows after populate()"
 
         data = result[0]
         key_columns = {"dataset"}
         golden_baseline.check_sample_values(
             "ybinnedxytrajectory",
-            {k: np.array(v) for k, v in data.items() if k not in key_columns}
+            {k: np.array(v) for k, v in data.items() if k not in key_columns},
         )
 
     def test_meanvelocities_populates(self, populated_db, golden_baseline):
@@ -1008,10 +1122,19 @@ class TestInterpMode:
         key = populated_db["dataset_key"]
         result = (interpolated_trajectories.MeanVelocities & key).fetch(as_dict=True)
 
-        assert len(result) > 0, "MeanVelocities not populated - expected rows after populate()"
+        assert (
+            len(result) > 0
+        ), "MeanVelocities not populated - expected rows after populate()"
 
         data = result[0]
-        for k in ["aperture", "trial_length", "velocity", "velocity_x", "velocity_y", "velocity_x_fliped"]:
+        for k in [
+            "aperture",
+            "trial_length",
+            "velocity",
+            "velocity_x",
+            "velocity_y",
+            "velocity_x_fliped",
+        ]:
             assert k in data, f"Missing key: {k}"
 
     def test_meanvelocities_sample_values(self, populated_db, golden_baseline):
@@ -1021,19 +1144,22 @@ class TestInterpMode:
         key = populated_db["dataset_key"]
         result = (interpolated_trajectories.MeanVelocities & key).fetch(as_dict=True)
 
-        assert len(result) > 0, "MeanVelocities not populated - expected rows after populate()"
+        assert (
+            len(result) > 0
+        ), "MeanVelocities not populated - expected rows after populate()"
 
         data = result[0]
         key_columns = {"dataset"}
         golden_baseline.check_sample_values(
             "meanvelocities",
-            {k: np.array(v) for k, v in data.items() if k not in key_columns}
+            {k: np.array(v) for k, v in data.items() if k not in key_columns},
         )
 
 
 # ==============================================================================
 # Latency Mode Tests
 # ==============================================================================
+
 
 class TestLatencyMode:
     """Tests for latency mode - photodiode signal and latency analysis.
@@ -1073,7 +1199,7 @@ class TestLatencyMode:
     def test_signals_photodiode_table_exists(self, populated_db):
         """Verify SignalsPhotodiode table can be accessed."""
         vr4mice = populated_db["vr4mice"]
-        assert hasattr(vr4mice, 'SignalsPhotodiode')
+        assert hasattr(vr4mice, "SignalsPhotodiode")
 
     def test_signals_photodiode_populates(self, populated_db, golden_baseline):
         """Verify SignalsPhotodiode.populate() creates entry from PROC data."""
@@ -1091,8 +1217,13 @@ class TestLatencyMode:
         assert len(result) == 1, "SignalsPhotodiode should have 1 row"
         data = result[0]
 
-        for field in ["photodiode_time", "photodiode_read", "generated_frame_time",
-                       "generated_send_time", "generated_signal"]:
+        for field in [
+            "photodiode_time",
+            "photodiode_read",
+            "generated_frame_time",
+            "generated_send_time",
+            "generated_signal",
+        ]:
             assert field in data, f"Missing field: {field}"
             assert len(data[field]) > 0, f"Field {field} is empty"
 
@@ -1110,8 +1241,11 @@ class TestLatencyMode:
         skip_fields = {"dataset", "signal_type", "signal_delay", "start_time"}
         golden_baseline.check_sample_values(
             "signalsphotodiode",
-            {k: v for k, v in data.items()
-             if k not in skip_fields and isinstance(v, np.ndarray) and v.ndim > 0}
+            {
+                k: v
+                for k, v in data.items()
+                if k not in skip_fields and isinstance(v, np.ndarray) and v.ndim > 0
+            },
         )
 
     def test_signals_photodiode_aligned_populates(self, populated_db, golden_baseline):
@@ -1132,6 +1266,7 @@ class TestLatencyMode:
 # ==============================================================================
 # SummaryPlots Tests
 # ==============================================================================
+
 
 class TestSummaryPlots:
     """Tests for SummaryPlots table population.
@@ -1232,6 +1367,7 @@ class TestSummaryPlots:
 # ==============================================================================
 # Fetch Mode Tests
 # ==============================================================================
+
 
 class TestFetchMode:
     """Tests for fetch mode - independent of pipeline, creates GUI menu file."""

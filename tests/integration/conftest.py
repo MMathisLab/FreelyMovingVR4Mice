@@ -120,6 +120,8 @@ def dj_config(mysql_container):
         'vr4mice.actions.keys2tables_base',
         'vr4mice.actions.keys2tables_vr4mice',
         'vr4mice.schema',
+        'vr4mice.analysis',
+        'vr4mice.analysis.plotting',
     ]
     for _mod in _mocked_modules:
         if _mod in sys.modules:
@@ -215,6 +217,8 @@ def pipeline(dj_config):
         'vr4mice.actions.keys2tables_base',
         'vr4mice.actions.keys2tables_vr4mice',
         'vr4mice.schema',
+        'vr4mice.analysis',
+        'vr4mice.analysis.plotting',
     ]
     for _mod in _mocked_modules:
         if _mod in sys.modules:
