@@ -24,10 +24,10 @@ logger = Logger.get_logger()
 class DataFrame(dj.Computed):
     """Host main dataframe for analysis."""
 
-    # TODO: This used to point to vr4mice.VR4Mice
+    # NOTE(mary): This used to point to vr4mice.VR4Mice
     #       will probably point this to the next version when it's available
 
-    # TODO: Alert!
+    # TODO:
     # "step", "reward", "step_time", "mouse_can_report", "head_dir" has to be deprecated: can be always fetched from Raw
 
     definition = """
@@ -110,9 +110,6 @@ class DataFrame(dj.Computed):
             data = data.to_dict(orient="list")
             data = {**key, **data, **{"interpolation": unity_to_physical_arena_size}}
 
-            # TODO: add test that data keys are the same with columns names
-            # if not in... alert
-
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
@@ -155,41 +152,11 @@ class DataFrame(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_all_data(self, columns=None):
-        """
-        columns: list containing the names of required columns
-        return pd.Dataframe
-        """
-
-        try:
-            dfs = []
-            keys = self.fetch("dataset")
-            for key in keys:
-                key = f"dataset='{key}'"
-                data = self.get_data(key, columns)
-                dfs.append(data)
-
-            df = pd.concat(dfs).reset_index(drop=True)
-            return df
-
-        except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}: {err}")
-            return None
-
     def get_rewarded(self, key):
         from vr4mice.analysis.analysis import get_rewarded
 
         # values needed for get_rewarded function
         df = self.get_data(key, ["dataset", "trial", "reward", "aperture"])
-        if df is not False and df is not None:
-            df["trial_rewarded"] = get_rewarded(df)
-            return df["trial_rewarded"]
-        return False
-
-    def get_all_rewarded(self):
-        from vr4mice.analysis.analysis import get_rewarded
-
-        df = self.get_all_data(["dataset", "trial", "reward", "aperture"])
         if df is not False and df is not None:
             df["trial_rewarded"] = get_rewarded(df)
             return df["trial_rewarded"]
@@ -278,23 +245,6 @@ class BoxDataFrame(dj.Computed):
             logger.warning(
                 f"Can't fetch {self.__class__.__name__}, key: {key}. Error: {err}."
             )
-            return None
-
-    def get_all_data(self, columns):
-        try:
-
-            dfs = []
-            keys = self.fetch("dataset")
-            for key in keys:
-                key = f"dataset='{key}'"
-                data = self.get_data(key, columns)
-                dfs.append(data)
-
-            df = pd.concat(dfs).reset_index(drop=True)
-            return df
-
-        except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}: {err}")
             return None
 
     def calculate_distance_to_reward(self, key):
