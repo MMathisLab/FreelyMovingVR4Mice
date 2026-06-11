@@ -183,6 +183,7 @@ if __name__ == "__main__":
     elif args.mode == "decision":
         from vr4mice.schema import decision
 
+        decision.sync_lookup_contents()
         decision.ExperimentMember().populate()
         decision.InclusionStatus().populate()
         decision.LabelSet().fill()

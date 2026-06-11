@@ -5,6 +5,14 @@ set -euo pipefail
 : "${HOME:=/app}"
 : "${PYTHONUSERBASE:=/app/.local}"
 : "${PIP_CACHE_DIR:=/app/.cache/pip}"
+
+_shims_dir="$(dirname "${BASH_SOURCE[0]}")"
+if [ -f "${_shims_dir}/ensure_python_shims.sh" ]; then
+  # shellcheck source=docker/ensure_python_shims.sh
+  source "${_shims_dir}/ensure_python_shims.sh"
+  ensure_python_shims || true
+fi
+
 export HOME PYTHONUSERBASE PIP_CACHE_DIR PATH="/app/.local/bin:${PATH}"
 
 vr4mice_app_dirs() {
