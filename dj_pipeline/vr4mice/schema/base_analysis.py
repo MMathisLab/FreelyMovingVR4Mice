@@ -195,17 +195,6 @@ class DataFrame(dj.Computed):
             return df["trial_rewarded"]
         return False
 
-    def get_choices(self, key):  # TODO: implement
-
-        pass  # TODO: implement as rewarded
-
-        from vr4mice.analysis.analysis import get_choices
-
-        df = self.get_data(key)
-        if df is not False:
-            return get_choices(df)
-        return df
-
 
 @schema
 class BoxDataFrame(dj.Computed):
@@ -513,7 +502,7 @@ class GitCommit(dj.Computed):
             logger.warning(err)
 
 
-def parse_git_commit_file(filename="git_commit"):  # TODO(mary): move to helpers
+def parse_git_commit_file(filename="git_commit"):
     """Parse a git commit file into hash and modified file list."""
     commit_hash = None
     modified_files = []
