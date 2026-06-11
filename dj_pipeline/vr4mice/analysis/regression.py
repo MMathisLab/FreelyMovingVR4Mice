@@ -54,6 +54,7 @@ def predict_decision(
     scale_data: bool = True,
     random_state: Optional[int] = None,
 ) -> Tuple[pd.DataFrame, npt.NDArray, List[Optional[dict]]]:
+
     """Predict the animal's decision based on the `label` data, through a logistic regression.
 
     Args:
