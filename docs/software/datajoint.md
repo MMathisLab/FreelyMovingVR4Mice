@@ -46,7 +46,7 @@ DataJoint is an open-source data management framework designed for scientific wo
 
 ## Tables in the `vr4mice/schema` Pipeline
 
-Each file under `dj_pipeline/vr4mice/schema/` has a module-level docstring, and every table class has a class-level docstring describing its role. The summaries below mirror those docstrings.
+Each file under `dj_pipeline/vr4mice/schema/` has a module-level docstring, and each top-level DataJoint table class has a class-level docstring describing its role (nested `dj.Part` tables may not). The summaries below mirror those docstrings.
 
 ```{image} ../../docs/images/vr4mice-erd.png
 :alt: vr4mice_erd

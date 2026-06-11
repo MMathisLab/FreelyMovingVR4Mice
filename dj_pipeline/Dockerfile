@@ -1,4 +1,4 @@
-FROM deeplabcut/deeplabcut:2.3.5-core-cuda11.7.1-cudnn8-runtime-ubuntu20.04-latest 
+FROM deeplabcut/deeplabcut:3.0.0-core-cuda12.4-cudnn9
 #mysql:debian
 
 WORKDIR /
@@ -27,9 +27,19 @@ RUN if [ -n "$APT_MIRROR" ]; then \
 
 RUN pip install -U pip setuptools wheel packaging
 
-COPY requirements-docker.txt /tmp/requirements-docker.txt
-RUN pip install --no-cache-dir -r /tmp/requirements-docker.txt \
-    && rm /tmp/requirements-docker.txt
+RUN pip install "datajoint>=2.0.1" \
+    cryptography \
+    pandas \
+    scipy \
+    seaborn \
+    jupyter \
+    umap-learn \
+    black==22.6 \
+    pytest pytest-cov tables
+
+COPY docker/ensure_python_shims.sh /usr/local/bin/ensure_python_shims.sh
+RUN chmod +x /usr/local/bin/ensure_python_shims.sh \
+    && bash -c '. /usr/local/bin/ensure_python_shims.sh && ensure_python_shims'
 
 ARG user_name=user
 ARG uid=1000

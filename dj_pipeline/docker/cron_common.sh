@@ -40,9 +40,10 @@ vr4mice_check_env_file() {
     return 1
   fi
   if grep -qE '^DJ_PWD=(your-.*-password|change-me|simple)\s*$' "${env_file}" 2>/dev/null \
-    && grep -qE '^DJ_HOST=your-' "${env_file}" 2>/dev/null; then
-    echo "Error: set real DJ_HOST / DJ_USER / DJ_PWD in ${env_file} before running cron." >&2
-    return 1
+    || grep -qE '^DJ_PWD=\s*$' "${env_file}" 2>/dev/null \
+    || grep -qE '^DJ_HOST=your-' "${env_file}" 2>/dev/null; then\
+    echo "Error: set real DJ_HOST / DJ_USER / DJ_PWD in ${env_file} before running cron." >&2\
+    return 1\
   fi
 }
 
@@ -55,7 +56,12 @@ vr4mice_run_cron_scenario() {
     vr4mice_check_env_file ".env" ".env.example"
   fi
 
-  local cmd="${BASE_INSTALL} && python cron_scenario.py"
+  local env_file=".env"
+  if [[ "${aws_mode}" == "aws" ]]; then
+    env_file=".env-aws"
+  fi
+
+  local cmd="${BASE_INSTALL} && set -a && source ${env_file} && set +a && python cron_scenario.py"
   if [[ "${aws_mode}" == "aws" ]]; then
     cmd="${cmd} --aws"
   fi

@@ -30,7 +30,7 @@ To reproduce the figure notebooks end-to-end:
 
 ## 📊 List of Paper Figures
 
-We provide reference code for plotting all paper figures here. Note that for the paper version, psome panels may have been post-processed for the manuscript layout, and the figures might differ in minor typographic details.
+We provide reference code for plotting all paper figures here. Note that for the paper version, some panels may have been post-processed for the manuscript layout, and the figures might differ in minor typographic details.
 
 ```{tableofcontents}
 ```

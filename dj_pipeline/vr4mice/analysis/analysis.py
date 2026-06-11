@@ -30,14 +30,12 @@ def style():
             "text.color": font_color,
             "axes.labelcolor": font_color,
             "axes.labelsize": font_size,
-            # "axes.titleweight": "bold",
             "axes.titlesize": font_size,
             "xtick.labelcolor": font_color,
             "xtick.labelsize": font_size,
             "ytick.labelcolor": font_color,
             "ytick.labelsize": font_size,
             "font.weight": "regular",
-            # "svg.fonttype": "none",
         }
     )
 
@@ -45,29 +43,64 @@ def style():
     plt.rc("axes", edgecolor=font_color)
 
 
+def _categorize_columns(df: pd.DataFrame) -> Tuple[List[str], List[str], List[str]]:
+    """Automatically categorize DataFrame columns based on their dtype and values.
+
+    Args:
+        df (pd.DataFrame): DataFrame to analyze.
+
+    Returns:
+        Tuple[List[str], List[str], List[str]]: Lists of categorical, boolean, and continuous column names.
+    """
+    categorical_columns = df.select_dtypes(
+        include=["object", "category"]
+    ).columns.tolist()
+    # "time" is created inside _resample_data_frame after categorization,
+    # so it won't be present here, but exclude defensively.
+    categorical_columns = [col for col in categorical_columns if col not in ["time"]]
+
+    boolean_columns = []
+    continuous_columns = []
+
+    for col in df.columns:
+        if col in categorical_columns + ["time"]:
+            continue
+
+        series = df[col]
+        # Boolean dtypes are always treated as boolean
+        if series.dtype == "bool":
+            boolean_columns.append(col)
+        # For numeric dtypes, check whether all non-NA values are in {0, 1}
+        elif pd.api.types.is_numeric_dtype(series):
+            non_na = series.dropna()
+            if non_na.isin((0, 1)).all():
+                boolean_columns.append(col)
+            else:
+                continuous_columns.append(col)
+
+    return categorical_columns, boolean_columns, continuous_columns
+
+
 def _resample_data_frame(
     df: pd.DataFrame, resampling_period_ms: int = 20
 ) -> pd.DataFrame:  # in ms
-    categorical_columns = ["aperture"]
-    binary_columns = ["reward", "mouse_in_right", "mouse_in_left", "iti"]
-    continuous_columns = df.columns[
-        (~df.columns.isin(categorical_columns)) & (~df.columns.isin(binary_columns))
-    ]
+    categorical_columns, boolean_columns, continuous_columns = _categorize_columns(df)
 
     t = f"{resampling_period_ms}ms"  # old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
 
     df["time"] = pd.to_datetime(df["step_time"], unit="s")
+
     categorical_resampled = (
         df.set_index("time")
         .groupby("trial", as_index=False)[categorical_columns]
-        .resample(t)  # resample to 50Hz
-        .first()
+        .resample(t)  # resample to fixed time intervals {resampling_period_ms} ms
+        .first(numeric_only=False)  # default
         .ffill()
     )
 
-    binary_resampled = (
+    boolean_resampled = (
         df.set_index("time")
-        .groupby("trial", as_index=False)[binary_columns]
+        .groupby("trial", as_index=False)[boolean_columns]
         .resample(t)
         .max()
         .ffill()
@@ -81,7 +114,7 @@ def _resample_data_frame(
         .interpolate()
     )
     df = pd.concat(
-        [continuous_resampled, categorical_resampled, binary_resampled], axis=1
+        [continuous_resampled, categorical_resampled, boolean_resampled], axis=1
     ).reset_index()
 
     if "level_0" in df.columns:
@@ -249,6 +282,45 @@ def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
     return group
 
 
+DEFAULT_UNITY_ARENA_SIZE = np.array([-9.0, 9.0, -10.0, -2.0])
+
+
+def resolve_unity_arena_size(key: dict) -> np.ndarray:
+    """Return Unity arena bounds [x_min, x_max, z_max, z_min] for a dataset.
+
+    Reads ``GuiParams.unity_arena_size``. Falls back to ``DEFAULT_UNITY_ARENA_SIZE``
+    (standard rig default used before GuiParams was wired in) when the row or
+    field is missing, with a warning. Raises ``ValueError`` if the stored value
+    is present but does not have length 4.
+    """
+    dataset = key.get("dataset", key)
+    gui_params = vr4mice.GuiParams() & key
+
+    if len(gui_params) == 0:
+        logger.warning(
+            "GuiParams missing for %s; using default unity_arena_size %s",
+            dataset,
+            DEFAULT_UNITY_ARENA_SIZE.tolist(),
+        )
+        return DEFAULT_UNITY_ARENA_SIZE.copy()
+
+    value = gui_params.fetch1("unity_arena_size")
+    if value is None:
+        logger.warning(
+            "unity_arena_size is NULL for %s; using default %s",
+            dataset,
+            DEFAULT_UNITY_ARENA_SIZE.tolist(),
+        )
+        return DEFAULT_UNITY_ARENA_SIZE.copy()
+
+    arr = np.asarray(value, dtype=float).reshape(-1)
+    if arr.shape != (4,):
+        raise ValueError(
+            f"unity_arena_size for {dataset} must have length 4, got shape {arr.shape}"
+        )
+    return arr
+
+
 def create_data_frame(
     key: dict,
     iti: bool = True,
@@ -276,18 +348,18 @@ def create_data_frame(
 
     logger.info(f"Creating dataframe for: {key}")
 
-    # Note:
-    # all attributes are used for MouseState, the implementation could be:
+    # NOTE: all attributes are used for MouseState, the implementation could be:
     # df = pd.DataFrame((vr4mice.MouseState & {"dataset": dataset}).fetch1())
     # but with fetch1 it looks faster and more control on keys
+    # TODO:(mary) checks if exists, try-catch
 
     slit_size = np.array(
         (vr4mice.Metadata & key).fetch1("slit_size")
-    )
-    trial = (vr4mice.State & key).fetch("episode")  # change of name
+    )  # TODO: check type-s
+    trial = (vr4mice.State & key).fetch("episode")
     trial = np.array(np.array(trial)[0], dtype=np.int32)
 
-    aperture = slit_size[trial - 1]
+    aperture = slit_size[trial - 1]  # TODO check type-s
     df = pd.DataFrame(
         {
             "step": (vr4mice.State & key).fetch1(
@@ -324,12 +396,13 @@ def create_data_frame(
         df.trial != 1
     ]  # NOTE(celia): drop first trial which is DLC-live initialization trial
 
-    unity_to_physical_arena_size = dict(
-        unity_arena_size_x_min=9,
-        unity_arena_size_z_max=-10,
-        unity_arena_size_z_min=-2,
-        physical_arena_size=27,
-    )
+    unity_arena_size = resolve_unity_arena_size(key)
+    unity_to_physical_arena_size = {
+        "unity_arena_size_x_min": abs(unity_arena_size[0]),
+        "unity_arena_size_z_max": unity_arena_size[2],
+        "unity_arena_size_z_min": unity_arena_size[3],
+        "physical_arena_size": 27,
+    }
 
     df["x"] = np.interp(
         df.x,
@@ -368,7 +441,7 @@ def create_data_frame(
     # Normalized coordinates
     df["bins_y"] = pd.cut(
         df["y"], bins=np.linspace(spatial_ybins[0], spatial_ybins[1], spatial_ybins[2])
-    )
+    ).astype(str)
     df["norm_y"] = df.groupby("trial", as_index=False)["y"].transform(
         lambda x: x - np.mean(x.iloc[:first_n_samples])
     )

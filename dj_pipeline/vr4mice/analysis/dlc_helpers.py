@@ -9,13 +9,15 @@ import scipy.signal
 
 
 def df_to_dj(df: pd.DataFrame) -> Dict:
-    """Converts a DataFrame to a dictionary format for data handling.
+    """Convert a DLC-style DataFrame to a DataJoint-friendly dictionary.
 
-    This function is specifically for converting a DataFrame containing DLC
-    data into a DataJoint-compatible dictionary.
+    This helper is intentionally DLC-specific: it assumes the standard DLC
+    multi-index layout and converts it into the `data`, `headers`, and optional
+    `scorer` fields used by the DLC schema tables.
 
     Args:
-        df (pd.DataFrame): The DataFrame to convert.
+        df (pd.DataFrame): The DataFrame to convert. Expected to use the
+            standard DLC multi-index column structure.
 
     Returns:
         dict: A dictionary containing:
@@ -35,10 +37,13 @@ def df_to_dj(df: pd.DataFrame) -> Dict:
 
 
 def h5_to_dj(h5_path: str) -> Dict:
-    """Reads data from an HDF5 file and converts it to a dictionary format.
+    """Load a DLC HDF5 file and convert it to the DataJoint-friendly format.
+
+    This is a convenience wrapper around `pandas.read_hdf()` and `df_to_dj()`.
 
     Args:
-        h5_path (str): The path to the HDF5 file.
+        h5_path (str): The path to the HDF5 file. Expected to point to a DLC
+            export produced by the standard pipeline.
 
     Returns:
         dict: A dictionary representation of the data.
@@ -50,14 +55,14 @@ def h5_to_dj(h5_path: str) -> Dict:
 def dj_to_df(
     data: npt.NDArray, headers: List[Union[str, Tuple[str]]], scorer
 ) -> pd.DataFrame:
-    """Converts a dictionary format back to a DataFrame.
+    """Convert the stored DLC payload back to a pandas DataFrame.
 
-    This function is specifically for retrieving dlc raw data stored in
-    datajoint tables.
+    This reverses `df_to_dj()` for DLC data stored in DataJoint tables.
 
     Args:
         data (Any): The data to convert (should be in a compatible format).
-        headers (List[Tuple[str]]): Column headers for the DataFrame.
+        headers (List[Tuple[str]]): Column headers for the DataFrame. Expected
+            to be the output of `df_to_dj()`.
         scorer (str): Specifies the model that was used, along with scorer of
                     the data if applicable.
 
@@ -294,6 +299,8 @@ def compute_head_angles(filtered_dlc: pd.DataFrame) -> pd.DataFrame:
 
     Args:
         filtered_dlc (pd.DataFrame): DataFrame containing filtered DLC data for multiple frames.
+            Expected columns: DLC body-part coordinates with a `coords` level in the
+            MultiIndex, plus the standard body part ordering used by the pipeline.
 
     Returns:
         pd.DataFrame: A DataFrame with the following columns:
@@ -344,11 +351,14 @@ def find_closest_indices(pose_time: List[int], step_time: List[int]) -> List[int
     return closest_indices
 
 
-# NOTE(celia): unused helper kept for potential future angular-velocity analysis.
 def compute_circular_angular_velocity(
     angles: Union[list, npt.NDArray], time_intervals: Union[list, npt.NDArray]
 ) -> npt.NDArray:
-    """Computes the circular angular velocity of an angle changing over time.
+    """Compute angular velocity for a circular quantity.
+
+    The function unwraps the angle series to avoid discontinuities at the
+    -pi/pi boundary, differentiates the sine and cosine components over time,
+    and combines them into a signed angular velocity estimate.
 
     Args:
         angles (array-like): Array of angles in radians.

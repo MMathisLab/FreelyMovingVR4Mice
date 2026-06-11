@@ -29,10 +29,8 @@ class RawVideo(dj.Imported):
     ---
     video_path: varchar(255)       # absolute path to the raw OBS recording
     """
-    # key_source = vr4mice.Dataset.proj()
 
-    # NOTE(celia): to update the default path when we put the videos onto the server
-    def make(self, key, base_path: str = "/vr4mice_screen_recordings"):
+    def make(self, key):
         """Insert raw OBS recording path for a dataset."""
         from vr4mice.actions.populate_rig import get_files_paths
 
@@ -70,8 +68,8 @@ class ProcessedVideo(dj.Computed):
     img_validation_path: varchar(255) # path to validation frame JPEGs
     start_frame: int                # session start frame index (raw video)
     end_frame: int                  # session end frame index (raw video)
-    visual_roi: blob                # (x,y,w,h) for visual ROI in raw video coords
-    sync_roi: blob                  # (x,y,w,h) for sync ROI in raw video coords
+    visual_roi: <blob>                # (x,y,w,h) for visual ROI in raw video coords
+    sync_roi: <blob>                  # (x,y,w,h) for sync ROI in raw video coords
     """
 
     def make(
@@ -169,9 +167,9 @@ class VideoSyncSignal(dj.Computed):
     ---
     video_fps: float              # FPS of the sync video
     total_frames: int             # frame count of the sync video
-    frame_ids: longblob           # frame indices (0-based)
-    timestamps: longblob          # frame timestamps in seconds
-    signals: longblob             # binary sync signal per frame (0/1)
+    frame_ids: <blob>           # frame indices (0-based)
+    timestamps: <blob>          # frame timestamps in seconds
+    signals: <blob>             # binary sync signal per frame (0/1)
     """
 
     def make(self, key):
@@ -232,9 +230,9 @@ class AlignedVideoFrame(dj.Computed):
     -> vr4mice.State                # game state (step, step_time, photodiode optional)
     ---
     n_steps: int                    # number of steps in the session
-    step: longblob                  # step indices
-    step_time: longblob             # step timestamps (seconds)
-    frame_ids: longblob             # aligned video frame indices for each step
+    step: <blob>                  # step indices
+    step_time: <blob>             # step timestamps (seconds)
+    frame_ids: <blob>             # aligned video frame indices for each step
     align_path: varchar(32)         # 'photodiode' or 'fallback'
     pair_count: float               # number of matched edges (if photodiode path)
     rms: float                      # RMS residual of edge fit (seconds)

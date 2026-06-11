@@ -208,7 +208,7 @@ make ipython
 (docker-client-base-packages)=
 ### Docker client: base packages and user mapping
 
-The client image is built from DeepLabCut’s pip-based Docker image (system Python at `/usr/bin/python`, **not** conda).
+The client image is built from DeepLabCut’s Docker image. Pipeline commands use plain `python -m pip` (**no** `conda activate`). At build time and container start, `docker/ensure_python_shims.sh` symlinks the base image’s Python into `/usr/local/bin` so `make`, cron, and `docker compose exec` all find `python` on the compose `PATH`.
 
 **`base_schemas` / `base_actions`** are bind-mounted from the repo and installed at runtime with pip:
 
@@ -367,7 +367,7 @@ mkdir -p /mnt/database/shared   # or your SHARED_PATH
    | `remote_dropdown_menu` | Path to menu file **on the server** | `/shared/gui_menu.npy` |
    | `host_dropdown_menu` | Local copy path on the rig | `./gui_menu.npy` |
 
-   On startup, `config.get_menu_path()` copies the remote file to the rig:
+   On startup, `config.get_menu_path` copies the remote file to the rig:
    - **`localhost`**: local file copy from `remote_dropdown_menu` to `host_dropdown_menu` (both paths must be readable on the same machine)
    - **remote server**: `scp host@ip:remote_dropdown_menu` → `host_dropdown_menu` (requires SSH access and the menu file on the server)
 

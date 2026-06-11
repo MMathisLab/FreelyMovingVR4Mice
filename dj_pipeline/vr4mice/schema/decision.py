@@ -116,6 +116,18 @@ class ExperimentStage(dj.Lookup):
     ]
 
 
+def sync_lookup_contents():
+    """Insert Lookup rows from class ``contents`` that are missing in the DB.
+
+    DataJoint only loads ``contents`` when a Lookup table is first created.
+    On deployed databases, new rows added to ``contents`` in code must be
+    back-filled explicitly (parent rows before ``ExperimentMember.populate``).
+    """
+    for table in (ExperimentSet, ExperimentStage, SessionLabel):
+        if table.contents:
+            table.insert(table.contents, skip_duplicates=True)
+
+
 @schema
 class ExperimentMember(dj.Imported):
     """
@@ -177,7 +189,7 @@ class InclusionStatus(dj.Computed):
     definition = """
     -> ExperimentMember
     ---
-    included : boolean
+    included : bool
     """
 
     def make(self, key):
@@ -393,9 +405,9 @@ class PredictionModel(dj.Computed):
     -> ExperimentSet
     -> ExperimentStage
     ---
-    coefficients : longblob     # coefficients per session (per_mouse=True)
+    coefficients : <blob>     # coefficients per session (per_mouse=True)
     n_sessions : int            # number of sessions included
-    sessions : longblob         # list of session dataset names
+    sessions : <blob>         # list of session dataset names
     random_state : int          # random state used for reproducibility
     mean_accuracy : float       # mean accuracy across sessions
     bic : float                 # Bayesian Information Criterion for the model
@@ -409,12 +421,12 @@ class PredictionModel(dj.Computed):
         n_samples : int                # number of samples in the session
         mean_accuracy : float          # mean accuracy for this session
         mean_proba_left: float         # mean predicted probability for left choice
-        trial : longblob               # trial numbers
-        trial_length: longblob         # trial progression
-        proba_left : longblob          # predicted probabilities for left choice
-        accuracy : longblob            # per-trial accuracy values
-        trial_left_choice : longblob   # ground truth left choice
-        bic : longblob                 # Bayesian Information Criterion per timestep
+        trial : <blob>               # trial numbers
+        trial_length: <blob>         # trial progression
+        proba_left : <blob>          # predicted probabilities for left choice
+        accuracy : <blob>            # per-trial accuracy values
+        trial_left_choice : <blob>   # ground truth left choice
+        bic : <blob>                 # Bayesian Information Criterion per timestep
         """
 
     def make(self, key):
@@ -600,14 +612,14 @@ class PredictionModel10Windows(dj.Computed):
     -> ExperimentSet
     -> ExperimentStage
     ---
-    coefficients_by_window : longblob    # dict mapping window_id (0-9) -> coefficients
-    scalers_by_window : longblob         # dict mapping window_id (0-9) -> list of scaler params per fold
+    coefficients_by_window : <blob>    # dict mapping window_id (0-9) -> coefficients
+    scalers_by_window : <blob>         # dict mapping window_id (0-9) -> list of scaler params per fold
     n_sessions : int                     # number of sessions included
-    sessions : longblob                  # list of session dataset names
+    sessions : <blob>                  # list of session dataset names
     random_state : int                   # random state used for reproducibility
-    mean_accuracy_by_window : longblob   # dict mapping window_id (0-9) -> mean accuracy
-    bic_by_window : longblob             # dict mapping window_id (0-9) -> BIC
-    cross_window_accuracy_matrix : longblob  # nested dict: train_window -> test_window -> accuracy
+    mean_accuracy_by_window : <blob>   # dict mapping window_id (0-9) -> mean accuracy
+    bic_by_window : <blob>             # dict mapping window_id (0-9) -> BIC
+    cross_window_accuracy_matrix : <blob>  # nested dict: train_window -> test_window -> accuracy
     cross_window_accuracy_mean : float       # mean off-diagonal cross-window accuracy
     """
 
@@ -619,13 +631,13 @@ class PredictionModel10Windows(dj.Computed):
         n_samples : int                  # number of samples in the session
         mean_accuracy : float            # mean accuracy for this session
         mean_proba_left : float          # mean predicted probability for left choice
-        trial : longblob                 # trial numbers
-        trial_length : longblob          # trial progression
-        proba_left : longblob            # predicted probabilities for left choice
-        accuracy : longblob              # per-sample accuracy values
-        trial_left_choice : longblob     # ground truth left choice
-        bic : longblob                   # Bayesian Information Criterion per timestep
-        model_idx : longblob             # per-sample model/window index (0-9)
+        trial : <blob>                 # trial numbers
+        trial_length : <blob>          # trial progression
+        proba_left : <blob>            # predicted probabilities for left choice
+        accuracy : <blob>              # per-sample accuracy values
+        trial_left_choice : <blob>     # ground truth left choice
+        bic : <blob>                   # Bayesian Information Criterion per timestep
+        model_idx : <blob>             # per-sample model/window index (0-9)
         """
 
     @staticmethod
@@ -795,7 +807,7 @@ class PredictionModel10Windows(dj.Computed):
             bic_by_window = {}
             session_prediction_by_dataset = {}
 
-            for window_id in range(10):
+            for window_id in range(WINDOW_COUNT):
                 window_df = interpolated_df[
                     interpolated_df["trial_window"] == window_id
                 ].copy()
@@ -887,8 +899,8 @@ class PredictionModel10Windows(dj.Computed):
             )
             off_diag_scores = [
                 cross_window_accuracy_matrix[i][j]
-                for i in range(10)
-                for j in range(10)
+                for i in range(WINDOW_COUNT)
+                for j in range(WINDOW_COUNT)
                 if i != j and np.isfinite(cross_window_accuracy_matrix[i][j])
             ]
             cross_window_accuracy_mean = (
@@ -972,14 +984,14 @@ class DecisionPoints(dj.Computed):
     -> PredictionModel.SessionPrediction
     -> DecisionThreshold
     ---
-    trial: longblob                 # trial corresponding to the timestamp
-    proba_left: longblob            # pred proba of the regression on decision side
-    aperture: longblob              # occlusion size for the corresponding trial
-    trial_left_choice: longblob     # ground truth on the decision side
-    trial_rewarded: longblob        # 1 if trial was rewarded, else 0
-    trial_length: longblob          # length of the trial at which decision was made
-    x: longblob                     # x position of the decision point in the trial
-    y: longblob                     # y position of the decision point in the trial
+    trial: <blob>                 # trial corresponding to the timestamp
+    proba_left: <blob>            # pred proba of the regression on decision side
+    aperture: <blob>              # occlusion size for the corresponding trial
+    trial_left_choice: <blob>     # ground truth on the decision side
+    trial_rewarded: <blob>        # 1 if trial was rewarded, else 0
+    trial_length: <blob>          # length of the trial at which decision was made
+    x: <blob>                     # x position of the decision point in the trial
+    y: <blob>                     # y position of the decision point in the trial
     """
 
     def make(self, key):
@@ -1056,14 +1068,14 @@ class DecisionPoints10Windows(dj.Computed):
     -> PredictionModel10Windows.SessionPrediction
     -> DecisionThreshold
     ---
-    trial: longblob                 # trial corresponding to the timestamp
-    proba_left: longblob            # pred proba of the regression on decision side
-    aperture: longblob              # occlusion size for the corresponding trial
-    trial_left_choice: longblob     # ground truth on the decision side
-    trial_rewarded: longblob        # 1 if trial was rewarded, else 0
-    trial_length: longblob          # length of the trial at which decision was made
-    x: longblob                     # x position of the decision point in the trial
-    y: longblob                     # y position of the decision point in the trial
+    trial: <blob>                 # trial corresponding to the timestamp
+    proba_left: <blob>            # pred proba of the regression on decision side
+    aperture: <blob>              # occlusion size for the corresponding trial
+    trial_left_choice: <blob>     # ground truth on the decision side
+    trial_rewarded: <blob>        # 1 if trial was rewarded, else 0
+    trial_length: <blob>          # length of the trial at which decision was made
+    x: <blob>                     # x position of the decision point in the trial
+    y: <blob>                     # y position of the decision point in the trial
     """
 
     def make(self, key):

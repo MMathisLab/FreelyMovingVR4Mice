@@ -1,6 +1,7 @@
 services:
   db:
-    image: datajoint/mysql:5.7 
+    image: mysql:8.0
+    command: --character-set-server=latin1 --collation-server=latin1_swedish_ci
     container_name: ${DB_CONTAINER_NAME:-vr4mice_db}
     ports:
       - "${DB_BIND_IP:-0.0.0.0}:${DB_PORT:-3309}:3306"
@@ -30,6 +31,7 @@ services:
     entrypoint: ["/bin/bash", "/usr/local/bin/entrypoint.sh"]
     volumes:
       - "./docker/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro"
+      - "./docker/ensure_python_shims.sh:/usr/local/bin/ensure_python_shims.sh:ro"
       - "./:/app"
       - "${SHARED_PATH:-/mnt/database/shared}:/shared"
       - "${DATA_PATH:-/mnt/database/vr4mice/vr4mice_database/data}:/data"

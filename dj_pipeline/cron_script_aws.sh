@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # AWS pipeline run (decision tables, /data/processed).
-# DB credentials are loaded from .env-aws inside the container (see cron_scenario.py).
+# DB credentials are sourced from .env-aws inside the client container (see cron_common.sh).
 
 source "$(dirname "$0")/docker/cron_common.sh"
 vr4mice_cron_init

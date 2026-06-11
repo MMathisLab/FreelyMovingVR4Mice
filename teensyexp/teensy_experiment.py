@@ -111,7 +111,7 @@ class TeensyExperimentGUI(object):
                 it also updates GUI elements with new config info.
             :param name: name of the config file without extension (name - not path!), default = None
             :type name: string
-            :raises: FileNotFoundError: If the named setup file does not exist.
+            :raises: TODO file not found
             :return: initialized setup structure
             :rtype: dictionary
         """
@@ -120,7 +120,7 @@ class TeensyExperimentGUI(object):
         else:
             setup_file = self.get_setup_file_name(name)
             if not os.path.isfile(setup_file):
-                if hasattr(self, "window"):
+                if hasattr(self, "window"):  # TODO redo hasattr approach
                     messagebox.showerror("Setup does not exist!",
                                          "This setup file does not exist, "
                                          "please create a new setup file with this name.",
@@ -168,7 +168,7 @@ class TeensyExperimentGUI(object):
         """
         setup = self.setup if setup is None else setup
         setup_name = self.setup_name.get() if setup_name is None else setup_name  # gui interaction
-        json.dump(setup, open(self.get_setup_file_name(setup_name), 'w'))  # stores in gui file
+        json.dump(setup, open(self.get_setup_file_name(setup_name), 'w'),indent=4)  # stores in gui file
         if notify:
             messagebox.showinfo("Config Saved", "Configuration file has been saved.", parent=self.window)
 
@@ -221,7 +221,7 @@ class TeensyExperimentGUI(object):
                 This method deletes the setup file from file system (attention! all information will be lost)
             :param name: name of the config file without extension (name - not path!), default = None
             :type name: string
-            :raises: FileNotFoundError: If the named setup file does not exist.
+            :raises: TODO file not found
         """
         if name is None:
             name = self.setup_name.get()  # gui interaction
@@ -236,6 +236,7 @@ class TeensyExperimentGUI(object):
             self.setup_list.remove(name)  # gui interaction : update
             self.setup_entry['values'] = tuple(self.setup_list) + ('Create New Setup',)
             self.setup_name.set("")  # gui interaction : update
+            # TODO :: reset to default drop down boxes!
 
     def update_tasks(self, task_dir):
         """
@@ -274,13 +275,13 @@ class TeensyExperimentGUI(object):
 
         self.task_params = {}
         for t in task_list:
-            obj = getattr(self.task_module, t)
+            obj = getattr(self.task_module, t)  # TODO no getattr
             args = inspect.getargspec(obj)
             self.task_params[t] = {}
             for i in range(2, len(args[0])):
                 self.task_params[t][args[0][i]] = args[3][i - 2]
 
-        if hasattr(self, 'task_entry'):
+        if hasattr(self, 'task_entry'):  # TODO no hasattr
             self.task_name.set("")  # gui interaction : update
             self.task_entry['values'] = tuple(self.task_params.keys())
 
@@ -430,6 +431,7 @@ class TeensyExperimentGUI(object):
             self.teensy.close()
             self.teensy = None
             self.rig_label['text'] = "Not Connected"
+        # TODO delete Teensy instance
 
     def add_sub_to_cfg(self):
         """
@@ -600,11 +602,7 @@ class TeensyExperimentGUI(object):
                 self.check_task_progress()
 
     def check_task_progress(self, info=None):
-        """
-            :priority: utils
-                This method allows track the state of task in real time on gui
-                get information from task_info dictionary
-        """
+        """Track the real time task state on GUI and get information from task_info dictionary."""
         if info is None:
             info = self.task_info
 
@@ -620,14 +618,6 @@ class TeensyExperimentGUI(object):
             for k, v in info.items():
                 self.value_labels[index]['text'] = str(v)
                 index += 1
-
-        # if not initial:
-        #     if self.task_on_button:
-        #         self.window.after(1, self.check_task_progress)
-        #     else:
-        #         self.task_on.set(0)
-        #         if self.gui_task:
-        #             self.task.window.destroy()
 
     def _reset_progress_labels(self):
         """
@@ -976,6 +966,5 @@ def main():
     exp = TeensyExperimentGUI()
     exp.run_experiment()
 
-
-#__name__ == '__main__'
-#main()
+if __name__ == "__main__":
+    main()

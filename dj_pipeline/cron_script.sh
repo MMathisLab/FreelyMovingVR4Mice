@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Nightly local pipeline (rig data -> /data/data, video tables, shared export).
-# DB credentials are loaded from .env inside the container (see cron_scenario.py).
+# DB credentials are sourced from .env inside the client container (see cron_common.sh).
 
 source "$(dirname "$0")/docker/cron_common.sh"
 vr4mice_cron_init

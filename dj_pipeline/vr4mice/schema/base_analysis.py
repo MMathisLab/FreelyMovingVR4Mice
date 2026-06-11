@@ -11,7 +11,6 @@ from base_actions.send_email import email
 
 from vr4mice.schema import base, vr4mice
 from vr4mice.analysis.summary_dj import vr4mice_summary_plots
-from vr4mice.utils.git_helpers import parse_git_commit_file
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
 
@@ -28,69 +27,72 @@ class DataFrame(dj.Computed):
     hosts the main per-step analysis dataframe for a dataset
     """
 
-    # DEPRECATED: Foreign key may move from vr4mice.Dataset when VR4Mice schema is revised.
-    # DEPRECATED: step, reward, step_time, mouse_can_report, head_dir — fetch from State instead.
+    # NOTE(mary): This used to point to vr4mice.VR4Mice
+    #       will probably point this to the next version when it's available
+
+    # TODO:
+    # "step", "reward", "step_time", "mouse_can_report", "head_dir" has to be deprecated: can be always fetched from Raw
 
     definition = """
     -> vr4mice.Dataset
     ---
-    step: longblob                      # TO DEPRECATE
-    step_time: longblob                 # TO DEPRECATE 
-    trial: longblob 
-    reward: longblob                    # TO DEPRECATE
+    step: <blob>                      # TO DEPRECATE
+    step_time: <blob>                 # TO DEPRECATE 
+    trial: <blob> 
+    reward: <blob>                    # TO DEPRECATE
    
-    x: longblob
-    y: longblob
+    x: <blob>
+    y: <blob>
 
-    bins_y=NULL: longblob               # NEW, do we need to 'store' too?
-    norm_y=NULL: longblob               # NEW, do we need to store 'trial' too?
+    bins_y=NULL: <blob>               # NEW, do we need to 'store' too?
+    norm_y=NULL: <blob>               # NEW, do we need to store 'trial' too?
 
-    mouse_can_report=NULL: longblob     # TO DEPRECATE
-    iti: longblob
-    iti_duration=NULL: longblob
-    mouse_correct: longblob             # TO DEPRECATE
-    object_on_left: longblob
-    mouse_in_left: longblob
-    mouse_in_right: longblob
+    mouse_can_report=NULL: <blob>     # TO DEPRECATE
+    iti: <blob>
+    iti_duration=NULL: <blob>
+    mouse_correct: <blob>             # TO DEPRECATE
+    object_on_left: <blob>
+    mouse_in_left: <blob>
+    mouse_in_right: <blob>
     
-    velocity: longblob
-    velocity_x=NULL: longblob           # NEW --> to think about separate table
-    velocity_y=NULL: longblob           # NEW
+    velocity: <blob>
+    velocity_x=NULL: <blob>           # NEW --> to think about separate table
+    velocity_y=NULL: <blob>           # NEW
 
-    acceleration_x=NULL: longblob      # NEW
-    acceleration_y=NULL: longblob      # NEW
+    acceleration_x=NULL: <blob>      # NEW
+    acceleration_y=NULL: <blob>      # NEW
 
-    head_dir=NULL: longblob             # TO DEPRECATE
+    head_dir=NULL: <blob>             # TO DEPRECATE
 
-    trial_duration=NULL: longblob          # NEW
-    distance=NULL: longblob                # NEW
-    trial_traj_path_length=NULL: longblob  # NEW
+    trial_duration=NULL: <blob>          # NEW
+    distance=NULL: <blob>                # NEW
+    trial_traj_path_length=NULL: <blob>  # NEW
 
-    trial_init_x=NULL: longblob             # NEW --> to method maybe
-    trial_init_y=NULL: longblob             # NEW
-    trial_end_x=NULL: longblob              # NEW
-    trial_end_y=NULL: longblob              # NEW
+    trial_init_x=NULL: <blob>             # NEW --> to method maybe
+    trial_init_y=NULL: <blob>             # NEW
+    trial_end_x=NULL: <blob>              # NEW
+    trial_end_y=NULL: <blob>              # NEW
 
-    trial_direct_path=NULL: longblob        # NEW
-    trial_tortuosity=NULL: longblob         # NEW
-    trial_step: longblob
+    trial_direct_path=NULL: <blob>        # NEW
+    trial_tortuosity=NULL: <blob>         # NEW
+    trial_step: <blob>
 
-    trial_step_time=NULL: longblob          # OLD TO DEPRECATE? (same as time?)
-    trial_step_fraction=NULL: longblob
+    trial_step_time=NULL: <blob>          # OLD TO DEPRECATE? (same as time?)
+    trial_step_fraction=NULL: <blob>
     
-    choice=NULL: longblob                   # NEW --> to method?
-    flip_one_side=NULL: longblob            # NEW
+    choice=NULL: <blob>                   # NEW --> to method?
+    flip_one_side=NULL: <blob>            # NEW
     
-    trial_right_choice: longblob
-    trial_left_choice: longblob
+    trial_right_choice: <blob>
+    trial_left_choice: <blob>
 
-    trial_step_fraction=NULL: longblob      # OLD: TO DEPRECATE (same as trial_step?)
+    trial_step_fraction=NULL: <blob>      # OLD: TO DEPRECATE (same as trial_step?)
    
-    aperture=NULL: longblob                 # NEW
-    time=NULL: longblob                     # NEW
-    time_elapsed=NULL: longblob             # NEW
+    aperture=NULL: <blob>                 # NEW
+    time=NULL: <blob>                     # NEW
+    time_elapsed=NULL: <blob>             # NEW
 
-    interpolation: longblob
+    interpolation: <blob>
     """
 
     def make(self, key):
@@ -110,8 +112,6 @@ class DataFrame(dj.Computed):
             data, unity_to_physical_arena_size = create_data_frame(key)
             data = data.to_dict(orient="list")
             data = {**key, **data, **{"interpolation": unity_to_physical_arena_size}}
-
-            # Keys in data must match table columns before insert1.
 
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
@@ -155,27 +155,6 @@ class DataFrame(dj.Computed):
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
 
-    def get_all_data(self, columns=None):
-        """
-        columns: list containing the names of required columns
-        return pd.Dataframe
-        """
-
-        try:
-            dfs = []
-            keys = self.fetch("dataset")
-            for key in keys:
-                key = f"dataset='{key}'"
-                data = self.get_data(key, columns)
-                dfs.append(data)
-
-            df = pd.concat(dfs).reset_index(drop=True)
-            return df
-
-        except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}: {err}")
-            return None
-
     def get_rewarded(self, key):
         from vr4mice.analysis.analysis import get_rewarded
 
@@ -185,23 +164,6 @@ class DataFrame(dj.Computed):
             df["trial_rewarded"] = get_rewarded(df)
             return df["trial_rewarded"]
         return False
-
-    def get_all_rewarded(self):
-        from vr4mice.analysis.analysis import get_rewarded
-
-        df = self.get_all_data(["dataset", "trial", "reward", "aperture"])
-        if df is not False and df is not None:
-            df["trial_rewarded"] = get_rewarded(df)
-            return df["trial_rewarded"]
-        return False
-
-    def get_choices(self, key):
-        from vr4mice.analysis.analysis import get_choices
-
-        df = self.get_data(key)
-        if df is not False:
-            return get_choices(df)
-        return df
 
 
 @schema
@@ -214,27 +176,27 @@ class BoxDataFrame(dj.Computed):
     definition = """
     -> DataFrame
     ---
-    l_box_x_min: blob
-    l_box_x_max: blob
-    l_box_z_min: blob
-    l_box_z_max: blob
+    l_box_x_min: <blob>
+    l_box_x_max: <blob>
+    l_box_z_min: <blob>
+    l_box_z_max: <blob>
     
-    r_box_x_min: blob
-    r_box_x_max: blob
-    r_box_z_min: blob
-    r_box_z_max: blob
+    r_box_x_min: <blob>
+    r_box_x_max: <blob>
+    r_box_z_min: <blob>
+    r_box_z_max: <blob>
 
-    tt_box_x_min: blob
-    tt_box_x_max: blob
-    tt_box_z_min: blob
-    tt_box_z_max: blob
+    tt_box_x_min: <blob>
+    tt_box_x_max: <blob>
+    tt_box_z_min: <blob>
+    tt_box_z_max: <blob>
 
-    tt_box_angle: blob
+    tt_box_angle: <blob>
     
-    l_reward_x=NULL: blob    # NEW  
-    l_reward_z=NULL: blob    # NEW  
-    r_reward_x= NULL: blob  # NEW
-    r_reward_z=NULL: blob    # NEW  
+    l_reward_x=NULL: <blob>    # NEW  
+    l_reward_z=NULL: <blob>    # NEW  
+    r_reward_x= NULL: <blob>  # NEW
+    r_reward_z=NULL: <blob>    # NEW  
     
     """
 
@@ -291,23 +253,6 @@ class BoxDataFrame(dj.Computed):
             logger.warning(
                 f"Can't fetch {self.__class__.__name__}, key: {key}. Error: {err}."
             )
-            return None
-
-    def get_all_data(self, columns):
-        try:
-
-            dfs = []
-            keys = self.fetch("dataset")
-            for key in keys:
-                key = f"dataset='{key}'"
-                data = self.get_data(key, columns)
-                dfs.append(data)
-
-            df = pd.concat(dfs).reset_index(drop=True)
-            return df
-
-        except Exception as err:
-            logger.warning(f"Error {self.__class__.__name__}: {err}")
             return None
 
     def calculate_distance_to_reward(self, key):
@@ -495,7 +440,7 @@ class GitCommit(dj.Computed):
     -> DataFrame
     ---
     commit_hash: varchar(256)
-    changed_files: blob
+    changed_files: <blob>
     """
 
     def make(self, key):
@@ -523,3 +468,25 @@ class GitCommit(dj.Computed):
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
 
+
+def parse_git_commit_file(filename="git_commit"):
+    """Parse a git commit file into hash and modified file list."""
+    commit_hash = None
+    modified_files = []
+
+    try:
+        with open(filename, "r") as file:
+            lines = file.readlines()
+
+            for line in lines:
+                line = line.strip()
+                if line.startswith("commit "):
+                    commit_hash = line.split()[1]
+                elif line.startswith("M "):
+                    modified_files.append(line)
+
+        return {"commit_hash": commit_hash, "changed_files": modified_files}
+
+    except FileNotFoundError:
+        logger.warning(f"Error: File '{filename}' not found.")
+        return {"commit_hash": "", "changed_files": []}

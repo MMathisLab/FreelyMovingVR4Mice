@@ -114,13 +114,13 @@ class TrialMetrics(dj.Computed):
     definition = """
     -> base_analysis.DataFrame
     ---
-    aperture:             longblob # occlusion slit aperture in game units
-    trial:                longblob # trial number
-    trial_left_choice:    longblob # mouse chose left port 0.0 or 1
-    trial_rewarded:       longblob # trial duration in seconds
-    trial_tortuosity:     longblob # trial tortuosity
-    trial_duration:       longblob # trial duration in seconds
-    trial_jshaped:        longblob # trial jshaped
+    aperture:             <blob> # occlusion slit aperture in game units
+    trial:                <blob> # trial number
+    trial_left_choice:    <blob> # mouse chose left port 0.0 or 1
+    trial_rewarded:       <blob> # trial duration in seconds
+    trial_tortuosity:     <blob> # trial tortuosity
+    trial_duration:       <blob> # trial duration in seconds
+    trial_jshaped:        <blob> # trial jshaped
     """
 
     def make(self, key):
