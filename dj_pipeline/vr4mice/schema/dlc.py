@@ -18,6 +18,11 @@ logger = logger.Logger.get_logger()
 
 @schema
 class DLCProcessor(dj.Imported):
+    """
+    DLCProcessor definition table:
+    imports processed DLC outputs from the PROC npy file
+    """
+
     definition = """
     -> vr4mice.DLC
     ---

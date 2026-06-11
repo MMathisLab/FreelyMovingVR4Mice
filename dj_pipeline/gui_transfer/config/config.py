@@ -148,19 +148,15 @@ class Config:
             dst = str(dst).replace("\\", "/")
             cmd = ["scp", src, dst]
 
-            if Path(src).exists():
-                process = subprocess.Popen(
-                    cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE
-                )
-                stdout, stderr = process.communicate()
-                exit_code = process.wait()
-                if exit_code != 0:
-                    logger.warning(f"{cmd} failed: {stdout} {stderr}")
-                    return False
-                self.config_dict["dropdown_menu"] = dst
-            else:
-                logger.warning(f"{src} doesn't exist.")
+            process = subprocess.Popen(
+                cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE
+            )
+            stdout, stderr = process.communicate()
+            exit_code = process.wait()
+            if exit_code != 0:
+                logger.warning(f"{cmd} failed: {stdout} {stderr}")
                 return False
+            self.config_dict["dropdown_menu"] = dst
 
         return self.config_dict["dropdown_menu"]
 

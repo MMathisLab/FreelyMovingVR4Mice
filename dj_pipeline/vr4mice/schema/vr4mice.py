@@ -161,6 +161,11 @@ class FailedSession(dj.Manual):
 
 @schema
 class Labels(dj.Lookup):
+    """
+    Labels definition table:
+    stores custom group labels assigned to datasets
+    """
+
     definition = """
     idx: int
     ---
@@ -181,6 +186,11 @@ class Labels(dj.Lookup):
 
 @schema
 class Groups(dj.Manual):
+    """
+    Groups definition table:
+    links datasets to custom Labels entries
+    """
+
     definition = """
     -> Dataset
     -> Labels
@@ -214,6 +224,11 @@ class Groups(dj.Manual):
 
 @schema
 class Labs(dj.Lookup):
+    """
+    Labs definition table:
+    stores collaborating lab identifiers
+    """
+
     definition = """
     idx: int
     ---
@@ -225,6 +240,11 @@ class Labs(dj.Lookup):
 
 @schema
 class Collab(dj.Computed):
+    """
+    Collab definition table:
+    links each dataset to a collaborating lab
+    """
+
     definition = """
     -> Dataset
     ---
@@ -487,6 +507,10 @@ class Metadata(dj.Manual):
 
 @schema
 class SignalsPhotodiode(dj.Computed):
+    """
+    SignalsPhotodiode definition table:
+    stores photodiode and generated sync signals from the PROC file
+    """
 
     definition = """
     -> Dataset
@@ -554,6 +578,10 @@ class SignalsPhotodiode(dj.Computed):
 
 @schema
 class GuiParams(dj.Manual):
+    """
+    GuiParams definition table:
+    stores Unity game parameters fetched from the teensy output pickle file
+    """
 
     definition = """
     -> Dataset
@@ -592,6 +620,11 @@ class GuiParams(dj.Manual):
 
 @schema
 class TrainingPhaseType(dj.Lookup):
+    """
+    TrainingPhaseType definition table:
+    stores training phase categories used to classify datasets
+    """
+
     definition = """
     idx: int
     ---
@@ -615,6 +648,11 @@ class TrainingPhaseType(dj.Lookup):
 
 @schema
 class DatasetType(dj.Computed):
+    """
+    DatasetType definition table:
+    assigns each dataset to a training phase based on metadata and state
+    """
+
     definition = """
     -> Metadata
     ---
@@ -731,6 +769,11 @@ class Box(dj.Manual):
 
 @schema
 class Object(dj.Lookup):
+    """
+    Object definition table:
+    stores target and distractor object names used in the game
+    """
+
     definition = """
     idx: int
     ---

@@ -22,7 +22,10 @@ logger = Logger.get_logger()
 
 @schema
 class DataFrame(dj.Computed):
-    """Host main dataframe for analysis."""
+    """
+    DataFrame definition table:
+    hosts the main per-step analysis dataframe for a dataset
+    """
 
     # TODO: This used to point to vr4mice.VR4Mice
     #       will probably point this to the next version when it's available
@@ -209,6 +212,11 @@ class DataFrame(dj.Computed):
 
 @schema
 class BoxDataFrame(dj.Computed):
+    """
+    BoxDataFrame definition table:
+    stores per-trial report and target box coordinates derived from DataFrame
+    """
+
     definition = """
     -> DataFrame
     ---
@@ -323,6 +331,11 @@ class BoxDataFrame(dj.Computed):
 
 @schema
 class SummaryPlots(dj.Computed):
+    """
+    SummaryPlots definition table:
+    stores paths to generated per-session summary plot figures
+    """
+
     definition = """
     -> vr4mice.Dataset
     ---
@@ -479,6 +492,10 @@ def insert_send_email(key, filename, err_msg):
 
 @schema
 class GitCommit(dj.Computed):
+    """
+    GitCommit definition table:
+    stores git commit hash and changed files for analysis reproducibility
+    """
 
     definition = """
     -> DataFrame

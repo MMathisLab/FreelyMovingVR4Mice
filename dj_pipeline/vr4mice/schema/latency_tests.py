@@ -16,6 +16,11 @@ logger = Logger.get_logger()
 
 @schema
 class SignalsPhotodiodeAligned(dj.Computed):
+    """
+    SignalsPhotodiodeAligned definition table:
+    stores interpolated and aligned photodiode and generated sync signals
+    """
+
     definition = """
     -> vr4mice.SignalsPhotodiode
     ---
@@ -86,6 +91,11 @@ class SignalsPhotodiodeAligned(dj.Computed):
 
 @schema
 class AllLatencies(dj.Computed):
+    """
+    AllLatencies definition table:
+    stores per-session latency between generated and photodiode signal edges
+    """
+
     definition = """
     -> SignalsPhotodiodeAligned
     ---

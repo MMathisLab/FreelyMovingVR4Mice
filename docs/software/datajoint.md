@@ -34,7 +34,7 @@ DataJoint is an open-source data management framework designed for scientific wo
 
 1. The **`base/base_min_schemas/`** directory contains minimal `exp` and `mice` schema definitions needed for GUI dropdowns and basic metadata.
 2. The **`Dockerfile`** and **`docker/entrypoint.sh`** build the client image used by `docker-compose.yml`.
-3. The **`gui_transfer/`** folder contains all GUI-related information. Only this folder, plus Python 3 and PyQt5, are needed to build the GUI on a rig computer.
+3. The **`gui_transfer/`** folder contains all GUI-related information. Only this folder, plus Python 3 and PyQt5, are needed to build the GUI on a rig computer. For dropdown menu paths and rig `config.json` setup, see [GUI dropdown menu and rig setup](install_dj_pipeline.md#gui-dropdown-menu-and-rig-setup) in `install_dj_pipeline.md`.
 4. The **`run.py`** script is the main CLI entrypoint for running pipeline modes (populate, analysis, dlc, etc.).
 5. The **`cron_scenario.py`** script runs the full pipeline with per-step logging (used by cron). See [Cron and Docker operations](install_dj_pipeline.md#cron-and-docker-operations) for wrapper scripts, crontab setup, and compose project naming.
 6. The **`quick_start.sh`** script interactively configures `.env`/`env.py` and starts containers.
@@ -46,6 +46,8 @@ DataJoint is an open-source data management framework designed for scientific wo
 
 ## Tables in the `vr4mice/schema` Pipeline
 
+Each file under `dj_pipeline/vr4mice/schema/` has a module-level docstring, and every table class has a class-level docstring describing its role. The summaries below mirror those docstrings.
+
 ```{image} ../../docs/images/vr4mice-erd.png
 :alt: vr4mice_erd
 :class: bg-primary mb-1
@@ -54,207 +56,331 @@ DataJoint is an open-source data management framework designed for scientific wo
 
 ### `base.py`
 
+*Base schema linking datasets to shared experiment metadata.*
+
 ```python
 class Base(dj.Computed)
 ```
-Core experiment computed table.
+**Depends on:** `vr4mice.Dataset`  
+Links together `Dataset` with base `Mouse` and `Exp` schemas.
+
+### `vr4mice.py`
+
+*Core VR4Mice schema tables for datasets, metadata, and raw signals.*
+
+```python
+class Camera(dj.Lookup)
+```
+Camera definition table; to be updated if a new camera name is added.
+
+```python
+class Dataset(dj.Manual)
+```
+Stores dataset names representing VR experiments; keeps raw pickle and npy files (`mouse_name_doe_attempt` format).
+
+```python
+class FailedSession(dj.Manual)
+```
+Tracks dataset/table pairs that failed during populate/compute.
+
+```python
+class Labels(dj.Lookup)
+```
+Stores custom group labels assigned to datasets.
+
+```python
+class Groups(dj.Manual)
+```
+Links datasets to custom `Labels` entries.
+
+```python
+class Labs(dj.Lookup)
+```
+Stores collaborating lab identifiers.
+
+```python
+class Collab(dj.Computed)
+```
+Links each dataset to a collaborating lab.
+
+```python
+class Video(dj.Manual)
+```
+Stores raw video file metadata, timestamp files, and paths on the rig PC.
+
+```python
+class ModelName(dj.Lookup)
+```
+Stores DLC model names applied to video analysis; can be extended for new model types.
+
+```python
+class DLC(dj.Manual)
+```
+Stores local paths to keypoints and processed keypoints files.
+
+```python
+class MouseState(dj.Manual)
+```
+Stores mouse game-related position and events; fetched from the teensy output pickle file.
+
+```python
+class State(dj.Manual)
+```
+**Depends on:** `vr4mice.MouseState`  
+Stores trial-related information; fetched from the teensy output pickle file.
+
+```python
+class Metadata(dj.Manual)
+```
+Stores Unity parameters and session metadata; fetched from the teensy output pickle file.
+
+```python
+class SignalsPhotodiode(dj.Computed)
+```
+Stores photodiode and generated sync signals from the PROC file.
+
+```python
+class GuiParams(dj.Manual)
+```
+Stores Unity game parameters fetched from the teensy output pickle file.
+
+```python
+class TrainingPhaseType(dj.Lookup)
+```
+Stores training phase categories used to classify datasets.
+
+```python
+class DatasetType(dj.Computed)
+```
+**Depends on:** `vr4mice.Metadata`  
+Assigns each dataset to a training phase based on metadata and state.
+
+```python
+class Box(dj.Manual)
+```
+**Depends on:** `vr4mice.Metadata`  
+Stores box positions; fetched from the teensy output pickle file.
+
+```python
+class Object(dj.Lookup)
+```
+Stores target and distractor object names used in the game.
 
 ### `base_analysis.py`
+
+*Analysis schema tables built on top of core VR4Mice datasets.*
 
 ```python
 class DataFrame(dj.Computed)
 ```
 **Depends on:** `vr4mice.Dataset`  
-Main analysis dataframe including trial data, position (x,y), velocity, acceleration, choices, rewards, and behavioral metrics. Runs `create_data_frame(key)` to get the data into a `pd.DataFrame`.
+Hosts the main per-step analysis dataframe (trial data, position, velocity, choices, rewards, and behavioral metrics). Populated via `create_data_frame(key)`.
 
 ```python
 class BoxDataFrame(dj.Computed)
 ```
 **Depends on:** `DataFrame`  
-Box and reward zone coordinates, angles, and boundaries for left/right/target boxes using `get_box_df()`.
+Stores per-trial report and target box coordinates derived from `DataFrame`.
 
 ```python
 class SummaryPlots(dj.Computed)
 ```
 **Depends on:** `vr4mice.Dataset`, `DataFrame`, `BoxDataFrame`  
-Generates and stores summary plots for each dataset using `vr4mice_summary_plots()`.
+Stores paths to generated per-session summary plot figures.
 
 ```python
 class GitCommit(dj.Computed)
 ```
 **Depends on:** `DataFrame`  
-Git commit hash and changed files for reproducibility tracking.
+Stores git commit hash and changed files for analysis reproducibility.
 
 ### `dlc.py`
+
+*DLC-related schema tables for keypoints and derived kinematics.*
 
 ```python
 class DLCProcessor(dj.Imported)
 ```
 **Depends on:** `vr4mice.DLC`  
-**Imports:** DeepLabCut pose estimation results from external files.
+Imports processed DLC outputs from the PROC npy file.
 
 ```python
 class DLCKptsDf(dj.Computed)
 ```
-**Depends on:** `DLCProcessor`  
-Processes DLC keypoints into structured dataframes.
+**Depends on:** `vr4mice.DLC`  
+All available raw DLC keypoints with likelihood.
 
 ```python
 class SyncDLCKptsDf(dj.Computed)
 ```
 **Depends on:** `DLCKptsDf`  
-Synchronizes DLC keypoints with experiment timing and events.
+Filtered and game-synchronized DLC keypoints.
 
 ```python
 class OfflineKinematics(dj.Computed)
 ```
 **Depends on:** `SyncDLCKptsDf`  
-Offline kinematics analysis from synchronized DLC pose data.
+Stores mouse body kinematics computed offline from synchronized DLC keypoints.
 
 ### `interpolated_trajectories.py`
+
+*Interpolated trajectory schema used for downstream analysis tables.*
 
 ```python
 class InterpolatedTrials(dj.Computed)
 ```
-Interpolated trial trajectories for smooth motion analysis.
+**Depends on:** `base_analysis.DataFrame`  
+Stores J-shaped interpolated per-trial trajectories and kinematics.
 
 ```python
 class MeanXYTrajectory(dj.Computed)
 ```
 **Depends on:** `InterpolatedTrials`  
-Mean XY trajectories averaged across multiple trials.
+Stores mean x/y trajectories across trials for each aperture.
 
 ```python
 class YBinnedXYTrajectory(dj.Computed)
 ```
 **Depends on:** `InterpolatedTrials`  
-Y-axis binned XY trajectories for spatial analysis.
+Stores y-binned mean trajectories for each aperture.
 
 ```python
 class MeanVelocities(dj.Computed)
 ```
 **Depends on:** `InterpolatedTrials`  
-Mean velocities computed from interpolated trial data.
+Stores mean velocities across trials for each aperture and trial length.
 
 ### `latency_tests.py`
+
+*Latency testing schema for photodiode and frame timing analysis.*
 
 ```python
 class SignalsPhotodiodeAligned(dj.Computed)
 ```
 **Depends on:** `vr4mice.SignalsPhotodiode`  
-Signals aligned to photodiode events for timing analysis.
+Stores interpolated and aligned photodiode and generated sync signals.
 
 ```python
 class AllLatencies(dj.Computed)
 ```
 **Depends on:** `SignalsPhotodiodeAligned`  
-All measured latencies from photodiode signal alignment.
+Stores per-session latency between generated and photodiode signal edges.
 
 ### `session_metrics.py`
+
+*Session-level and trial-level summary metrics schema.*
 
 ```python
 class SessionMetrics(dj.Computed)
 ```
-Session-level performance metrics and statistics.
+**Depends on:** `vr4mice.Dataset` (populated from `base_analysis.DataFrame`)  
+Stores session-level summary metrics computed from `base_analysis.DataFrame`.
 
 ```python
 class TrialMetrics(dj.Computed)
 ```
-Individual trial-level metrics and behavioral measures.
+**Depends on:** `base_analysis.DataFrame`  
+Stores per-trial summary metrics derived from the `DataFrame` table.
 
-### `vr4mice.py`
+### `decision.py`
 
-```python
-class Camera(dj.Lookup)
-```
-**Reference table:** Camera hardware definitions and configurations.
+*Decision analysis schema for regression models and decision points.*
 
 ```python
-class Dataset(dj.Manual)
+class SessionLabel(dj.Lookup)
 ```
-**Manual entry:** Dataset metadata containing most raw experimental data.
+Maps session labels to experiment set and stage.
 
 ```python
-class FailedSession(dj.Manual)
+class ExperimentSet(dj.Lookup)
 ```
-**Manual entry:** Tracks failed sessions and error logging; used as a skip list to prevent repeated failures.
+Stores experiment set names and descriptions.
 
 ```python
-class Labels(dj.Lookup)
+class ExperimentStage(dj.Lookup)
 ```
-**Reference table:** Label definitions for experimental conditions.
+Stores experiment stage names and descriptions.
 
 ```python
-class Groups(dj.Manual)
+class ExperimentMember(dj.Imported)
 ```
-**Manual entry:** Experimental group assignments and metadata.
+**Depends on:** `vr4mice.Dataset`  
+Links each dataset to an experiment set, stage, and session label.
 
 ```python
-class Labs(dj.Lookup)
+class InclusionStatus(dj.Computed)
 ```
-**Reference table:** Laboratory information and configurations.
+**Depends on:** `ExperimentMember`  
+Inclusion status per dataset and experiment set role.
 
 ```python
-class Collab(dj.Computed)
+class Label(dj.Lookup)
 ```
-Collaboration and sharing information.
+Stores regression feature names used in decision analysis.
 
 ```python
-class Video(dj.Manual)
+class LabelSet(dj.Lookup)
 ```
-**Manual entry:** Video file metadata and paths.
+Stores named sets of regression labels for model training.
 
 ```python
-class ModelName(dj.Lookup)
+class ModelParams(dj.Lookup)
 ```
-**Reference table:** Model name definitions for analysis pipelines.
+Stores logistic regression hyperparameter combinations.
 
 ```python
-class DLC(dj.Manual)
+class PredictionModel(dj.Computed)
 ```
-**Manual entry:** DeepLabCut model metadata and configurations.
+**Depends on:** `LabelSet`, `ModelParams`, `ExperimentSet`, `ExperimentStage`  
+Trains logistic regression model per mouse using LOGO cross-validation.
 
 ```python
-class MouseState(dj.Manual)
+class PredictionModel10Windows(dj.Computed)
 ```
-**Manual entry:** Mouse behavioral state information.
+**Depends on:** `LabelSet`, `ModelParams`, `ExperimentSet`, `ExperimentStage`  
+Trains LOGO regression models on 10 equally-spaced trial progress windows.
 
 ```python
-class State(dj.Manual)
+class DecisionThreshold(dj.Lookup)
 ```
-**Manual entry:** General experimental state information.
+Lookup table for different uncertainty thresholds to define decision points.
 
 ```python
-class Metadata(dj.Manual)
+class DecisionPoints(dj.Computed)
 ```
-**Manual entry:** General experimental metadata.
+**Depends on:** `PredictionModel.SessionPrediction`, `DecisionThreshold`  
+Decision point and corresponding per-trial data.
 
 ```python
-class SignalsPhotodiode(dj.Computed)
+class DecisionPoints10Windows(dj.Computed)
 ```
-Photodiode signal processing and timing data.
+**Depends on:** `PredictionModel10Windows.SessionPrediction`, `DecisionThreshold`  
+Decision points computed from 10-window model predictions.
+
+### `inputs_videos.py`
+
+*Video input schema for sync/crop/align operations on session recordings.*
 
 ```python
-class GuiParams(dj.Manual)
+class RawVideo(dj.Imported)
 ```
-**Manual entry:** GUI parameter settings and configurations.
+**Depends on:** `vr4mice.Dataset`  
+Stores the raw OBS recording path for a dataset.
 
 ```python
-class TrainingPhaseType(dj.Lookup)
+class ProcessedVideo(dj.Computed)
 ```
-**Reference table:** Training phase type definitions.
+**Depends on:** `RawVideo`  
+Stores cropped/truncated OBS videos and ROI metadata.
 
 ```python
-class DatasetType(dj.Computed)
+class VideoSyncSignal(dj.Computed)
 ```
-Dataset type classification and information.
+**Depends on:** `ProcessedVideo`  
+Extracts the binary sync trace from the sync ROI video.
 
 ```python
-class Box(dj.Manual)
+class AlignedVideoFrame(dj.Computed)
 ```
-**Manual entry:** Experimental box metadata and configurations.
-
-```python
-class Object(dj.Lookup)
-```
-**Reference table:** Object definitions used in experiments.
+**Depends on:** `VideoSyncSignal`, `vr4mice.State`  
+Aligns game steps to video frames using photodiode when available; stores QA metrics.

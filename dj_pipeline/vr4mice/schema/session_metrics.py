@@ -21,6 +21,11 @@ logger = Logger.get_logger()
 
 @schema
 class SessionMetrics(dj.Computed):
+    """
+    SessionMetrics definition table:
+    stores session-level summary metrics computed from base_analysis.DataFrame
+    """
+
     definition = """
     -> vr4mice.Dataset
     ---
@@ -101,11 +106,11 @@ class SessionMetrics(dj.Computed):
 
 @schema
 class TrialMetrics(dj.Computed):
-    definition = """
-    -> base_analysis.DataFrame
-    ---
-    trial_rewarded: float # proportion of rewarded trials
     """
+    TrialMetrics definition table:
+    stores per-trial summary metrics derived from the DataFrame table
+    """
+
     definition = """
     -> base_analysis.DataFrame
     ---
