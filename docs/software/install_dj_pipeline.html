@@ -439,10 +439,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#end-to-end-workflow-data-acquisition-emails">End-to-end workflow (data acquisition → emails)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#repository-layout-dj-pipeline">Repository layout (dj_pipeline)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-module-guide-key-folders">vr4mice module guide (key folders)</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-schema"><code class="docutils literal notranslate"><span class="pre">vr4mice/schema</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-actions"><code class="docutils literal notranslate"><span class="pre">vr4mice/actions</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-analysis"><code class="docutils literal notranslate"><span class="pre">vr4mice/analysis</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-module-guide">vr4mice module guide</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-transfer"><code class="docutils literal notranslate"><span class="pre">gui_transfer</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#base-schemas"><code class="docutils literal notranslate"><span class="pre">base</span></code> (schemas)</a></li>
 </ul>
@@ -459,7 +456,8 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-connect-via-ipython-or-jupyter">Step 4 — Connect via IPython or Jupyter</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-verify-connection">Step 5 — Verify connection</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stop-the-client">Stop the client</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#datajoint-database-user-remote-access-via-jupyter-notebook-tested-with-python-3-9-5">DataJoint database user remote access via Jupyter Notebook (tested with Python 3.9.5):</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#jupyter-ipython-access-recommended-docker-client">Jupyter / IPython access (recommended: Docker client)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#host-jupyter-legacy-outside-docker">Host Jupyter (legacy / outside Docker)</a></li>
 </ul>
 </li>
 </ul>
@@ -477,7 +475,11 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-vs-non-gui-mode">GUI vs non-GUI mode</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-installation-rig-related">GUI installation (rig-related)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-dropdown-menu-and-rig-setup">GUI dropdown menu and rig setup</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#server-generate-the-menu-file">Server: generate the menu file</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rig-configure-paths-and-fetch-the-menu">Rig: configure paths and fetch the menu</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manual-runs-run-py">Manual runs (run.py)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-quick-sanity">Testing / quick sanity</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-and-docker-operations">Cron and Docker operations</a><ul class="nav section-nav flex-column">
@@ -513,7 +515,7 @@ document.write(`
                 <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="setup-usage">
-<h1>Setup &amp; Usage<a class="headerlink" href="#setup-usage" title="Permalink to this heading">#</a></h1>
+<span id="sec-install-dj-pipeline"></span><h1>Setup &amp; Usage<a class="headerlink" href="#setup-usage" title="Permalink to this heading">#</a></h1>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">#</a></h2>
 <p>The VR4Mice pipeline is a DataJoint-based workflow for ingesting raw rig data,
@@ -523,13 +525,18 @@ It is designed to run from the client container and can be scheduled via cron.</
 <section id="end-to-end-workflow-data-acquisition-emails">
 <h2>End-to-end workflow (data acquisition → emails)<a class="headerlink" href="#end-to-end-workflow-data-acquisition-emails" title="Permalink to this heading">#</a></h2>
 <ol class="arabic simple">
-<li><p><strong>Acquisition (rig)</strong>: <code class="docutils literal notranslate"><span class="pre">.pickle</span></code> files (and optional <code class="docutils literal notranslate"><span class="pre">.npy</span></code> metadata via GUI).</p></li>
+<li><p><strong>Acquisition (rig)</strong>: <code class="docutils literal notranslate"><span class="pre">.pickle</span></code> files (and optional <code class="docutils literal notranslate"><span class="pre">.npy</span></code> metadata via <code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code>).</p></li>
 <li><p><strong>Ingest</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">populate</span></code> → raw tables in <code class="docutils literal notranslate"><span class="pre">vr4mice</span></code>/<code class="docutils literal notranslate"><span class="pre">base</span></code>.</p></li>
-<li><p><strong>Analysis</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">analysis</span></code> → <code class="docutils literal notranslate"><span class="pre">base_analysis</span></code> tables.</p></li>
-<li><p><strong>DLC + interpolation</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">dlc</span></code> then <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">interp</span></code>.</p></li>
-<li><p><strong>Latency + inputs</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">latency</span></code> and <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">inputs_videos</span></code>.</p></li>
-<li><p><strong>Decision + summaries</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">decision</span></code> then <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">summary</span></code>.</p></li>
-<li><p><strong>Emails</strong>: sent if <code class="docutils literal notranslate"><span class="pre">EMAIL=true</span></code> and recipients are available.</p></li>
+<li><p><strong>Analysis</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">analysis</span></code> → <code class="docutils literal notranslate"><span class="pre">base_analysis</span></code> tables (<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">BoxDataFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">GitCommit</span></code>).</p></li>
+<li><p><strong>DLC + interpolation</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">dlc</span></code> then <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">interp</span></code> (includes <code class="docutils literal notranslate"><span class="pre">session_metrics</span></code> tables).</p></li>
+<li><p><strong>Latency</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">latency</span></code> → photodiode alignment tables.</p></li>
+<li><p><strong>Environment-specific</strong> (manual or via <code class="docutils literal notranslate"><span class="pre">cron_scenario.py</span></code>):</p>
+<ul class="simple">
+<li><p><strong>Local server</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">inputs_videos</span></code>, then <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">fetch</span></code> → refreshes <code class="docutils literal notranslate"><span class="pre">/shared/gui_menu.npy</span></code> for the rig GUI.</p></li>
+<li><p><strong>AWS / remote</strong> (<code class="docutils literal notranslate"><span class="pre">--aws</span></code>): <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">decision</span></code> on <code class="docutils literal notranslate"><span class="pre">/data/processed</span></code>.</p></li>
+</ul>
+</li>
+<li><p><strong>Summaries</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">summary</span></code> → <code class="docutils literal notranslate"><span class="pre">SummaryPlots</span></code> (emails sent when <code class="docutils literal notranslate"><span class="pre">EMAIL=true</span></code> and recipients are available).</p></li>
 </ol>
 </section>
 <section id="repository-layout-dj-pipeline">
@@ -542,6 +549,7 @@ It is designed to run from the client container and can be scheduled via cron.</
 <li><p><code class="docutils literal notranslate"><span class="pre">base/</span></code>: base schemas and actions (full and minimal modes: mice, exp tables, connections and email functions).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">backup/</span></code>: backup helpers (local/remote sync scripts).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">cron_*.sh</span></code>: cron wrappers for scheduled runs (standard, reboot, AWS).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Dockerfile</span></code> + <code class="docutils literal notranslate"><span class="pre">requirements-docker.txt</span></code>: client image build and pinned runtime dependencies.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">docker/entrypoint.sh</span></code>: creates runtime user (PUID/PGID) and drops privileges with <code class="docutils literal notranslate"><span class="pre">gosu</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">docker/cron_common.sh</span></code>: shared helpers for cron scripts and compose exec.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">generators/</span></code>: small utilities to create helper tables/files (e.g., add mice).</p></li>
@@ -551,44 +559,22 @@ It is designed to run from the client container and can be scheduled via cron.</
 <li><p>Logs are written on the <strong>server</strong> in a local <code class="docutils literal notranslate"><span class="pre">logs/</span></code> folder and are not part of the repo.</p></li>
 </ul>
 </section>
-<section id="vr4mice-module-guide-key-folders">
-<h2>vr4mice module guide (key folders)<a class="headerlink" href="#vr4mice-module-guide-key-folders" title="Permalink to this heading">#</a></h2>
-<section id="vr4mice-schema">
-<h3><code class="docutils literal notranslate"><span class="pre">vr4mice/schema</span></code><a class="headerlink" href="#vr4mice-schema" title="Permalink to this heading">#</a></h3>
-<p>DataJoint table definitions for core pipeline:</p>
+<section id="vr4mice-module-guide">
+<h2>vr4mice module guide<a class="headerlink" href="#vr4mice-module-guide" title="Permalink to this heading">#</a></h2>
+<p>See <a class="reference external" href="https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/dj_pipeline/vr4mice/README.md">vr4mice/README.md</a>. Key components:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">vr4mice</span></code>: raw/session tables and metadata.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">base</span></code>, <code class="docutils literal notranslate"><span class="pre">base_analysis</span></code>: analysis and summary outputs.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dlc</span></code>, <code class="docutils literal notranslate"><span class="pre">interpolated_trajectories</span></code>, <code class="docutils literal notranslate"><span class="pre">latency_tests</span></code>, <code class="docutils literal notranslate"><span class="pre">decision</span></code>, <code class="docutils literal notranslate"><span class="pre">inputs_videos</span></code>: downstream modules.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">schema/</span></code>: DataJoint table definitions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">analysis/</span></code>: analysis helpers and plotting.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/</span></code>: orchestration helpers (ingest, sync, fetch).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">utils/</span></code>: logging, schema config, connections.</p></li>
 </ul>
-</section>
-<section id="vr4mice-actions">
-<h3><code class="docutils literal notranslate"><span class="pre">vr4mice/actions</span></code><a class="headerlink" href="#vr4mice-actions" title="Permalink to this heading">#</a></h3>
-<p>Orchestration helpers and ingestion utilities:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">populate_rig.py</span></code>: main raw-data ingest for <code class="docutils literal notranslate"><span class="pre">.pickle</span></code>/<code class="docutils literal notranslate"><span class="pre">.npy</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fetch_data.py</span></code>: builds GUI dropdown <code class="docutils literal notranslate"><span class="pre">.npy</span></code> (menu).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">sync_days.py</span></code>: sync/backfill missing days/sessions.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">keys2tables_*.py</span></code>: map GUI/rig keys to table attributes.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">helpers_dj.py</span></code>: shared DataJoint helpers used by actions.</p></li>
-</ul>
-</section>
-<section id="vr4mice-analysis">
-<h3><code class="docutils literal notranslate"><span class="pre">vr4mice/analysis</span></code><a class="headerlink" href="#vr4mice-analysis" title="Permalink to this heading">#</a></h3>
-<p>Computation and plotting utilities used by schema tables:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">analysis.py</span></code>: core session dataframe and derived metrics.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">latency_testing.py</span></code>, <code class="docutils literal notranslate"><span class="pre">inputs_videos.py</span></code>: latency and sync utilities.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">regression.py</span></code>, <code class="docutils literal notranslate"><span class="pre">stats.py</span></code>, <code class="docutils literal notranslate"><span class="pre">plotting.py</span></code>: downstream analyses and visualization.</p></li>
-</ul>
-</section>
 <section id="gui-transfer">
 <h3><code class="docutils literal notranslate"><span class="pre">gui_transfer</span></code><a class="headerlink" href="#gui-transfer" title="Permalink to this heading">#</a></h3>
 <p>Rig GUI and transfer utilities:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">gui.py</span></code> + <code class="docutils literal notranslate"><span class="pre">config/</span></code> for metadata capture.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">utils/</span></code> and <code class="docutils literal notranslate"><span class="pre">modules/</span></code> for GUI logic.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">menu.npy</span></code> generated by <code class="docutils literal notranslate"><span class="pre">fetch_data.py</span></code>.</p></li>
+<li><p>Dropdown menu file (<code class="docutils literal notranslate"><span class="pre">gui_menu.npy</span></code>) generated on the server by <code class="docutils literal notranslate"><span class="pre">fetch_data.py</span></code> and copied to the rig at GUI startup (see <a class="reference internal" href="#gui-dropdown-menu"><span class="std std-ref">GUI dropdown menu and rig setup</span></a>).</p></li>
 </ul>
 </section>
 <section id="base-schemas">
@@ -723,22 +709,30 @@ You can add an SSH config alias (e.g., <code class="docutils literal notranslate
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>client_down
 </pre></div>
 </div>
-<section id="datajoint-database-user-remote-access-via-jupyter-notebook-tested-with-python-3-9-5">
-<h4>DataJoint database user remote access via Jupyter Notebook (tested with Python 3.9.5):<a class="headerlink" href="#datajoint-database-user-remote-access-via-jupyter-notebook-tested-with-python-3-9-5" title="Permalink to this heading">#</a></h4>
+<section id="jupyter-ipython-access-recommended-docker-client">
+<h4>Jupyter / IPython access (recommended: Docker client)<a class="headerlink" href="#jupyter-ipython-access-recommended-docker-client" title="Permalink to this heading">#</a></h4>
+<p>Use <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">notebook</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">ipython</span></code> in the client container — dependencies match <code class="docutils literal notranslate"><span class="pre">requirements-docker.txt</span></code> (DataJoint 2.x).</p>
+</section>
+<section id="host-jupyter-legacy-outside-docker">
+<h4>Host Jupyter (legacy / outside Docker)<a class="headerlink" href="#host-jupyter-legacy-outside-docker" title="Permalink to this heading">#</a></h4>
 <ol class="arabic">
-<li><p>Assuming that Jupyter Notebook and DataJoint are installed, “vr4mice” repository is loaded, and “base_schemas” are pip-installed:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>notebook<span class="w"> </span><span class="nv">datajoint</span><span class="o">==</span><span class="m">0</span>.14.0<span class="w">  </span><span class="c1"># later versions enforce CamelCase for class names</span>
+<li><p>Install matching packages and base schemas:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>notebook<span class="w"> </span><span class="s2">&quot;datajoint&gt;=2.0.1&quot;</span>
 pip<span class="w"> </span>install<span class="w"> </span>base/base_actions/
 pip<span class="w"> </span>install<span class="w"> </span>base/base_min_schemas/
 </pre></div>
 </div>
 </li>
-<li><p>Make sure the “graphviz” package is available if you want to display images (i.e. schema diagrams): <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">apt</span> <span class="pre">install</span> <span class="pre">-y</span> <span class="pre">graphviz</span></code></p></li>
-<li><p>Update the information in the <code class="docutils literal notranslate"><span class="pre">env.py</span></code> file (IP of server, username provided by administrator)</p></li>
-<li><p>From the current directory, start <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">notebook</span></code> and launch a Python3 kernel</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">%run</span> <span class="pre">env.py</span></code> to load environmental variables</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">%run</span> <span class="pre">run.py</span> <span class="pre">connect</span></code> to connect to the DJ database</p></li>
-<li><p>Bravo! Data can now be fetched with <code class="docutils literal notranslate"><span class="pre">vr4mice.Dataset()</span></code> (relative imports were done in the <code class="docutils literal notranslate"><span class="pre">run.py</span></code> script)</p></li>
+<li><p>Install graphviz if you want schema diagrams: <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">apt</span> <span class="pre">install</span> <span class="pre">-y</span> <span class="pre">graphviz</span></code></p></li>
+<li><p>Update <code class="docutils literal notranslate"><span class="pre">env.py</span></code> (server IP, credentials from your administrator)</p></li>
+<li><p>Start <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">notebook</span></code>, open a Python 3 kernel, then:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">run</span> <span class="n">env</span><span class="o">.</span><span class="n">py</span>
+<span class="o">%</span><span class="n">run</span> <span class="n">run</span><span class="o">.</span><span class="n">py</span> <span class="n">connect</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">vr4mice</span>
+<span class="n">vr4mice</span><span class="o">.</span><span class="n">Dataset</span><span class="p">()</span>
+</pre></div>
+</div>
+</li>
 </ol>
 </section>
 </section>
@@ -762,8 +756,8 @@ make<span class="w"> </span>ipython
 </div>
 </section>
 <section id="docker-client-base-packages-and-user-mapping">
-<h3>Docker client: base packages and user mapping<a class="headerlink" href="#docker-client-base-packages-and-user-mapping" title="Permalink to this heading">#</a></h3>
-<p>The client image is built from DeepLabCut’s Docker image. Pipeline commands use plain <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span></code> (<strong>no</strong> <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span></code>). At build time and container start, <code class="docutils literal notranslate"><span class="pre">docker/ensure_python_shims.sh</span></code> symlinks the base image’s Python into <code class="docutils literal notranslate"><span class="pre">/usr/local/bin</span></code> so <code class="docutils literal notranslate"><span class="pre">make</span></code>, cron, and <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">exec</span></code> all find <code class="docutils literal notranslate"><span class="pre">python</span></code> on the compose <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
+<span id="docker-client-base-packages"></span><h3>Docker client: base packages and user mapping<a class="headerlink" href="#docker-client-base-packages-and-user-mapping" title="Permalink to this heading">#</a></h3>
+<p>The client image is built from DeepLabCut’s Docker image. Build-time Python dependencies are pinned in <code class="docutils literal notranslate"><span class="pre">requirements-docker.txt</span></code> and installed by <code class="docutils literal notranslate"><span class="pre">Dockerfile</span></code> (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements-docker.txt</span></code>). Pipeline commands use plain <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span></code> (<strong>no</strong> <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span></code>). At build time and container start, <code class="docutils literal notranslate"><span class="pre">docker/ensure_python_shims.sh</span></code> symlinks the base image’s Python into <code class="docutils literal notranslate"><span class="pre">/usr/local/bin</span></code> so <code class="docutils literal notranslate"><span class="pre">make</span></code>, cron, and <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">exec</span></code> all find <code class="docutils literal notranslate"><span class="pre">python</span></code> on the compose <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
 <p><strong><code class="docutils literal notranslate"><span class="pre">base_schemas</span></code> / <code class="docutils literal notranslate"><span class="pre">base_actions</span></code></strong> are bind-mounted from the repo and installed at runtime with pip:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>--no-deps<span class="w"> </span>/base_schemas/
 python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>--no-deps<span class="w"> </span>/base_actions/
@@ -804,7 +798,7 @@ Network mode:</p></li>
 </ul>
 </section>
 <section id="deployment-defaults-quick-start-sh">
-<h3>Deployment defaults (quick_start.sh)<a class="headerlink" href="#deployment-defaults-quick-start-sh" title="Permalink to this heading">#</a></h3>
+<span id="deployment-defaults"></span><h3>Deployment defaults (quick_start.sh)<a class="headerlink" href="#deployment-defaults-quick-start-sh" title="Permalink to this heading">#</a></h3>
 <p>When using <code class="docutils literal notranslate"><span class="pre">bash</span> <span class="pre">quick_start.sh</span></code> in <strong>deployment</strong> mode, the default host paths map to:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">/mnt/database/vr4mice/vr4mice_database/database</span></code> → <code class="docutils literal notranslate"><span class="pre">/var/lib/mysql</span></code></p></li>
@@ -888,13 +882,13 @@ because experimenter names are otherwise missing from GUI metadata.</p></li>
 </section>
 <section id="data-import-export-restricted-dumps">
 <h3>Data import/export (restricted dumps)<a class="headerlink" href="#data-import-export-restricted-dumps" title="Permalink to this heading">#</a></h3>
-<p>See <code class="docutils literal notranslate"><span class="pre">docs/software/data_import_export.md</span></code> for:</p>
+<p>See <a class="reference internal" href="data_import_export.html#sec-data-import-export"><span class="std std-ref">Data import/export</span></a> for export/import workflows, or:</p>
 <ul class="simple">
 <li><p>Exporting restricted dumps (<code class="docutils literal notranslate"><span class="pre">export_restricted_dump.sh</span></code>)</p></li>
 <li><p>Importing dumps with <code class="docutils literal notranslate"><span class="pre">quick_start.sh</span></code></p></li>
 <li><p>Manual mysql import</p></li>
 </ul>
-<p>See <code class="docutils literal notranslate"><span class="pre">docs/software/quickstart_local_dump.md</span></code> for a full local deploy workflow that clones the data archive, runs quickstart, and connects Jupyter.</p>
+<p>See <a class="reference internal" href="quickstart_local_dump.html#sec-import-sql-dump"><span class="std std-ref">Deploy the DataJoint database locally</span></a> for a full local deploy workflow that clones the data archive, runs quickstart, and connects Jupyter.</p>
 </section>
 </section>
 <section id="gui-vs-non-gui-mode">
@@ -905,20 +899,99 @@ because experimenter names are otherwise missing from GUI metadata.</p></li>
 Use GUI mode when experiment metadata is collected via the rig GUI.</p></li>
 </ul>
 </section>
-<section id="gui-installation-rig-related">
-<h2>GUI installation (rig-related)<a class="headerlink" href="#gui-installation-rig-related" title="Permalink to this heading">#</a></h2>
-<p>GUI is used to transfer <strong>experiment metadata</strong> and files (not videos; videos remain on the rig).</p>
-<ol class="arabic simple">
-<li><p>Clone or copy the <code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code> folder to the rig computer.</p></li>
-<li><p>Install Python 3 + PyQt5; conda environment.</p></li>
-<li><p>Edit <code class="docutils literal notranslate"><span class="pre">gui_transfer/config/config.json</span></code> (paths, host, user).</p></li>
-<li><p>Start GUI:</p>
+<section id="gui-dropdown-menu-and-rig-setup">
+<span id="gui-dropdown-menu"></span><h2>GUI dropdown menu and rig setup<a class="headerlink" href="#gui-dropdown-menu-and-rig-setup" title="Permalink to this heading">#</a></h2>
+<p>The rig GUI (<code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code>) uses a DataJoint-exported <code class="docutils literal notranslate"><span class="pre">.npy</span></code> file for dropdown menus (mice, experimenters, rigs, tasks, etc.). The file is generated on the <strong>pipeline server</strong> and copied to the <strong>rig</strong> when the GUI starts.</p>
+<section id="server-generate-the-menu-file">
+<h3>Server: generate the menu file<a class="headerlink" href="#server-generate-the-menu-file" title="Permalink to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Item</p></th>
+<th class="head"><p>Default path / value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Menu output (in container)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/shared/gui_menu.npy</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Host mount</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SHARED_PATH</span></code> in <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code> → <code class="docutils literal notranslate"><span class="pre">/shared</span></code> in the client container</p></td>
+</tr>
+<tr class="row-even"><td><p>Generator script</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vr4mice/actions/fetch_data.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>CLI entrypoint</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">fetch</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Generate or refresh the menu manually (inside the client container or via Jupyter):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>run.py<span class="w"> </span>fetch
+</pre></div>
+</div>
+<p>This queries <code class="docutils literal notranslate"><span class="pre">exp</span></code> / <code class="docutils literal notranslate"><span class="pre">mice</span></code> tables and writes <code class="docutils literal notranslate"><span class="pre">/shared/gui_menu.npy</span></code>. On <strong>local</strong> (non-AWS) cron runs, <code class="docutils literal notranslate"><span class="pre">cron_scenario.py</span></code> executes this as the <strong>final</strong> step after populate, analysis, DLC, and <code class="docutils literal notranslate"><span class="pre">inputs_videos</span></code> tables. AWS cron runs do not export the GUI menu.</p>
+<p>Ensure the shared directory exists on the host (see <a class="reference internal" href="#deployment-defaults"><span class="std std-ref">Deployment defaults</span></a>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>-p<span class="w"> </span>/mnt/database/shared<span class="w">   </span><span class="c1"># or your SHARED_PATH</span>
+</pre></div>
+</div>
+</section>
+<section id="rig-configure-paths-and-fetch-the-menu">
+<h3>Rig: configure paths and fetch the menu<a class="headerlink" href="#rig-configure-paths-and-fetch-the-menu" title="Permalink to this heading">#</a></h3>
+<ol class="arabic">
+<li><p>Copy <code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code> to the rig computer.</p></li>
+<li><p>Install Python 3 + PyQt5 (<code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">env</span></code> from <code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code>).</p></li>
+<li><p>Create the GUI config from the template (do not commit the result):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cp<span class="w"> </span>gui_transfer/config/local_config.json.example<span class="w"> </span>gui_transfer/config/config.json
+</pre></div>
+</div>
+</li>
+<li><p>Edit <code class="docutils literal notranslate"><span class="pre">gui_transfer/config/config.json</span></code>. Key fields for the dropdown menu:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Example</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ip</span></code></p></td>
+<td><p>Pipeline server IP (<code class="docutils literal notranslate"><span class="pre">localhost</span></code> for local testing)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">192.168.1.10</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">host</span></code></p></td>
+<td><p>SSH user on the server (empty if not needed for <code class="docutils literal notranslate"><span class="pre">localhost</span></code>)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vr4mice</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">remote_dropdown_menu</span></code></p></td>
+<td><p>Path to menu file <strong>on the server</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/shared/gui_menu.npy</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">host_dropdown_menu</span></code></p></td>
+<td><p>Local copy path on the rig</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">./gui_menu.npy</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>On startup, <code class="docutils literal notranslate"><span class="pre">config.get_menu_path</span></code> (a property on the <code class="docutils literal notranslate"><span class="pre">Config</span></code> instance) copies the menu file to the rig:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">localhost</span></code></strong>: local file copy from <code class="docutils literal notranslate"><span class="pre">remote_dropdown_menu</span></code> to <code class="docutils literal notranslate"><span class="pre">host_dropdown_menu</span></code> (both paths must be readable on the same machine)</p></li>
+<li><p><strong>remote server</strong>: <code class="docutils literal notranslate"><span class="pre">scp</span> <span class="pre">host&#64;ip:remote_dropdown_menu</span></code> → <code class="docutils literal notranslate"><span class="pre">host_dropdown_menu</span></code> (requires SSH access and the menu file on the server)</p></li>
+</ul>
+<p>Also set transfer paths (<code class="docutils literal notranslate"><span class="pre">remote_dst</span></code>, <code class="docutils literal notranslate"><span class="pre">gui_output_folder</span></code>, <code class="docutils literal notranslate"><span class="pre">teensy_path</span></code>, <code class="docutils literal notranslate"><span class="pre">processed_path</span></code>, etc.) for your rig layout. See the inline example in <code class="docutils literal notranslate"><span class="pre">gui_transfer/config/config.py</span></code>.</p>
+</li>
+<li><p>Start the GUI:</p>
 <ul class="simple">
 <li><p>Linux: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run_gui</span></code> from <code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code></p></li>
 <li><p>Windows: use the provided batch file example and adjust paths.</p></li>
 </ul>
 </li>
 </ol>
+<p>If the menu file is missing or <code class="docutils literal notranslate"><span class="pre">scp</span></code> fails, the GUI logs a warning and exits — fix paths/credentials and ensure <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">fetch</span></code> has been run on the server before restarting the GUI.</p>
+<p>Further GUI module details: <code class="docutils literal notranslate"><span class="pre">dj_pipeline/gui_transfer/README.md</span></code>.</p>
+<p>The GUI transfers <strong>experiment metadata</strong> and rig files only (videos stay on the rig).</p>
+</section>
 </section>
 <section id="manual-runs-run-py">
 <h2>Manual runs (<a class="reference external" href="http://run.py">run.py</a>)<a class="headerlink" href="#manual-runs-run-py" title="Permalink to this heading">#</a></h2>
@@ -926,6 +999,7 @@ Use GUI mode when experiment metadata is collected via the rig GUI.</p></li>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%run<span class="w"> </span>run.py<span class="w"> </span>populate
 %run<span class="w"> </span>run.py<span class="w"> </span>analysis
 %run<span class="w"> </span>run.py<span class="w"> </span>summary
+%run<span class="w"> </span>run.py<span class="w"> </span>fetch<span class="w">    </span><span class="c1"># refresh GUI dropdown menu on /shared</span>
 ...
 </pre></div>
 </div>
@@ -948,7 +1022,7 @@ Use GUI mode when experiment metadata is collected via the rig GUI.</p></li>
 </ul>
 </section>
 <section id="cron-and-docker-operations">
-<h2>Cron and Docker operations<a class="headerlink" href="#cron-and-docker-operations" title="Permalink to this heading">#</a></h2>
+<span id="cron-and-docker"></span><h2>Cron and Docker operations<a class="headerlink" href="#cron-and-docker-operations" title="Permalink to this heading">#</a></h2>
 <p>Scheduled pipeline runs use wrapper shell scripts that call <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code> with project name <strong><code class="docutils literal notranslate"><span class="pre">vr4mice</span></code></strong> (override via <code class="docutils literal notranslate"><span class="pre">COMPOSE_PROJECT</span></code> in <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code> or the environment). Shared logic lives in <code class="docutils literal notranslate"><span class="pre">docker/cron_common.sh</span></code>.</p>
 <section id="architecture">
 <h3>Architecture<a class="headerlink" href="#architecture" title="Permalink to this heading">#</a></h3>
@@ -980,7 +1054,7 @@ Use GUI mode when experiment metadata is collected via the rig GUI.</p></li>
 </tbody>
 </table>
 </div>
-<p><strong>Docker client vs host conda:</strong> the client container uses system Python + pip (DeepLabCut base image). Conda on the rig or laptop (<code class="docutils literal notranslate"><span class="pre">env.py</span></code>, <code class="docutils literal notranslate"><span class="pre">vr4mice_env</span></code>, DLCliveGUI) is a separate install path and is not used inside the Docker client. Base package install and user mapping are described under <span class="xref myst">Docker client: base packages and user mapping</span>.</p>
+<p><strong>Docker client vs host conda:</strong> the client container uses system Python + pip (DeepLabCut base image). Conda on the rig or laptop (<code class="docutils literal notranslate"><span class="pre">env.py</span></code>, <code class="docutils literal notranslate"><span class="pre">vr4mice_env</span></code>, DLCliveGUI) is a separate install path and is not used inside the Docker client. Base package install and user mapping are described under <a class="reference internal" href="#docker-client-base-packages"><span class="std std-ref">Docker client: base packages and user mapping</span></a>.</p>
 </section>
 <section id="makefile-targets-common">
 <h3>Makefile targets (common)<a class="headerlink" href="#makefile-targets-common" title="Permalink to this heading">#</a></h3>
@@ -1300,10 +1374,7 @@ Recipients are derived from:</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#end-to-end-workflow-data-acquisition-emails">End-to-end workflow (data acquisition → emails)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#repository-layout-dj-pipeline">Repository layout (dj_pipeline)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-module-guide-key-folders">vr4mice module guide (key folders)</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-schema"><code class="docutils literal notranslate"><span class="pre">vr4mice/schema</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-actions"><code class="docutils literal notranslate"><span class="pre">vr4mice/actions</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-analysis"><code class="docutils literal notranslate"><span class="pre">vr4mice/analysis</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-module-guide">vr4mice module guide</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-transfer"><code class="docutils literal notranslate"><span class="pre">gui_transfer</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#base-schemas"><code class="docutils literal notranslate"><span class="pre">base</span></code> (schemas)</a></li>
 </ul>
@@ -1320,7 +1391,8 @@ Recipients are derived from:</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-connect-via-ipython-or-jupyter">Step 4 — Connect via IPython or Jupyter</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-verify-connection">Step 5 — Verify connection</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stop-the-client">Stop the client</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#datajoint-database-user-remote-access-via-jupyter-notebook-tested-with-python-3-9-5">DataJoint database user remote access via Jupyter Notebook (tested with Python 3.9.5):</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#jupyter-ipython-access-recommended-docker-client">Jupyter / IPython access (recommended: Docker client)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#host-jupyter-legacy-outside-docker">Host Jupyter (legacy / outside Docker)</a></li>
 </ul>
 </li>
 </ul>
@@ -1338,7 +1410,11 @@ Recipients are derived from:</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-vs-non-gui-mode">GUI vs non-GUI mode</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-installation-rig-related">GUI installation (rig-related)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-dropdown-menu-and-rig-setup">GUI dropdown menu and rig setup</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#server-generate-the-menu-file">Server: generate the menu file</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rig-configure-paths-and-fetch-the-menu">Rig: configure paths and fetch the menu</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manual-runs-run-py">Manual runs (run.py)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-quick-sanity">Testing / quick sanity</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-and-docker-operations">Cron and Docker operations</a><ul class="nav section-nav flex-column">

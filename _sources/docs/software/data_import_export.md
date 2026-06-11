@@ -1,3 +1,4 @@
+(sec:data-import-export)=
 # Data Import/Export
 
 This document covers exporting a restricted subset of the database and importing the resulting dump files into a new database.
@@ -31,10 +32,11 @@ bash export_restricted_dump.sh
 
 Output goes to `/app/exports/restricted_dump_<timestamp>/` inside the container (or `$EXPORT_ROOT` if you set it).
 
-## Import (`quick_start.sh`) -- Recommended
+## Import (`quick_start.sh`) — Recommended
 
 Copy the generated `restricted_dump_*.sql` files (or a `.zip`/`.tar.gz` archive) into your dump directory and run:
 ```bash
+cd dj_pipeline
 bash quick_start.sh
 ```
 
@@ -44,6 +46,9 @@ When prompted:
 - **Dump directory or .zip/.tar.gz archive** → path to the dump folder or archive
 
 The script creates missing databases and imports each `restricted_dump_*.sql`. If you provide an archive, it is extracted to `.../tmp_extract` under the dump dir, so make sure you have **~50GB of free space available** there. Imports stay in the foreground and show progress (via `pv` or `dd status=progress` when available). Depending on the disk speed, the import can take **up to ~1 hour**.
+
+For a full walkthrough (Zenodo download → Jupyter), see {ref}`Deploy the DataJoint database locally <sec:import-sql-dump>`.
+For pipeline setup details, see {ref}`Setup & Usage <sec:install-dj-pipeline>`.
 
 ## Import (raw mysql)
 To import a single dump manually:

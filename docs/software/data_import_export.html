@@ -437,7 +437,7 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#export-export-restricted-dump-sh">Export (<code class="docutils literal notranslate"><span class="pre">export_restricted_dump.sh</span></code>)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#import-quick-start-sh-recommended">Import (<code class="docutils literal notranslate"><span class="pre">quick_start.sh</span></code>) – Recommended</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#import-quick-start-sh-recommended">Import (<code class="docutils literal notranslate"><span class="pre">quick_start.sh</span></code>) — Recommended</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#import-raw-mysql">Import (raw mysql)</a></li>
 </ul>
             </nav>
@@ -451,7 +451,7 @@ document.write(`
                 <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="data-import-export">
-<h1>Data Import/Export<a class="headerlink" href="#data-import-export" title="Permalink to this heading">#</a></h1>
+<span id="sec-data-import-export"></span><h1>Data Import/Export<a class="headerlink" href="#data-import-export" title="Permalink to this heading">#</a></h1>
 <p>This document covers exporting a restricted subset of the database and importing the resulting dump files into a new database.</p>
 <section id="export-export-restricted-dump-sh">
 <h2>Export (<code class="docutils literal notranslate"><span class="pre">export_restricted_dump.sh</span></code>)<a class="headerlink" href="#export-export-restricted-dump-sh" title="Permalink to this heading">#</a></h2>
@@ -485,9 +485,10 @@ document.write(`
 <p>Output goes to <code class="docutils literal notranslate"><span class="pre">/app/exports/restricted_dump_&lt;timestamp&gt;/</span></code> inside the container (or <code class="docutils literal notranslate"><span class="pre">$EXPORT_ROOT</span></code> if you set it).</p>
 </section>
 <section id="import-quick-start-sh-recommended">
-<h2>Import (<code class="docutils literal notranslate"><span class="pre">quick_start.sh</span></code>) – Recommended<a class="headerlink" href="#import-quick-start-sh-recommended" title="Permalink to this heading">#</a></h2>
+<h2>Import (<code class="docutils literal notranslate"><span class="pre">quick_start.sh</span></code>) — Recommended<a class="headerlink" href="#import-quick-start-sh-recommended" title="Permalink to this heading">#</a></h2>
 <p>Copy the generated <code class="docutils literal notranslate"><span class="pre">restricted_dump_*.sql</span></code> files (or a <code class="docutils literal notranslate"><span class="pre">.zip</span></code>/<code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code> archive) into your dump directory and run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bash<span class="w"> </span>quick_start.sh
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>dj_pipeline
+bash<span class="w"> </span>quick_start.sh
 </pre></div>
 </div>
 <p>When prompted:</p>
@@ -497,6 +498,8 @@ document.write(`
 <li><p><strong>Dump directory or .zip/.tar.gz archive</strong> → path to the dump folder or archive</p></li>
 </ul>
 <p>The script creates missing databases and imports each <code class="docutils literal notranslate"><span class="pre">restricted_dump_*.sql</span></code>. If you provide an archive, it is extracted to <code class="docutils literal notranslate"><span class="pre">.../tmp_extract</span></code> under the dump dir, so make sure you have <strong>~50GB of free space available</strong> there. Imports stay in the foreground and show progress (via <code class="docutils literal notranslate"><span class="pre">pv</span></code> or <code class="docutils literal notranslate"><span class="pre">dd</span> <span class="pre">status=progress</span></code> when available). Depending on the disk speed, the import can take <strong>up to ~1 hour</strong>.</p>
+<p>For a full walkthrough (Zenodo download → Jupyter), see <a class="reference internal" href="quickstart_local_dump.html#sec-import-sql-dump"><span class="std std-ref">Deploy the DataJoint database locally</span></a>.
+For pipeline setup details, see <a class="reference internal" href="install_dj_pipeline.html#sec-install-dj-pipeline"><span class="std std-ref">Setup &amp; Usage</span></a>.</p>
 </section>
 <section id="import-raw-mysql">
 <h2>Import (raw mysql)<a class="headerlink" href="#import-raw-mysql" title="Permalink to this heading">#</a></h2>
@@ -573,7 +576,7 @@ document.write(`
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#export-export-restricted-dump-sh">Export (<code class="docutils literal notranslate"><span class="pre">export_restricted_dump.sh</span></code>)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#import-quick-start-sh-recommended">Import (<code class="docutils literal notranslate"><span class="pre">quick_start.sh</span></code>) – Recommended</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#import-quick-start-sh-recommended">Import (<code class="docutils literal notranslate"><span class="pre">quick_start.sh</span></code>) — Recommended</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#import-raw-mysql">Import (raw mysql)</a></li>
 </ul>
   </nav></div>

@@ -444,12 +444,14 @@ document.write(`
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tables-in-the-vr4mice-schema-pipeline">Tables in the <code class="docutils literal notranslate"><span class="pre">vr4mice/schema</span></code> Pipeline</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#base-py"><code class="docutils literal notranslate"><span class="pre">base.py</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-py"><code class="docutils literal notranslate"><span class="pre">vr4mice.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#base-analysis-py"><code class="docutils literal notranslate"><span class="pre">base_analysis.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dlc-py"><code class="docutils literal notranslate"><span class="pre">dlc.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolated-trajectories-py"><code class="docutils literal notranslate"><span class="pre">interpolated_trajectories.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#latency-tests-py"><code class="docutils literal notranslate"><span class="pre">latency_tests.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#session-metrics-py"><code class="docutils literal notranslate"><span class="pre">session_metrics.py</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-py"><code class="docutils literal notranslate"><span class="pre">vr4mice.py</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decision-py"><code class="docutils literal notranslate"><span class="pre">decision.py</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inputs-videos-py"><code class="docutils literal notranslate"><span class="pre">inputs_videos.py</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -485,8 +487,8 @@ document.write(`
 </ul>
 <p><strong>Related VR4Mice docs:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">docs/software/install_dj_pipeline.md</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">docs/software/quickstart_local_dump.md</span></code></p></li>
+<li><p><a class="reference internal" href="install_dj_pipeline.html#sec-install-dj-pipeline"><span class="std std-ref">Setup &amp; Usage</span></a></p></li>
+<li><p><a class="reference internal" href="quickstart_local_dump.html#sec-import-sql-dump"><span class="std std-ref">Deploy the DataJoint database locally</span></a></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">docs/software/data_import_export.md</span></code></p></li>
 </ul>
 </section>
@@ -505,12 +507,12 @@ document.write(`
 <h3>Codebase overview<a class="headerlink" href="#codebase-overview" title="Permalink to this heading">#</a></h3>
 <ol class="arabic simple">
 <li><p>The <strong><code class="docutils literal notranslate"><span class="pre">base/base_min_schemas/</span></code></strong> directory contains minimal <code class="docutils literal notranslate"><span class="pre">exp</span></code> and <code class="docutils literal notranslate"><span class="pre">mice</span></code> schema definitions needed for GUI dropdowns and basic metadata.</p></li>
-<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">Dockerfile</span></code></strong> and <strong><code class="docutils literal notranslate"><span class="pre">docker/entrypoint.sh</span></code></strong> build the client image used by <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code>.</p></li>
-<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code></strong> folder contains all GUI-related information. Only this folder, plus Python 3 and PyQt5, are needed to build the GUI on a rig computer.</p></li>
+<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">Dockerfile</span></code></strong> (installs pinned deps from <strong><code class="docutils literal notranslate"><span class="pre">requirements-docker.txt</span></code></strong>) and <strong><code class="docutils literal notranslate"><span class="pre">docker/entrypoint.sh</span></code></strong> build the client image used by <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code>.</p></li>
+<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code></strong> folder contains all GUI-related information. Only this folder, plus Python 3 and PyQt5, are needed to build the GUI on a rig computer. For dropdown menu paths and rig <code class="docutils literal notranslate"><span class="pre">config.json</span></code> setup, see <a class="reference internal" href="install_dj_pipeline.html#gui-dropdown-menu"><span class="std std-ref">GUI dropdown menu and rig setup</span></a>.</p></li>
 <li><p>The <strong><code class="docutils literal notranslate"><span class="pre">run.py</span></code></strong> script is the main CLI entrypoint for running pipeline modes (populate, analysis, dlc, etc.).</p></li>
-<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">cron_scenario.py</span></code></strong> script runs the full pipeline with per-step logging (used by cron). See <span class="xref myst">Cron and Docker operations</span> for wrapper scripts, crontab setup, and compose project naming.</p></li>
+<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">cron_scenario.py</span></code></strong> script runs the full pipeline with per-step logging (used by cron). See <a class="reference internal" href="install_dj_pipeline.html#cron-and-docker"><span class="std std-ref">Cron and Docker operations</span></a> for wrapper scripts, crontab setup, and compose project naming.</p></li>
 <li><p>The <strong><code class="docutils literal notranslate"><span class="pre">quick_start.sh</span></code></strong> script interactively configures <code class="docutils literal notranslate"><span class="pre">.env</span></code>/<code class="docutils literal notranslate"><span class="pre">env.py</span></code> and starts containers.</p></li>
-<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">vr4mice/</span></code></strong> folder contains the core of the pipeline, including <code class="docutils literal notranslate"><span class="pre">vr4mice</span></code> schema (table definitions) and actions.</p></li>
+<li><p>The <strong><code class="docutils literal notranslate"><span class="pre">vr4mice/</span></code></strong> folder contains the core of the pipeline. Key components: <code class="docutils literal notranslate"><span class="pre">schema/</span></code> (DataJoint table definitions), <code class="docutils literal notranslate"><span class="pre">analysis/</span></code> (helpers and plotting), <code class="docutils literal notranslate"><span class="pre">actions/</span></code> (ingest, sync, fetch), <code class="docutils literal notranslate"><span class="pre">utils/</span></code> (logging, schema config, connections). See <code class="docutils literal notranslate"><span class="pre">dj_pipeline/vr4mice/README.md</span></code>.</p></li>
 <li><p>The <strong><code class="docutils literal notranslate"><span class="pre">Makefile</span></code></strong> provides shortcuts for Docker and common commands.</p></li>
 <li><p>The <strong><code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code></strong> file defines the database and client services and volume mounts.</p></li>
 </ol>
@@ -519,184 +521,285 @@ document.write(`
 </section>
 <section id="tables-in-the-vr4mice-schema-pipeline">
 <h2>Tables in the <code class="docutils literal notranslate"><span class="pre">vr4mice/schema</span></code> Pipeline<a class="headerlink" href="#tables-in-the-vr4mice-schema-pipeline" title="Permalink to this heading">#</a></h2>
+<p>Each file under <code class="docutils literal notranslate"><span class="pre">dj_pipeline/vr4mice/schema/</span></code> has a module-level docstring, and each top-level DataJoint table class has a class-level docstring describing its role (nested <code class="docutils literal notranslate"><span class="pre">dj.Part</span></code> tables may not). The summaries below mirror those docstrings.</p>
 <img alt="vr4mice_erd" class="bg-primary mb-1 align-center" src="../../_images/vr4mice-erd.png" />
 <section id="base-py">
 <h3><code class="docutils literal notranslate"><span class="pre">base.py</span></code><a class="headerlink" href="#base-py" title="Permalink to this heading">#</a></h3>
+<p><em>Base schema linking datasets to shared experiment metadata.</em></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Base</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Core experiment computed table.</p>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">vr4mice.Dataset</span></code><br />
+Links together <code class="docutils literal notranslate"><span class="pre">Dataset</span></code> with base <code class="docutils literal notranslate"><span class="pre">Mouse</span></code> and <code class="docutils literal notranslate"><span class="pre">Exp</span></code> schemas.</p>
+</section>
+<section id="vr4mice-py">
+<h3><code class="docutils literal notranslate"><span class="pre">vr4mice.py</span></code><a class="headerlink" href="#vr4mice-py" title="Permalink to this heading">#</a></h3>
+<p><em>Core VR4Mice schema tables for datasets, metadata, and raw signals.</em></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Camera</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Camera definition table; to be updated if a new camera name is added.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Dataset</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Stores dataset names representing VR experiments; keeps raw pickle and npy files (<code class="docutils literal notranslate"><span class="pre">mouse_name_doe_attempt</span></code> format).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">FailedSession</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Tracks dataset/table pairs that failed during populate/compute.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Labels</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Stores custom group labels assigned to datasets.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Groups</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Links datasets to custom <code class="docutils literal notranslate"><span class="pre">Labels</span></code> entries.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Labs</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Stores collaborating lab identifiers.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Collab</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Links each dataset to a collaborating lab.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Video</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Stores raw video file metadata, timestamp files, and paths on the rig PC.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">ModelName</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Stores DLC model names applied to video analysis; can be extended for new model types.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DLC</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Stores local paths to keypoints and processed keypoints files.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MouseState</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Stores mouse game-related position and events; fetched from the teensy output pickle file.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">State</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">vr4mice.MouseState</span></code><br />
+Stores trial-related information; fetched from the teensy output pickle file.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Metadata</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Stores Unity parameters and session metadata; fetched from the teensy output pickle file.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SignalsPhotodiode</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Stores photodiode and generated sync signals from the PROC file.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GuiParams</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Stores Unity game parameters fetched from the teensy output pickle file.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TrainingPhaseType</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Stores training phase categories used to classify datasets.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DatasetType</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">vr4mice.Metadata</span></code><br />
+Assigns each dataset to a training phase based on metadata and state.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Box</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">vr4mice.Metadata</span></code><br />
+Stores box positions; fetched from the teensy output pickle file.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Object</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Stores target and distractor object names used in the game.</p>
 </section>
 <section id="base-analysis-py">
 <h3><code class="docutils literal notranslate"><span class="pre">base_analysis.py</span></code><a class="headerlink" href="#base-analysis-py" title="Permalink to this heading">#</a></h3>
+<p><em>Analysis schema tables built on top of core VR4Mice datasets.</em></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DataFrame</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">vr4mice.Dataset</span></code><br />
-Main analysis dataframe including trial data, position (x,y), velocity, acceleration, choices, rewards, and behavioral metrics. Runs <code class="docutils literal notranslate"><span class="pre">create_data_frame(key)</span></code> to get the data into a <code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code>.</p>
+Hosts the main per-step analysis dataframe (trial data, position, velocity, choices, rewards, and behavioral metrics). Populated via <code class="docutils literal notranslate"><span class="pre">create_data_frame(key)</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">BoxDataFrame</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code><br />
-Box and reward zone coordinates, angles, and boundaries for left/right/target boxes using <code class="docutils literal notranslate"><span class="pre">get_box_df()</span></code>.</p>
+Stores per-trial report and target box coordinates derived from <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SummaryPlots</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">vr4mice.Dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">BoxDataFrame</span></code><br />
-Generates and stores summary plots for each dataset using <code class="docutils literal notranslate"><span class="pre">vr4mice_summary_plots()</span></code>.</p>
+Stores paths to generated per-session summary plot figures.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GitCommit</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code><br />
-Git commit hash and changed files for reproducibility tracking.</p>
+Stores git commit hash and changed files for analysis reproducibility.</p>
 </section>
 <section id="dlc-py">
 <h3><code class="docutils literal notranslate"><span class="pre">dlc.py</span></code><a class="headerlink" href="#dlc-py" title="Permalink to this heading">#</a></h3>
+<p><em>DLC-related schema tables for keypoints and derived kinematics.</em></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DLCProcessor</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Imported</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">vr4mice.DLC</span></code><br />
-<strong>Imports:</strong> DeepLabCut pose estimation results from external files.</p>
+Imports processed DLC outputs from the PROC npy file.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DLCKptsDf</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">DLCProcessor</span></code><br />
-Processes DLC keypoints into structured dataframes.</p>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">vr4mice.DLC</span></code><br />
+All available raw DLC keypoints with likelihood.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SyncDLCKptsDf</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">DLCKptsDf</span></code><br />
-Synchronizes DLC keypoints with experiment timing and events.</p>
+Filtered and game-synchronized DLC keypoints.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">OfflineKinematics</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">SyncDLCKptsDf</span></code><br />
-Offline kinematics analysis from synchronized DLC pose data.</p>
+Stores mouse body kinematics computed offline from synchronized DLC keypoints.</p>
 </section>
 <section id="interpolated-trajectories-py">
 <h3><code class="docutils literal notranslate"><span class="pre">interpolated_trajectories.py</span></code><a class="headerlink" href="#interpolated-trajectories-py" title="Permalink to this heading">#</a></h3>
+<p><em>Interpolated trajectory schema used for downstream analysis tables.</em></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">InterpolatedTrials</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Interpolated trial trajectories for smooth motion analysis.</p>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">base_analysis.DataFrame</span></code><br />
+Stores J-shaped interpolated per-trial trajectories and kinematics.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MeanXYTrajectory</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">InterpolatedTrials</span></code><br />
-Mean XY trajectories averaged across multiple trials.</p>
+Stores mean x/y trajectories across trials for each aperture.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">YBinnedXYTrajectory</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">InterpolatedTrials</span></code><br />
-Y-axis binned XY trajectories for spatial analysis.</p>
+Stores y-binned mean trajectories for each aperture.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MeanVelocities</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">InterpolatedTrials</span></code><br />
-Mean velocities computed from interpolated trial data.</p>
+Stores mean velocities across trials for each aperture and trial length.</p>
 </section>
 <section id="latency-tests-py">
 <h3><code class="docutils literal notranslate"><span class="pre">latency_tests.py</span></code><a class="headerlink" href="#latency-tests-py" title="Permalink to this heading">#</a></h3>
+<p><em>Latency testing schema for photodiode and frame timing analysis.</em></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SignalsPhotodiodeAligned</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">vr4mice.SignalsPhotodiode</span></code><br />
-Signals aligned to photodiode events for timing analysis.</p>
+Stores interpolated and aligned photodiode and generated sync signals.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">AllLatencies</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">SignalsPhotodiodeAligned</span></code><br />
-All measured latencies from photodiode signal alignment.</p>
+Stores per-session latency between generated and photodiode signal edges.</p>
 </section>
 <section id="session-metrics-py">
 <h3><code class="docutils literal notranslate"><span class="pre">session_metrics.py</span></code><a class="headerlink" href="#session-metrics-py" title="Permalink to this heading">#</a></h3>
+<p><em>Session-level and trial-level summary metrics schema.</em></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SessionMetrics</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Session-level performance metrics and statistics.</p>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">vr4mice.Dataset</span></code> (populated from <code class="docutils literal notranslate"><span class="pre">base_analysis.DataFrame</span></code>)<br />
+Stores session-level summary metrics computed from <code class="docutils literal notranslate"><span class="pre">base_analysis.DataFrame</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TrialMetrics</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Individual trial-level metrics and behavioral measures.</p>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">base_analysis.DataFrame</span></code><br />
+Stores per-trial summary metrics derived from the <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> table.</p>
 </section>
-<section id="vr4mice-py">
-<h3><code class="docutils literal notranslate"><span class="pre">vr4mice.py</span></code><a class="headerlink" href="#vr4mice-py" title="Permalink to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Camera</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
+<section id="decision-py">
+<h3><code class="docutils literal notranslate"><span class="pre">decision.py</span></code><a class="headerlink" href="#decision-py" title="Permalink to this heading">#</a></h3>
+<p><em>Decision analysis schema for regression models and decision points.</em></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SessionLabel</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Reference table:</strong> Camera hardware definitions and configurations.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Dataset</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+<p>Maps session labels to experiment set and stage.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">ExperimentSet</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Manual entry:</strong> Dataset metadata containing most raw experimental data.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">FailedSession</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+<p>Stores experiment set names and descriptions.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">ExperimentStage</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Manual entry:</strong> Tracks failed sessions and error logging; used as a skip list to prevent repeated failures.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Labels</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
+<p>Stores experiment stage names and descriptions.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">ExperimentMember</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Imported</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Reference table:</strong> Label definitions for experimental conditions.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Groups</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">vr4mice.Dataset</span></code><br />
+Links each dataset to an experiment set, stage, and session label.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">InclusionStatus</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Manual entry:</strong> Experimental group assignments and metadata.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Labs</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">ExperimentMember</span></code><br />
+Inclusion status per dataset and experiment set role.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Label</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Reference table:</strong> Laboratory information and configurations.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Collab</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
+<p>Stores regression feature names used in decision analysis.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">LabelSet</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Collaboration and sharing information.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Video</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+<p>Stores named sets of regression labels for model training.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">ModelParams</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Manual entry:</strong> Video file metadata and paths.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">ModelName</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
+<p>Stores logistic regression hyperparameter combinations.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">PredictionModel</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Reference table:</strong> Model name definitions for analysis pipelines.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DLC</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">LabelSet</span></code>, <code class="docutils literal notranslate"><span class="pre">ModelParams</span></code>, <code class="docutils literal notranslate"><span class="pre">ExperimentSet</span></code>, <code class="docutils literal notranslate"><span class="pre">ExperimentStage</span></code><br />
+Trains logistic regression model per mouse using LOGO cross-validation.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">PredictionModel10Windows</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Manual entry:</strong> DeepLabCut model metadata and configurations.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MouseState</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">LabelSet</span></code>, <code class="docutils literal notranslate"><span class="pre">ModelParams</span></code>, <code class="docutils literal notranslate"><span class="pre">ExperimentSet</span></code>, <code class="docutils literal notranslate"><span class="pre">ExperimentStage</span></code><br />
+Trains LOGO regression models on 10 equally-spaced trial progress windows.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DecisionThreshold</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Manual entry:</strong> Mouse behavioral state information.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">State</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+<p>Lookup table for different uncertainty thresholds to define decision points.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DecisionPoints</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Manual entry:</strong> General experimental state information.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Metadata</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">PredictionModel.SessionPrediction</span></code>, <code class="docutils literal notranslate"><span class="pre">DecisionThreshold</span></code><br />
+Decision point and corresponding per-trial data.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DecisionPoints10Windows</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Manual entry:</strong> General experimental metadata.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SignalsPhotodiode</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">PredictionModel10Windows.SessionPrediction</span></code>, <code class="docutils literal notranslate"><span class="pre">DecisionThreshold</span></code><br />
+Decision points computed from 10-window model predictions.</p>
+</section>
+<section id="inputs-videos-py">
+<h3><code class="docutils literal notranslate"><span class="pre">inputs_videos.py</span></code><a class="headerlink" href="#inputs-videos-py" title="Permalink to this heading">#</a></h3>
+<p><em>Video input schema for sync/crop/align operations on session recordings.</em></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">RawVideo</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Imported</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Photodiode signal processing and timing data.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GuiParams</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">vr4mice.Dataset</span></code><br />
+Stores the raw OBS recording path for a dataset.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">ProcessedVideo</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Manual entry:</strong> GUI parameter settings and configurations.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TrainingPhaseType</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">RawVideo</span></code><br />
+Stores cropped/truncated OBS videos and ROI metadata.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">VideoSyncSignal</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Reference table:</strong> Training phase type definitions.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DatasetType</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">ProcessedVideo</span></code><br />
+Extracts the binary sync trace from the sync ROI video.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">AlignedVideoFrame</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Dataset type classification and information.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Box</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
-</pre></div>
-</div>
-<p><strong>Manual entry:</strong> Experimental box metadata and configurations.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Object</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
-</pre></div>
-</div>
-<p><strong>Reference table:</strong> Object definitions used in experiments.</p>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">VideoSyncSignal</span></code>, <code class="docutils literal notranslate"><span class="pre">vr4mice.State</span></code><br />
+Aligns game steps to video frames using photodiode when available; stores QA metrics.</p>
 </section>
 </section>
 </section>
@@ -773,12 +876,14 @@ All measured latencies from photodiode signal alignment.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tables-in-the-vr4mice-schema-pipeline">Tables in the <code class="docutils literal notranslate"><span class="pre">vr4mice/schema</span></code> Pipeline</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#base-py"><code class="docutils literal notranslate"><span class="pre">base.py</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-py"><code class="docutils literal notranslate"><span class="pre">vr4mice.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#base-analysis-py"><code class="docutils literal notranslate"><span class="pre">base_analysis.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dlc-py"><code class="docutils literal notranslate"><span class="pre">dlc.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolated-trajectories-py"><code class="docutils literal notranslate"><span class="pre">interpolated_trajectories.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#latency-tests-py"><code class="docutils literal notranslate"><span class="pre">latency_tests.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#session-metrics-py"><code class="docutils literal notranslate"><span class="pre">session_metrics.py</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-py"><code class="docutils literal notranslate"><span class="pre">vr4mice.py</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decision-py"><code class="docutils literal notranslate"><span class="pre">decision.py</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inputs-videos-py"><code class="docutils literal notranslate"><span class="pre">inputs_videos.py</span></code></a></li>
 </ul>
 </li>
 </ul>

@@ -115,6 +115,8 @@ vr4mice.Dataset().fetch()
 
 Now, you can either play with the data yourself or run our Figures Jupyter notebooks directly. Happy hacking! 👩‍💻👾
 
+For ongoing pipeline use (manual runs, cron, rig GUI setup), see {ref}`Setup & Usage <sec:install-dj-pipeline>`.
+
 
 ## Optional — SSH tunnel (remote server)
 If Jupyter runs on a remote host:
