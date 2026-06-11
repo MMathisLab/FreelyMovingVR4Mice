@@ -7,6 +7,9 @@ from dlc_utils.dlc_processor_socket import MyProcessor_socket
 
 
 class dlc_inference_w_pd(MyProcessor_socket):
+    def _create_teensy(self, com, baudrate):
+        return TeensyLatency(com, baudrate=baudrate)
+
     def __init__(
         self,
         com="COM3",
@@ -20,7 +23,7 @@ class dlc_inference_w_pd(MyProcessor_socket):
 
         self.use_teensy = use_teensy
         if self.use_teensy == 1:
-            self.teensy = TeensyLatency(com, baudrate=baudrate)
+            self.teensy = self._create_teensy(com, baudrate)
             print("Using Teensy")
 
     def save_latency_data(self) -> Dict[str, Any]:
