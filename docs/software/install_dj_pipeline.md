@@ -360,7 +360,7 @@ mkdir -p /mnt/database/shared   # or your SHARED_PATH
    | `remote_dropdown_menu` | Path to menu file **on the server** | `/shared/gui_menu.npy` |
    | `host_dropdown_menu` | Local copy path on the rig | `./gui_menu.npy` |
 
-   On startup, `config.get_menu_path()` copies the remote file to the rig:
+   On startup, `config.get_menu_path` copies the remote file to the rig:
    - **`localhost`**: local file copy from `remote_dropdown_menu` to `host_dropdown_menu` (both paths must be readable on the same machine)
    - **remote server**: `scp host@ip:remote_dropdown_menu` → `host_dropdown_menu` (requires SSH access and the menu file on the server)
 
