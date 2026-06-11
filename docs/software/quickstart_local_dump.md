@@ -25,6 +25,8 @@ The Zenodo record consists of a compressed `.zip` archive containing:
 - `meta.txt`, a run summary file, emitted at the end of the export.
 - `tables.csv`, a per-table log of the tables and row counts exported (see below).
 
+Exact row counts for your archive are listed in `tables.csv`. The table below summarizes exported schemas, tables, and restriction modes (10-window decision models used in the paper notebooks).
+
 | Schema | Table | Restriction Mode | Entries count |
 |---|---|---|---|
 | vr4mice | #labels | unrestricted | 5 |
@@ -38,10 +40,10 @@ The Zenodo record consists of a compressed `.zip` archive containing:
 | decision | #label | unrestricted | 14 |
 | decision | #label_set | unrestricted | 8 |
 | decision | #label_set__member | unrestricted | 44 |
-| decision | __decision_points | dataset | 3320 |
+| decision | __decision_points10_windows | dataset | see tables.csv |
 | decision | __inclusion_status | dataset | 471 |
-| decision | __prediction_model | set_name | 32 |
-| decision | __prediction_model__session_prediction | dataset | 744 |
+| decision | __prediction_model10_windows | set_name | see tables.csv |
+| decision | __prediction_model10_windows__session_prediction | dataset | see tables.csv |
 | decision | _experiment_member | dataset | 471 |
 | dlc | __offline_kinematics | dataset+dataset_override | 1 |
 | interpolated_trajectories | __interpolated_trials | dataset | 445 |
