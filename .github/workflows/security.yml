@@ -1,0 +1,54 @@
+name: Security checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  gitleaks:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  forbidden-files:
+    name: Blocklisted tracked files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail if secrets or personal configs are tracked
+        run: |
+          set -euo pipefail
+          blocked="$(git ls-files | grep -E '(^|/)\.env(\.compose|-aws)?$|(^|/)local_config\.json$|(^|/)\.env(\.compose|-aws)?\.bak$' || true)"
+          if [ -n "${blocked}" ]; then
+            echo "These files must not be tracked (use .env.example, .env.compose.example, .env-aws.example, local_config.json.example):"
+            echo "${blocked}"
+            exit 1
+          fi
+          echo "No blocklisted credential files tracked."
+
+  infra-patterns:
+    name: Internal host patterns
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Block known internal hosts in tracked files
+        run: |
+          set -euo pipefail
+          patterns='128\.178\.51\.167|vr4mice-ar-collab\.cluster'
+          # Notebooks may log DB hosts in cell outputs; we keep committed outputs.
+          tracked="$(git ls-files | grep -Ev '\.ipynb$' || true)"
+          matches="$(git grep -E "${patterns}" -- ${tracked} || true)"
+          if [ -n "${matches}" ]; then
+            echo "Possible infrastructure leak in tracked files:"
+            echo "${matches}"
+            exit 1
+          fi
+          echo "No blocklisted host patterns in tracked files."

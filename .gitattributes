@@ -1,1 +1,5 @@
 dj_pipeline/tests/data/** filter=lfs diff=lfs merge=lfs -text
+
+*.ipynb filter=nbstripout
+*.zpln filter=nbstripout
+*.ipynb diff=ipynb

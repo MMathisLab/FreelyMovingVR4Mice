@@ -18,6 +18,7 @@ RUN if [ -n "$APT_MIRROR" ]; then \
     mysql-client \
     graphviz \
     gosu \
+    passwd \
     vim \
     && apt-get -y autoclean \
     && apt-get -y autoremove \
@@ -35,6 +36,10 @@ RUN pip install "datajoint>=2.0.1" \
     umap-learn \
     black==22.6 \
     pytest pytest-cov tables
+
+COPY docker/ensure_python_shims.sh /usr/local/bin/ensure_python_shims.sh
+RUN chmod +x /usr/local/bin/ensure_python_shims.sh \
+    && bash -c '. /usr/local/bin/ensure_python_shims.sh && ensure_python_shims'
 
 ARG user_name=user
 ARG uid=1000

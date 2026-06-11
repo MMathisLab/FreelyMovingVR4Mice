@@ -1,0 +1,21 @@
+{
+  "ip": "localhost",
+  "host": "",
+
+  "remote_dropdown_menu": "/shared/gui_menu.npy",
+  "host_dropdown_menu": "./gui_menu.npy",
+
+  "gui_output_folder": "./test_output/raw",
+  "cache": "default",
+
+  "remote_dst": "/tmp/test_transfer",
+
+  "raw_data_src": "/data",
+  "dlc_path": "/data/dlc_video_raw",
+  "proc_path": "/data/dlc_video_raw",
+  "video_path": "/data/dlc_video_raw",
+  "camera_path": "/data/dlc_video_raw",
+  "teensy_path": "/data/raw",
+
+  "processed_path": "/data/processed_rig"
+}

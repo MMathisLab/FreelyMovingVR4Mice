@@ -178,14 +178,10 @@ if [ ! -d "${REPO_DIR}" ]; then
   echo "Repo dir not found: ${REPO_DIR}"
   exit 1
 fi
-COMPOSE_PROJECT_DEFAULT=""
-if [ -f "${REPO_DIR}/Makefile" ]; then
-  COMPOSE_PROJECT_DEFAULT="$(awk -F'=' '/^COMPOSE_PROJECT/ {gsub(/ /,"",$2); print $2}' "${REPO_DIR}/Makefile" | tail -n1)"
-else
-  echo "${C_YELLOW}Makefile not found in ${REPO_DIR}. Using default project name.${C_RESET}"
-fi
-COMPOSE_PROJECT_DEFAULT="${COMPOSE_PROJECT_DEFAULT:-mysqltest}"
+eval "$(bash "${REPO_DIR}/docker/compose_env.sh" load 2>/dev/null || true)"
+COMPOSE_PROJECT_DEFAULT="${COMPOSE_PROJECT:-vr4mice}"
 COMPOSE_PROJECT="${COMPOSE_PROJECT_DEFAULT}"
+DOCKER_COMPOSE_CMD="bash ${REPO_DIR}/docker/compose_env.sh compose"
 
 if [ "${MODE}" = "deployment" ]; then
   echo "${C_BLUE}Deployment defaults:${C_RESET}"
@@ -259,25 +255,22 @@ else
   DJ_PWD="${MYSQL_ROOT_PASSWORD}"
 fi
 
-if [ -f "${REPO_DIR}/.env" ]; then
-  CURRENT_CLIENT_NAME="$({ grep -E '^CLIENT_CONTAINER_NAME=' "${REPO_DIR}/.env" || true; } | tail -n1 | cut -d= -f2-)"
-  CURRENT_DB_NAME="$({ grep -E '^DB_CONTAINER_NAME=' "${REPO_DIR}/.env" || true; } | tail -n1 | cut -d= -f2-)"
-else
-  CURRENT_CLIENT_NAME="vr4mice_${USER}"
-  CURRENT_DB_NAME="vr4mice_db"
-fi
+CURRENT_CLIENT_NAME="${CLIENT_CONTAINER_NAME:-vr4mice_${USER}}"
+CURRENT_DB_NAME="${DB_CONTAINER_NAME:-vr4mice_db}"
 
-PROJECT_RUNNING="$(${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" ps -q 2>/dev/null | wc -l | tr -d ' ')"
+PROJECT_RUNNING="$(${DOCKER_COMPOSE_CMD} ps -q 2>/dev/null | wc -l | tr -d ' ')"
 CLIENT_EXISTS="$(docker ps -a --format '{{.Names}}' | grep -x "${CURRENT_CLIENT_NAME}" >/dev/null 2>&1 && echo yes || echo no)"
 DB_EXISTS="$(docker ps -a --format '{{.Names}}' | grep -x "${CURRENT_DB_NAME}" >/dev/null 2>&1 && echo yes || echo no)"
 
 if [ "${PROJECT_RUNNING}" != "0" ] || [ "${CLIENT_EXISTS}" = "yes" ] || [ "${DB_EXISTS}" = "yes" ]; then
+  echo "${C_YELLOW}Existing vr4mice containers detected on this server.${C_RESET}"
+  echo "${C_YELLOW}Choose 'new' with a different COMPOSE_PROJECT to avoid replacing production.${C_RESET}"
   ACTION="$(prompt "Containers already exist. Action (reuse/recreate/new)" "reuse")"
   ACTION="$(echo "${ACTION}" | tr '[:upper:]' '[:lower:]')"
   case "${ACTION}" in
     reuse) ;;
     recreate)
-      ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" down || true
+      COMPOSE_PROJECT="${COMPOSE_PROJECT}" ${DOCKER_COMPOSE_CMD} down || true
       ;;
     new)
       COMPOSE_PROJECT="$(prompt "New project name" "${COMPOSE_PROJECT}_2")"
@@ -304,12 +297,17 @@ if [ ! -d "${REPO_DIR}" ]; then
 fi
 
 ENV_FILE="${REPO_DIR}/.env"
+ENV_COMPOSE_FILE="${REPO_DIR}/.env.compose"
 ENV_PY="${REPO_DIR}/env.py"
 MAKEFILE="${REPO_DIR}/Makefile"
 
 if [ -f "${ENV_FILE}" ]; then
   cp "${ENV_FILE}" "${ENV_FILE}.bak"
   echo "${C_YELLOW}Backed up .env to .env.bak${C_RESET}"
+fi
+if [ -f "${ENV_COMPOSE_FILE}" ]; then
+  cp "${ENV_COMPOSE_FILE}" "${ENV_COMPOSE_FILE}.bak"
+  echo "${C_YELLOW}Backed up .env.compose to .env.compose.bak${C_RESET}"
 fi
 
 mkdir -p "${DB_ROOT}" "${DATA_ROOT}" "${SHARED_ROOT}" "${SCREEN_ROOT}" || true
@@ -327,8 +325,10 @@ GUI=$( [ "${GUI_FLAG}" = "yes" ] && echo "True" || echo "False" )
 EMAIL=$( [ "${EMAIL_FLAG}" = "yes" ] && echo "True" || echo "False" )
 DJ_SUPPORT_FILEPATH_MANAGEMENT=TRUE
 DJ_SUPPORT_ADAPTED_TYPES=TRUE
+EOF
 
-# Docker-compose overrides (optional)
+cat > "${ENV_COMPOSE_FILE}" <<EOF
+COMPOSE_PROJECT=${COMPOSE_PROJECT}
 DB_BIND_IP=${DB_BIND_IP}
 DB_PORT=${DB_PORT}
 MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
@@ -338,9 +338,9 @@ DATA_PATH=${DATA_ROOT}
 SCREEN_RECORDINGS_PATH=${SCREEN_ROOT}
 JUPYTER_PORT=8887
 CLIENT_IMAGE=mmathislab/vr4mice_app:0.1.0
-CLIENT_CONTAINER_NAME=vr4mice_\${USER}
 DB_CONTAINER_NAME=${CURRENT_DB_NAME}
 CLIENT_CONTAINER_NAME=${CURRENT_CLIENT_NAME}
+CLIENT_NETWORK_MODE=host
 EOF
 
 cat > "${ENV_PY}" <<EOF
@@ -462,7 +462,7 @@ if [ "${IMPORT_DUMPS}" = "yes" ]; then
         db="$(basename "${f}" | sed -E 's/^restricted_dump_(.*)_[0-9]{8}_[0-9]{6}\.sql$/\1/')"
         echo "${C_BLUE}Importing ${f} -> ${db}${C_RESET}"
         if [ "${SKIP_EXISTING_DB}" = "yes" ]; then
-          db_tables_count="$(${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
+          db_tables_count="$(COMPOSE_PROJECT="${COMPOSE_PROJECT}" ${DOCKER_COMPOSE_CMD} exec -T db \
             env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root -Nse \
             "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${db}' AND table_type='BASE TABLE';" 2>/dev/null || echo "0")"
           if [ "${db_tables_count}" != "0" ]; then
@@ -470,16 +470,16 @@ if [ "${IMPORT_DUMPS}" = "yes" ]; then
             continue
           fi
         fi
-        ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
+        COMPOSE_PROJECT="${COMPOSE_PROJECT}" ${DOCKER_COMPOSE_CMD} exec -T db \
           env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${db}\`;"
       if command -v pv >/dev/null 2>&1; then
-        pv "${f}" | table_progress_filter | ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
+        pv "${f}" | table_progress_filter | COMPOSE_PROJECT="${COMPOSE_PROJECT}" ${DOCKER_COMPOSE_CMD} exec -T db \
           env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root "${db}"
       elif dd --help 2>&1 | grep -q "status=progress"; then
-        dd if="${f}" bs=4M status=progress | table_progress_filter | ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
+        dd if="${f}" bs=4M status=progress | table_progress_filter | COMPOSE_PROJECT="${COMPOSE_PROJECT}" ${DOCKER_COMPOSE_CMD} exec -T db \
           env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root "${db}"
       else
-        table_progress_filter < "${f}" | ${DOCKER_COMPOSE_CMD} -p "${COMPOSE_PROJECT}" exec -T db \
+        table_progress_filter < "${f}" | COMPOSE_PROJECT="${COMPOSE_PROJECT}" ${DOCKER_COMPOSE_CMD} exec -T db \
           env MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mysql -u root "${db}" &
         spinner_wait "$!" "Importing ${db}"
       fi

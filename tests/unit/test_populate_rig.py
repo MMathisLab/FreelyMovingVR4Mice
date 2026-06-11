@@ -651,7 +651,7 @@ class TestPopulateRig:
             with patch("populate_rig.vr4mice", {"tables": {}}):
                 with patch("populate_rig.base", {"tables": {}}):
                     # This should not raise an error - it processes the file
-                    populate_rig(path=str(tmp_path), gui="false")
+                    populate_rig(path=str(tmp_path))
 
     def test_populate_rig_skips_existing_dataset(self, tmp_path, sample_pickle_data):
         """populate_rig should skip datasets already in database."""
@@ -667,7 +667,7 @@ class TestPopulateRig:
             ]
 
             # Run should complete without populating
-            populate_rig(path=str(tmp_path), gui="false")
+            populate_rig(path=str(tmp_path))
 
             # Dataset.fetch should have been called to check existence
             mock_schema.vr4mice.Dataset.return_value.__and__.return_value.fetch.assert_called()
@@ -677,7 +677,7 @@ class TestPopulateRig:
         # Empty directory - no pickle files
         with patch("populate_rig.dj_schema"):
             # Should not raise an error
-            populate_rig(path=str(tmp_path), gui="false")
+            populate_rig(path=str(tmp_path))
 
     def test_populate_rig_gui_mode_requires_npy(self, tmp_path, sample_pickle_data):
         """populate_rig in GUI mode should require .npy files."""
@@ -691,7 +691,7 @@ class TestPopulateRig:
 
             # In GUI mode, should return None when npy is missing (early return)
             with patch.dict(os.environ, {"GUI": "true"}):
-                result = populate_rig(path=str(tmp_path), gui="true")
+                result = populate_rig(path=str(tmp_path))
                 assert result is None
 
     def test_populate_rig_processes_npy_only(self, tmp_path):
@@ -709,7 +709,7 @@ class TestPopulateRig:
         with patch("populate_rig.dj_schema") as mock_schema:
             with patch("populate_rig.base", {"tables": {}}):
                 # Should process npy file
-                populate_rig(path=str(tmp_path), gui="false")
+                populate_rig(path=str(tmp_path))
 
     def test_populate_rig_generates_file_paths_without_gui(self, tmp_path, sample_pickle_data):
         """populate_rig should generate file paths when GUI npy is missing."""
@@ -726,7 +726,7 @@ class TestPopulateRig:
                 mock_vr4mice.__getitem__ = MagicMock(return_value={})
                 mock_vr4mice.get = MagicMock(return_value={})
 
-                populate_rig(path=str(tmp_path), gui="false")
+                populate_rig(path=str(tmp_path))
 
     def test_populate_rig_handles_exception_gracefully(self, tmp_path):
         """populate_rig should catch and log exceptions during processing."""
@@ -736,7 +736,7 @@ class TestPopulateRig:
 
         with patch("populate_rig.dj_schema"):
             # Should not raise - should catch and log the error
-            populate_rig(path=str(tmp_path), gui="false")
+            populate_rig(path=str(tmp_path))
 
 
 # ==============================================================================

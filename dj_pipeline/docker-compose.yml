@@ -1,4 +1,3 @@
-version: "2.4"
 services:
   db:
     image: mysql:8.0
@@ -20,12 +19,19 @@ services:
       - PUID=${UID}
       - PGID=${GID}
       - USERNAME=${USER_NAME}
-      - HOME=/home/${USER_NAME}
-      - PIP_CACHE_DIR=/home/${USER_NAME}/.cache/pip
-      - PATH=/home/${USER_NAME}/.local/bin:$PATH
+      - HOME=/app
+      - PYTHONUSERBASE=/app/.local
+      - PIP_CACHE_DIR=/app/.cache/pip
+      - MPLCONFIGDIR=/app/.cache/matplotlib
+      - XDG_CONFIG_HOME=/app/.cache
+      - PATH=/app/.local/bin:/usr/local/bin:/usr/bin:/bin
       - TAG=${TAG}
     network_mode: ${CLIENT_NETWORK_MODE:-host}
+    # Run via bash so the bind-mounted script does not need +x on shared/NFS checkouts.
+    entrypoint: ["/bin/bash", "/usr/local/bin/entrypoint.sh"]
     volumes:
+      - "./docker/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro"
+      - "./docker/ensure_python_shims.sh:/usr/local/bin/ensure_python_shims.sh:ro"
       - "./:/app"
       - "${SHARED_PATH:-/mnt/database/shared}:/shared"
       - "${DATA_PATH:-/mnt/database/vr4mice/vr4mice_database/data}:/data"
@@ -39,3 +45,5 @@ services:
       - .env
     stdin_open: true
     tty: true
+    # Keep the client alive under `docker compose up -d` (plain bash may exit without a TTY).
+    command: ["sleep", "infinity"]

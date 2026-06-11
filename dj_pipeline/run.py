@@ -5,11 +5,7 @@ import argparse
 import sys
 import warnings
 
-try:
-    from base_actions.connect import connect
-except ModuleNotFoundError:
-    sys.path.insert(0, "/base_actions")
-    from base_actions.connect import connect
+from base_actions.connect import connect
 from vr4mice.utils.logger import Logger, config_logger
 
 logger = Logger.get_logger()
@@ -174,7 +170,7 @@ if __name__ == "__main__":
 
         vr4mice.SignalsPhotodiode().populate()
         latency_tests.SignalsPhotodiodeAligned().populate()
-        latency_tests.AllLatencies()
+        latency_tests.AllLatencies().populate()
 
     elif args.mode == "inputs_videos":
         from vr4mice.schema import inputs_videos
@@ -187,6 +183,7 @@ if __name__ == "__main__":
     elif args.mode == "decision":
         from vr4mice.schema import decision
 
+        decision.sync_lookup_contents()
         decision.ExperimentMember().populate()
         decision.InclusionStatus().populate()
         decision.LabelSet().fill()

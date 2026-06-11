@@ -160,7 +160,7 @@ In `docker-compose.yml`, map host storage for database and data volumes:
 - `/shared` is used for GUI menu exports.
 - Use persistent paths (e.g., `/mnt/database/...`) on the server.
 Network mode:
-- Default is `host`. Set `CLIENT_NETWORK_MODE=bridge` in `.env` if you need bridge networking.
+- Default is `host`. Set `CLIENT_NETWORK_MODE=bridge` in `.env.compose` if you need bridge networking.
 
 ### Database deployment notes (server)
 - Add user to Docker group:
@@ -185,16 +185,10 @@ Network mode:
   port=3309
   ```
 ### Environment variables
-Common variables used by the pipeline:
-- `DJ_HOST` (include port, e.g. `127.0.0.1:3309`), `DJ_USER`, `DJ_PWD`
-- `DJ_LAB`
-- `GUI` (true/false)
-- `EMAIL` (true/false)
-- `IMG_SRC`
-- `VR4MICE_EMAIL_RECIPIENTS` (comma-separated experimenter names)
-Docker-specific overrides (optional):
-- `DB_BIND_IP`, `DB_PORT`, `MYSQL_ROOT_PASSWORD`
-- `DB_DATA_PATH`, `SHARED_PATH`, `DATA_PATH`, `SCREEN_RECORDINGS_PATH`
+
+**Pipeline** (`.env`): `DJ_HOST`, `DJ_USER`, `DJ_PWD`, `DJ_LAB`, `GUI`, `EMAIL`, `IMG_SRC`, `VR4MICE_EMAIL_RECIPIENTS`
+
+**Docker Compose** (`.env.compose`): `COMPOSE_PROJECT`, `DB_BIND_IP`, `DB_PORT`, `MYSQL_ROOT_PASSWORD`, `DB_DATA_PATH`, `SHARED_PATH`, `DATA_PATH`, `SCREEN_RECORDINGS_PATH`, container names, etc.
 
 Notes:
 - `VR4MICE_EMAIL_RECIPIENTS` is required if base schemas (exp/mice) are not in use,
@@ -249,10 +243,18 @@ Typical sequence:
   ```
 
 ## Automated runs (cron)
-`cron_scenario.py` executes the full pipeline in order with per-step logging.
-It is usually invoked via a bash wrapper and added to `crontab`:
-- `cron_script.sh` (nightly)
-- `cron_script_reboot.sh` (on reboot)
+
+See **[Cron and Docker operations](../docs/software/install_dj_pipeline.md#cron-and-docker-operations)** in the install guide for:
+
+- wrapper scripts (`cron_script.sh`, `cron_script_aws.sh`, `cron_script_reboot.sh`)
+- `make add-cron`, `make cron-local`, `make cron-aws`
+- `.env` / `.env.compose` / `.env-aws`, compose project `vr4mice`, logs, and migration notes
+
+Quick install from `dj_pipeline/`:
+
+```bash
+make add-cron
+```
 
 ## AWS mode
 `--aws` mode uses `/data/processed` and disables moving raw files.

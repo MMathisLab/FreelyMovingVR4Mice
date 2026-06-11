@@ -1,8 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Change to the directory where your docker-compose.yml file is located
-cd /mnt/database/vr4mice/vr4mice_database/FreelyMovingVR4Mice/dj_pipeline
+# Nightly local pipeline (rig data -> /data/data, video tables, shared export).
+# DB credentials are sourced from .env inside the client container (see cron_common.sh).
 
-# add git hash
-docker-compose up -d client
-docker-compose exec -d client bash -c "pip install /base_schemas/ && pip install /base_actions/ && source .env && python cron_scenario.py && source .env-aws && python cron_scenario.py --aws"
+source "$(dirname "$0")/docker/cron_common.sh"
+vr4mice_cron_init
+
+vr4mice_git_info
+vr4mice_compose_up db client
+
+vr4mice_run_cron_scenario local
