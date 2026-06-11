@@ -1,0 +1,138 @@
+{
+  "l_box_x_min": {
+    "length": 1,
+    "dtype": "float64",
+    "first": -27.0,
+    "middle": -27.0,
+    "middle_idx": 0,
+    "last": -27.0
+  },
+  "l_box_x_max": {
+    "length": 1,
+    "dtype": "float64",
+    "first": -15.0,
+    "middle": -15.0,
+    "middle_idx": 0,
+    "last": -15.0
+  },
+  "l_box_z_min": {
+    "length": 1,
+    "dtype": "float64",
+    "first": 13.5,
+    "middle": 13.5,
+    "middle_idx": 0,
+    "last": 13.5
+  },
+  "l_box_z_max": {
+    "length": 1,
+    "dtype": "float64",
+    "first": 27.0,
+    "middle": 27.0,
+    "middle_idx": 0,
+    "last": 27.0
+  },
+  "r_box_x_min": {
+    "length": 1,
+    "dtype": "float64",
+    "first": 15.0,
+    "middle": 15.0,
+    "middle_idx": 0,
+    "last": 15.0
+  },
+  "r_box_x_max": {
+    "length": 1,
+    "dtype": "float64",
+    "first": 27.0,
+    "middle": 27.0,
+    "middle_idx": 0,
+    "last": 27.0
+  },
+  "r_box_z_min": {
+    "length": 1,
+    "dtype": "float64",
+    "first": 13.5,
+    "middle": 13.5,
+    "middle_idx": 0,
+    "last": 13.5
+  },
+  "r_box_z_max": {
+    "length": 1,
+    "dtype": "float64",
+    "first": 27.0,
+    "middle": 27.0,
+    "middle_idx": 0,
+    "last": 27.0
+  },
+  "tt_box_x_min": {
+    "length": 1,
+    "dtype": "float64",
+    "first": -12.0,
+    "middle": -12.0,
+    "middle_idx": 0,
+    "last": -12.0
+  },
+  "tt_box_x_max": {
+    "length": 1,
+    "dtype": "float64",
+    "first": 12.0,
+    "middle": 12.0,
+    "middle_idx": 0,
+    "last": 12.0
+  },
+  "tt_box_z_min": {
+    "length": 1,
+    "dtype": "float64",
+    "first": -20.25,
+    "middle": -20.25,
+    "middle_idx": 0,
+    "last": -20.25
+  },
+  "tt_box_z_max": {
+    "length": 1,
+    "dtype": "float64",
+    "first": 6.75,
+    "middle": 6.75,
+    "middle_idx": 0,
+    "last": 6.75
+  },
+  "tt_box_angle": {
+    "length": 1,
+    "dtype": "int64",
+    "first": 90,
+    "middle": 90,
+    "middle_idx": 0,
+    "last": 90
+  },
+  "l_reward_x": {
+    "length": 1,
+    "dtype": "float64",
+    "first": -17.50524480853762,
+    "middle": -17.50524480853762,
+    "middle_idx": 0,
+    "last": -17.50524480853762
+  },
+  "l_reward_z": {
+    "length": 1,
+    "dtype": "float64",
+    "first": 19.92247636722667,
+    "middle": 19.92247636722667,
+    "middle_idx": 0,
+    "last": 19.92247636722667
+  },
+  "r_reward_x": {
+    "length": 1,
+    "dtype": "float64",
+    "first": 17.778844087091212,
+    "middle": 17.778844087091212,
+    "middle_idx": 0,
+    "last": 17.778844087091212
+  },
+  "r_reward_z": {
+    "length": 1,
+    "dtype": "float64",
+    "first": 20.43801259892444,
+    "middle": 20.43801259892444,
+    "middle_idx": 0,
+    "last": 20.43801259892444
+  }
+}
