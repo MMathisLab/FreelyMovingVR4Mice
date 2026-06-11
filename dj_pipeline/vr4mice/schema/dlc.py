@@ -57,7 +57,7 @@ class DLCProcessor(dj.Imported):
 
             if (
                 not "camera" in key or not "doe" in key
-            ):  # TODO: add allow_direct_insert in arg
+            ):  # NOTE: fetch full primary key when partial key is passed to insert1.
                 key = (vr4mice.DLC() & key).fetch(
                     *vr4mice.DLC().primary_key, as_dict=True
                 )[0]
@@ -172,7 +172,7 @@ class SyncDLCKptsDf(dj.Computed):
 
             if (
                 not "camera" in key or not "doe" in key
-            ):  # TODO: add allow_direct_insert in arg
+            ):  # NOTE: fetch full primary key when partial key is passed to insert1.
                 key = (vr4mice.DLC() & key).fetch(
                     *vr4mice.DLC().primary_key, as_dict=True
                 )[0]
@@ -254,7 +254,7 @@ class OfflineKinematics(dj.Computed):
             data = data.to_dict(orient="list")
             if (
                 not "camera" in key or not "doe" in key
-            ):  # TODO: add allow_direct_insert in arg
+            ):  # NOTE: fetch full primary key when partial key is passed to insert1.
                 key = (vr4mice.DLC() & key).fetch(
                     *vr4mice.DLC().primary_key, as_dict=True
                 )[0]

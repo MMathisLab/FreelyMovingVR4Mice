@@ -427,7 +427,7 @@ class DLC(dj.Manual):
 class MouseState(dj.Manual):  # variable State
     """
     MouseState definition table:
-    stores mouse game-related position and events @todo(check thomas)
+    stores mouse game-related position and events (see State for overlap).
     fetched from teensy output pickle file
     """
 
@@ -447,7 +447,6 @@ class MouseState(dj.Manual):  # variable State
     velocity=NULL: longblob      # new
     frame_flip=NULL: longblob    # new to check?
     """
-    # TODO: make populate from file...
 
 
 @schema
@@ -659,7 +658,7 @@ class DatasetType(dj.Computed):
     -> TrainingPhaseType
     """
 
-    def make(self, key):  # TODO(mary): refactor to a separate compact function
+    def make(self, key):
         """Assign a dataset to a training phase based on metadata and state."""
         if FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
@@ -744,7 +743,7 @@ class DatasetType(dj.Computed):
 class Box(dj.Manual):
     """
     Box definition table:
-    stores box positions @todo(thomas)
+    stores box positions derived from teensy output pickle file.
     fetched from teensy output pickle file
     """
 

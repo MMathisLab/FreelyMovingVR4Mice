@@ -11,6 +11,7 @@ from base_actions.send_email import email
 
 from vr4mice.schema import base, vr4mice
 from vr4mice.analysis.summary_dj import vr4mice_summary_plots
+from vr4mice.utils.git_helpers import parse_git_commit_file
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
 
@@ -27,11 +28,8 @@ class DataFrame(dj.Computed):
     hosts the main per-step analysis dataframe for a dataset
     """
 
-    # TODO: This used to point to vr4mice.VR4Mice
-    #       will probably point this to the next version when it's available
-
-    # TODO: Alert!
-    # "step", "reward", "step_time", "mouse_can_report", "head_dir" has to be deprecated: can be always fetched from Raw
+    # DEPRECATED: Foreign key may move from vr4mice.Dataset when VR4Mice schema is revised.
+    # DEPRECATED: step, reward, step_time, mouse_can_report, head_dir — fetch from State instead.
 
     definition = """
     -> vr4mice.Dataset
@@ -113,8 +111,7 @@ class DataFrame(dj.Computed):
             data = data.to_dict(orient="list")
             data = {**key, **data, **{"interpolation": unity_to_physical_arena_size}}
 
-            # TODO: add test that data keys are the same with columns names
-            # if not in... alert
+            # Keys in data must match table columns before insert1.
 
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
@@ -198,10 +195,7 @@ class DataFrame(dj.Computed):
             return df["trial_rewarded"]
         return False
 
-    def get_choices(self, key):  # TODO: implement
-
-        pass  # TODO: implement as rewarded
-
+    def get_choices(self, key):
         from vr4mice.analysis.analysis import get_choices
 
         df = self.get_data(key)
@@ -529,25 +523,3 @@ class GitCommit(dj.Computed):
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
 
-
-def parse_git_commit_file(filename="git_commit"):  # TODO(mary): move to helpers
-    """Parse a git commit file into hash and modified file list."""
-    commit_hash = None
-    modified_files = []
-
-    try:
-        with open(filename, "r") as file:
-            lines = file.readlines()
-
-            for line in lines:
-                line = line.strip()
-                if line.startswith("commit "):
-                    commit_hash = line.split()[1]
-                elif line.startswith("M "):
-                    modified_files.append(line)
-
-        return {"commit_hash": commit_hash, "changed_files": modified_files}
-
-    except FileNotFoundError:
-        logger.warning(f"Error: File '{filename}' not found.")
-        return {"commit_hash": "", "changed_files": []}

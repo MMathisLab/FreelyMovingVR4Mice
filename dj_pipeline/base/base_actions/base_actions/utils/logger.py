@@ -47,8 +47,6 @@ class Logger:
         log_filepath = logs_folder / log_filename
         logging_level = logging.INFO  # lowest level, tracks everything
 
-        # TODO(ahmed) if useful: read config file and get parameters
-
         # create utils with parameters, handlers, etc
         logger = logging.getLogger("base_actions")
         logger.setLevel(logging_level)

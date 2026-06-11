@@ -111,7 +111,7 @@ class TeensyExperimentGUI(object):
                 it also updates GUI elements with new config info.
             :param name: name of the config file without extension (name - not path!), default = None
             :type name: string
-            :raises: TODO file not found
+            :raises: FileNotFoundError: If the named setup file does not exist.
             :return: initialized setup structure
             :rtype: dictionary
         """
@@ -120,7 +120,7 @@ class TeensyExperimentGUI(object):
         else:
             setup_file = self.get_setup_file_name(name)
             if not os.path.isfile(setup_file):
-                if hasattr(self, "window"):  # TODO redo hasattr approach
+                if hasattr(self, "window"):
                     messagebox.showerror("Setup does not exist!",
                                          "This setup file does not exist, "
                                          "please create a new setup file with this name.",
@@ -221,7 +221,7 @@ class TeensyExperimentGUI(object):
                 This method deletes the setup file from file system (attention! all information will be lost)
             :param name: name of the config file without extension (name - not path!), default = None
             :type name: string
-            :raises: TODO file not found
+            :raises: FileNotFoundError: If the named setup file does not exist.
         """
         if name is None:
             name = self.setup_name.get()  # gui interaction
@@ -236,7 +236,6 @@ class TeensyExperimentGUI(object):
             self.setup_list.remove(name)  # gui interaction : update
             self.setup_entry['values'] = tuple(self.setup_list) + ('Create New Setup',)
             self.setup_name.set("")  # gui interaction : update
-            # TODO :: reset to default drop down boxes!
 
     def update_tasks(self, task_dir):
         """
@@ -275,13 +274,13 @@ class TeensyExperimentGUI(object):
 
         self.task_params = {}
         for t in task_list:
-            obj = getattr(self.task_module, t)  # TODO no getattr
+            obj = getattr(self.task_module, t)
             args = inspect.getargspec(obj)
             self.task_params[t] = {}
             for i in range(2, len(args[0])):
                 self.task_params[t][args[0][i]] = args[3][i - 2]
 
-        if hasattr(self, 'task_entry'):  # TODO no hasattr
+        if hasattr(self, 'task_entry'):
             self.task_name.set("")  # gui interaction : update
             self.task_entry['values'] = tuple(self.task_params.keys())
 
@@ -431,7 +430,6 @@ class TeensyExperimentGUI(object):
             self.teensy.close()
             self.teensy = None
             self.rig_label['text'] = "Not Connected"
-        # TODO delete Teensy instance
 
     def add_sub_to_cfg(self):
         """

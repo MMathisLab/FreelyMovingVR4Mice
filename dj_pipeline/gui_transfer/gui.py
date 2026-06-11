@@ -30,8 +30,6 @@ class Gui(QWidget):
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
 
-        # Elements todo(externalise)
-
         self.max = 3  # columns in grid
         self.submitted = False
 

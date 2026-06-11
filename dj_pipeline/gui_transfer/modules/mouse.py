@@ -114,7 +114,7 @@ class Mouse(Template):
         layout = QGridLayout()  # local layor locl grid
         self.main_layout.addLayout(layout)
 
-        # self.setStyleSheet('background: black; color: white') #todo(mary) mode
+        # self.setStyleSheet('background: black; color: white')
 
         self.values = dict()
         labels = self.get_labels()
@@ -146,7 +146,7 @@ class Mouse(Template):
                 if key in json_dict.keys():
                     self.values[key].setCurrentText(
                         json_dict[key]
-                    )  # todo(mary) cache vs default
+                    )
 
             else:
                 self.values[key] = QLabel("")
@@ -190,7 +190,7 @@ class Mouse(Template):
         """
         name = self.values["mouse_name"].currentText()
         if name != mouse:
-            msg = "Mouse name will be updated according to selected file."  # todo(mary) msg management
+            msg = "Mouse name will be updated according to selected file."
             dlg = AlertMsg(self.widget, msg, cancel=True)
             ret = dlg.exec()
             if ret == 1:
@@ -200,7 +200,7 @@ class Mouse(Template):
                 if mouse.lower() not in tmp:
                     msg = (
                         "Mouse " + mouse + " doesn't exist in the database!"
-                    )  # todo(mary) case sensitive
+                    )
                     AlertMsg(self.widget, msg).exec()
                     return False
                 for x in options:

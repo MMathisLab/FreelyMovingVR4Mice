@@ -28,7 +28,6 @@ def load_dj_input(path_dj_data, path_json):
     """
 
     # load dictionary with entries of the dropdown menus
-    # todo if doesn't exist
     dj_data = np.load(path_dj_data, allow_pickle=True)
     dj_dict = dj_data.item()
     json_dict = dict()
@@ -38,7 +37,7 @@ def load_dj_input(path_dj_data, path_json):
     date = now.strftime("%Y-%m-%d")
 
     if Path(path_json).exists():
-        with open(path_json) as json_file:  # todo(mary) err case
+        with open(path_json) as json_file:
             json_dict = json.load(json_file)
 
     return dj_dict, date, json_dict
@@ -55,9 +54,6 @@ def get_dataset(info_mouse, info_exp):
 
     Returns:
     str: A string representing the name of the dataset.
-
-    Todo:
-    Change the dataset format to allow users to add notes.
     """
     # create file extension for the server, format? ->  different for pipelines?
 
@@ -210,19 +206,19 @@ def check_files(key, filename, format, current_mouse=None):
         for f in filename:
             ret = check_file_format(key, f, format, current_mouse)
             if isinstance(ret, bool) and ret is False:
-                return False  # todo
+                return False
         return ret
 
     ret = check_file_format(key, filename, format, current_mouse)
 
     if isinstance(ret, bool) and ret is False:
-        return False  # todo
+        return False
     return ret
 
 
 def check_file_format(
     key, filename, format, current_mouse=None
-):  # todo mouse name check
+):
     """
     Check if the file format of the given file matches the expected format for the given key.
 
@@ -251,7 +247,7 @@ def check_file_format(
     """
     name = Path(filename).stem
     ext = Path(filename).suffix
-    # all_ext = get_ext(key) todo
+    # all_ext = get_ext(key)
 
     # if ext not in all_ext:
     #    logger.info("wrong ext")
@@ -260,7 +256,7 @@ def check_file_format(
     arr = name.split("_")
     default = format
     if isinstance(default, list) or isinstance(default, tuple):
-        return True  # todo adjust
+        return True
 
     if len(arr) != len(default.split("_")):
         logger.info("wrong l")
@@ -337,9 +333,6 @@ def transfer_files(transfer_files):
     Returns:
         bool: True if all files were transferred successfully, False otherwise.
 
-    Todo:
-        - Add support for transferring multiple files at once.
-
     Raises:
         Any exceptions that occur during file transfer.
 
@@ -353,7 +346,6 @@ def transfer_files(transfer_files):
         adr = ip + ":"
     ret = list()
     for key, value in transfer_files.items():
-        # todo list
         # if isinstance(value["filename"], list) or \
         #        isinstance(value["filename"], tuple):
         #    for v in value:
@@ -364,7 +356,7 @@ def transfer_files(transfer_files):
     for val in ret:
         if val[0] is False:
             return False
-    return True  # todo err
+    return True
 
 
 def move_files(files_info):

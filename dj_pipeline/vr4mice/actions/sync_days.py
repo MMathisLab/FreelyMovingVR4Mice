@@ -45,8 +45,6 @@ def sync_days(path, date_format="%Y-%m-%d"):
     path (str): A string representing the path of the directory containing datasets files
     date_format (str, optional): A string representing the date format used in the data files' names.
     Defaults to "%Y-%m-%d".
-
-    todo: can be split and refactored, but not the main codebase
     """
     ext = [".npy"]
 

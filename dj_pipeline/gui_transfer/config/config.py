@@ -58,8 +58,6 @@ def get_system_config(
     - If the configuration file is not found, the function returns False.
     - If the configuration file is found but there is an error loading it,
     an error message will be printed to the console and the function will return None.
-
-    Todo: config not found error
     """
     if config_path == "default":
         config_path = Path(__file__).parent.absolute().joinpath(config_name)
@@ -106,8 +104,6 @@ class Config:
         Returns the configuration value for a given key.
     update(key, value)
         Updates the value for a given configuration key.
-
-     Todo: check that all default paths exist
     """
 
     config_dict = get_system_config()
@@ -123,7 +119,7 @@ class Config:
 
     @property
     def get_dst_path(self):
-        return self.config_dict["remote_dst"]  # todo make here : video/data
+        return self.config_dict["remote_dst"]
 
     @property
     def get_menu_path(self):

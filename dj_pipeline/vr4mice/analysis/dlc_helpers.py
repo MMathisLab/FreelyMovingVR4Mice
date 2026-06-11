@@ -344,7 +344,7 @@ def find_closest_indices(pose_time: List[int], step_time: List[int]) -> List[int
     return closest_indices
 
 
-# TODO(celia): not used in the codebase but could be used later.
+# NOTE(celia): unused helper kept for potential future angular-velocity analysis.
 def compute_circular_angular_velocity(
     angles: Union[list, npt.NDArray], time_intervals: Union[list, npt.NDArray]
 ) -> npt.NDArray:

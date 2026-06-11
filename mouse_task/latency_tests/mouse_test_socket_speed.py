@@ -34,7 +34,7 @@ from teensyexp.tasks_abc.dlc_deque_socket import DLCClient
 from mouse_task.kfilter import OneEuroFilter
 from teensyexp.tasks_abc.teensy_agent import (
     Agent,
-)  # TODO: has module name teensy_agent changed to teensy?
+)
 
 
 # default class constructor input

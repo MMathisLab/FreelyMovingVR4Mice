@@ -73,7 +73,7 @@ def plot_all_boxes(ax, datasets_keys: List = []):
 
     Args:
         ax (matplotlib.axes.Axes): A matplotlib Axes object to plot the boxes on.
-        datasets_keys: TODO
+        datasets_keys (list): Dataset keys to plot; empty list plots all datasets.
     """
     start_box = plot_box_rectangle(
         box_label="tt", edgecolor="#009B9E", datasets_keys=datasets_keys
@@ -142,7 +142,8 @@ def _plot_session_in_arena(
     )
 
 
-# TODO: sync with a function from DJ
+
+
 def plot_session(
     dataset_key: str,  # NOTE: since 1 session only
     ax: Optional[mpl.axes.Axes] = None,
@@ -177,7 +178,6 @@ def plot_session(
             ax = [ax]
 
         if per_aperture:
-            # TODO(celia): add tests on axes.
             for j, aperture in enumerate(np.sort(aperture.aperture.unique())):
                 _plot_session_in_arena(
                     ax=ax[j],
@@ -205,7 +205,7 @@ def plot_session(
 def plot_rewards(
     datasets_keys: List = [],
     per_aperture: bool = False,
-    per_day: bool = False,  # TODO(celia): to add for Fig.2 E.
+    per_day: bool = False,
     alpha: float = 0.5,
     ax: Optional[matplotlib.axes.Axes] = None,
     cmap: str = "Set1",
@@ -332,7 +332,7 @@ def plot_init_position_histogram(
 def plot_trial_count(
     datasets_keys: List = [],
     per_aperture: bool = False,
-    per_day: bool = False,  # TODO(celia): to add for Fig.2 E.
+    per_day: bool = False,
     alpha: float = 0.5,
     ax: Optional[matplotlib.axes.Axes] = None,
     cmap: str = "Set1",
