@@ -1,15 +1,22 @@
-# VR4Mice Core (vr4mice)
+# VR4Mice Core (`vr4mice`)
 
-Key components:
-- `schema/`: DataJoint table definitions.
-- `analysis/`: analysis helpers and plotting.
-- `actions/`: orchestration helpers (ingest, sync, fetch).
-- `utils/`: logging, schema config, connections.
+DataJoint schemas, ingestion actions, and analysis helpers for the pipeline.
+
+## Layout
+
+| Folder | Contents |
+|--------|----------|
+| `schema/` | Table definitions (`vr4mice`, `base_analysis`, `dlc`, `decision`, …) |
+| `actions/` | Ingest, sync, GUI menu export (`populate_rig.py`, `fetch_data.py`, …) |
+| `analysis/` | Session metrics, plotting, regression utilities |
+| `utils/` | Logging, env loading, shared helpers |
 
 ## Entry points
-- Manual runs: `run.py` (from repo root: user mode)
-- Scheduled runs: `cron_scenario.py` (cronjob mode)
+
+- **Manual runs:** `run.py` (from `dj_pipeline/`)
+- **Scheduled runs:** `cron_scenario.py`
 
 ## Documentation
- Full pipeline guide: `../README.md`
 
+- Full pipeline guide: [../README.md](../README.md)
+- Published book: [Setup & Usage](../../docs/software/install_dj_pipeline.md), [Architecture & Tables](../../docs/software/datajoint.md)

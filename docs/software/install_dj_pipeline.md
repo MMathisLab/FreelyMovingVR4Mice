@@ -1,3 +1,4 @@
+(sec:install-dj-pipeline)=
 # Setup & Usage
 
 ## Overview
@@ -6,13 +7,15 @@ computing analysis tables, running DLC and interpolation, and generating summary
 It is designed to run from the client container and can be scheduled via cron.
 
 ## End-to-end workflow (data acquisition → emails)
-1. **Acquisition (rig)**: `.pickle` files (and optional `.npy` metadata via GUI).
+1. **Acquisition (rig)**: `.pickle` files (and optional `.npy` metadata via `gui_transfer/`).
 2. **Ingest**: `run.py populate` → raw tables in `vr4mice`/`base`.
-3. **Analysis**: `run.py analysis` → `base_analysis` tables.
-4. **DLC + interpolation**: `run.py dlc` then `run.py interp`.
-5. **Latency + inputs**: `run.py latency` and `run.py inputs_videos`.
-6. **Decision + summaries**: `run.py decision` then `run.py summary`.
-7. **Emails**: sent if `EMAIL=true` and recipients are available.
+3. **Analysis**: `run.py analysis` → `base_analysis` tables (`DataFrame`, `BoxDataFrame`, `GitCommit`).
+4. **DLC + interpolation**: `run.py dlc` then `run.py interp` (includes `session_metrics` tables).
+5. **Latency**: `run.py latency` → photodiode alignment tables.
+6. **Environment-specific** (manual or via `cron_scenario.py`):
+   - **Local server**: `run.py inputs_videos`, then `run.py fetch` → refreshes `/shared/gui_menu.npy` for the rig GUI.
+   - **AWS / remote** (`--aws`): `run.py decision` on `/data/processed`.
+7. **Summaries**: `run.py summary` → `SummaryPlots` (emails sent when `EMAIL=true` and recipients are available).
 
 ## Repository layout (dj_pipeline)
 - `run.py`: manual CLI entrypoint for running pipeline modes (user mode).
@@ -55,7 +58,7 @@ Computation and plotting utilities used by schema tables:
 Rig GUI and transfer utilities:
 - `gui.py` + `config/` for metadata capture.
 - `utils/` and `modules/` for GUI logic.
-- Dropdown menu file (`gui_menu.npy`) generated on the server by `fetch_data.py` and copied to the rig at GUI startup (see [GUI dropdown menu and rig setup](#gui-dropdown-menu-and-rig-setup)).
+- Dropdown menu file (`gui_menu.npy`) generated on the server by `fetch_data.py` and copied to the rig at GUI startup (see {ref}`GUI dropdown menu and rig setup <gui-dropdown-menu>`).
 
 ### `base` (schemas)
 - `base_schemas`: full `exp` and `mice` schema definitions.
@@ -202,6 +205,7 @@ make ipython
 %run run.py connect
 ```
 
+(docker-client-base-packages)=
 ### Docker client: base packages and user mapping
 
 The client image is built from DeepLabCut’s pip-based Docker image (system Python at `/usr/bin/python`, **not** conda).
@@ -233,6 +237,7 @@ In `docker-compose.yml`, map host storage for database and data volumes:
 Network mode:
 - Default is `host`. Set `CLIENT_NETWORK_MODE=bridge` in `.env.compose` if you need bridge networking.
 
+(deployment-defaults)=
 ### Deployment defaults (quick_start.sh)
 When using `bash quick_start.sh` in **deployment** mode, the default host paths map to:
 - `/mnt/database/vr4mice/vr4mice_database/database` → `/var/lib/mysql`
@@ -303,12 +308,13 @@ Two base schema modes are supported:
 Both modes work; choose minimal when only GUI dropdowns and basic metadata are needed.
 
 ### Data import/export (restricted dumps)
-See `docs/software/data_import_export.md` for:
+See {ref}`Data import/export <sec:data-import-export>` for export/import workflows, or:
+
 - Exporting restricted dumps (`export_restricted_dump.sh`)
 - Importing dumps with `quick_start.sh`
 - Manual mysql import
 
-See `docs/software/quickstart_local_dump.md` for a full local deploy workflow that clones the data archive, runs quickstart, and connects Jupyter.
+See {ref}`Deploy the DataJoint database locally <sec:import-sql-dump>` for a full local deploy workflow that clones the data archive, runs quickstart, and connects Jupyter.
 
 
 ## GUI vs non-GUI mode
@@ -316,6 +322,7 @@ See `docs/software/quickstart_local_dump.md` for a full local deploy workflow th
 - **Non-GUI** (`GUI=false`): uses `.pickle` only; metadata is reconstructed as needed.
 Use GUI mode when experiment metadata is collected via the rig GUI.
 
+(gui-dropdown-menu)=
 ## GUI dropdown menu and rig setup
 
 The rig GUI (`gui_transfer/`) uses a DataJoint-exported `.npy` file for dropdown menus (mice, experimenters, rigs, tasks, etc.). The file is generated on the **pipeline server** and copied to the **rig** when the GUI starts.
@@ -337,7 +344,7 @@ python run.py fetch
 
 This queries `exp` / `mice` tables and writes `/shared/gui_menu.npy`. On **local** (non-AWS) cron runs, `cron_scenario.py` executes this as the **final** step after populate, analysis, DLC, and `inputs_videos` tables. AWS cron runs do not export the GUI menu.
 
-Ensure the shared directory exists on the host (see [Deployment defaults](#deployment-defaults-quick_startsh)):
+Ensure the shared directory exists on the host (see {ref}`Deployment defaults <deployment-defaults>`):
 
 ```bash
 mkdir -p /mnt/database/shared   # or your SHARED_PATH
@@ -374,9 +381,7 @@ If the menu file is missing or `scp` fails, the GUI logs a warning and dropdowns
 
 Further GUI module details: `dj_pipeline/gui_transfer/README.md`.
 
-## GUI installation (rig-related)
-
-GUI is used to transfer **experiment metadata** and files (not videos; videos remain on the rig). Follow the [GUI dropdown menu and rig setup](#gui-dropdown-menu-and-rig-setup) section above for menu paths and `config.json`.
+The GUI transfers **experiment metadata** and rig files only (videos stay on the rig).
 
 ## Manual runs (run.py)
 Typical sequence:
@@ -400,6 +405,7 @@ Typical sequence:
   %run run.py analysis
   ```
 
+(cron-and-docker)=
 ## Cron and Docker operations
 
 Scheduled pipeline runs use wrapper shell scripts that call `docker compose` with project name **`vr4mice`** (override via `COMPOSE_PROJECT` in `.env.compose` or the environment). Shared logic lives in `docker/cron_common.sh`.
@@ -415,7 +421,7 @@ Scheduled pipeline runs use wrapper shell scripts that call `docker compose` wit
 | `cron_script_reboot.sh` | After host reboot: wait 120s, start `db` + `client`, install base packages |
 | `Makefile` | Same compose project and exec pattern as cron scripts |
 
-**Docker client vs host conda:** the client container uses system Python + pip (DeepLabCut base image). Conda on the rig or laptop (`env.py`, `vr4mice_env`, DLCliveGUI) is a separate install path and is not used inside the Docker client. Base package install and user mapping are described under [Docker client: base packages and user mapping](#docker-client-base-packages-and-user-mapping).
+**Docker client vs host conda:** the client container uses system Python + pip (DeepLabCut base image). Conda on the rig or laptop (`env.py`, `vr4mice_env`, DLCliveGUI) is a separate install path and is not used inside the Docker client. Base package install and user mapping are described under {ref}`Docker client: base packages and user mapping <docker-client-base-packages>`.
 
 ### Makefile targets (common)
 
@@ -454,8 +460,8 @@ The nightly job runs **local first**; **AWS runs only if local exits successfull
 1. `.env` — pipeline / DataJoint credentials (see `.env.example`)
 2. `.env.compose` — Docker Compose settings (see `.env.compose.example`)
 3. `.env-aws` — remote DB credentials for AWS runs (see `.env-aws.example`)
-3. Docker daemon running; cron user in the `docker` group
-4. Run `make add-cron` from `dj_pipeline/` (paths are resolved from that directory)
+4. Docker daemon running; cron user in the `docker` group
+5. Run `make add-cron` from `dj_pipeline/` (paths are resolved from that directory)
 
 ### Manual test (before enabling cron)
 
