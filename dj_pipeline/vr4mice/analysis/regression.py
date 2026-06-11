@@ -53,7 +53,8 @@ def predict_decision(
     max_iter: int = 100,
     scale_data: bool = True,
     random_state: Optional[int] = None,
-) -> Tuple[pd.DataFrame, npt.NDArray, List[dict]]:
+) -> Tuple[pd.DataFrame, npt.NDArray, List[Optional[dict]]]:
+
     """Predict the animal's decision based on the `label` data, through a logistic regression.
 
     Args:
