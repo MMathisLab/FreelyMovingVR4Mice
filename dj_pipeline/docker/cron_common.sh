@@ -41,9 +41,9 @@ vr4mice_check_env_file() {
   fi
   if grep -qE '^DJ_PWD=(your-.*-password|change-me|simple)\s*$' "${env_file}" 2>/dev/null \
     || grep -qE '^DJ_PWD=\s*$' "${env_file}" 2>/dev/null \
-    || grep -qE '^DJ_HOST=your-' "${env_file}" 2>/dev/null; then\
-    echo "Error: set real DJ_HOST / DJ_USER / DJ_PWD in ${env_file} before running cron." >&2\
-    return 1\
+    || grep -qE '^DJ_HOST=your-' "${env_file}" 2>/dev/null; then
+    echo "Error: set real DJ_HOST / DJ_USER / DJ_PWD in ${env_file} before running cron." >&2
+    return 1
   fi
 }
 
