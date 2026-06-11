@@ -178,6 +178,20 @@ const thebe_selector_output = ".output, .cell_output"
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../../docs/developer_guide.html">Developer Guide for VR4Mice 🎉</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Publication</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../docs/paper.html">Benquet, Sainsbury <em>et al.</em></a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Figure_1.html">Figure 1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_2.html">Figure 2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_3.html">Figure 3</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Figure 4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_5a_kinematics.html">[Trajectory Analysis] Figure 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Figure_5b_decision.html">[Decision Variable Prediction] Figure 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Supp_Figure_control.html">Black target control</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/quickstart_local_dump.html">Deploy the DataJoint database locally</a></li>
+</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Hardware - Building the rig</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../../docs/hardware/parts_list.html">Parts list</a></li>
@@ -227,20 +241,6 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="../../../docs/training_protocols/training_protocol.html">Mouse training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../docs/training_protocols/contrast_discrimination_training_parameters.html">Contrast discrimination game parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../docs/training_protocols/shape_discrimination_training_parameters.html">Shape discrimination game parameters</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Benquet, Sainsbury, et al. material</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../docs/figures.html">Figures</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Figure_1.html">Figure 1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Figure_2.html">Figure 2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Figure_3.html">Figure 3</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Figure 4</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Figure_5a_kinematics.html">[Trajectory Analysis] Figure 5</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Figure_5b_decision.html">[Decision Variable Prediction] Figure 5</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Supp_Figure_control.html">Black target control</a></li>
-</ul>
-</details></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../docs/software/quickstart_local_dump.html">Deploy the DataJoint database locally</a></li>
 </ul>
 
     </div>
@@ -505,16 +505,15 @@ document.write(`
 <p><img alt="Supplemental dual_occlusion" src="../../../_images/supp_dual_regression.jpg" /></p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">load_ext</span> autoreload
+<span class="o">%</span><span class="k">autoreload</span> 2
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="s2">&quot;/app/&quot;</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/IPython/core/magics/osm.py:417: UserWarning: using dhist requires you to install the `pickleshare` library.
-  self.shell.db[&#39;dhist&#39;] = compress_dhist(dhist)[-100:]
 </pre></div>
 </div>
 </div>
@@ -540,7 +539,7 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.analysis.analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">style</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema.interpolated_trajectories</span><span class="w"> </span><span class="kn">import</span> <span class="n">InterpolatedTrials</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema.session_metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrialMetrics</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema.decision</span><span class="w"> </span><span class="kn">import</span> <span class="n">PredictionModel</span><span class="p">,</span> <span class="n">DecisionPoints</span><span class="p">,</span> <span class="n">InclusionStatus</span><span class="p">,</span> <span class="n">ExperimentMember</span><span class="p">,</span> <span class="n">LabelSet</span><span class="p">,</span> <span class="n">Label</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema.decision</span><span class="w"> </span><span class="kn">import</span> <span class="n">InclusionStatus</span><span class="p">,</span> <span class="n">ExperimentMember</span><span class="p">,</span> <span class="n">LabelSet</span><span class="p">,</span> <span class="n">Label</span><span class="p">,</span> <span class="n">PredictionModel10Windows</span><span class="p">,</span> <span class="n">DecisionPoints10Windows</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.stats.anova</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnovaRM</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">ttest_ind</span>
@@ -559,6 +558,7 @@ document.write(`
 <div class="cell_output docutils container">
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
+2026-05-13 12:50:19,474::WARNING::decision.py::Skipping schema declaration for DecisionPoints10Windows due to error: (3780, &quot;Referencing column &#39;set_name&#39; and referenced column &#39;set_name&#39; in foreign key constraint &#39;__decision_points10_windows_ibfk_1&#39; are incompatible.&quot;)
 </pre></div>
 </div>
 </div>
@@ -985,22 +985,48 @@ aperture:trial_length  5.8329 99.0000 4158.0000 0.0000
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Coefficients for dual occluder task</span>
-<span class="n">coef</span> <span class="o">=</span> <span class="p">(</span><span class="n">PredictionModel</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">model_key</span> <span class="o">&amp;</span> <span class="n">task_type_key</span><span class="p">)</span><span class="o">.</span><span class="n">fetch1</span><span class="p">(</span><span class="s2">&quot;coefficients&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">coefs</span> <span class="o">=</span> <span class="p">(</span><span class="n">PredictionModel10Windows</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">task_type_key</span> <span class="o">&amp;</span> <span class="n">model_key</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="s2">&quot;coefficients_by_window&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">model_labels</span><span class="p">,</span> <span class="n">clean_labels</span> <span class="o">=</span> <span class="p">(</span><span class="n">LabelSet</span><span class="o">.</span><span class="n">Member</span> <span class="o">*</span> <span class="n">Label</span> <span class="o">&amp;</span> <span class="n">model_key</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="s2">&quot;label_key&quot;</span><span class="p">,</span> <span class="s2">&quot;clean_name&quot;</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">coefs</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+    
+    <span class="n">axis</span><span class="o">.</span><span class="n">barh</span><span class="p">(</span>
+        <span class="n">model_labels</span><span class="p">,</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">coefs</span><span class="p">[</span><span class="n">key</span><span class="p">][:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+        <span class="n">xerr</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">sem</span><span class="p">(</span><span class="n">coefs</span><span class="p">[</span><span class="n">key</span><span class="p">][:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#7C7C7C&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+
+    <span class="n">axis</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">model_labels</span><span class="p">)))</span>
+    <span class="n">axis</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="n">clean_labels</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+    <span class="n">axis</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Logits&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">axis</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Features&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">axis</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">axis</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Model </span><span class="si">{</span><span class="n">key</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/10&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure4_models_logits.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../../_images/c838cc83ce1c54b5ce1f2333c37b2ab8a2959679ce47336de11deba15b6879b8.png" src="../../../_images/c838cc83ce1c54b5ce1f2333c37b2ab8a2959679ce47336de11deba15b6879b8.png" />
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Logits of the regression</span>
-<span class="n">model_labels</span><span class="p">,</span> <span class="n">clean_labels</span> <span class="o">=</span> <span class="p">(</span><span class="n">LabelSet</span><span class="o">.</span><span class="n">Member</span> <span class="o">*</span> <span class="n">Label</span> <span class="o">&amp;</span> <span class="n">model_key</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="s2">&quot;label_key&quot;</span><span class="p">,</span> <span class="s2">&quot;clean_name&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Average across windows</span>
+<span class="n">mean_coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">coefs</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">coefs</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
 
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">barh</span><span class="p">(</span>
     <span class="n">model_labels</span><span class="p">,</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">coef</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
-    <span class="n">yerr</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">sem</span><span class="p">(</span><span class="n">coef</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mean_coef</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+    <span class="n">xerr</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">sem</span><span class="p">(</span><span class="n">mean_coef</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="c1"># sem across windows</span>
     <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#7C7C7C&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
@@ -1010,17 +1036,17 @@ aperture:trial_length  5.8329 99.0000 4158.0000 0.0000
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Logits&quot;</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Features&quot;</span><span class="p">)</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure4_model_logits.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure4_avg_model_logits.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/df9dc1d11fa1ac428a1198a9ae91d140b789821dfba5bb22b3aa92781a38cfd5.png" src="../../../_images/df9dc1d11fa1ac428a1198a9ae91d140b789821dfba5bb22b3aa92781a38cfd5.png" />
+<img alt="../../../_images/09f07fbaf6cce208c5d2fcec2f8951f7ae1f7869eb71b682d42b704fb1b7d475.png" src="../../../_images/09f07fbaf6cce208c5d2fcec2f8951f7ae1f7869eb71b682d42b704fb1b7d475.png" />
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">prediction_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">((</span><span class="n">PredictionModel</span><span class="p">()</span><span class="o">.</span><span class="n">SessionPrediction</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">model_key</span> <span class="o">&amp;</span> <span class="n">task_type_key</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">prediction_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">((</span><span class="n">PredictionModel10Windows</span><span class="p">()</span><span class="o">.</span><span class="n">SessionPrediction</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">model_key</span> <span class="o">&amp;</span> <span class="n">task_type_key</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span>
     <span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;trial&quot;</span><span class="p">,</span> <span class="s2">&quot;proba_left&quot;</span><span class="p">,</span> <span class="s2">&quot;accuracy&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_length&quot;</span><span class="p">,</span> <span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span><span class="o">.</span><span class="n">explode</span><span class="p">([</span><span class="s2">&quot;trial&quot;</span><span class="p">,</span> <span class="s2">&quot;proba_left&quot;</span><span class="p">,</span> <span class="s2">&quot;accuracy&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_length&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -1036,6 +1062,87 @@ aperture:trial_length  5.8329 99.0000 4158.0000 0.0000
 <span class="n">df_model</span><span class="p">[</span><span class="s2">&quot;proba_left&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_model</span><span class="p">[</span><span class="s2">&quot;proba_left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the rate of left vs right choices per dataset</span>
+<span class="n">n_trial_per_aperture</span> <span class="o">=</span> <span class="n">df_model</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span><span class="s2">&quot;trial_left_choice&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="s2">&quot;trial&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
+
+<span class="n">df_rates</span> <span class="o">=</span> <span class="n">n_trial_per_aperture</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span>
+    <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">],</span> 
+    <span class="n">columns</span><span class="o">=</span><span class="s2">&quot;trial_left_choice&quot;</span><span class="p">,</span> 
+    <span class="n">values</span><span class="o">=</span><span class="s2">&quot;trial&quot;</span>
+<span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+
+<span class="n">df_rates</span> <span class="o">=</span> <span class="n">df_rates</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">df_rates</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="mf">0.0</span><span class="p">:</span> <span class="s2">&quot;right_count&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">:</span> <span class="s2">&quot;left_count&quot;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">df_rates</span><span class="p">[</span><span class="s2">&quot;total_trials&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_rates</span><span class="p">[</span><span class="s2">&quot;left_count&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">df_rates</span><span class="p">[</span><span class="s2">&quot;right_count&quot;</span><span class="p">]</span>
+<span class="n">df_rates</span><span class="p">[</span><span class="s2">&quot;left_rate&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_rates</span><span class="p">[</span><span class="s2">&quot;left_count&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">df_rates</span><span class="p">[</span><span class="s2">&quot;total_trials&quot;</span><span class="p">]</span>
+
+<span class="n">epsilon</span> <span class="o">=</span> <span class="mf">1e-5</span>
+<span class="n">df_rates</span><span class="p">[</span><span class="s2">&quot;logit_bias&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="n">df_rates</span><span class="p">[</span><span class="s2">&quot;left_count&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">epsilon</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">df_rates</span><span class="p">[</span><span class="s2">&quot;right_count&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">epsilon</span><span class="p">))</span>
+<span class="n">df_rates</span> <span class="o">=</span> <span class="n">df_rates</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;dataset&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="n">total_left</span> <span class="o">=</span> <span class="n">df_rates</span><span class="p">[</span><span class="s1">&#39;left_count&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">total_right</span> <span class="o">=</span> <span class="n">df_rates</span><span class="p">[</span><span class="s1">&#39;right_count&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+<span class="c1"># Compute the &quot;Leave-One-Out&quot; behavioral logit for each dataset</span>
+<span class="c1"># This is the prior the model &#39;sees&#39; during training for that specific fold</span>
+<span class="n">df_rates</span><span class="p">[</span><span class="s1">&#39;loso_behavioral_logit&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_rates</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+    <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="n">total_left</span> <span class="o">-</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;left_count&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">total_right</span> <span class="o">-</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;right_count&#39;</span><span class="p">])),</span> 
+    <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+<span class="p">)</span>
+<span class="n">df_rates</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df_rates</span><span class="o">.</span><span class="n">left_rate</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.5545860348681098
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_trial_per_aperture</span> <span class="o">=</span> <span class="n">df_model</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span><span class="s2">&quot;trial_left_choice&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="s2">&quot;trial&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">pointplot</span><span class="p">(</span><span class="n">n_trial_per_aperture</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;trial_left_choice&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;trial&quot;</span><span class="p">,</span>
+              <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="n">plotting</span><span class="o">.</span><span class="n">colors_aperture</span><span class="p">,</span> <span class="n">errorbar</span><span class="o">=</span><span class="s2">&quot;se&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Choice&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Number of Trials&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;Right&quot;</span><span class="p">,</span> <span class="s2">&quot;Left&quot;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Rate of trials per condition:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">n_trial_per_aperture</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;trial_left_choice&quot;</span><span class="p">)[</span><span class="s2">&quot;trial&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">/</span><span class="n">n_trial_per_aperture</span><span class="p">[</span><span class="s2">&quot;trial&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Rate of trials per condition:
+trial_left_choice
+0.0    0.445611
+1.0    0.554389
+Name: trial, dtype: float64
+</pre></div>
+</div>
+<img alt="../../../_images/36f28c985bbc2cfddd17b31e3f59234996224369d2f530b23ed3eecb63b4348c.png" src="../../../_images/36f28c985bbc2cfddd17b31e3f59234996224369d2f530b23ed3eecb63b4348c.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -1085,20 +1192,32 @@ aperture:trial_length  5.8329 99.0000 4158.0000 0.0000
     <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
     <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Prob(Left)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;P(Left)&quot;</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Trial progression&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">xmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">linestyles</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">xmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span> <span class="n">linestyles</span><span class="o">=</span><span class="s2">&quot;dotted&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">xmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span> <span class="n">linestyles</span><span class="o">=</span><span class="s2">&quot;dotted&quot;</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">((</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">10</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+
 <span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
+    <span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure4_dynamic_decision_variable.png&quot;</span><span class="p">,</span>
+    <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
     <span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure4_dynamic_decision_variable.svg&quot;</span><span class="p">,</span>
-    <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/4c5450cefdcd52f48da8a85d68a8f876af2a346435ff0a0fa1cbca29382774e4.png" src="../../../_images/4c5450cefdcd52f48da8a85d68a8f876af2a346435ff0a0fa1cbca29382774e4.png" />
+<img alt="../../../_images/3d2eead4551f241faf010d799164135b132158d9f9dc5ee734f760aeffc0f797.png" src="../../../_images/3d2eead4551f241faf010d799164135b132158d9f9dc5ee734f760aeffc0f797.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -1124,7 +1243,7 @@ aperture:trial_length  5.8329 99.0000 4158.0000 0.0000
     <span class="n">errorbar</span><span class="o">=</span><span class="s2">&quot;se&quot;</span><span class="p">,</span>
     <span class="n">dashes</span><span class="o">=</span><span class="n">dash_styles</span>
 <span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Proba(Left)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;P(Left)&quot;</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Trial progression&quot;</span><span class="p">)</span>
 
 <span class="n">ax</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">xmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">linestyles</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">)</span>
@@ -1133,10 +1252,15 @@ aperture:trial_length  5.8329 99.0000 4158.0000 0.0000
 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">((</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">10</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+    
+
 <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
     <span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure4_dynamic_decision_variable_avg.png&quot;</span><span class="p">,</span>
     <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+    <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span>
 <span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
@@ -1147,7 +1271,55 @@ aperture:trial_length  5.8329 99.0000 4158.0000 0.0000
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/15e135425c8f687dee1d940acb3ed46de9d3b1741d848dbbece0a83ad42ffbe0.png" src="../../../_images/15e135425c8f687dee1d940acb3ed46de9d3b1741d848dbbece0a83ad42ffbe0.png" />
+<img alt="../../../_images/12c39feb51088307313634acd16421dbc3506e9cf61d94b0a295ab4673b4eabe.png" src="../../../_images/12c39feb51088307313634acd16421dbc3506e9cf61d94b0a295ab4673b4eabe.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df_model_mean</span><span class="p">[</span><span class="n">df_model_mean</span><span class="o">.</span><span class="n">trial_length</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="p">]</span><span class="o">.</span><span class="n">proba_left</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.551072079596627
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">weights</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;intercept&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">coefs</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">]),</span>
+    <span class="s1">&#39;x position&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">coefs</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="mi">1</span><span class="p">]),</span> 
+    <span class="s1">&#39;x velocity&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">coefs</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="mi">2</span><span class="p">]),</span> 
+    <span class="s1">&#39;sin(head-body angle)&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">coefs</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="mi">3</span><span class="p">]),</span> 
+    <span class="s1">&#39;sin(running direction)&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">coefs</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="mi">4</span><span class="p">])</span>
+<span class="p">}</span>
+
+
+<span class="c1"># 2. Calculate individual contributions (Logit components)</span>
+<span class="n">contributions</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">feature</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="n">weights</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="c1"># Mean value of the feature at t=0 across all trials</span>
+    <span class="n">mean_val</span> <span class="o">=</span> <span class="n">features_t0</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="n">contributions</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span> <span class="o">=</span> <span class="n">mean_val</span> <span class="o">*</span> <span class="n">weight</span>
+
+<span class="c1"># 3. Create a summary table</span>
+<span class="n">df_bias</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">contributions</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Logit_Contribution&#39;</span><span class="p">])</span>
+<span class="n">df_bias</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;Intercept&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">intercept</span>
+<span class="n">df_bias</span><span class="p">[</span><span class="s1">&#39;Absolute_Impact&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_bias</span><span class="p">[</span><span class="s1">&#39;Logit_Contribution&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span>
+<span class="n">df_bias</span> <span class="o">=</span> <span class="n">df_bias</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;Absolute_Impact&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Bias Decomposition at t=0:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">df_bias</span><span class="p">)</span>
+
+<span class="c1"># 4. Calculate total starting probability</span>
+<span class="n">total_logit</span> <span class="o">=</span> <span class="n">df_bias</span><span class="p">[</span><span class="s1">&#39;Logit_Contribution&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">starting_prob</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">total_logit</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Total Logit: </span><span class="si">{</span><span class="n">total_logit</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Starting Probability: </span><span class="si">{</span><span class="n">starting_prob</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="cell docutils container">
@@ -1180,7 +1352,7 @@ aperture:trial_length  5.8329 99.0000 4158.0000 0.0000
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/e3b298b2496d1aa9123e3a6b9cbea1640fbd21c4adb2a320a8ebc12237e1c3e9.png" src="../../../_images/e3b298b2496d1aa9123e3a6b9cbea1640fbd21c4adb2a320a8ebc12237e1c3e9.png" />
+<img alt="../../../_images/c7c9ce857191fae187909d6e05dbdfbb38534ce9f56d730342ea73470b35eedc.png" src="../../../_images/c7c9ce857191fae187909d6e05dbdfbb38534ce9f56d730342ea73470b35eedc.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -1206,13 +1378,13 @@ aperture:trial_length  5.8329 99.0000 4158.0000 0.0000
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>                           Anova
-============================================================
-                           F Value   Num DF   Den DF  Pr &gt; F
-------------------------------------------------------------
-aperture                    51.7532  1.0000   42.0000 0.0000
-trial_length_bin          1110.6243 49.0000 2058.0000 0.0000
-aperture:trial_length_bin   16.5970 49.0000 2058.0000 0.0000
-============================================================
+===========================================================
+                          F Value   Num DF   Den DF  Pr &gt; F
+-----------------------------------------------------------
+aperture                   26.1908  1.0000   42.0000 0.0000
+trial_length_bin          794.2525 49.0000 2058.0000 0.0000
+aperture:trial_length_bin   9.6310 49.0000 2058.0000 0.0000
+===========================================================
 </pre></div>
 </div>
 </div>
@@ -1224,7 +1396,7 @@ aperture:trial_length_bin   16.5970 49.0000 2058.0000 0.0000
     <span class="n">section</span> <span class="o">=</span> <span class="n">df_anova</span><span class="p">[</span><span class="n">df_anova</span><span class="o">.</span><span class="n">trial_length_bin</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span>
     <span class="n">t</span> <span class="o">=</span> <span class="n">ttest_ind</span><span class="p">(</span>
         <span class="n">section</span><span class="p">[</span><span class="n">section</span><span class="o">.</span><span class="n">aperture</span> <span class="o">==</span> <span class="n">section</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">accuracy</span><span class="p">,</span>
-        <span class="n">section</span><span class="p">[</span><span class="n">section</span><span class="o">.</span><span class="n">aperture</span> <span class="o">==</span> <span class="n">section</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">accuracy</span><span class="p">,</span>
+        <span class="n">section</span><span class="p">[</span><span class="n">section</span><span class="o">.</span><span class="n">aperture</span> <span class="o">==</span> <span class="n">section</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">accuracy</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1e-5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">section</span><span class="p">[</span><span class="n">section</span><span class="o">.</span><span class="n">aperture</span> <span class="o">==</span> <span class="n">section</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">accuracy</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="p">)</span>
     <span class="n">p_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;segment&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="s2">&quot;p_value&quot;</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">pvalue</span><span class="p">},</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
 
@@ -1256,8 +1428,347 @@ aperture:trial_length_bin   16.5970 49.0000 2058.0000 0.0000
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/e0d488360a747dfd63c6ebbda171b8545051fd17616efb93c7dfb8fbbc568819.png" src="../../../_images/e0d488360a747dfd63c6ebbda171b8545051fd17616efb93c7dfb8fbbc568819.png" />
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/app/.venv/lib/python3.9/site-packages/scipy/stats/_axis_nan_policy.py:531: RuntimeWarning: Precision loss occurred in moment calculation due to catastrophic cancellation. This occurs when the data are nearly identical. Results may be unreliable.
+  res = hypotest_fun_out(*samples, **kwds)
+</pre></div>
 </div>
+<img alt="../../../_images/298eaae6b068844ae9f439a6a3dcf11a62b01c2ed4ab2f3caafab1e3d5e33bc5.png" src="../../../_images/298eaae6b068844ae9f439a6a3dcf11a62b01c2ed4ab2f3caafab1e3d5e33bc5.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">p_value_df</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>segment</th>
+      <th>p_value</th>
+      <th>p_value_corr</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.009405</td>
+      <td>8.704066e-01</td>
+      <td>8.704066e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.029700</td>
+      <td>7.750284e-01</td>
+      <td>8.073213e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.049500</td>
+      <td>6.301074e-01</td>
+      <td>7.001193e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.069300</td>
+      <td>6.459415e-01</td>
+      <td>7.021104e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.089100</td>
+      <td>4.685586e-01</td>
+      <td>5.578079e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.109000</td>
+      <td>4.981953e-01</td>
+      <td>5.792968e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.129000</td>
+      <td>4.134173e-01</td>
+      <td>5.041674e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.148500</td>
+      <td>3.306542e-01</td>
+      <td>4.133178e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.168000</td>
+      <td>2.303959e-01</td>
+      <td>3.173557e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.188000</td>
+      <td>1.966810e-01</td>
+      <td>2.892368e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.208000</td>
+      <td>2.190989e-01</td>
+      <td>3.129984e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.228000</td>
+      <td>8.222941e-02</td>
+      <td>1.245900e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.247500</td>
+      <td>4.898041e-02</td>
+      <td>7.653188e-02</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.267000</td>
+      <td>3.620738e-02</td>
+      <td>6.034563e-02</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.287000</td>
+      <td>4.158693e-02</td>
+      <td>6.707570e-02</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.307000</td>
+      <td>1.972243e-05</td>
+      <td>4.695817e-05</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.327000</td>
+      <td>3.166450e-07</td>
+      <td>9.313089e-07</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.346500</td>
+      <td>1.785779e-08</td>
+      <td>6.377781e-08</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.366000</td>
+      <td>2.336097e-09</td>
+      <td>1.061862e-08</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.386000</td>
+      <td>1.152036e-08</td>
+      <td>4.800150e-08</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.406000</td>
+      <td>4.018385e-11</td>
+      <td>2.870275e-10</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.426000</td>
+      <td>3.684278e-12</td>
+      <td>3.684278e-11</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.445500</td>
+      <td>8.415647e-12</td>
+      <td>7.013039e-11</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.465000</td>
+      <td>5.663373e-13</td>
+      <td>1.415843e-11</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.485000</td>
+      <td>4.926177e-11</td>
+      <td>3.078861e-10</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.505000</td>
+      <td>1.903242e-12</td>
+      <td>2.379053e-11</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.525000</td>
+      <td>1.609000e-12</td>
+      <td>2.379053e-11</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.544500</td>
+      <td>1.313625e-13</td>
+      <td>6.568127e-12</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.564000</td>
+      <td>3.469202e-10</td>
+      <td>1.927335e-09</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.584000</td>
+      <td>8.609772e-08</td>
+      <td>2.869924e-07</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.604000</td>
+      <td>1.725392e-09</td>
+      <td>8.626960e-09</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.624000</td>
+      <td>1.427316e-08</td>
+      <td>5.489677e-08</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.643500</td>
+      <td>2.851354e-07</td>
+      <td>8.910481e-07</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.663000</td>
+      <td>8.977043e-06</td>
+      <td>2.362380e-05</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.683000</td>
+      <td>3.228454e-05</td>
+      <td>7.018378e-05</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.703000</td>
+      <td>1.823169e-05</td>
+      <td>4.557923e-05</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.723000</td>
+      <td>6.565146e-05</td>
+      <td>1.298865e-04</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.742500</td>
+      <td>3.097870e-05</td>
+      <td>7.018378e-05</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.762000</td>
+      <td>1.926030e-06</td>
+      <td>5.350082e-06</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.782000</td>
+      <td>6.754099e-05</td>
+      <td>1.298865e-04</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.802000</td>
+      <td>4.978566e-05</td>
+      <td>1.037201e-04</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.822000</td>
+      <td>1.088166e-04</td>
+      <td>2.015123e-04</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.841500</td>
+      <td>1.240637e-03</td>
+      <td>2.215423e-03</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.861000</td>
+      <td>6.624891e-03</td>
+      <td>1.142223e-02</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.881000</td>
+      <td>6.095075e-01</td>
+      <td>6.926222e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.901000</td>
+      <td>2.348432e-01</td>
+      <td>3.173557e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.921000</td>
+      <td>6.764873e-01</td>
+      <td>7.196673e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.940500</td>
+      <td>2.912871e-01</td>
+      <td>3.734450e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.960000</td>
+      <td>8.018979e-01</td>
+      <td>8.182632e-01</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.980000</td>
+      <td>2.862397e-01</td>
+      <td>3.734450e-01</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
 </div>
 <section id="comparison-to-other-models-bic-analysis">
 <h3>Comparison to other models (BIC analysis)<a class="headerlink" href="#comparison-to-other-models-bic-analysis" title="Permalink to this heading">#</a></h3>
@@ -1273,12 +1784,15 @@ aperture:trial_length_bin   16.5970 49.0000 2058.0000 0.0000
     <span class="k">if</span> <span class="s2">&quot;Best Task-related&quot;</span> <span class="ow">in</span> <span class="n">label_set_name</span><span class="p">:</span>
         <span class="n">label_set_name</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Lateral Displacement&quot;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">model_labels</span><span class="p">]</span>
     
-    <span class="n">coef</span> <span class="o">=</span> <span class="p">(</span><span class="n">PredictionModel</span><span class="p">()</span> <span class="o">&amp;</span> <span class="nb">dict</span><span class="p">({</span><span class="s1">&#39;label_set_id&#39;</span><span class="p">:</span> <span class="n">label_set_id</span><span class="p">,</span>
-                                      <span class="s2">&quot;params_id&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span> <span class="o">**</span><span class="n">task_type_key</span><span class="p">))</span><span class="o">.</span><span class="n">fetch1</span><span class="p">(</span><span class="s2">&quot;coefficients&quot;</span><span class="p">)</span>
+    <span class="n">coef</span> <span class="o">=</span> <span class="p">(</span><span class="n">PredictionModel10Windows</span><span class="p">()</span> <span class="o">&amp;</span> <span class="nb">dict</span><span class="p">({</span><span class="s1">&#39;label_set_id&#39;</span><span class="p">:</span> <span class="n">label_set_id</span><span class="p">,</span>
+                                      <span class="s2">&quot;params_id&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span> <span class="o">**</span><span class="n">task_type_key</span><span class="p">))</span><span class="o">.</span><span class="n">fetch1</span><span class="p">(</span><span class="s2">&quot;coefficients_by_window&quot;</span><span class="p">)</span>
+    <span class="n">mean_coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">coef</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">coefs</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+
+
     <span class="n">axis</span><span class="o">.</span><span class="n">barh</span><span class="p">(</span>
         <span class="n">model_labels</span><span class="p">,</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">coef</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
-        <span class="n">yerr</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">sem</span><span class="p">(</span><span class="n">coef</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mean_coef</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+        <span class="n">xerr</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">sem</span><span class="p">(</span><span class="n">mean_coef</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
         <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#7C7C7C&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
@@ -1294,63 +1808,125 @@ aperture:trial_length_bin   16.5970 49.0000 2058.0000 0.0000
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/8d0f597d5c4cde325e0887cc892cce4847fa5934aceeb830ca15a0cf8efe8d32.png" src="../../../_images/8d0f597d5c4cde325e0887cc892cce4847fa5934aceeb830ca15a0cf8efe8d32.png" />
+<img alt="../../../_images/c02b72f77ccc6a6fd62d33c8f0481d83da5c3f8998829bf88b5ec6e6be325249.png" src="../../../_images/c02b72f77ccc6a6fd62d33c8f0481d83da5c3f8998829bf88b5ec6e6be325249.png" />
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pred_all</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">((</span><span class="n">PredictionModel</span><span class="p">()</span><span class="o">.</span><span class="n">SessionPrediction</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">task_type_key</span> <span class="o">&amp;</span> <span class="p">{</span><span class="s2">&quot;params_id&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span><span class="o">.</span><span class="n">explode</span><span class="p">([</span><span class="s2">&quot;trial&quot;</span><span class="p">,</span> <span class="s2">&quot;proba_left&quot;</span><span class="p">,</span> <span class="s2">&quot;accuracy&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_length&quot;</span><span class="p">,</span> <span class="s2">&quot;bic&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_left_choice&quot;</span><span class="p">])</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pred_all</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">((</span><span class="n">PredictionModel10Windows</span><span class="p">()</span><span class="o">.</span><span class="n">SessionPrediction</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">task_type_key</span> <span class="o">&amp;</span> <span class="p">{</span><span class="s2">&quot;params_id&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span><span class="o">.</span><span class="n">explode</span><span class="p">([</span><span class="s2">&quot;trial&quot;</span><span class="p">,</span> <span class="s2">&quot;proba_left&quot;</span><span class="p">,</span> <span class="s2">&quot;accuracy&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_length&quot;</span><span class="p">,</span> <span class="s2">&quot;bic&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_left_choice&quot;</span><span class="p">,</span> <span class="s2">&quot;model_idx&quot;</span><span class="p">])</span>
 <span class="n">pred_all</span><span class="p">[</span><span class="s2">&quot;bic&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pred_all</span><span class="p">[</span><span class="s2">&quot;bic&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
 <span class="n">pred_all</span><span class="p">[</span><span class="s2">&quot;accuracy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pred_all</span><span class="p">[</span><span class="s2">&quot;accuracy&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+<span class="n">pred_all</span><span class="p">[</span><span class="s2">&quot;coef_var_bic&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pred_all</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;label_set_id&quot;</span><span class="p">,</span> <span class="s2">&quot;trial&quot;</span><span class="p">,</span> <span class="s2">&quot;model_idx&quot;</span><span class="p">])[</span><span class="s2">&quot;bic&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="o">/</span> <span class="n">x</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define bins and labels</span>
-<span class="n">bins</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
-<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;0.0-0.5&#39;</span><span class="p">,</span> <span class="s1">&#39;0.5-1.0&#39;</span><span class="p">]</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pred_all</span><span class="p">[</span><span class="s1">&#39;length_interval&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">pred_all</span><span class="p">[</span><span class="s1">&#39;trial_length&#39;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">include_lowest</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">pred_all</span><span class="p">[</span><span class="s2">&quot;coef_var_bic&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pred_all</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;label_set_id&quot;</span><span class="p">,</span> <span class="s2">&quot;trial&quot;</span><span class="p">,</span> <span class="s2">&quot;length_interval&quot;</span><span class="p">])[</span><span class="s2">&quot;bic&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="o">/</span> <span class="n">x</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">summary_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">pred_all</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;label_set_id&quot;</span><span class="p">,</span> <span class="s2">&quot;length_interval&quot;</span><span class="p">])[[</span><span class="s2">&quot;coef_var_bic&quot;</span><span class="p">,</span> 
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">summary_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">pred_all</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;label_set_id&quot;</span><span class="p">,</span> <span class="s2">&quot;model_idx&quot;</span><span class="p">])[[</span><span class="s2">&quot;coef_var_bic&quot;</span><span class="p">,</span> 
                                                                              <span class="s2">&quot;accuracy&quot;</span><span class="p">,</span> 
                                                                              <span class="s2">&quot;bic&quot;</span><span class="p">,]]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> 
          <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">LabelSet</span><span class="p">()</span><span class="o">.</span><span class="n">fetch</span><span class="p">())</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;label_set_id&quot;</span><span class="p">),</span> <span class="n">left_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">right_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">summary_df</span><span class="p">[</span><span class="s2">&quot;label_set_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">summary_df</span><span class="o">.</span><span class="n">label_set_name</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;Best Task-related&quot;</span><span class="p">,</span> <span class="s2">&quot;Lateral Displacement&quot;</span><span class="p">)</span>
+<span class="n">summary_df</span><span class="p">[</span><span class="s2">&quot;label_set_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">summary_df</span><span class="o">.</span><span class="n">label_set_name</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;Lateral Kinematics&quot;</span><span class="p">,</span> <span class="s2">&quot;Lateral Displacement&quot;</span><span class="p">)</span>
 <span class="n">summary_df</span> <span class="o">=</span> <span class="n">summary_df</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">level</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">summary_df</span><span class="p">[</span><span class="s2">&quot;diff_bic&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">summary_df</span><span class="p">[</span><span class="s2">&quot;bic&quot;</span><span class="p">][</span><span class="s2">&quot;0.0-0.5&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">summary_df</span><span class="p">[</span><span class="s2">&quot;bic&quot;</span><span class="p">][</span><span class="s2">&quot;0.5-1.0&quot;</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">accuracy_05_10</span> <span class="o">=</span> <span class="n">summary_df</span><span class="p">[(</span><span class="s2">&quot;accuracy&quot;</span><span class="p">,</span> <span class="s2">&quot;0.5-1.0&quot;</span><span class="p">)]</span>
-<span class="n">bic_05_10</span> <span class="o">=</span> <span class="n">summary_df</span><span class="p">[(</span><span class="s2">&quot;bic&quot;</span><span class="p">,</span> <span class="s2">&quot;0.5-1.0&quot;</span><span class="p">)]</span>
-<span class="n">delta_cv</span> <span class="o">=</span> <span class="p">(</span><span class="n">summary_df</span><span class="p">[(</span><span class="s2">&quot;coef_var_bic&quot;</span><span class="p">,</span> <span class="s2">&quot;0.5-1.0&quot;</span><span class="p">)]</span> <span class="o">-</span> <span class="n">summary_df</span><span class="p">[(</span><span class="s2">&quot;coef_var_bic&quot;</span><span class="p">,</span> <span class="s2">&quot;0.0-0.5&quot;</span><span class="p">)])</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_data</span> <span class="o">=</span> <span class="n">summary_df</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">level</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span> <span class="k">if</span> <span class="s2">&quot;model_idx&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">summary_df</span><span class="o">.</span><span class="n">columns</span> <span class="k">else</span> <span class="n">summary_df</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
 
-<span class="n">s_score</span> <span class="o">=</span> <span class="p">(</span><span class="n">accuracy_05_10</span> <span class="o">/</span> <span class="n">bic_05_10</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="n">delta_cv</span><span class="p">)</span>
-<span class="n">s_score</span> <span class="o">=</span> <span class="n">s_score</span><span class="o">.</span><span class="n">replace</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+<span class="n">colormap</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;#6f1926&quot;</span><span class="p">,</span> <span class="s2">&quot;#de324c&quot;</span><span class="p">,</span> <span class="s2">&quot;#f4895f&quot;</span><span class="p">,</span> <span class="s2">&quot;#f8e16f&quot;</span><span class="p">,</span> 
+            <span class="s2">&quot;#95cf92&quot;</span><span class="p">,</span> <span class="s2">&quot;#369acc&quot;</span><span class="p">,</span> <span class="s2">&quot;#9656a2&quot;</span><span class="p">,</span> <span class="s2">&quot;#cbabd1&quot;</span><span class="p">]</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">set_palette</span><span class="p">(</span><span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">(</span><span class="n">colormap</span><span class="p">))</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.8</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">plot_data</span><span class="p">,</span> 
+    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;model_idx&quot;</span><span class="p">,</span> 
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;accuracy&quot;</span><span class="p">,</span> 
+    <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;label_set_name&quot;</span><span class="p">,</span> 
+    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+    <span class="n">markeredgewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+    <span class="n">palette</span><span class="o">=</span><span class="n">colormap</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">plot_data</span><span class="p">,</span> 
+    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;model_idx&quot;</span><span class="p">,</span> 
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;bic&quot;</span><span class="p">,</span> 
+    <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;label_set_name&quot;</span><span class="p">,</span> 
+    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+    <span class="n">markeredgewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+    <span class="n">palette</span><span class="o">=</span><span class="n">colormap</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">plot_data</span><span class="p">,</span> 
+    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;model_idx&quot;</span><span class="p">,</span> 
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;coef_var_bic&quot;</span><span class="p">,</span> 
+    <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;label_set_name&quot;</span><span class="p">,</span> 
+    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+    <span class="n">markeredgewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+    <span class="n">palette</span><span class="o">=</span><span class="n">colormap</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;dashed&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Accuracy&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;BIC&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;CV(BIC)&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ax</span><span class="p">:</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;5&quot;</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">])</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Model Index&quot;</span><span class="p">)</span>
+    <span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">a</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">1.05</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_fig_path</span> <span class="o">+</span> <span class="s2">&quot;figure4_model_comparison.svg&quot;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../../_images/1e1aafba19772e0992ec5753d61899036abe4ae70877c3dc11aab09c629bfacf.png" src="../../../_images/1e1aafba19772e0992ec5753d61899036abe4ae70877c3dc11aab09c629bfacf.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">accuracy</span> <span class="o">=</span> <span class="n">summary_df</span><span class="p">[</span><span class="s2">&quot;accuracy&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">bic</span> <span class="o">=</span> <span class="n">summary_df</span><span class="p">[</span><span class="s2">&quot;bic&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">cv_end</span> <span class="o">=</span> <span class="n">summary_df</span><span class="p">[(</span><span class="s2">&quot;coef_var_bic&quot;</span><span class="p">,</span> <span class="mi">9</span><span class="p">)]</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">normalize</span><span class="p">(</span><span class="n">series</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">series</span> <span class="o">-</span> <span class="n">series</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">series</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">series</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+
+<span class="n">acc_norm</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">accuracy</span><span class="p">)</span>
+<span class="c1"># For BIC and CV, we want 1 to be the BEST (lowest value), so we subtract from 1</span>
+<span class="n">bic_norm</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">normalize</span><span class="p">(</span><span class="n">bic</span><span class="p">)</span>
+<span class="n">cv_norm</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">normalize</span><span class="p">(</span><span class="n">cv_end</span><span class="p">)</span>
+
+<span class="n">s_score</span> <span class="o">=</span> <span class="p">(</span><span class="n">acc_norm</span> <span class="o">+</span> <span class="n">bic_norm</span> <span class="o">+</span> <span class="n">cv_norm</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span>
 
 <span class="n">s_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
-    <span class="s2">&quot;label_set_name&quot;</span><span class="p">:</span> <span class="n">summary_df</span><span class="p">[(</span><span class="s2">&quot;label_set_name&quot;</span><span class="p">,</span> <span class="s2">&quot;0.0-0.5&quot;</span><span class="p">)],</span>
-    <span class="s2">&quot;accuracy_0.5-1.0&quot;</span><span class="p">:</span> <span class="n">accuracy_05_10</span><span class="p">,</span>
-    <span class="s2">&quot;bic_0.5-1.0&quot;</span><span class="p">:</span> <span class="n">bic_05_10</span><span class="p">,</span>
-    <span class="s2">&quot;delta_cv&quot;</span><span class="p">:</span> <span class="n">delta_cv</span><span class="p">,</span>
+    <span class="s2">&quot;label_set_name&quot;</span><span class="p">:</span> <span class="n">summary_df</span><span class="p">[(</span><span class="s2">&quot;label_set_name&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span>
+    <span class="s2">&quot;accuracy&quot;</span><span class="p">:</span> <span class="n">accuracy</span><span class="p">,</span>
+    <span class="s2">&quot;bic&quot;</span><span class="p">:</span> <span class="n">bic</span><span class="p">,</span>
+    <span class="s2">&quot;cv_end&quot;</span><span class="p">:</span> <span class="n">cv_end</span><span class="p">,</span>
+    <span class="s2">&quot;accuracy_norm&quot;</span><span class="p">:</span> <span class="n">acc_norm</span><span class="p">,</span>
+    <span class="s2">&quot;bic_norm&quot;</span><span class="p">:</span> <span class="n">bic_norm</span><span class="p">,</span>
+    <span class="s2">&quot;cv_norm&quot;</span><span class="p">:</span> <span class="n">cv_norm</span><span class="p">,</span>
     <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="n">s_score</span><span class="p">,</span>
+
 <span class="p">})</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">&quot;score&quot;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 <span class="n">s_df</span>
@@ -1377,13 +1953,19 @@ aperture:trial_length_bin   16.5970 49.0000 2058.0000 0.0000
     <tr style="text-align: right;">
       <th></th>
       <th>label_set_name</th>
-      <th>accuracy_0.5-1.0</th>
-      <th>bic_0.5-1.0</th>
-      <th>delta_cv</th>
+      <th>accuracy</th>
+      <th>bic</th>
+      <th>cv_end</th>
+      <th>accuracy_norm</th>
+      <th>bic_norm</th>
+      <th>cv_norm</th>
       <th>score</th>
     </tr>
     <tr>
       <th>label_set_id</th>
+      <th></th>
+      <th></th>
+      <th></th>
       <th></th>
       <th></th>
       <th></th>
@@ -1395,66 +1977,90 @@ aperture:trial_length_bin   16.5970 49.0000 2058.0000 0.0000
     <tr>
       <th>8</th>
       <td>Lateral Displacement</td>
-      <td>0.980987</td>
-      <td>13.092029</td>
-      <td>-0.198192</td>
-      <td>1.485054e-02</td>
+      <td>0.832593</td>
+      <td>17.630543</td>
+      <td>0.001270</td>
+      <td>0.979325</td>
+      <td>0.852021</td>
+      <td>0.994677</td>
+      <td>0.942008</td>
     </tr>
     <tr>
       <th>1</th>
       <td>Kinematics only</td>
-      <td>0.977062</td>
-      <td>13.391716</td>
-      <td>-0.171835</td>
-      <td>1.253708e-02</td>
+      <td>0.815628</td>
+      <td>17.954724</td>
+      <td>0.000720</td>
+      <td>0.919603</td>
+      <td>0.839908</td>
+      <td>0.998094</td>
+      <td>0.919202</td>
     </tr>
     <tr>
-      <th>3</th>
-      <td>Velocity only</td>
-      <td>0.967327</td>
-      <td>9.536206</td>
-      <td>-0.121486</td>
-      <td>1.232320e-02</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>Orientation only</td>
-      <td>0.975070</td>
-      <td>13.808917</td>
-      <td>-0.173832</td>
-      <td>1.227457e-02</td>
+      <th>2</th>
+      <td>Position only</td>
+      <td>0.750718</td>
+      <td>15.445885</td>
+      <td>0.005596</td>
+      <td>0.691111</td>
+      <td>0.933647</td>
+      <td>0.967771</td>
+      <td>0.864176</td>
     </tr>
     <tr>
       <th>5</th>
       <td>Task-related</td>
-      <td>0.981135</td>
-      <td>29.165043</td>
-      <td>-0.161736</td>
-      <td>5.440912e-03</td>
+      <td>0.830246</td>
+      <td>33.678069</td>
+      <td>0.000569</td>
+      <td>0.971061</td>
+      <td>0.252433</td>
+      <td>0.999032</td>
+      <td>0.740842</td>
     </tr>
     <tr>
       <th>6</th>
       <td>All</td>
-      <td>0.980864</td>
-      <td>36.082923</td>
-      <td>-0.143414</td>
-      <td>3.898510e-03</td>
+      <td>0.838467</td>
+      <td>40.434255</td>
+      <td>0.000414</td>
+      <td>1.000000</td>
+      <td>0.000000</td>
+      <td>1.000000</td>
+      <td>0.666667</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Velocity only</td>
+      <td>0.809222</td>
+      <td>13.669992</td>
+      <td>0.161194</td>
+      <td>0.897053</td>
+      <td>1.000000</td>
+      <td>0.000000</td>
+      <td>0.632351</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Orientation only</td>
+      <td>0.828903</td>
+      <td>18.072149</td>
+      <td>0.146001</td>
+      <td>0.966336</td>
+      <td>0.835521</td>
+      <td>0.094497</td>
+      <td>0.632118</td>
     </tr>
     <tr>
       <th>7</th>
       <td>Priors</td>
       <td>0.554389</td>
-      <td>22.975909</td>
-      <td>0.000001</td>
-      <td>-2.585972e-08</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>Position only</td>
-      <td>0.935537</td>
-      <td>11.912853</td>
-      <td>0.009489</td>
-      <td>-7.452153e-04</td>
+      <td>22.975952</td>
+      <td>0.096351</td>
+      <td>0.000000</td>
+      <td>0.652299</td>
+      <td>0.403302</td>
+      <td>0.351867</td>
     </tr>
   </tbody>
 </table>
@@ -1464,16 +2070,13 @@ aperture:trial_length_bin   16.5970 49.0000 2058.0000 0.0000
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_df</span> <span class="o">=</span> <span class="n">s_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">&quot;score&quot;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Sort for ranking</span>
 
-<span class="n">plot_df</span> <span class="o">=</span> <span class="n">plot_df</span><span class="p">[</span><span class="n">plot_df</span><span class="o">.</span><span class="n">label_set_name</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span>
-    <span class="s2">&quot;Lateral Displacement&quot;</span><span class="p">,</span> <span class="s2">&quot;All&quot;</span><span class="p">,</span> <span class="s2">&quot;Kinematics only&quot;</span><span class="p">,</span> <span class="s2">&quot;Task-related&quot;</span><span class="p">,</span> <span class="s2">&quot;Priors&quot;</span><span class="p">,</span> <span class="s2">&quot;Orientation only&quot;</span>
-<span class="p">])]</span>
-<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;accuracy_0.5-1.0&quot;</span><span class="p">,</span> <span class="s2">&quot;bic_0.5-1.0&quot;</span><span class="p">,</span> <span class="s2">&quot;delta_cv&quot;</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">]</span>
-<span class="n">titles</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Late Accuracy (↑)&quot;</span><span class="p">,</span> <span class="s2">&quot;Late BIC (↓)&quot;</span><span class="p">,</span> <span class="s2">&quot;$\Delta$CV(BIC) (↓)&quot;</span><span class="p">,</span> <span class="s2">&quot;Final Score (↑)&quot;</span><span class="p">]</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">),</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;accuracy&quot;</span><span class="p">,</span> <span class="s2">&quot;bic&quot;</span><span class="p">,</span> <span class="s2">&quot;cv_end&quot;</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">]</span>
+<span class="n">titles</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Accuracy (↑)&quot;</span><span class="p">,</span> <span class="s2">&quot;BIC (↓)&quot;</span><span class="p">,</span> <span class="s2">&quot;Final CV(BIC) (↓)&quot;</span><span class="p">,</span> <span class="s2">&quot;Final Score (↑)&quot;</span><span class="p">]</span>
 <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;#4C72B0&quot;</span><span class="p">,</span> <span class="s2">&quot;#C44E52&quot;</span><span class="p">,</span> <span class="s2">&quot;#55A868&quot;</span><span class="p">,</span> <span class="s2">&quot;black&quot;</span><span class="p">]</span>
 
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">titles</span><span class="p">,</span> <span class="n">colors</span><span class="p">)):</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;label_set_name&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;label_set_name&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
     
     <span class="c1"># Padding based on data range</span>
     <span class="n">data_min</span> <span class="o">=</span> <span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
@@ -1482,7 +2085,7 @@ aperture:trial_length_bin   16.5970 49.0000 2058.0000 0.0000
 
     <span class="n">padding</span> <span class="o">=</span> <span class="n">data_range</span> <span class="o">*</span> <span class="mf">0.1</span>
     
-    <span class="k">if</span> <span class="n">col</span> <span class="o">==</span> <span class="s2">&quot;delta_cv&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">col</span> <span class="o">==</span> <span class="s2">&quot;cv_end&quot;</span> <span class="ow">or</span> <span class="n">col</span> <span class="o">==</span> <span class="s2">&quot;score&quot;</span><span class="p">:</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;label_set_name&quot;</span><span class="p">],</span> <span class="n">xmin</span><span class="o">=</span><span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">xmax</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
                 <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -1501,7 +2104,7 @@ aperture:trial_length_bin   16.5970 49.0000 2058.0000 0.0000
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/0a20896bc01e3bc7ea38f56b49cb997e0cf6492f281be88c3b6041130892df1d.png" src="../../../_images/0a20896bc01e3bc7ea38f56b49cb997e0cf6492f281be88c3b6041130892df1d.png" />
+<img alt="../../../_images/22c6155981cf025440a19f3c8b523e4767756c8d4772476aca9466192d3f0d2c.png" src="../../../_images/22c6155981cf025440a19f3c8b523e4767756c8d4772476aca9466192d3f0d2c.png" />
 </div>
 </div>
 </section>
@@ -1527,7 +2130,7 @@ aperture:trial_length_bin   16.5970 49.0000 2058.0000 0.0000
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">all_decision_points</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">((</span><span class="n">DecisionPoints</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">task_type_key</span> <span class="o">&amp;</span> <span class="n">model_key</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">all_decision_points</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">((</span><span class="n">DecisionPoints10Windows</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">task_type_key</span> <span class="o">&amp;</span> <span class="n">model_key</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="n">all_decision_points</span> <span class="o">=</span> <span class="n">all_decision_points</span><span class="o">.</span><span class="n">explode</span><span class="p">([</span><span class="s2">&quot;trial&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_length&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_left_choice&quot;</span><span class="p">,</span> <span class="s2">&quot;proba_left&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_rewarded&quot;</span><span class="p">])</span>
 <span class="n">all_decision_points</span><span class="p">[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_decision_points</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 </pre></div>
@@ -1556,7 +2159,6 @@ Analyzing decision points with threshold_uncertainty 0.4 (normalized)...
 Analyzing decision points with threshold_uncertainty 0.3 (normalized)...
 Analyzing decision points with threshold_uncertainty 0.2 (normalized)...
 Analyzing decision points with threshold_uncertainty 0.1 (normalized)...
-Analyzing decision points with threshold_uncertainty 0.0 (normalized)...
 </pre></div>
 </div>
 </div>
@@ -1570,29 +2172,199 @@ Analyzing decision points with threshold_uncertainty 0.0 (normalized)...
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mean_eval_df_norm</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>threshold</th>
+      <th>jump_score_norm</th>
+      <th>jump_score</th>
+      <th>n_trials</th>
+      <th>z_vx</th>
+      <th>z_vy</th>
+      <th>z_ang</th>
+      <th>z_dir</th>
+      <th>vx_delta</th>
+      <th>vy_delta</th>
+      <th>ang_delta</th>
+      <th>dir_delta</th>
+      <th>t_stat</th>
+      <th>p_value</th>
+      <th>p_value_fisher</th>
+      <th>z_vx_minmax</th>
+      <th>z_vy_minmax</th>
+      <th>z_ang_minmax</th>
+      <th>z_dir_minmax</th>
+      <th>jump_score_norm_minmax</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.1</td>
+      <td>1.604802</td>
+      <td>55.122344</td>
+      <td>207.744186</td>
+      <td>1.044272</td>
+      <td>-0.048215</td>
+      <td>0.156263</td>
+      <td>0.356052</td>
+      <td>18.111254</td>
+      <td>-4.472469</td>
+      <td>13.250256</td>
+      <td>19.288365</td>
+      <td>7.830445</td>
+      <td>0.004990</td>
+      <td>0.000000e+00</td>
+      <td>0.648945</td>
+      <td>0.401484</td>
+      <td>0.205076</td>
+      <td>0.618592</td>
+      <td>1.071130</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.2</td>
+      <td>1.608385</td>
+      <td>54.926013</td>
+      <td>207.976744</td>
+      <td>1.007998</td>
+      <td>-0.047593</td>
+      <td>0.271204</td>
+      <td>0.281590</td>
+      <td>17.582246</td>
+      <td>-4.472776</td>
+      <td>14.602185</td>
+      <td>18.268806</td>
+      <td>7.583409</td>
+      <td>0.004327</td>
+      <td>0.000000e+00</td>
+      <td>0.615551</td>
+      <td>0.402047</td>
+      <td>0.290691</td>
+      <td>0.566688</td>
+      <td>1.070884</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.3</td>
+      <td>1.489763</td>
+      <td>53.386965</td>
+      <td>208.023256</td>
+      <td>0.929417</td>
+      <td>-0.034929</td>
+      <td>0.339714</td>
+      <td>0.185703</td>
+      <td>16.561800</td>
+      <td>-4.351261</td>
+      <td>15.429140</td>
+      <td>17.044764</td>
+      <td>7.006041</td>
+      <td>0.014359</td>
+      <td>0.000000e+00</td>
+      <td>0.543210</td>
+      <td>0.413511</td>
+      <td>0.341722</td>
+      <td>0.499848</td>
+      <td>0.971269</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.4</td>
+      <td>1.362932</td>
+      <td>51.457835</td>
+      <td>200.418605</td>
+      <td>0.827579</td>
+      <td>-0.011041</td>
+      <td>0.450010</td>
+      <td>0.074302</td>
+      <td>15.219744</td>
+      <td>-4.018836</td>
+      <td>16.627652</td>
+      <td>15.591603</td>
+      <td>6.211942</td>
+      <td>0.005983</td>
+      <td>0.000000e+00</td>
+      <td>0.449457</td>
+      <td>0.435136</td>
+      <td>0.423877</td>
+      <td>0.422195</td>
+      <td>0.860393</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.5</td>
+      <td>1.188464</td>
+      <td>49.069441</td>
+      <td>170.930233</td>
+      <td>0.645964</td>
+      <td>0.010703</td>
+      <td>0.598901</td>
+      <td>-0.045697</td>
+      <td>12.867098</td>
+      <td>-3.761993</td>
+      <td>18.214316</td>
+      <td>14.226033</td>
+      <td>4.786950</td>
+      <td>0.006056</td>
+      <td>7.290213e-193</td>
+      <td>0.282262</td>
+      <td>0.454821</td>
+      <td>0.534780</td>
+      <td>0.338548</td>
+      <td>0.700770</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_df</span> <span class="o">=</span> <span class="n">mean_eval_df_norm</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">&quot;jump_score_norm&quot;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;z_vx&quot;</span><span class="p">,</span> <span class="s2">&quot;z_vy&quot;</span><span class="p">,</span> <span class="s2">&quot;z_ang&quot;</span><span class="p">,</span> <span class="s2">&quot;z_dir&quot;</span><span class="p">,</span> <span class="s2">&quot;jump_score_norm&quot;</span><span class="p">]</span>
-<span class="n">titles</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;$\Delta$x-velocity</span><span class="se">\n</span><span class="s2">(↑)&quot;</span><span class="p">,</span> <span class="s2">&quot;$\Delta$y-velocity</span><span class="se">\n</span><span class="s2">(↓)&quot;</span><span class="p">,</span> <span class="s2">&quot;$\Delta$Head angle</span><span class="se">\n</span><span class="s2">(↑)&quot;</span><span class="p">,</span> <span class="s2">&quot;$\Delta$Running direction</span><span class="se">\n</span><span class="s2">(↑)&quot;</span><span class="p">,</span> <span class="s2">&quot;Turning Score</span><span class="se">\n</span><span class="s2">(↑)&quot;</span><span class="p">]</span>
+<span class="n">metrics_standardized</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">_minmax&quot;</span> <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">]</span>
+<span class="n">titles</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;$\Delta$x-velocity (↑)&quot;</span><span class="p">,</span> <span class="s2">&quot;$\Delta$y-velocity (↓)&quot;</span><span class="p">,</span> <span class="s2">&quot;$\Delta$Head angle (↑)&quot;</span><span class="p">,</span> <span class="s2">&quot;$\Delta$Running dir. (↑)&quot;</span><span class="p">,</span> <span class="s2">&quot;Turning Score (↑)&quot;</span><span class="p">]</span>
 <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;#4C72B0&quot;</span><span class="p">,</span> <span class="s2">&quot;#C44E52&quot;</span><span class="p">,</span> <span class="s2">&quot;#55A868&quot;</span><span class="p">,</span> <span class="s2">&quot;#8C564B&quot;</span><span class="p">,</span> <span class="s2">&quot;black&quot;</span><span class="p">]</span>
 
-<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">titles</span><span class="p">,</span> <span class="n">colors</span><span class="p">)):</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">metrics_standardized</span><span class="p">,</span> <span class="n">titles</span><span class="p">,</span> <span class="n">colors</span><span class="p">)):</span>
     <span class="c1"># Plot dots</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;threshold&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;threshold&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
     <span class="c1"># Add horizontal lines for readability</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;threshold&quot;</span><span class="p">],</span> <span class="n">xmin</span><span class="o">=</span><span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">xmax</span><span class="o">=</span><span class="n">plot_df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> 
               <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
     
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;threshold&quot;</span><span class="p">])</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;threshold&quot;</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="n">plot_df</span><span class="p">[</span><span class="s2">&quot;threshold&quot;</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
     
     <span class="c1"># Get the existing x-axis ticks and just chage the size</span>
     <span class="n">ticks</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_xticks</span><span class="p">()</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">ticks</span><span class="p">,</span> <span class="n">minor</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>    
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tick</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">tick</span> <span class="ow">in</span> <span class="n">ticks</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">ticks</span><span class="p">,</span> <span class="n">minor</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tick</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">tick</span> <span class="ow">in</span> <span class="n">ticks</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">)</span>
+
+<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Threshold&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 <span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -1601,26 +2373,7 @@ Analyzing decision points with threshold_uncertainty 0.0 (normalized)...
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/60ce4a306f49417d9de7ec47c72fa4518032baca903ce4043b13075e72abb519.png" src="../../../_images/60ce4a306f49417d9de7ec47c72fa4518032baca903ce4043b13075e72abb519.png" />
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">all_decision_points</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">all_decision_points</span><span class="p">[</span><span class="s2">&quot;distance_to_screen&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">all_decision_points</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">27</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">filtered_df</span> <span class="o">=</span> <span class="n">all_decision_points</span><span class="p">[</span><span class="n">all_decision_points</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="mf">4.3</span><span class="p">,</span> <span class="mf">12.0</span><span class="p">])]</span>
-<span class="n">grouped</span> <span class="o">=</span> <span class="n">filtered_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;threshold_uncertainty&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">])[</span><span class="s2">&quot;distance_to_screen&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="s2">&quot;aperture&quot;</span><span class="p">)</span>
-
-<span class="n">grouped</span><span class="p">[</span><span class="s2">&quot;diff&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grouped</span><span class="p">[</span><span class="mf">12.0</span><span class="p">]</span> <span class="o">-</span> <span class="n">grouped</span><span class="p">[</span><span class="mf">4.3</span><span class="p">]</span>
-<span class="n">result_df</span> <span class="o">=</span> <span class="n">grouped</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
-</pre></div>
-</div>
+<img alt="../../../_images/dc7ea627cfdd593391ca0b85ec1c9f665d8539d6ad8351347479f4872eda9834.png" src="../../../_images/dc7ea627cfdd593391ca0b85ec1c9f665d8539d6ad8351347479f4872eda9834.png" />
 </div>
 </div>
 </section>
@@ -1628,7 +2381,7 @@ Analyzing decision points with threshold_uncertainty 0.0 (normalized)...
 <h3>Threshold selected: 0.2, the rest is with that threshold<a class="headerlink" href="#threshold-selected-0-2-the-rest-is-with-that-threshold" title="Permalink to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">decision_points</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">((</span><span class="n">DecisionPoints</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">task_type_key</span> <span class="o">&amp;</span> <span class="n">model_key</span> <span class="o">&amp;</span> <span class="s2">&quot;threshold_uncertainty = 0.2&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">decision_points</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">((</span><span class="n">DecisionPoints10Windows</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">task_type_key</span> <span class="o">&amp;</span> <span class="n">model_key</span> <span class="o">&amp;</span> <span class="s2">&quot;threshold_uncertainty = 0.2&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="n">decision_points</span> <span class="o">=</span> <span class="n">decision_points</span><span class="o">.</span><span class="n">explode</span><span class="p">([</span><span class="s2">&quot;trial&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_length&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_left_choice&quot;</span><span class="p">,</span> <span class="s2">&quot;proba_left&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_rewarded&quot;</span><span class="p">])</span>
 <span class="n">decision_points</span><span class="p">[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">decision_points</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 </pre></div>
@@ -1663,10 +2416,10 @@ Analyzing decision points with threshold_uncertainty 0.0 (normalized)...
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Decision Time: 0.37
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Decision Time: 0.36
 </pre></div>
 </div>
-<img alt="../../../_images/a5c2d614417e1d030eb6dd37679119ae274abe4afba268f5b131997bf4e05642.png" src="../../../_images/a5c2d614417e1d030eb6dd37679119ae274abe4afba268f5b131997bf4e05642.png" />
+<img alt="../../../_images/2a79f52aa670095fbf26076a5ceb8c1ba2089028306ee0c838a2f34c0a1deee2.png" src="../../../_images/2a79f52aa670095fbf26076a5ceb8c1ba2089028306ee0c838a2f34c0a1deee2.png" />
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Figure size 640x480 with 0 Axes&gt;
 </pre></div>
 </div>
@@ -1693,10 +2446,13 @@ Analyzing decision points with threshold_uncertainty 0.0 (normalized)...
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Decision Time: 0.45
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Decision Time:
 </pre></div>
 </div>
-<img alt="../../../_images/add1bbc9bcaa75d3d4c0156a5af990d1db3e86b83177bd60bc5d58d60780d9af.png" src="../../../_images/add1bbc9bcaa75d3d4c0156a5af990d1db3e86b83177bd60bc5d58d60780d9af.png" />
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> 0.44
+</pre></div>
+</div>
+<img alt="../../../_images/4abe9181ef5b5fa2b8df706bd87a52ccb334195d51b0c0a0327da1f7e7239b53.png" src="../../../_images/4abe9181ef5b5fa2b8df706bd87a52ccb334195d51b0c0a0327da1f7e7239b53.png" />
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Figure size 640x480 with 0 Axes&gt;
 </pre></div>
 </div>
@@ -1797,11 +2553,11 @@ Analyzing decision points with threshold_uncertainty 0.0 (normalized)...
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/tmp/ipykernel_3229955/2512967155.py:26: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed in 3.11. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap()`` or ``pyplot.get_cmap()`` instead.
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/tmp/ipykernel_2557715/2512967155.py:26: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed in 3.11. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap()`` or ``pyplot.get_cmap()`` instead.
   base_cmap = cm.get_cmap(&quot;PuOr&quot;)
 </pre></div>
 </div>
-<img alt="../../../_images/768d3a2856c90440a52f109dd95436114149e03070f665edffe1371ca9661af9.png" src="../../../_images/768d3a2856c90440a52f109dd95436114149e03070f665edffe1371ca9661af9.png" />
+<img alt="../../../_images/e8fbb4aad43839ae7ccf504a2755ffc54f0b2ed921531195cdf41f72a5fb2530.png" src="../../../_images/e8fbb4aad43839ae7ccf504a2755ffc54f0b2ed921531195cdf41f72a5fb2530.png" />
 </div>
 </div>
 </section>
@@ -1907,6 +2663,11 @@ Analyzing decision points with threshold_uncertainty 0.0 (normalized)...
 
 <span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span>
     <span class="p">{</span>
+        <span class="s2">&quot;col&quot;</span><span class="p">:</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ylabel&quot;</span><span class="p">:</span> <span class="s2">&quot;Mean y-position&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s2">&quot;figure4_y_position_around_decision.svg&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
         <span class="s2">&quot;col&quot;</span><span class="p">:</span> <span class="s2">&quot;velocity_y&quot;</span><span class="p">,</span>
         <span class="s2">&quot;ylabel&quot;</span><span class="p">:</span> <span class="s2">&quot;Mean y-velocity&quot;</span><span class="p">,</span>
         <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s2">&quot;figure4_velocity_around_decision.svg&quot;</span><span class="p">,</span>
@@ -1979,9 +2740,10 @@ Analyzing decision points with threshold_uncertainty 0.0 (normalized)...
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/e15d9116c26ccf7d0399eba6ca7ce291c94c05e6d62046f48e529e3900573048.png" src="../../../_images/e15d9116c26ccf7d0399eba6ca7ce291c94c05e6d62046f48e529e3900573048.png" />
-<img alt="../../../_images/e55314f4a08dabef75d5b24860796c3a462c78831c98d7a0da271eaeb2a0debe.png" src="../../../_images/e55314f4a08dabef75d5b24860796c3a462c78831c98d7a0da271eaeb2a0debe.png" />
-<img alt="../../../_images/d1da1f3d23c7e621dacf41348a0ab5f411d568529c4c3c2c783ace6261d4043a.png" src="../../../_images/d1da1f3d23c7e621dacf41348a0ab5f411d568529c4c3c2c783ace6261d4043a.png" />
+<img alt="../../../_images/2ab617d6a73d7149f4b358216ce0c2bb7d30364ce021d13397f57b86be6ec367.png" src="../../../_images/2ab617d6a73d7149f4b358216ce0c2bb7d30364ce021d13397f57b86be6ec367.png" />
+<img alt="../../../_images/c30e53a3dc955ba7cc620b39b7f5b38cc56cc2361287734669f8f10b02927b9b.png" src="../../../_images/c30e53a3dc955ba7cc620b39b7f5b38cc56cc2361287734669f8f10b02927b9b.png" />
+<img alt="../../../_images/ed397971e026bc5e1aca07ad6acf8dde93d5d5ab3a94818c0ea7c5af0333c10f.png" src="../../../_images/ed397971e026bc5e1aca07ad6acf8dde93d5d5ab3a94818c0ea7c5af0333c10f.png" />
+<img alt="../../../_images/830faba65b21d8c9cbd5f9b783024fa88f5fb0397cd59a455e4fb25caa30352a.png" src="../../../_images/830faba65b21d8c9cbd5f9b783024fa88f5fb0397cd59a455e4fb25caa30352a.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -1995,7 +2757,7 @@ Analyzing decision points with threshold_uncertainty 0.0 (normalized)...
     <span class="n">suffixes</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;_vel&quot;</span><span class="p">,</span> <span class="s2">&quot;_info&quot;</span><span class="p">),</span>
 <span class="p">)</span>
 
-<span class="n">corr_window</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+<span class="n">corr_window</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
 
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
 <span class="n">divider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
@@ -2076,7 +2838,7 @@ Analyzing decision points with threshold_uncertainty 0.0 (normalized)...
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/088410b835e61d27c0b3458df5e22129e7fef851a795214a23dbdb19e0bc2b75.png" src="../../../_images/088410b835e61d27c0b3458df5e22129e7fef851a795214a23dbdb19e0bc2b75.png" />
+<img alt="../../../_images/f0331815d1e47316169d91f029d02342f01fccd154d52f57901dd8fe6e3ec77b.png" src="../../../_images/f0331815d1e47316169d91f029d02342f01fccd154d52f57901dd8fe6e3ec77b.png" />
 </div>
 </div>
 </section>
@@ -2133,14 +2895,26 @@ Analyzing decision points with threshold_uncertainty 0.0 (normalized)...
 <span class="n">initial_positions</span><span class="p">[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial_positions</span><span class="p">[</span><span class="s2">&quot;info_gain&quot;</span><span class="p">]</span>
 <span class="n">initial_positions</span><span class="o">.</span><span class="n">aperture</span> <span class="o">=</span> <span class="n">initial_positions</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
 <span class="n">initial_positions</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">initial_positions</span><span class="o">.</span><span class="n">reset_index</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Merge the two dataframes on the common keys</span>
+<span class="n">information_difference</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+    <span class="n">info_at_decision_per_session</span><span class="p">[[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;info_gain&quot;</span><span class="p">]],</span>
+    <span class="n">initial_positions</span><span class="p">[[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">,</span> <span class="s2">&quot;info_gain&quot;</span><span class="p">]],</span>
+    <span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">],</span>
+    <span class="n">suffixes</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;_decision&quot;</span><span class="p">,</span> <span class="s2">&quot;_initial&quot;</span><span class="p">)</span>
+<span class="p">)</span>
 
-<span class="c1"># Difference in information available</span>
-<span class="n">information_difference</span> <span class="o">=</span> <span class="n">info_at_decision_per_session</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;mouse_name&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;aperture&quot;</span><span class="p">],</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="s2">&quot;info_gain&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-<span class="n">information_difference</span><span class="p">[</span><span class="s2">&quot;info_gain&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">information_difference</span><span class="p">[</span><span class="s2">&quot;info_gain&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">initial_positions</span><span class="p">[</span><span class="s2">&quot;info_gain&quot;</span><span class="p">]</span>
+<span class="c1"># Calculate the delta</span>
+<span class="n">information_difference</span><span class="p">[</span><span class="s2">&quot;info_gain&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">information_difference</span><span class="p">[</span><span class="s2">&quot;info_gain_decision&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">information_difference</span><span class="p">[</span><span class="s2">&quot;info_gain_initial&quot;</span><span class="p">]</span>
+<span class="p">)</span>
 <span class="n">information_difference</span><span class="p">[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">information_difference</span><span class="p">[</span><span class="s2">&quot;info_gain&quot;</span><span class="p">]</span>
-<span class="n">information_difference</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">information_difference</span><span class="o">.</span><span class="n">reset_index</span><span class="p">())</span>
-
-<span class="n">information_difference</span><span class="o">.</span><span class="n">aperture</span> <span class="o">=</span> <span class="n">information_difference</span><span class="o">.</span><span class="n">aperture</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+<span class="n">information_difference</span> <span class="o">=</span> <span class="n">information_difference</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;info_gain_decision&quot;</span><span class="p">,</span> <span class="s2">&quot;info_gain_initial&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -2224,12 +2998,12 @@ Analyzing decision points with threshold_uncertainty 0.0 (normalized)...
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Information at Initiation
 12.0-4.3: TtestResult(statistic=203.58890643063685, pvalue=1.5822172914976845e-64, df=42)
 Information at Decision
-12.0-4.3: TtestResult(statistic=39.61052982086955, pvalue=6.799318147850608e-35, df=42)
+12.0-4.3: TtestResult(statistic=47.397784438490845, pvalue=4.256328087058785e-38, df=42)
 Information Difference
-12.0-4.3: TtestResult(statistic=89.42607565873232, pvalue=1.471575700020202e-49, df=42)
+12.0-4.3: TtestResult(statistic=-10.96538238955721, pvalue=6.673296868546147e-14, df=42)
 </pre></div>
 </div>
-<img alt="../../../_images/d189792d7159cd43b8666c7624dfea1bffb4e75bc5ce860d85e399cedbc10f4d.png" src="../../../_images/d189792d7159cd43b8666c7624dfea1bffb4e75bc5ce860d85e399cedbc10f4d.png" />
+<img alt="../../../_images/ddba05ef14d854a9eb2fad614e8931e86ebbcc1b2fa0efeef2355b7248d9582e.png" src="../../../_images/ddba05ef14d854a9eb2fad614e8931e86ebbcc1b2fa0efeef2355b7248d9582e.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -2256,20 +3030,20 @@ aperture
 Name: count, dtype: float64
 Information at Decision
 aperture
-12.0    0.588
-4.3     0.326
+12.0    0.578
+4.3     0.311
 Name: count, dtype: float64
 aperture
-12.0    0.005
-4.3     0.009
+12.0    0.006
+4.3     0.008
 Name: count, dtype: float64
 Information Difference
 aperture
-12.0    0.477
-4.3    -0.117
+12.0    0.135
+4.3     0.200
 Name: count, dtype: float64
 aperture
-12.0    0.005
+12.0    0.004
 4.3     0.008
 Name: count, dtype: float64
 </pre></div>
@@ -2300,7 +3074,7 @@ Name: count, dtype: float64
 <span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">28</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Occlusion&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Aperture&quot;</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;Narrow&quot;</span><span class="p">,</span> <span class="s2">&quot;Wide&quot;</span><span class="p">])</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Distance to screen (cm)&quot;</span><span class="p">)</span>
 <span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
@@ -2314,13 +3088,13 @@ Name: count, dtype: float64
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>mean: 12.945713638388412 +/- 0.42075972895108993
-12.0-4.3: TtestResult(statistic=6.355253690057035, pvalue=1.2238950358981805e-07, df=42)
- mean difference:  -3.6707149152692224
-mean: 16.616428553657634 +/- 0.35825944591851416
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>mean: 13.787705477348597 +/- 0.4393329188419583
+12.0-4.3: TtestResult(statistic=6.03301315926924, pvalue=3.560499842093932e-07, df=42)
+ mean difference:  -3.7539992039304
+mean: 17.541704681278997 +/- 0.4162917138417842
 </pre></div>
 </div>
-<img alt="../../../_images/6f869fe20dae104aa9d8a70f79baa889d17671f782c98cdf70a0af516caa87a7.png" src="../../../_images/6f869fe20dae104aa9d8a70f79baa889d17671f782c98cdf70a0af516caa87a7.png" />
+<img alt="../../../_images/0775a5606863b549c2214ad2732a605e82052dd2072a6358c3850d8d00a9ee83.png" src="../../../_images/0775a5606863b549c2214ad2732a605e82052dd2072a6358c3850d8d00a9ee83.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -2359,13 +3133,13 @@ mean: 16.616428553657634 +/- 0.35825944591851416
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>mean: 14.054286361612208 +/- 0.42075972895114894
-12.0-4.3: TtestResult(statistic=-12.864675228967217, pvalue=3.6747680032927093e-16, df=42)
- mean difference:  3.6707149152698424
-mean: 10.383571446342366 +/- 0.35825944591851416
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>mean: 13.212294522651405 +/- 0.4393329188419583
+12.0-4.3: TtestResult(statistic=-13.739980604697008, pvalue=3.890221334063942e-17, df=42)
+ mean difference:  3.7539992039304035
+mean: 9.458295318721001 +/- 0.41629171384178426
 </pre></div>
 </div>
-<img alt="../../../_images/934db1db5dffecdd3822ad8aac421af434157025b4c3947c0fa18f9d787e8264.png" src="../../../_images/934db1db5dffecdd3822ad8aac421af434157025b4c3947c0fa18f9d787e8264.png" />
+<img alt="../../../_images/2bd8a13dfb0b6ee042df0cb1a8e2571123c1b92bbdae1cbffd0db2d4b449dbda.png" src="../../../_images/2bd8a13dfb0b6ee042df0cb1a8e2571123c1b92bbdae1cbffd0db2d4b449dbda.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -2386,7 +3160,7 @@ mean: 10.383571446342366 +/- 0.35825944591851416
 =======================================
          F Value  Num DF  Den DF Pr &gt; F
 ---------------------------------------
-aperture 165.4999 1.0000 42.0000 0.0000
+aperture 188.7871 1.0000 42.0000 0.0000
 =======================================
 </pre></div>
 </div>
@@ -2400,12 +3174,12 @@ aperture 165.4999 1.0000 42.0000 0.0000
 </div>
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(aperture
- 4.3     14.189555
- 12.0    10.736870
+ 4.3     13.466827
+ 12.0     9.857858
  Name: y, dtype: float64,
  aperture
- 4.3     0.087201
- 12.0    0.087109
+ 4.3     0.086441
+ 12.0    0.096759
  Name: y, dtype: float64)
 </pre></div>
 </div>
@@ -2438,13 +3212,13 @@ aperture 165.4999 1.0000 42.0000 0.0000
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/tmp/ipykernel_3229955/2084882542.py:10: SettingWithCopyWarning: 
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/tmp/ipykernel_2557715/2084882542.py:10: SettingWithCopyWarning: 
 A value is trying to be set on a copy of a slice from a DataFrame.
 Try using .loc[row_indexer,col_indexer] = value instead
 
 See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
   before_q1[&quot;mouse_name&quot;] = before_q1.dataset.str.split(&quot;_&quot;).str [0]
-/tmp/ipykernel_3229955/2084882542.py:11: SettingWithCopyWarning: 
+/tmp/ipykernel_2557715/2084882542.py:11: SettingWithCopyWarning: 
 A value is trying to be set on a copy of a slice from a DataFrame.
 Try using .loc[row_indexer,col_indexer] = value instead
 
@@ -2462,7 +3236,8 @@ See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stab
 </div>
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(array([&#39;31726&#39;, &#39;31728&#39;, &#39;J731&#39;, &#39;Pheasant&#39;], dtype=object),
- array([&#39;J729&#39;, &#39;Jacana&#39;, &#39;Lemming&#39;, &#39;Nightingale&#39;, &#39;Oribi&#39;], dtype=object))
+ array([&#39;J729&#39;, &#39;Jacana&#39;, &#39;Kiwi&#39;, &#39;Lemming&#39;, &#39;Nightingale&#39;, &#39;Oribi&#39;],
+       dtype=object))
 </pre></div>
 </div>
 </div>
@@ -2565,12 +3340,12 @@ See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stab
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>4.3: mean=0.703 ± 0.017
 12.0-4.3: TtestResult(statistic=8.620578958360586, pvalue=1.7358583683875294e-06, df=12)
 12.0: mean=0.867 ± 0.016
-4.3: mean=0.795 ± 0.019
-12.0-4.3: TtestResult(statistic=4.4700285565646976, pvalue=0.00015984419487565023, df=24)
-12.0: mean=0.884 ± 0.011
+4.3: mean=0.789 ± 0.016
+12.0-4.3: TtestResult(statistic=3.9317874784512914, pvalue=0.0004813230361002368, df=29)
+12.0: mean=0.863 ± 0.013
 </pre></div>
 </div>
-<img alt="../../../_images/14b156310a72283e65a2f47d3c88d6bffb7002efe99873ebe0e0e8fccb563fd5.png" src="../../../_images/14b156310a72283e65a2f47d3c88d6bffb7002efe99873ebe0e0e8fccb563fd5.png" />
+<img alt="../../../_images/e2457348114a912c38ebf1aa85f9f704a84016d3907a6377647508c1f9dd07a5.png" src="../../../_images/e2457348114a912c38ebf1aa85f9f704a84016d3907a6377647508c1f9dd07a5.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -2591,8 +3366,8 @@ See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stab
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>narrow TtestResult(statistic=-3.147714204607385, pvalue=0.003299150380735476, df=36.0)
-wide TtestResult(statistic=-0.8951141071836514, pvalue=0.37667219573341515, df=36.0)
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>narrow TtestResult(statistic=-3.162045377061214, pvalue=0.002945767030159765, df=41.0)
+wide TtestResult(statistic=0.18002299756336906, pvalue=0.8580213473108533, df=41.0)
 </pre></div>
 </div>
 </div>
@@ -2668,7 +3443,7 @@ wide TtestResult(statistic=-0.8951141071836514, pvalue=0.37667219573341515, df=3
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../../_images/9a006f7df4786819af508384915ec0a5860cfa8b07eaef9e3cd42955f46b01ea.png" src="../../../_images/9a006f7df4786819af508384915ec0a5860cfa8b07eaef9e3cd42955f46b01ea.png" />
+<img alt="../../../_images/5edfd3a4fd43d17b0e85130482b4b2767c8f14ba4518fb67ccff8898aaee66c7.png" src="../../../_images/5edfd3a4fd43d17b0e85130482b4b2767c8f14ba4518fb67ccff8898aaee66c7.png" />
 </div>
 </div>
 </section>
@@ -2783,11 +3558,63 @@ Pheasant_2024-08-21_1
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">interpolated_df_all</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">interpolated_df_all</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># interpolated_df_all[&quot;aperture&quot;] = interpolated_df_all[&quot;aperture&quot;].astype(float)</span>
 
-<span class="n">df_model_all</span><span class="p">,</span> <span class="n">coef</span> <span class="o">=</span> <span class="n">regression</span><span class="o">.</span><span class="n">predict_decision</span><span class="p">(</span>
-    <span class="n">df</span><span class="o">=</span><span class="n">interpolated_df_all</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">model_labels</span><span class="p">,</span> <span class="n">per_mouse</span><span class="o">=</span><span class="kc">True</span>
+<span class="c1"># df_model_all, coef = regression.predict_decision(</span>
+<span class="c1">#     df=interpolated_df_all, label=model_labels, per_mouse=True</span>
+<span class="c1"># )</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">WINDOW_COUNT</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="c1"># Build trial-progress windows like PredictionModel10Windows</span>
+<span class="n">df_multi</span> <span class="o">=</span> <span class="n">interpolated_df_all</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">df_multi</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_multi</span><span class="p">[</span><span class="s2">&quot;aperture&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+<span class="n">df_multi</span> <span class="o">=</span> <span class="n">df_multi</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;trial&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_length&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">trial_index</span> <span class="o">=</span> <span class="n">df_multi</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;trial&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">cumcount</span><span class="p">()</span>
+<span class="n">trial_size</span> <span class="o">=</span> <span class="n">df_multi</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;trial&quot;</span><span class="p">])[</span><span class="s2">&quot;trial&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="s2">&quot;size&quot;</span><span class="p">)</span>
+<span class="n">df_multi</span><span class="p">[</span><span class="s2">&quot;trial_window&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">trial_index</span> <span class="o">*</span> <span class="n">WINDOW_COUNT</span> <span class="o">/</span> <span class="n">trial_size</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>
+    <span class="mi">0</span><span class="p">,</span>
+    <span class="n">WINDOW_COUNT</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
 <span class="p">)</span>
+
+<span class="c1"># Train one model per window (LOGO across datasets)</span>
+<span class="n">df_model_parts</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">coef</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">scalers_by_window</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="k">for</span> <span class="n">window_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">WINDOW_COUNT</span><span class="p">):</span>
+    <span class="n">window_df</span> <span class="o">=</span> <span class="n">df_multi</span><span class="p">[</span><span class="n">df_multi</span><span class="p">[</span><span class="s2">&quot;trial_window&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">window_id</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">window_df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="n">coef</span><span class="p">[</span><span class="n">window_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">]])</span>
+        <span class="n">scalers_by_window</span><span class="p">[</span><span class="n">window_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">continue</span>
+
+    <span class="n">window_pred</span><span class="p">,</span> <span class="n">window_coef</span><span class="p">,</span> <span class="n">window_scalers</span> <span class="o">=</span> <span class="n">regression</span><span class="o">.</span><span class="n">predict_decision</span><span class="p">(</span>
+        <span class="n">df</span><span class="o">=</span><span class="n">window_df</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">model_labels</span><span class="p">,</span>
+        <span class="n">per_mouse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">window_pred</span><span class="p">[</span><span class="s2">&quot;model_idx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">window_id</span>
+    <span class="n">df_model_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">window_pred</span><span class="p">)</span>
+
+    <span class="n">coef</span><span class="p">[</span><span class="n">window_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">window_coef</span>
+    <span class="n">scalers_by_window</span><span class="p">[</span><span class="n">window_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">window_scalers</span>
+
+<span class="n">df_model_all</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">df_model_parts</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">df_model_all</span> <span class="o">=</span> <span class="n">df_model_all</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span>
+    <span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;trial&quot;</span><span class="p">,</span> <span class="s2">&quot;trial_length&quot;</span><span class="p">,</span> <span class="s2">&quot;model_idx&quot;</span><span class="p">]</span>
+<span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Optional sanity check: every sample assigned to exactly one window model</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">df_model_all</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">df_multi</span><span class="p">),</span> <span class="s2">&quot;Row mismatch after windowed prediction&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -2832,7 +3659,7 @@ Pheasant_2024-08-21_1
     <span class="c1"># annotate correlation</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
         <span class="mf">0.05</span><span class="p">,</span> <span class="n">ypos</span><span class="p">,</span>
-        <span class="sa">f</span><span class="s2">&quot;r = </span><span class="si">{</span><span class="n">r_value</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, p = </span><span class="si">{</span><span class="n">p_value</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;r=</span><span class="si">{</span><span class="n">r_value</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, p=</span><span class="si">{</span><span class="n">p_value</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
         <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
         <span class="n">va</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
         <span class="n">color</span><span class="o">=</span><span class="n">color</span>
@@ -2848,11 +3675,11 @@ Pheasant_2024-08-21_1
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Aperture 4.3: r=-0.7057843864945809, p=0.022567528924541
-Aperture 12.0: r=-0.266999421524306, p=0.4558250085749076
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Aperture 4.3: r=-0.7090448373239551, p=0.02167831235770712
+Aperture 12.0: r=-0.10298094981745738, p=0.7771030235057779
 </pre></div>
 </div>
-<img alt="../../../_images/acc6edabcc639513c0efe8e1b27d129cd16922cab48feef2611350b944b934ca.png" src="../../../_images/acc6edabcc639513c0efe8e1b27d129cd16922cab48feef2611350b944b934ca.png" />
+<img alt="../../../_images/eccb9135a6ab0174faa259d3eb804595597dc7f39f96b5f00d24ee968514e433.png" src="../../../_images/eccb9135a6ab0174faa259d3eb804595597dc7f39f96b5f00d24ee968514e433.png" />
 </div>
 </div>
 </section>

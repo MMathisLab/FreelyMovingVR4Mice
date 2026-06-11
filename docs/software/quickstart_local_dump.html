@@ -66,6 +66,7 @@ const thebe_selector_output = ".output, .cell_output"
     <link rel="shortcut icon" href="../../_static/logo.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Parts list" href="../hardware/parts_list.html" />
     <link rel="prev" title="Black target control" href="../../dj_pipeline/notebooks/Paper_figures/Supp_Figure_control.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -177,6 +178,20 @@ const thebe_selector_output = ".output, .cell_output"
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer Guide for VR4Mice 🎉</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Publication</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../paper.html">Benquet, Sainsbury <em>et al.</em></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Figure_1.html">Figure 1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Figure_2.html">Figure 2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Figure_3.html">Figure 3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Figure_4.html">Figure 4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Figure_5a_kinematics.html">[Trajectory Analysis] Figure 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Figure_5b_decision.html">[Decision Variable Prediction] Figure 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Supp_Figure_control.html">Black target control</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Deploy the DataJoint database locally</a></li>
+</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Hardware - Building the rig</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../hardware/parts_list.html">Parts list</a></li>
@@ -226,20 +241,6 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="../training_protocols/training_protocol.html">Mouse training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../training_protocols/contrast_discrimination_training_parameters.html">Contrast discrimination game parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../training_protocols/shape_discrimination_training_parameters.html">Shape discrimination game parameters</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Benquet, Sainsbury, et al. material</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../figures.html">Figures</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Figure_1.html">Figure 1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Figure_2.html">Figure 2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Figure_3.html">Figure 3</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Figure_4.html">Figure 4</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Figure_5a_kinematics.html">[Trajectory Analysis] Figure 5</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Figure_5b_decision.html">[Decision Variable Prediction] Figure 5</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../dj_pipeline/notebooks/Paper_figures/Supp_Figure_control.html">Black target control</a></li>
-</ul>
-</details></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Deploy the DataJoint database locally</a></li>
 </ul>
 
     </div>
@@ -482,6 +483,7 @@ document.write(`
 <li><p><code class="docutils literal notranslate"><span class="pre">meta.txt</span></code>, a run summary file, emitted at the end of the export.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tables.csv</span></code>, a per-table log of the tables and row counts exported (see below).</p></li>
 </ul>
+<p>Exact row counts for your archive are listed in <code class="docutils literal notranslate"><span class="pre">tables.csv</span></code>. The table below summarizes exported schemas, tables, and restriction modes (10-window decision models used in the paper notebooks).</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Schema</p></th>
@@ -547,7 +549,7 @@ document.write(`
 <td><p>44</p></td>
 </tr>
 <tr class="row-odd"><td><p>decision</p></td>
-<td><p>__decision_points</p></td>
+<td><p>__decision_points10_windows</p></td>
 <td><p>dataset</p></td>
 <td><p>3320</p></td>
 </tr>
@@ -557,12 +559,12 @@ document.write(`
 <td><p>471</p></td>
 </tr>
 <tr class="row-odd"><td><p>decision</p></td>
-<td><p>__prediction_model</p></td>
+<td><p>__prediction_model10_windows</p></td>
 <td><p>set_name</p></td>
 <td><p>32</p></td>
 </tr>
 <tr class="row-even"><td><p>decision</p></td>
-<td><p>__prediction_model__session_prediction</p></td>
+<td><p>__prediction_model10_windows__session_prediction</p></td>
 <td><p>dataset</p></td>
 <td><p>744</p></td>
 </tr>
@@ -724,6 +726,15 @@ when available).</p>
         <p class="prev-next-subtitle">previous</p>
         <p class="prev-next-title">Black target control</p>
       </div>
+    </a>
+    <a class="right-next"
+       href="../hardware/parts_list.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Parts list</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>

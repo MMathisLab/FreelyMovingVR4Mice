@@ -1,0 +1,657 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Benquet, Sainsbury et al. &#8212; FreelyMovingVR4Mice</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../_static/sphinx-thebe.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'docs/paper';</script>
+    <link rel="shortcut icon" href="../_static/logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Figure 1" href="../dj_pipeline/notebooks/Paper_figures/Figure_1.html" />
+    <link rel="prev" title="Developer Guide for VR4Mice 🎉" href="developer_guide.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="vr4mice_overview.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt="FreelyMovingVR4Mice - Home"/>
+    <script>document.write(`<img src="../_static/logo.png" class="logo__image only-dark" alt="FreelyMovingVR4Mice - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="vr4mice_overview.html">
+                    FreelyMovingVR4mice overview
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer's Guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide for VR4Mice 🎉</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Publication</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">Benquet, Sainsbury <em>et al.</em></a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_1.html">Figure 1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_2.html">Figure 2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_3.html">Figure 3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_4.html">Figure 4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_5a_kinematics.html">[Trajectory Analysis] Figure 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_5b_decision.html">[Decision Variable Prediction] Figure 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Supp_Figure_control.html">Black target control</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="software/quickstart_local_dump.html">Deploy the DataJoint database locally</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Hardware - Building the rig</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="hardware/parts_list.html">Parts list</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware/building_the_box.html">Build the box</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware/building_the_cage.html">Build the cage &amp; mount monitors and cameras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware/monitor_luminance_measurement.html">Measure Monitor Luminance</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Hardware - Teensy Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="hardware/water_teensy.html">Water delivery &amp; Lick ports Teensy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware/photodiode_teensy.html">Photodiode Teensy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware/teensy_config.html">Configuring the teensy board and uploading the code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware/writing_a_teensy_sketch.html">Write a Teensy sketch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware/water_valve_calibration.html">Calibrate the water valve</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software Installation - vr4mice &amp; Config File Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="software_installation/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_installation/config_file_setup.html">Configuration files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_installation/run_a_session.html">Run a session</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_installation/create_desktop_icon.html">Create a desktop icon to launch Teensy experiments</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Unity Games</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="software_unity_games/ar_game.html">Install the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_unity_games/update_unity_game.html">Update the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_unity_games/build_unity_game.html">Rebuild a Unity game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_unity_games/add_new_objects.html">Add new target objects</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - VR4Mice DataJoint</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="software/install_dj_pipeline.html">Setup &amp; Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software/datajoint.html">Architecture &amp; Tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software/data_import_export.html">Data Import/Export</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Tests</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="software/mouse_task_test.html">Mouse task</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Dev - Software package Documentation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="software_package/active_sensing_task.html">Active Sensing Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_package/dlc_processor.html">DLC processor file</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experiments - Training protocol and parameters</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="training_protocols/training_protocol.html">Mouse training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_protocols/contrast_discrimination_training_parameters.html">Contrast discrimination game parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_protocols/shape_discrimination_training_parameters.html">Shape discrimination game parameters</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/MMathisLab/FreelyMovingVR4Mice" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/MMathisLab/FreelyMovingVR4Mice/issues/new?title=Issue%20on%20page%20%2Fdocs/paper.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/docs/paper.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Benquet, Sainsbury et al.</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visual-uncertainty-task-demands-shape-active-sensing-strategies-in-mice">Visual uncertainty &amp; task demands shape active sensing strategies in mice</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#authors">📝 Authors</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#highlights">✨ Highlights</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-availability-and-reproducibility">💾 Data Availability and Reproducibility</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#list-of-paper-figures">📊 List of Paper Figures</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supplementary-videos">🎬 Supplementary Videos</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="benquet-sainsbury-et-al">
+<h1>Benquet, Sainsbury <em>et al.</em><a class="headerlink" href="#benquet-sainsbury-et-al" title="Permalink to this heading">#</a></h1>
+<section id="visual-uncertainty-task-demands-shape-active-sensing-strategies-in-mice">
+<h2>Visual uncertainty &amp; task demands shape active sensing strategies in mice<a class="headerlink" href="#visual-uncertainty-task-demands-shape-active-sensing-strategies-in-mice" title="Permalink to this heading">#</a></h2>
+<p>This page collects the figure notebooks, supplementary videos, and reproducibility resources for the paper.</p>
+</section>
+<section id="authors">
+<h2>📝 Authors<a class="headerlink" href="#authors" title="Permalink to this heading">#</a></h2>
+<p>Célia Benquet*, Thomas Sainsbury*, Léo Bruneau, Yang Lin, Chenchen Cai, Mariia Popova, Kayla Ponder, Lydia Ntanavara, Rachel Froebe, Zheng Tan, Paul Fahey, Katrin Franke, Luis M. Franco, Keaton Jones, Yizhou Chen, Reece Keller, Xaq Pitkow, Cristopher M. Niell, Andreas S. Tolias, Mackenzie Weygandt Mathis</p>
+<p>* Equal contribution.</p>
+</section>
+<section id="highlights">
+<h2>✨ Highlights<a class="headerlink" href="#highlights" title="Permalink to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Mice perform active visual sensing in a free-range virtual reality-based object discrimination task.</p></li>
+<li><p>Mice perform infotaxis and select the correct object under variable visibility conditions.</p></li>
+<li><p>Trial-by-trial decisions can be decoded from head-body movements and speed, reflecting sensitivity to object occlusion (aperture width).</p></li>
+</ul>
+</section>
+<section id="data-availability-and-reproducibility">
+<h2>💾 Data Availability and Reproducibility<a class="headerlink" href="#data-availability-and-reproducibility" title="Permalink to this heading">#</a></h2>
+<p>All figures are generated from the VR4Mice DataJoint database. To reproduce them, first connect to the local database and then run the notebooks. Then, we provide the necessary code for deploying a local copy of our database and reproducing the paper figures and related analyses.</p>
+<p>🔗 Public data release on <a class="reference external" href="https://zenodo.org/uploads/19091270">Zenodo</a></p>
+<p>To reproduce the figure notebooks end-to-end:</p>
+<ol class="arabic simple">
+<li><p>Download the database archive from the <a class="reference external" href="https://zenodo.org/uploads/19091270">Zenodo record</a>.</p></li>
+<li><p>Install and configure the DJ pipeline following <a class="reference internal" href="software/quickstart_local_dump.html#sec-import-sql-dump"><span class="std std-ref">our installation guide</span></a>.</p></li>
+<li><p>Run the figure notebooks listed below in order, after the database connection and fetch steps are complete.</p></li>
+</ol>
+</section>
+<section id="list-of-paper-figures">
+<h2>📊 List of Paper Figures<a class="headerlink" href="#list-of-paper-figures" title="Permalink to this heading">#</a></h2>
+<p>We provide reference code for plotting all paper figures here. Note that for the paper version, some panels may have been post-processed for the manuscript layout, and the figures might differ in minor typographic details.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_1.html">Figure 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_2.html">Figure 2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_3.html">Figure 3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_4.html">Figure 4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_5a_kinematics.html">[Trajectory Analysis] Figure 5</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Figure_5b_decision.html">[Decision Variable Prediction] Figure 5</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dj_pipeline/notebooks/Paper_figures/Supp_Figure_control.html">Black target control</a></li>
+</ul>
+</div>
+</section>
+<section id="supplementary-videos">
+<h2>🎬 Supplementary Videos<a class="headerlink" href="#supplementary-videos" title="Permalink to this heading">#</a></h2>
+<p>The videos below show representative sessions from the supplementary material.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start; margin-top: 1rem;">
+  <figure style="flex: 1 1 360px; min-width: 280px; margin: 0;">
+    <video controls playsinline preload="metadata" style="width: 100%; height: auto; display: block; border-radius: 0.5rem; background: #000;">
+      <source src="../_static/videos/Video%20S1.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <figcaption style="margin-top: 0.75rem;">
+      <strong>Video S1. Dual-occlusion session example.</strong><br>
+      Left: arena top view; Right: back view. Video playback speed: 0.3&times;.
+    </figcaption>
+  </figure>
+  <figure style="flex: 1 1 360px; min-width: 280px; margin: 0;">
+    <video controls playsinline preload="metadata" style="width: 100%; height: auto; display: block; border-radius: 0.5rem; background: #000;">
+      <source src="../_static/videos/Video%20S2.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <figcaption style="margin-top: 0.75rem;">
+      <strong>Video S2. Multi-occlusion session example, related to the multi-occlusion figure.</strong><br>
+      Left: arena top view; Right: back view. Video playback speed: 0.3&times;.
+    </figcaption>
+  </figure>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./docs"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="developer_guide.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Developer Guide for VR4Mice 🎉</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../dj_pipeline/notebooks/Paper_figures/Figure_1.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Figure 1</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visual-uncertainty-task-demands-shape-active-sensing-strategies-in-mice">Visual uncertainty &amp; task demands shape active sensing strategies in mice</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#authors">📝 Authors</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#highlights">✨ Highlights</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-availability-and-reproducibility">💾 Data Availability and Reproducibility</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#list-of-paper-figures">📊 List of Paper Figures</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supplementary-videos">🎬 Supplementary Videos</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By MWMathis Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+<div class="extra_footer">
+  <div>Powered by <a href="https://jupyterbook.org/">Jupyter Book</a>.</div>
+
+</div>
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
