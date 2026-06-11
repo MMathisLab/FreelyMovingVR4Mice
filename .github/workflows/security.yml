@@ -44,7 +44,7 @@ jobs:
       - name: Fail if secrets or personal configs are tracked
         run: |
           set -euo pipefail
-          blocked="$(git ls-files | grep -E '(^|/)\.env(\.compose|\.aws)?$|(^|/)local_config\.json$|\.env(\.compose)?\.bak$' || true)"
+          blocked="$(git ls-files | grep -E '(^|/)\.env(\.compose|-aws)?$|(^|/)local_config\.json$|(^|/)\.env(\.compose|-aws)?\.bak$' || true)"
           if [ -n "${blocked}" ]; then
             echo "These files must not be tracked (use .env.example, .env.compose.example, .env-aws.example, local_config.json.example):"
             echo "${blocked}"
