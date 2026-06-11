@@ -53,7 +53,8 @@ for path in [ANALYSIS_PATH, ACTIONS_PATH, BASE_SCHEMAS_PATH, BASE_ACTIONS_PATH]:
 # module-level imports of base_schemas and vr4mice.schema that connect to MySQL
 # at import time. These mocks let unit tests import those modules without a DB.
 # Integration tests clear these mocks in dj_config/pipeline fixtures (see
-# integration/conftest.py) before importing the real modules.
+# integration/conftest.py) before importing the real modules. When adding
+# mocks here, add the same module names to integration/conftest.py.
 mock_mice = MagicMock()
 mock_schemas = MagicMock()
 mock_schemas.mice = mock_mice
@@ -82,6 +83,10 @@ mock_vr4mice.actions.keys2tables_vr4mice = mock_keys2tables_vr4mice
 mock_dj_schema = MagicMock()
 mock_vr4mice.schema = mock_dj_schema
 
+# Mock vr4mice.analysis for regression.py imports
+mock_vr4mice.analysis = MagicMock()
+mock_vr4mice.analysis.plotting = MagicMock()
+
 # Apply mocks to sys.modules before any imports
 sys.modules['base_schemas'] = mock_base_schemas
 sys.modules['base_schemas.schemas'] = mock_schemas
@@ -93,6 +98,8 @@ sys.modules['vr4mice.actions'] = mock_vr4mice.actions
 sys.modules['vr4mice.actions.keys2tables_base'] = mock_keys2tables_base
 sys.modules['vr4mice.actions.keys2tables_vr4mice'] = mock_keys2tables_vr4mice
 sys.modules['vr4mice.schema'] = mock_dj_schema
+sys.modules['vr4mice.analysis'] = mock_vr4mice.analysis
+sys.modules['vr4mice.analysis.plotting'] = mock_vr4mice.analysis.plotting
 
 # Dataset identifiers (golden dataset)
 DATASET_NAME = "Flamingo_2026-02-05_1"
@@ -112,6 +119,8 @@ def pytest_collection_modifyitems(config, items):
 
     Run unit tests only: pytest -m "not integration"
     Run integration tests only: pytest -m integration
+    Skip slow tests (CI default): pytest -m "not slow"
+    Run slow pipeline tests only: pytest -m slow
     """
     integration_fixtures = {
         # MySQL/DataJoint fixtures
@@ -123,12 +132,20 @@ def pytest_collection_modifyitems(config, items):
         "require_golden_data",
         "golden_session_path",
     }
+    slow_fixtures = {
+        # Full pipeline populate on golden session (test_run_modes, etc.)
+        "populated_db",
+        "populated_base_tables",
+    }
 
     for item in items:
-        if set(item.fixturenames) & integration_fixtures:
+        fixturenames = set(item.fixturenames)
+        if fixturenames & integration_fixtures:
             item.add_marker(pytest.mark.integration)
         else:
             item.add_marker(pytest.mark.unit)
+        if fixturenames & slow_fixtures:
+            item.add_marker(pytest.mark.slow)
 
 
 # ==============================================================================

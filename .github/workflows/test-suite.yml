@@ -71,6 +71,10 @@ jobs:
 
       - name: Run pytest
         run: |
+          marker_filter="-m 'not slow'"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            marker_filter=""
+          fi
           docker run --rm \
             --add-host=host.docker.internal:host-gateway \
             -e DJ_HOST="${DJ_HOST}" \
@@ -85,4 +89,4 @@ jobs:
             -v "$GITHUB_WORKSPACE:/app" \
             --entrypoint bash \
             vr4mice_app:test-image \
-            -lc "pip install --no-deps /app/dj_pipeline/base/base_min_schemas /app/dj_pipeline/base/base_actions && cd /app/tests && python -m pytest integration/ unit/ -v"
+            -lc "pip install --no-deps /app/dj_pipeline/base/base_min_schemas /app/dj_pipeline/base/base_actions && cd /app/tests && python -m pytest integration/ unit/ -v ${marker_filter}"

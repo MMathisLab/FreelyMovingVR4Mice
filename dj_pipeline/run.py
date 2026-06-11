@@ -192,6 +192,8 @@ if __name__ == "__main__":
         decision.LabelSet().fill()
         decision.PredictionModel().populate()
         decision.DecisionPoints().populate()
+        decision.PredictionModel10Windows().populate()
+        decision.DecisionPoints10Windows().populate()
 
     elif args.mode == "fetch":  # TODO: adjust path
         from vr4mice.actions.fetch_data import fetch_data

@@ -2,7 +2,15 @@ FROM deeplabcut/deeplabcut:3.0.0-core-cuda12.4-cudnn9
 #mysql:debian
 
 WORKDIR /
-RUN apt-get update -y && apt-get install -yy --no-install-recommends \
+ARG APT_MIRROR=
+RUN if [ -n "$APT_MIRROR" ]; then \
+        sed -i \
+            -e "s|http://archive.ubuntu.com/ubuntu/|${APT_MIRROR}|g" \
+            -e "s|http://security.ubuntu.com/ubuntu/|${APT_MIRROR}|g" \
+            /etc/apt/sources.list; \
+    fi \
+    && apt-get update -y \
+    && apt-get install -yy --no-install-recommends \
     libgl1 \
     build-essential make \
     perl libnet-ssleay-perl libio-socket-ssl-perl \
