@@ -5,7 +5,7 @@ This guide explains how to run the pipeline tests inside Docker containers.
 ## Overview
 
 The test setup uses docker-compose to orchestrate:
-- **MySQL 8.0** container for the database
+- **MySQL** container for the database (`DB_IMAGE`, default `mysql:8.0`)
 - **Test runner** container built from the pipeline Dockerfile
 
 Tests connect to the external MySQL container instead of using testcontainers,
@@ -76,6 +76,8 @@ The tests connect to the MySQL service via environment variables set in
 - `DJ_PORT=3306`, `DJ_USER=root`, `DJ_PASSWORD=simple`
 
 This is implemented in `tests/integration/conftest.py`.
+
+The test compose file uses the same `DB_IMAGE` variable as the main stack (see {ref}`MySQL version (5.7 and 8.0) <sec:mysql-version>`). CI and local test runs use `mysql:8.0` with an empty datadir; you do not need to set `DB_IMAGE` unless testing against a specific version.
 
 ## Troubleshooting
 

@@ -281,7 +281,46 @@ When using the local Docker database, `DJ_HOST` port must match `DB_PORT` in `.e
 - `COMPOSE_PROJECT` (default `vr4mice`) — must match between `make`, cron scripts, and manual `docker compose -p …` calls
 - `DB_BIND_IP`, `DB_PORT`, `MYSQL_ROOT_PASSWORD`
 - `DB_DATA_PATH`, `SHARED_PATH`, `DATA_PATH`, `SCREEN_RECORDINGS_PATH`
+- `DB_IMAGE` — Docker image for the local database service (see below)
 - `CLIENT_IMAGE`, `CLIENT_CONTAINER_NAME`, `DB_CONTAINER_NAME`, `CLIENT_NETWORK_MODE`, `JUPYTER_PORT`
+
+(sec:mysql-version)=
+#### MySQL version (5.7 and 8.0)
+
+The database service in `docker-compose.yml` uses `${DB_IMAGE:-mysql:8.0}`.
+
+| Situation | What to use |
+|-----------|-------------|
+| New install (empty `DB_DATA_PATH`) | `mysql:8.0` (default) |
+| Existing on-disk datadir from MySQL 5.7 | `mysql:5.7` |
+
+If `DB_IMAGE` is **not** set in `.env.compose`, `docker/compose_env.sh` (used by `make` and cron) auto-detects the image from `DB_DATA_PATH` via `docker/detect_mysql_image.sh`. `quick_start.sh` writes the detected value into `.env.compose`.
+
+Manual override in `.env.compose`:
+
+```bash
+DB_IMAGE=mysql:5.7   # legacy datadir
+# DB_IMAGE=mysql:8.0 # new installs
+```
+
+Check what Compose will use:
+
+```bash
+bash docker/compose_env.sh get DB_IMAGE
+```
+
+**Upgrading 5.7 → 8.0** (keep data): run MySQL 5.7 against the datadir, shut down cleanly, then switch to 8.0:
+
+```bash
+docker compose exec db mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" \
+  -e "SET GLOBAL innodb_fast_shutdown=0; SHUTDOWN;"
+# set DB_IMAGE=mysql:8.0 in .env.compose, then:
+make up_all
+```
+
+**Fresh start** (discard local datadir): stop the stack, move or delete `DB_DATA_PATH`, then start with `DB_IMAGE=mysql:8.0`.
+
+If the `db` container exits immediately with code 1 and logs mention a failed upgrade from MySQL 5.7, the datadir version likely does not match `DB_IMAGE` — set `DB_IMAGE=mysql:5.7` or wipe the datadir for a new 8.0 install.
 
 Remote/AWS DB credentials for scheduled AWS runs live in `.env-aws` (copy from `.env-aws.example`); this file is **not** committed.
 
