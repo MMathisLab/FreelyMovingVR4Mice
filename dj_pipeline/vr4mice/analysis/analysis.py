@@ -282,6 +282,45 @@ def set_first_xy_to_nan(group: pd.DataFrame) -> pd.DataFrame:
     return group
 
 
+DEFAULT_UNITY_ARENA_SIZE = np.array([-9.0, 9.0, -10.0, -2.0])
+
+
+def resolve_unity_arena_size(key: dict) -> np.ndarray:
+    """Return Unity arena bounds [x_min, x_max, z_max, z_min] for a dataset.
+
+    Reads ``GuiParams.unity_arena_size``. Falls back to ``DEFAULT_UNITY_ARENA_SIZE``
+    (standard rig default used before GuiParams was wired in) when the row or
+    field is missing, with a warning. Raises ``ValueError`` if the stored value
+    is present but does not have length 4.
+    """
+    dataset = key.get("dataset", key)
+    gui_params = vr4mice.GuiParams() & key
+
+    if len(gui_params) == 0:
+        logger.warning(
+            "GuiParams missing for %s; using default unity_arena_size %s",
+            dataset,
+            DEFAULT_UNITY_ARENA_SIZE.tolist(),
+        )
+        return DEFAULT_UNITY_ARENA_SIZE.copy()
+
+    value = gui_params.fetch1("unity_arena_size")
+    if value is None:
+        logger.warning(
+            "unity_arena_size is NULL for %s; using default %s",
+            dataset,
+            DEFAULT_UNITY_ARENA_SIZE.tolist(),
+        )
+        return DEFAULT_UNITY_ARENA_SIZE.copy()
+
+    arr = np.asarray(value, dtype=float).reshape(-1)
+    if arr.shape != (4,):
+        raise ValueError(
+            f"unity_arena_size for {dataset} must have length 4, got shape {arr.shape}"
+        )
+    return arr
+
+
 def create_data_frame(
     key: dict,
     iti: bool = True,
@@ -357,9 +396,7 @@ def create_data_frame(
         df.trial != 1
     ]  # NOTE(celia): drop first trial which is DLC-live initialization trial
 
-    unity_arena_size = np.asarray(
-        (vr4mice.GuiParams() & key).fetch1("unity_arena_size")
-    )
+    unity_arena_size = resolve_unity_arena_size(key)
     unity_to_physical_arena_size = {
         "unity_arena_size_x_min": abs(unity_arena_size[0]),
         "unity_arena_size_z_max": unity_arena_size[2],
