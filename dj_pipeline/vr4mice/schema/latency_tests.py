@@ -24,14 +24,14 @@ class SignalsPhotodiodeAligned(dj.Computed):
     definition = """
     -> vr4mice.SignalsPhotodiode
     ---
-    time_stamp: longblob    # time stamp of the interpolated of the generated and photodiode signal   
-    send_time: longblob     # time stamp of the interpolated of the generated signal
-    frame_to_socket_time: longblob # time difference between the frame and the signal send time
-    signal_read: longblob       # value of the generated signal
-    photodiode_read: longblob   # value of the photodiode signal
-    photodiode_raw_scaled: longblob         # scaled value of the photodiode signal
-    filtered_photodiode_scaled: longblob    # filtered value of the photodiode signal
-    threshold: longblob                     # threshold value of the photodiode signal
+    time_stamp: <blob>    # time stamp of the interpolated of the generated and photodiode signal   
+    send_time: <blob>     # time stamp of the interpolated of the generated signal
+    frame_to_socket_time: <blob> # time difference between the frame and the signal send time
+    signal_read: <blob>       # value of the generated signal
+    photodiode_read: <blob>   # value of the photodiode signal
+    photodiode_raw_scaled: <blob>         # scaled value of the photodiode signal
+    filtered_photodiode_scaled: <blob>    # filtered value of the photodiode signal
+    threshold: <blob>                     # threshold value of the photodiode signal
     """
 
     def make(self, key):
@@ -99,10 +99,10 @@ class AllLatencies(dj.Computed):
     definition = """
     -> SignalsPhotodiodeAligned
     ---
-    frame_time: longblob    # time stamp of the interpolated of the generated frame time
-    time_diff: longblob     # time differences between the generated signal and the photodiode signal's rising edge
-    photodiode_time: longblob   # time stamp of the interpolated of the photodiode signal's rising edge
-    frame_to_socket: longblob   # time difference between the frame and the signal send time
+    frame_time: <blob>    # time stamp of the interpolated of the generated frame time
+    time_diff: <blob>     # time differences between the generated signal and the photodiode signal's rising edge
+    photodiode_time: <blob>   # time stamp of the interpolated of the photodiode signal's rising edge
+    frame_to_socket: <blob>   # time difference between the frame and the signal send time
     """
 
     def make(self, key):

@@ -1,0 +1,26 @@
+{
+  "x_pos": {
+    "length": 119864,
+    "dtype": "float32",
+    "first": 475.73065185546875,
+    "middle": 256.6455078125,
+    "middle_idx": 59932,
+    "last": 190.07289123535156
+  },
+  "y_pos": {
+    "length": 119864,
+    "dtype": "float32",
+    "first": 459.0707092285156,
+    "middle": 122.02326202392578,
+    "middle_idx": 59932,
+    "last": 238.06602478027344
+  },
+  "heading_direction": {
+    "length": 119864,
+    "dtype": "float64",
+    "first": 358.58142178735903,
+    "middle": 41.2902335670096,
+    "middle_idx": 59932,
+    "last": 198.2037043947613
+  }
+}
