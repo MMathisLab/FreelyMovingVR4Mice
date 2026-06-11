@@ -36,7 +36,7 @@ It is designed to run from the client container and can be scheduled via cron.
 
 ## vr4mice module guide
 
-See [`vr4mice/README.md`](../../dj_pipeline/vr4mice/README.md). Key components:
+See [vr4mice/README.md](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/dj_pipeline/vr4mice/README.md). Key components:
 
 - `schema/`: DataJoint table definitions.
 - `analysis/`: analysis helpers and plotting.
