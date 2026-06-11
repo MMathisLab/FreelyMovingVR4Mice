@@ -18,6 +18,8 @@ gracefully if data is not available.
 import numpy as np
 import pytest
 
+pytestmark = pytest.mark.slow
+
 # Import transformation functions
 from dlc_helpers import (
     df_to_dj,
