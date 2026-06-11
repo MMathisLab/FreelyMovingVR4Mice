@@ -664,7 +664,7 @@ class TestAnalysisMode:
         ), "DataFrame not populated - expected rows after populate()"
 
         row_columns = {
-            col for col in row.keys() if col not in {"dataset", "interpolation"}
+            col for col in row.keys() if col not in {"interpolation"}
         }
 
         assert (
