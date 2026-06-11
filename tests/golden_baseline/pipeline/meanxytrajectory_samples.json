@@ -1,0 +1,74 @@
+{
+  "aperture": {
+    "length": 400,
+    "dtype": "float64",
+    "first": 4.3,
+    "middle": 12.0,
+    "middle_idx": 200,
+    "last": 12.0
+  },
+  "trial_left_choice": {
+    "length": 400,
+    "dtype": "float64",
+    "first": 0.0,
+    "middle": 0.0,
+    "middle_idx": 200,
+    "last": 1.0
+  },
+  "trial_length": {
+    "length": 400,
+    "dtype": "float64",
+    "first": 0.0,
+    "middle": 0.0,
+    "middle_idx": 200,
+    "last": 0.99
+  },
+  "x": {
+    "length": 400,
+    "dtype": "float64",
+    "first": 0.10931697743160002,
+    "middle": -0.5902435233108174,
+    "middle_idx": 200,
+    "last": -17.04352787266607
+  },
+  "y": {
+    "length": 400,
+    "dtype": "float64",
+    "first": -0.38320734962988434,
+    "middle": 0.11610804561158301,
+    "middle_idx": 200,
+    "last": 19.79864703896253
+  },
+  "sem_x": {
+    "length": 400,
+    "dtype": "float64",
+    "first": 0.5236230788387877,
+    "middle": 0.5734275393198526,
+    "middle_idx": 200,
+    "last": 0.057371393920967996
+  },
+  "sem_y": {
+    "length": 400,
+    "dtype": "float64",
+    "first": 0.6298697898977633,
+    "middle": 0.5672948227235838,
+    "middle_idx": 200,
+    "last": 0.14429787336743347
+  },
+  "std_x": {
+    "length": 400,
+    "dtype": "float64",
+    "first": 4.93985024607451,
+    "middle": 4.8317863303730535,
+    "middle_idx": 200,
+    "last": 0.38911172516387194
+  },
+  "std_y": {
+    "length": 400,
+    "dtype": "float64",
+    "first": 5.942179713547957,
+    "middle": 4.780111141816448,
+    "middle_idx": 200,
+    "last": 0.9786757930411573
+  }
+}

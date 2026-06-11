@@ -1,0 +1,58 @@
+{
+  "head_center_x": {
+    "length": 98804,
+    "dtype": "float64",
+    "first": 320.1365159400804,
+    "middle": 54.30074298373499,
+    "middle_idx": 49402,
+    "last": 289.73698443387855
+  },
+  "head_center_y": {
+    "length": 98804,
+    "dtype": "float64",
+    "first": 278.36090736357977,
+    "middle": 444.56251315259385,
+    "middle_idx": 49402,
+    "last": 257.4991300839585
+  },
+  "heading_dir": {
+    "length": 98804,
+    "dtype": "float64",
+    "first": -0.9395725710532474,
+    "middle": 74.07682247974859,
+    "middle_idx": 49402,
+    "last": -37.31105972266042
+  },
+  "head_angle": {
+    "length": 98804,
+    "dtype": "float64",
+    "first": 14.03039715780767,
+    "middle": -6.1975834201637765,
+    "middle_idx": 49402,
+    "last": 44.11427697638456
+  },
+  "pose_time": {
+    "length": 98804,
+    "dtype": "float64",
+    "first": 55.65399932861328,
+    "middle": 1044.575655221939,
+    "middle_idx": 49402,
+    "last": 2033.1609082221985
+  },
+  "step_time": {
+    "length": 98804,
+    "dtype": "float64",
+    "first": 55.651999950408936,
+    "middle": 1044.5721564292908,
+    "middle_idx": 49402,
+    "last": 2033.1699073314667
+  },
+  "step": {
+    "length": 98804,
+    "dtype": "float64",
+    "first": 4149.0,
+    "middle": 77946.5,
+    "middle_idx": 49402,
+    "last": 151736.5
+  }
+}

@@ -23,8 +23,7 @@ env:
   DJ_SUPPORT_FILEPATH_MANAGEMENT: "TRUE"
   DJ_SUPPORT_ADAPTED_TYPES: "TRUE"
   MYSQL_MAX_ALLOWED_PACKET: 1G
-  #MYSQL_IMAGE: datajoint/mysql:5.7
-  MYSQL_IMAGE: mysql:5.7
+  MYSQL_IMAGE: mysql:8.0
 
 jobs:
   run-pipeline-and-dump:
@@ -59,6 +58,8 @@ jobs:
             --health-timeout=5s \
             --health-retries=12 \
             "${MYSQL_IMAGE}" \
+            --character-set-server=latin1 \
+            --collation-server=latin1_swedish_ci \
             --max_allowed_packet="${MYSQL_MAX_ALLOWED_PACKET}" \
             --net_read_timeout=600 \
             --net_write_timeout=600
@@ -201,6 +202,8 @@ jobs:
             --health-timeout=5s \
             --health-retries=12 \
             "${MYSQL_IMAGE}" \
+            --character-set-server=latin1 \
+            --collation-server=latin1_swedish_ci \
             --max_allowed_packet="${MYSQL_MAX_ALLOWED_PACKET}" \
             --net_read_timeout=600 \
             --net_write_timeout=600
