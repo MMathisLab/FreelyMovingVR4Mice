@@ -6,6 +6,8 @@
 
 FreelyMovingVR4Mice is the MLAI lab codebase for running the freely moving VR mouse rig. It brings together the Python control stack, task scripts, DeepLabCut integration, Teensy hardware control, Unity assets, and the documentation needed to build, calibrate, and run experiments.
 
+Happy experimenting 🙂
+
 ## What is in this repository 🔎
 
 - `teensyexp/`: the main Python package that provides the `vr4mice` GUI, task orchestration, socket helpers, and experiment control logic.
@@ -37,17 +39,20 @@ For development, use editable mode instead:
 pip install -e .
 ```
 
+You are all set to start 😄
+
 ## Important links 🔗
 
-- [Project documentation](https://mmathislab.github.io/FreelyMovingVR4Mice)
-- [Installation guide](docs/software_installation/installation.md)
-- [Run a session](docs/software_installation/run_a_session.md)
-- [Config file setup](docs/software_installation/config_file_setup.md)
-- [Install DeepLabCut-live-GUI](https://github.com/DeepLabCut/DeepLabCut-live-GUI)
-- [User guide](docs/user_guide.md)
-- [VR4Mice overview](docs/vr4mice_overview.md)
-- [Hardware build and calibration docs](docs/hardware/building_the_box.md)
-- [Software package docs](docs/software_package/active_sensing_task.md)
+- [Project documentation 📚](https://mmathislab.github.io/FreelyMovingVR4Mice)
+- [Public data release (Zenodo) 🗂️](https://zenodo.org/records/21099082)
+- [Installation guide ⚙️](docs/software_installation/installation.md)
+- [Run a session ▶️](docs/software_installation/run_a_session.md)
+- [Config file setup 🧩](docs/software_installation/config_file_setup.md)
+- [Install DeepLabCut-live-GUI 🐭](https://github.com/DeepLabCut/DeepLabCut-live-GUI)
+- [User guide 🧭](docs/user_guide.md)
+- [VR4Mice overview 🕶️](docs/vr4mice_overview.md)
+- [Hardware build and calibration docs 🔧](docs/hardware/building_the_box.md)
+- [Software package docs 🧪](docs/software_package/active_sensing_task.md)
 
 ## Hardware and software requirements 🛠️
 
@@ -64,4 +69,8 @@ The recommended setup uses two separate environments:
 
 ## Citation
 
-If you use this repository in your work, please cite the associated paper once the paper is available.
+Please cite our work is you use code or ideas from this project! Thank you!
+
+We appreciate your support 😊
+
+Célia Benquet*, Thomas Sainsbury*, Léo Bruneau, Yang Lin, Chenchen Cai, Mariia Popova, Kayla Ponder, Lydia Ntanavara, Rachel Froebe, Zheng Tan, Paul Fahey, Katrin Franke, Luis M. Franco, Keaton Jones, Yizhou Chen, Reece Keller, Xaq Pitkow, Cristopher M. Niell, Andreas S. Tolias, Mackenzie Weygandt Mathis. [Visual uncertainty and task demands shape active sensing strategies in mice.](https://www.cell.com/current-biology/fulltext/S0960-9822(26)00722-0?) Current Biology 20 July 2026. DOI: 10.1016/j.cub.2026.06.011
