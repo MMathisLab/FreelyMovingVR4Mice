@@ -1,9 +1,27 @@
 import numpy as np
 from dlclive.processor.processor import Processor
+from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor
 from math import sqrt, acos, atan2, copysign, degrees
 import pickle
 
+
+@register_processor
 class dlc_only(Processor):
+    PROCESSOR_NAME = "DLCOnly"
+    PROCESSOR_DESCRIPTION = "Runs DLC inference and computes head/body kinematics."
+    PROCESSOR_PARAMS = {
+        "con": {
+            "type": "int",
+            "default": 50,
+            "description": "Reserved parameter (currently unused).",
+        },
+        "com": {
+            "type": "int",
+            "default": 2,
+            "description": "Reserved parameter (currently unused).",
+        },
+    }
+
     def __init__(self,  con = 50, com=2):
         super().__init__()
         self.x = []
@@ -45,6 +63,17 @@ class dlc_only(Processor):
             save_code = False
 
         return save_code
+
+
+def get_available_processors():
+    return {
+        "dlc_only": {
+            "class": dlc_only,
+            "name": getattr(dlc_only, "PROCESSOR_NAME", "dlc_only"),
+            "description": getattr(dlc_only, "PROCESSOR_DESCRIPTION", ""),
+            "params": getattr(dlc_only, "PROCESSOR_PARAMS", {}),
+        }
+    }
         
     
     
