@@ -4,6 +4,8 @@ from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor
 from math import sqrt, acos, atan2, copysign, degrees
 import pickle
 
+PROCESSOR_REGISTRY.pop("dlc_only", None)
+
 
 @register_processor
 class dlc_only(Processor):
