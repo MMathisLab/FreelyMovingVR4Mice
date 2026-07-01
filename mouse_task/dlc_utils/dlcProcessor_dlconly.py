@@ -1,6 +1,5 @@
 import numpy as np
 from dlclive.processor.processor import Processor
-
 from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor
 from math import sqrt, acos, atan2, copysign, degrees
 import pickle

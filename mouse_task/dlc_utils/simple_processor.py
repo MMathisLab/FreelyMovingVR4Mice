@@ -1,6 +1,9 @@
 from dlclive.processor.processor import Processor
 import pickle
 import time
+from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor  # type: ignore[import-not-found]
+
+PROCESSOR_REGISTRY.pop("TeensyLaser", None)
 
 from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor  # type: ignore[import-not-found]
 

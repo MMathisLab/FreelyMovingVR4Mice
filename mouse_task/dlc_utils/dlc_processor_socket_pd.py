@@ -5,6 +5,7 @@ import warnings
 from pathlib import Path
 
 from typing import Any, Dict
+from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor
 
 from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor
 

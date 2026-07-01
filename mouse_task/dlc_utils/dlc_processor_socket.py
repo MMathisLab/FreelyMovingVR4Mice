@@ -11,6 +11,7 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 from numpy.typing import NDArray
+from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor  # type: ignore[import-not-found]
 
 from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor  # type: ignore[import-not-found]
 
