@@ -1,27 +1,86 @@
 import pickle
 import time
+import importlib.util
+import sys
 import warnings
 from collections import deque
 from math import acos, atan2, copysign, degrees, sqrt
 from multiprocessing.connection import Listener
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 import numpy as np
 from numpy.typing import NDArray
+from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor  # type: ignore[import-not-found]
 
-from dlc_utils.processor_with_signal import ProcessorWithSignal
+try:
+    from dlc_utils.processor_with_signal import ProcessorWithSignal
+except ModuleNotFoundError:
+    _local_path = Path(__file__).with_name("processor_with_signal.py")
+    _local_name = "dlclivegui_plugins.local_processor_with_signal"
+    _spec = importlib.util.spec_from_file_location(_local_name, _local_path)
+    if _spec is None or _spec.loader is None:
+        raise ImportError(f"Could not import ProcessorWithSignal from {_local_path}")
+    _module = sys.modules.get(_local_name)
+    if _module is None:
+        _module = importlib.util.module_from_spec(_spec)
+        sys.modules[_local_name] = _module
+        _spec.loader.exec_module(_module)
+    ProcessorWithSignal = _module.ProcessorWithSignal
+
+PROCESSOR_REGISTRY.pop("MyProcessor_socket", None)
 
 
+@register_processor
 class MyProcessor_socket(ProcessorWithSignal):
+    PROCESSOR_NAME = "SocketProcessor"
+    PROCESSOR_DESCRIPTION = "Sends DLC-derived kinematics over a local socket."
+    PROCESSOR_PARAMS = {
+        "bind": {
+            "type": "tuple",
+            "default": ("127.0.0.1", 6000),
+            "description": "Server bind address as (host, port).",
+        },
+        "authkey": {
+            "type": "bytes",
+            "default": b"secret password",
+            "description": "Authentication key for socket clients.",
+        },
+        "signal_delay": {
+            "type": "float",
+            "default": 10,
+            "description": "Delay in seconds before TTL signal starts.",
+        },
+        "signal_type": {
+            "type": "str",
+            "default": "pulse_geo",
+            "description": "Signal mode: pulse, pulse_geo, sin, or flip.",
+        },
+        "freq": {
+            "type": "float",
+            "default": 5,
+            "description": "Signal frequency in Hz.",
+        },
+    }
+
     def __init__(
-        self, signal_delay: float = 10, signal_type: str = "pulse_geo", freq: float = 5
+        self,
+        bind: tuple[str, int] = ("127.0.0.1", 6000),
+        authkey: bytes = b"secret password",
+        signal_delay: float = 10,
+        signal_type: str = "pulse_geo",
+        freq: float = 5,
     ) -> None:
         super().__init__(signal_delay=signal_delay, signal_type=signal_type, freq=freq)
 
-        self.address = ("localhost", 6000)  # family is deduced to be 'AF_INET'
-        self.listener = Listener(self.address, authkey=b"secret password")
-        self.conn = self.listener.accept()
-        print("Connection accepted from", self.listener.last_accepted)
+        self.address = bind
+        self.authkey = authkey
+        self.listener = Listener(self.address, authkey=self.authkey)
+        self.conn = None
+        try:
+            self.listener._listener._socket.settimeout(0.0)
+        except Exception:
+            pass
 
         self.center_x = deque()
         self.center_y = deque()
@@ -34,6 +93,15 @@ class MyProcessor_socket(ProcessorWithSignal):
         self.pose_time = deque()
         self.curr_step = 0  # frame counter
         self.previous = np.array([0, 0])
+
+    def _ensure_connection(self) -> None:
+        if self.conn is not None:
+            return
+        try:
+            self.conn = self.listener.accept()
+            print("Connection accepted from", self.listener.last_accepted)
+        except Exception:
+            self.conn = None
 
     def process(self, pose: NDArray[np.float64], **kwargs: Any) -> NDArray[np.float64]:
 
@@ -80,7 +148,12 @@ class MyProcessor_socket(ProcessorWithSignal):
         self.signal.append(self.curr_signal)
         self.frame_time.append(kwargs.get("frame_time", self.curr_time))
 
-        self.conn.send([time.time(), vals[0], vals[1], vals[2], vals[3], vals[4]])
+        self._ensure_connection()
+        if self.conn is not None:
+            try:
+                self.conn.send([time.time(), vals[0], vals[1], vals[2], vals[3], vals[4]])
+            except Exception:
+                self.conn = None
         self.previous = center
         return pose
 
@@ -114,3 +187,14 @@ class MyProcessor_socket(ProcessorWithSignal):
         save_dict["head_angle"] = np.array(self.head_angle)
 
         return save_dict
+
+
+def get_available_processors() -> Dict[str, Dict[str, Any]]:
+    return {
+        "MyProcessor_socket": {
+            "class": MyProcessor_socket,
+            "name": getattr(MyProcessor_socket, "PROCESSOR_NAME", "MyProcessor_socket"),
+            "description": getattr(MyProcessor_socket, "PROCESSOR_DESCRIPTION", ""),
+            "params": getattr(MyProcessor_socket, "PROCESSOR_PARAMS", {}),
+        }
+    }
