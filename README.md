@@ -64,4 +64,6 @@ The recommended setup uses two separate environments:
 
 ## Citation
 
-If you use this repository in your work, please cite the associated paper once the paper is available.
+Please cite our work is you use code or ideas from this project! Thank you!
+
+Célia Benquet*, Thomas Sainsbury*, Léo Bruneau, Yang Lin, Chenchen Cai, Mariia Popova, Kayla Ponder, Lydia Ntanavara, Rachel Froebe, Zheng Tan, Paul Fahey, Katrin Franke, Luis M. Franco, Keaton Jones, Yizhou Chen, Reece Keller, Xaq Pitkow, Cristopher M. Niell, Andreas S. Tolias, Mackenzie Weygandt Mathis. [Visual uncertainty and task demands shape active sensing strategies in mice.](https://www.cell.com/current-biology/fulltext/S0960-9822(26)00722-0?) Current Biology 20 July 2026. DOI: 10.1016/j.cub.2026.06.011
