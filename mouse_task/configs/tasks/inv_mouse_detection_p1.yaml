@@ -1,0 +1,21 @@
+class_name: InvDetectionNoVelThrTask
+description: |
+  Inverse Detection task without velocity threshold to initiate the trials.
+
+  Black teardrop as target, no velocity threshold.
+
+# Only the parameters that differ from configs/common.yaml.
+params:
+  session_label:
+  - ar_det_no_velthr_inv
+  epoch_labels:
+  - single_teardrop
+  slit_size:
+  - 4.0
+  - 4.0
+  - 1
+  target_selection: 4.0
+  distractor_selection: 6.0
+  start_box_delay: 0.1
+  velocity_threshold: 20.0
+  distractor: 0.0

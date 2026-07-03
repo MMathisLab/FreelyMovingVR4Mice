@@ -1,0 +1,15 @@
+class_name: DiscriminationWithMultiOccludersTask
+description: |
+  Discrimination task with multiple occluders, sampled from a log space these are [12.0, 8.48, 6.0, 4.24, 3].
+
+# Only the parameters that differ from configs/common.yaml.
+params:
+  session_label:
+  - ar_discrim_5_occluders
+  slit_size:
+  - 12.0
+  - 8.48
+  - 6.0
+  - 4.2
+  - 3
+  occlusion_type: 1.0
