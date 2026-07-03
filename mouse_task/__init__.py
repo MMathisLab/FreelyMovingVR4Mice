@@ -7,6 +7,9 @@ from .mouse_discrim import DiscriminationTask
 from .mouse_discrim_occluders import DiscriminationWithOccludersTask
 from .mouse_discrim_multioccluders import DiscriminationWithMultiOccludersTask
 
+# White target contrast task with far reward ports
+from .far_reward_mouse_detection_p2 import FarDetectionWithoutVelocityThresholdTask
+
 # Black target contrast task
 from .inv_mouse_detection_p1 import InvDetectionNoVelThrTask
 from .inv_mouse_detection_p2 import InvDetectionVelThrTask
