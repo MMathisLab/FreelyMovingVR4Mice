@@ -1,0 +1,20 @@
+class_name: InvDiscrimMultiOccludersTask
+description: |
+  Discrimination task with multiple occluders.
+
+  Sampled from a log space these are [12.0, 8.48, 6.0, 4.2, 3].
+  Black teardrop as target, white teardrop as distractor.
+
+# Only the parameters that differ from configs/common.yaml.
+params:
+  session_label:
+  - ar_discrim_5_occluders_inv
+  slit_size:
+  - 12.0
+  - 8.48
+  - 6.0
+  - 4.2
+  - 3
+  target_selection: 4.0
+  distractor_selection: 6.0
+  occlusion_type: 1.0

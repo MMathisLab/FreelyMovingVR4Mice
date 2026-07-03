@@ -1,0 +1,19 @@
+class_name: InvShapeDiscrim
+description: |
+  Discrimination for shape task,with velocity threshold for trial initiation, no occluders.
+  The mouse must report the location of the black teardrop object and ignore the wide Pacman.
+
+# Only the parameters that differ from configs/common.yaml.
+params:
+  session_label:
+  - ar_shape_discrimination_inv
+  epoch_labels:
+  - pacman_vs_teardrop
+  slit_size:
+  - 4.0
+  - 4.0
+  - 1
+  slit_depth: 0.02
+  target_selection: 4.0
+  distractor_selection: 9.0
+  target_rotation: 15.0

@@ -1,32 +1,18 @@
+"""Mouse task package.
+
+Task variants are described by ``configs/tasks/<name>.yaml`` (class name,
+docstring, and the parameters that differ from ``configs/common.yaml``); the
+corresponding ``ActiveSensingTask`` subclass is generated at import time by
+:mod:`mouse_task._registry`.
+
+Generated classes are bound into this namespace, so ``mouse_task.<ClassName>``
+keeps working (e.g. the teensyexp GUI task list).
+"""
+
 from .manual_water import ManualWater
+from ._registry import build_task_classes
 
-# White target contrast task 
-from .mouse_detection_p1 import DetectionWithoutVelocityThresholdTask
-from .mouse_detection_p2 import DetectionWithVelocityThresholdTask
-from .mouse_discrim import DiscriminationTask
-from .mouse_discrim_occluders import DiscriminationWithOccludersTask
-from .mouse_discrim_multioccluders import DiscriminationWithMultiOccludersTask
+_TASK_CLASSES = build_task_classes()
+globals().update(_TASK_CLASSES)
 
-# White target contrast task with far reward ports
-from .far_reward_mouse_detection_p2 import FarDetectionWithoutVelocityThresholdTask
-
-# Black target contrast task
-from .inv_mouse_detection_p1 import InvDetectionNoVelThrTask
-from .inv_mouse_detection_p2 import InvDetectionVelThrTask
-from .inv_mouse_discrim import InvDiscrimTask
-from .inv_mouse_discrim_occluders import InvDiscrimOccludersTask
-from .inv_mouse_discrim_multioccluders import InvDiscrimMultiOccludersTask
-
-# White Pacman target shape task
-from .shape_mouse_detection_p1 import ShapeDetectionWithoutVelocityThresholdTask
-from .shape_mouse_detection_p2 import ShapeDetectionWithVelocityThresholdTask
-from .shape_mouse_discrim import ShapeDiscrim
-from .shape_mouse_discrim_occluders import ShapeDiscrimOccluders
-from .shape_mouse_discrim_narrow_occluders import ShapeDiscrimNarrowOccluders
-from .shape_mouse_discrim_multioccluders import ShapeDiscrimMultiOccluders
-
-# Black teardrop target shape task
-from .inv_shape_mouse_discrim import InvShapeDiscrim
-from .inv_shape_mouse_discrim_occluders import InvShapeDiscrimOccluders
-from .inv_shape_mouse_discrim_multioccluders import InvShapeDiscrimMultiOccluders
-from .inv_shape_mouse_discrim_narrow_occluders import InvShapeDiscrimNarrowOccluders
+__all__ = ["ManualWater", *sorted(_TASK_CLASSES)]

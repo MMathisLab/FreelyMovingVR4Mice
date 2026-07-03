@@ -1,0 +1,28 @@
+class_name: FarDetectionWithVelocityThresholdTask
+description: |
+  Detection task with velocity threshold to initiate the trials.
+
+  Reward ports are further away from the screen, by ~2 cm, compared to
+  DetectionWithVelocityThresholdTask.
+
+# Only the parameters that differ from configs/common.yaml.
+params:
+  session_label:
+  - ar_detection_velthr
+  epoch_labels:
+  - single_teardrop
+  slit_size:
+  - 19.0
+  - 20.0
+  - 2
+  r_report_box:
+  - 5
+  - 10
+  - -5
+  - -3
+  l_report_box:
+  - -10
+  - -5
+  - -5
+  - -3
+  distractor: 0.0

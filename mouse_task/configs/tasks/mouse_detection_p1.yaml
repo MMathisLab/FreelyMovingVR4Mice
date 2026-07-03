@@ -1,0 +1,17 @@
+class_name: DetectionWithoutVelocityThresholdTask
+description: |
+  Detection task without velocity threshold to initiate the trials.
+
+# Only the parameters that differ from configs/common.yaml.
+params:
+  session_label:
+  - ar_detection_no_velthr
+  epoch_labels:
+  - single_teardrop
+  slit_size:
+  - 4.0
+  - 4.0
+  - 1
+  start_box_delay: 0.1
+  velocity_threshold: 20.0
+  distractor: 0.0
