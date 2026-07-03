@@ -11,6 +11,7 @@
 #     explicitly-passed arguments taking precedence.
 
 import inspect
+import types
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -178,6 +179,43 @@ class TestTaskConstruction(unittest.TestCase):
         ):
             with self.assertRaises(ValueError):
                 ActiveSensingTask(teensy=MagicMock(), use_dlc=False)  # no task_config, no params
+
+
+class TestTeensyGuiTaskLoading(unittest.TestCase):
+    """Regression tests for teensyexp task discovery and parameter introspection."""
+
+    def test_update_tasks_ignores_non_task_symbols(self):
+        from teensyexp.tasks_abc.task import Task
+        from teensyexp.teensy_experiment import TeensyExperimentGUI
+
+        class GoodTask(Task):
+            def __init__(self, teensy, velocity_threshold=7.5, optional=None):
+                super().__init__(teensy)
+
+        class NotATask:
+            def __init__(self, teensy, ignored=1):
+                self.teensy = teensy
+
+        class _Loader:
+            def exec_module(self, module):
+                module.GoodTask = GoodTask
+                module.NotATask = NotATask
+                module._TASK_CLASSES = {"GoodTask": GoodTask}
+                module.some_constant = 123
+
+        fake_spec = types.SimpleNamespace(loader=_Loader())
+        fake_module = types.ModuleType("fake_tasks_pkg")
+
+        gui = TeensyExperimentGUI.__new__(TeensyExperimentGUI)
+
+        with patch("teensyexp.teensy_experiment.importlib.util.find_spec", return_value=fake_spec), \
+             patch("teensyexp.teensy_experiment.importlib.util.module_from_spec", return_value=fake_module):
+            gui.update_tasks("C:/tmp/fake_tasks_pkg")
+
+        self.assertIn("GoodTask", gui.task_params)
+        self.assertNotIn("NotATask", gui.task_params)
+        self.assertEqual(gui.task_params["GoodTask"]["velocity_threshold"], 7.5)
+        self.assertIsNone(gui.task_params["GoodTask"]["optional"])
 
 
 if __name__ == "__main__":
