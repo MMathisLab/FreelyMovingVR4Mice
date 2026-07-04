@@ -332,15 +332,12 @@ def populate_rig(path="/data/data", srcf="/data", dstf="processed", move=True) -
                 logger.info(f"Processing file: {pickle_file}")
                 raw_data_pickle, dataset = get_new_file(pickle_file, path)
                 key = f'dataset="{dataset}"'
-                
-                # has to be atomic, not only dataset 
-                #if (dj_schema.vr4mice.Dataset() & key).fetch(as_dict=True):
-                #    logger.info(f"{key} is already in the database, skip.")
-                #    if move:
-                #        move_dataset_files(dataset, path, dstf)
-                #    continue
-                #else:
-                #    logger.info(f"{key} not yet in the database, continue.")
+
+                if (dj_schema.vr4mice.Dataset() & key).fetch(as_dict=True):
+                    logger.debug("%s is already in the database, skip.", key)
+                    if move:
+                        move_dataset_files(dataset, path, dstf)
+                    continue
 
                 raw_data_npy = None
 
