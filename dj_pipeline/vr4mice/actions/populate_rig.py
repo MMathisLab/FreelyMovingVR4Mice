@@ -137,6 +137,203 @@ def check_keys(value, raw_data, key, schema, none=True) -> bool:
     return True, none_vals
 
 
+def build_row(
+    table_name,
+    attributes,
+    raw_data,
+    schema,
+    srcf="/data",
+    dstf="processed",
+    move=False,
+):
+    """Build the row dict that populate would insert for a table."""
+    data = dict()
+
+    for a in attributes:
+        if a in schema["local_def"].keys():
+            data[a] = schema["local_def"][a](
+                raw_data=raw_data,
+                key=a,
+                transformer=schema["transformer"],
+                srcf=srcf,
+                dstf=dstf,
+                move=move,
+            )
+        else:
+            label = a
+            change = False
+            transformers = ["transformer"]
+            for t in transformers:
+                if t in schema.keys():
+                    if a in schema[t].keys():
+                        label = schema[t][a]
+                        change = True
+
+                if label in raw_data.keys():
+                    data[a] = raw_data[label]
+                    if change:
+                        logger.debug("Note: %s variable name changed to %s", label, a)
+
+    return data
+
+
+def row_exists(schema, table_name, data) -> bool:
+    """Return True if the table already contains the row primary key."""
+    if not data:
+        return False
+
+    table = schema["dj_tables"][table_name]
+    key = {field: data[field] for field in table.primary_key if field in data}
+    if len(key) != len(table.primary_key):
+        return False
+    return len(table & key) > 0
+
+
+def collect_population_targets(
+    raw_data,
+    schemas,
+    *,
+    srcf="/data",
+    dstf="processed",
+):
+    """Return populate targets in dependency order with their expected row keys."""
+    working_data = dict(raw_data)
+    targets = []
+
+    for schema in schemas:
+        for table_name, attributes in schema["tables"].items():
+            flag, none_vals = check_keys(
+                attributes, working_data, table_name, schema=schema
+            )
+            if not flag:
+                continue
+            if none_vals:
+                working_data = {**working_data, **none_vals}
+            row = build_row(
+                table_name,
+                attributes,
+                working_data,
+                schema,
+                srcf=srcf,
+                dstf=dstf,
+                move=False,
+            )
+            targets.append(
+                {
+                    "schema": schema,
+                    "table_name": table_name,
+                    "attributes": attributes,
+                    "row": row,
+                }
+            )
+
+    return targets
+
+
+def is_dataset_fully_populated(targets) -> bool:
+    """True when every planned populate target already exists in the database."""
+    if not targets:
+        return False
+    return all(
+        row_exists(target["schema"], target["table_name"], target["row"])
+        for target in targets
+    )
+
+
+def populate_dataset_tables(
+    dataset,
+    raw_data,
+    schemas,
+    *,
+    srcf="/data",
+    dstf="processed",
+) -> bool:
+    """
+    Populate all missing tables for a dataset without moving raw files.
+
+    Returns True only when every target table row exists after populate.
+    """
+    targets = collect_population_targets(
+        raw_data, schemas, srcf=srcf, dstf=dstf
+    )
+    if not targets:
+        logger.warning("No population targets resolved for dataset %s.", dataset)
+        return False
+
+    if is_dataset_fully_populated(targets):
+        logger.debug(
+            "Dataset %s already fully populated (%d tables).",
+            dataset,
+            len(targets),
+        )
+        return True
+
+    working_data = dict(raw_data)
+    for schema in schemas:
+        for table_name, attributes in schema["tables"].items():
+            flag, none_vals = check_keys(
+                attributes, working_data, table_name, schema=schema
+            )
+            if not flag:
+                continue
+            if none_vals:
+                working_data = {**working_data, **none_vals}
+
+            row = build_row(
+                table_name,
+                attributes,
+                working_data,
+                schema,
+                srcf=srcf,
+                dstf=dstf,
+                move=False,
+            )
+            if row_exists(schema, table_name, row):
+                continue
+
+            logger.info("Populating: %s", table_name)
+            schema["dj_tables"][table_name].insert1(
+                row, skip_duplicates=SKIP_DUPLICATES
+            )
+            logger.info("[POPULATED OK] %s", table_name)
+
+    complete = is_dataset_fully_populated(
+        collect_population_targets(raw_data, schemas, srcf=srcf, dstf=dstf)
+    )
+    if not complete:
+        logger.warning(
+            "Dataset %s population incomplete; raw files were not moved.",
+            dataset,
+        )
+    return complete
+
+
+def sync_dataset_paths_after_move(
+    dataset: str, srcf: str = "/data", dstf: str = "processed"
+) -> None:
+    """Point Dataset filepath columns at the processed folder after a move."""
+    processed_dir = os.path.join(srcf, dstf)
+    key = {"dataset": dataset}
+    table = dj_schema.vr4mice.Dataset()
+    if not (table & key):
+        return
+
+    row = (table & key).fetch1()
+    updates = {}
+    for field in ("exp_teensy_filepath", "exp_session_filepath"):
+        current = row.get(field)
+        if not current:
+            continue
+        filename = os.path.basename(str(current))
+        new_path = os.path.join(processed_dir, filename)
+        if os.path.exists(new_path) and str(current) != new_path:
+            updates[field] = new_path
+
+    if updates:
+        table.update1({**key, **updates})
+        logger.debug("Updated Dataset file paths after move for %s", dataset)
+
+
 def populate(
     table_name, attributes, raw_data, schema, srcf="/data", dstf="processed", move=True
 ) -> None:
@@ -157,34 +354,15 @@ def populate(
         - If duplicates are found, they are skipped and not inserted into the table.
         - The function logs a message indicating whether the population was successful or not.
     """
-    data = dict()
-
-    for a in attributes:
-        print(a)
-        # check if there is a special processing for the generation of value of given attribute
-        if a in schema["local_def"].keys():
-            data[a] = schema["local_def"][a](
-                raw_data=raw_data,
-                key=a,
-                transformer=schema["transformer"],
-                srcf=srcf,
-                dstf=dstf,
-                move=move,
-            )
-        else:  # dj_def-orientated
-            label = a
-            change = False
-            transformers = ["transformer"]
-            for t in transformers:
-                if t in schema.keys():
-                    if a in schema[t].keys():
-                        label = schema[t][a]
-                        change = True
-
-                if label in raw_data.keys():
-                    data[a] = raw_data[label]
-                    if change:
-                        logger.info(f"Note: {label} variable name changed to {a}")
+    data = build_row(
+        table_name,
+        attributes,
+        raw_data,
+        schema,
+        srcf=srcf,
+        dstf=dstf,
+        move=move,
+    )
 
     logger.info(f"Populating: {table_name}")
 
@@ -274,6 +452,30 @@ def get_files_paths(
     return files_info
 
 
+def move_dataset_files(
+    dataset_name: str,
+    base_path: str,
+    dst_folder: str,
+    srcf: str = "/data",
+) -> None:
+    """Move pickle/npy session files to processed only after population succeeds."""
+    # Match get_path(): session files under .../data/ move to srcf/dst_folder.
+    dst_path = os.path.join(srcf, dst_folder)
+    os.makedirs(dst_path, exist_ok=True)
+    moved = False
+    for suffix in [".pickle", ".npy"]:
+        filename = f"{dataset_name}{suffix}"
+        src = os.path.join(base_path, filename)
+        if os.path.exists(src):
+            shutil.move(src, os.path.join(dst_path, filename))
+            moved = True
+    if moved:
+        logger.info(f"Moved raw files for {dataset_name} to {dst_path}")
+        sync_dataset_paths_after_move(dataset_name, srcf=srcf, dstf=dst_folder)
+    else:
+        logger.debug(f"No raw files found to move for {dataset_name}")
+
+
 def populate_rig(path="/data/data", srcf="/data", dstf="processed", move=True) -> None:
     """
     Populates database tables with data from files in the specified directory.
@@ -292,11 +494,10 @@ def populate_rig(path="/data/data", srcf="/data", dstf="processed", move=True) -
     same dictionary. If no corresponding ".npy" file is found, the function logs
     an error message and returns.
 
-    The function then iterates over a list of schemas and their associated tables.
-    For each table, it checks if all required keys are present in the loaded data.
-    If so, it populates the table in the database with data from the loaded data
-    dictionary using the corresponding schema. If any required keys are missing,
-    the function logs an error message and skips populating that table.
+    The function then populates every applicable table for the dataset. Population
+    and file moves are atomic: raw pickle/npy files are moved to the processed
+    folder only after every target table row exists in the database. Partial
+    population (e.g. Dataset without State) is retried on the next run.
 
     dataset = name of file : mouse_name_doe_attempt
     """
@@ -310,34 +511,12 @@ def populate_rig(path="/data/data", srcf="/data", dstf="processed", move=True) -
 
     dir_list = get_filenames(ext, path)
 
-    def move_dataset_files(dataset_name: str, base_path: str, dst_folder: str) -> None:
-        dst_path = os.path.join(base_path, dst_folder)
-        os.makedirs(dst_path, exist_ok=True)
-        moved = False
-        for ext in [".pickle", ".npy"]:
-            filename = f"{dataset_name}{ext}"
-            src = os.path.join(base_path, filename)
-            if os.path.exists(src):
-                shutil.move(src, os.path.join(dst_path, filename))
-                moved = True
-        if moved:
-            logger.info(f"Moved raw files for {dataset_name} to {dst_path}")
-        else:
-            logger.info(f"No raw files found to move for {dataset_name}")
-
     if ".pickle" in dir_list.keys():
 
         for pickle_file in dir_list[".pickle"]:
             try:
                 logger.info(f"Processing file: {pickle_file}")
                 raw_data_pickle, dataset = get_new_file(pickle_file, path)
-                key = f'dataset="{dataset}"'
-
-                if (dj_schema.vr4mice.Dataset() & key).fetch(as_dict=True):
-                    logger.debug("%s is already in the database, skip.", key)
-                    if move:
-                        move_dataset_files(dataset, path, dstf)
-                    continue
 
                 raw_data_npy = None
 
@@ -376,24 +555,15 @@ def populate_rig(path="/data/data", srcf="/data", dstf="processed", move=True) -
                     raw_data = {**raw_data_pickle, **raw_data_npy}
                     schemas = [base, vr4mice]
 
-                for schema in schemas:
-                    for table_name, attributes in schema[
-                        "tables"
-                    ].items():  # get attributes
-                        flag, none_vals = check_keys(
-                            attributes, raw_data, table_name, schema=schema
-                        )
-                        if flag:
-                            raw_data = {**raw_data, **none_vals}
-                            populate(
-                                table_name,
-                                attributes,
-                                raw_data,
-                                schema=schema,
-                                srcf=srcf,
-                                dstf=dstf,
-                                move=move,
-                            )
+                complete = populate_dataset_tables(
+                    dataset,
+                    raw_data,
+                    schemas,
+                    srcf=srcf,
+                    dstf=dstf,
+                )
+                if complete and move:
+                    move_dataset_files(dataset, path, dstf, srcf=srcf)
 
             except Exception as e:
                 logger.warning(f"Population of raw data failed for {pickle_file}: {e}")
@@ -410,23 +580,14 @@ def populate_rig(path="/data/data", srcf="/data", dstf="processed", move=True) -
                 raw_data = {**files_info, **raw_data_npy}
                 schemas = [base]
 
-                for schema in schemas:
-                    for table_name, attributes in schema[
-                        "tables"
-                    ].items():  # get attributes
-                        flag, none_vals = check_keys(
-                            attributes, raw_data, table_name, schema=schema
-                        )
-                        if flag:
-                            raw_data = {**raw_data, **none_vals}
-                            populate(
-                                table_name,
-                                attributes,
-                                raw_data,
-                                schema=schema,
-                                srcf=srcf,
-                                dstf=dstf,
-                                move=move,
-                            )
+                complete = populate_dataset_tables(
+                    dataset,
+                    raw_data,
+                    schemas,
+                    srcf=srcf,
+                    dstf=dstf,
+                )
+                if complete and move:
+                    move_dataset_files(dataset, path, dstf, srcf=srcf)
             except Exception as e:
                 logger.warning(f"Population of raw data failed for {npy_file}: {e}")
