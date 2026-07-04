@@ -20,7 +20,7 @@ logger = Logger.get_logger()
     "summary": generate summary plots: populate summary plots
     "dlc": process DeepLabCut data: populate dlc tables
     "update": sync missing data in existing tables
-    "sync_days": synchronize days in the dataset (process raw .npy files)
+    "sync_days": synchronize days in GUI .npy files (/data/data + /data/processed)
     "interp": interpolate trajectories and compute kinematics
     "latency": compute latencies based on photodiode signals
     "inputs_videos": process input videos and extract frames
@@ -269,7 +269,7 @@ if __name__ == "__main__":
     elif args.mode == "sync_days":
         from vr4mice.actions.sync_days import sync_days
 
-        sync_days(path="/data/data")
+        sync_days()
 
     elif args.mode == "maintenance":
         from vr4mice.utils.maintenance import rebuild_lineage
