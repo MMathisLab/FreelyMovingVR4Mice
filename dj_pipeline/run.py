@@ -65,6 +65,12 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--no-populate-base",
+        action="store_true",
+        help="Skip exp/mice base schema during populate (default: populate base).",
+    )
+
+    parser.add_argument(
         "--force",
         action="store_true",
         help="Apply destructive cleanup (used with cleanup_mice).",
@@ -118,7 +124,11 @@ if __name__ == "__main__":
         # Intentionally not calling sync_days here: day synchronization should be
         # run explicitly via the "sync_days" mode when needed, rather than on every
         # populate run.
-        populate_rig(path=path, move=move)
+        populate_rig(
+            path=path,
+            move=move,
+            populate_base=not args.no_populate_base,
+        )
         populate_pending(vr4mice.Collab, vr4mice.Dataset, logger=logger)
 
     elif args.mode == "analysis":

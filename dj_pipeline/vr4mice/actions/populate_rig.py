@@ -23,6 +23,46 @@ logger = Logger.get_logger()
 SKIP_DUPLICATES = True
 
 
+def _env_bool(name: str, default: bool = True) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.lower() in ("true", "1", "yes")
+
+
+def _schemas_for_dataset(raw_data_npy, *, populate_base: bool) -> list:
+    """Return schema list for a dataset (base+vr4mice or vr4mice-only)."""
+    if raw_data_npy is None or not populate_base:
+        return [vr4mice]
+    return [base, vr4mice]
+
+
+def _data_rel_path(file_dir: str, srcf: str = "/data") -> str:
+    """Path suffix for get_files_paths (local_src + data == file directory)."""
+    file_dir = os.path.normpath(file_dir)
+    srcf = os.path.normpath(srcf)
+    if file_dir == srcf:
+        return "/"
+    if file_dir.startswith(srcf + os.sep):
+        rel = file_dir[len(srcf) :]
+        return rel if rel.startswith("/") else f"/{rel}"
+    return file_dir if file_dir.startswith("/") else f"/{file_dir}"
+
+
+def _prepare_gui_raw_data(dataset, raw_data_npy, *, srcf="/data", file_dir: str):
+    """Merge GUI .npy metadata with simulated filepath info for base schema populate."""
+    raw_data_npy = dict(raw_data_npy)
+    raw_data_npy.setdefault("rig_id", 12)
+    raw_data_npy.setdefault("license", "N/A")
+    files_info = get_files_paths(
+        dataset=dataset,
+        remote_src=None,
+        local_src=srcf,
+        data=_data_rel_path(file_dir, srcf),
+    )
+    return {**files_info, **raw_data_npy}
+
+
 def get_filenames(ext, path: str = "/tmp") -> dict:
     """
     Get a dictionary of filenames with the specified extensions from the given path.
@@ -260,6 +300,13 @@ def populate_dataset_tables(
         logger.warning("No population targets resolved for dataset %s.", dataset)
         return False
 
+    from vr4mice.actions.keys2tables_base import base as base_schema
+
+    if base_schema in schemas:
+        from vr4mice.actions.mouse_sync import ensure_mouse_for_session
+
+        ensure_mouse_for_session(raw_data, dataset=dataset, log=logger)
+
     if is_dataset_fully_populated(targets):
         logger.debug(
             "Dataset %s already fully populated (%d tables).",
@@ -452,6 +499,154 @@ def get_files_paths(
     return files_info
 
 
+def _dstf_for_folder(folder_path: str, srcf: str = "/data") -> str:
+    """Folder name relative to srcf for filepath metadata (e.g. data, processed)."""
+    rel = _data_rel_path(folder_path, srcf).lstrip("/")
+    return rel or "processed"
+
+
+def populate_base_from_gui_folder(
+    folder_path: str,
+    *,
+    srcf: str = "/data",
+    sync_days_first: bool = False,
+) -> tuple[int, int]:
+    """
+    Populate base/exp schema (stub Mouse rows only) from GUI .npy files in a folder.
+
+    Day sync is off by default here; call sync_days() once over all GUI folders
+    (data + processed) before batch populate so numbering stays consistent.
+
+    Returns (completed_count, failed_count).
+    """
+    folder_path = os.path.normpath(folder_path)
+    if not os.path.isdir(folder_path):
+        logger.debug("GUI folder %s does not exist; skipping.", folder_path)
+        return (0, 0)
+
+    if sync_days_first:
+        from vr4mice.actions.sync_days import sync_days
+
+        sync_days()
+
+    dir_list = get_filenames([".npy"], folder_path)
+    if ".npy" not in dir_list:
+        logger.info("No GUI .npy files in %s", folder_path)
+        return (0, 0)
+
+    dstf = _dstf_for_folder(folder_path, srcf)
+    ok, failed = 0, 0
+
+    for npy_file in dir_list[".npy"]:
+        try:
+            raw_data_npy, dataset = get_new_file(npy_file, folder_path)
+            raw_data = _prepare_gui_raw_data(
+                dataset, raw_data_npy, srcf=srcf, file_dir=folder_path
+            )
+            complete = populate_dataset_tables(
+                dataset,
+                raw_data,
+                [base],
+                srcf=srcf,
+                dstf=dstf,
+            )
+            if complete:
+                ok += 1
+                logger.info("Base populate complete for %s", dataset)
+            else:
+                failed += 1
+                logger.warning(
+                    "Base populate incomplete for %s (will retry on next run).", dataset
+                )
+        except Exception as e:
+            failed += 1
+            logger.warning(
+                "Base populate failed for %s in %s: %s", npy_file, folder_path, e
+            )
+
+    return (ok, failed)
+
+
+def populate_processed_gui(
+    *,
+    srcf: str = "/data",
+    dstf: str = "processed",
+    populate_base: bool = True,
+) -> None:
+    """
+    Backfill base (exp/mice) schema from all GUI .npy files in the processed folder.
+
+    Corrects experiment day in each .npy via sync_days before population.
+    """
+    if not populate_base:
+        return
+
+    processed_path = os.path.join(srcf, dstf)
+    if not os.path.isdir(processed_path):
+        logger.debug(
+            "Processed folder %s does not exist; skipping GUI backfill.", processed_path
+        )
+        return
+
+    from vr4mice.actions.sync_days import sync_days
+
+    logger.info(
+        "Syncing experiment days in GUI files (data + processed) before backfill."
+    )
+    sync_days()
+
+    dir_list = get_filenames([".npy"], processed_path)
+    if ".npy" not in dir_list:
+        logger.info("No GUI .npy files in %s", processed_path)
+        return
+
+    logger.info(
+        "Backfilling base schema from %d GUI file(s) in %s",
+        len(dir_list[".npy"]),
+        processed_path,
+    )
+
+    for npy_file in dir_list[".npy"]:
+        try:
+            raw_data_npy, dataset = get_new_file(npy_file, processed_path)
+            pickle_path = Path(processed_path) / f"{dataset}.pickle"
+            raw_data_pickle = None
+            if pickle_path.is_file():
+                raw_data_pickle, _ = get_new_file(pickle_path.name, processed_path)
+
+            if raw_data_pickle:
+                raw_data = {
+                    **_prepare_gui_raw_data(
+                        dataset, raw_data_npy, srcf=srcf, file_dir=processed_path
+                    ),
+                    **raw_data_pickle,
+                    **raw_data_npy,
+                }
+                schemas = _schemas_for_dataset(raw_data_npy, populate_base=True)
+            else:
+                raw_data = _prepare_gui_raw_data(
+                    dataset, raw_data_npy, srcf=srcf, file_dir=processed_path
+                )
+                schemas = [base]
+
+            complete = populate_dataset_tables(
+                dataset,
+                raw_data,
+                schemas,
+                srcf=srcf,
+                dstf=dstf,
+            )
+            if complete:
+                logger.info("Processed GUI backfill complete for %s", dataset)
+            else:
+                logger.warning(
+                    "Processed GUI backfill incomplete for %s (will retry on next run).",
+                    dataset,
+                )
+        except Exception as e:
+            logger.warning("Processed GUI backfill failed for %s: %s", npy_file, e)
+
+
 def move_dataset_files(
     dataset_name: str,
     base_path: str,
@@ -476,12 +671,20 @@ def move_dataset_files(
         logger.debug(f"No raw files found to move for {dataset_name}")
 
 
-def populate_rig(path="/data/data", srcf="/data", dstf="processed", move=True) -> None:
+def populate_rig(
+    path="/data/data",
+    srcf="/data",
+    dstf="processed",
+    move=True,
+    populate_base=None,
+) -> None:
     """
     Populates database tables with data from files in the specified directory.
 
     Args:
         path (str): The path to the directory containing data files.
+        populate_base (bool | None): Populate exp/mice base schema from .npy metadata.
+            Defaults to True, or the POPULATE_BASE environment variable when None.
     Raises:
         OSError: If the specified directory does not exist.
 
@@ -501,8 +704,15 @@ def populate_rig(path="/data/data", srcf="/data", dstf="processed", move=True) -
 
     dataset = name of file : mouse_name_doe_attempt
     """
+    if populate_base is None:
+        populate_base = _env_bool("POPULATE_BASE", default=True)
 
     gui = os.environ.get("GUI", "false").lower() in ["true", "1", "yes"]
+
+    if not populate_base:
+        logger.info(
+            "Base schema (exp/mice) population disabled; only vr4mice tables will be populated."
+        )
 
     if gui:
         ext = [".npy", ".pickle"]
@@ -546,14 +756,16 @@ def populate_rig(path="/data/data", srcf="/data", dstf="processed", move=True) -
                     files_info = get_files_paths(
                         dataset=dataset,
                         remote_src=None,
-                        local_src="/data",
-                        data=path,
-                    )  # paths correspond to docker env
+                        local_src=srcf,
+                        data=_data_rel_path(path, srcf),
+                    )
                     raw_data = {**files_info, **raw_data_pickle}
-                    schemas = [vr4mice]
+                    schemas = _schemas_for_dataset(None, populate_base=populate_base)
                 else:
                     raw_data = {**raw_data_pickle, **raw_data_npy}
-                    schemas = [base, vr4mice]
+                    schemas = _schemas_for_dataset(
+                        raw_data_npy, populate_base=populate_base
+                    )
 
                 complete = populate_dataset_tables(
                     dataset,
@@ -569,15 +781,15 @@ def populate_rig(path="/data/data", srcf="/data", dstf="processed", move=True) -
                 logger.warning(f"Population of raw data failed for {pickle_file}: {e}")
 
     elif ".npy" in dir_list.keys():  # case no pickle
+        if not populate_base:
+            logger.info("Skipping .npy-only files (base schema population disabled).")
+            return
         for npy_file in dir_list[".npy"]:
             try:
                 raw_data_npy, dataset = get_new_file(npy_file, path)
-                raw_data_npy["rig_id"] = 12
-                raw_data_npy["license"] = "N/A"
-                files_info = get_files_paths(
-                    dataset=dataset, remote_src=None, local_src="/data", data=path
-                )  # paths correspond to docker env
-                raw_data = {**files_info, **raw_data_npy}
+                raw_data = _prepare_gui_raw_data(
+                    dataset, raw_data_npy, srcf=srcf, file_dir=path
+                )
                 schemas = [base]
 
                 complete = populate_dataset_tables(
@@ -591,3 +803,6 @@ def populate_rig(path="/data/data", srcf="/data", dstf="processed", move=True) -
                     move_dataset_files(dataset, path, dstf, srcf=srcf)
             except Exception as e:
                 logger.warning(f"Population of raw data failed for {npy_file}: {e}")
+
+    if populate_base:
+        populate_processed_gui(srcf=srcf, dstf=dstf, populate_base=populate_base)
