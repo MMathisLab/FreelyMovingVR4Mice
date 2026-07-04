@@ -26,6 +26,8 @@ logger = Logger.get_logger()
     "inputs_videos": process input videos and extract frames
     "decision": analyze decision-making metrics
     "maintenance": rebuild DataJoint lineage tables (one-time setup)
+    "sync_mice": pull Mouse metadata from main DB for local session mice
+    "cleanup_mice": remove stub Mouse rows without local sessions
 """
 
 
@@ -63,6 +65,12 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Apply destructive cleanup (used with cleanup_mice).",
+    )
+
+    parser.add_argument(
         "mode",
         choices=[
             "connect",
@@ -75,11 +83,13 @@ if __name__ == "__main__":
             "ar_paper",
             "latency",
             "sync_days",
+            "sync_mice",
+            "cleanup_mice",
             "inputs_videos",
             "decision",
             "maintenance",
         ],
-        help="Mode to execute: 'connect', 'populate', 'summary', 'dlc', 'fetch', 'sync_days', 'analysis', 'inputs_videos', 'decision', 'maintenance'",
+        help="Mode to execute: connect, populate, fetch, sync_mice, cleanup_mice, ...",
     )
 
     args = parser.parse_args()
@@ -255,3 +265,13 @@ if __name__ == "__main__":
         from vr4mice.utils.maintenance import rebuild_lineage
 
         rebuild_lineage()
+
+    elif args.mode == "sync_mice":
+        from vr4mice.actions.mouse_sync import sync_mice_from_main
+
+        sync_mice_from_main(log=logger)
+
+    elif args.mode == "cleanup_mice":
+        from vr4mice.actions.mouse_sync import cleanup_mice_without_sessions
+
+        cleanup_mice_without_sessions(dry_run=not args.force, stubs_only=True)
