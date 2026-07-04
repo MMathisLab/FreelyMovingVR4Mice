@@ -58,6 +58,24 @@ def _create_mice_dict(all_mice: dict) -> dict:
     return mice_dict
 
 
+def _fetch_alive_mice() -> list:
+    """
+    Return Mouse rows excluding sacrificed and breeding mice.
+
+    DJ 2.x rejects chained table subtraction (Mouse - Sacrificed - Breed) because
+    mouse_name has incompatible lineages across dependent tables.
+    """
+    excluded = {
+        *mice.Sacrificed().fetch("mouse_name"),
+        *mice.Breed().fetch("mouse_name"),
+    }
+    return [
+        row
+        for row in mice.Mouse().fetch(as_dict=True)
+        if row["mouse_name"] not in excluded
+    ]
+
+
 def fetch_tables() -> dict:
     """
     Fetches tables from the VR4Mice database and returns a dictionary containing the fetched data.
@@ -82,7 +100,7 @@ def fetch_tables() -> dict:
     - Some tables have been commented out entirely, indicating that they are not currently used in the pipeline
 
     """
-    all_mice = (mice.Mouse() - mice.Sacrificed() - mice.Breed()).fetch(as_dict=True)
+    all_mice = _fetch_alive_mice()
 
     return {
         # 'Mouse': all_mice,
