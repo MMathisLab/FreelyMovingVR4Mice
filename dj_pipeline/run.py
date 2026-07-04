@@ -28,6 +28,7 @@ logger = Logger.get_logger()
     "maintenance": rebuild DataJoint lineage tables (one-time setup)
     "sync_mice": pull Mouse metadata from main DB for local session mice
     "cleanup_mice": remove stub Mouse rows without local sessions
+    "recover_base": recovery — cleanup orphan exp/mice, repopulate base from GUI files
 """
 
 
@@ -73,7 +74,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Apply destructive cleanup (used with cleanup_mice).",
+        help="Apply destructive steps (cleanup_mice, recover_base orphan deletion).",
     )
 
     parser.add_argument(
@@ -91,6 +92,7 @@ if __name__ == "__main__":
             "sync_days",
             "sync_mice",
             "cleanup_mice",
+            "recover_base",
             "inputs_videos",
             "decision",
             "maintenance",
@@ -285,3 +287,8 @@ if __name__ == "__main__":
         from vr4mice.actions.mouse_sync import cleanup_mice_without_sessions
 
         cleanup_mice_without_sessions(dry_run=not args.force, stubs_only=True)
+
+    elif args.mode == "recover_base":
+        from vr4mice.actions.recover_base import run_recovery
+
+        run_recovery(force=args.force)
