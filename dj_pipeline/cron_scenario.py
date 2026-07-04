@@ -25,12 +25,15 @@ def main():
 
     def run_named(name, func, *, capture=False):
         logger.info("[cron] start %s", name)
+        started = time.monotonic()
         try:
             result = func()
-            logger.info("[cron] done %s", name)
+            elapsed = time.monotonic() - started
+            logger.info("[cron] done %s (%.1fs)", name, elapsed)
             return result if capture else None
         except Exception:
-            logger.exception("[cron] failed %s", name)
+            elapsed = time.monotonic() - started
+            logger.exception("[cron] failed %s (%.1fs)", name, elapsed)
             failed_steps.append(name)
             return None if capture else None
 
