@@ -1,9 +1,7 @@
-import logging
-import warnings
 import argparse
+import time
 
-logging.getLogger("settings").setLevel(logging.ERROR)
-warnings.simplefilter(action="ignore", category=FutureWarning)
+from vr4mice.utils.bootstrap import configure_runtime
 
 
 def main():
@@ -13,13 +11,16 @@ def main():
     parser.add_argument(
         "--aws", action="store_true", help="Enable AWS-specific execution."
     )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable verbose logging (DEBUG level).",
+    )
     args = parser.parse_args()
 
     from base_actions.connect import connect
-    from vr4mice.utils.logger import Logger, config_logger
 
-    config_logger(level="INFO", debug=False)
-    logger = Logger.get_logger()
+    logger = configure_runtime(verbose=args.verbose, debug=args.verbose)
     failed_steps = []
 
     def run_named(name, func, *, capture=False):

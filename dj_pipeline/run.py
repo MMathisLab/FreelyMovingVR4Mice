@@ -1,19 +1,12 @@
-import logging
 import os
 import argparse
-
 import sys
-import warnings
 
 from base_actions.connect import connect
-from vr4mice.utils.logger import Logger, config_logger
+from vr4mice.utils.bootstrap import configure_runtime
+from vr4mice.utils.logger import Logger
 
 logger = Logger.get_logger()
-
-
-logging.getLogger("settings").setLevel(logging.ERROR)
-
-warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
 """
@@ -62,6 +55,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--aws", action="store_true", help="Enable AWS-specific execution."
     )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable verbose logging (DEBUG level).",
+    )
 
     parser.add_argument(
         "mode",
@@ -84,7 +82,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    config_logger(level="INFO", debug=False)
+    logger = configure_runtime(verbose=args.verbose, debug=args.verbose)
     connect(tag="")
 
     if args.mode == "connect":
