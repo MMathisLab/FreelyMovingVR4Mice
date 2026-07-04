@@ -55,7 +55,7 @@ class DLCProcessor(dj.Imported):
         """Load DLC processed outputs into the DLCProcessor table."""
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
@@ -107,7 +107,7 @@ class DLCKptsDf(dj.Computed):
         """Store raw DLC keypoints and metadata for a dataset."""
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
@@ -166,7 +166,7 @@ class SyncDLCKptsDf(dj.Computed):
         """Synchronize DLC keypoints to game time and store results."""
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
@@ -236,7 +236,7 @@ class OfflineKinematics(dj.Computed):
         """Compute offline kinematic features from synchronized keypoints."""
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return

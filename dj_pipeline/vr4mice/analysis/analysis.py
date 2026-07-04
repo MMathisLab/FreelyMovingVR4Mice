@@ -346,7 +346,7 @@ def create_data_frame(
     # all keys corresponds to the datajoint tables initial keys, except: "episode" --> "trial"
     # in output: z transforms in y, x in x
 
-    logger.info(f"Creating dataframe for: {key}")
+    logger.debug(f"Creating dataframe for: {key}")
 
     # NOTE: all attributes are used for MouseState, the implementation could be:
     # df = pd.DataFrame((vr4mice.MouseState & {"dataset": dataset}).fetch1())
@@ -390,7 +390,7 @@ def create_data_frame(
         }
     )
 
-    logger.info(f"All dataframe fetched for: {key}")
+    logger.debug(f"All dataframe fetched for: {key}")
 
     df = df[
         df.trial != 1

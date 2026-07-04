@@ -37,7 +37,7 @@ def create_folder_if_not_exist(folder_path):
             logger.warning(f"Error: {e}")
             exit(1)
     else:
-        logger.info(f"Folder '{folder_path}' already exists.")
+        logger.debug(f"Folder '{folder_path}' already exists.")
 
 
 def check_folder_existence(folder_path):
@@ -45,7 +45,7 @@ def check_folder_existence(folder_path):
         logger.warning(f"Folder '{folder_path}' does not exist. Exiting.")
         sys.exit(1)
     else:
-        logger.info(f"Folder '{folder_path}' exists.")
+        logger.debug(f"Folder '{folder_path}' exists.")
 
 
 if __name__ == "__main__":

@@ -37,7 +37,7 @@ class SignalsPhotodiodeAligned(dj.Computed):
     def make(self, key):
         """Align photodiode and generated signals for latency analysis."""
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
@@ -108,7 +108,7 @@ class AllLatencies(dj.Computed):
     def make(self, key):
         """Compute per-session latency distributions and summary stats."""
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return

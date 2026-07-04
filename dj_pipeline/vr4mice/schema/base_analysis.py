@@ -101,7 +101,7 @@ class DataFrame(dj.Computed):
         from vr4mice.analysis.analysis import create_data_frame
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
@@ -206,7 +206,7 @@ class BoxDataFrame(dj.Computed):
         from vr4mice.analysis.analysis import get_box_df
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
@@ -289,7 +289,7 @@ class SummaryPlots(dj.Computed):
         send = os.environ.get("EMAIL", "false").lower() in ["true", "1", "yes"]
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
@@ -448,7 +448,7 @@ class GitCommit(dj.Computed):
         """Store git commit metadata for the current analysis run."""
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return

@@ -118,7 +118,7 @@ class FailedSession(dj.Manual):
 
     @classmethod
     def should_skip(cls, key, table_name, logger=None) -> bool:
-        """Return True if dataset is in FailedSession; optionally log a warning."""
+        """Return True if dataset is in FailedSession; optionally log at debug."""
         dataset = None
         if isinstance(key, dict):
             dataset = key.get("dataset")
@@ -149,11 +149,11 @@ class FailedSession(dj.Manual):
                         (error_msg[:160] + "...") if len(error_msg) > 160 else error_msg
                     )
                 if short_error:
-                    logger.warning(
+                    logger.debug(
                         f"skip {table_name} {dataset} (FailedSession: {short_error})"
                     )
                 else:
-                    logger.warning(f"skip {table_name} {dataset} (FailedSession)")
+                    logger.debug(f"skip {table_name} {dataset} (FailedSession)")
             return True
 
         return False
@@ -533,7 +533,7 @@ class SignalsPhotodiode(dj.Computed):
             return
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
