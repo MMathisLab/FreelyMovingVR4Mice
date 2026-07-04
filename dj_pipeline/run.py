@@ -93,6 +93,7 @@ if __name__ == "__main__":
     elif args.mode == "populate":
         from vr4mice.actions.populate_rig import populate_rig
         from vr4mice.schema import vr4mice
+        from vr4mice.utils.populate_helpers import populate_pending
 
         if args.aws:
             path = "/data/processed"
@@ -106,44 +107,73 @@ if __name__ == "__main__":
         # run explicitly via the "sync_days" mode when needed, rather than on every
         # populate run.
         populate_rig(path=path, move=move)
-        vr4mice.Collab().populate()
+        populate_pending(vr4mice.Collab, vr4mice.Dataset, logger=logger)
 
     elif args.mode == "analysis":
-        from vr4mice.schema import base_analysis, base
+        from vr4mice.schema import base_analysis, vr4mice
+        from vr4mice.utils.populate_helpers import populate_pending
 
         # NOTE: populate has to be run before
 
         create_folder_if_not_exist("/data/summary_plots")
-        base_analysis.DataFrame.populate()
-        base_analysis.BoxDataFrame().populate()
-        base_analysis.GitCommit().populate()
+        populate_pending(base_analysis.DataFrame, vr4mice.Dataset, logger=logger)
+        populate_pending(
+            base_analysis.BoxDataFrame, base_analysis.DataFrame, logger=logger
+        )
+        populate_pending(base_analysis.GitCommit, base_analysis.DataFrame, logger=logger)
 
     elif args.mode == "summary":
-        from vr4mice.schema import base_analysis
+        from vr4mice.schema import base_analysis, vr4mice
+        from vr4mice.utils.populate_helpers import populate_pending
 
-        base_analysis.SummaryPlots().populate()
+        populate_pending(base_analysis.SummaryPlots, vr4mice.Dataset, logger=logger)
 
     elif args.mode == "dlc":
         # NOTE: populate and analysis have to be run before
-        from vr4mice.schema import dlc
+        from vr4mice.schema import dlc, vr4mice
+        from vr4mice.utils.populate_helpers import populate_pending
 
         create_folder_if_not_exist("/data/summary_plots")
-        dlc.DLCProcessor().populate()
-        dlc.DLCKptsDf().populate()
-        dlc.SyncDLCKptsDf().populate()
-        dlc.OfflineKinematics().populate()
+        populate_pending(dlc.DLCProcessor, vr4mice.DLC, logger=logger)
+        populate_pending(dlc.DLCKptsDf, vr4mice.DLC, logger=logger)
+        populate_pending(dlc.SyncDLCKptsDf, dlc.DLCKptsDf, logger=logger)
+        populate_pending(dlc.OfflineKinematics, dlc.SyncDLCKptsDf, logger=logger)
 
     elif args.mode == "interp":
 
-        from vr4mice.schema import interpolated_trajectories, session_metrics
+        from vr4mice.schema import (
+            base_analysis,
+            interpolated_trajectories,
+            session_metrics,
+            vr4mice,
+        )
+        from vr4mice.utils.populate_helpers import populate_pending
 
-        session_metrics.SessionMetrics().populate()
-        session_metrics.TrialMetrics().populate()
+        populate_pending(session_metrics.SessionMetrics, vr4mice.Dataset, logger=logger)
+        populate_pending(
+            session_metrics.TrialMetrics, base_analysis.DataFrame, logger=logger
+        )
 
-        interpolated_trajectories.InterpolatedTrials().populate()
-        interpolated_trajectories.MeanXYTrajectory().populate()
-        interpolated_trajectories.YBinnedXYTrajectory().populate()
-        interpolated_trajectories.MeanVelocities().populate()
+        populate_pending(
+            interpolated_trajectories.InterpolatedTrials,
+            base_analysis.DataFrame,
+            logger=logger,
+        )
+        populate_pending(
+            interpolated_trajectories.MeanXYTrajectory,
+            interpolated_trajectories.InterpolatedTrials,
+            logger=logger,
+        )
+        populate_pending(
+            interpolated_trajectories.YBinnedXYTrajectory,
+            interpolated_trajectories.InterpolatedTrials,
+            logger=logger,
+        )
+        populate_pending(
+            interpolated_trajectories.MeanVelocities,
+            interpolated_trajectories.InterpolatedTrials,
+            logger=logger,
+        )
 
     elif args.mode == "ar_paper":
 
@@ -164,19 +194,35 @@ if __name__ == "__main__":
 
     elif args.mode == "latency":
 
-        from vr4mice.schema import vr4mice, latency_tests
+        from vr4mice.schema import latency_tests, vr4mice
+        from vr4mice.utils.populate_helpers import populate_pending
 
-        vr4mice.SignalsPhotodiode().populate()
-        latency_tests.SignalsPhotodiodeAligned().populate()
-        latency_tests.AllLatencies().populate()
+        populate_pending(vr4mice.SignalsPhotodiode, vr4mice.Dataset, logger=logger)
+        populate_pending(
+            latency_tests.SignalsPhotodiodeAligned,
+            vr4mice.SignalsPhotodiode,
+            logger=logger,
+        )
+        populate_pending(
+            latency_tests.AllLatencies,
+            latency_tests.SignalsPhotodiodeAligned,
+            logger=logger,
+        )
 
     elif args.mode == "inputs_videos":
-        from vr4mice.schema import inputs_videos
+        from vr4mice.schema import inputs_videos, vr4mice
+        from vr4mice.utils.populate_helpers import populate_pending
 
-        inputs_videos.RawVideo().populate()
-        inputs_videos.ProcessedVideo().populate()
-        inputs_videos.VideoSyncSignal().populate()
-        inputs_videos.AlignedVideoFrame().populate()
+        populate_pending(inputs_videos.RawVideo, vr4mice.Dataset, logger=logger)
+        populate_pending(inputs_videos.ProcessedVideo, inputs_videos.RawVideo, logger=logger)
+        populate_pending(
+            inputs_videos.VideoSyncSignal, inputs_videos.ProcessedVideo, logger=logger
+        )
+        populate_pending(
+            inputs_videos.AlignedVideoFrame,
+            inputs_videos.VideoSyncSignal,
+            logger=logger,
+        )
 
     elif args.mode == "decision":
         from vr4mice.schema import decision

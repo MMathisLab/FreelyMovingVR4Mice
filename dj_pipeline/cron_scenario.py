@@ -100,6 +100,8 @@ def main():
 
     core_schemas = run_import("import core schemas", import_core_schemas)
     if core_schemas and create_folder_if_not_exist:
+        from vr4mice.utils.populate_helpers import populate_pending
+
         (
             base_analysis,
             dlc,
@@ -114,64 +116,124 @@ def main():
             lambda: create_folder_if_not_exist("/data/summary_plots"),
         )
 
-        run_step("vr4mice.Collab.populate", lambda: vr4mice.Collab().populate())
-        run_step("base_analysis.DataFrame.populate", base_analysis.DataFrame.populate)
+        run_step(
+            "vr4mice.Collab.populate",
+            lambda: populate_pending(vr4mice.Collab, vr4mice.Dataset, logger=logger),
+        )
+        run_step(
+            "base_analysis.DataFrame.populate",
+            lambda: populate_pending(
+                base_analysis.DataFrame, vr4mice.Dataset, logger=logger
+            ),
+        )
         run_step(
             "base_analysis.BoxDataFrame.populate",
-            base_analysis.BoxDataFrame.populate,
+            lambda: populate_pending(
+                base_analysis.BoxDataFrame, base_analysis.DataFrame, logger=logger
+            ),
         )
-        run_step("base_analysis.GitCommit.populate", base_analysis.GitCommit.populate)
+        run_step(
+            "base_analysis.GitCommit.populate",
+            lambda: populate_pending(
+                base_analysis.GitCommit, base_analysis.DataFrame, logger=logger
+            ),
+        )
 
-        run_step("dlc.DLCProcessor.populate", lambda: dlc.DLCProcessor().populate())
-        run_step("dlc.DLCKptsDf.populate", lambda: dlc.DLCKptsDf().populate())
-        run_step("dlc.SyncDLCKptsDf.populate", lambda: dlc.SyncDLCKptsDf().populate())
+        run_step(
+            "dlc.DLCProcessor.populate",
+            lambda: populate_pending(dlc.DLCProcessor, vr4mice.DLC, logger=logger),
+        )
+        run_step(
+            "dlc.DLCKptsDf.populate",
+            lambda: populate_pending(dlc.DLCKptsDf, vr4mice.DLC, logger=logger),
+        )
+        run_step(
+            "dlc.SyncDLCKptsDf.populate",
+            lambda: populate_pending(
+                dlc.SyncDLCKptsDf, dlc.DLCKptsDf, logger=logger
+            ),
+        )
         run_step(
             "dlc.OfflineKinematics.populate",
-            lambda: dlc.OfflineKinematics().populate(),
+            lambda: populate_pending(
+                dlc.OfflineKinematics, dlc.SyncDLCKptsDf, logger=logger
+            ),
         )
 
         run_step(
             "session_metrics.SessionMetrics.populate",
-            lambda: session_metrics.SessionMetrics().populate(),
+            lambda: populate_pending(
+                session_metrics.SessionMetrics, vr4mice.Dataset, logger=logger
+            ),
         )
         run_step(
             "session_metrics.TrialMetrics.populate",
-            lambda: session_metrics.TrialMetrics().populate(),
+            lambda: populate_pending(
+                session_metrics.TrialMetrics, base_analysis.DataFrame, logger=logger
+            ),
         )
 
         run_step(
             "interpolated_trajectories.InterpolatedTrials.populate",
-            lambda: interpolated_trajectories.InterpolatedTrials().populate(),
+            lambda: populate_pending(
+                interpolated_trajectories.InterpolatedTrials,
+                base_analysis.DataFrame,
+                logger=logger,
+            ),
         )
         run_step(
             "interpolated_trajectories.MeanXYTrajectory.populate",
-            lambda: interpolated_trajectories.MeanXYTrajectory().populate(),
+            lambda: populate_pending(
+                interpolated_trajectories.MeanXYTrajectory,
+                interpolated_trajectories.InterpolatedTrials,
+                logger=logger,
+            ),
         )
         run_step(
             "interpolated_trajectories.YBinnedXYTrajectory.populate",
-            lambda: interpolated_trajectories.YBinnedXYTrajectory().populate(),
+            lambda: populate_pending(
+                interpolated_trajectories.YBinnedXYTrajectory,
+                interpolated_trajectories.InterpolatedTrials,
+                logger=logger,
+            ),
         )
         run_step(
             "interpolated_trajectories.MeanVelocities.populate",
-            lambda: interpolated_trajectories.MeanVelocities().populate(),
+            lambda: populate_pending(
+                interpolated_trajectories.MeanVelocities,
+                interpolated_trajectories.InterpolatedTrials,
+                logger=logger,
+            ),
         )
 
         run_step(
             "vr4mice.SignalsPhotodiode.populate",
-            lambda: vr4mice.SignalsPhotodiode().populate(),
+            lambda: populate_pending(
+                vr4mice.SignalsPhotodiode, vr4mice.Dataset, logger=logger
+            ),
         )
         run_step(
             "latency_tests.SignalsPhotodiodeAligned.populate",
-            lambda: latency_tests.SignalsPhotodiodeAligned().populate(),
+            lambda: populate_pending(
+                latency_tests.SignalsPhotodiodeAligned,
+                vr4mice.SignalsPhotodiode,
+                logger=logger,
+            ),
         )
         run_step(
             "latency_tests.AllLatencies.populate",
-            lambda: latency_tests.AllLatencies().populate(),
+            lambda: populate_pending(
+                latency_tests.AllLatencies,
+                latency_tests.SignalsPhotodiodeAligned,
+                logger=logger,
+            ),
         )
 
         run_step(
             "base_analysis.SummaryPlots.populate",
-            lambda: base_analysis.SummaryPlots().populate(),
+            lambda: populate_pending(
+                base_analysis.SummaryPlots, vr4mice.Dataset, logger=logger
+            ),
         )
 
     if args.aws:
@@ -223,21 +285,38 @@ def main():
             "import inputs_videos schema", import_inputs_videos_schema
         )
         if inputs_videos:
+            from vr4mice.schema import vr4mice
+            from vr4mice.utils.populate_helpers import populate_pending
+
             run_step(
                 "inputs_videos.RawVideo.populate",
-                lambda: inputs_videos.RawVideo().populate(),
+                lambda: populate_pending(
+                    inputs_videos.RawVideo, vr4mice.Dataset, logger=logger
+                ),
             )
             run_step(
                 "inputs_videos.ProcessedVideo.populate",
-                lambda: inputs_videos.ProcessedVideo().populate(),
+                lambda: populate_pending(
+                    inputs_videos.ProcessedVideo,
+                    inputs_videos.RawVideo,
+                    logger=logger,
+                ),
             )
             run_step(
                 "inputs_videos.VideoSyncSignal.populate",
-                lambda: inputs_videos.VideoSyncSignal().populate(),
+                lambda: populate_pending(
+                    inputs_videos.VideoSyncSignal,
+                    inputs_videos.ProcessedVideo,
+                    logger=logger,
+                ),
             )
             run_step(
                 "inputs_videos.AlignedVideoFrame.populate",
-                lambda: inputs_videos.AlignedVideoFrame().populate(),
+                lambda: populate_pending(
+                    inputs_videos.AlignedVideoFrame,
+                    inputs_videos.VideoSyncSignal,
+                    logger=logger,
+                ),
             )
 
             if check_folder_existence and fetch_data:
