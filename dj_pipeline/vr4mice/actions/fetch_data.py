@@ -45,8 +45,10 @@ def _create_mice_dict(all_mice: dict) -> dict:
         if session_incr == 0:
             last_exp = None
         else:
-            last_session = (exp.Session() & mouse) & "session_increment = %d" % (
-                session_incr - 1
+            last_session = (
+                exp.Session()
+                & {"mouse_name": mouse_name}
+                & {"session_increment": session_incr - 1}
             )
             last_exp = last_session.fetch("doe")[0]
 
