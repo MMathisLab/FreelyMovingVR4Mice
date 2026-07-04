@@ -65,11 +65,18 @@ class DLCProcessor(dj.Imported):
 
         try:
             fpath = (vr4mice.DLC & key).fetch1("proc_filepath")
-            data = np.load(fpath, allow_pickle=True)
+            proc_data = np.load(fpath, allow_pickle=True)
+            if isinstance(proc_data, np.ndarray) and proc_data.ndim == 0:
+                proc_data = proc_data.item()
 
             key = _complete_dlc_key(key)  # TODO: add allow_direct_insert in arg
 
-            data = {**key, **data}
+            # PROC files may include metadata (e.g. signal_type) not stored in DLCProcessor
+            table_attrs = set(self.heading.names) - set(self.primary_key)
+            data = {
+                **key,
+                **{attr: proc_data[attr] for attr in table_attrs if attr in proc_data},
+            }
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
