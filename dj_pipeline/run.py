@@ -25,6 +25,7 @@ logger = Logger.get_logger()
     "latency": compute latencies based on photodiode signals
     "inputs_videos": process input videos and extract frames
     "decision": analyze decision-making metrics
+    "maintenance": rebuild DataJoint lineage tables (one-time setup)
 """
 
 
@@ -76,8 +77,9 @@ if __name__ == "__main__":
             "sync_days",
             "inputs_videos",
             "decision",
+            "maintenance",
         ],
-        help="Mode to execute: 'connect', 'populate', 'summary', 'dlc', 'fetch', 'sync_days', 'analysis', 'inputs_videos', 'decision'",
+        help="Mode to execute: 'connect', 'populate', 'summary', 'dlc', 'fetch', 'sync_days', 'analysis', 'inputs_videos', 'decision', 'maintenance'",
     )
 
     args = parser.parse_args()
@@ -248,3 +250,8 @@ if __name__ == "__main__":
         from vr4mice.actions.sync_days import sync_days
 
         sync_days(path="/data/data")
+
+    elif args.mode == "maintenance":
+        from vr4mice.utils.maintenance import rebuild_lineage
+
+        rebuild_lineage()
