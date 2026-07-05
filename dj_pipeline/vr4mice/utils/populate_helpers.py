@@ -48,7 +48,10 @@ def pending_keys(source, target, *, exclude_failed: bool = True) -> List[dict]:
 
         failed_datasets = {
             row["dataset"]
-            for row in vr4mice.FailedSession().fetch("dataset", as_dict=True)
+            for row in (
+                vr4mice.FailedSession()
+                & {"failed_table_name": target_cls.__name__}
+            ).fetch("dataset", as_dict=True)
             if row.get("dataset")
         }
         if failed_datasets:
