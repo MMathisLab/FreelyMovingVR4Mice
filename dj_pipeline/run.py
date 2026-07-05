@@ -20,15 +20,14 @@ logger = Logger.get_logger()
     "summary": generate summary plots: populate summary plots
     "dlc": process DeepLabCut data: populate dlc tables
     "update": sync missing data in existing tables
-    "sync_days": synchronize days in GUI .npy files (/data/data + /data/processed)
+    "sync_days": synchronize days in the dataset (process raw .npy files)
     "interp": interpolate trajectories and compute kinematics
     "latency": compute latencies based on photodiode signals
     "inputs_videos": process input videos and extract frames
     "decision": analyze decision-making metrics
     "maintenance": rebuild DataJoint lineage tables (one-time setup)
-    "sync_mice": pull Mouse metadata from main DB for local session mice
-    "cleanup_mice": remove stub Mouse rows without local sessions
-    "recover_base": recovery — cleanup orphan exp/mice, repopulate base from GUI files
+
+    exp/mice base schema (sync_mice, recover_base, …): use run_base.py
 """
 
 
@@ -66,18 +65,6 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--no-populate-base",
-        action="store_true",
-        help="Skip exp/mice base schema during populate (default: populate base).",
-    )
-
-    parser.add_argument(
-        "--force",
-        action="store_true",
-        help="Apply destructive steps (cleanup_mice, recover_base orphan deletion).",
-    )
-
-    parser.add_argument(
         "mode",
         choices=[
             "connect",
@@ -90,14 +77,11 @@ if __name__ == "__main__":
             "ar_paper",
             "latency",
             "sync_days",
-            "sync_mice",
-            "cleanup_mice",
-            "recover_base",
             "inputs_videos",
             "decision",
             "maintenance",
         ],
-        help="Mode to execute: connect, populate, fetch, sync_mice, cleanup_mice, ...",
+        help="Mode to execute: connect, populate, analysis, dlc, latency, ...",
     )
 
     args = parser.parse_args()
@@ -126,11 +110,7 @@ if __name__ == "__main__":
         # Intentionally not calling sync_days here: day synchronization should be
         # run explicitly via the "sync_days" mode when needed, rather than on every
         # populate run.
-        populate_rig(
-            path=path,
-            move=move,
-            populate_base=not args.no_populate_base,
-        )
+        populate_rig(path=path, move=move, populate_base=False)
         populate_pending(vr4mice.Collab, vr4mice.Dataset, logger=logger)
 
     elif args.mode == "analysis":
@@ -271,24 +251,9 @@ if __name__ == "__main__":
     elif args.mode == "sync_days":
         from vr4mice.actions.sync_days import sync_days
 
-        sync_days()
+        sync_days(path="/data/data")
 
     elif args.mode == "maintenance":
         from vr4mice.utils.maintenance import rebuild_lineage
 
         rebuild_lineage()
-
-    elif args.mode == "sync_mice":
-        from vr4mice.actions.mouse_sync import sync_mice_from_main
-
-        sync_mice_from_main(log=logger)
-
-    elif args.mode == "cleanup_mice":
-        from vr4mice.actions.mouse_sync import cleanup_mice_without_sessions
-
-        cleanup_mice_without_sessions(dry_run=not args.force, stubs_only=True)
-
-    elif args.mode == "recover_base":
-        from vr4mice.actions.recover_base import run_recovery
-
-        run_recovery(force=args.force)

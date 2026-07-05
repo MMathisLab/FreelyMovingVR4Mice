@@ -26,7 +26,7 @@ from vr4mice.utils.logger import Logger
 logger = Logger.get_logger()
 
 SYNC_EXP_COMMAND = (
-    "python run.py sync_exp  # not yet implemented; push local exp.Session to main DB "
+    "python run_base.py sync_exp  # not yet implemented; push local exp.Session to main DB "
     "(set DJ_MAIN_HOST; requires write access on main exp schema)"
 )
 

@@ -17,7 +17,7 @@ logger = Logger.get_logger()
 STUB_MOUSE_ID = -1
 STUB_DOB = datetime.date(1970, 1, 1)
 SYNC_MICE_COMMAND = (
-    "python run.py sync_mice  # set DJ_MAIN_HOST (and optionally DJ_MAIN_USER/DJ_MAIN_PWD)"
+    "python run_base.py sync_mice  # set DJ_MAIN_HOST (and optionally DJ_MAIN_USER/DJ_MAIN_PWD)"
 )
 
 MOUSE_SYNC_TABLES = (
@@ -244,7 +244,7 @@ def cleanup_mice_without_sessions(*, dry_run: bool = True, stubs_only: bool = Tr
     if dry_run:
         logger.warning(
             "Dry run: would delete %d Mouse rows without local sessions: %s. "
-            "Re-run with: python run.py cleanup_mice --force",
+            "Re-run with: python run_base.py cleanup_mice --force",
             len(candidates),
             ", ".join(sorted(candidates)),
         )
