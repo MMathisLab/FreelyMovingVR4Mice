@@ -127,7 +127,9 @@ if __name__ == "__main__":
         populate_pending(
             base_analysis.BoxDataFrame, base_analysis.DataFrame, logger=logger
         )
-        populate_pending(base_analysis.GitCommit, base_analysis.DataFrame, logger=logger)
+        populate_pending(
+            base_analysis.GitCommit, base_analysis.DataFrame, logger=logger
+        )
 
     elif args.mode == "summary":
         from vr4mice.schema import base_analysis, summary_emails, vr4mice
@@ -233,7 +235,9 @@ if __name__ == "__main__":
         from vr4mice.utils.populate_helpers import populate_pending
 
         populate_pending(inputs_videos.RawVideo, vr4mice.Dataset, logger=logger)
-        populate_pending(inputs_videos.ProcessedVideo, inputs_videos.RawVideo, logger=logger)
+        populate_pending(
+            inputs_videos.ProcessedVideo, inputs_videos.RawVideo, logger=logger
+        )
         populate_pending(
             inputs_videos.VideoSyncSignal, inputs_videos.ProcessedVideo, logger=logger
         )

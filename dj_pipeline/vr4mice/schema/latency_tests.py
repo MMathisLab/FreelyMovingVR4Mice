@@ -56,9 +56,7 @@ class SignalsPhotodiodeAligned(dj.Computed):
                 )
 
             data = {**key, **data}
-            self.insert1(
-                data, allow_direct_insert=True, skip_duplicates=True
-            )
+            self.insert1(data, allow_direct_insert=True, skip_duplicates=True)
         except dj.errors.DuplicateError:
             logger.debug(
                 "%s already populated for %s",

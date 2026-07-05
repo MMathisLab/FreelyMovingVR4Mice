@@ -253,9 +253,7 @@ def populate_dataset_tables(
 
     Returns True only when every target table row exists after populate.
     """
-    targets = collect_population_targets(
-        raw_data, schemas, srcf=srcf, dstf=dstf
-    )
+    targets = collect_population_targets(raw_data, schemas, srcf=srcf, dstf=dstf)
     if not targets:
         logger.warning("No population targets resolved for dataset %s.", dataset)
         return False

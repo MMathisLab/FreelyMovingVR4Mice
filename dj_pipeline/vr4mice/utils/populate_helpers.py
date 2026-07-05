@@ -42,7 +42,9 @@ def pending_keys(source, target, *, exclude_failed: bool = True) -> List[dict]:
     source_table = _table_instance(source)
 
     primary_key = list(target_table.primary_key)
-    missing = [field for field in primary_key if field not in source_table.heading.names]
+    missing = [
+        field for field in primary_key if field not in source_table.heading.names
+    ]
     if missing:
         raise ValueError(
             f"Source table {source_table.__class__.__name__} is missing primary-key "
@@ -59,8 +61,7 @@ def pending_keys(source, target, *, exclude_failed: bool = True) -> List[dict]:
         failed_datasets = {
             row["dataset"]
             for row in (
-                vr4mice.FailedSession()
-                & {"failed_table_name": target_cls.__name__}
+                vr4mice.FailedSession() & {"failed_table_name": target_cls.__name__}
             ).fetch("dataset", as_dict=True)
             if row.get("dataset")
         }

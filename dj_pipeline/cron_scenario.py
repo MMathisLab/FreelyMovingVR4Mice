@@ -158,9 +158,7 @@ def main():
         )
         run_step(
             "dlc.SyncDLCKptsDf.populate",
-            lambda: populate_pending(
-                dlc.SyncDLCKptsDf, dlc.DLCKptsDf, logger=logger
-            ),
+            lambda: populate_pending(dlc.SyncDLCKptsDf, dlc.DLCKptsDf, logger=logger),
         )
         run_step(
             "dlc.OfflineKinematics.populate",

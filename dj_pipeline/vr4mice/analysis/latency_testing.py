@@ -59,7 +59,9 @@ def normalize_proc_data(data: dict) -> dict:
         data["start_time"] = 0.0
 
     if "signal_delay" in data and data["signal_delay"] is not None:
-        data["signal_delay"] = _coerce_float_scalar(data["signal_delay"], "signal_delay")
+        data["signal_delay"] = _coerce_float_scalar(
+            data["signal_delay"], "signal_delay"
+        )
 
     return data
 

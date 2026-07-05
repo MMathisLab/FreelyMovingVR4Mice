@@ -97,10 +97,7 @@ def _resample_data_frame(
         blocks.append(grouped[continuous_columns].resample(t).mean().interpolate())
     if categorical_columns:
         blocks.append(
-            grouped[categorical_columns]
-            .resample(t)
-            .first(numeric_only=False)
-            .ffill()
+            grouped[categorical_columns].resample(t).first(numeric_only=False).ffill()
         )
     if boolean_columns:
         blocks.append(grouped[boolean_columns].resample(t).max().ffill())

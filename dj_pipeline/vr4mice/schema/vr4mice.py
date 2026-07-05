@@ -527,7 +527,11 @@ class SignalsPhotodiode(dj.Computed):
     def make(self, key):
         """Compute photodiode-aligned signals for a dataset."""
         from vr4mice.actions.populate_rig import get_files_paths
-        from vr4mice.analysis.latency_testing import check_data, load_proc_dict, normalize_proc_data
+        from vr4mice.analysis.latency_testing import (
+            check_data,
+            load_proc_dict,
+            normalize_proc_data,
+        )
 
         if FailedSession.should_skip(key, self.__class__.__name__, logger):
             return

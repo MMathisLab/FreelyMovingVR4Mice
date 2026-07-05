@@ -119,9 +119,7 @@ class DataFrame(dj.Computed):
 
         dataset = key["dataset"]
         if dataset.startswith("Latencytest"):
-            logger.debug(
-                "Skipping DataFrame for latency test session %s", dataset
-            )
+            logger.debug("Skipping DataFrame for latency test session %s", dataset)
             return
 
         if not _behavior_trials_remain(key):
@@ -130,9 +128,7 @@ class DataFrame(dj.Computed):
                 self.__class__.__name__,
                 "No trials after excluding initialization trial 1",
             )
-            logger.debug(
-                "Skipping DataFrame for %s: no behavior trials", dataset
-            )
+            logger.debug("Skipping DataFrame for %s: no behavior trials", dataset)
             return
 
         try:
@@ -360,9 +356,7 @@ class SummaryPlots(dj.Computed):
             logger.info(f"Summary plots populated successfully for {dataset}")
         except Exception as err:
             table_name = self.__class__.__name__
-            vr4mice.FailedSession().add_entry(
-                f"{dataset}", f"{table_name}", str(err)
-            )
+            vr4mice.FailedSession().add_entry(f"{dataset}", f"{table_name}", str(err))
             err_msg = f"Can't populate {table_name}, dataset: {dataset}. Error: {err}."
             logger.warning(err_msg)
 

@@ -9,9 +9,7 @@ _verbose = False
 class _DataJointNoiseFilter(logging.Filter):
     """Drop repetitive DJ 2.x messages that are safe to ignore after explicit-key fixes."""
 
-    _SKIP_SUBSTRINGS = (
-        "Semantic check disabled: ~lineage table not found",
-    )
+    _SKIP_SUBSTRINGS = ("Semantic check disabled: ~lineage table not found",)
 
     def filter(self, record: logging.LogRecord) -> bool:
         if _verbose:
