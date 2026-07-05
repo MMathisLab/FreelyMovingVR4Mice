@@ -125,7 +125,7 @@ if __name__ == "__main__":
         populate_pending(base_analysis.GitCommit, base_analysis.DataFrame, logger=logger)
 
     elif args.mode == "summary":
-        from vr4mice.schema import base_analysis, vr4mice
+        from vr4mice.schema import base_analysis, summary_emails, vr4mice
         from vr4mice.utils.populate_helpers import populate_pending
 
         populate_pending(
@@ -133,6 +133,7 @@ if __name__ == "__main__":
             base_analysis.DataFrame & base_analysis.BoxDataFrame,
             logger=logger,
         )
+        summary_emails.send_pending_summary_emails(logger=logger)
 
     elif args.mode == "dlc":
         # NOTE: populate and analysis have to be run before

@@ -26,6 +26,7 @@ def _schema_pairs() -> Iterable[Tuple[str, object]]:
         interpolated_trajectories,
         latency_tests,
         session_metrics,
+        summary_emails,
         vr4mice,
     )
 
@@ -35,6 +36,7 @@ def _schema_pairs() -> Iterable[Tuple[str, object]]:
         ("vr4mice", vr4mice.schema),
         ("base", base.schema),
         ("base_analysis", base_analysis.schema),
+        ("summary_emails", summary_emails.schema),
         ("dlc", dlc.schema),
         ("session_metrics", session_metrics.schema),
         ("interpolated_trajectories", interpolated_trajectories.schema),

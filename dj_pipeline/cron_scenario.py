@@ -90,6 +90,7 @@ def main():
             interpolated_trajectories,
             session_metrics,
             latency_tests,
+            summary_emails,
         )
 
         return (
@@ -99,6 +100,7 @@ def main():
             interpolated_trajectories,
             session_metrics,
             latency_tests,
+            summary_emails,
         )
 
     core_schemas = run_import("import core schemas", import_core_schemas)
@@ -112,6 +114,7 @@ def main():
             interpolated_trajectories,
             session_metrics,
             latency_tests,
+            summary_emails,
         ) = core_schemas
 
         run_step(
@@ -239,6 +242,10 @@ def main():
                 base_analysis.DataFrame & base_analysis.BoxDataFrame,
                 logger=logger,
             ),
+        )
+        run_step(
+            "summary_emails.send_pending_summary_emails",
+            lambda: summary_emails.send_pending_summary_emails(logger=logger),
         )
 
     if args.aws:

@@ -7,7 +7,6 @@ from typing import List, Optional
 
 import datajoint as dj
 import pandas as pd
-from base_actions.send_email import email
 
 from vr4mice.schema import base, vr4mice
 from vr4mice.analysis.summary_dj import vr4mice_summary_plots
@@ -319,29 +318,35 @@ class SummaryPlots(dj.Computed):
             return False
 
         data = {**key, **{"filename": full_path}}
-        if base.Base() & key:
-            key = (base.Base() & key).fetch(as_dict=True)[0]
-        else:
-            key = self.parse_dataset(key["dataset"])
+        dataset = key["dataset"]
 
         err_msg = None
         try:
             self.insert1(data, allow_direct_insert=True, skip_duplicates=True)
-            logger.info(f"Summary plots populated successfully for {key}")
+            logger.info(f"Summary plots populated successfully for {dataset}")
         except Exception as err:
             table_name = self.__class__.__name__
-            dataset = key.get("dataset") if isinstance(key, dict) else None
-            if dataset:
-                vr4mice.FailedSession().add_entry(
-                    f"{dataset}", f"{table_name}", str(err)
-                )
-            err_msg = f"Can't populate {table_name}, key: {key}. Error: {err}."
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{table_name}", str(err)
+            )
+            err_msg = f"Can't populate {table_name}, dataset: {dataset}. Error: {err}."
             logger.warning(err_msg)
 
         if send:
-            insert_send_email(key, full_path, err_msg)
+            from vr4mice.schema import summary_emails
+
+            email_key = summary_emails.build_summary_email_key(dataset)
+            if email_key:
+                summary_emails.send_and_record_summary_email(
+                    dataset, email_key, str(full_path), err_msg=err_msg, logger=logger
+                )
+            else:
+                logger.warning(
+                    "Could not parse session metadata for %s; summary email skipped",
+                    dataset,
+                )
         else:
-            logger.info(f"Send flag is false for {key}. No email.")
+            logger.info(f"Send flag is false for {dataset}. No email.")
 
     def parse_dataset(self, dataset):
         pattern = r"(?:(?P<mouse_name>[^_]+)_)?(?P<day>\d{4}-\d{2}-\d{2})(?:_(?P<attempt>\d+))?(?:\.pickle)?$"
@@ -384,50 +389,6 @@ class SummaryPlots(dj.Computed):
 
         subtitle = task_name + ": " + name
         return subtitle
-
-
-def insert_send_email(key, filename, err_msg):
-    """Insert summary plots row and optionally email recipients."""
-
-    from base_schemas.schemas import exp
-
-    toaddr = []
-    try:
-        default_recipient_names = os.getenv("VR4MICE_EMAIL_RECIPIENTS")
-        if default_recipient_names:
-            recipient_names = [
-                name.strip()
-                for name in default_recipient_names.split(",")
-                if name.strip()
-            ]
-        else:
-            recipient_names = ["mathislab"]
-
-        for name in recipient_names:
-            user_email = (exp.Experimenter & {"experimenter_name": name}).fetch("mail")[
-                0
-            ]
-            if user_email:
-                toaddr.append(user_email)
-
-        if len(exp.Session() & key) > 0:
-            user = (exp.Session() & key).fetch("experimenter_name", as_dict=True)[0]
-            if len(user) > 0:
-                addr = (exp.Experimenter & user).fetch("mail")[0]
-                if addr and addr not in toaddr:
-                    toaddr.append(addr)
-
-    except dj.DataJointError as e:
-        logger.warning(f"Error fetching experimenter email: {e}")
-        addr = None
-
-    logger.info(f"Sending email now for {key}")
-    error = True if err_msg else False
-    email_type = "summary" if err_msg is None else "error"
-    try:
-        email(key, toaddr, filename, error=error, message=err_msg)
-    except Exception as email_err:
-        logger.warning(f"Failed to send {email_type} email for {key}: {email_err}")
 
 
 @schema
