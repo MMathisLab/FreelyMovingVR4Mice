@@ -326,7 +326,7 @@ class SummaryPlots(dj.Computed):
 
         err_msg = None
         try:
-            self.insert1(data, allow_direct_insert=True)
+            self.insert1(data, allow_direct_insert=True, skip_duplicates=True)
             logger.info(f"Summary plots populated successfully for {key}")
         except Exception as err:
             table_name = self.__class__.__name__

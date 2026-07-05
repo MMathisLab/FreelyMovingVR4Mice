@@ -235,7 +235,9 @@ def main():
         run_step(
             "base_analysis.SummaryPlots.populate",
             lambda: populate_pending(
-                base_analysis.SummaryPlots, vr4mice.Dataset, logger=logger
+                base_analysis.SummaryPlots,
+                base_analysis.DataFrame & base_analysis.BoxDataFrame,
+                logger=logger,
             ),
         )
 

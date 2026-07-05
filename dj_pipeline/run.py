@@ -128,7 +128,11 @@ if __name__ == "__main__":
         from vr4mice.schema import base_analysis, vr4mice
         from vr4mice.utils.populate_helpers import populate_pending
 
-        populate_pending(base_analysis.SummaryPlots, vr4mice.Dataset, logger=logger)
+        populate_pending(
+            base_analysis.SummaryPlots,
+            base_analysis.DataFrame & base_analysis.BoxDataFrame,
+            logger=logger,
+        )
 
     elif args.mode == "dlc":
         # NOTE: populate and analysis have to be run before
