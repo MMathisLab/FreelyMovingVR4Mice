@@ -105,7 +105,10 @@ def main():
 
     core_schemas = run_import("import core schemas", import_core_schemas)
     if core_schemas and create_folder_if_not_exist:
-        from vr4mice.utils.populate_helpers import populate_pending
+        from vr4mice.utils.populate_helpers import (
+            behavior_dataset_source,
+            populate_pending,
+        )
 
         (
             base_analysis,
@@ -129,7 +132,7 @@ def main():
         run_step(
             "base_analysis.DataFrame.populate",
             lambda: populate_pending(
-                base_analysis.DataFrame, vr4mice.Dataset, logger=logger
+                base_analysis.DataFrame, behavior_dataset_source(), logger=logger
             ),
         )
         run_step(
@@ -169,7 +172,9 @@ def main():
         run_step(
             "session_metrics.SessionMetrics.populate",
             lambda: populate_pending(
-                session_metrics.SessionMetrics, vr4mice.Dataset, logger=logger
+                session_metrics.SessionMetrics,
+                behavior_dataset_source(),
+                logger=logger,
             ),
         )
         run_step(

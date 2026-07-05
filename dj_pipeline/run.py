@@ -113,12 +113,17 @@ if __name__ == "__main__":
 
     elif args.mode == "analysis":
         from vr4mice.schema import base_analysis, vr4mice
-        from vr4mice.utils.populate_helpers import populate_pending
+        from vr4mice.utils.populate_helpers import (
+            behavior_dataset_source,
+            populate_pending,
+        )
 
         # NOTE: populate has to be run before
 
         create_folder_if_not_exist("/data/summary_plots")
-        populate_pending(base_analysis.DataFrame, vr4mice.Dataset, logger=logger)
+        populate_pending(
+            base_analysis.DataFrame, behavior_dataset_source(), logger=logger
+        )
         populate_pending(
             base_analysis.BoxDataFrame, base_analysis.DataFrame, logger=logger
         )
@@ -154,9 +159,16 @@ if __name__ == "__main__":
             session_metrics,
             vr4mice,
         )
-        from vr4mice.utils.populate_helpers import populate_pending
+        from vr4mice.utils.populate_helpers import (
+            behavior_dataset_source,
+            populate_pending,
+        )
 
-        populate_pending(session_metrics.SessionMetrics, vr4mice.Dataset, logger=logger)
+        populate_pending(
+            session_metrics.SessionMetrics,
+            behavior_dataset_source(),
+            logger=logger,
+        )
         populate_pending(
             session_metrics.TrialMetrics, base_analysis.DataFrame, logger=logger
         )

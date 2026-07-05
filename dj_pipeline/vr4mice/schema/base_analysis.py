@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import datajoint as dj
+import numpy as np
 import pandas as pd
 
 from vr4mice.schema import base, vr4mice
@@ -18,6 +19,14 @@ schema_name = "base_analysis"
 schema = get_schema(schema_name, locals())
 
 logger = Logger.get_logger()
+
+
+def _behavior_trials_remain(key: dict) -> bool:
+    """False when only initialization trial 1 exists (excluded from DataFrame)."""
+    episodes = np.unique(
+        np.asarray((vr4mice.State & key).fetch("episode"), dtype=np.int32)
+    )
+    return bool(np.any(episodes != 1))
 
 
 @schema
@@ -106,6 +115,24 @@ class DataFrame(dj.Computed):
             return
 
         if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
+        dataset = key["dataset"]
+        if dataset.startswith("Latencytest"):
+            logger.debug(
+                "Skipping DataFrame for latency test session %s", dataset
+            )
+            return
+
+        if not _behavior_trials_remain(key):
+            vr4mice.FailedSession().add_entry(
+                dataset,
+                self.__class__.__name__,
+                "No trials after excluding initialization trial 1",
+            )
+            logger.debug(
+                "Skipping DataFrame for %s: no behavior trials", dataset
+            )
             return
 
         try:

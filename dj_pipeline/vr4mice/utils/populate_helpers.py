@@ -4,6 +4,16 @@ from __future__ import annotations
 
 from typing import Any, List, Union
 
+# Latency calibration sessions use latency_tests.*, not VR behavior DataFrame.
+BEHAVIOR_DATASET_RESTRICTION = 'dataset NOT LIKE "Latencytest%"'
+
+
+def behavior_dataset_source():
+    """Return Dataset rows eligible for VR behavior analysis (DataFrame, metrics, …)."""
+    from vr4mice.schema import vr4mice
+
+    return vr4mice.Dataset & BEHAVIOR_DATASET_RESTRICTION
+
 
 def _table_class(table: Union[type, Any]) -> type:
     if isinstance(table, type):

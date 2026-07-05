@@ -81,3 +81,4 @@ vr4mice/cfg/*
 tests/logs/
 tests/.coverage
 .coverage
+docs/software/dj2_fix_pr_rationale.md
