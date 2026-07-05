@@ -63,7 +63,7 @@ def _categorize_columns(df: pd.DataFrame) -> Tuple[List[str], List[str], List[st
     continuous_columns = []
 
     for col in df.columns:
-        if col in categorical_columns + ["time"]:
+        if col in categorical_columns + ["time", "trial"]:
             continue
 
         series = df[col]
@@ -423,8 +423,8 @@ def create_data_frame(
     # Handling for first frame in trial - the first frame results in the default x,y position and head_dir for virtual mouse.
     # They therefore needs to be set to a nan and then interpolated from neighboring points.
     df = (
-        df.groupby("trial", group_keys=False)
-        .apply(set_first_xy_to_nan, include_groups=False)
+        df.groupby("trial", as_index=False)
+        .apply(set_first_xy_to_nan)
         .reset_index(drop=True)
     )
     df[["x", "y", "head_dir"]] = df[["x", "y", "head_dir"]].interpolate()
