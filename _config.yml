@@ -8,6 +8,20 @@ sphinx:
     autodoc_mock_imports: "list"
     html_static_path:
       - docs/_static
+    html_css_files:
+      - custom.css
+    html_js_files:
+      - custom-header-icons.js
+    html_theme_options:
+      icon_links:
+        - name: GitHub
+          url: https://github.com/MMathisLab/FreelyMovingVR4Mice
+          icon: fa-brands fa-github
+          type: fontawesome
+        - name: Paper
+          url: https://www.cell.com/current-biology/fulltext/S0960-9822(26)00722-0?
+          icon: fa-solid fa-file-lines
+          type: fontawesome
   extra_extensions:
     - numpydoc
 
