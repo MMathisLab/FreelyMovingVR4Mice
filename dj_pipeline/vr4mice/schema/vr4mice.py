@@ -527,7 +527,7 @@ class SignalsPhotodiode(dj.Computed):
     def make(self, key):
         """Compute photodiode-aligned signals for a dataset."""
         from vr4mice.actions.populate_rig import get_files_paths
-        from vr4mice.analysis.latency_testing import check_data
+        from vr4mice.analysis.latency_testing import check_data, load_proc_dict, normalize_proc_data
 
         if FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
@@ -546,7 +546,9 @@ class SignalsPhotodiode(dj.Computed):
             )
             logger.info(f"proc_filepath: {proc_filepath}")
             if os.path.exists(proc_filepath):
-                photodiode_data = np.load(proc_filepath, allow_pickle=True)
+                photodiode_data = normalize_proc_data(
+                    load_proc_dict(np.load(proc_filepath, allow_pickle=True))
+                )
                 if check_data(photodiode_data):
                     data = {
                         "start_time": photodiode_data["start_time"],
@@ -563,9 +565,14 @@ class SignalsPhotodiode(dj.Computed):
                     logger.warning(f"Photodiode data check failed for {key['dataset']}")
                     return
             else:
-                logger.warning(f"PROC file not found: {key['dataset']}")
+                logger.debug(f"PROC file not found, skipping latency for {key['dataset']}")
                 return
 
+        except (TypeError, ValueError) as err:
+            logger.warning(
+                "Skipping %s for %s: %s", self.__class__.__name__, key["dataset"], err
+            )
+            return
         except Exception as err:
             dataset = key["dataset"]
             FailedSession().add_entry(

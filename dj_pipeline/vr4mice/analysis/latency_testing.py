@@ -5,6 +5,64 @@ from vr4mice.utils.logger import Logger
 
 logger = Logger.get_logger()
 
+_PROC_NUMERIC_KEYS = (
+    "frame_time",
+    "time_stamp",
+    "photodiode_read",
+    "photodiode_time",
+    "signal",
+)
+
+
+def load_proc_dict(raw) -> dict:
+    """Return a dict from a PROC np.load result (handles 0-d object arrays)."""
+    if isinstance(raw, np.ndarray) and raw.ndim == 0:
+        raw = raw.item()
+    if not isinstance(raw, dict):
+        raise TypeError(f"PROC file must contain a dict, got {type(raw)}")
+    return raw
+
+
+def _coerce_float_array(value, name: str) -> np.ndarray:
+    arr = np.asarray(value)
+    if arr.dtype.kind in {"U", "S", "O"}:
+        try:
+            arr = arr.astype(float)
+        except (ValueError, TypeError) as err:
+            raise TypeError(f"{name} is not numeric (dtype={arr.dtype})") from err
+    return np.asarray(arr, dtype=float)
+
+
+def _coerce_float_scalar(value, name: str) -> float:
+    return float(_coerce_float_array(value, name).reshape(-1)[0])
+
+
+def normalize_proc_data(data: dict) -> dict:
+    """
+    Coerce PROC timing/signal fields to float arrays.
+
+    Some older PROC files store timestamps as short string arrays; numpy
+    arithmetic on those dtypes raises ufunc errors during latency checks.
+    """
+    data = dict(data)
+    for key in _PROC_NUMERIC_KEYS:
+        if key in data:
+            data[key] = _coerce_float_array(data[key], key)
+
+    if "start_time" in data:
+        data["start_time"] = _coerce_float_scalar(data["start_time"], "start_time")
+    elif "photodiode_time" in data and len(data["photodiode_time"]):
+        data["start_time"] = float(np.min(data["photodiode_time"]))
+    elif "frame_time" in data and len(data["frame_time"]):
+        data["start_time"] = float(np.min(data["frame_time"]))
+    else:
+        data["start_time"] = 0.0
+
+    if "signal_delay" in data and data["signal_delay"] is not None:
+        data["signal_delay"] = _coerce_float_scalar(data["signal_delay"], "signal_delay")
+
+    return data
+
 
 def check_data(data: dict):
     """
@@ -16,20 +74,12 @@ def check_data(data: dict):
     Returns:
         bool: True if all checks pass, False otherwise.
     """
-    # Check that all data variables are present
-    vars = [
-        "frame_time",
-        "time_stamp",
-        "photodiode_read",
-        "photodiode_time",
-        "signal",
-    ]
-
     try:
-        for var in vars:
+        data = normalize_proc_data(data)
+        for var in _PROC_NUMERIC_KEYS:
             if var not in data:
                 raise ValueError(f"{var} not found in PROC file")
-    except ValueError as e:
+    except (ValueError, TypeError) as e:
         logger.warning("Session population failed: %s", e)
         return False
 
@@ -51,8 +101,8 @@ def has_signal(data, mean_threshold: float = 8.0):
             data["frame_time"][np.where(data["signal"] > 0.5)[0][0]]
             - data["start_time"]
         )
-    except Exception as e:
-        logger.warning(f"Error finding delay, {e}.")
+    except (IndexError, TypeError, ValueError) as e:
+        logger.warning("Error finding delay, %s.", e)
         return False
 
     mean_start = np.mean(
@@ -223,6 +273,7 @@ def get_signals(data, threshold=0.2):
         - The function merges the processed photodiode data with the signal data based on time alignment.
     """
 
+    data = normalize_proc_data(data)
     photodiode_read = data["photodiode_read"]
     photodiode_time = data["photodiode_time"] - data["start_time"]
 
