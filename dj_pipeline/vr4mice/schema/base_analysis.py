@@ -113,10 +113,17 @@ class DataFrame(dj.Computed):
             data = data.to_dict(orient="list")
             data = {**key, **data, **{"interpolation": unity_to_physical_arena_size}}
 
-            self.insert1(data, allow_direct_insert=True)
+            self.insert1(data, allow_direct_insert=True, skip_duplicates=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
+            if "already exists" in str(err):
+                logger.debug(
+                    "%s already populated for %s",
+                    self.__class__.__name__,
+                    key["dataset"],
+                )
+                return
             dataset = key["dataset"]
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)

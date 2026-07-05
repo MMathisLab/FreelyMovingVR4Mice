@@ -88,34 +88,27 @@ def _resample_data_frame(
 
     t = f"{resampling_period_ms}ms"  # old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
 
+    df = df.copy()
     df["time"] = pd.to_datetime(df["step_time"], unit="s")
+    grouped = df.set_index("time").groupby("trial")
 
-    categorical_resampled = (
-        df.set_index("time")
-        .groupby("trial", as_index=False)[categorical_columns]
-        .resample(t)  # resample to fixed time intervals {resampling_period_ms} ms
-        .first(numeric_only=False)  # default
-        .ffill()
-    )
+    blocks = []
+    if continuous_columns:
+        blocks.append(grouped[continuous_columns].resample(t).mean().interpolate())
+    if categorical_columns:
+        blocks.append(
+            grouped[categorical_columns]
+            .resample(t)
+            .first(numeric_only=False)
+            .ffill()
+        )
+    if boolean_columns:
+        blocks.append(grouped[boolean_columns].resample(t).max().ffill())
 
-    boolean_resampled = (
-        df.set_index("time")
-        .groupby("trial", as_index=False)[boolean_columns]
-        .resample(t)
-        .max()
-        .ffill()
-    )
+    if not blocks:
+        raise ValueError("No columns available to resample")
 
-    continuous_resampled = (
-        df.set_index("time")
-        .groupby("trial", as_index=False)[continuous_columns]
-        .resample(t)
-        .mean()
-        .interpolate()
-    )
-    df = pd.concat(
-        [continuous_resampled, categorical_resampled, boolean_resampled], axis=1
-    ).reset_index()
+    df = pd.concat(blocks, axis=1).reset_index()
 
     if "level_0" in df.columns:
         df = df.drop(columns=["level_0"])
@@ -430,8 +423,8 @@ def create_data_frame(
     # Handling for first frame in trial - the first frame results in the default x,y position and head_dir for virtual mouse.
     # They therefore needs to be set to a nan and then interpolated from neighboring points.
     df = (
-        df.groupby("trial", as_index=False)
-        .apply(set_first_xy_to_nan)
+        df.groupby("trial", group_keys=False)
+        .apply(set_first_xy_to_nan, include_groups=False)
         .reset_index(drop=True)
     )
     df[["x", "y", "head_dir"]] = df[["x", "y", "head_dir"]].interpolate()
