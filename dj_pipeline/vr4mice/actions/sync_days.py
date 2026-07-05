@@ -1,4 +1,5 @@
 import os
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import Iterable, List, Optional, Sequence, Union
@@ -68,6 +69,35 @@ def _collect_gui_npy_files(paths: Iterable[str]) -> List[tuple[str, str, str]]:
     return entries
 
 
+def _days_from_exp_dates(
+    sessions: List[List[str]], date_format: str = "%Y-%m-%d"
+) -> dict[str, int]:
+    """
+    Assign experiment day numbers from calendar dates for one mouse.
+
+    First session date is day 1; gaps between calendar dates add to the day index
+    (e.g. Jan 1 → day 1, Jan 3 → day 3). Multiple attempts on the same date share
+    the same day number.
+    """
+    days = {}
+    sorted_sessions = sorted(
+        sessions, key=lambda row: datetime.strptime(row[0], date_format)
+    )
+    idx = 1
+    prev_date = ""
+
+    for date, name, attempt in sorted_sessions:
+        if date != prev_date:
+            if prev_date:
+                d1 = datetime.strptime(prev_date, date_format)
+                d2 = datetime.strptime(date, date_format)
+                idx += int((d2 - d1).days)
+            prev_date = date
+        days[f"{name}_{date}_{attempt}"] = idx
+
+    return days
+
+
 def sync_days(
     paths: Optional[Union[str, Sequence[str]]] = None,
     date_format: str = "%Y-%m-%d",
@@ -75,10 +105,14 @@ def sync_days(
     """
     Synchronize experiment day values in GUI .npy files.
 
+    Day is always relative to each mouse's experiment timeline:
+    - If the mouse already has exp.Session rows, day = (doe − first session doe) + 1.
+    - Otherwise day is inferred from session filenames on disk (earliest date = day 1),
+      scanning all requested folders together so data/ and processed/ stay consistent.
+
     Args:
         paths: One folder, a list of folders, or None. When None, scans both
-            /data/data and /data/processed together so day numbering stays
-            consistent across incoming and archived sessions.
+            /data/data and /data/processed together.
         date_format: Date format used in dataset filenames.
     """
     paths = _normalize_paths(paths)
@@ -118,21 +152,15 @@ def sync_days(
             logger.debug("Day for %s from DB: %d", dataset, ret)
             ret_arr[dataset] = ret
 
-    sorted_dir = sorted(raw_dir, key=lambda day: datetime.strptime(day[0], date_format))
+    by_mouse: dict[str, List[List[str]]] = defaultdict(list)
+    for date, name, attempt in raw_dir:
+        by_mouse[name].append([date, name, attempt])
 
-    idx = 1
-    prec = ""
-
-    for elm in sorted_dir:
-        if elm[0] != prec:
-            if prec != "":
-                d1 = datetime.strptime(prec, date_format)
-                d2 = datetime.strptime(elm[0], date_format)
-                delta = d2 - d1
-                idx += int(delta.days)
-            prec = elm[0]
-
-        ret_arr[elm[1] + "_" + elm[0] + "_" + elm[2]] = idx
+    for name, sessions in by_mouse.items():
+        ret_arr.update(_days_from_exp_dates(sessions, date_format=date_format))
+        logger.debug(
+            "Inferred days for %s from %d on-disk session(s).", name, len(sessions)
+        )
 
     for folder, filename, dataset in file_entries:
         if dataset not in ret_arr:
