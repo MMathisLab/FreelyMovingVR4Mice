@@ -19,6 +19,14 @@ logger = Logger.get_logger()
 _SESSION_DATE_RE = re.compile(r"(?:(?P<mouse>[^_]+)_)?(?P<day>\d{4}-\d{2}-\d{2})")
 
 
+def summary_email_recipient_names() -> List[str]:
+    """Experimenter names from VR4MICE_EMAIL_RECIPIENTS (comma-separated, set in .env)."""
+    raw = os.getenv("VR4MICE_EMAIL_RECIPIENTS", "").strip()
+    if not raw:
+        return []
+    return [name.strip() for name in raw.split(",") if name.strip()]
+
+
 @schema
 class SummaryPlotEmail(dj.Manual):
     """Tracks summary plot notification emails sent per session."""
@@ -109,13 +117,7 @@ def resolve_summary_email_recipients(dataset: str) -> List[str]:
     key = {"dataset": dataset}
     toaddr: List[str] = []
 
-    default_recipient_names = os.getenv("VR4MICE_EMAIL_RECIPIENTS")
-    if default_recipient_names:
-        recipient_names = [
-            name.strip() for name in default_recipient_names.split(",") if name.strip()
-        ]
-    else:
-        recipient_names = ["mathislab"]
+    recipient_names = summary_email_recipient_names()
 
     for name in recipient_names:
         rows = (exp.Experimenter & {"experimenter_name": name}).fetch("mail")

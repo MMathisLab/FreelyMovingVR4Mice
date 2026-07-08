@@ -1,4 +1,19 @@
-"""One-off maintenance tasks for the DataJoint pipeline."""
+"""One-off maintenance tasks for the DataJoint pipeline.
+
+Run ``python run.py maintenance`` (``rebuild_lineage()``) manually — it is **not**
+part of cron or normal nightly populate/analysis.
+
+When to run (once per database, before relying on cron again):
+
+- After upgrading to **DataJoint 2.x**: run ``scripts/migrate_to_dj2.py`` first on
+  **legacy** databases (column comment metadata), then ``python run.py maintenance``
+  (lineage tables). On a fresh DJ 2.x database, only maintenance is needed.
+- After **adding a new schema** to the pipeline (update ``_schema_pairs()`` first).
+- When lineage/dependency errors appear and a full lineage rebuild is needed.
+
+Rebuilds DataJoint lineage tables for all schemas in dependency order (mice/exp →
+vr4mice → base → downstream analysis schemas, including ``summary_emails``).
+"""
 
 from __future__ import annotations
 
@@ -47,7 +62,11 @@ def _schema_pairs() -> Iterable[Tuple[str, object]]:
 
 
 def rebuild_lineage(*, strict: bool = True) -> None:
-    """Rebuild DataJoint lineage tables for all pipeline schemas."""
+    """Rebuild DataJoint lineage tables for all pipeline schemas.
+
+    See module docstring for when this must be run. Safe to re-run; does not
+    repopulate computed tables or touch raw session data.
+    """
     failed = []
 
     for name, schema in _schema_pairs():

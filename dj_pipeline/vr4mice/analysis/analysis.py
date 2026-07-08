@@ -88,9 +88,8 @@ def _resample_data_frame(
 
     t = f"{resampling_period_ms}ms"  # old: 0.02s, err: ValueError: invalid literal for int() with base 10: '0.02'
 
-    df = df.copy()
-    df["time"] = pd.to_datetime(df["step_time"], unit="s")
-    grouped = df.set_index("time").groupby("trial")
+    work = df.assign(time=pd.to_datetime(df["step_time"], unit="s"))
+    grouped = work.set_index("time").groupby("trial")
 
     blocks = []
     if continuous_columns:
@@ -336,8 +335,6 @@ def create_data_frame(
     # all keys corresponds to the datajoint tables initial keys, except: "episode" --> "trial"
     # in output: z transforms in y, x in x
 
-    logger.debug(f"Creating dataframe for: {key}")
-
     # NOTE: all attributes are used for MouseState, the implementation could be:
     # df = pd.DataFrame((vr4mice.MouseState & {"dataset": dataset}).fetch1())
     # but with fetch1 it looks faster and more control on keys
@@ -379,8 +376,6 @@ def create_data_frame(
             # "start_time": (vr4mice.State & key).fetch1("start_time"), #we don't modify it, can be fetched from State any time
         }
     )
-
-    logger.debug(f"All dataframe fetched for: {key}")
 
     df = df[
         df.trial != 1

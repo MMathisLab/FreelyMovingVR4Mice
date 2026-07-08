@@ -122,7 +122,7 @@ def has_signal(data, mean_threshold: float = 8.0):
     is_signal_present = mean_start > mean_threshold
 
     if not is_signal_present:
-        logger.debug(
+        logger.warning(
             "No significant signal detected, make sure the photodiode was recording."
         )
     return is_signal_present
