@@ -20,8 +20,6 @@ services:
       - PGID=${GID}
       - USERNAME=${USER_NAME}
       - HOME=/app
-        #- PYTHONUSERBASE=/app/.local
-        #- PIP_CACHE_DIR=/app/.cache/pip
       - MPLCONFIGDIR=/app/.cache/matplotlib
       - XDG_CONFIG_HOME=/app/.cache
       - PATH=/app/.local/bin:/usr/local/bin:/usr/bin:/bin
