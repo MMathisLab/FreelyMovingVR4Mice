@@ -18,11 +18,17 @@ params:
   r_report_box:
   - 5
   - 10
-  - -5
-  - -3
+  - -6
+  - -4
   l_report_box:
   - -10
   - -5
-  - -5
-  - -3
+  - -6
+  - -4
+  start_box: 
+  - -4
+  - 4
+  - -9
+  - -7
+  - 90
   distractor: 0.0
