@@ -33,6 +33,7 @@ PROCESSOR_REGISTRY.pop("MyProcessor_socket", None)
 
 @register_processor
 class MyProcessor_socket(ProcessorWithSignal):
+    HEAD_CONF_THRESHOLD = 0.6
     PROCESSOR_NAME = "SocketProcessor"
     PROCESSOR_DESCRIPTION = "Sends DLC-derived kinematics over a local socket."
     PROCESSOR_PARAMS = {
@@ -111,7 +112,7 @@ class MyProcessor_socket(ProcessorWithSignal):
         head_xy = xy[[0, 1, 2, 3, 4, 5, 6, 26], :]
         head_conf = conf[[0, 1, 2, 3, 4, 5, 6, 26]]
 
-        if np.mean(head_conf) < 0.6:
+        if np.mean(head_conf) < self.HEAD_CONF_THRESHOLD:
             center = self.previous
         else:
             center = np.average(head_xy, axis=0, weights=head_conf)

@@ -4,6 +4,7 @@ import importlib.util
 import sys
 from pathlib import Path
 from typing import Any, Dict
+import logging
 
 import numpy as np
 from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor  # type: ignore[import-not-found]
@@ -23,18 +24,22 @@ except ModuleNotFoundError:
         _spec.loader.exec_module(_module)
     dlc_inference_w_pd = _module.dlc_inference_w_pd
 
+import_issues = None
 try:
     from latency_tests.Teensy_latency.TeensyLatencySync import TeensyLatencySync
-except ModuleNotFoundError:
+except ModuleNotFoundError as e:
     TeensyLatencySync = None
+    import_issues = e
 
 PROCESSOR_REGISTRY.pop("dlc_inference_w_pd_sync", None)
-
+logger = logging.getLogger(__name__)
 
 @register_processor
 class dlc_inference_w_pd_sync(dlc_inference_w_pd):
     PROCESSOR_NAME = "SocketProcessorWithPDSync"
+    HEAD_CONF_THRESHOLD = 0.01
     PROCESSOR_DESCRIPTION = "Photodiode processor with Teensy sync timing capture."
+    PROCESSOR_BUILD_IN_WORKER = True # legacy initialization ensures compatibility with old dlclivegui processors
     PROCESSOR_PARAMS = {
         "com": {
             "type": "str",
@@ -85,13 +90,16 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             freq=freq,
             use_teensy=use_teensy,
         )
+        logger.info(
+            f"Listener status: {self.listener._listener._socket.getsockname()} with authkey: {self.authkey}"
+        )
 
     def _create_teensy(self, com, baudrate):
         if TeensyLatencySync is None:
             raise ImportError(
                 "TeensyLatencySync dependency is unavailable. Ensure mouse_task is on PYTHONPATH "
                 "and Teensy latency modules are installed."
-            )
+            ) from import_issues
         return TeensyLatencySync(com, baudrate=baudrate)
 
     def save_latency_data(self) -> Dict[str, Any]:
