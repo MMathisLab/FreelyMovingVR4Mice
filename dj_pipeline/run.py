@@ -140,7 +140,7 @@ if __name__ == "__main__":
             base_analysis.DataFrame & base_analysis.BoxDataFrame,
             logger=logger,
         )
-        summary_emails.send_pending_summary_emails(logger=logger)
+        summary_emails.send_pending_summary_emails(logger=logger, prompt=True)
 
     elif args.mode == "dlc":
         # NOTE: populate and analysis have to be run before

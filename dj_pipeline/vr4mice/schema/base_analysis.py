@@ -311,12 +311,10 @@ class SummaryPlots(dj.Computed):
     filename:  varchar(255)
     """
 
-    def make(self, key, send=os.environ["EMAIL"]):
+    def make(self, key):
         """
         key: Dataset
         """
-        send = os.environ.get("EMAIL", "false").lower() in ["true", "1", "yes"]
-
         if self & key:
             logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
@@ -350,31 +348,15 @@ class SummaryPlots(dj.Computed):
         data = {**key, **{"filename": full_path}}
         dataset = key["dataset"]
 
-        err_msg = None
         try:
             self.insert1(data, allow_direct_insert=True, skip_duplicates=True)
             logger.info(f"Summary plots populated successfully for {dataset}")
         except Exception as err:
             table_name = self.__class__.__name__
             vr4mice.FailedSession().add_entry(f"{dataset}", f"{table_name}", str(err))
-            err_msg = f"Can't populate {table_name}, dataset: {dataset}. Error: {err}."
-            logger.warning(err_msg)
-
-        if send:
-            from vr4mice.schema import summary_emails
-
-            email_key = summary_emails.build_summary_email_key(dataset)
-            if email_key:
-                summary_emails.send_and_record_summary_email(
-                    dataset, email_key, str(full_path), err_msg=err_msg, logger=logger
-                )
-            else:
-                logger.warning(
-                    "Could not parse session metadata for %s; summary email skipped",
-                    dataset,
-                )
-        else:
-            logger.info(f"Send flag is false for {dataset}. No email.")
+            logger.warning(
+                f"Can't populate {table_name}, dataset: {dataset}. Error: {err}."
+            )
 
     def parse_dataset(self, dataset):
         pattern = r"(?:(?P<mouse_name>[^_]+)_)?(?P<day>\d{4}-\d{2}-\d{2})(?:_(?P<attempt>\d+))?(?:\.pickle)?$"

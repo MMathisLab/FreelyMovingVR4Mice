@@ -1329,11 +1329,6 @@ class TestSummaryPlots:
             mock_summary_plots,
         )
 
-        monkeypatch.setattr(
-            "vr4mice.schema.summary_emails.send_and_record_summary_email",
-            lambda *args, **kwargs: False,
-        )
-
         # Populate SummaryPlots
         base_analysis.SummaryPlots.populate()
 

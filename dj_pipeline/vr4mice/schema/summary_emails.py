@@ -144,19 +144,22 @@ def record_summary_plot_email(
     email_type: str,
     send_error: Optional[str] = None,
 ) -> None:
-    """Insert or replace the email tracking row for a dataset."""
+    """Record the email outcome for a dataset without overwriting a prior success."""
     key = {"dataset": dataset}
-    (SummaryPlotEmail() & key).delete()
-    SummaryPlotEmail.insert1(
-        {
-            **key,
-            "sent_at": datetime.utcnow(),
-            "recipients": ", ".join(recipients),
-            "email_type": email_type,
-            "send_error": send_error,
-        },
-        skip_duplicates=True,
-    )
+    row = (SummaryPlotEmail() & key).fetch(as_dict=True)
+    data = {
+        **key,
+        "sent_at": datetime.utcnow(),
+        "recipients": ", ".join(recipients),
+        "email_type": email_type,
+        "send_error": send_error,
+    }
+    if row:
+        if row[0].get("send_error") is None:
+            return
+        SummaryPlotEmail.update1(data)
+        return
+    SummaryPlotEmail.insert1(data, skip_duplicates=True)
 
 
 def send_and_record_summary_email(
@@ -242,8 +245,29 @@ def pending_summary_email_keys(*, since: Optional[date] = None) -> List[dict]:
     return pending
 
 
-def send_pending_summary_emails(*, logger=None) -> int:
-    """Send summary emails for eligible new sessions missing a successful send."""
+def confirm_send_summary_email(dataset: str, recipients: List[str]) -> bool:
+    """Ask whether to send a summary email for one dataset (interactive runs)."""
+    if recipients:
+        recipient_text = ", ".join(recipients)
+    else:
+        recipient_text = "(no recipients resolved)"
+    while True:
+        answer = input(
+            f"Send summary email for {dataset} to {recipient_text}? [y/N]: "
+        ).strip().lower()
+        if answer in ("", "n", "no"):
+            return False
+        if answer in ("y", "yes"):
+            return True
+        print("Please answer y or n.")
+
+
+def send_pending_summary_emails(*, logger=None, prompt: bool = False) -> int:
+    """Send summary emails for eligible new sessions missing a successful send.
+
+    When ``prompt`` is True (``run.py summary``), ask before each send.
+    Cron runs leave ``prompt`` False and send all eligible pending sessions.
+    """
     log = logger or globals()["logger"]
     if not summary_email_enabled():
         log.debug("EMAIL disabled; skipping pending summary emails")
@@ -259,6 +283,11 @@ def send_pending_summary_emails(*, logger=None) -> int:
             log.warning(
                 "Skipping summary email for %s: could not parse metadata", dataset
             )
+            continue
+        if prompt and not confirm_send_summary_email(
+            dataset, resolve_summary_email_recipients(dataset)
+        ):
+            log.info("Skipped summary email for %s (user declined)", dataset)
             continue
         if send_and_record_summary_email(
             dataset,
