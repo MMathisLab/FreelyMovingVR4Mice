@@ -296,6 +296,36 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             )
 
         return save_dict
+    
+    def save(self, file: Optional[str] = None) -> int:
+        """Save processor data.
+
+        If `file` is not provided, uses `self.save_path`.
+        """
+        target = file
+
+        if target is None:
+            target = getattr(self, "save_path", None)
+
+        if target is None:
+            warnings.warn("Processor save skipped: no file or save_path was provided.")
+            return 0
+
+        try:
+            target = Path(target)
+            target.parent.mkdir(parents=True, exist_ok=True)
+
+            save_dict = self.save_latency_data()
+
+            with target.open("wb") as f:
+                pickle.dump(save_dict, f)
+
+            print(f"Processor data saved to: {target}")
+            return 1
+
+        except Exception as e:
+            warnings.warn(f"Proc file was not saved, an exception occurred: {e}")
+            return -1
         
     def stop(self, save: bool = False, file: str | None = None) -> None:
         """Cleanly stop processor resources.
