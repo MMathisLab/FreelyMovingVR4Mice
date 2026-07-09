@@ -226,12 +226,16 @@ def pending_summary_email_keys(*, since: Optional[date] = None) -> List[dict]:
     if since is None:
         return []
 
-    sent_ok = {
-        row["dataset"]
-        for row in (SummaryPlotEmail() & "send_error IS NULL").fetch(
-            "dataset", as_dict=True
-        )
-    }
+    try:
+        sent_ok = {
+            row["dataset"]
+            for row in (SummaryPlotEmail() & "send_error IS NULL").fetch(
+                "dataset", as_dict=True
+            )
+        }
+    except dj.DataJointError as err:
+        logger.debug("SummaryPlotEmail not available yet: %s", err)
+        sent_ok = set()
 
     pending: List[dict] = []
     for row in base_analysis.SummaryPlots().fetch("dataset", "filename", as_dict=True):

@@ -143,7 +143,7 @@ jobs:
             -v "$GITHUB_WORKSPACE/dj_pipeline:/app" \
             vr4mice_app:test-image \
             bash -lc "pip install --no-deps /app/base/base_min_schemas /app/base/base_actions \
-              && python /app/tests/verify_summary_emails_after_cron.py"
+              && cd /app && python -u tests/verify_summary_emails_after_cron.py"
 
       - name: Dump populated schemas
         run: |
