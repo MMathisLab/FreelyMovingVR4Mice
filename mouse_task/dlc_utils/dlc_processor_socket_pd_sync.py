@@ -3,8 +3,10 @@
 import importlib.util
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 import logging
+import warnings
+import pickle
 
 import numpy as np
 from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor  # type: ignore[import-not-found]
@@ -82,6 +84,7 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         freq=5,
         use_teensy=1,
     ):
+        self.save_path: Optional[Path] = None
         try:
             super().__init__(
                 com=com,
@@ -118,6 +121,36 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             )
 
         return save_dict
+    
+    def save(self, file: Optional[str] = None) -> int:
+        """Save processor data.
+
+        If `file` is not provided, uses `self.save_path`.
+        """
+        target = file
+
+        if target is None:
+            target = getattr(self, "save_path", None)
+
+        if target is None:
+            warnings.warn("Processor save skipped: no file or save_path was provided.")
+            return 0
+
+        try:
+            target = Path(target)
+            target.parent.mkdir(parents=True, exist_ok=True)
+
+            save_dict = self.save_latency_data()
+
+            with target.open("wb") as f:
+                pickle.dump(save_dict, f)
+
+            print(f"Processor data saved to: {target}")
+            return 1
+
+        except Exception as e:
+            warnings.warn(f"Proc file was not saved, an exception occurred: {e}")
+            return -1
         
     def stop(self, save: bool = False, file: str | None = None) -> None:
         """Cleanly stop processor resources.
