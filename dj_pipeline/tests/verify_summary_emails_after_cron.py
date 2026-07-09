@@ -10,7 +10,7 @@ from vr4mice.utils.bootstrap import configure_runtime
 
 def main() -> int:
     configure_runtime()
-    connect(tag="verify_summary_emails")
+    connect(tag="")
 
     from vr4mice.schema import base_analysis, summary_emails
 
@@ -86,4 +86,10 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except Exception:
+        import traceback
+
+        traceback.print_exc()
+        raise
