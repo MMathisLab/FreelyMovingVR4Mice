@@ -296,6 +296,78 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             )
 
         return save_dict
+        
+    def stop(self, save: bool = False, file: str | None = None) -> None:
+        """Cleanly stop processor resources.
+
+        Args:
+            save:
+                If True, call self.save(file) before closing resources.
+            file:
+                Output path for processor data. If None, no save is attempted unless
+                the parent class has a meaningful default filename.
+        """
+
+        # 1. Optional save first, while all buffers/objects still exist.
+        if save:
+            try:
+                if file is not None:
+                    self.save(file)
+                else:
+                    # Avoid saving to an unknown location unless explicitly requested.
+                    print("Processor stop(save=True) called without file; skipping save.")
+            except Exception as exc:
+                print(f"Processor save during stop failed: {exc}")
+
+        # 2. Close Teensy serial if available.
+        try:
+            teensy = getattr(self, "teensy", None)
+            if teensy is not None:
+                close_serial = getattr(teensy, "close_serial", None)
+                if callable(close_serial):
+                    close_serial()
+                else:
+                    close = getattr(teensy, "close", None)
+                    if callable(close):
+                        close()
+        except Exception as exc:
+            print(f"Failed to close Teensy cleanly: {exc}")
+        finally:
+            try:
+                self.teensy = None
+            except Exception:
+                pass
+
+        # 3. Close accepted socket connection.
+        try:
+            conn = getattr(self, "conn", None)
+            if conn is not None:
+                conn.close()
+        except Exception as exc:
+            print(f"Failed to close processor socket connection: {exc}")
+        finally:
+            try:
+                self.conn = None
+            except Exception:
+                pass
+
+        # 4. Close listener on port 6000.
+        try:
+            listener = getattr(self, "listener", None)
+            if listener is not None:
+                listener.close()
+        except Exception as exc:
+            print(f"Failed to close processor listener: {exc}")
+        finally:
+            try:
+                self.listener = None
+            except Exception:
+                pass
+
+
+    def close(self) -> None:
+        """Alias for generic cleanup."""
+        self.stop(save=False)
 
     def save(self, file: str | Path | None = None) -> int:
         """Save processor PROC-style data.
