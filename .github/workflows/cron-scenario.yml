@@ -122,6 +122,29 @@ jobs:
               && mysql -h \"${DJ_HOST}\" -P \"${DJ_PORT}\" -u \"${DJ_USER}\" -p\"${DJ_PASS}\" -e 'DELETE FROM vr4mice.failed_session;' \
               && python cron_scenario.py --aws"
 
+      - name: Verify summary emails after cron
+        run: |
+          docker run --rm \
+            --add-host=host.docker.internal:host-gateway \
+            -e USERNAME="$(id -un)" \
+            -e PUID="$(id -u)" \
+            -e PGID="$(id -g)" \
+            -e DJ_HOST="${DJ_HOST}" \
+            -e DJ_PORT="${DJ_PORT}" \
+            -e DJ_USER="${DJ_USER}" \
+            -e DJ_PASS="${DJ_PASS}" \
+            -e DJ_PWD="${DJ_PASS}" \
+            -e DJ_LAB="${DJ_LAB}" \
+            -e GUI="${GUI}" \
+            -e EMAIL="${EMAIL}" \
+            -e IMG_SRC="${IMG_SRC}" \
+            -e DJ_SUPPORT_FILEPATH_MANAGEMENT="${DJ_SUPPORT_FILEPATH_MANAGEMENT}" \
+            -e DJ_SUPPORT_ADAPTED_TYPES="${DJ_SUPPORT_ADAPTED_TYPES}" \
+            -v "$GITHUB_WORKSPACE/dj_pipeline:/app" \
+            vr4mice_app:test-image \
+            bash -lc "pip install --no-deps /app/base/base_min_schemas /app/base/base_actions \
+              && python /app/tests/verify_summary_emails_after_cron.py"
+
       - name: Dump populated schemas
         run: |
           mkdir -p "$RUNNER_TEMP/mysql-dump"
@@ -132,6 +155,7 @@ jobs:
             interpolated_trajectories
             session_metrics
             latency_tests
+            summary_emails
             inputs_videos
             decision
             base
@@ -234,16 +258,19 @@ jobs:
           state_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM vr4mice.state;')"
           dataframe_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM base_analysis.__data_frame;')"
           summary_plot_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM base_analysis.__summary_plots;')"
+          summary_email_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM summary_emails.__summary_plot_email WHERE send_error IS NULL;')"
 
           echo "vr4mice.dataset rows: ${dataset_count}"
           echo "vr4mice.state rows: ${state_count}"
           echo "base_analysis.__data_frame rows: ${dataframe_count}"
           echo "base_analysis.__summary_plots rows: ${summary_plot_count}"
+          echo "summary_emails.__summary_plot_email successful rows: ${summary_email_count}"
 
           test "${dataset_count}" -ge 1
           test "${state_count}" -ge 1
           test "${dataframe_count}" -ge 1
           test "${summary_plot_count}" -ge 1
+          test "${summary_email_count}" -ge 1
 
       - name: Verify decision tables (--aws populated)
         run: |

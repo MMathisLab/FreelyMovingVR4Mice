@@ -252,9 +252,11 @@ def confirm_send_summary_email(dataset: str, recipients: List[str]) -> bool:
     else:
         recipient_text = "(no recipients resolved)"
     while True:
-        answer = input(
-            f"Send summary email for {dataset} to {recipient_text}? [y/N]: "
-        ).strip().lower()
+        answer = (
+            input(f"Send summary email for {dataset} to {recipient_text}? [y/N]: ")
+            .strip()
+            .lower()
+        )
         if answer in ("", "n", "no"):
             return False
         if answer in ("y", "yes"):
