@@ -39,7 +39,6 @@ except ModuleNotFoundError:
 
     dlc_inference_w_pd = _module.dlc_inference_w_pd
 
-
 import_issues = None
 try:
     from latency_tests.Teensy_latency.TeensyLatencySync import TeensyLatencySync
@@ -86,8 +85,8 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
     PROCESSOR_BUILD_IN_WORKER = True
 
     PROCESSOR_NAME = "SocketProcessorWithPDSync"
+    HEAD_CONF_THRESHOLD = 0.01
     PROCESSOR_DESCRIPTION = "Photodiode processor with Teensy sync timing capture."
-
     PROCESSOR_PARAMS = {
         "com": {
             "type": "str",
@@ -204,7 +203,6 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
                 "TeensyLatencySync dependency is unavailable. Ensure mouse_task is on PYTHONPATH "
                 "and Teensy latency modules are installed."
             ) from import_issues
-
         return TeensyLatencySync(com, baudrate=baudrate)
 
     def set_dlc_cfg(self, dlc_cfg):
