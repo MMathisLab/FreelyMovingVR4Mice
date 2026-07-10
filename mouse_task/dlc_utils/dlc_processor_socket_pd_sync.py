@@ -16,7 +16,6 @@ from pathlib import Path
 import time
 from typing import Any, Dict, Optional
 
-import pandas as pd
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
@@ -40,6 +39,7 @@ except ModuleNotFoundError:
         _spec.loader.exec_module(_module)
 
     dlc_inference_w_pd = _module.dlc_inference_w_pd
+
 
 import_issues = None
 try:
@@ -87,7 +87,6 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
     PROCESSOR_BUILD_IN_WORKER = True
 
     PROCESSOR_NAME = "SocketProcessorWithPDSync"
-    HEAD_CONF_THRESHOLD = 0.01
     PROCESSOR_DESCRIPTION = "Photodiode processor with Teensy sync timing capture."
     PROCESSOR_PARAMS = {
         "com": {
@@ -205,6 +204,7 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
                 "TeensyLatencySync dependency is unavailable. Ensure mouse_task is on PYTHONPATH "
                 "and Teensy latency modules are installed."
             ) from import_issues
+
         return TeensyLatencySync(com, baudrate=baudrate)
 
     def set_dlc_cfg(self, dlc_cfg):
@@ -298,61 +298,13 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             )
 
         return save_dict
-    
-    def set_dlc_cfg(self, dlc_cfg):
-        self.dlc_cfg = dlc_cfg
-    
-    def on_recording_started(self, context: dict) -> None:
-        """Receive recording context from DLCLiveGUI."""
-        self.recording_context = dict(context or {})
 
-        base_path = self.recording_context.get("processor_base_path")
-        if base_path is None:
-            self.save_path = None
-            logger.warning("Processor recording started without processor_base_path")
-            return
-
-        base_path = Path(base_path)
-
-        # Old-style processor output.
-        self.save_path = base_path.parent / f"{base_path.name}_PROC"
-
-        # Optional future outputs.
-        self.dlc_h5_path = base_path.parent / f"{base_path.name}_DLC.hdf5"
-        self.legacy_timestamp_path = base_path.parent / f"TS_{base_path.name}.npy"
-
-        logger.info("Processor save path set to %s", self.save_path)
-    
-    def on_recording_stopped(self, context: dict) -> None:
-        """Save custom processor outputs after GUI recording stops."""
-        self.recording_context = dict(context or getattr(self, "recording_context", {}))
-
-        # Save old PROC pickle.
-        result = self.save()
-        logger.info("Processor legacy PROC save result: %r", result)
-
-        dlc_h5_result = self.save_legacy_dlc_h5()
-        logger.info("Processor legacy DLC h5 save result: %r", dlc_h5_result)
-        
-        npy_ts_result = self.save_legacy_timestamp_npy()
-        logger.info("Processor legacy timestamp npy save result: %r", npy_ts_result)
-        
-        try:
-            self._legacy_poses.clear()
-            self._legacy_pose_times.clear()
-            self._legacy_frame_times.clear()
-        except Exception:
-            logger.warning("Failed to clear legacy pose buffers after recording stop")
-    
-    def save(self, file: Optional[str] = None) -> int:
-        """Save processor data.
+    def save(self, file: str | Path | None = None) -> int:
+        """Save processor PROC-style data.
 
         If `file` is not provided, uses `self.save_path`.
         """
-        target = file
-
-        if target is None:
-            target = getattr(self, "save_path", None)
+        target = Path(file) if file is not None else getattr(self, "save_path", None)
 
         if target is None:
             warnings.warn("Processor save skipped: no file or save_path was provided.")
@@ -362,18 +314,21 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             target = Path(target)
             target.parent.mkdir(parents=True, exist_ok=True)
 
-            save_dict = self.save_latency_data()
-
             with target.open("wb") as f:
-                pickle.dump(save_dict, f)
+                pickle.dump(self.save_latency_data(), f)
 
-            print(f"Processor data saved to: {target}")
+            logger.info("Processor data saved to: %s", target)
             return 1
 
         except Exception as e:
             warnings.warn(f"Proc file was not saved, an exception occurred: {e}")
+            logger.exception("Processor PROC save failed")
             return -1
-    
+
+    # ------------------------------------------------------------------
+    # Legacy DLC HDF5 saving
+    # ------------------------------------------------------------------
+
     def save_legacy_dlc_h5(self) -> int:
         """Write old-style <base>_DLC.hdf5 from buffered poses."""
         target = getattr(self, "dlc_h5_path", None)
@@ -390,34 +345,28 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             target = Path(target)
             target.parent.mkdir(parents=True, exist_ok=True)
 
-            # Expected shape: frames x keypoints x 3
-            poses = np.asarray(poses)
             if poses.ndim == 2:
-                # Single frame case.
                 poses = poses[None, :, :]
+
+            if poses.ndim != 3 or poses.shape[-1] != 3:
+                logger.warning("Skipping DLC h5 save: unexpected pose shape %s", poses.shape)
+                return 0
 
             flat = poses.reshape((poses.shape[0], poses.shape[1] * poses.shape[2]))
 
-            bodyparts = None
-            dlc_cfg = getattr(self, "dlc_cfg", None)
-
-            if isinstance(dlc_cfg, dict):
-                bodyparts = (
-                    dlc_cfg.get("all_joints_names")
-                    or dlc_cfg.get("metadata", {}).get("bodyparts")
-                )
-
-            if bodyparts and len(bodyparts) * 3 == flat.shape[1]:
+            bodyparts = self._get_bodyparts_for_pose_width(flat.shape[1])
+            if bodyparts:
                 pdindex = pd.MultiIndex.from_product(
                     [bodyparts, ["x", "y", "likelihood"]],
                     names=["bodyparts", "coords"],
                 )
                 pose_df = pd.DataFrame(flat, columns=pdindex)
             else:
+                logger.warning("Bodyparts information not found or mismatched; saving DLC h5 without labels.")
                 pose_df = pd.DataFrame(flat)
 
-            pose_df["frame_time"] = list(getattr(self, "_legacy_frame_times", []))
-            pose_df["pose_time"] = list(getattr(self, "_legacy_pose_times", []))
+            pose_df["frame_time"] = list(self._legacy_frame_times)
+            pose_df["pose_time"] = list(self._legacy_pose_times)
 
             pose_df.to_hdf(target, key="df_with_missing", mode="w")
 
@@ -427,23 +376,82 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         except Exception:
             logger.exception("Failed to save legacy DLC h5")
             return -1
-    
+
+    def _get_bodyparts_for_pose_width(self, flat_width: int) -> list[str] | None:
+        dlc_cfg = getattr(self, "dlc_cfg", None)
+        bodyparts = None
+
+        if isinstance(dlc_cfg, dict):
+            bodyparts = (
+                dlc_cfg.get("all_joints_names")
+                or dlc_cfg.get("metadata", {}).get("bodyparts")
+            )
+
+        if bodyparts and len(bodyparts) * 3 == flat_width:
+            return list(bodyparts)
+
+        return None
+
+    # ------------------------------------------------------------------
+    # Timestamp JSON -> legacy NPY
+    # ------------------------------------------------------------------
+
+    def save_legacy_timestamp_npy(self) -> int:
+        """Convert new GUI timestamp JSON files to pipeline-compatible .npy files.
+
+        Saves both:
+          - <legacy_base>_TS.npy   old GUI style
+          - TS_<legacy_base>.npy   pipeline/database matcher style
+        """
+        json_paths = self._find_timestamp_json_files()
+
+        if not json_paths:
+            logger.warning("Skipping legacy timestamp npy save: no timestamp JSON files found")
+            return 0
+
+        saved = 0
+
+        for json_path in json_paths:
+            try:
+                timestamps = self._extract_timestamps_from_json(json_path)
+                if timestamps.size == 0:
+                    logger.warning("No timestamps extracted from %s", json_path)
+                    continue
+
+                legacy_base = self._legacy_base_for_timestamp_json(json_path)
+                for out_path in self._timestamp_output_paths(legacy_base):
+                    self._save_npy(out_path, timestamps)
+                    logger.info(
+                        "Legacy timestamp npy saved to %s with %d timestamps",
+                        out_path,
+                        len(timestamps),
+                    )
+                    saved += 1
+
+            except Exception:
+                logger.exception("Failed to convert timestamp JSON to npy: %s", json_path)
+
+        return 1 if saved else 0
+
     def _extract_timestamps_from_json(self, json_path: Path) -> np.ndarray:
-        """Extract software timestamps from new GUI timestamp JSON."""
+        """Extract timestamps from the new VideoRecorder JSON format.
+
+        Old GUI saved `np.save(..., write_frame_ts)`, i.e. a 1D numeric array.
+        This returns the same shape/type.
+        """
         json_path = Path(json_path)
 
         with json_path.open("r", encoding="utf-8") as f:
             data = json.load(f)
 
-        # Current VideoRecorder schema.
         if isinstance(data, dict) and isinstance(data.get("frame_timestamps"), list):
-            timestamps = []
-            for rec in data["frame_timestamps"]:
-                if isinstance(rec, dict) and "software_timestamp" in rec:
-                    timestamps.append(float(rec["software_timestamp"]))
+            timestamps = [
+                float(rec["software_timestamp"])
+                for rec in data["frame_timestamps"]
+                if isinstance(rec, dict) and "software_timestamp" in rec
+            ]
             return np.asarray(timestamps, dtype=float)
 
-        # Tolerant fallback schemas.
         if isinstance(data, dict):
             for key in ("timestamps", "frame_times", "times"):
                 values = data.get(key)
@@ -456,146 +464,243 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
                 if isinstance(item, (int, float)):
                     values.append(float(item))
                 elif isinstance(item, dict):
-                    for key in ("software_timestamp", "timestamp", "frame_time", "time"):
-                        if key in item:
-                            values.append(float(item[key]))
-                            break
+                    value = self._first_present(item, ("software_timestamp", "timestamp", "frame_time", "time"))
+                    if value is not None:
+                        values.append(float(value))
             return np.asarray(values, dtype=float)
 
         return np.asarray([], dtype=float)
-    
-    def _legacy_timestamp_output_path(
-        self,
-        json_path: Path,
-        *,
-        base_path: Path | None,
-        index: int,
-        total: int,
-    ) -> Path:
-        """Derive old-style TS_*.npy path from timestamp JSON path/context."""
+
+    def _find_timestamp_json_files(self) -> list[Path]:
+        """Resolve timestamp JSON files from recording context."""
+        paths = self._paths_from_context_value(
+            self.recording_context.get("timestamp_json_files")
+            or self.recording_context.get("timestamp_files")
+        )
+
+        paths = [p for p in paths if p.exists()]
+        if paths:
+            return sorted(paths)
+
+        run_dir = self.recording_context.get("run_dir")
+        if run_dir is not None:
+            return sorted(Path(run_dir).glob("*_timestamps.json"))
+
+        return []
+
+    def _timestamp_output_paths(self, legacy_base: Path) -> list[Path]:
+        """Return both old-GUI and pipeline-compatible timestamp names."""
+        suffix_style = legacy_base.parent / f"{legacy_base.name}_TS.npy"
+        prefix_style = legacy_base.parent / f"TS_{legacy_base.name}.npy"
+        return self._unique_paths([suffix_style, prefix_style])
+
+    # ------------------------------------------------------------------
+    # Legacy video/sidecar compatibility copies
+    # ------------------------------------------------------------------
+
+    def copy_legacy_video_files(self) -> int:
+        """Copy new GUI video files to old-style <base>_VIDEO.<ext> files."""
+        copied = 0
+
+        for video_path in self._find_video_files():
+            try:
+                legacy_base = self._legacy_base_for_video(video_path)
+                out_path = legacy_base.parent / f"{legacy_base.name}_VIDEO{video_path.suffix}"
+
+                if self._copy_file_if_needed(video_path, out_path):
+                    copied += 1
+
+            except Exception:
+                logger.exception("Failed to copy legacy video file %s", video_path)
+
+        return 1 if copied else 0
+
+    def copy_processor_outputs_to_primary_legacy_base(self) -> int:
+        """Copy PROC and DLC H5 to match the primary video/timestamp legacy base.
+
+        This is useful when processor_base_path differs from the actual recorder
+        video stem.
+        """
+        legacy_base = self._primary_legacy_base()
+        if legacy_base is None:
+            return 0
+
+        copied = 0
+
+        src_proc = getattr(self, "save_path", None)
+        if src_proc is not None:
+            dst_proc = legacy_base.parent / f"{legacy_base.name}_PROC"
+            if self._copy_file_if_needed(Path(src_proc), dst_proc):
+                copied += 1
+
+        src_h5 = getattr(self, "dlc_h5_path", None)
+        if src_h5 is not None:
+            dst_h5 = legacy_base.parent / f"{legacy_base.name}_DLC.hdf5"
+            if self._copy_file_if_needed(Path(src_h5), dst_h5):
+                copied += 1
+
+        return 1 if copied else 0
+
+    # ------------------------------------------------------------------
+    # Legacy base / path helpers
+    # ------------------------------------------------------------------
+
+    def _context_processor_base_path(self) -> Path | None:
+        base_path = self.recording_context.get("processor_base_path")
+        return Path(base_path) if base_path is not None else None
+
+    def _primary_legacy_base(self) -> Path | None:
+        timestamp_jsons = self._find_timestamp_json_files()
+        if timestamp_jsons:
+            return self._legacy_base_for_timestamp_json(timestamp_jsons[0])
+
+        video_files = self._find_video_files()
+        if video_files:
+            return self._legacy_base_for_video(video_files[0])
+
+        return self._context_processor_base_path()
+
+    def _legacy_base_for_timestamp_json(self, json_path: Path) -> Path:
+        """Return legacy base path inferred from a timestamp JSON file."""
         json_path = Path(json_path)
+        run_dir = Path(self.recording_context.get("run_dir") or json_path.parent)
 
-        # Single DLC/camera recording: use processor base name.
-        if total == 1 and base_path is not None:
-            return base_path.parent / f"TS_{base_path.name}.npy"
+        video_name = self._video_name_from_timestamp_json(json_path)
+        if video_name:
+            return run_dir / Path(video_name).stem
 
-        # Multi-camera case: derive from video filename.
-        name = json_path.name
+        return run_dir / self._strip_timestamp_json_suffix(json_path.name)
 
+    def _legacy_base_for_video(self, video_path: Path) -> Path:
+        """Return legacy base path inferred from a video path."""
+        video_path = Path(video_path)
+        return video_path.parent / video_path.stem
+
+    def _video_name_from_timestamp_json(self, json_path: Path) -> str | None:
+        try:
+            with Path(json_path).open("r", encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, dict):
+                video_name = data.get("video_file")
+                return str(video_name) if video_name else None
+        except Exception:
+            return None
+
+        return None
+
+    @staticmethod
+    def _strip_timestamp_json_suffix(name: str) -> str:
         for suffix in (
             ".avi_timestamps.json",
             ".mp4_timestamps.json",
             "_timestamps.json",
         ):
             if name.endswith(suffix):
-                video_stem = name[: -len(suffix)]
-                break
-        else:
-            video_stem = json_path.stem
+                return name[: -len(suffix)]
+        return Path(name).stem
 
-        return json_path.parent / f"TS_{video_stem}.npy"
-    
-    def _find_timestamp_json_files(self) -> list[Path]:
-        """Resolve timestamp JSON files from recording context."""
-        context = getattr(self, "recording_context", {}) or {}
-
-        value = (
-            context.get("timestamp_json_files")
-            or context.get("timestamp_files")
-            or {}
-        )
-
-        paths: list[Path] = []
-
-        if isinstance(value, (str, Path)):
-            paths.append(Path(value))
-
-        elif isinstance(value, dict):
-            for item in value.values():
-                if isinstance(item, (str, Path)):
-                    paths.append(Path(item))
-
-        elif isinstance(value, (list, tuple, set)):
-            for item in value:
-                if isinstance(item, (str, Path)):
-                    paths.append(Path(item))
-
+    def _find_video_files(self) -> list[Path]:
+        paths = self._paths_from_context_value(self.recording_context.get("video_files"))
         paths = [p for p in paths if p.exists()]
-
         if paths:
             return sorted(paths)
 
-        # Fallback: scan run_dir.
-        run_dir = context.get("run_dir")
-        if run_dir is not None:
-            return sorted(Path(run_dir).glob("*_timestamps.json"))
+        run_dir = self.recording_context.get("run_dir")
+        if run_dir is None:
+            return []
+
+        run_dir = Path(run_dir)
+        return sorted([*run_dir.glob("*.avi"), *run_dir.glob("*.mp4")])
+
+    @staticmethod
+    def _paths_from_context_value(value: Any) -> list[Path]:
+        if value is None:
+            return []
+
+        if isinstance(value, (str, Path)):
+            return [Path(value)]
+
+        if isinstance(value, dict):
+            return [Path(v) for v in value.values() if isinstance(v, (str, Path))]
+
+        if isinstance(value, (list, tuple, set)):
+            return [Path(v) for v in value if isinstance(v, (str, Path))]
 
         return []
-        
-    def save_legacy_timestamp_npy(self) -> int:
-        """Convert new GUI timestamp JSON files to old-style TS_*.npy files."""
-        json_paths = self._find_timestamp_json_files()
 
-        if not json_paths:
-            logger.warning("Skipping legacy timestamp npy save: no timestamp JSON files found")
-            return 0
+    @staticmethod
+    def _unique_paths(paths: list[Path]) -> list[Path]:
+        unique: list[Path] = []
+        seen: set[str] = set()
+        for path in paths:
+            key = str(path)
+            if key not in seen:
+                unique.append(path)
+                seen.add(key)
+        return unique
 
-        context = getattr(self, "recording_context", {}) or {}
-        base_path = context.get("processor_base_path")
-        base_path = Path(base_path) if base_path is not None else None
+    @staticmethod
+    def _copy_file_if_needed(src: Path, dst: Path) -> bool:
+        src = Path(src)
+        dst = Path(dst)
 
-        saved = 0
+        if not src.exists():
+            return False
 
-        for index, json_path in enumerate(json_paths):
-            try:
-                timestamps = self._extract_timestamps_from_json(json_path)
+        try:
+            if src.resolve() == dst.resolve():
+                return False
+        except Exception:
+            if str(src) == str(dst):
+                return False
 
-                if timestamps.size == 0:
-                    logger.warning("No timestamps extracted from %s", json_path)
-                    continue
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dst)
+        logger.info("Copied compatibility file %s -> %s", src, dst)
+        return True
 
-                out_path = self._legacy_timestamp_output_path(
-                    json_path,
-                    base_path=base_path,
-                    index=index,
-                    total=len(json_paths),
-                )
+    @staticmethod
+    def _save_npy(path: Path, values: np.ndarray) -> None:
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        np.save(path, values)
 
-                out_path.parent.mkdir(parents=True, exist_ok=True)
-                np.save(out_path, timestamps)
+    @staticmethod
+    def _first_present(mapping: dict, keys: tuple[str, ...]) -> Any:
+        for key in keys:
+            if key in mapping:
+                return mapping[key]
+        return None
 
-                logger.info(
-                    "Legacy timestamp npy saved to %s with %d timestamps",
-                    out_path,
-                    len(timestamps),
-                )
-                saved += 1
+    def _clear_legacy_pose_buffers(self) -> None:
+        try:
+            self._legacy_poses.clear()
+            self._legacy_pose_times.clear()
+            self._legacy_frame_times.clear()
+        except Exception:
+            logger.warning("Failed to clear legacy pose buffers after recording stop")
 
-            except Exception:
-                logger.exception("Failed to convert timestamp JSON to npy: %s", json_path)
+    # ------------------------------------------------------------------
+    # Cleanup
+    # ------------------------------------------------------------------
 
-        return 1 if saved else 0
-    
-    
-    def stop(self, save: bool = False, file: str | None = None) -> None:
-        """Cleanly stop processor resources.
-
-        Args:
-            save:
-                If True, call self.save(file) before closing resources.
-            file:
-                Output path for processor data. If None, no save is attempted unless
-                the parent class has a meaningful default filename.
-        """
-
-        # 1. Optional save first, while all buffers/objects still exist.
+    def stop(self, save: bool = False, file: str | Path | None = None) -> None:
+        """Cleanly stop processor resources."""
         if save:
             try:
                 self.save(file)
-            except Exception as exc:
-                print(f"Processor save during stop failed: {exc}")
+            except Exception:
+                logger.exception("Processor save during stop failed")
 
-        # 2. Close Teensy serial if available.
+        self._close_teensy()
+        self._close_socket_connection()
+        self._close_listener()
+
+    def close(self) -> None:
+        """Alias for generic cleanup."""
+        self.stop(save=False)
+
+    def _close_teensy(self) -> None:
         try:
             teensy = getattr(self, "teensy", None)
             if teensy is not None:
@@ -606,34 +711,34 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
                     close = getattr(teensy, "close", None)
                     if callable(close):
                         close()
-        except Exception as exc:
-            print(f"Failed to close Teensy cleanly: {exc}")
+        except Exception:
+            logger.exception("Failed to close Teensy cleanly")
         finally:
             try:
                 self.teensy = None
             except Exception:
                 pass
 
-        # 3. Close accepted socket connection.
+    def _close_socket_connection(self) -> None:
         try:
             conn = getattr(self, "conn", None)
             if conn is not None:
                 conn.close()
-        except Exception as exc:
-            print(f"Failed to close processor socket connection: {exc}")
+        except Exception:
+            logger.exception("Failed to close processor socket connection")
         finally:
             try:
                 self.conn = None
             except Exception:
                 pass
 
-        # 4. Close listener on port 6000.
+    def _close_listener(self) -> None:
         try:
             listener = getattr(self, "listener", None)
             if listener is not None:
                 listener.close()
-        except Exception as exc:
-            print(f"Failed to close processor listener: {exc}")
+        except Exception:
+            logger.exception("Failed to close processor listener")
         finally:
             try:
                 self.listener = None
