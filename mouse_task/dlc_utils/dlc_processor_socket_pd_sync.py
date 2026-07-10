@@ -532,7 +532,7 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         date = self._date_from_context_or_run_dir(run_dir)
         attempt = self._attempt_from_context(default="1")
 
-        return run_dir / f"{prefix}_{date}_{attempt}"
+        return run_dir / f"vr4mice_{prefix}_{date}_{attempt}"
 
 
     def _fallback_output_dir(self) -> Path:
