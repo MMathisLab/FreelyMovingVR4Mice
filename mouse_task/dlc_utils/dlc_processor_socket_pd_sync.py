@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import datetime
 import importlib.util
 import json
 import logging
 import pickle
+import re
 import shutil
 import sys
 import time
@@ -343,12 +345,6 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
     # ------------------------------------------------------------------
 
     def save_legacy_timestamp_npy(self) -> int:
-        """Convert new GUI timestamp JSON files to pipeline-compatible .npy files.
-
-        Saves both:
-          - <legacy_base>_TS.npy   old GUI style
-          - TS_<legacy_base>.npy   pipeline/database matcher style
-        """
         json_paths = self._find_timestamp_json_files()
 
         if not json_paths:
@@ -356,19 +352,24 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             return 0
 
         saved = 0
+        total = len(json_paths)
+        compat_base = self._db_compat_base()
 
-        for json_path in json_paths:
+        for index, json_path in enumerate(json_paths):
             try:
                 timestamps = self._extract_timestamps_from_json(json_path)
                 if timestamps.size == 0:
                     logger.warning("No timestamps extracted from %s", json_path)
                     continue
 
-                legacy_base = self._legacy_base_for_timestamp_json(json_path)
-                for out_path in self._timestamp_output_paths(legacy_base):
+                for out_path in self._timestamp_output_paths(
+                    compat_base,
+                    index=index,
+                    total=total,
+                ):
                     self._save_npy(out_path, timestamps)
                     logger.info(
-                        "Legacy timestamp npy saved to %s with %d timestamps",
+                        "DB-compatible timestamp npy saved to %s with %d timestamps",
                         out_path,
                         len(timestamps),
                     )
@@ -378,7 +379,7 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
                 logger.exception("Failed to convert timestamp JSON to npy: %s", json_path)
 
         return 1 if saved else 0
-
+    
     def _extract_timestamps_from_json(self, json_path: Path) -> np.ndarray:
         """Extract timestamps from the new VideoRecorder JSON format.
 
@@ -434,54 +435,57 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
 
         return []
 
-    def _timestamp_output_paths(self, legacy_base: Path) -> list[Path]:
-        """Return both old-GUI and pipeline-compatible timestamp names."""
-        suffix_style = legacy_base.parent / f"{legacy_base.name}_TS.npy"
-        prefix_style = legacy_base.parent / f"TS_{legacy_base.name}.npy"
-        return self._unique_paths([suffix_style, prefix_style])
+    def _timestamp_output_paths(
+        self,
+        compat_base: Path,
+        *,
+        index: int,
+        total: int,
+    ) -> list[Path]:
+        camera_token = "CAMERA" if total == 1 else f"CAMERA{index + 1}"
+
+        return self._unique_paths(
+            [
+                compat_base.parent / f"TS_{compat_base.name}_{camera_token}.npy",
+                compat_base.parent / f"TIMESTAMP_{compat_base.name}_{camera_token}.npy",
+            ]
+        )
 
     # ------------------------------------------------------------------
     # Legacy video/sidecar compatibility copies
     # ------------------------------------------------------------------
-
     def copy_legacy_video_files(self) -> int:
-        """Copy new GUI video files to old-style <base>_VIDEO.<ext> files."""
         copied = 0
+        video_files = self._find_video_files()
+        compat_base = self._db_compat_base()
+        total = len(video_files)
 
-        for video_path in self._find_video_files():
+        for index, video_path in enumerate(video_files):
             try:
-                legacy_base = self._legacy_base_for_video(video_path)
-                out_path = legacy_base.parent / f"{legacy_base.name}_VIDEO{video_path.suffix}"
+                video_token = "VIDEO" if total == 1 else f"VIDEO{index + 1}"
+                out_path = compat_base.parent / f"{compat_base.name}_{video_token}{video_path.suffix}"
 
                 if self._copy_file_if_needed(video_path, out_path):
                     copied += 1
 
             except Exception:
-                logger.exception("Failed to copy legacy video file %s", video_path)
+                logger.exception("Failed to copy DB-compatible video file %s", video_path)
 
         return 1 if copied else 0
 
     def copy_processor_outputs_to_primary_legacy_base(self) -> int:
-        """Copy PROC and DLC H5 to match the primary video/timestamp legacy base.
-
-        This is useful when processor_base_path differs from the actual recorder
-        video stem.
-        """
-        legacy_base = self._primary_legacy_base()
-        if legacy_base is None:
-            return 0
-
+        compat_base = self._db_compat_base()
         copied = 0
 
         src_proc = getattr(self, "save_path", None)
         if src_proc is not None:
-            dst_proc = legacy_base.parent / f"{legacy_base.name}_PROC"
+            dst_proc = compat_base.parent / f"{compat_base.name}_PROC"
             if self._copy_file_if_needed(Path(src_proc), dst_proc):
                 copied += 1
 
         src_h5 = getattr(self, "dlc_h5_path", None)
         if src_h5 is not None:
-            dst_h5 = legacy_base.parent / f"{legacy_base.name}_DLC.hdf5"
+            dst_h5 = compat_base.parent / f"{compat_base.name}_DLC.hdf5"
             if self._copy_file_if_needed(Path(src_h5), dst_h5):
                 copied += 1
 
@@ -490,21 +494,134 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
     # ------------------------------------------------------------------
     # Legacy base / path helpers
     # ------------------------------------------------------------------
+    def _db_compat_base(self) -> Path:
+        """Return DB-GUI-compatible base path.
+
+        New Live-GUI layout is usually:
+
+            MouseA/run_<timestamp>/
+
+        This returns:
+
+            <run_dir>/MouseA_YYYY-MM-DD_1
+
+        so files parse correctly as:
+            mouse_name = MouseA
+            date = YYYY-MM-DD
+            attempt = 1
+        """
+        context = getattr(self, "recording_context", {}) or {}
+
+        run_dir = context.get("run_dir")
+        run_dir = Path(run_dir) if run_dir is not None else self._fallback_output_dir()
+
+        mouse = self._mouse_from_context_or_run_dir(run_dir)
+        date = self._date_from_context_or_run_dir(run_dir)
+        attempt = self._attempt_from_context(default="1")
+
+        return run_dir / f"{mouse}_{date}_{attempt}"
+
+
+    def _fallback_output_dir(self) -> Path:
+        base_path = self._context_processor_base_path()
+        if base_path is not None:
+            return base_path.parent
+
+        save_path = getattr(self, "save_path", None)
+        if save_path is not None:
+            return Path(save_path).parent
+
+        return Path.cwd()
+
+
+    def _mouse_from_context_or_run_dir(self, run_dir: Path) -> str:
+        context = getattr(self, "recording_context", {}) or {}
+
+        for key in ("mouse", "mouse_name", "subject", "session_name"):
+            value = context.get(key)
+            if value:
+                return self._sanitize(str(value))
+
+        # New Live-GUI layout: MouseA/run_<timestamp>/
+        parent_name = getattr(run_dir.parent, "name", "")
+        if parent_name:
+            return self._sanitize(parent_name)
+
+        return "Mouse"
+
+
+    def _date_from_context_or_run_dir(self, run_dir: Path) -> str:
+        context = getattr(self, "recording_context", {}) or {}
+
+        for key in ("date", "recording_date", "session_date"):
+            value = context.get(key)
+            if value:
+                parsed = self._normalize_date(str(value))
+                if parsed:
+                    return parsed
+
+        parsed = self._date_from_run_dir_name(run_dir.name)
+        if parsed:
+            return parsed
+
+        try:
+            return datetime.fromtimestamp(run_dir.stat().st_mtime).strftime("%Y-%m-%d")
+        except Exception:
+            return datetime.now().strftime("%Y-%m-%d")
+
+
+    def _attempt_from_context(self, default: str = "1") -> str:
+        context = getattr(self, "recording_context", {}) or {}
+
+        for key in ("attempt", "trial", "run_index"):
+            value = context.get(key)
+            if value not in (None, ""):
+                return self._sanitize(str(value))
+
+        filename_stem = context.get("filename_stem")
+        if filename_stem:
+            parts = str(filename_stem).split("_")
+            for part in reversed(parts):
+                if part.isdigit():
+                    return self._sanitize(part)
+
+        return default
+
+
+    @staticmethod
+    def _sanitize(value: str) -> str:
+        value = str(value).strip()
+        value = value.replace(" ", "")
+        value = value.replace("_", "")
+        return value or "unknown"
+
+
+    @staticmethod
+    def _normalize_date(value: str) -> str | None:
+        value = str(value)
+
+        # Already YYYY-MM-DD
+        match = re.search(r"(20\d{2}-\d{2}-\d{2})", value)
+        if match:
+            return match.group(1)
+
+        # YYYYMMDD
+        match = re.search(r"(20\d{2})(\d{2})(\d{2})", value)
+        if match:
+            return f"{match.group(1)}-{match.group(2)}-{match.group(3)}"
+
+        return None
+
+
+    def _date_from_run_dir_name(self, run_name: str) -> str | None:
+        return self._normalize_date(run_name)
 
     def _context_processor_base_path(self) -> Path | None:
         base_path = self.recording_context.get("processor_base_path")
         return Path(base_path) if base_path is not None else None
 
     def _primary_legacy_base(self) -> Path | None:
-        timestamp_jsons = self._find_timestamp_json_files()
-        if timestamp_jsons:
-            return self._legacy_base_for_timestamp_json(timestamp_jsons[0])
-
-        video_files = self._find_video_files()
-        if video_files:
-            return self._legacy_base_for_video(video_files[0])
-
-        return self._context_processor_base_path()
+        return self._db_compat_base()
 
     def _legacy_base_for_timestamp_json(self, json_path: Path) -> Path:
         """Return legacy base path inferred from a timestamp JSON file."""
