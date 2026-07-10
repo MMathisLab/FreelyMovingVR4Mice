@@ -498,11 +498,11 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         videos = self._find_video_files()
 
         if videos:
-            return videos[0].stem
+            return videos[0].stem.split("_", 1)[0]
 
         filename_stem = self.recording_context.get("filename_stem")
         if filename_stem:
-            return str(filename_stem)
+            return str(filename_stem).split("_", 1)[0]
 
         return "recording"
     
