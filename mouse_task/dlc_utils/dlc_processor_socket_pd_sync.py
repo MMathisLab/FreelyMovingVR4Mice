@@ -494,6 +494,18 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
     # ------------------------------------------------------------------
     # Legacy base / path helpers
     # ------------------------------------------------------------------
+    def _video_prefix(self) -> str:
+        videos = self._find_video_files()
+
+        if videos:
+            return videos[0].stem
+
+        filename_stem = self.recording_context.get("filename_stem")
+        if filename_stem:
+            return str(filename_stem)
+
+        return "recording"
+    
     def _db_compat_base(self) -> Path:
         """Return DB-GUI-compatible base path.
 
@@ -515,11 +527,12 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         run_dir = context.get("run_dir")
         run_dir = Path(run_dir) if run_dir is not None else self._fallback_output_dir()
 
-        mouse = self._mouse_from_context_or_run_dir(run_dir)
+        prefix = self._video_prefix()
+        # mouse = self._mouse_from_context_or_run_dir(run_dir)
         date = self._date_from_context_or_run_dir(run_dir)
         attempt = self._attempt_from_context(default="1")
 
-        return run_dir / f"{mouse}_{date}_{attempt}"
+        return run_dir / f"{prefix}_{date}_{attempt}"
 
 
     def _fallback_output_dir(self) -> Path:
