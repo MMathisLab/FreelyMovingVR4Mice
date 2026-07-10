@@ -120,7 +120,7 @@ def main() -> int:
         if sent < 1:
             return _fail(
                 f"expected at least one summary email recorded, sent={sent}. "
-                "Inspect summary_emails.__summary_plot_email for send_error rows."
+                "Inspect summary_emails.summary_plot_email for send_error rows."
             )
 
         _log("checking SummaryPlotEmail rows")
@@ -129,11 +129,11 @@ def main() -> int:
         )
         if not ok_rows:
             email_count = _mysql_scalar(
-                "SELECT COUNT(*) FROM summary_emails.__summary_plot_email "
+                "SELECT COUNT(*) FROM summary_emails.summary_plot_email "
                 "WHERE send_error IS NULL"
             )
             failed_count = _mysql_scalar(
-                "SELECT COUNT(*) FROM summary_emails.__summary_plot_email "
+                "SELECT COUNT(*) FROM summary_emails.summary_plot_email "
                 "WHERE send_error IS NOT NULL"
             )
             return _fail(
@@ -163,6 +163,17 @@ def main() -> int:
 
         if len(summary_emails.SummaryPlotEmail() & {"dataset": dataset}) != 1:
             return _fail("expected exactly one SummaryPlotEmail row per dataset")
+
+        mysql_email_count = _mysql_scalar(
+            "SELECT COUNT(*) FROM summary_emails.summary_plot_email "
+            "WHERE send_error IS NULL"
+        )
+        if mysql_email_count < 1:
+            return _fail(
+                "SummaryPlotEmail rows visible in DataJoint but mysql count is 0 "
+                f"(table summary_emails.summary_plot_email). "
+                "Check DJ2 table naming in CI SQL checks."
+            )
 
         _log(
             f"ok ({summary_plot_count} plots, {sent} sent, dataset={dataset})",
