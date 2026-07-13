@@ -1,0 +1,11 @@
+class_name: InvDiscrimTask
+description: |
+  Discrimination task (without occluders).
+  Black teardrop as target, white teardrop as distractor.
+
+# Only the parameters that differ from configs/common.yaml.
+params:
+  session_label:
+  - ar_discrim_inv
+  target_selection: 4.0
+  distractor_selection: 6.0

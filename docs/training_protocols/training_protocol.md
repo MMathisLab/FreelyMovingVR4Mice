@@ -202,8 +202,8 @@ May be combined in single arena session with {ref}`sec:arena-habituation`.
   - To encourage mice to form connection between position and visual stimuli, longer initial session (ex 75 minutes) may be necessary to allow enough serendipitous trial initiations to occur.
   - If mice are allowed to overtrain on this step their performance can reach up to 100%.
   - **Python Task** to be loaded in the GUI:
-    - [DetectionWithoutVelocityThresholdTask](../../mouse_task/mouse_detection_p1.py)
-    - [ShapeDetectionWithoutVelocityThresholdTask](../../mouse_task/mouse_shape_detection_p1.py)
+    - [DetectionWithoutVelocityThresholdTask](../../mouse_task/configs/tasks/mouse_detection_p1.yaml)
+    - [ShapeDetectionWithoutVelocityThresholdTask](../../mouse_task/configs/tasks/shape_mouse_detection_p1.yaml)
   - **Parameters**:
     - [**Contrast**](./contrast_discrimination_training_parameters.md#stage-1-p1)
     - [**Shape**](./shape_discrimination_training_parameters.md#stage-1-p1)
@@ -213,8 +213,8 @@ May be combined in single arena session with {ref}`sec:arena-habituation`.
   - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation (see {ref}`sec:gui`).
   - Same as in **1.1** except we want the mice to learn to mark a stop at trial initiation so we lower `velocity_threshold` and increase `start_box_delay` from the task parameters compared to **1.1**.
   - **Python Task** to be loaded in the GUI:
-    - [DetectionWithVelocityThresholdTask](../../mouse_task/mouse_detection_p2.py)
-    - [ShapeDetectionWithVelocityThresholdTask](../../mouse_task/mouse_shape_detection_p2.py)
+    - [DetectionWithVelocityThresholdTask](../../mouse_task/configs/tasks/mouse_detection_p2.yaml)
+    - [ShapeDetectionWithVelocityThresholdTask](../../mouse_task/configs/tasks/shape_mouse_detection_p2.yaml)
   - **Parameters**:
     - [**Contrast**](./contrast_discrimination_training_parameters.md#stage-1-p2)
     - [**Shape**](./shape_discrimination_training_parameters.md#stage-1-p2)
@@ -227,8 +227,8 @@ May be combined in single arena session with {ref}`sec:arena-habituation`.
 (see {ref}`sec:gui`).
 - At this stage, a distractor object is introduced so that the task becomes a discrimination task. The mouse gets no reward when going on the distractor object side. The distractor object can be selected by modifying the value of the `distractor_selection` parameter. Its presence (or absence) is controlled by the `distractor` parameter which can be either `1` (presence) or `0` (absence).
 - **Python Task** to be loaded in the GUI:
-  - [DiscriminationTask](../../mouse_task/mouse_discrim.py)
-  - [ShapeDiscrimination](../../mouse_task/mouse_shape_discrim.py)
+  - [DiscriminationTask](../../mouse_task/configs/tasks/mouse_discrim.yaml)
+  - [ShapeDiscrim](../../mouse_task/configs/tasks/shape_mouse_discrim.yaml)
 - **Parameters**:
   - [**Contrast**](./contrast_discrimination_training_parameters.md#stage-2)
   - [**Shape**](./shape_discrimination_training_parameters.md#stage-2)
@@ -240,8 +240,8 @@ May be combined in single arena session with {ref}`sec:arena-habituation`.
 (see {ref}`sec:gui`).
 - Ooccluder walls are introduced to hide varying amounts of both the target and the distractor.
 - **Python Task** to be loaded in the GUI:
-  - [DiscriminationWithOccludersTask](../../mouse_task/mouse_discrim_occluders.py)
-  - [ShapeDiscriminationOccluders](../../mouse_task/mouse_shape_discrim_occluders.py)
+  - [DiscriminationWithOccludersTask](../../mouse_task/configs/tasks/mouse_discrim_occluders.yaml)
+  - [ShapeDiscrimOccluders](../../mouse_task/configs/tasks/shape_mouse_discrim_occluders.yaml)
 - **Parameters**:
   - [**Contrast**](./contrast_discrimination_training_parameters.md#stage-3)
   - [**Shape**](./shape_discrimination_training_parameters.md#stage-3)
@@ -255,7 +255,7 @@ This is currently the **test stage**. Mice that have reached it should do **== 5
 - Standard arena preparation (see {ref}`sec:arena-habituation`) and control software preparation
 (see {ref}`sec:gui`).
 - **Python Task** to be selected in the GUI:
-  - [DiscriminationWithMultiOccludersTask](../../mouse_task/mouse_discrim_multioccluders.py)
+  - [DiscriminationWithMultiOccludersTask](../../mouse_task/configs/tasks/mouse_discrim_multioccluders.yaml)
 - **Parameters**:
   - [**Contrast**](./contrast_discrimination_training_parameters.md#stage-4)
   - [**Shape**](./shape_discrimination_training_parameters.md#stage-4)

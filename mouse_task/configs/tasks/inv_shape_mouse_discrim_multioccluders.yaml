@@ -1,0 +1,22 @@
+class_name: InvShapeDiscrimMultiOccluders
+description: |
+  Shape discrimination task, with occluders of different sizes
+  The mouse must report the location of the black teardrop object and ignore the wide Pacman.
+
+# Only the parameters that differ from configs/common.yaml.
+params:
+  session_label:
+  - ar_shape_discrim_multi_occluders_inv
+  epoch_labels:
+  - pacman_vs_teardrop
+  slit_size:
+  - 15.0
+  - 10.78
+  - 7.75
+  - 5.57
+  - 4.0
+  slit_depth: 0.02
+  target_selection: 4.0
+  distractor_selection: 9.0
+  occlusion_type: 1.0
+  target_rotation: 15.0

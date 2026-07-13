@@ -1,0 +1,57 @@
+# Common task parameters.
+#
+# These are the parameter values shared across every task variant. A task
+# config in ``configs/tasks/<name>.yaml`` overrides only the entries that
+# differ for that task; everything not listed there falls back to the values
+# below (see ``mouse_task.helpers.load_task_config``).
+#
+# ``config_file_path`` (the machine-specific ``task_config.json`` holding the
+# absolute Unity build path) is NOT a task parameter — it is handled in code
+# and defaults to ``mouse_task/task_config.json``.
+
+# --- Operational / runtime (not task-specific behaviour) --------------------
+monitor: null            # unused
+write_video: false       # record video output
+fps: 60.0                # recorded-video frame rate (currently unused)
+use_dlc: true            # use the DLC tracking socket (set false only for debugging)
+
+# --- Session / trial structure ---------------------------------------------
+session_label: ["ar_discrim"]
+epochs: [250]
+epoch_labels: ["dual_teardrop"]
+reward_size: 100         # water-valve open time in ms (~3 µL)
+
+# --- Arena / camera geometry (rig-specific, constant across tasks) ----------
+cropped_image: [0, 530, 0, 510]    # [left, right, top, bottom]
+unity_arena_size: [-9, 9, -10, -2]  # [left, right, top, bottom]
+r_report_box: [5, 10, -4, -2]       # right report box [left, right, top, bottom]
+l_report_box: [-10, -5, -4, -2]     # left report box  [left, right, top, bottom]
+start_box: [-4, 4, -9, -5, 90]      # [left, right, top, bottom, angle]
+rotate_camera: 90.0                 # camera rotation, set once per rig
+
+# --- Trial-side / block logic ----------------------------------------------
+prob_obj_on_left: 0.5
+prob_block_coherence: 0.5
+block_length: 1.0
+mouse_report_delay: 0.0
+
+# --- Occluder / slit geometry ----------------------------------------------
+slit_size: [4.0, 10.0, 2]   # [min, max, n] or an explicit list of sizes (len > 3)
+slit_depth: 0.2             # occluder wall thickness
+occlusion_type: 0.0         # 0 = none, 1 = slit, 2 = central wall
+
+# --- Object selection / appearance -----------------------------------------
+target_selection: 6.0       # OOI object id (see ActiveSensingTask docstring)
+distractor_selection: 4.0   # distractor object id
+distractor: 1.0             # 0 = no distractor, 1 = distractor present
+camera_type: 1.0            # 0 = on-axis, 1 = off-axis
+target_spread: 4.0          # distance between targets
+target_rotation: 0          # inward rotation of target tips
+target_size: 2.0
+target_height: 3.0
+target_distance: 3          # target distance in y
+grey_screen_active: 0.0     # 0 = no grey ITI screen, 1 = grey screen
+
+# --- Trial initiation ------------------------------------------------------
+start_box_delay: 0.25       # time below velocity threshold required in start box
+velocity_threshold: 10.0    # max speed in start box to initiate a trial
