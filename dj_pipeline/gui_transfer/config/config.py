@@ -103,9 +103,10 @@ def validate_config(config_dict):
     missing = [key for key in REQUIRED_CONFIG_KEYS if key not in config_dict]
     if missing:
         return False, "Missing config keys: " + ", ".join(missing)
-    if "localhost" not in str(config_dict.get("ip", "")) and not str(
-        config_dict.get("host", "")
-    ).strip():
+    if (
+        "localhost" not in str(config_dict.get("ip", ""))
+        and not str(config_dict.get("host", "")).strip()
+    ):
         return False, "Config 'host' (SSH user) is required when ip is not localhost."
     return True, ""
 

@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QFileDialog, QGridLayout, QLabel, QPushButton, QText
 
 from config.config import config, logger
 from modules.template import Template
+
 try:
     from moviepy.editor import VideoFileClip
 except ImportError:
@@ -407,7 +408,9 @@ class Transfer(Template):
             logger.warning(f"Could not parse session from filename: {filenames}")
             return []
 
-        path_by_key = {path_key: config.get_path(path_key) for path_key in PATH_KEYS_FOR_SEARCH}
+        path_by_key = {
+            path_key: config.get_path(path_key) for path_key in PATH_KEYS_FOR_SEARCH
+        }
         related = find_related_files(dataset_stem, path_by_key, get_type)
         skip_resolved = Path(skip_path).resolve() if skip_path else None
 

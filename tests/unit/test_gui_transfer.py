@@ -61,9 +61,11 @@ def _reload_gui_modules(config_file):
         sys.path.insert(0, str(GUI_TRANSFER))
 
     for name in list(sys.modules):
-        if name in {"config.config", "utils.utils", "modules.transfer"} or name.startswith(
-            ("utils.", "modules.", "config.")
-        ):
+        if name in {
+            "config.config",
+            "utils.utils",
+            "modules.transfer",
+        } or name.startswith(("utils.", "modules.", "config.")):
             del sys.modules[name]
 
     config_mod = importlib.import_module("config.config")
@@ -252,7 +254,11 @@ def test_find_related_files(gui_modules, tmp_path):
     ts.write_text("t")
     dlc.write_text("d")
 
-    path_by_key = {k: config_data[k] for k in config_data if k.endswith("_path") or k == "raw_data_src"}
+    path_by_key = {
+        k: config_data[k]
+        for k in config_data
+        if k.endswith("_path") or k == "raw_data_src"
+    }
     related = find_related_files(stem, path_by_key, get_type)
     assert related["teensy_path"] == teensy
     assert related["camera_path"] == ts

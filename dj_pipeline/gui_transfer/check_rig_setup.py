@@ -130,7 +130,9 @@ def test_menu_access(config_dict):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Preflight checks for gui_transfer rig setup.")
+    parser = argparse.ArgumentParser(
+        description="Preflight checks for gui_transfer rig setup."
+    )
     parser.add_argument(
         "--test-menu",
         action="store_true",
@@ -143,19 +145,19 @@ def main(argv=None):
     failures = 0
 
     ok, message = check_python_version()
-    ( _ok if ok else _fail)(message)
+    (_ok if ok else _fail)(message)
     failures += 0 if ok else 1
 
     ok, message = check_python_packages()
-    ( _ok if ok else _fail)(message)
+    (_ok if ok else _fail)(message)
     failures += 0 if ok else 1
 
     ok, message = check_scp()
-    ( _ok if ok else _fail)(message)
+    (_ok if ok else _fail)(message)
     failures += 0 if ok else 1
 
     ok, message, config_dict = load_config()
-    ( _ok if ok else _fail)(message)
+    (_ok if ok else _fail)(message)
     failures += 0 if ok else 1
 
     if config_dict:
@@ -168,13 +170,17 @@ def main(argv=None):
             failures += 1
         else:
             ok, message = test_menu_access(config_dict)
-            ( _ok if ok else _fail)(message)
+            (_ok if ok else _fail)(message)
             failures += 0 if ok else 1
 
     print()
     if failures:
-        print(f"Preflight failed ({failures} check(s)). Fix the items above, then retry.")
-        print("Tip: run `python check_rig_setup.py --test-menu` after SSH keys are set up.")
+        print(
+            f"Preflight failed ({failures} check(s)). Fix the items above, then retry."
+        )
+        print(
+            "Tip: run `python check_rig_setup.py --test-menu` after SSH keys are set up."
+        )
         return 1
 
     print("Preflight passed.")

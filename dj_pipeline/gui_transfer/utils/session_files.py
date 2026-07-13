@@ -66,7 +66,9 @@ def check_file_format(key, filename, format_spec, current_mouse=None):
         for extra in filename[1:]:
             if not _format_matches(extra, format_spec):
                 return False
-            if dataset_stem_from_filename(extra) != dataset_stem_from_filename(filename[0]):
+            if dataset_stem_from_filename(extra) != dataset_stem_from_filename(
+                filename[0]
+            ):
                 return False
         return parsed
 
