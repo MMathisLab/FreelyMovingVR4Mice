@@ -447,7 +447,7 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         return self._unique_paths(
             [
                 compat_base.parent / f"TS_{compat_base.name}_{camera_token}.npy",
-                compat_base.parent / f"TIMESTAMP_{compat_base.name}_{camera_token}.npy",
+                # compat_base.parent / f"TIMESTAMP_{compat_base.name}_{camera_token}.npy",
             ]
         )
 
