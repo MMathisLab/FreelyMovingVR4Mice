@@ -491,7 +491,7 @@ run_gui.bat
 
 Or double-click `run_gui.bat`. If the window closes immediately, run the same commands from Command Prompt to read the error.
 
-   **Local dry-run (no SSH):** see `gui_transfer/README.md` → *Local test* (`gui_transfer/test/Makefile`; Linux only).
+   **Local dry-run (no SSH, Linux/macOS):** from `gui_transfer/test/` run `make menu config build_tree && make run_gui`. Creates fake menu and session files under `/tmp/vr4mice_test_gui` and runs the GUI on `localhost` (no scp). Full walkthrough: `gui_transfer/README.md` → *Local test*.
 
 If the menu file is missing or `scp` fails, the GUI logs a warning and exits — fix paths/credentials and ensure `run.py fetch` has been run on the server before restarting the GUI.
 
