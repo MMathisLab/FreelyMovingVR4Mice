@@ -48,6 +48,7 @@ Rig GUI and transfer utilities:
 - `gui.py` + `config/` for metadata capture.
 - `utils/` and `modules/` for GUI logic.
 - Dropdown menu file (`gui_menu.npy`) generated on the server by `fetch_data.py` and copied to the rig at GUI startup (see {ref}`GUI dropdown menu and rig setup <gui-dropdown-menu>`).
+- Rig session filenames (`{mouse}_{date}_{attempt}`, typed suffixes) — see {ref}`Rig filename contract <rig-filename-contract>` and `gui_transfer/README.md`.
 
 ### `base` (schemas)
 - `base_schemas`: full `exp` and `mice` schema definitions.
@@ -487,6 +488,27 @@ Or double-click `run_gui.bat`. If the window closes immediately, run the same co
 If the menu file is missing or `scp` fails, the GUI logs a warning and exits — fix paths/credentials and ensure `run.py fetch` has been run on the server before restarting the GUI.
 
 **Canonical GUI code:** deploy `FreelyMovingVR4Mice/dj_pipeline/gui_transfer/` on rigs. Do not use the legacy flat layout from `auxPipelines-DataJoint_Mathis/vr4mice/gui_transfer/`.
+
+(rig-filename-contract)=
+### Rig filename contract
+
+The rig GUI and **`populate_rig`** on the server assume the same session filenames. Auto-discovery (select one file → find related pickle / TS / DLC / PROC / VIDEO), metadata auto-fill, and pipeline ingest all rely on this.
+
+**Dataset stem:** `{mouse_name}_{YYYY-MM-DD}_{attempt}` (e.g. `Testmouse_2023-02-22_2`).
+
+**Typical session files** (camera prefix = `IMG_SRC`, default `Imagingsource`):
+
+| File | Example |
+|------|---------|
+| Teensy | `Testmouse_2023-02-22_2.pickle` |
+| Timestamps | `Imagingsource_Testmouse_2023-02-22_2_TS.npy` |
+| DLC | `Imagingsource_Testmouse_2023-02-22_2_DLC.hdf5` |
+| Processed | `Imagingsource_Testmouse_2023-02-22_2_PROC` |
+| Video (rig only) | `Imagingsource_Testmouse_2023-02-22_2_VIDEO.avi` |
+
+Classification uses keyword tags (`TS`, `DLC`, `VIDEO`, `PROC`) and glob patterns in `gui_transfer/modules/transfer.py`; parsing lives in `gui_transfer/utils/session_files.py`. The server mirror is `vr4mice/actions/populate_rig.py` → `get_files_paths()`.
+
+**If naming changes**, update GUI + populate + tests in one change set — patterns are **not** configurable in `config.json`. Full checklist and limitations: `dj_pipeline/gui_transfer/README.md` → *Rig filename contract*.
 
 Further GUI module details: `dj_pipeline/gui_transfer/README.md`.
 

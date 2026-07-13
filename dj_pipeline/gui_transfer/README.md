@@ -215,6 +215,75 @@ cd tests && python -m pytest unit/test_gui_transfer.py -v
 | Wrong pipeline / old GUI behaviour | Deployed legacy `-aux` checkout | Replace with this folder from `FreelyMovingVR4Mice` |
 | Windows: `'scp' is not recognized` | OpenSSH Client not installed | Windows Settings → Optional features → OpenSSH Client |
 | Windows: GUI closes instantly | Menu/`scp`/config error | Run `python main.py` from cmd to see the message |
+| Auto-fill / prefetch does not find files | Filename does not match [rig filename contract](#rig-filename-contract) | Rename files or update code (see contract section) |
+
+## Rig filename contract
+
+The rig GUI and the pipeline **`populate_rig`** logic share the same implicit naming rules. Auto-discovery (pick one file → find siblings), mouse/date/attempt sync, and server ingest all depend on this contract.
+
+Patterns are defined in code (not in `config.json`). If rig output naming changes, update GUI and pipeline **in the same PR**.
+
+### Dataset stem (session ID)
+
+Every session file should embed:
+
+```text
+{mouse_name}_{YYYY-MM-DD}_{attempt}
+```
+
+Example stem: `Testmouse_2023-02-22_2`
+
+Parsed by `utils/session_files.py` (`SESSION_RE`). Also used for GUI output files (`{stem}.npy`, `{stem}.json`) and the pipeline `dataset` field.
+
+**Limitation:** mouse names must not contain underscores — the regex takes the first `_`-delimited segment as the mouse name.
+
+### Expected files per session
+
+With camera prefix from `IMG_SRC` (default `Imagingsource`), a full session typically looks like:
+
+| Role | Example filename | GUI key |
+|------|------------------|---------|
+| Teensy / state | `Testmouse_2023-02-22_2.pickle` | `teensy_path` |
+| GUI metadata (generated on submit) | `Testmouse_2023-02-22_2.npy` | `gui_output` |
+| Camera timestamps | `Imagingsource_Testmouse_2023-02-22_2_TS.npy` | `camera_path` |
+| DLC output | `Imagingsource_Testmouse_2023-02-22_2_DLC.hdf5` | `dlc_path` |
+| Processed kinematics | `Imagingsource_Testmouse_2023-02-22_2_PROC` | `proc_path` |
+| Video (metadata only; stays on rig) | `Imagingsource_Testmouse_2023-02-22_2_VIDEO.avi` | `video_path` |
+
+The server-side mirror is `vr4mice/actions/populate_rig.py` → `get_files_paths()`.
+
+### How the GUI classifies files
+
+1. **Validation** — `modules/transfer.py` → `_set_path_format()` (glob patterns for the file picker).
+2. **Type tag** — `get_type()` scans for keywords: `VIDEO`, `TS`, `DLC`, `PROC`; otherwise `teensy_path`.
+3. **Sibling search** — `find_related_files()` lists configured rig folders and keeps files whose stem matches the selected session.
+
+### If formats change
+
+| Change | What breaks | Manual workaround |
+|--------|-------------|-------------------|
+| New suffix (e.g. `_TIMESTAMPS` instead of `_TS`) | Validation + prefetch + populate | Use file buttons to attach each file by hand |
+| Different date format | Stem parsing, auto-fill | Enter mouse/date/attempt manually |
+| New file category | Not shown in transfer section | Requires new GUI key + populate path |
+| Mouse names with `_` | Wrong stem split | Avoid underscores in mouse names or update regex |
+
+### Code to update (checklist)
+
+When changing rig naming, edit **together**:
+
+| File | What to change |
+|------|----------------|
+| `gui_transfer/utils/session_files.py` | `SESSION_RE`, validation helpers |
+| `gui_transfer/modules/transfer.py` | `_set_path_format()`, `get_type()`, transfer keys |
+| `vr4mice/actions/populate_rig.py` | `get_files_paths()` |
+| `tests/unit/test_gui_transfer.py` | Golden filename examples |
+| This README + [install guide](../../docs/software/install_dj_pipeline.md#rig-filename-contract) | Examples and troubleshooting |
+
+Run tests after changes:
+
+```bash
+cd tests && python -m pytest unit/test_gui_transfer.py -v --confcutdir=unit
+```
 
 ## GUI modules
 

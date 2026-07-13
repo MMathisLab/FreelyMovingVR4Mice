@@ -1,5 +1,7 @@
 """
 Pure helpers for parsing session filenames and discovering related rig files.
+
+Filename contract (examples, change checklist): gui_transfer/README.md → Rig filename contract.
 """
 
 import re

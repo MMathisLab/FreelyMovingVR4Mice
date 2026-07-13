@@ -49,6 +49,7 @@ Rig GUI and transfer utilities:
 - `gui.py` + `config/` for metadata capture.
 - `utils/` and `modules/` for GUI logic.
 - Dropdown menu file (`gui_menu.npy`) generated on the server by `fetch_data.py` and copied to the rig at GUI startup (see [GUI dropdown menu and rig setup](#gui-dropdown-menu-and-rig-setup)).
+- Session filename contract (`{mouse}_{date}_{attempt}`) — see [gui_transfer/README.md](gui_transfer/README.md#rig-filename-contract) and the [install guide](../docs/software/install_dj_pipeline.md#rig-filename-contract).
 
 ### `base` (schemas)
 - `base_schemas`: full `exp` and `mice` schema definitions.
