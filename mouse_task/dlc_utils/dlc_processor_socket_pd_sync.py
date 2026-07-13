@@ -61,7 +61,7 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
     # sockets / serial / side-effect-heavy resources are created inside DLCLiveWorker.
     PROCESSOR_BUILD_IN_WORKER = True
 
-    HEAD_CONF_THRESHOLD = 0.01
+    HEAD_CONF_THRESHOLD = 0.6 # NOTE: this might need to be adjusted based on the model
 
     PROCESSOR_PARAMS = {
         "com": {
