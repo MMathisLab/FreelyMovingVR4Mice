@@ -1,13 +1,21 @@
-import os
+import shutil
 from pathlib import Path
 
 from PyQt5.QtWidgets import QFileDialog, QGridLayout, QLabel, QPushButton, QTextEdit
 
 from config.config import config, logger
 from modules.template import Template
-from moviepy.editor import VideoFileClip
+try:
+    from moviepy.editor import VideoFileClip
+except ImportError:
+    from moviepy import VideoFileClip
 from utils.helpers import get_max, get_pattern
 from utils.utils import check_files
+from utils.session_files import (
+    PATH_KEYS_FOR_SEARCH,
+    dataset_stem_from_filename,
+    find_related_files,
+)
 
 
 def get_type(filename):
@@ -216,16 +224,33 @@ class Transfer(Template):
 
     def get_processed_files(self):
         """
-        Get the processed files.
-
-        Returns:
-          list: The processed files.
+        Get files that should be moved to processed_path after a successful submit.
         """
-        args = ["gui_output", "teensy_path"]
         ret = list()
-        for a in args:
-            ret.append(self.get_transfer_files(key=a))
+        for key in ("gui_output", "teensy_path"):
+            info = self.get_transfer_files(key=key)
+            if info:
+                ret.append(info)
         return ret
+
+    def _mouse_is_selected(self, mouse):
+        name = mouse.values["mouse_name"].currentText()
+        return name not in ("", "-")
+
+    def _sync_metadata_from_file(self, mouse, exp, dj_dict, parsed):
+        if parsed is False or not isinstance(parsed, tuple):
+            return True
+        if not self._mouse_is_selected(mouse) or not mouse.get_auto():
+            return True
+
+        _mouse, _attempt, _date = parsed
+        if not mouse.update_mouse(_mouse, dj_dict):
+            return False
+        if not exp.update_date(_date):
+            return False
+        if not exp.update_attempt(_attempt):
+            return False
+        return True
 
     def get_cache_paths(self):
         """
@@ -322,38 +347,24 @@ class Transfer(Template):
             )
 
         if filenames is not None and len(filenames) > 0:
-            mice_part = mouse.values != dict()
-
-            if mice_part:  # mouse was already set
-                current_mouse = mouse.values["mouse_name"].currentText()
-
             ret = check_files(key, filenames, self.get_format(key))
 
-            if isinstance(ret, bool) and ret is False:  # update
+            if ret is False:
                 return False
 
-            if isinstance(ret, tuple):  # update data in gui according to file
-                _mouse, _attempt, _date = ret
+            if not self._sync_metadata_from_file(mouse, exp, dj_dict, ret):
+                return False
 
-                if (
-                    mice_part
-                    and mouse.update_mouse(_mouse, dj_dict)
-                    and mouse.get_auto()
-                ):
-                    # mouse.set_auto(False) # once?
-                    exp.update_date(_date)
-                    exp.update_attempt(_attempt)
+            self._set_file(key, filenames)
+            self._set_cache_paths(key, filenames)
+            self.files_labels[key].setText(str(filenames))
 
-            # att filename can be list
-            self._set_file(key, filenames)  # file added
-            self._set_cache_paths(key, filenames)  # update cache with parent folder
-            self.files_labels[key].setText(str(filenames))  # show selected path on gui
-
-            # predict other files (in the same folder)
-
-            processed_keys = self._pre_fetch_files(filenames)
+            processed_keys = self._pre_fetch_files(filenames, skip_path=filenames)
             processed_keys.append(key)
             self._check_video(processed_keys)
+            return True
+
+        return False
 
     def _check_video(self, keys, video_label="video_path"):
         """
@@ -387,35 +398,32 @@ class Transfer(Template):
             except Exception as e:
                 logger.warning(f"An error occurred while processing the video: {e}")
 
-    def _pre_fetch_files(self, filenames):
+    def _pre_fetch_files(self, filenames, skip_path=None):
         """
-        Fetches files with same prefix as given filename and adds them to GUI.
-
-        Args:
-            filenames (str): Name of file to use for prefix.
-
-        Returns:
-            list: List of processed keys.
+        Find sibling session files across configured rig folders.
         """
-        parent = Path(config.get_config("dlc_path"))
-        filename = Path(filenames).name
-        name = filename.split(".")[0]
+        dataset_stem = dataset_stem_from_filename(filenames)
+        if not dataset_stem:
+            logger.warning(f"Could not parse session from filename: {filenames}")
+            return []
 
-        paths = os.listdir(parent)
+        path_by_key = {path_key: config.get_path(path_key) for path_key in PATH_KEYS_FOR_SEARCH}
+        related = find_related_files(dataset_stem, path_by_key, get_type)
+        skip_resolved = Path(skip_path).resolve() if skip_path else None
 
         processed_keys = list()
-        for filepath in paths:
-            if name in filepath and filename != filepath:
-                key = get_type(Path(filepath).name)
-                filepath = Path(parent).joinpath(filepath)
-                if not filepath.exists():
-                    logger.info("ERR: " + str(filepath) + " not found.")
-                self._set_file(key, filepath)  # file added
-                self._set_cache_paths(key, filepath)  # update cache with parent folder
-                self.files_labels[key].setText(
-                    str(filepath)
-                )  # show selected path on gui
-                processed_keys.append(key)
+        for file_key, filepath in related.items():
+            if file_key not in self.keys:
+                continue
+            if skip_resolved and filepath.resolve() == skip_resolved:
+                continue
+            if not filepath.exists():
+                logger.warning(f"Related file not found: {filepath}")
+                continue
+            self._set_file(file_key, filepath)
+            self._set_cache_paths(file_key, filepath)
+            self.files_labels[file_key].setText(str(filepath))
+            processed_keys.append(file_key)
         return processed_keys
 
     def _set_file(self, key, filename):

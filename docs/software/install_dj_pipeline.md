@@ -388,6 +388,8 @@ mkdir -p /mnt/database/shared   # or your SHARED_PATH
 
 ### Rig: configure paths and fetch the menu
 
+#### Linux / macOS rig
+
 1. Copy `gui_transfer/` to the rig computer.
 2. Install Python 3 + PyQt5 (`make env` from `gui_transfer/`).
 3. Create the GUI config from the template (do not commit the result):
@@ -410,10 +412,81 @@ mkdir -p /mnt/database/shared   # or your SHARED_PATH
    Also set transfer paths (`remote_dst`, `gui_output_folder`, `teensy_path`, `processed_path`, etc.) for your rig layout. See the inline example in `gui_transfer/config/config.py`.
 
 5. Start the GUI:
-   - Linux: `make run_gui` from `gui_transfer/`
-   - Windows: use the provided batch file example and adjust paths.
+   ```bash
+   cd gui_transfer
+   make run_gui
+   ```
+
+#### Windows rig
+
+Most VR rigs run **Windows 10/11**. You do not need Docker, WSL, or GNU Make on the rig — only Python 3, the `gui_transfer/` folder, and **OpenSSH** (`scp`/`ssh`) to reach the pipeline server.
+
+**1. Install Python 3.9+**
+
+- Download from [python.org](https://www.python.org/downloads/windows/).
+- During setup, enable **“Add python.exe to PATH”**.
+- Verify in Command Prompt: `python --version` (or `py -3 --version`).
+
+**2. Install OpenSSH Client (for `scp`)**
+
+- Settings → Apps → Optional features → **Add a feature** → **OpenSSH Client**.
+- Verify: `scp` and `ssh` run without “not recognized”.
+
+**3. Copy the GUI folder**
+
+Copy `FreelyMovingVR4Mice/dj_pipeline/gui_transfer/` to the rig, e.g. `C:\vr4mice\gui_transfer\`.
+
+**4. Install Python dependencies**
+
+```bat
+cd C:\vr4mice\gui_transfer
+python -m pip install --upgrade pip
+python -m pip install PyQt5 numpy "moviepy>=1.0.3"
+```
+
+**5. Create and edit config**
+
+```bat
+cd C:\vr4mice\gui_transfer\config
+copy windows_config.json.example config.json
+```
+
+Edit `config.json` with your server IP, SSH user, and **Windows paths** (use forward slashes, e.g. `C:/vr4mice/raw`). See `gui_transfer/README.md` for a full key table.
+
+Required for a production rig:
+
+| Key | Example |
+|-----|---------|
+| `ip` | `192.168.1.10` |
+| `host` | `vr4mice` |
+| `remote_dropdown_menu` | `/shared/gui_menu.npy` (path on the **Linux server**) |
+| `host_dropdown_menu` | `C:/vr4mice/gui_transfer/gui_menu.npy` |
+| `teensy_path`, `dlc_path`, … | Your local data folders |
+| `remote_dst` | `/data/data` (destination on the server) |
+
+**6. Test SSH / menu download**
+
+```bat
+ssh vr4mice@192.168.1.10
+scp vr4mice@192.168.1.10:/shared/gui_menu.npy C:\vr4mice\gui_transfer\gui_menu.npy
+```
+
+Set up an SSH key if you do not want a password prompt every session (see `gui_transfer/README.md`).
+
+**7. Start the GUI**
+
+```bat
+cd C:\vr4mice\gui_transfer
+run_gui.bat
+```
+
+Or double-click `run_gui.bat`. If the window closes immediately, run the same commands from Command Prompt to read the error.
+
+   **Local dry-run (no SSH):** see `gui_transfer/README.md` → *Local test* (`gui_transfer/test/Makefile`; Linux only).
 
 If the menu file is missing or `scp` fails, the GUI logs a warning and exits — fix paths/credentials and ensure `run.py fetch` has been run on the server before restarting the GUI.
+
+**Canonical GUI code:** deploy `FreelyMovingVR4Mice/dj_pipeline/gui_transfer/` on rigs. Do not use the legacy flat layout from `auxPipelines-DataJoint_Mathis/vr4mice/gui_transfer/`.
 
 Further GUI module details: `dj_pipeline/gui_transfer/README.md`.
 
