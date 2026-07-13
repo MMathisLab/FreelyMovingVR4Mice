@@ -17,3 +17,6 @@ black==22.6.0
 pytest==9.0.3
 pytest-cov==7.1.0
 tables==3.8.0
+# gui_transfer rig GUI — unit tests import PyQt5 / moviepy (headless in CI via QT_QPA_PLATFORM=offscreen)
+PyQt5==5.15.11
+moviepy==2.2.1

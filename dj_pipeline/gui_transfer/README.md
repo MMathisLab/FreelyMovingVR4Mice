@@ -81,7 +81,7 @@ Copy the whole folder from the repo to the rig, e.g.:
 C:\vr4mice\gui_transfer\
 ```
 
-Minimum contents: `main.py`, `gui.py`, `config/`, `modules/`, `utils/`, `run_gui.bat`.
+Minimum contents: `main.py`, `gui.py`, `config/`, `modules/`, `utils/`, `run_gui.bat`, `check_rig_setup.py`, `check_rig_setup.bat`.
 
 You can clone the repo on the rig or copy only `dj_pipeline/gui_transfer/` from a USB stick / shared drive.
 
@@ -144,7 +144,26 @@ type %USERPROFILE%\.ssh\id_ed25519.pub
 
 Add the printed public key to `~/.ssh/authorized_keys` on the server (ask your admin).
 
-### Step 5 — Start the GUI
+### Step 5 — Preflight check (recommended)
+
+Before the first real session, run the setup checker from the GUI folder:
+
+```bat
+cd C:\vr4mice\gui_transfer
+check_rig_setup.bat
+```
+
+This verifies Python, PyQt5/moviepy, `scp`, and `config\config.json`. To test menu download from the server (uses `scp -o BatchMode=yes` — requires SSH keys, no password prompt):
+
+```bat
+check_rig_setup.bat --test-menu
+```
+
+On Linux rigs the same script works: `python check_rig_setup.py [--test-menu]`.
+
+If preflight fails, fix the reported items before starting the GUI.
+
+### Step 6 — Start the GUI
 
 **Option A — double-click**
 
@@ -174,7 +193,7 @@ If the window closes immediately, run from Command Prompt (not double-click) to 
 |---------|-----|
 | `'python' is not recognized` | Reinstall Python with “Add to PATH”, or use `py -3 main.py` |
 | `'scp' is not recognized` | Install **OpenSSH Client** (Windows optional feature) |
-| GUI exits on start | Run `python run.py fetch` on server; test `scp` manually (step 4) |
+| GUI exits on start | Run `check_rig_setup.bat --test-menu`; ensure `python run.py fetch` on server |
 | `ModuleNotFoundError: PyQt5` / `moviepy` | Re-run pip install (step 2) in the same Python you use to start the GUI |
 | Wrong folders in file picker | Fix paths in `config\config.json` |
 | Upload fails at Submit | Check `host`, `ip`, `remote_dst`, and SSH key |

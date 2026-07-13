@@ -9,5 +9,5 @@ REM 4. Double-click this file or run from cmd in gui_transfer\
 set "config_path=default"
 set "config_name=config.json"
 cd /d "%~dp0"
-python main.py 2>nul || py -3 main.py
+python main.py || py -3 main.py
 if errorlevel 1 pause

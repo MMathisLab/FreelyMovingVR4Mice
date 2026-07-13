@@ -474,7 +474,15 @@ scp vr4mice@192.168.1.10:/shared/gui_menu.npy C:\vr4mice\gui_transfer\gui_menu.n
 
 Set up an SSH key if you do not want a password prompt every session (see `gui_transfer/README.md`).
 
-**7. Start the GUI**
+**7. Preflight check (recommended)**
+
+```bat
+cd C:\vr4mice\gui_transfer
+check_rig_setup.bat
+check_rig_setup.bat --test-menu
+```
+
+**8. Start the GUI**
 
 ```bat
 cd C:\vr4mice\gui_transfer
