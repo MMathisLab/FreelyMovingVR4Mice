@@ -584,7 +584,18 @@ class TeensyExperimentGUI(object):
         else:
             task_object = getattr(self.task_module, self.task_name.get())
             task_params = copy.deepcopy(self.task_params[self.task_name.get()])
-            self.task = task_object(self.teensy, **task_params)
+            try:
+                self.task = task_object(self.teensy, **task_params)
+            except Exception as err:
+                self.task = None
+                self.task_info = {}
+                self.task_on.set(0)
+                messagebox.showerror(
+                    "Task Initialization Failed",
+                    f"Could not initialize task '{self.task_name.get()}'.\n{err}",
+                    parent=self.window,
+                )
+                return
             parent_class = [c.__name__ for c in self.task.__class__.__mro__]
             self.gui_task = True if 'GuiTask' in parent_class else False
             self.unity_task = True if 'UnityTask' in parent_class else False
@@ -605,6 +616,9 @@ class TeensyExperimentGUI(object):
         """Track the real time task state on GUI and get information from task_info dictionary."""
         if info is None:
             info = self.task_info
+
+        if not isinstance(info, dict):
+            return
 
         index = 0
         if len(self.info_labels) == 0:

@@ -125,9 +125,10 @@ class ActiveSensingTask(UnityTask):
         config_dict = process_config(config_file_path)
 
         if config_dict is None:
-            # Error messages are showed on process_config() function level
-            print("config not found!")
-            return
+            # Fail fast so callers can surface the configuration issue to the user.
+            raise FileNotFoundError(
+                f"Invalid task configuration or missing paths in {config_file_path}"
+            )
 
         env_path = config_dict["ar_env_unity_absolute_path"]
 
