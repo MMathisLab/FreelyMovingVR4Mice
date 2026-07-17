@@ -144,10 +144,58 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
     # ------------------------------------------------------------------
     # DLCLive processor API
     # ------------------------------------------------------------------
+    @staticmethod
+    def _select_single_pose(pose: Any) -> np.ndarray:
+        """Return one pose with shape (K, 3).
+
+        Accepts:
+            (K, 3): already a single pose.
+            (N, K, 3): one or more detections.
+
+        For multiple detections, selects the detection with the highest
+        mean keypoint likelihood.
+        """
+        poses = np.asarray(pose)
+
+        if poses.ndim == 2:
+            if poses.shape[1] != 3:
+                raise ValueError(
+                    f"Expected pose shape (K, 3), got {poses.shape}"
+                )
+            return poses
+
+        if poses.ndim == 3:
+            if poses.shape[0] == 0 or poses.shape[2] != 3:
+                raise ValueError(
+                    f"Expected pose shape (N, K, 3), got {poses.shape}"
+                )
+
+            if poses.shape[0] == 1:
+                return poses[0]
+
+            scores = np.nanmean(poses[..., 2], axis=1)
+
+            if not np.isfinite(scores).any():
+                logger.warning(
+                    "No detection has a finite confidence score; "
+                    "selecting detection 0"
+                )
+                return poses[0]
+
+            index = int(np.nanargmax(scores))
+
+
+            return poses[index]
+
+        raise ValueError(
+            "Expected pose shape (K, 3) or (N, K, 3), "
+            f"got {poses.shape}"
+        )
 
     def process(self, pose: NDArray[np.float64], **kwargs: Any) -> NDArray[np.float64]:
         """Run the parent processor and buffer pose data for legacy DLC HDF5 saving."""
-        processed_pose = super().process(pose, **kwargs)
+        most_likely_detected_pose = self._select_single_pose(pose) # IMPORTANT: not multi-animal friendly
+        processed_pose = super().process(most_likely_detected_pose, **kwargs)
 
         # Parent should return pose, but guard just in case.
         pose_to_buffer = processed_pose if processed_pose is not None else pose
