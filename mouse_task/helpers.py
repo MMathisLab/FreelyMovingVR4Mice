@@ -48,8 +48,13 @@ def process_config(config_file_path: Path) -> dict:
         return None
 
     # Only this path is required for task startup.
-    env_path = config_dict[required_key]
-    if not Path(env_path).exists():
+    try:
+        env_path = Path(config_dict[required_key])
+    except TypeError:
+        logging.error(f"{required_key} must be a string path in {config_file_path}")
+        return None
+
+    if not env_path.exists():
         logging.error(str(env_path) + " does not exist.")
         return None
 
