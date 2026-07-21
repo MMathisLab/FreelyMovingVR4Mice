@@ -127,7 +127,7 @@ class ActiveSensingTask(UnityTask):
         if config_dict is None:
             # Fail fast so callers can surface the configuration issue to the user.
             raise FileNotFoundError(
-                f"Invalid task configuration or missing paths in {config_file_path}"
+                f"Missing/invalid 'ar_env_unity_absolute_path' in {config_file_path}"
             )
 
         env_path = config_dict["ar_env_unity_absolute_path"]
