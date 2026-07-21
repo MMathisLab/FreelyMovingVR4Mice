@@ -589,7 +589,15 @@ class TeensyExperimentGUI(object):
             except Exception as err:
                 self.task = None
                 self.task_info = {}
+                self.task_label["text"] = "No Task"
                 self.task_on.set(0)
+                try:
+                    self._reset_progress_labels()
+                except Exception:
+                    pass
+                finally:
+                    self.info_labels = []
+                    self.value_labels = []
                 messagebox.showerror(
                     "Task Initialization Failed",
                     f"Could not initialize task '{self.task_name.get()}'.\n{err}",
