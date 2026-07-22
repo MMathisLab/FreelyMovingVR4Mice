@@ -1,0 +1,6 @@
+class_name: DiscriminationTask
+description: |
+  Discrimination task (without occluders).
+
+# No parameter overrides — uses configs/common.yaml verbatim.
+params: {}

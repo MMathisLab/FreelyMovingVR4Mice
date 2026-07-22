@@ -1,0 +1,19 @@
+class_name: InvDetectionVelThrTask
+description: |
+  Detection task with velocity threshold to initiate the trials.
+
+  Black teardrop as target, with velocity threshold.
+
+# Only the parameters that differ from configs/common.yaml.
+params:
+  session_label:
+  - ar_detection_velthr_inv
+  epoch_labels:
+  - single_teardrop
+  slit_size:
+  - 19.0
+  - 20.0
+  - 2
+  target_selection: 4.0
+  distractor_selection: 6.0
+  distractor: 0.0

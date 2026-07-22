@@ -262,7 +262,15 @@ class TeensyExperimentGUI(object):
             try:
                 self.task_module = importlib.util.module_from_spec(task_spec)
                 task_spec.loader.exec_module(self.task_module)
-                task_list = [t for t in dir(self.task_module) if '__' not in t]
+                from teensyexp.tasks_abc.task import Task
+                task_list = []
+                # Only load real Task subclasses; task packages may export helper symbols too.
+                for t in dir(self.task_module):
+                    if t.startswith('_'):
+                        continue
+                    obj = getattr(self.task_module, t)
+                    if inspect.isclass(obj) and issubclass(obj, Task):
+                        task_list.append(t)
             except AttributeError:
                 if hasattr(self, "window"):
                     messagebox.showerror("Failed to load tasks!",
@@ -276,10 +284,22 @@ class TeensyExperimentGUI(object):
         self.task_params = {}
         for t in task_list:
             obj = getattr(self.task_module, t)  # TODO no getattr
-            args = inspect.getargspec(obj)
             self.task_params[t] = {}
-            for i in range(2, len(args[0])):
-                self.task_params[t][args[0][i]] = args[3][i - 2]
+            try:
+                # signature() is safer than getargspec for modern/dynamic callables.
+                signature = inspect.signature(obj.__init__)
+            except (TypeError, ValueError):
+                continue
+
+            for name, param in signature.parameters.items():
+                if name in ('self', 'teensy'):
+                    continue
+                if param.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD):
+                    continue
+                if param.default is inspect.Parameter.empty:
+                    self.task_params[t][name] = None
+                else:
+                    self.task_params[t][name] = param.default
 
         if hasattr(self, 'task_entry'):  # TODO no hasattr
             self.task_name.set("")  # gui interaction : update

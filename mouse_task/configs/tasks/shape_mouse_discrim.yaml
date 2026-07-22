@@ -1,0 +1,22 @@
+class_name: ShapeDiscrim
+description: |
+  Discrimination for shape task,with velocity threshold for trial initiation, no occluders.
+  The mouse must report the location of the white Pacman object and ignore the teardrop.
+
+# Only the parameters that differ from configs/common.yaml.
+params:
+  session_label:
+  - ar_shape_discrimination
+  epoch_labels:
+  - pacman_vs_teardrop
+  slit_size:
+  - 4.0
+  - 4.0
+  - 1
+  slit_depth: 0.02
+  target_selection: 13.0
+  distractor_selection: 6.0
+  target_spread: 3.0
+  target_rotation: 15.0
+  velocity_threshold: 5.0
+  target_distance: 4.0

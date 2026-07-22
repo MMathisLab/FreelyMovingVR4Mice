@@ -15,7 +15,7 @@ import pathlib
 import numpy as np
 import time
 
-from mouse_task.helpers import process_config
+from mouse_task.helpers import load_task_config, process_config
 
 from teensyexp.tasks_abc.unity_task import UnityTask
 from teensyexp.tasks_abc.dlc_deque_socket import DLCClient
@@ -23,6 +23,12 @@ from teensyexp.teensy import Teensy
 from mouse_task.kfilter import OneEuroFilter
 
 from typing import List, Optional
+
+# Machine-specific config holding the absolute Unity build path.
+_DEFAULT_CONFIG_FILE = pathlib.Path(__file__).parent / "task_config.json"
+
+# Marks a param not explicitly passed, so it is resolved from task_config.
+_UNSET = object()
 
 
 class ActiveSensingTask(UnityTask):
@@ -73,41 +79,89 @@ class ActiveSensingTask(UnityTask):
     def __init__(
         self,
         teensy: Teensy,
-        session_label: List[str],
-        config_file_path: pathlib.Path,
-        monitor: Optional[bool],
-        write_video: bool,
-        fps: float,
-        epochs: int,
-        epoch_labels: List[str],
-        reward_size: int,
-        cropped_image: List[int],
-        unity_arena_size: List[int],
-        r_report_box: List[int],
-        l_report_box: List[int],
-        start_box: List[int],
-        rotate_camera: float,
-        prob_obj_on_left: float,
-        prob_block_coherence: float,
-        mouse_report_delay: float,
-        slit_size: List[int],
-        slit_depth: float,
-        target_selection: float,
-        distractor_selection: float,
-        occlusion_type: float,
-        camera_type: float,
-        target_spread: float,
-        target_rotation: float,
-        target_size: float,
-        target_height: float,
-        block_length: float,
-        start_box_delay: float,
-        velocity_threshold: float,
-        distractor: float,
-        grey_screen_active: float,
-        target_distance: float,
-        use_dlc: bool,
+        task_config: Optional[str] = None,
+        config_file_path: pathlib.Path = _DEFAULT_CONFIG_FILE,
+        session_label: List[str] = _UNSET,
+        monitor: Optional[bool] = _UNSET,
+        write_video: bool = _UNSET,
+        fps: float = _UNSET,
+        epochs: int = _UNSET,
+        epoch_labels: List[str] = _UNSET,
+        reward_size: int = _UNSET,
+        cropped_image: List[int] = _UNSET,
+        unity_arena_size: List[int] = _UNSET,
+        r_report_box: List[int] = _UNSET,
+        l_report_box: List[int] = _UNSET,
+        start_box: List[int] = _UNSET,
+        rotate_camera: float = _UNSET,
+        prob_obj_on_left: float = _UNSET,
+        prob_block_coherence: float = _UNSET,
+        mouse_report_delay: float = _UNSET,
+        slit_size: List[int] = _UNSET,
+        slit_depth: float = _UNSET,
+        target_selection: float = _UNSET,
+        distractor_selection: float = _UNSET,
+        occlusion_type: float = _UNSET,
+        camera_type: float = _UNSET,
+        target_spread: float = _UNSET,
+        target_rotation: float = _UNSET,
+        target_size: float = _UNSET,
+        target_height: float = _UNSET,
+        block_length: float = _UNSET,
+        start_box_delay: float = _UNSET,
+        velocity_threshold: float = _UNSET,
+        distractor: float = _UNSET,
+        grey_screen_active: float = _UNSET,
+        target_distance: float = _UNSET,
+        use_dlc: bool = _UNSET,
     ):
+
+        # Resolve params: explicit args win, else fall back to task_config.
+        _explicit = {k: v for k, v in locals().items() if v is not _UNSET}
+        if task_config is not None:
+            merged = load_task_config(task_config)
+            merged.update({k: v for k, v in _explicit.items() if k in merged})
+        else:
+            merged = _explicit
+        _missing = [k for k, v in locals().items() if v is _UNSET and k not in merged]
+        if _missing:
+            raise ValueError(
+                "Missing task parameters (pass them explicitly or via task_config): "
+                + ", ".join(sorted(_missing))
+            )
+        session_label = merged["session_label"]
+        monitor = merged["monitor"]
+        write_video = merged["write_video"]
+        fps = merged["fps"]
+        epochs = merged["epochs"]
+        epoch_labels = merged["epoch_labels"]
+        reward_size = merged["reward_size"]
+        cropped_image = merged["cropped_image"]
+        unity_arena_size = merged["unity_arena_size"]
+        r_report_box = merged["r_report_box"]
+        l_report_box = merged["l_report_box"]
+        start_box = merged["start_box"]
+        rotate_camera = merged["rotate_camera"]
+        prob_obj_on_left = merged["prob_obj_on_left"]
+        prob_block_coherence = merged["prob_block_coherence"]
+        mouse_report_delay = merged["mouse_report_delay"]
+        slit_size = merged["slit_size"]
+        slit_depth = merged["slit_depth"]
+        target_selection = merged["target_selection"]
+        distractor_selection = merged["distractor_selection"]
+        occlusion_type = merged["occlusion_type"]
+        camera_type = merged["camera_type"]
+        target_spread = merged["target_spread"]
+        target_rotation = merged["target_rotation"]
+        target_size = merged["target_size"]
+        target_height = merged["target_height"]
+        block_length = merged["block_length"]
+        start_box_delay = merged["start_box_delay"]
+        velocity_threshold = merged["velocity_threshold"]
+        distractor = merged["distractor"]
+        grey_screen_active = merged["grey_screen_active"]
+        target_distance = merged["target_distance"]
+        use_dlc = merged["use_dlc"]
 
         # Initialized in init_DLC_live()
         self.t_count = None

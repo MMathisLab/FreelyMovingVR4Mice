@@ -5,6 +5,49 @@ import json
 import logging
 from pathlib import Path
 
+import yaml
+
+# Directory holding the modular task configs (``common.yaml`` + ``tasks/*.yaml``).
+CONFIG_DIR = Path(__file__).parent / "configs"
+
+
+def _load_yaml(path: Path) -> dict:
+    with open(path) as f:
+        return yaml.safe_load(f) or {}
+
+
+def _deep_merge(base: dict, override: dict) -> None:
+    """Recursively merge ``override`` into ``base`` in-place."""
+    for key, val in override.items():
+        if key in base and isinstance(base[key], dict) and isinstance(val, dict):
+            _deep_merge(base[key], val)
+        else:
+            base[key] = val
+
+
+def load_task_config(task_config: str, config_dir: Path = CONFIG_DIR) -> dict:
+    """Load ``common.yaml`` and overlay the task-specific overrides.
+
+    Args:
+        task_config: Stem of a file in ``configs/tasks/`` (e.g. ``"shape_mouse_discrim"``).
+        config_dir: Root of the config tree (defaults to ``mouse_task/configs``).
+
+    Returns:
+        Flat dict of task parameters: every key from ``common.yaml`` with the
+        task's ``params`` block merged on top.
+    """
+    params = _load_yaml(config_dir / "common.yaml")
+
+    task_path = config_dir / "tasks" / f"{task_config}.yaml"
+    if not task_path.exists():
+        available = sorted(p.stem for p in (config_dir / "tasks").glob("*.yaml"))
+        raise FileNotFoundError(
+            f"Task config not found: {task_path}. Available: {available}"
+        )
+    _deep_merge(params, _load_yaml(task_path).get("params") or {})
+    return params
+
+
 def process_config(config_file_path: Path) -> dict:
     """
         Function that processes the task_config file and verifies its content
