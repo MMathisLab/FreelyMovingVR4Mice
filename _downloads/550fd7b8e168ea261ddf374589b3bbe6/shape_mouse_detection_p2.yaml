@@ -1,0 +1,22 @@
+class_name: ShapeDetectionWithVelocityThresholdTask
+description: |
+  Detection of shape task with a lower velocity threshold to initiate the trials.
+
+# Only the parameters that differ from configs/common.yaml.
+params:
+  session_label:
+  - ar_shape_detection_velthr
+  epoch_labels:
+  - single_wide_pacman
+  slit_size:
+  - 4.0
+  - 4.0
+  - 1
+  slit_depth: 0.02
+  target_selection: 13.0
+  distractor_selection: 6.0
+  target_spread: 3.0
+  target_rotation: 15.0
+  velocity_threshold: 5.0
+  distractor: 0.0
+  target_distance: 4.0
