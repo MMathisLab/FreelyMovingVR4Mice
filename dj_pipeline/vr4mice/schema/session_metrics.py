@@ -42,7 +42,7 @@ class SessionMetrics(dj.Computed):
         """Compute session-level summary metrics from the DataFrame table."""
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
@@ -127,7 +127,7 @@ class TrialMetrics(dj.Computed):
         """Compute trial-level metrics derived from per-step data."""
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return

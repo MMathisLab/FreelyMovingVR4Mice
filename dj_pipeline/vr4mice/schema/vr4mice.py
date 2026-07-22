@@ -118,7 +118,7 @@ class FailedSession(dj.Manual):
 
     @classmethod
     def should_skip(cls, key, table_name, logger=None) -> bool:
-        """Return True if dataset is in FailedSession; optionally log a warning."""
+        """Return True if dataset is in FailedSession; optionally log at debug."""
         dataset = None
         if isinstance(key, dict):
             dataset = key.get("dataset")
@@ -128,7 +128,7 @@ class FailedSession(dj.Manual):
         if not dataset:
             return False
 
-        failed = cls() & {"dataset": dataset}
+        failed = cls() & {"dataset": dataset, "failed_table_name": table_name}
         if failed:
             if logger:
                 failed_rows = failed.fetch(
@@ -149,11 +149,11 @@ class FailedSession(dj.Manual):
                         (error_msg[:160] + "...") if len(error_msg) > 160 else error_msg
                     )
                 if short_error:
-                    logger.warning(
+                    logger.debug(
                         f"skip {table_name} {dataset} (FailedSession: {short_error})"
                     )
                 else:
-                    logger.warning(f"skip {table_name} {dataset} (FailedSession)")
+                    logger.debug(f"skip {table_name} {dataset} (FailedSession)")
             return True
 
         return False
@@ -527,46 +527,85 @@ class SignalsPhotodiode(dj.Computed):
     def make(self, key):
         """Compute photodiode-aligned signals for a dataset."""
         from vr4mice.actions.populate_rig import get_files_paths
-        from vr4mice.analysis.latency_testing import check_data
+        from vr4mice.analysis.latency_testing import (
+            check_data,
+            load_proc_dict,
+            normalize_proc_data,
+        )
 
         if FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
 
         try:
-            logger.info(f"{key['dataset']}")
             paths = get_files_paths(key["dataset"])
             proc_filepath = (
                 f"{paths['proc_path']['dst']}/{paths['proc_path']['filename']}"
             )
-            logger.info(f"proc_filepath: {proc_filepath}")
-            if os.path.exists(proc_filepath):
-                photodiode_data = np.load(proc_filepath, allow_pickle=True)
-                if check_data(photodiode_data):
-                    data = {
-                        "start_time": photodiode_data["start_time"],
-                        "photodiode_time": photodiode_data["photodiode_time"],
-                        "photodiode_read": photodiode_data["photodiode_read"],
-                        "generated_frame_time": photodiode_data["frame_time"],
-                        "generated_send_time": photodiode_data["time_stamp"],
-                        "generated_signal": photodiode_data["signal"],
-                        "signal_type": photodiode_data.get("signal_type", None),
-                        "signal_delay": photodiode_data.get("signal_delay", None),
-                    }
-                    self.insert1({**key, **data}, allow_direct_insert=True)
-                else:
-                    logger.warning(f"Photodiode data check failed for {key['dataset']}")
-                    return
-            else:
-                logger.warning(f"PROC file not found: {key['dataset']}")
+            if not os.path.exists(proc_filepath):
+                logger.debug(
+                    "PROC file not found, skipping latency for %s",
+                    key["dataset"],
+                )
                 return
 
+            logger.debug("Populating %s from %s", key["dataset"], proc_filepath)
+            photodiode_data = normalize_proc_data(
+                load_proc_dict(np.load(proc_filepath, allow_pickle=True))
+            )
+            if check_data(photodiode_data):
+                data = {
+                    "start_time": photodiode_data["start_time"],
+                    "photodiode_time": photodiode_data["photodiode_time"],
+                    "photodiode_read": photodiode_data["photodiode_read"],
+                    "generated_frame_time": photodiode_data["frame_time"],
+                    "generated_send_time": photodiode_data["time_stamp"],
+                    "generated_signal": photodiode_data["signal"],
+                    "signal_type": photodiode_data.get("signal_type", None),
+                    "signal_delay": photodiode_data.get("signal_delay", None),
+                }
+                self.insert1(
+                    {**key, **data},
+                    allow_direct_insert=True,
+                    skip_duplicates=True,
+                )
+            else:
+                FailedSession().add_entry(
+                    key["dataset"],
+                    self.__class__.__name__,
+                    "No photodiode signal in PROC file",
+                )
+                logger.debug(
+                    "No photodiode signal for %s; recorded in FailedSession",
+                    key["dataset"],
+                )
+                return
+
+        except (TypeError, ValueError) as err:
+            logger.warning(
+                "Skipping %s for %s: %s", self.__class__.__name__, key["dataset"], err
+            )
+            return
+        except dj.errors.DuplicateError:
+            logger.debug(
+                "%s already populated for %s",
+                self.__class__.__name__,
+                key["dataset"],
+            )
+            return
         except Exception as err:
+            if "Duplicate entry" in str(err):
+                logger.debug(
+                    "%s already populated for %s",
+                    self.__class__.__name__,
+                    key["dataset"],
+                )
+                return
             dataset = key["dataset"]
             FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
