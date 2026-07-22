@@ -454,7 +454,12 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-vs-non-gui-mode">GUI vs non-GUI mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-dropdown-menu-and-rig-setup">GUI dropdown menu and rig setup</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#server-generate-the-menu-file">Server: generate the menu file</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rig-configure-paths-and-fetch-the-menu">Rig: configure paths and fetch the menu</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rig-configure-paths-and-fetch-the-menu">Rig: configure paths and fetch the menu</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#linux-macos-rig">Linux / macOS rig</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#windows-rig">Windows rig</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rig-filename-contract">Rig filename contract</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manual-runs-run-py">Manual runs (run.py)</a></li>
@@ -576,6 +581,7 @@ python<span class="w"> </span>run.py<span class="w"> </span>maintenance
 <li><p><code class="docutils literal notranslate"><span class="pre">gui.py</span></code> + <code class="docutils literal notranslate"><span class="pre">config/</span></code> for metadata capture.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">utils/</span></code> and <code class="docutils literal notranslate"><span class="pre">modules/</span></code> for GUI logic.</p></li>
 <li><p>Dropdown menu file (<code class="docutils literal notranslate"><span class="pre">gui_menu.npy</span></code>) generated on the server by <code class="docutils literal notranslate"><span class="pre">fetch_data.py</span></code> and copied to the rig at GUI startup (see <a class="reference internal" href="#gui-dropdown-menu"><span class="std std-ref">GUI dropdown menu and rig setup</span></a>).</p></li>
+<li><p>Rig session filenames (<code class="docutils literal notranslate"><span class="pre">{mouse}_{date}_{attempt}</span></code>, typed suffixes) — see <a class="reference internal" href="#rig-filename-contract"><span class="std std-ref">Rig filename contract</span></a> and <code class="docutils literal notranslate"><span class="pre">gui_transfer/README.md</span></code>.</p></li>
 </ul>
 </section>
 <section id="base-schemas">
@@ -986,6 +992,8 @@ Use GUI mode when experiment metadata is collected via the rig GUI.</p></li>
 </section>
 <section id="rig-configure-paths-and-fetch-the-menu">
 <h3>Rig: configure paths and fetch the menu<a class="headerlink" href="#rig-configure-paths-and-fetch-the-menu" title="Permalink to this heading">#</a></h3>
+<section id="linux-macos-rig">
+<h4>Linux / macOS rig<a class="headerlink" href="#linux-macos-rig" title="Permalink to this heading">#</a></h4>
 <ol class="arabic">
 <li><p>Copy <code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code> to the rig computer.</p></li>
 <li><p>Install Python 3 + PyQt5 (<code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">env</span></code> from <code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code>).</p></li>
@@ -1030,13 +1038,125 @@ Use GUI mode when experiment metadata is collected via the rig GUI.</p></li>
 <p>Also set transfer paths (<code class="docutils literal notranslate"><span class="pre">remote_dst</span></code>, <code class="docutils literal notranslate"><span class="pre">gui_output_folder</span></code>, <code class="docutils literal notranslate"><span class="pre">teensy_path</span></code>, <code class="docutils literal notranslate"><span class="pre">processed_path</span></code>, etc.) for your rig layout. See the inline example in <code class="docutils literal notranslate"><span class="pre">gui_transfer/config/config.py</span></code>.</p>
 </li>
 <li><p>Start the GUI:</p>
-<ul class="simple">
-<li><p>Linux: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">run_gui</span></code> from <code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code></p></li>
-<li><p>Windows: use the provided batch file example and adjust paths.</p></li>
-</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>gui_transfer
+make<span class="w"> </span>run_gui
+</pre></div>
+</div>
 </li>
 </ol>
+</section>
+<section id="windows-rig">
+<h4>Windows rig<a class="headerlink" href="#windows-rig" title="Permalink to this heading">#</a></h4>
+<p>Most VR rigs run <strong>Windows 10/11</strong>. You do not need Docker, WSL, or GNU Make on the rig — only Python 3, the <code class="docutils literal notranslate"><span class="pre">gui_transfer/</span></code> folder, and <strong>OpenSSH</strong> (<code class="docutils literal notranslate"><span class="pre">scp</span></code>/<code class="docutils literal notranslate"><span class="pre">ssh</span></code>) to reach the pipeline server.</p>
+<p><strong>1. Install Python 3.9+</strong></p>
+<ul class="simple">
+<li><p>Download from <a class="reference external" href="https://www.python.org/downloads/windows/">python.org</a>.</p></li>
+<li><p>During setup, enable <strong>“Add python.exe to PATH”</strong>.</p></li>
+<li><p>Verify in Command Prompt: <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">--version</span></code> (or <code class="docutils literal notranslate"><span class="pre">py</span> <span class="pre">-3</span> <span class="pre">--version</span></code>).</p></li>
+</ul>
+<p><strong>2. Install OpenSSH Client (for <code class="docutils literal notranslate"><span class="pre">scp</span></code>)</strong></p>
+<ul class="simple">
+<li><p>Settings → Apps → Optional features → <strong>Add a feature</strong> → <strong>OpenSSH Client</strong>.</p></li>
+<li><p>Verify: <code class="docutils literal notranslate"><span class="pre">scp</span></code> and <code class="docutils literal notranslate"><span class="pre">ssh</span></code> run without “not recognized”.</p></li>
+</ul>
+<p><strong>3. Copy the GUI folder</strong></p>
+<p>Copy <code class="docutils literal notranslate"><span class="pre">FreelyMovingVR4Mice/dj_pipeline/gui_transfer/</span></code> to the rig, e.g. <code class="docutils literal notranslate"><span class="pre">C:\vr4mice\gui_transfer\</span></code>.</p>
+<p><strong>4. Install Python dependencies</strong></p>
+<div class="highlight-bat notranslate"><div class="highlight"><pre><span></span><span class="k">cd</span> C:\vr4mice\gui_transfer
+python -m pip install --upgrade pip
+python -m pip install PyQt5 numpy <span class="s2">&quot;moviepy&gt;=1.0.3&quot;</span>
+</pre></div>
+</div>
+<p><strong>5. Create and edit config</strong></p>
+<div class="highlight-bat notranslate"><div class="highlight"><pre><span></span><span class="k">cd</span> C:\vr4mice\gui_transfer\config
+<span class="k">copy</span> windows_config.json.example config.json
+</pre></div>
+</div>
+<p>Edit <code class="docutils literal notranslate"><span class="pre">config.json</span></code> with your server IP, SSH user, and <strong>Windows paths</strong> (use forward slashes, e.g. <code class="docutils literal notranslate"><span class="pre">C:/vr4mice/raw</span></code>). See <code class="docutils literal notranslate"><span class="pre">gui_transfer/README.md</span></code> for a full key table.</p>
+<p>Required for a production rig:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Example</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ip</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">192.168.1.10</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">host</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vr4mice</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">remote_dropdown_menu</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/shared/gui_menu.npy</span></code> (path on the <strong>Linux server</strong>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">host_dropdown_menu</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">C:/vr4mice/gui_transfer/gui_menu.npy</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">teensy_path</span></code>, <code class="docutils literal notranslate"><span class="pre">dlc_path</span></code>, …</p></td>
+<td><p>Your local data folders</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">remote_dst</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/data/data</span></code> (destination on the server)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>6. Test SSH / menu download</strong></p>
+<div class="highlight-bat notranslate"><div class="highlight"><pre><span></span>ssh vr4mice@192.168.1.10
+scp vr4mice@192.168.1.10:/shared/gui_menu.npy C:\vr4mice\gui_transfer\gui_menu.npy
+</pre></div>
+</div>
+<p>Set up an SSH key if you do not want a password prompt every session (see <code class="docutils literal notranslate"><span class="pre">gui_transfer/README.md</span></code>).</p>
+<p><strong>7. Preflight check (recommended)</strong></p>
+<div class="highlight-bat notranslate"><div class="highlight"><pre><span></span><span class="k">cd</span> C:\vr4mice\gui_transfer
+check_rig_setup.bat
+check_rig_setup.bat --test-menu
+</pre></div>
+</div>
+<p><strong>8. Start the GUI</strong></p>
+<div class="highlight-bat notranslate"><div class="highlight"><pre><span></span><span class="k">cd</span> C:\vr4mice\gui_transfer
+run_gui.bat
+</pre></div>
+</div>
+<p>Or double-click <code class="docutils literal notranslate"><span class="pre">run_gui.bat</span></code>. If the window closes immediately, run the same commands from Command Prompt to read the error.</p>
+<p><strong>Local dry-run (no SSH, Linux/macOS):</strong> from <code class="docutils literal notranslate"><span class="pre">gui_transfer/test/</span></code> run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">menu</span> <span class="pre">config</span> <span class="pre">build_tree</span> <span class="pre">&amp;&amp;</span> <span class="pre">make</span> <span class="pre">run_gui</span></code>. Creates fake menu and session files under <code class="docutils literal notranslate"><span class="pre">/tmp/vr4mice_test_gui</span></code> and runs the GUI on <code class="docutils literal notranslate"><span class="pre">localhost</span></code> (no scp). Full walkthrough: <code class="docutils literal notranslate"><span class="pre">gui_transfer/README.md</span></code> → <em>Local test</em>.</p>
 <p>If the menu file is missing or <code class="docutils literal notranslate"><span class="pre">scp</span></code> fails, the GUI logs a warning and exits — fix paths/credentials and ensure <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">fetch</span></code> has been run on the server before restarting the GUI.</p>
+<p><strong>Canonical GUI code:</strong> deploy <code class="docutils literal notranslate"><span class="pre">FreelyMovingVR4Mice/dj_pipeline/gui_transfer/</span></code> on rigs. Do not use the legacy flat layout from <code class="docutils literal notranslate"><span class="pre">auxPipelines-DataJoint_Mathis/vr4mice/gui_transfer/</span></code>.</p>
+</section>
+</section>
+<section id="rig-filename-contract">
+<span id="id1"></span><h3>Rig filename contract<a class="headerlink" href="#rig-filename-contract" title="Permalink to this heading">#</a></h3>
+<p>The rig GUI and <strong><code class="docutils literal notranslate"><span class="pre">populate_rig</span></code></strong> on the server assume the same session filenames. Auto-discovery (select one file → find related pickle / TS / DLC / PROC / VIDEO), metadata auto-fill, and pipeline ingest all rely on this.</p>
+<p><strong>Dataset stem:</strong> <code class="docutils literal notranslate"><span class="pre">{mouse_name}_{YYYY-MM-DD}_{attempt}</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">Testmouse_2023-02-22_2</span></code>).</p>
+<p><strong>Typical session files</strong> (camera prefix = <code class="docutils literal notranslate"><span class="pre">IMG_SRC</span></code>, default <code class="docutils literal notranslate"><span class="pre">Imagingsource</span></code>):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>File</p></th>
+<th class="head"><p>Example</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Teensy</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Testmouse_2023-02-22_2.pickle</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Timestamps</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Imagingsource_Testmouse_2023-02-22_2_TS.npy</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>DLC</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Imagingsource_Testmouse_2023-02-22_2_DLC.hdf5</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Processed</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Imagingsource_Testmouse_2023-02-22_2_PROC</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Video (rig only)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Imagingsource_Testmouse_2023-02-22_2_VIDEO.avi</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Classification uses keyword tags (<code class="docutils literal notranslate"><span class="pre">TS</span></code>, <code class="docutils literal notranslate"><span class="pre">DLC</span></code>, <code class="docutils literal notranslate"><span class="pre">VIDEO</span></code>, <code class="docutils literal notranslate"><span class="pre">PROC</span></code>) and glob patterns in <code class="docutils literal notranslate"><span class="pre">gui_transfer/modules/transfer.py</span></code>; parsing lives in <code class="docutils literal notranslate"><span class="pre">gui_transfer/utils/session_files.py</span></code>. The server mirror is <code class="docutils literal notranslate"><span class="pre">vr4mice/actions/populate_rig.py</span></code> → <code class="docutils literal notranslate"><span class="pre">get_files_paths()</span></code>.</p>
+<p><strong>If naming changes</strong>, update GUI + populate + tests in one change set — patterns are <strong>not</strong> configurable in <code class="docutils literal notranslate"><span class="pre">config.json</span></code>. Full checklist and limitations: <code class="docutils literal notranslate"><span class="pre">dj_pipeline/gui_transfer/README.md</span></code> → <em>Rig filename contract</em>.</p>
 <p>Further GUI module details: <code class="docutils literal notranslate"><span class="pre">dj_pipeline/gui_transfer/README.md</span></code>.</p>
 <p>The GUI transfers <strong>experiment metadata</strong> and rig files only (videos stay on the rig).</p>
 </section>
@@ -1583,7 +1703,12 @@ messages are DEBUG unless you run with <code class="docutils literal notranslate
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-vs-non-gui-mode">GUI vs non-GUI mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-dropdown-menu-and-rig-setup">GUI dropdown menu and rig setup</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#server-generate-the-menu-file">Server: generate the menu file</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rig-configure-paths-and-fetch-the-menu">Rig: configure paths and fetch the menu</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rig-configure-paths-and-fetch-the-menu">Rig: configure paths and fetch the menu</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#linux-macos-rig">Linux / macOS rig</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#windows-rig">Windows rig</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rig-filename-contract">Rig filename contract</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manual-runs-run-py">Manual runs (run.py)</a></li>
