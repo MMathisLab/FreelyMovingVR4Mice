@@ -261,7 +261,6 @@ def get_box(raw_data=None, key=None, transformer=None, **kwargs):
     if transformer[key] in raw_data.keys():
         raw_key = transformer[key]
         data = raw_data[raw_key]
-        logger.info(f"Old/ Key: {key} Raw key: {raw_key}, data: {data}")
         return data
 
     # new style
@@ -270,13 +269,11 @@ def get_box(raw_data=None, key=None, transformer=None, **kwargs):
             idx = b[key]
             name = n
             data = raw_data[name][idx]
-            logger.info(f"New/ Key: {key}, idx: {idx}, name: {name}, data: {data}")
             return data
 
 
 def get_name(raw_data=None, key=None, **kwargs):
     val = raw_data[key]
-    logger.info(f"Session label: {key}: {val}")
     if isinstance(val, list):
         return val[0]
     return None
