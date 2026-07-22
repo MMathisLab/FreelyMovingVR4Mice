@@ -8,6 +8,23 @@ from utils.logger import Logger
 
 logger = Logger.get_logger()
 
+REQUIRED_CONFIG_KEYS = (
+    "ip",
+    "host",
+    "remote_dropdown_menu",
+    "host_dropdown_menu",
+    "gui_output_folder",
+    "cache",
+    "remote_dst",
+    "raw_data_src",
+    "dlc_path",
+    "proc_path",
+    "video_path",
+    "camera_path",
+    "teensy_path",
+    "processed_path",
+)
+
 """
 config.json example 
 
@@ -36,9 +53,7 @@ config.json example
 """
 
 
-def get_system_config(
-    config_path=os.environ["config_path"], config_name=os.environ["config_name"]
-):
+def get_system_config(config_path=None, config_name=None):
     """
     Loads the system configuration from a JSON file.
 
@@ -59,6 +74,11 @@ def get_system_config(
     - If the configuration file is found but there is an error loading it,
     an error message will be printed to the console and the function will return None.
     """
+    if config_path is None:
+        config_path = os.environ.get("config_path", "default")
+    if config_name is None:
+        config_name = os.environ.get("config_name", "config.json")
+
     if config_path == "default":
         config_path = Path(__file__).parent.absolute().joinpath(config_name)
 
@@ -66,9 +86,29 @@ def get_system_config(
         print("Config not found")
         return False
 
-    with open(config_path) as config_path:
-        config_dict = json.load(config_path)
+    with open(config_path) as config_file:
+        config_dict = json.load(config_file)
     return config_dict
+
+
+def validate_config(config_dict):
+    """
+    Validate that config.json contains required keys.
+
+    Returns:
+        tuple (ok: bool, message: str)
+    """
+    if not config_dict or not isinstance(config_dict, dict):
+        return False, "Config file missing or invalid JSON."
+    missing = [key for key in REQUIRED_CONFIG_KEYS if key not in config_dict]
+    if missing:
+        return False, "Missing config keys: " + ", ".join(missing)
+    if (
+        "localhost" not in str(config_dict.get("ip", ""))
+        and not str(config_dict.get("host", "")).strip()
+    ):
+        return False, "Config 'host' (SSH user) is required when ip is not localhost."
+    return True, ""
 
 
 class Config:
@@ -109,6 +149,10 @@ class Config:
     config_dict = get_system_config()
     cache_file = Path(__file__).parent.absolute().joinpath("cache.json")
 
+    @classmethod
+    def validate(cls):
+        return validate_config(cls.config_dict)
+
     @property
     def get_ip(self):
         return self.config_dict["ip"]
@@ -123,46 +167,44 @@ class Config:
 
     @property
     def get_menu_path(self):
-        # scp
-        ip = self.get_ip
-        if ip != "localhost":
-            host = self.get_host
-            adr = str(host) + "@" + str(ip) + ":"
-        else:
-            adr = ip + ":"
-
         dst = self.config_dict["host_dropdown_menu"]
+        ip = self.get_ip
 
         if "localhost" in ip:
             src = self.config_dict["remote_dropdown_menu"]
-            if Path(src) != Path(dst):
-                if Path(src).exists():
-                    shutil.copy(Path(src), Path(dst))
-                    self.config_dict["dropdown_menu"] = dst
-        else:
-            src = adr + self.config_dict["remote_dropdown_menu"]
-            dst = str(dst).replace("\\", "/")
-            cmd = ["scp", src, dst]
+            src_path = Path(src)
+            dst_path = Path(dst)
+            if src_path != dst_path:
+                if not src_path.exists():
+                    logger.warning(f"Menu file not found: {src}")
+                    return False
+                dst_path.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy(src_path, dst_path)
+            self.config_dict["dropdown_menu"] = str(dst_path)
+            return self.config_dict["dropdown_menu"]
 
-            process = subprocess.Popen(
-                cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE
+        host = self.get_host
+        adr = str(host) + "@" + str(ip) + ":"
+        src = adr + self.config_dict["remote_dropdown_menu"]
+        dst = str(dst).replace("\\", "/")
+        cmd = ["scp", src, dst]
+
+        process = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            stdout_s = (
+                stdout.decode(errors="replace")
+                if isinstance(stdout, (bytes, bytearray))
+                else str(stdout)
             )
-            stdout, stderr = process.communicate()
-            if process.returncode != 0:
-                stdout_s = (
-                    stdout.decode(errors="replace")
-                    if isinstance(stdout, (bytes, bytearray))
-                    else str(stdout)
-                )
-                stderr_s = (
-                    stderr.decode(errors="replace")
-                    if isinstance(stderr, (bytes, bytearray))
-                    else str(stderr)
-                )
-                logger.warning(f"{cmd} failed: {stdout_s} {stderr_s}")
-                return False
-            self.config_dict["dropdown_menu"] = dst
-
+            stderr_s = (
+                stderr.decode(errors="replace")
+                if isinstance(stderr, (bytes, bytearray))
+                else str(stderr)
+            )
+            logger.warning(f"{cmd} failed: {stdout_s} {stderr_s}")
+            return False
+        self.config_dict["dropdown_menu"] = dst
         return self.config_dict["dropdown_menu"]
 
     @property

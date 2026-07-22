@@ -65,6 +65,7 @@ Rig GUI and transfer utilities:
 - `gui.py` + `config/` for metadata capture.
 - `utils/` and `modules/` for GUI logic.
 - Dropdown menu file (`gui_menu.npy`) generated on the server by `fetch_data.py` and copied to the rig at GUI startup (see [GUI dropdown menu and rig setup](#gui-dropdown-menu-and-rig-setup)).
+- Session filename contract (`{mouse}_{date}_{attempt}`) — see [gui_transfer/README.md](gui_transfer/README.md#rig-filename-contract) and the [install guide](../docs/software/install_dj_pipeline.md#rig-filename-contract).
 
 ### `base` (schemas)
 - `base_schemas`: full `exp` and `mice` schema definitions.
@@ -392,12 +393,12 @@ mkdir -p /mnt/database/shared   # or your SHARED_PATH
    Also set transfer paths (`remote_dst`, `gui_output_folder`, `teensy_path`, `processed_path`, etc.) for your rig layout. See the inline example in `gui_transfer/config/config.py`.
 
 5. Start the GUI:
-   - Linux: `make run_gui` from `gui_transfer/`
-   - Windows: use the provided batch file example and adjust paths.
+   - **Linux / macOS:** `make run_gui` from `gui_transfer/`
+   - **Windows:** see **`gui_transfer/README.md` → Windows rig setup** (Python, OpenSSH, `config\config.json`, `run_gui.bat`)
 
 If the menu file is missing or `scp` fails, the GUI logs a warning and exits — fix paths/credentials and ensure `run.py fetch` has been run on the server before restarting the GUI.
 
-Further GUI module details: `gui_transfer/README.md`.
+Further GUI module details: `gui_transfer/README.md` (includes full **Windows** install steps).
 
 The GUI transfers **experiment metadata** and rig files only (videos stay on the rig).
 
