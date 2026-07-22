@@ -1329,18 +1329,6 @@ class TestSummaryPlots:
             mock_summary_plots,
         )
 
-        # Monkeypatch insert_send_email to skip email recipient lookup.
-        # The test exp.Experimenter table only has default entries; the
-        # production "mathislab" experimenter doesn't exist in tests.
-        # We still exercise the DB insert; only the email lookup is skipped.
-        def mock_insert_send_email(key, tuple_, table, filename, send=False):
-            table.insert1(tuple_, allow_direct_insert=True)
-
-        monkeypatch.setattr(
-            "vr4mice.schema.base_analysis.insert_send_email",
-            mock_insert_send_email,
-        )
-
         # Populate SummaryPlots
         base_analysis.SummaryPlots.populate()
 

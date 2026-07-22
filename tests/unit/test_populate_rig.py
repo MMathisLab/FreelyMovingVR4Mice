@@ -29,6 +29,11 @@ from populate_rig import (
     check_keys,
     populate,
     populate_rig,
+    collect_population_targets,
+    is_dataset_fully_populated,
+    row_exists,
+    populate_dataset_tables,
+    move_dataset_files,
 )
 from unittest.mock import MagicMock, patch
 
@@ -653,24 +658,31 @@ class TestPopulateRig:
                     # This should not raise an error - it processes the file
                     populate_rig(path=str(tmp_path))
 
-    def test_populate_rig_skips_existing_dataset(self, tmp_path, sample_pickle_data):
-        """populate_rig should skip datasets already in database."""
-        # Create test pickle file
+    def test_populate_rig_moves_files_only_when_fully_populated(
+        self, tmp_path, sample_pickle_data
+    ):
+        """Raw files move only after populate_dataset_tables reports complete."""
         pickle_path = tmp_path / "ExistingMouse_2024-01-01_1.pickle"
         with open(pickle_path, "wb") as f:
             pickle.dump(sample_pickle_data, f)
 
-        with patch("populate_rig.dj_schema") as mock_schema:
-            # Simulate dataset ALREADY in database
-            mock_schema.vr4mice.Dataset.return_value.__and__.return_value.fetch.return_value = [
-                {"dataset": "ExistingMouse_2024-01-01_1"}
-            ]
+        with patch("populate_rig.populate_dataset_tables", return_value=True):
+            with patch("populate_rig.move_dataset_files") as mock_move:
+                populate_rig(path=str(tmp_path), move=True)
+                mock_move.assert_called_once()
 
-            # Run should complete without populating
-            populate_rig(path=str(tmp_path))
+    def test_populate_rig_keeps_files_when_population_incomplete(
+        self, tmp_path, sample_pickle_data
+    ):
+        """Incomplete population must not move raw session files."""
+        pickle_path = tmp_path / "PartialMouse_2024-01-01_1.pickle"
+        with open(pickle_path, "wb") as f:
+            pickle.dump(sample_pickle_data, f)
 
-            # Dataset.fetch should have been called to check existence
-            mock_schema.vr4mice.Dataset.return_value.__and__.return_value.fetch.assert_called()
+        with patch("populate_rig.populate_dataset_tables", return_value=False):
+            with patch("populate_rig.move_dataset_files") as mock_move:
+                populate_rig(path=str(tmp_path), move=True)
+                mock_move.assert_not_called()
 
     def test_populate_rig_handles_empty_directory(self, tmp_path):
         """populate_rig should handle empty directories gracefully."""
@@ -737,6 +749,41 @@ class TestPopulateRig:
         with patch("populate_rig.dj_schema"):
             # Should not raise - should catch and log the error
             populate_rig(path=str(tmp_path))
+
+
+class TestAtomicPopulationHelpers:
+    """Tests for all-or-nothing populate checks."""
+
+    def test_is_dataset_fully_populated_requires_all_targets(self):
+        schema = {
+            "dj_tables": {
+                "Dataset": MagicMock(primary_key=("dataset",)),
+            }
+        }
+        schema["dj_tables"]["Dataset"].__and__.return_value.__len__.return_value = 1
+
+        targets = [
+            {
+                "schema": schema,
+                "table_name": "Dataset",
+                "row": {"dataset": "Mouse_2024-01-01_1"},
+            }
+        ]
+        assert is_dataset_fully_populated(targets) is True
+
+        schema["dj_tables"]["Dataset"].__and__.return_value.__len__.return_value = 0
+        assert is_dataset_fully_populated(targets) is False
+
+    def test_row_exists_requires_full_primary_key(self):
+        schema = {
+            "dj_tables": {
+                "Session": MagicMock(primary_key=("mouse_name", "day", "attempt")),
+            }
+        }
+        schema["dj_tables"]["Session"].__and__.return_value.__len__.return_value = 0
+        assert (
+            row_exists(schema, "Session", {"mouse_name": "Mouse", "day": 1}) is False
+        )
 
 
 # ==============================================================================

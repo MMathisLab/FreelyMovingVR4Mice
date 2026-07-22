@@ -61,7 +61,7 @@ class InterpolatedTrials(dj.Computed):
         from vr4mice.analysis.utils import interpolate_j_shaped
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
@@ -125,7 +125,7 @@ class MeanXYTrajectory(dj.Computed):
         from vr4mice.analysis.analysis import mean_xy_trajectory
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
@@ -191,7 +191,7 @@ class YBinnedXYTrajectory(dj.Computed):
         from vr4mice.analysis.utils import create_bins
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
@@ -257,7 +257,7 @@ class MeanVelocities(dj.Computed):
     def make(self, key):
         """Compute mean velocities across trials for each aperture."""
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
