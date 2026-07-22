@@ -1,8 +1,7 @@
 run_gui:
-	@export config_path=test/test_config.json && \
-	export config_name=test_config.json && \
-	cd .. && python3 main.py && \
-	echo $$config_name
+	export config_path="$(CURDIR)/../test/test_config.json" && \
+	export config_name="test_config.json" && \
+	cd .. && python3 main.py
 
 BASE_DIR=/tmp/vr4mice_test_gui
 

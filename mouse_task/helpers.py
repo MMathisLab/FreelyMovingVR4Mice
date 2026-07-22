@@ -84,15 +84,21 @@ def process_config(config_file_path: Path) -> dict:
         logging.error(err)
         return None
 
-    # Check if all necessary keys are present in the config file
-    keys = ["ar_env_unity_absolute_path"]
-    for k in keys:
-        if k not in config_dict:
-            logging.error(k + " not in " + config_file_path)
+    # Validate required key for runtime.
+    required_key = "ar_env_unity_absolute_path"
+    if required_key not in config_dict:
+        logging.error(required_key + " not in " + str(config_file_path))
+        return None
 
-    for paths in config_dict.values():
-        if not Path(paths).exists():
-            logging.error(str(paths) + " does not exist.")
-            return None
+    # Only this path is required for task startup.
+    try:
+        env_path = Path(config_dict[required_key])
+    except TypeError:
+        logging.error(f"{required_key} must be a string path in {config_file_path}")
+        return None
+
+    if not env_path.exists():
+        logging.error(str(env_path) + " does not exist.")
+        return None
 
     return config_dict

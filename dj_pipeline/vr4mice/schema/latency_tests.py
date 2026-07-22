@@ -37,7 +37,7 @@ class SignalsPhotodiodeAligned(dj.Computed):
     def make(self, key):
         """Align photodiode and generated signals for latency analysis."""
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
@@ -56,8 +56,22 @@ class SignalsPhotodiodeAligned(dj.Computed):
                 )
 
             data = {**key, **data}
-            self.insert1(data, allow_direct_insert=True)
+            self.insert1(data, allow_direct_insert=True, skip_duplicates=True)
+        except dj.errors.DuplicateError:
+            logger.debug(
+                "%s already populated for %s",
+                self.__class__.__name__,
+                key["dataset"],
+            )
+            return
         except Exception as err:
+            if "Duplicate entry" in str(err):
+                logger.debug(
+                    "%s already populated for %s",
+                    self.__class__.__name__,
+                    key["dataset"],
+                )
+                return
             dataset = key["dataset"]
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
@@ -108,7 +122,7 @@ class AllLatencies(dj.Computed):
     def make(self, key):
         """Compute per-session latency distributions and summary stats."""
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
@@ -140,9 +154,27 @@ class AllLatencies(dj.Computed):
                 - raw_data["generated_frame_time"][100:]
             )
             data = latencies.to_dict()
-            self.insert1({**key, **data}, allow_direct_insert=True)
+            self.insert1(
+                {**key, **data},
+                allow_direct_insert=True,
+                skip_duplicates=True,
+            )
 
+        except dj.errors.DuplicateError:
+            logger.debug(
+                "%s already populated for %s",
+                self.__class__.__name__,
+                key["dataset"],
+            )
+            return
         except Exception as err:
+            if "Duplicate entry" in str(err):
+                logger.debug(
+                    "%s already populated for %s",
+                    self.__class__.__name__,
+                    key["dataset"],
+                )
+                return
             dataset = key["dataset"]
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)

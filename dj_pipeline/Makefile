@@ -111,7 +111,7 @@ down_all:
 	 fi
 
 client_build:
-	$(DOCKER_COMPOSE) build client #&& \
+	$(DOCKER_COMPOSE) build client --no-cache
 
 client_up: git_info check-compose-project
 	@UID=$(UID) GID=$(GID) USER_NAME=$(USER_NAME) $(DOCKER_COMPOSE) up -d client
@@ -128,7 +128,7 @@ client_down: client_stop
 	@$(DOCKER_COMPOSE) rm client
 
 ipython: git_info
-	@$(DOCKER_COMPOSE) exec --user "$(USER_NAME)" client bash -c "ipython"
+	@$(DOCKER_COMPOSE) exec --user "$(USER_NAME)" client bash -lc "python -m IPython"
 
 bash: git_info
 	@$(DOCKER_COMPOSE) exec --user "$(USER_NAME)" client bash
