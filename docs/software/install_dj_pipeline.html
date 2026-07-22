@@ -458,6 +458,12 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manual-runs-run-py">Manual runs (run.py)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#maintenance">Maintenance</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-maintains">What it maintains</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-does-not-touch">What it does <strong>not</strong> touch</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-run">When to run</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-quick-sanity">Testing / quick sanity</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-and-docker-operations">Cron and Docker operations</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#architecture">Architecture</a></li>
@@ -478,7 +484,11 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backup-and-aws-sync">Backup and AWS sync</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling-and-failedsession">Error handling and FailedSession</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gitcommit-table">GitCommit table</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#emails">Emails</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#emails">Emails</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#who-receives-emails">Who receives emails</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-add-or-change-recipients">How to add or change recipients</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#logs">Logs</a></li>
 </ul>
             </nav>
@@ -513,8 +523,22 @@ It is designed to run from the client container and can be scheduled via cron.</
 <li><p><strong>AWS / remote</strong> (<code class="docutils literal notranslate"><span class="pre">--aws</span></code>): <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">decision</span></code> on <code class="docutils literal notranslate"><span class="pre">/data/processed</span></code>.</p></li>
 </ul>
 </li>
-<li><p><strong>Summaries</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">summary</span></code> → <code class="docutils literal notranslate"><span class="pre">SummaryPlots</span></code> (emails sent when <code class="docutils literal notranslate"><span class="pre">EMAIL=true</span></code> and recipients are available).</p></li>
+<li><p><strong>Summaries</strong>: <code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">summary</span></code> → <code class="docutils literal notranslate"><span class="pre">SummaryPlots</span></code> for sessions with both <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> and <code class="docutils literal notranslate"><span class="pre">BoxDataFrame</span></code>; cron also runs <code class="docutils literal notranslate"><span class="pre">summary_emails.send_pending_summary_emails</span></code> to send or retry plot notification emails (see <span class="xref myst">Emails</span>).</p></li>
 </ol>
+<p><strong>After upgrading to DataJoint 2.x</strong> (once per rig, before relying on cron):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Existing database only: add :&lt;blob&gt;: markers to column comments (dry-run first)</span>
+python<span class="w"> </span>scripts/migrate_to_dj2.py<span class="w"> </span>--dry-run
+python<span class="w"> </span>scripts/migrate_to_dj2.py
+
+<span class="c1"># Always after a DJ 2.x upgrade (and after migrate_to_dj2 on existing DBs)</span>
+python<span class="w"> </span>run.py<span class="w"> </span>maintenance
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">migrate_to_dj2.py</span></code> — metadata-only; fixes blob column comments on <strong>legacy</strong> databases. Skip on a fresh DJ 2.x install (it will report nothing to migrate).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">maintenance</span></code> — rebuilds DataJoint <strong>lineage</strong> tables for all pipeline schemas (including <code class="docutils literal notranslate"><span class="pre">summary_emails</span></code>). Does not repopulate computed tables.</p></li>
+</ul>
+<p>Normal cron runs do not replace either step.</p>
 </section>
 <section id="repository-layout-dj-pipeline">
 <h2>Repository layout (dj_pipeline)<a class="headerlink" href="#repository-layout-dj-pipeline" title="Permalink to this heading">#</a></h2>
@@ -543,7 +567,7 @@ It is designed to run from the client container and can be scheduled via cron.</
 <li><p><code class="docutils literal notranslate"><span class="pre">schema/</span></code>: DataJoint table definitions.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">analysis/</span></code>: analysis helpers and plotting.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">actions/</span></code>: orchestration helpers (ingest, sync, fetch).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">utils/</span></code>: logging, schema config, connections.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">utils/</span></code>: logging, schema config, bootstrap, <code class="docutils literal notranslate"><span class="pre">populate_helpers</span></code>, <code class="docutils literal notranslate"><span class="pre">maintenance</span></code>.</p></li>
 </ul>
 <section id="gui-transfer">
 <h3><code class="docutils literal notranslate"><span class="pre">gui_transfer</span></code><a class="headerlink" href="#gui-transfer" title="Permalink to this heading">#</a></h3>
@@ -821,7 +845,7 @@ mkdir<span class="w"> </span>-p<span class="w"> </span>/shared
 <p><strong>Pipeline</strong> (<code class="docutils literal notranslate"><span class="pre">.env</span></code> — copy from <code class="docutils literal notranslate"><span class="pre">.env.example</span></code>; loaded into the client container):</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">DJ_HOST</span></code> (include port, e.g. <code class="docutils literal notranslate"><span class="pre">127.0.0.1:3309</span></code>), <code class="docutils literal notranslate"><span class="pre">DJ_USER</span></code>, <code class="docutils literal notranslate"><span class="pre">DJ_PWD</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DJ_LAB</span></code>, <code class="docutils literal notranslate"><span class="pre">GUI</span></code>, <code class="docutils literal notranslate"><span class="pre">EMAIL</span></code>, <code class="docutils literal notranslate"><span class="pre">IMG_SRC</span></code>, <code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DJ_LAB</span></code>, <code class="docutils literal notranslate"><span class="pre">GUI</span></code>, <code class="docutils literal notranslate"><span class="pre">EMAIL</span></code>, <code class="docutils literal notranslate"><span class="pre">IMG_SRC</span></code>, <code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS</span></code>, <code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_SINCE</span></code></p></li>
 </ul>
 <p>When using the local Docker database, <code class="docutils literal notranslate"><span class="pre">DJ_HOST</span></code> port must match <code class="docutils literal notranslate"><span class="pre">DB_PORT</span></code> in <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code>.</p>
 <p><strong>Docker Compose</strong> (<code class="docutils literal notranslate"><span class="pre">.env.compose</span></code> — copy from <code class="docutils literal notranslate"><span class="pre">.env.compose.example</span></code>; used by <code class="docutils literal notranslate"><span class="pre">make</span></code>, cron, and <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code> only):</p>
@@ -874,8 +898,14 @@ make<span class="w"> </span>up_all
 <p>If you still have Docker settings in <code class="docutils literal notranslate"><span class="pre">.env</span></code> from an older setup, move them to <code class="docutils literal notranslate"><span class="pre">.env.compose</span></code> (Makefile falls back to <code class="docutils literal notranslate"><span class="pre">.env</span></code> for <code class="docutils literal notranslate"><span class="pre">COMPOSE_PROJECT</span></code> only during migration).</p>
 <p>Notes:</p>
 <ul class="simple">
+<li><p>Default summary email recipients come from <code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS</span></code> in <code class="docutils literal notranslate"><span class="pre">.env</span></code>
+(comma-separated experimenter names, e.g. <code class="docutils literal notranslate"><span class="pre">mathislab</span></code>). The session experimenter from
+<code class="docutils literal notranslate"><span class="pre">exp.Session</span></code> is added when present. See <span class="xref myst">Emails</span>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS</span></code> is required if base schemas (exp/mice) are not in use,
 because experimenter names are otherwise missing from GUI metadata.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_SINCE</span></code> (format <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code>) limits automatic summary emails to <strong>new</strong>
+sessions on or after that date. If unset, cron does not send summary emails (avoids
+emailing the full backlog). Set this on the rig when enabling <code class="docutils literal notranslate"><span class="pre">EMAIL=true</span></code>.</p></li>
 </ul>
 </section>
 </section>
@@ -885,6 +915,7 @@ because experimenter names are otherwise missing from GUI metadata.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">vr4mice</span></code>: core tables for datasets, raw signals, metadata, and derived features.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">base</span></code>: links datasets to <code class="docutils literal notranslate"><span class="pre">exp</span></code> and <code class="docutils literal notranslate"><span class="pre">mice</span></code> schema information.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">base_analysis</span></code>: analysis outputs and summary plots.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary_emails</span></code>: tracks summary plot notification emails (<code class="docutils literal notranslate"><span class="pre">SummaryPlotEmail</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">dlc</span></code>, <code class="docutils literal notranslate"><span class="pre">interpolated_trajectories</span></code>, <code class="docutils literal notranslate"><span class="pre">latency_tests</span></code>, <code class="docutils literal notranslate"><span class="pre">decision</span></code>, <code class="docutils literal notranslate"><span class="pre">inputs_videos</span></code>: downstream analysis modules.</p></li>
 </ul>
 </section>
@@ -1012,6 +1043,7 @@ Use GUI mode when experiment metadata is collected via the rig GUI.</p></li>
 </section>
 <section id="manual-runs-run-py">
 <h2>Manual runs (<a class="reference external" href="http://run.py">run.py</a>)<a class="headerlink" href="#manual-runs-run-py" title="Permalink to this heading">#</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">--verbose</span></code> for DEBUG logging and DataJoint lineage details (cron stays quiet by default).</p>
 <p>Typical sequence:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%run<span class="w"> </span>run.py<span class="w"> </span>populate
 %run<span class="w"> </span>run.py<span class="w"> </span>analysis
@@ -1020,6 +1052,71 @@ Use GUI mode when experiment metadata is collected via the rig GUI.</p></li>
 ...
 </pre></div>
 </div>
+<p>One-off after a DataJoint upgrade or when adding a new schema:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%run<span class="w"> </span>run.py<span class="w"> </span>maintenance
+</pre></div>
+</div>
+<p>See <span class="xref myst">Maintenance</span> for what this step does and when it is required.</p>
+</section>
+<section id="maintenance">
+<h2>Maintenance<a class="headerlink" href="#maintenance" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">run.py</span> <span class="pre">maintenance</span></code> rebuilds DataJoint <strong>lineage</strong> metadata. It is a one-off
+setup step — <strong>not</strong> part of cron or normal <code class="docutils literal notranslate"><span class="pre">populate</span></code> / <code class="docutils literal notranslate"><span class="pre">analysis</span></code> runs.</p>
+<section id="what-it-maintains">
+<h3>What it maintains<a class="headerlink" href="#what-it-maintains" title="Permalink to this heading">#</a></h3>
+<p>Each pipeline schema (<code class="docutils literal notranslate"><span class="pre">mice</span></code>, <code class="docutils literal notranslate"><span class="pre">exp</span></code>, <code class="docutils literal notranslate"><span class="pre">vr4mice</span></code>, <code class="docutils literal notranslate"><span class="pre">base</span></code>, <code class="docutils literal notranslate"><span class="pre">base_analysis</span></code>, <code class="docutils literal notranslate"><span class="pre">dlc</span></code>, …)
+has a hidden table called <code class="docutils literal notranslate"><span class="pre">~lineage</span></code>. DataJoint 2.x stores, per table attribute,
+<strong>where that attribute came from</strong> in the foreign-key dependency graph (semantic
+lineage). Joins and <code class="docutils literal notranslate"><span class="pre">populate()</span></code> use this to match attributes that share the same
+origin, not just the same column name.</p>
+<p><code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">maintenance</span></code> calls <code class="docutils literal notranslate"><span class="pre">schema.rebuild_lineage()</span></code> on every pipeline schema (in
+dependency order) and repopulates those <code class="docutils literal notranslate"><span class="pre">~lineage</span></code> rows from current FK definitions.</p>
+</section>
+<section id="what-it-does-not-touch">
+<h3>What it does <strong>not</strong> touch<a class="headerlink" href="#what-it-does-not-touch" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Raw rig files (<code class="docutils literal notranslate"><span class="pre">.pickle</span></code>, <code class="docutils literal notranslate"><span class="pre">.npy</span></code>, DLC outputs)</p></li>
+<li><p>Computed table contents (<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">SummaryPlots</span></code>, <code class="docutils literal notranslate"><span class="pre">DLC</span></code>, etc.)</p></li>
+<li><p>Blob column comments (<code class="docutils literal notranslate"><span class="pre">scripts/migrate_to_dj2.py</span></code> handles that separately)</p></li>
+</ul>
+</section>
+<section id="when-to-run">
+<h3>When to run<a class="headerlink" href="#when-to-run" title="Permalink to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Situation</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">migrate_to_dj2.py</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">run.py</span> <span class="pre">maintenance</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Legacy DB upgraded to DJ 2.x</p></td>
+<td><p>Yes (first)</p></td>
+<td><p>Yes (after)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Fresh DJ 2.x database</p></td>
+<td><p>Skip (no-op)</p></td>
+<td><p>Yes (once)</p></td>
+</tr>
+<tr class="row-even"><td><p>New schema added to pipeline</p></td>
+<td><p>No</p></td>
+<td><p>Yes (once)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Lineage / join errors</p></td>
+<td><p>Maybe</p></td>
+<td><p>Yes</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>After a DJ 2.x upgrade on an existing database:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/migrate_to_dj2.py<span class="w"> </span>--dry-run
+python<span class="w"> </span>scripts/migrate_to_dj2.py
+python<span class="w"> </span>run.py<span class="w"> </span>maintenance
+</pre></div>
+</div>
+<p>See also <code class="docutils literal notranslate"><span class="pre">docs/migration/minimum_migration_guide.md</span></code>.</p>
+</section>
 </section>
 <section id="testing-quick-sanity">
 <h2>Testing / quick sanity<a class="headerlink" href="#testing-quick-sanity" title="Permalink to this heading">#</a></h2>
@@ -1294,14 +1391,19 @@ Update paths and credentials to match your storage backend.</p>
 </section>
 <section id="error-handling-and-failedsession">
 <h2>Error handling and FailedSession<a class="headerlink" href="#error-handling-and-failedsession" title="Permalink to this heading">#</a></h2>
-<p>Failures are recorded in <code class="docutils literal notranslate"><span class="pre">vr4mice.FailedSession</span></code>:</p>
+<p>Failures are recorded in <code class="docutils literal notranslate"><span class="pre">vr4mice.FailedSession</span></code> keyed by <code class="docutils literal notranslate"><span class="pre">(dataset,</span> <span class="pre">failed_table_name)</span></code>:</p>
 <ul class="simple">
-<li><p>Used as a skip list to avoid repeated failures.</p></li>
-<li><p>Remove entries to retry after fixing data.</p></li>
+<li><p>Used as a <strong>per-table</strong> skip list during <code class="docutils literal notranslate"><span class="pre">populate_pending</span></code> (a photodiode skip does not block <code class="docutils literal notranslate"><span class="pre">SummaryPlots</span></code>).</p></li>
+<li><p>Some entries are intentional permanent skips (e.g. no photodiode signal, no trials after excluding initialization trial 1).</p></li>
+<li><p>Remove entries to retry after fixing data or deploying a fix.</p></li>
 </ul>
-<p>Example removal:</p>
+<p>Example removal (one table):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">vr4mice</span>
-<span class="n">vr4mice</span><span class="o">.</span><span class="n">FailedSession</span><span class="p">()</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">&quot;dataset=&#39;Grizzly_2026-01-29_1&#39;&quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="n">vr4mice</span><span class="o">.</span><span class="n">FailedSession</span><span class="p">()</span> <span class="o">&amp;</span> <span class="s1">&#39;dataset=&quot;Grizzly_2026-01-29_1&quot;&#39;</span> <span class="o">&amp;</span> <span class="s1">&#39;failed_table_name=&quot;DataFrame&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Bulk cleanup after duplicate-key fixes:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">vr4mice</span><span class="o">.</span><span class="n">FailedSession</span><span class="p">()</span> <span class="o">&amp;</span> <span class="s1">&#39;failed_table_name=&quot;SignalsPhotodiode&quot;&#39;</span> <span class="o">&amp;</span> <span class="s1">&#39;error_message LIKE &quot;%Duplicate entry%&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
@@ -1311,16 +1413,65 @@ Update paths and credentials to match your storage backend.</p>
 </section>
 <section id="emails">
 <h2>Emails<a class="headerlink" href="#emails" title="Permalink to this heading">#</a></h2>
-<p>Summary emails are sent when <code class="docutils literal notranslate"><span class="pre">EMAIL=true</span></code>.
-Recipients are derived from:</p>
+<p>Summary emails are sent when <code class="docutils literal notranslate"><span class="pre">EMAIL=true</span></code> <strong>and</strong> <code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_SINCE</span></code> is set.</p>
+<section id="who-receives-emails">
+<h3>Who receives emails<a class="headerlink" href="#who-receives-emails" title="Permalink to this heading">#</a></h3>
+<p>Recipients are resolved in two layers:</p>
 <ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS</span></code> (experimenter names)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">exp.Session</span></code> experimenter (if available)</p></li>
+<li><p><strong>Lab default list</strong> — <code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS</span></code> in <code class="docutils literal notranslate"><span class="pre">.env</span></code> (comma-separated
+experimenter names looked up in <code class="docutils literal notranslate"><span class="pre">exp.Experimenter</span></code>), e.g.
+<code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS=mathislab</span></code> or <code class="docutils literal notranslate"><span class="pre">mathislab,experimenter_a,experimenter_b</span></code>.</p></li>
+<li><p><strong>Session experimenter</strong> — if <code class="docutils literal notranslate"><span class="pre">exp.Session</span></code> has an experimenter for that dataset,
+their <code class="docutils literal notranslate"><span class="pre">mail</span></code> is added when not already on the list.</p></li>
 </ol>
+<p>Names must match <code class="docutils literal notranslate"><span class="pre">experimenter_name</span></code> in <code class="docutils literal notranslate"><span class="pre">exp.Experimenter</span></code> (lowercase). Addresses always
+come from <code class="docutils literal notranslate"><span class="pre">exp.Experimenter.mail</span></code>, not from the env var directly.</p>
+</section>
+<section id="how-to-add-or-change-recipients">
+<h3>How to add or change recipients<a class="headerlink" href="#how-to-add-or-change-recipients" title="Permalink to this heading">#</a></h3>
+<ol class="arabic">
+<li><p><strong>Add the person to <code class="docutils literal notranslate"><span class="pre">exp.Experimenter</span></code></strong> with a valid <code class="docutils literal notranslate"><span class="pre">mail</span></code> address (required for
+lookup). From Python or a notebook:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">base_schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">exp</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">Experimenter</span><span class="o">.</span><span class="n">insert1</span><span class="p">(</span>
+    <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">experimenter_name</span><span class="o">=</span><span class="s2">&quot;experimenter_a&quot;</span><span class="p">,</span>
+        <span class="n">full_name</span><span class="o">=</span><span class="s2">&quot;Example User&quot;</span><span class="p">,</span>
+        <span class="n">mail</span><span class="o">=</span><span class="s2">&quot;user@example.com&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">skip_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Include them in the default list</strong> — add their <code class="docutils literal notranslate"><span class="pre">experimenter_name</span></code> to
+<code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_RECIPIENTS</span></code> in <code class="docutils literal notranslate"><span class="pre">.env</span></code>.</p></li>
+<li><p><strong>Session-only recipient</strong> — assign that experimenter on <code class="docutils literal notranslate"><span class="pre">exp.Session</span></code> for the
+dataset; they are added automatically for that session’s summary email.</p></li>
+</ol>
+<p>Enable on the rig:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">EMAIL</span><span class="o">=</span><span class="nb">true</span>
+<span class="nv">VR4MICE_EMAIL_RECIPIENTS</span><span class="o">=</span>mathislab
+<span class="nv">VR4MICE_EMAIL_SINCE</span><span class="o">=</span><span class="m">2026</span>-07-01<span class="w">   </span><span class="c1"># only sessions on/after this date</span>
+</pre></div>
+</div>
+<p><strong>Tracking and retry:</strong> the <code class="docutils literal notranslate"><span class="pre">summary_emails</span></code> schema stores one row per send attempt in
+<code class="docutils literal notranslate"><span class="pre">SummaryPlotEmail</span></code> (timestamp, recipients, error if any). After <code class="docutils literal notranslate"><span class="pre">SummaryPlots</span></code> populate,
+cron calls <code class="docutils literal notranslate"><span class="pre">send_pending_summary_emails</span></code> to send or retry emails for eligible sessions
+(those with a plot row, on/after <code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_SINCE</span></code>, and no successful send yet).</p>
+<p>Inspect pending or sent emails:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">summary_emails</span>
+<span class="n">summary_emails</span><span class="o">.</span><span class="n">pending_summary_email_keys</span><span class="p">()</span>
+<span class="p">(</span><span class="n">summary_emails</span><span class="o">.</span><span class="n">SummaryPlotEmail</span><span class="p">()</span> <span class="o">&amp;</span> <span class="s2">&quot;send_error IS NULL&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="logs">
 <h2>Logs<a class="headerlink" href="#logs" title="Permalink to this heading">#</a></h2>
-<p>Runtime logs are written to the local <code class="docutils literal notranslate"><span class="pre">logs/</span></code> folder on the server/container.</p>
+<p>Runtime logs are written to the local <code class="docutils literal notranslate"><span class="pre">logs/</span></code> folder on the server/container.
+Cron logs per-step timing (<code class="docutils literal notranslate"><span class="pre">[cron]</span> <span class="pre">start/done</span> <span class="pre">…</span></code>) at INFO; routine skip and duplicate
+messages are DEBUG unless you run with <code class="docutils literal notranslate"><span class="pre">--verbose</span></code>.</p>
 </section>
 </section>
 
@@ -1436,6 +1587,12 @@ Recipients are derived from:</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manual-runs-run-py">Manual runs (run.py)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#maintenance">Maintenance</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-maintains">What it maintains</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-does-not-touch">What it does <strong>not</strong> touch</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-run">When to run</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-quick-sanity">Testing / quick sanity</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-and-docker-operations">Cron and Docker operations</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#architecture">Architecture</a></li>
@@ -1456,7 +1613,11 @@ Recipients are derived from:</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backup-and-aws-sync">Backup and AWS sync</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling-and-failedsession">Error handling and FailedSession</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gitcommit-table">GitCommit table</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#emails">Emails</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#emails">Emails</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#who-receives-emails">Who receives emails</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-add-or-change-recipients">How to add or change recipients</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#logs">Logs</a></li>
 </ul>
   </nav></div>

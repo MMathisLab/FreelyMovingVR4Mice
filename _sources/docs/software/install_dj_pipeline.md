@@ -15,7 +15,23 @@ It is designed to run from the client container and can be scheduled via cron.
 6. **Environment-specific** (manual or via `cron_scenario.py`):
    - **Local server**: `run.py inputs_videos`, then `run.py fetch` → refreshes `/shared/gui_menu.npy` for the rig GUI.
    - **AWS / remote** (`--aws`): `run.py decision` on `/data/processed`.
-7. **Summaries**: `run.py summary` → `SummaryPlots` (emails sent when `EMAIL=true` and recipients are available).
+7. **Summaries**: `run.py summary` → `SummaryPlots` for sessions with both `DataFrame` and `BoxDataFrame`; cron also runs `summary_emails.send_pending_summary_emails` to send or retry plot notification emails (see [Emails](#emails)).
+
+**After upgrading to DataJoint 2.x** (once per rig, before relying on cron):
+
+```bash
+# Existing database only: add :<blob>: markers to column comments (dry-run first)
+python scripts/migrate_to_dj2.py --dry-run
+python scripts/migrate_to_dj2.py
+
+# Always after a DJ 2.x upgrade (and after migrate_to_dj2 on existing DBs)
+python run.py maintenance
+```
+
+- `migrate_to_dj2.py` — metadata-only; fixes blob column comments on **legacy** databases. Skip on a fresh DJ 2.x install (it will report nothing to migrate).
+- `run.py maintenance` — rebuilds DataJoint **lineage** tables for all pipeline schemas (including `summary_emails`). Does not repopulate computed tables.
+
+Normal cron runs do not replace either step.
 
 ## Repository layout (dj_pipeline)
 - `run.py`: manual CLI entrypoint for running pipeline modes (user mode).
@@ -41,7 +57,7 @@ See [vr4mice/README.md](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/m
 - `schema/`: DataJoint table definitions.
 - `analysis/`: analysis helpers and plotting.
 - `actions/`: orchestration helpers (ingest, sync, fetch).
-- `utils/`: logging, schema config, connections.
+- `utils/`: logging, schema config, bootstrap, `populate_helpers`, `maintenance`.
 
 ### `gui_transfer`
 Rig GUI and transfer utilities:
@@ -272,7 +288,7 @@ When using `bash quick_start.sh` in **deployment** mode, the default host paths 
 **Pipeline** (`.env` — copy from `.env.example`; loaded into the client container):
 
 - `DJ_HOST` (include port, e.g. `127.0.0.1:3309`), `DJ_USER`, `DJ_PWD`
-- `DJ_LAB`, `GUI`, `EMAIL`, `IMG_SRC`, `VR4MICE_EMAIL_RECIPIENTS`
+- `DJ_LAB`, `GUI`, `EMAIL`, `IMG_SRC`, `VR4MICE_EMAIL_RECIPIENTS`, `VR4MICE_EMAIL_SINCE`
 
 When using the local Docker database, `DJ_HOST` port must match `DB_PORT` in `.env.compose`.
 
@@ -327,13 +343,20 @@ Remote/AWS DB credentials for scheduled AWS runs live in `.env-aws` (copy from `
 If you still have Docker settings in `.env` from an older setup, move them to `.env.compose` (Makefile falls back to `.env` for `COMPOSE_PROJECT` only during migration).
 
 Notes:
+- Default summary email recipients come from `VR4MICE_EMAIL_RECIPIENTS` in `.env`
+  (comma-separated experimenter names, e.g. `mathislab`). The session experimenter from
+  `exp.Session` is added when present. See [Emails](#emails).
 - `VR4MICE_EMAIL_RECIPIENTS` is required if base schemas (exp/mice) are not in use,
   because experimenter names are otherwise missing from GUI metadata.
+- `VR4MICE_EMAIL_SINCE` (format `YYYY-MM-DD`) limits automatic summary emails to **new**
+  sessions on or after that date. If unset, cron does not send summary emails (avoids
+  emailing the full backlog). Set this on the rig when enabling `EMAIL=true`.
 
 ### Schemas (what they do)
 - `vr4mice`: core tables for datasets, raw signals, metadata, and derived features.
 - `base`: links datasets to `exp` and `mice` schema information.
 - `base_analysis`: analysis outputs and summary plots.
+- `summary_emails`: tracks summary plot notification emails (`SummaryPlotEmail`).
 - `dlc`, `interpolated_trajectories`, `latency_tests`, `decision`, `inputs_videos`: downstream analysis modules.
 
 ### Schema modes
@@ -420,6 +443,9 @@ Further GUI module details: `dj_pipeline/gui_transfer/README.md`.
 The GUI transfers **experiment metadata** and rig files only (videos stay on the rig).
 
 ## Manual runs (run.py)
+
+Use `--verbose` for DEBUG logging and DataJoint lineage details (cron stays quiet by default).
+
 Typical sequence:
 ```bash
 %run run.py populate
@@ -428,6 +454,55 @@ Typical sequence:
 %run run.py fetch    # refresh GUI dropdown menu on /shared
 ...
 ```
+
+One-off after a DataJoint upgrade or when adding a new schema:
+
+```bash
+%run run.py maintenance
+```
+
+See [Maintenance](#maintenance) for what this step does and when it is required.
+
+## Maintenance
+
+`python run.py maintenance` rebuilds DataJoint **lineage** metadata. It is a one-off
+setup step — **not** part of cron or normal `populate` / `analysis` runs.
+
+### What it maintains
+
+Each pipeline schema (`mice`, `exp`, `vr4mice`, `base`, `base_analysis`, `dlc`, …)
+has a hidden table called `~lineage`. DataJoint 2.x stores, per table attribute,
+**where that attribute came from** in the foreign-key dependency graph (semantic
+lineage). Joins and `populate()` use this to match attributes that share the same
+origin, not just the same column name.
+
+`run.py maintenance` calls `schema.rebuild_lineage()` on every pipeline schema (in
+dependency order) and repopulates those `~lineage` rows from current FK definitions.
+
+### What it does **not** touch
+
+- Raw rig files (`.pickle`, `.npy`, DLC outputs)
+- Computed table contents (`DataFrame`, `SummaryPlots`, `DLC`, etc.)
+- Blob column comments (`scripts/migrate_to_dj2.py` handles that separately)
+
+### When to run
+
+| Situation | `migrate_to_dj2.py` | `run.py maintenance` |
+|-----------|---------------------|----------------------|
+| Legacy DB upgraded to DJ 2.x | Yes (first) | Yes (after) |
+| Fresh DJ 2.x database | Skip (no-op) | Yes (once) |
+| New schema added to pipeline | No | Yes (once) |
+| Lineage / join errors | Maybe | Yes |
+
+After a DJ 2.x upgrade on an existing database:
+
+```bash
+python scripts/migrate_to_dj2.py --dry-run
+python scripts/migrate_to_dj2.py
+python run.py maintenance
+```
+
+See also `docs/migration/minimum_migration_guide.md`.
 
 ## Testing / quick sanity
 - Populate test:
@@ -645,23 +720,81 @@ If older versions should be replaced, manual cleanup may be required before re-p
 Update paths and credentials to match your storage backend.
 
 ## Error handling and FailedSession
-Failures are recorded in `vr4mice.FailedSession`:
-- Used as a skip list to avoid repeated failures.
-- Remove entries to retry after fixing data.
+Failures are recorded in `vr4mice.FailedSession` keyed by `(dataset, failed_table_name)`:
+- Used as a **per-table** skip list during `populate_pending` (a photodiode skip does not block `SummaryPlots`).
+- Some entries are intentional permanent skips (e.g. no photodiode signal, no trials after excluding initialization trial 1).
+- Remove entries to retry after fixing data or deploying a fix.
 
-Example removal:
+Example removal (one table):
 ```python
 from vr4mice.schema import vr4mice
-vr4mice.FailedSession().delete("dataset='Grizzly_2026-01-29_1'")
+(vr4mice.FailedSession() & 'dataset="Grizzly_2026-01-29_1"' & 'failed_table_name="DataFrame"').delete()
+```
+
+Bulk cleanup after duplicate-key fixes:
+```python
+(vr4mice.FailedSession() & 'failed_table_name="SignalsPhotodiode"' & 'error_message LIKE "%Duplicate entry%"').delete()
 ```
 ## GitCommit table
 `base_analysis.GitCommit` stores commit hash and modified files for provenance.
 
 ## Emails
-Summary emails are sent when `EMAIL=true`.
-Recipients are derived from:
-1. `VR4MICE_EMAIL_RECIPIENTS` (experimenter names)
-2. `exp.Session` experimenter (if available)
+Summary emails are sent when `EMAIL=true` **and** `VR4MICE_EMAIL_SINCE` is set.
+
+### Who receives emails
+
+Recipients are resolved in two layers:
+
+1. **Lab default list** — `VR4MICE_EMAIL_RECIPIENTS` in `.env` (comma-separated
+   experimenter names looked up in `exp.Experimenter`), e.g.
+   `VR4MICE_EMAIL_RECIPIENTS=mathislab` or `mathislab,experimenter_a,experimenter_b`.
+2. **Session experimenter** — if `exp.Session` has an experimenter for that dataset,
+   their `mail` is added when not already on the list.
+
+Names must match `experimenter_name` in `exp.Experimenter` (lowercase). Addresses always
+come from `exp.Experimenter.mail`, not from the env var directly.
+
+### How to add or change recipients
+
+1. **Add the person to `exp.Experimenter`** with a valid `mail` address (required for
+   lookup). From Python or a notebook:
+   ```python
+   from base_schemas.schemas import exp
+   exp.Experimenter.insert1(
+       dict(
+           experimenter_name="experimenter_a",
+           full_name="Example User",
+           mail="user@example.com",
+       ),
+       skip_duplicates=True,
+   )
+   ```
+2. **Include them in the default list** — add their `experimenter_name` to
+   `VR4MICE_EMAIL_RECIPIENTS` in `.env`.
+3. **Session-only recipient** — assign that experimenter on `exp.Session` for the
+   dataset; they are added automatically for that session's summary email.
+
+Enable on the rig:
+
+```bash
+EMAIL=true
+VR4MICE_EMAIL_RECIPIENTS=mathislab
+VR4MICE_EMAIL_SINCE=2026-07-01   # only sessions on/after this date
+```
+
+**Tracking and retry:** the `summary_emails` schema stores one row per send attempt in
+`SummaryPlotEmail` (timestamp, recipients, error if any). After `SummaryPlots` populate,
+cron calls `send_pending_summary_emails` to send or retry emails for eligible sessions
+(those with a plot row, on/after `VR4MICE_EMAIL_SINCE`, and no successful send yet).
+
+Inspect pending or sent emails:
+```python
+from vr4mice.schema import summary_emails
+summary_emails.pending_summary_email_keys()
+(summary_emails.SummaryPlotEmail() & "send_error IS NULL").fetch()
+```
 
 ## Logs
 Runtime logs are written to the local `logs/` folder on the server/container.
+Cron logs per-step timing (`[cron] start/done …`) at INFO; routine skip and duplicate
+messages are DEBUG unless you run with `--verbose`.

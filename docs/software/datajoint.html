@@ -420,6 +420,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#base-py"><code class="docutils literal notranslate"><span class="pre">base.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-py"><code class="docutils literal notranslate"><span class="pre">vr4mice.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#base-analysis-py"><code class="docutils literal notranslate"><span class="pre">base_analysis.py</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#summary-emails-py"><code class="docutils literal notranslate"><span class="pre">summary_emails.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dlc-py"><code class="docutils literal notranslate"><span class="pre">dlc.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolated-trajectories-py"><code class="docutils literal notranslate"><span class="pre">interpolated_trajectories.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#latency-tests-py"><code class="docutils literal notranslate"><span class="pre">latency_tests.py</span></code></a></li>
@@ -520,7 +521,8 @@ Links together <code class="docutils literal notranslate"><span class="pre">Data
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">FailedSession</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Tracks dataset/table pairs that failed during populate/compute.</p>
+<p>Tracks dataset/table pairs that failed during populate/compute. Primary key is
+<code class="docutils literal notranslate"><span class="pre">(dataset,</span> <span class="pre">failed_table_name)</span></code>; populate skips a dataset only for the table that failed.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Labels</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Lookup</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -605,13 +607,24 @@ Stores per-trial report and target box coordinates derived from <code class="doc
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SummaryPlots</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">vr4mice.Dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">BoxDataFrame</span></code><br />
-Stores paths to generated per-session summary plot figures.</p>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">vr4mice.Dataset</span></code><br />
+Stores paths to generated per-session summary plot figures. Cron populates only sessions
+that have both <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> and <code class="docutils literal notranslate"><span class="pre">BoxDataFrame</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GitCommit</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code><br />
 Stores git commit hash and changed files for analysis reproducibility.</p>
+</section>
+<section id="summary-emails-py">
+<h3><code class="docutils literal notranslate"><span class="pre">summary_emails.py</span></code><a class="headerlink" href="#summary-emails-py" title="Permalink to this heading">#</a></h3>
+<p><em>Tracks summary plot notification emails sent per session.</em></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SummaryPlotEmail</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Manual</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">base_analysis.SummaryPlots</span></code><br />
+Records send time, recipients, email type, and optional error message. Cron retries
+sessions with no successful send (and session date on/after <code class="docutils literal notranslate"><span class="pre">VR4MICE_EMAIL_SINCE</span></code>).</p>
 </section>
 <section id="dlc-py">
 <h3><code class="docutils literal notranslate"><span class="pre">dlc.py</span></code><a class="headerlink" href="#dlc-py" title="Permalink to this heading">#</a></h3>
@@ -852,6 +865,7 @@ Aligns game steps to video frames using photodiode when available; stores QA met
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#base-py"><code class="docutils literal notranslate"><span class="pre">base.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vr4mice-py"><code class="docutils literal notranslate"><span class="pre">vr4mice.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#base-analysis-py"><code class="docutils literal notranslate"><span class="pre">base_analysis.py</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#summary-emails-py"><code class="docutils literal notranslate"><span class="pre">summary_emails.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dlc-py"><code class="docutils literal notranslate"><span class="pre">dlc.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolated-trajectories-py"><code class="docutils literal notranslate"><span class="pre">interpolated_trajectories.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#latency-tests-py"><code class="docutils literal notranslate"><span class="pre">latency_tests.py</span></code></a></li>
