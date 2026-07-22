@@ -238,11 +238,11 @@ class Transfer(Template):
         name = mouse.values["mouse_name"].currentText()
         return name not in ("", "-")
 
-def _sync_metadata_from_file(self, mouse, exp, dj_dict, parsed):
-    if parsed is False or not isinstance(parsed, tuple):
-        return True
-    if not mouse.get_auto():
-        return True
+    def _sync_metadata_from_file(self, mouse, exp, dj_dict, parsed):
+        if parsed is False or not isinstance(parsed, tuple):
+            return True
+        if not mouse.get_auto():
+            return True
 
         _mouse, _attempt, _date = parsed
         if not mouse.update_mouse(_mouse, dj_dict):
