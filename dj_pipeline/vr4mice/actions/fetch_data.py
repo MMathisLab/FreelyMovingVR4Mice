@@ -45,8 +45,10 @@ def _create_mice_dict(all_mice: dict) -> dict:
         if session_incr == 0:
             last_exp = None
         else:
-            last_session = (exp.Session() & mouse) & "session_increment = %d" % (
-                session_incr - 1
+            last_session = (
+                exp.Session()
+                & {"mouse_name": mouse_name}
+                & {"session_increment": session_incr - 1}
             )
             last_exp = last_session.fetch("doe")[0]
 
@@ -56,6 +58,24 @@ def _create_mice_dict(all_mice: dict) -> dict:
         mice_dict[mouse_name]["surgery_type"] = surgery_type
 
     return mice_dict
+
+
+def _fetch_alive_mice() -> list:
+    """
+    Return Mouse rows excluding sacrificed and breeding mice.
+
+    DJ 2.x rejects chained table subtraction (Mouse - Sacrificed - Breed) because
+    mouse_name has incompatible lineages across dependent tables.
+    """
+    excluded = {
+        *mice.Sacrificed().fetch("mouse_name"),
+        *mice.Breed().fetch("mouse_name"),
+    }
+    return [
+        row
+        for row in mice.Mouse().fetch(as_dict=True)
+        if row["mouse_name"] not in excluded
+    ]
 
 
 def fetch_tables() -> dict:
@@ -82,7 +102,7 @@ def fetch_tables() -> dict:
     - Some tables have been commented out entirely, indicating that they are not currently used in the pipeline
 
     """
-    all_mice = (mice.Mouse() - mice.Sacrificed() - mice.Breed()).fetch(as_dict=True)
+    all_mice = _fetch_alive_mice()
 
     return {
         # 'Mouse': all_mice,

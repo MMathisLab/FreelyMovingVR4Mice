@@ -1,0 +1,21 @@
+{
+  "ip": "192.168.1.10",
+  "host": "vr4mice",
+
+  "remote_dropdown_menu": "/shared/gui_menu.npy",
+  "host_dropdown_menu": "C:/vr4mice/gui_transfer/gui_menu.npy",
+
+  "gui_output_folder": "C:/vr4mice/gui_output/raw",
+  "cache": "default",
+
+  "remote_dst": "/data/data",
+
+  "raw_data_src": "C:/vr4mice/data",
+  "dlc_path": "C:/vr4mice/dlc_video_raw",
+  "proc_path": "C:/vr4mice/dlc_video_raw",
+  "video_path": "C:/vr4mice/dlc_video_raw",
+  "camera_path": "C:/vr4mice/dlc_video_raw",
+  "teensy_path": "C:/vr4mice/raw",
+
+  "processed_path": "C:/vr4mice/processed_rig"
+}

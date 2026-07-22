@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import List, Optional
 
 import datajoint as dj
+import numpy as np
 import pandas as pd
-from base_actions.send_email import email
 
 from vr4mice.schema import base, vr4mice
 from vr4mice.analysis.summary_dj import vr4mice_summary_plots
@@ -19,6 +19,14 @@ schema_name = "base_analysis"
 schema = get_schema(schema_name, locals())
 
 logger = Logger.get_logger()
+
+
+def _behavior_trials_remain(key: dict) -> bool:
+    """False when only initialization trial 1 exists (excluded from DataFrame)."""
+    episodes = np.unique(
+        np.asarray((vr4mice.State & key).fetch("episode"), dtype=np.int32)
+    )
+    return bool(np.any(episodes != 1))
 
 
 @schema
@@ -101,7 +109,7 @@ class DataFrame(dj.Computed):
         from vr4mice.analysis.analysis import create_data_frame
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
@@ -109,15 +117,36 @@ class DataFrame(dj.Computed):
         if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
+        dataset = key["dataset"]
+        if dataset.startswith("Latencytest"):
+            logger.debug("Skipping DataFrame for latency test session %s", dataset)
+            return
+
+        if not _behavior_trials_remain(key):
+            vr4mice.FailedSession().add_entry(
+                dataset,
+                self.__class__.__name__,
+                "No trials after excluding initialization trial 1",
+            )
+            logger.debug("Skipping DataFrame for %s: no behavior trials", dataset)
+            return
+
         try:
             data, unity_to_physical_arena_size = create_data_frame(key)
             data = data.to_dict(orient="list")
             data = {**key, **data, **{"interpolation": unity_to_physical_arena_size}}
 
-            self.insert1(data, allow_direct_insert=True)
+            self.insert1(data, allow_direct_insert=True, skip_duplicates=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
+            if "already exists" in str(err):
+                logger.debug(
+                    "%s already populated for %s",
+                    self.__class__.__name__,
+                    key["dataset"],
+                )
+                return
             dataset = key["dataset"]
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
@@ -206,7 +235,7 @@ class BoxDataFrame(dj.Computed):
         from vr4mice.analysis.analysis import get_box_df
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
@@ -282,14 +311,12 @@ class SummaryPlots(dj.Computed):
     filename:  varchar(255)
     """
 
-    def make(self, key, send=os.environ["EMAIL"]):
+    def make(self, key):
         """
         key: Dataset
         """
-        send = os.environ.get("EMAIL", "false").lower() in ["true", "1", "yes"]
-
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return
@@ -319,29 +346,17 @@ class SummaryPlots(dj.Computed):
             return False
 
         data = {**key, **{"filename": full_path}}
-        if base.Base() & key:
-            key = (base.Base() & key).fetch(as_dict=True)[0]
-        else:
-            key = self.parse_dataset(key["dataset"])
+        dataset = key["dataset"]
 
-        err_msg = None
         try:
-            self.insert1(data, allow_direct_insert=True)
-            logger.info(f"Summary plots populated successfully for {key}")
+            self.insert1(data, allow_direct_insert=True, skip_duplicates=True)
+            logger.info(f"Summary plots populated successfully for {dataset}")
         except Exception as err:
             table_name = self.__class__.__name__
-            dataset = key.get("dataset") if isinstance(key, dict) else None
-            if dataset:
-                vr4mice.FailedSession().add_entry(
-                    f"{dataset}", f"{table_name}", str(err)
-                )
-            err_msg = f"Can't populate {table_name}, key: {key}. Error: {err}."
-            logger.warning(err_msg)
-
-        if send:
-            insert_send_email(key, full_path, err_msg)
-        else:
-            logger.info(f"Send flag is false for {key}. No email.")
+            vr4mice.FailedSession().add_entry(f"{dataset}", f"{table_name}", str(err))
+            logger.warning(
+                f"Can't populate {table_name}, dataset: {dataset}. Error: {err}."
+            )
 
     def parse_dataset(self, dataset):
         pattern = r"(?:(?P<mouse_name>[^_]+)_)?(?P<day>\d{4}-\d{2}-\d{2})(?:_(?P<attempt>\d+))?(?:\.pickle)?$"
@@ -386,50 +401,6 @@ class SummaryPlots(dj.Computed):
         return subtitle
 
 
-def insert_send_email(key, filename, err_msg):
-    """Insert summary plots row and optionally email recipients."""
-
-    from base_schemas.schemas import exp
-
-    toaddr = []
-    try:
-        default_recipient_names = os.getenv("VR4MICE_EMAIL_RECIPIENTS")
-        if default_recipient_names:
-            recipient_names = [
-                name.strip()
-                for name in default_recipient_names.split(",")
-                if name.strip()
-            ]
-        else:
-            recipient_names = ["mathislab"]
-
-        for name in recipient_names:
-            user_email = (exp.Experimenter & {"experimenter_name": name}).fetch("mail")[
-                0
-            ]
-            if user_email:
-                toaddr.append(user_email)
-
-        if len(exp.Session() & key) > 0:
-            user = (exp.Session() & key).fetch("experimenter_name", as_dict=True)[0]
-            if len(user) > 0:
-                addr = (exp.Experimenter & user).fetch("mail")[0]
-                if addr and addr not in toaddr:
-                    toaddr.append(addr)
-
-    except dj.DataJointError as e:
-        logger.warning(f"Error fetching experimenter email: {e}")
-        addr = None
-
-    logger.info(f"Sending email now for {key}")
-    error = True if err_msg else False
-    email_type = "summary" if err_msg is None else "error"
-    try:
-        email(key, toaddr, filename, error=error, message=err_msg)
-    except Exception as email_err:
-        logger.warning(f"Failed to send {email_type} email for {key}: {email_err}")
-
-
 @schema
 class GitCommit(dj.Computed):
     """
@@ -448,7 +419,7 @@ class GitCommit(dj.Computed):
         """Store git commit metadata for the current analysis run."""
 
         if self & key:
-            logger.info(
+            logger.debug(
                 f"{self.__class__.__name__}: to ignore duplicate entries in insert, set skip_duplicates=True; key: {key}"
             )
             return

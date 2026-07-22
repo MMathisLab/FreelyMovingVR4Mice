@@ -7,7 +7,7 @@ DataJoint schemas, ingestion actions, and analysis helpers for the pipeline.
 - `schema/`: DataJoint table definitions.
 - `analysis/`: analysis helpers and plotting.
 - `actions/`: orchestration helpers (ingest, sync, fetch).
-- `utils/`: logging, schema config, connections.
+- `utils/`: logging, schema config, bootstrap, populate_helpers, maintenance.
 
 ## Entry points
 
