@@ -96,7 +96,36 @@ migrate_columns(schema, dry_run=True)
 migrate_columns(schema, dry_run=False)
 ```
 
-### Step 5: Run the test suite
+> **Fresh install?** If the database was created with DJ 2.x code from scratch, this
+> step is usually a no-op (`No columns need migration`).
+
+### Step 5: Rebuild lineage tables
+
+After `migrate_to_dj2.py` (or immediately on a fresh DJ 2.x database), rebuild
+DataJoint lineage tables once per rig:
+
+```bash
+cd dj_pipeline
+python run.py maintenance
+```
+
+This is separate from column migration: `migrate_to_dj2.py` fixes blob column
+comments; `run.py maintenance` rebuilds dependency/lineage metadata. Cron does not
+run this automatically.
+
+**What `maintenance` maintains:** each schema has a hidden `~lineage` table. DataJoint
+2.x records, per attribute, where it came from in the FK dependency graph. Joins and
+`populate()` use this semantic lineage so attributes match by origin, not just name.
+`rebuild_lineage()` repopulates those rows from current table definitions.
+
+**What it does not touch:** raw rig files, computed table contents (`DataFrame`,
+`SummaryPlots`, etc.), or blob column comments.
+
+**Symptoms when lineage is missing or stale:** `Semantic check disabled: ~lineage table
+not found`, join errors (`lineage missing on one side`), or unexpected `populate()`
+behavior on dependent tables.
+
+### Step 6: Run the test suite
 
 ```bash
 cd dj_pipeline
@@ -112,14 +141,14 @@ long composite varchar keys hit on MySQL 8.0's default `utf8mb4` charset.
 
 The integration tests spin up a MySQL container, insert the golden dataset, populate downstream tables, and verify row counts and sample values against golden baselines.
 
-### Step 6: Run your analysis pipelines
+### Step 7: Run your analysis pipelines
 
 Run your normal analysis workflows to confirm everything produces expected results. Pay attention to:
 - Tables that use blob columns (MouseState, State, DLC, etc.)
 - Downstream computed tables (DataFrame, OfflineKinematics, InterpolatedTrials, SessionMetrics)
 - Any custom scripts that call `fetch()` on blob columns
 
-### Step 7: Keep the backup
+### Step 8: Keep the backup
 
 Keep the database backup around for a reasonable period until you're confident everything is working correctly in production.
 
