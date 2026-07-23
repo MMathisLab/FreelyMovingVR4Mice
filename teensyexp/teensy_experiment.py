@@ -764,21 +764,12 @@ class TeensyExperimentGUI(object):
                 filename(str): path and name of file to save
 
             Note:
-                Writes to a temporary file first and only replaces `filename` once the
-                write succeeds, so a failed/interrupted save never corrupts or clobbers
-                an existing file. `self.saved_ok` is only set on success.
+                `self.saved_ok` is only set on success.
         """
-        tmp_filename = filename + '.tmp'
         try:
-            with open(tmp_filename, 'wb') as f:
+            with open(filename, 'wb') as f:
                 pickle.dump(data_to_save, f)
-            os.replace(tmp_filename, filename)
         except Exception as e:
-            try:
-                if os.path.isfile(tmp_filename):
-                    os.remove(tmp_filename)
-            except OSError:
-                pass
             messagebox.showerror(
                 "Save Failed",
                 "Failed to save data to %s:\n%s" % (filename, e),

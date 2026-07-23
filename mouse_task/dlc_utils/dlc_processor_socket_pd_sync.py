@@ -6,7 +6,6 @@ from datetime import datetime
 import importlib.util
 import json
 import logging
-import os
 import pickle
 import re
 import shutil
@@ -312,16 +311,13 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             warnings.warn("Processor save skipped: no file or save_path was provided.")
             return 0
 
-        tmp_target = None
         try:
             target = Path(target)
             target.parent.mkdir(parents=True, exist_ok=True)
             save_dict = self.save_latency_data()
 
-            tmp_target = target.with_suffix(target.suffix + ".tmp")
-            with tmp_target.open("wb") as f:
+            with target.open("wb") as f:
                 pickle.dump(save_dict, f)
-            os.replace(tmp_target, target)
 
             logger.info("Processor data saved to: %s", target)
             return 1
@@ -329,11 +325,6 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         except Exception as e:
             warnings.warn(f"Proc file was not saved, an exception occurred: {e}")
             logger.exception("Processor PROC save failed")
-            try:
-                if tmp_target is not None and tmp_target.exists():
-                    tmp_target.unlink()
-            except Exception:
-                pass
             return -1
 
     # ------------------------------------------------------------------
@@ -352,7 +343,6 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             logger.warning("Skipping DLC h5 save: no buffered poses")
             return 0
 
-        tmp_target = None
         try:
             target = Path(target)
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -384,20 +374,13 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             pose_df["frame_time"] = list(self._legacy_frame_times)
             pose_df["pose_time"] = list(self._legacy_pose_times)
 
-            tmp_target = target.with_suffix(target.suffix + ".tmp")
-            pose_df.to_hdf(tmp_target, key="df_with_missing", mode="w")
-            os.replace(tmp_target, target)
+            pose_df.to_hdf(target, key="df_with_missing", mode="w")
 
             logger.info("Legacy DLC h5 saved to: %s", target)
             return 1
 
         except Exception:
             logger.exception("Failed to save legacy DLC h5")
-            try:
-                if tmp_target is not None and tmp_target.exists():
-                    tmp_target.unlink()
-            except Exception:
-                pass
             return -1
 
     def _get_bodyparts_for_pose_width(self, flat_width: int) -> list[str] | None:
@@ -419,6 +402,12 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
     # ------------------------------------------------------------------
 
     def save_legacy_timestamp_npy(self) -> int:
+        # Reads timestamp JSON files written by DLCLiveGUI's video recorder, which is
+        # a separate component. If this is ever called from a teardown path that can
+        # run before the video recorder has finished flushing (e.g. before/without
+        # DLCLiveGUI's own "Stop"/"Save Video"), the JSON files may not exist yet or
+        # may be incomplete -- this degrades gracefully to a logged warning and
+        # `return 0` rather than raising, so that's safe, just possibly a no-op.
         json_paths = self._find_timestamp_json_files()
 
         if not json_paths:
@@ -819,14 +808,7 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
     def _save_npy(path: Path, values: np.ndarray) -> None:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        # np.save appends ".npy" if the given name lacks it; resolve the real final
-        # name first so the tmp file (which already ends in ".npy") isn't altered.
-        final_path = (
-            path if path.suffix == ".npy" else path.with_suffix(path.suffix + ".npy")
-        )
-        tmp_path = final_path.with_name(final_path.stem + ".tmp.npy")
-        np.save(tmp_path, values)
-        os.replace(tmp_path, final_path)
+        np.save(path, values)
 
     @staticmethod
     def _first_present(mapping: dict, keys: tuple[str, ...]) -> Any:

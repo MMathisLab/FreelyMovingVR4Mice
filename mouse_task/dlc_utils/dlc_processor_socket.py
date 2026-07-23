@@ -1,4 +1,3 @@
-import os
 import pickle
 import time
 import importlib.util
@@ -164,22 +163,17 @@ class MyProcessor_socket(ProcessorWithSignal):
     def save(self, file: Optional[str] = None) -> int:
         save_code = 0
         if file:
-            tmp_file = None
             try:
                 save_dict = self.save_latency_data()
 
-                tmp_file = f"{file}.tmp"
-                with open(tmp_file, "wb") as f:
-                    pickle.dump(save_dict, f)
-                os.replace(tmp_file, file)
+                pickle.dump(
+                    save_dict,
+                    open(file, "wb"),
+                )
                 save_code = 1
             except Exception as e:
                 warnings.warn(f"Proc file was not saved, an exception occurred: {e}")
-                try:
-                    if tmp_file is not None and os.path.isfile(tmp_file):
-                        os.remove(tmp_file)
-                except OSError:
-                    pass
+
                 save_code = -1
         return save_code
 
