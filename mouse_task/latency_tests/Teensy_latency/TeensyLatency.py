@@ -41,8 +41,8 @@ class TeensyLatency:
         """Start the reader thread for serial buffer, writer for `input_data`, save start time."""
         self.ser = serial.Serial(self.com, self.baudrate, timeout=0.5)
         self.start_read_time = time.time()
-        self._read_thread = threading.Thread(target=self.read_on_thread, daemon=True)
-        self._read_thread.start()
+        self._reader_thread = threading.Thread(target=self.read_on_thread, daemon=True)
+        self._reader_thread.start()
 
     def _stop_reading(self):
         """Stop reading from teensy and close serial connection."""
@@ -51,7 +51,6 @@ class TeensyLatency:
 
     def close_serial(self):
         self._stop_reading()
-        read_thread = getattr(self, "_read_thread", None)
-        if read_thread is not None:
-            read_thread.join(timeout=2)
+        if hasattr(self, '_reader_thread') and self._reader_thread.is_alive():
+            self._reader_thread.join(timeout=2.0)
         self.ser.close()
