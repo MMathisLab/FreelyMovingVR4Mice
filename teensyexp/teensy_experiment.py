@@ -1024,8 +1024,8 @@ class TeensyExperimentGUI(object):
         print_delay = .01
         last_print = time.time()
 
-        try:
-            while self.gui_on:
+        while self.gui_on:
+            try:
                 curr_time = time.time()
                 if self.task_on_button:
                     if curr_time - last_print > print_delay:
@@ -1037,17 +1037,18 @@ class TeensyExperimentGUI(object):
                         self.task.window.destroy()
 
                 self.window.update()
-        except KeyboardInterrupt:
-            # Ctrl+C in the terminal: still warn about unsaved data before tearing
-            # down, same as closing via the Close button / window [X].
-            if not self.saved_ok:
+            except KeyboardInterrupt:
+                # Ctrl+C is not a supported way to close this GUI (see run_a_session.md):
+                # it can skip Teensy/Unity/socket cleanup, so just warn and keep running
+                # instead of exiting -- the experimenter should use "Close"/"Stop" instead.
                 messagebox.showwarning(
-                    "Exit", "Interrupted: ARE YOU SURE YOU SAVED YOUR Data?", parent=self.window
+                    "Use the GUI to Close",
+                    "Ctrl+C does not safely close this program.\n"
+                    "Please use the \"Stop\"/\"Close\" buttons in the GUI instead.",
+                    parent=self.window,
                 )
-        finally:
-            # Always run cleanup (closes the Teensy connection), even on Ctrl+C or
-            # an unexpected error, so the serial port is never left dangling open.
-            self.close_window()
+
+        self.close_window()
 
 
 def main():
