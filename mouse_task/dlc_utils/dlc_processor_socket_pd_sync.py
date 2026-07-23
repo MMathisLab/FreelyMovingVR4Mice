@@ -257,6 +257,34 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
 
         self._clear_legacy_pose_buffers()
 
+    def stop(self, save: bool = False, file=None):
+        """Save all buffered data before tearing down resources.
+
+        This guards against data loss when ``stop()`` is called
+        before ``on_recording_stopped`` (e.g. during DLCLiveWorker
+        shutdown, socket disconnect, or task auto-stop).
+        """
+        if self._legacy_recording_active and self.save_path is not None:
+            try:
+                self.save()
+            except Exception:
+                logger.exception("Processor save during stop() failed")
+
+            try:
+                self.save_legacy_dlc_h5()
+            except Exception:
+                logger.exception("Legacy DLC h5 save during stop() failed")
+
+            try:
+                self.save_legacy_timestamp_npy()
+            except Exception:
+                logger.exception("Legacy timestamp npy save during stop() failed")
+
+            self._clear_legacy_pose_buffers()
+            self._legacy_recording_active = False
+
+        super().stop(save=False, file=file)
+
     # ------------------------------------------------------------------
     # Primary PROC save
     # ------------------------------------------------------------------
