@@ -261,30 +261,6 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         logger.info("Processor DLC h5 path set to %s", self.dlc_h5_path)
         logger.info("Processor timestamp path set to %s", self.legacy_timestamp_path)
 
-    def _on_client_disconnected(self) -> None:
-        """Auto-save PROC pickle + legacy .h5 the moment the vr4mice client disconnects.
-
-        This is a safety net independent of DLCLiveGUI's own Stop/Save Video
-        button: both outputs depend only on data this processor has already
-        buffered itself, so they're safe to flush immediately. Deliberately
-        does NOT run save_legacy_timestamp_npy()/copy_legacy_video_files()/
-        alignment here -- those read files written by DLCLiveGUI's video
-        recorder, which may still be mid-write at this point. That part still
-        only runs from on_recording_stopped(), which the experimenter should
-        still trigger via DLCLiveGUI's Stop/Save Video as usual.
-        """
-        if getattr(self, "save_path", None) is None:
-            logger.debug(
-                "vr4mice client disconnected before recording started; skipping auto-save"
-            )
-            return
-
-        logger.info("vr4mice client disconnected; auto-saving PROC + legacy DLC h5")
-        proc_result = self.save()
-        logger.info("Auto-save PROC result: %r", proc_result)
-        h5_result = self.save_legacy_dlc_h5()
-        logger.info("Auto-save legacy DLC h5 result: %r", h5_result)
-
     def on_recording_stopped(self, context: dict) -> None:
         """Save all custom legacy outputs after GUI recording stops."""
         previous_context = dict(getattr(self, "recording_context", {}) or {})

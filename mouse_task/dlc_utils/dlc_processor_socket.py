@@ -158,21 +158,8 @@ class MyProcessor_socket(ProcessorWithSignal):
                 )
             except Exception:
                 self.conn = None
-                self._on_client_disconnected()
         self.previous = center
         return pose
-
-    def _on_client_disconnected(self) -> None:
-        """Hook called the moment a connected vr4mice client drops (e.g. the task stopped).
-
-        No-op by default. Subclasses can use this to auto-save data that is
-        entirely self-contained (buffered by this processor), as a safety net
-        independent of DLCLiveGUI's own Stop/Save Video action. Do NOT use it
-        for anything that depends on files still being written by DLCLiveGUI's
-        video recorder (timestamps/video copy) -- those may not be finalized
-        yet when the client merely disconnects.
-        """
-        return None
 
     def save(self, file: Optional[str] = None) -> int:
         save_code = 0
