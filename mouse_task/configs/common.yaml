@@ -41,8 +41,8 @@ slit_depth: 0.2             # occluder wall thickness
 occlusion_type: 0.0         # 0 = none, 1 = slit, 2 = central wall
 
 # --- Object selection / appearance -----------------------------------------
-target_selection: 6.0       # OOI object id (see ActiveSensingTask docstring)
-distractor_selection: 4.0   # distractor object id
+target_selection: 2.0       # OOI object id (see ActiveSensingTask docstring)
+distractor_selection: 3.0   # distractor object id
 distractor: 1.0             # 0 = no distractor, 1 = distractor present
 camera_type: 1.0            # 0 = on-axis, 1 = off-axis
 target_spread: 4.0          # distance between targets
