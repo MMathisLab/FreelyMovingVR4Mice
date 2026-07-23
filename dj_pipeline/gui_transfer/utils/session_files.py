@@ -9,6 +9,11 @@ from fnmatch import fnmatch
 from pathlib import Path
 
 SESSION_RE = re.compile(r"([A-Za-z0-9]+)_(\d{4}-\d{2}-\d{2})_(\d+)")
+CAMERA_NUMBER_RE = re.compile(r"(?:CAMERA|VIDEO)(\d+)", re.IGNORECASE)
+
+# Rig always has exactly 3 cameras; this is the camera to default to when a
+# picked file (e.g. DLC output) carries no camera number of its own.
+DEFAULT_CAMERA_NUMBER = 3
 
 PATH_KEYS_FOR_SEARCH = (
     "teensy_path",
@@ -28,6 +33,18 @@ def dataset_stem_from_filename(filename):
     if not match:
         return None
     return f"{match.group(1)}_{match.group(2)}_{match.group(3)}"
+
+
+def camera_number_from_filename(filename):
+    """
+    Extract the camera index from a rig filename (e.g. "..._CAMERA3.npy" or
+    "..._VIDEO3.avi" -> 3). Returns None for filenames with no camera suffix
+    (single-camera rigs, or non-camera files like DLC/PROC/teensy).
+    """
+    match = CAMERA_NUMBER_RE.search(Path(filename).stem)
+    if not match:
+        return None
+    return int(match.group(1))
 
 
 def parse_session_from_filename(filename):
@@ -85,7 +102,7 @@ def check_file_format(key, filename, format_spec, current_mouse=None):
     return mouse_name, attempt, date
 
 
-def find_related_files(dataset_stem, path_by_key, get_type_fn):
+def find_related_files(dataset_stem, path_by_key, get_type_fn, camera_number=None):
     """
     Find one file per transfer type that belongs to the same session.
 
@@ -93,6 +110,15 @@ def find_related_files(dataset_stem, path_by_key, get_type_fn):
         dataset_stem: e.g. Testmouse_2023-02-22_2
         path_by_key: mapping config key -> directory path string
         get_type_fn: callable(filename) -> transfer key string
+        camera_number: if set, on a rig with multiple cameras (files
+            suffixed "..._CAMERA3.npy" / "..._VIDEO3.avi"), only match
+            candidate files for that camera index. Files with no camera
+            suffix (single-camera rigs, DLC/PROC/teensy) are unaffected.
+            If None (the file that was picked has no camera suffix, e.g.
+            DLC/PROC/teensy), a role with several different camera numbers
+            present is ambiguous; DEFAULT_CAMERA_NUMBER is used rather than
+            whichever sorts first. A role where every match shares the same
+            number (or none has a number at all) is unaffected.
 
     Returns:
         dict mapping transfer key -> Path
@@ -100,7 +126,7 @@ def find_related_files(dataset_stem, path_by_key, get_type_fn):
     if not dataset_stem:
         return {}
 
-    found = {}
+    candidates = {}
     seen_dirs = set()
 
     for path_key in PATH_KEYS_FOR_SEARCH:
@@ -121,8 +147,29 @@ def find_related_files(dataset_stem, path_by_key, get_type_fn):
                 continue
             if dataset_stem_from_filename(filepath.name) != dataset_stem:
                 continue
+            file_camera_number = camera_number_from_filename(filepath.name)
+            if (
+                camera_number is not None
+                and file_camera_number is not None
+                and file_camera_number != camera_number
+            ):
+                continue
             file_key = get_type_fn(filepath.name)
-            if file_key not in found:
-                found[file_key] = filepath
+            candidates.setdefault(file_key, []).append(
+                (file_camera_number, filepath)
+            )
+
+    found = {}
+    for file_key, matches in candidates.items():
+        if camera_number is None:
+            distinct_numbers = {n for n, _ in matches if n is not None}
+            if len(distinct_numbers) > 1:
+                preferred = (
+                    DEFAULT_CAMERA_NUMBER
+                    if DEFAULT_CAMERA_NUMBER in distinct_numbers
+                    else max(distinct_numbers)
+                )
+                matches = [m for m in matches if m[0] == preferred]
+        found[file_key] = matches[0][1]
 
     return found
