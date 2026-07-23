@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 7626242182667002188}
   - component: {fileID: 7626242182667002189}
   m_Layer: 0
-  m_Name: black cube
+  m_Name: black_cube
   m_TagString: Targets
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
