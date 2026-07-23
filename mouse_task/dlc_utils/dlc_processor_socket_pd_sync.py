@@ -54,14 +54,28 @@ logger = logging.getLogger(__name__)
 
 @register_processor
 class dlc_inference_w_pd_sync(dlc_inference_w_pd):
-    PROCESSOR_NAME = "SocketProcessorWithPDSync"
-    PROCESSOR_DESCRIPTION = "Photodiode processor with Teensy sync timing capture."
+    """`dlc_inference_w_pd` with Teensy sync timing and legacy DLCLiveGUI file outputs.
+
+    Swaps in `TeensyLatencySync` (adds TTL-read timestamps to the photodiode
+    capture) and, via the `on_recording_started`/`on_recording_stopped`
+    hooks, reproduces the old DLCLiveGUI on-disk layout the DataJoint
+    pipeline expects:
+    - `_PROC` pickle,
+    - `_DLC.hdf5` pose file,
+    - `_TS.npy` timestamp files,
+    - and DB-compatible copies of video/proc/DLC outputs named `vr4mice_<mouse>_<date>_<attempt>*`.
+    Poses are buffered per-frame in `process()` while recording so `save_legacy_dlc_h5()` can
+    write them out in one shot at the end.
+    """
+
+    HEAD_CONF_THRESHOLD = 0.6
 
     # Legacy initialization ensures compatibility with old DLCLiveGUI processors:
     # sockets / serial / side-effect-heavy resources are created inside DLCLiveWorker.
     PROCESSOR_BUILD_IN_WORKER = True
 
-    HEAD_CONF_THRESHOLD = 0.6  # NOTE: this might need to be adjusted based on the model
+    PROCESSOR_NAME = "SocketProcessorWithPDSync"
+    PROCESSOR_DESCRIPTION = "Photodiode processor with Teensy sync timing capture."
 
     PROCESSOR_PARAMS = {
         "com": {
@@ -105,6 +119,7 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         freq: float = 5,
         use_teensy: int | bool = 1,
     ) -> None:
+        """Initialize legacy-output state before the parent opens the Teensy/socket connections."""
         self.recording_context: dict[str, Any] = {}
 
         self.save_path: Optional[Path] = None
@@ -149,54 +164,9 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
     # ------------------------------------------------------------------
     # DLCLive processor API
     # ------------------------------------------------------------------
-    @staticmethod
-    def _select_single_pose(pose: Any) -> np.ndarray:
-        """Return one pose with shape (K, 3).
-
-        Accepts:
-            (K, 3): already a single pose.
-            (N, K, 3): one or more detections.
-
-        For multiple detections, selects the detection with the highest
-        mean keypoint likelihood.
-        """
-        poses = np.asarray(pose)
-
-        if poses.ndim == 2:
-            if poses.shape[1] != 3:
-                raise ValueError(f"Expected pose shape (K, 3), got {poses.shape}")
-            return poses
-
-        if poses.ndim == 3:
-            if poses.shape[0] == 0 or poses.shape[2] != 3:
-                raise ValueError(f"Expected pose shape (N, K, 3), got {poses.shape}")
-
-            if poses.shape[0] == 1:
-                return poses[0]
-
-            scores = np.nanmean(poses[..., 2], axis=1)
-
-            if not np.isfinite(scores).any():
-                logger.warning(
-                    "No detection has a finite confidence score; "
-                    "selecting detection 0"
-                )
-                return poses[0]
-
-            index = int(np.nanargmax(scores))
-
-            return poses[index]
-
-        raise ValueError(
-            "Expected pose shape (K, 3) or (N, K, 3), " f"got {poses.shape}"
-        )
-
     def process(self, pose: NDArray[np.float64], **kwargs: Any) -> NDArray[np.float64]:
         """Run the parent processor and buffer pose data for legacy DLC HDF5 saving."""
-        most_likely_detected_pose = self._select_single_pose(
-            pose
-        )  # IMPORTANT: not multi-animal friendly
-        processed_pose = super().process(most_likely_detected_pose, **kwargs)
+        processed_pose = super().process(pose, **kwargs)
 
         # Parent should return pose, but guard just in case.
         pose_to_buffer = processed_pose if processed_pose is not None else pose
@@ -217,6 +187,7 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         return pose_to_buffer
 
     def _create_teensy(self, com, baudrate):
+        """Use `TeensyLatencySync` instead of the parent's `TeensyLatency` to also capture TTL-read timing."""
         if TeensyLatencySync is None:
             raise ImportError(
                 "TeensyLatencySync dependency is unavailable. Ensure mouse_task is on PYTHONPATH "
@@ -226,6 +197,7 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         return TeensyLatencySync(com, baudrate=baudrate)
 
     def set_dlc_cfg(self, dlc_cfg):
+        """Store the DLC model config (used to label bodyparts when saving the legacy DLC h5)."""
         self.dlc_cfg = dlc_cfg
 
     # ------------------------------------------------------------------
@@ -290,6 +262,7 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
     # ------------------------------------------------------------------
 
     def save_latency_data(self) -> Dict[str, Any]:
+        """Extend parent's save_latency_data with Teensy TTL-read timestamps."""
         save_dict = super().save_latency_data()
 
         if getattr(self, "use_teensy", 0) == 1:
@@ -384,6 +357,7 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             return -1
 
     def _get_bodyparts_for_pose_width(self, flat_width: int) -> list[str] | None:
+        """Return bodypart names from `self.dlc_cfg` if their count matches the flattened pose width."""
         dlc_cfg = getattr(self, "dlc_cfg", None)
         bodyparts = None
 
@@ -824,71 +798,6 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             self._legacy_frame_times.clear()
         except Exception:
             logger.warning("Failed to clear legacy pose buffers after recording stop")
-
-    # ------------------------------------------------------------------
-    # Cleanup
-    # ------------------------------------------------------------------
-
-    def stop(self, save: bool = False, file: str | Path | None = None) -> None:
-        """Cleanly stop processor resources."""
-        if save:
-            try:
-                self.save(file)
-            except Exception:
-                logger.exception("Processor save during stop failed")
-
-        self._close_teensy()
-        self._close_socket_connection()
-        self._close_listener()
-
-    def close(self) -> None:
-        """Alias for generic cleanup."""
-        self.stop(save=False)
-
-    def _close_teensy(self) -> None:
-        try:
-            teensy = getattr(self, "teensy", None)
-            if teensy is not None:
-                close_serial = getattr(teensy, "close_serial", None)
-                if callable(close_serial):
-                    close_serial()
-                else:
-                    close = getattr(teensy, "close", None)
-                    if callable(close):
-                        close()
-        except Exception:
-            logger.exception("Failed to close Teensy cleanly")
-        finally:
-            try:
-                self.teensy = None
-            except Exception:
-                pass
-
-    def _close_socket_connection(self) -> None:
-        try:
-            conn = getattr(self, "conn", None)
-            if conn is not None:
-                conn.close()
-        except Exception:
-            logger.exception("Failed to close processor socket connection")
-        finally:
-            try:
-                self.conn = None
-            except Exception:
-                pass
-
-    def _close_listener(self) -> None:
-        try:
-            listener = getattr(self, "listener", None)
-            if listener is not None:
-                listener.close()
-        except Exception:
-            logger.exception("Failed to close processor listener")
-        finally:
-            try:
-                self.listener = None
-            except Exception:
-                pass
 
 
 def get_available_processors() -> Dict[str, Dict[str, Any]]:
