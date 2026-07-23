@@ -20,6 +20,7 @@ while the apex stays exactly where specified.
 
 import bpy
 import math
+import os
 from mathutils import Vector
 
 SPHERE_RADIUS = 1.0
@@ -29,6 +30,8 @@ TAIL_VERTS = 64
 
 TANGENT_EPSILON = SPHERE_RADIUS * 1e-4
 DEFAULT_TAIL_LENGTH = SPHERE_RADIUS * 2.1
+
+EXPORT_DIR = "/absolute/path/to/export/folder"  # <-- change this before running
 
 
 def create_shared_sphere(name, location):
@@ -87,6 +90,33 @@ def apply_auto_smooth(obj, angle_deg=30):
     bpy.ops.object.shade_auto_smooth(use_auto_smooth=True, angle=math.radians(angle_deg))
 
 
+def export_fbx(obj):
+    """Unity is -Z forward / Y up; location is zeroed so the exported pivot
+    is world origin, then restored so the Blender-side layout is unaffected."""
+    os.makedirs(EXPORT_DIR, exist_ok=True)
+    bpy.ops.object.select_all(action='DESELECT')
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+
+    original_location = obj.location.copy()
+    obj.location = (0.0, 0.0, 0.0)
+
+    filepath = os.path.join(EXPORT_DIR, obj.name + ".fbx")
+    bpy.ops.export_scene.fbx(
+        filepath=filepath,
+        use_selection=True,
+        axis_forward='-Z',
+        axis_up='Y',
+        use_space_transform=True,
+        bake_space_transform=True,   # "Apply Transform"
+        apply_unit_scale=True,       # "Apply Unit"
+        apply_scale_options='FBX_SCALE_ALL',
+    )
+    print(f"Exported: {filepath}")
+
+    obj.location = original_location
+
+
 def build_object(name, location, apex_points):
     sphere = create_shared_sphere(name, location)
     parts = [create_tangent_tail(f"{name}_tail{i}", location, apex)
@@ -131,8 +161,10 @@ OBJECTS = {
 
 x = 0
 for name, tail_specs in OBJECTS.items():
-    build_from_specs(name, (x, 0, 0), tail_specs)
+    obj = build_from_specs(name, (x, 0, 0), tail_specs)
+    export_fbx(obj)
     x += 4
 
-print(f"Built {len(OBJECTS)} object(s), each with coplanar tangent-cone tails "
-      f"on identical {SPHERE_RADIUS}-radius spheres.")
+print(f"Built and exported {len(OBJECTS)} object(s), each with coplanar "
+      f"tangent-cone tails on identical {SPHERE_RADIUS}-radius spheres, "
+      f"to individual .fbx files in {EXPORT_DIR}")
