@@ -51,6 +51,7 @@ parts:
   - file: docs/software/mouse_task_test.md
 - caption: Dev - Software package Documentation
   chapters:
+  - file: docs/software_package/experiment_lifecycle
   - file: docs/software_package/active_sensing_task
   - file: docs/software_package/dlc_processor
 - caption: Experiments - Training protocol and parameters
