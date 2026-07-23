@@ -12,6 +12,6 @@ params:
   - 4.3
   - 12.0
   - 2
-  target_selection: 4.0
-  distractor_selection: 6.0
+  target_selection: 3.0
+  distractor_selection: 2.0
   occlusion_type: 1.0

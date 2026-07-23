@@ -14,8 +14,8 @@ params:
   - 4.0
   - 4.0
   - 1
-  target_selection: 4.0
-  distractor_selection: 6.0
+  target_selection: 3.0
+  distractor_selection: 2.0
   start_box_delay: 0.1
   velocity_threshold: 20.0
   distractor: 0.0
