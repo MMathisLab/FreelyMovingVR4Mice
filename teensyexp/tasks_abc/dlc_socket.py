@@ -18,20 +18,22 @@ class DLCClient(object):
         # start connection to the socket
         self.conn = Client(self.address, authkey=b'secret password')
         # start reading and add data to a list
-        while self.reading == True: 
+        while self.reading == True:
             try:
                 this_read = self.conn.recv()
                 self.input_data.append(list((time.time(),this_read)))
-            # if the connection on the DLClivegui is closed, stop the thread reading in a clean way
-            except EOFError:
-                self.reading == False
+            # if the connection on the DLCLiveGUI is closed, or close() ran while
+            # recv() was blocked, stop the thread reading in a clean way
+            except (EOFError, OSError):
+                self.reading = False
                 break
 
     def start_read_buffer(self):
         # start reading from DLClivegui in thread
         self.start_read_time = time.time()
         self.reading = True
-        threading.Thread(target=self.read_on_thread, daemon=True).start()
+        self._read_thread = threading.Thread(target=self.read_on_thread, daemon=True)
+        self._read_thread.start()
 
     def read(self, index=-1, input=None):
         """
@@ -42,10 +44,7 @@ class DLCClient(object):
             return({"time": vals[0], "vals": vals [1]})
     
     def stop(self):
-
-        """
-            change the reading class attribute to False (switch flag)
-        """
+        """Change the reading class attribute to False (switch flag)."""
         self.reading = False
 
     def get_input_data(self, format='array'):
@@ -58,17 +57,18 @@ class DLCClient(object):
         return np.array(self.input_data)
 
     def reset(self):
-        """
-            method reset to empty list input_data and output_data attributes
-        """
+        """Reset input_data to an empty list."""
         self.input_data = []
 
     def close(self):
-        """
-            method to stop communication and update reading state attribute to False via stop()
-        """
+        """Stop communication and update reading state attribute."""
         self.stop()
-        self.conn.close()
+        conn = getattr(self, "conn", None)
+        if conn is not None:
+            conn.close()
+        read_thread = getattr(self, "_read_thread", None)
+        if read_thread is not None:
+            read_thread.join(timeout=2)
 
 
 

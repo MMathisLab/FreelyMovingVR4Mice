@@ -23,18 +23,15 @@ class TeensyLaser(Processor):
         },
     }
 
-    def __init__(
-        self, com = 50, conn=2):
+    def __init__(self, com=50, conn=2):
 
         super().__init__()
         self.stim_on_time = []
-      
 
     def process(self, pose, **kwargs):
 
         # define criteria to stimulate (e.g. if first point is in a corner of the video)
         self.stim_on_time.append(time.time())
-        
 
         return pose
 

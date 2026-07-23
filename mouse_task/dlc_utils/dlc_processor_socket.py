@@ -1,3 +1,4 @@
+import os
 import pickle
 import time
 import importlib.util
@@ -152,26 +153,46 @@ class MyProcessor_socket(ProcessorWithSignal):
         self._ensure_connection()
         if self.conn is not None:
             try:
-                self.conn.send([time.time(), vals[0], vals[1], vals[2], vals[3], vals[4]])
+                self.conn.send(
+                    [time.time(), vals[0], vals[1], vals[2], vals[3], vals[4]]
+                )
             except Exception:
                 self.conn = None
+                self._on_client_disconnected()
         self.previous = center
         return pose
+
+    def _on_client_disconnected(self) -> None:
+        """Hook called the moment a connected vr4mice client drops (e.g. the task stopped).
+
+        No-op by default. Subclasses can use this to auto-save data that is
+        entirely self-contained (buffered by this processor), as a safety net
+        independent of DLCLiveGUI's own Stop/Save Video action. Do NOT use it
+        for anything that depends on files still being written by DLCLiveGUI's
+        video recorder (timestamps/video copy) -- those may not be finalized
+        yet when the client merely disconnects.
+        """
+        return None
 
     def save(self, file: Optional[str] = None) -> int:
         save_code = 0
         if file:
+            tmp_file = None
             try:
                 save_dict = self.save_latency_data()
 
-                pickle.dump(
-                    save_dict,
-                    open(file, "wb"),
-                )
+                tmp_file = f"{file}.tmp"
+                with open(tmp_file, "wb") as f:
+                    pickle.dump(save_dict, f)
+                os.replace(tmp_file, file)
                 save_code = 1
             except Exception as e:
                 warnings.warn(f"Proc file was not saved, an exception occurred: {e}")
-
+                try:
+                    if tmp_file is not None and os.path.isfile(tmp_file):
+                        os.remove(tmp_file)
+                except OSError:
+                    pass
                 save_code = -1
         return save_code
 

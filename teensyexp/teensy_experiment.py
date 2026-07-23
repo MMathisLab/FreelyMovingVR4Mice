@@ -609,15 +609,15 @@ class TeensyExperimentGUI(object):
             except Exception as err:
                 self.task = None
                 self.task_info = {}
-                self.task_label["text"] = "No Task"
+                self.task_label["text"] = "No Task"
                 self.task_on.set(0)
-                try:
-                    self._reset_progress_labels()
-                except Exception:
-                    pass
-                finally:
-                    self.info_labels = []
-                    self.value_labels = []
+                try:
+                    self._reset_progress_labels()
+                except Exception:
+                    pass
+                finally:
+                    self.info_labels = []
+                    self.value_labels = []
                 messagebox.showerror(
                     "Task Initialization Failed",
                     f"Could not initialize task '{self.task_name.get()}'.\n{err}",
@@ -742,8 +742,30 @@ class TeensyExperimentGUI(object):
             Args:
                 data_to_save: output form task (return of self.task.get_data())
                 filename(str): path and name of file to save
+
+            Note:
+                Writes to a temporary file first and only replaces `filename` once the
+                write succeeds, so a failed/interrupted save never corrupts or clobbers
+                an existing file. `self.saved_ok` is only set on success.
         """
-        pickle.dump(data_to_save, open(filename, 'wb'))
+        tmp_filename = filename + '.tmp'
+        try:
+            with open(tmp_filename, 'wb') as f:
+                pickle.dump(data_to_save, f)
+            os.replace(tmp_filename, filename)
+        except Exception as e:
+            try:
+                if os.path.isfile(tmp_filename):
+                    os.remove(tmp_filename)
+            except OSError:
+                pass
+            messagebox.showerror(
+                "Save Failed",
+                "Failed to save data to %s:\n%s" % (filename, e),
+                parent=self.window,
+            )
+            return
+
         messagebox.showinfo("File Saved", "File saved to %s" % filename, parent=self.window)
         self.saved_ok = True
 
@@ -800,16 +822,17 @@ class TeensyExperimentGUI(object):
 
     def check_close(self):
         """
-            method used for close bottom callback
+            method used for close button callback (and the window's X button)
             checks if there is a running task and if all data saved
         """
         if self.task_on.get():
             messagebox.showerror("Task Open", "Task is currently open. Please stop task before closing.",
                                  parent=self.window)
+        elif not self.saved_ok:
+            if messagebox.askokcancel("Exit", "ARE YOU SURE YOU SAVED YOUR Data?"):
+                self.gui_on = False
         else:
-            if not self.saved_ok:
-                if messagebox.askokcancel("Exit", "ARE YOU SURE YOU SAVED YOUR Data?"):
-                    self.gui_on = False
+            self.gui_on = False
 
     def close_window(self):
         """
@@ -969,6 +992,10 @@ class TeensyExperimentGUI(object):
         Button(window, text="Close", command=self.check_close).grid(sticky="nsew", row=cur_row, column=1, columnspan=1)
         cur_row += 1
 
+        # route the window's own [X] close button through the same "did you save?" check
+        # instead of letting Tkinter destroy the window unprompted
+        window.protocol("WM_DELETE_WINDOW", self.check_close)
+
         # configure size of empty rows
         col_count, row_count = window.grid_size()
         for r in range(row_count):
@@ -985,20 +1012,30 @@ class TeensyExperimentGUI(object):
         print_delay = .01
         last_print = time.time()
 
-        while self.gui_on:
-            curr_time = time.time()
-            if self.task_on_button:
-                if curr_time - last_print > print_delay:
-                    self.check_task_progress()
-                    last_print = curr_time
-            elif self.task_on.get() == 1:
-                self.task_on.set(0)
-                if self.gui_task:
-                    self.task.window.destroy()
+        try:
+            while self.gui_on:
+                curr_time = time.time()
+                if self.task_on_button:
+                    if curr_time - last_print > print_delay:
+                        self.check_task_progress()
+                        last_print = curr_time
+                elif self.task_on.get() == 1:
+                    self.task_on.set(0)
+                    if self.gui_task:
+                        self.task.window.destroy()
 
-            self.window.update()
-
-        self.close_window()
+                self.window.update()
+        except KeyboardInterrupt:
+            # Ctrl+C in the terminal: still warn about unsaved data before tearing
+            # down, same as closing via the Close button / window [X].
+            if not self.saved_ok:
+                messagebox.showwarning(
+                    "Exit", "Interrupted: ARE YOU SURE YOU SAVED YOUR Data?", parent=self.window
+                )
+        finally:
+            # Always run cleanup (closes the Teensy connection), even on Ctrl+C or
+            # an unexpected error, so the serial port is never left dangling open.
+            self.close_window()
 
 
 def main():

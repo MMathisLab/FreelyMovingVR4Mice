@@ -22,12 +22,15 @@ class DLCClient(object):
                 this_read = self.conn.recv()
                 self.input_data.append(this_read)
 
-            except EOFError:
+            except (EOFError, OSError):
+                # EOFError: remote side closed cleanly. OSError: local conn.close()
+                # ran while recv() was blocked (e.g. from close()).
                 self.reading = False
                 break
 
     def start_read_buffer(self):
-        threading.Thread(target=self.read_on_thread, daemon=True).start()
+        self._read_thread = threading.Thread(target=self.read_on_thread, daemon=True)
+        self._read_thread.start()
 
     def read(self):
         if len(self.input_data) >= 1:
@@ -60,4 +63,9 @@ class DLCClient(object):
 
     def close(self):
         self.stop()
-        self.conn.close()
+        conn = getattr(self, "conn", None)
+        if conn is not None:
+            conn.close()
+        read_thread = getattr(self, "_read_thread", None)
+        if read_thread is not None:
+            read_thread.join(timeout=2)

@@ -6,6 +6,7 @@ from datetime import datetime
 import importlib.util
 import json
 import logging
+import os
 import pickle
 import re
 import shutil
@@ -61,7 +62,7 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
     # sockets / serial / side-effect-heavy resources are created inside DLCLiveWorker.
     PROCESSOR_BUILD_IN_WORKER = True
 
-    HEAD_CONF_THRESHOLD = 0.6 # NOTE: this might need to be adjusted based on the model
+    HEAD_CONF_THRESHOLD = 0.6  # NOTE: this might need to be adjusted based on the model
 
     PROCESSOR_PARAMS = {
         "com": {
@@ -135,11 +136,16 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
                     self.authkey,
                 )
             except Exception:
-                logger.info("Listener initialized with authkey: %r", getattr(self, "authkey", None))
+                logger.info(
+                    "Listener initialized with authkey: %r",
+                    getattr(self, "authkey", None),
+                )
 
         except Exception as e:
             self.stop(save=False)
-            raise RuntimeError(f"Failed to initialize dlc_inference_w_pd_sync: {e}.") from e
+            raise RuntimeError(
+                f"Failed to initialize dlc_inference_w_pd_sync: {e}."
+            ) from e
 
     # ------------------------------------------------------------------
     # DLCLive processor API
@@ -159,16 +165,12 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
 
         if poses.ndim == 2:
             if poses.shape[1] != 3:
-                raise ValueError(
-                    f"Expected pose shape (K, 3), got {poses.shape}"
-                )
+                raise ValueError(f"Expected pose shape (K, 3), got {poses.shape}")
             return poses
 
         if poses.ndim == 3:
             if poses.shape[0] == 0 or poses.shape[2] != 3:
-                raise ValueError(
-                    f"Expected pose shape (N, K, 3), got {poses.shape}"
-                )
+                raise ValueError(f"Expected pose shape (N, K, 3), got {poses.shape}")
 
             if poses.shape[0] == 1:
                 return poses[0]
@@ -184,17 +186,17 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
 
             index = int(np.nanargmax(scores))
 
-
             return poses[index]
 
         raise ValueError(
-            "Expected pose shape (K, 3) or (N, K, 3), "
-            f"got {poses.shape}"
+            "Expected pose shape (K, 3) or (N, K, 3), " f"got {poses.shape}"
         )
 
     def process(self, pose: NDArray[np.float64], **kwargs: Any) -> NDArray[np.float64]:
         """Run the parent processor and buffer pose data for legacy DLC HDF5 saving."""
-        most_likely_detected_pose = self._select_single_pose(pose) # IMPORTANT: not multi-animal friendly
+        most_likely_detected_pose = self._select_single_pose(
+            pose
+        )  # IMPORTANT: not multi-animal friendly
         processed_pose = super().process(most_likely_detected_pose, **kwargs)
 
         # Parent should return pose, but guard just in case.
@@ -203,9 +205,13 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         if self._legacy_recording_active:
             try:
                 # Use float32 to reduce RAM pressure during long recordings.
-                self._legacy_poses.append(np.asarray(pose_to_buffer, dtype=np.float32).copy())
+                self._legacy_poses.append(
+                    np.asarray(pose_to_buffer, dtype=np.float32).copy()
+                )
                 self._legacy_pose_times.append(time.time())
-                self._legacy_frame_times.append(float(kwargs.get("frame_time", time.time())))
+                self._legacy_frame_times.append(
+                    float(kwargs.get("frame_time", time.time()))
+                )
             except Exception:
                 logger.exception("Failed to buffer pose for legacy DLC save")
 
@@ -254,6 +260,30 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         logger.info("Processor save path set to %s", self.save_path)
         logger.info("Processor DLC h5 path set to %s", self.dlc_h5_path)
         logger.info("Processor timestamp path set to %s", self.legacy_timestamp_path)
+
+    def _on_client_disconnected(self) -> None:
+        """Auto-save PROC pickle + legacy .h5 the moment the vr4mice client disconnects.
+
+        This is a safety net independent of DLCLiveGUI's own Stop/Save Video
+        button: both outputs depend only on data this processor has already
+        buffered itself, so they're safe to flush immediately. Deliberately
+        does NOT run save_legacy_timestamp_npy()/copy_legacy_video_files()/
+        alignment here -- those read files written by DLCLiveGUI's video
+        recorder, which may still be mid-write at this point. That part still
+        only runs from on_recording_stopped(), which the experimenter should
+        still trigger via DLCLiveGUI's Stop/Save Video as usual.
+        """
+        if getattr(self, "save_path", None) is None:
+            logger.debug(
+                "vr4mice client disconnected before recording started; skipping auto-save"
+            )
+            return
+
+        logger.info("vr4mice client disconnected; auto-saving PROC + legacy DLC h5")
+        proc_result = self.save()
+        logger.info("Auto-save PROC result: %r", proc_result)
+        h5_result = self.save_legacy_dlc_h5()
+        logger.info("Auto-save legacy DLC h5 result: %r", h5_result)
 
     def on_recording_stopped(self, context: dict) -> None:
         """Save all custom legacy outputs after GUI recording stops."""
@@ -306,12 +336,16 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             warnings.warn("Processor save skipped: no file or save_path was provided.")
             return 0
 
+        tmp_target = None
         try:
             target = Path(target)
             target.parent.mkdir(parents=True, exist_ok=True)
+            save_dict = self.save_latency_data()
 
-            with target.open("wb") as f:
-                pickle.dump(self.save_latency_data(), f)
+            tmp_target = target.with_suffix(target.suffix + ".tmp")
+            with tmp_target.open("wb") as f:
+                pickle.dump(save_dict, f)
+            os.replace(tmp_target, target)
 
             logger.info("Processor data saved to: %s", target)
             return 1
@@ -319,6 +353,11 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         except Exception as e:
             warnings.warn(f"Proc file was not saved, an exception occurred: {e}")
             logger.exception("Processor PROC save failed")
+            try:
+                if tmp_target is not None and tmp_target.exists():
+                    tmp_target.unlink()
+            except Exception:
+                pass
             return -1
 
     # ------------------------------------------------------------------
@@ -337,6 +376,7 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             logger.warning("Skipping DLC h5 save: no buffered poses")
             return 0
 
+        tmp_target = None
         try:
             target = Path(target)
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -345,7 +385,9 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
                 poses = poses[None, :, :]
 
             if poses.ndim != 3 or poses.shape[-1] != 3:
-                logger.warning("Skipping DLC h5 save: unexpected pose shape %s", poses.shape)
+                logger.warning(
+                    "Skipping DLC h5 save: unexpected pose shape %s", poses.shape
+                )
                 return 0
 
             flat = poses.reshape((poses.shape[0], poses.shape[1] * poses.shape[2]))
@@ -358,19 +400,28 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
                 )
                 pose_df = pd.DataFrame(flat, columns=pdindex)
             else:
-                logger.warning("Bodyparts information not found or mismatched; saving DLC h5 without labels.")
+                logger.warning(
+                    "Bodyparts information not found or mismatched; saving DLC h5 without labels."
+                )
                 pose_df = pd.DataFrame(flat)
 
             pose_df["frame_time"] = list(self._legacy_frame_times)
             pose_df["pose_time"] = list(self._legacy_pose_times)
 
-            pose_df.to_hdf(target, key="df_with_missing", mode="w")
+            tmp_target = target.with_suffix(target.suffix + ".tmp")
+            pose_df.to_hdf(tmp_target, key="df_with_missing", mode="w")
+            os.replace(tmp_target, target)
 
             logger.info("Legacy DLC h5 saved to: %s", target)
             return 1
 
         except Exception:
             logger.exception("Failed to save legacy DLC h5")
+            try:
+                if tmp_target is not None and tmp_target.exists():
+                    tmp_target.unlink()
+            except Exception:
+                pass
             return -1
 
     def _get_bodyparts_for_pose_width(self, flat_width: int) -> list[str] | None:
@@ -378,10 +429,9 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         bodyparts = None
 
         if isinstance(dlc_cfg, dict):
-            bodyparts = (
-                dlc_cfg.get("all_joints_names")
-                or dlc_cfg.get("metadata", {}).get("bodyparts")
-            )
+            bodyparts = dlc_cfg.get("all_joints_names") or dlc_cfg.get(
+                "metadata", {}
+            ).get("bodyparts")
 
         if bodyparts and len(bodyparts) * 3 == flat_width:
             return list(bodyparts)
@@ -396,7 +446,9 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         json_paths = self._find_timestamp_json_files()
 
         if not json_paths:
-            logger.warning("Skipping legacy timestamp npy save: no timestamp JSON files found")
+            logger.warning(
+                "Skipping legacy timestamp npy save: no timestamp JSON files found"
+            )
             return 0
 
         saved = 0
@@ -424,10 +476,12 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
                     saved += 1
 
             except Exception:
-                logger.exception("Failed to convert timestamp JSON to npy: %s", json_path)
+                logger.exception(
+                    "Failed to convert timestamp JSON to npy: %s", json_path
+                )
 
         return 1 if saved else 0
-    
+
     def _extract_timestamps_from_json(self, json_path: Path) -> np.ndarray:
         """Extract timestamps from the new VideoRecorder JSON format.
 
@@ -459,7 +513,9 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
                 if isinstance(item, (int, float)):
                     values.append(float(item))
                 elif isinstance(item, dict):
-                    value = self._first_present(item, ("software_timestamp", "timestamp", "frame_time", "time"))
+                    value = self._first_present(
+                        item, ("software_timestamp", "timestamp", "frame_time", "time")
+                    )
                     if value is not None:
                         values.append(float(value))
             return np.asarray(values, dtype=float)
@@ -511,13 +567,18 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         for index, video_path in enumerate(video_files):
             try:
                 video_token = "VIDEO" if total == 1 else f"VIDEO{index + 1}"
-                out_path = compat_base.parent / f"{compat_base.name}_{video_token}{video_path.suffix}"
+                out_path = (
+                    compat_base.parent
+                    / f"{compat_base.name}_{video_token}{video_path.suffix}"
+                )
 
                 if self._copy_file_if_needed(video_path, out_path):
                     copied += 1
 
             except Exception:
-                logger.exception("Failed to copy DB-compatible video file %s", video_path)
+                logger.exception(
+                    "Failed to copy DB-compatible video file %s", video_path
+                )
 
         return 1 if copied else 0
 
@@ -553,7 +614,7 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             return str(filename_stem).split("_", 1)[0]
 
         return "recording"
-    
+
     def _db_compat_base(self) -> Path:
         """Return DB-GUI-compatible base path.
 
@@ -582,7 +643,6 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
 
         return run_dir / f"vr4mice_{prefix}_{date}_{attempt}"
 
-
     def _fallback_output_dir(self) -> Path:
         base_path = self._context_processor_base_path()
         if base_path is not None:
@@ -593,7 +653,6 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             return Path(save_path).parent
 
         return Path.cwd()
-
 
     def _mouse_from_context_or_run_dir(self, run_dir: Path) -> str:
         context = getattr(self, "recording_context", {}) or {}
@@ -609,7 +668,6 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             return self._sanitize(parent_name)
 
         return "Mouse"
-
 
     def _date_from_context_or_run_dir(self, run_dir: Path) -> str:
         context = getattr(self, "recording_context", {}) or {}
@@ -630,7 +688,6 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         except Exception:
             return datetime.now().strftime("%Y-%m-%d")
 
-
     def _attempt_from_context(self, default: str = "1") -> str:
         context = getattr(self, "recording_context", {}) or {}
 
@@ -648,14 +705,12 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
 
         return default
 
-
     @staticmethod
     def _sanitize(value: str) -> str:
         value = str(value).strip()
         value = value.replace(" ", "")
         value = value.replace("_", "")
         return value or "unknown"
-
 
     @staticmethod
     def _normalize_date(value: str) -> str | None:
@@ -672,7 +727,6 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             return f"{match.group(1)}-{match.group(2)}-{match.group(3)}"
 
         return None
-
 
     def _date_from_run_dir_name(self, run_name: str) -> str | None:
         return self._normalize_date(run_name)
@@ -724,7 +778,9 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         return Path(name).stem
 
     def _find_video_files(self) -> list[Path]:
-        paths = self._paths_from_context_value(self.recording_context.get("video_files"))
+        paths = self._paths_from_context_value(
+            self.recording_context.get("video_files")
+        )
         paths = [p for p in paths if p.exists()]
         if paths:
             return sorted(paths)
@@ -787,7 +843,14 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
     def _save_npy(path: Path, values: np.ndarray) -> None:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        np.save(path, values)
+        # np.save appends ".npy" if the given name lacks it; resolve the real final
+        # name first so the tmp file (which already ends in ".npy") isn't altered.
+        final_path = (
+            path if path.suffix == ".npy" else path.with_suffix(path.suffix + ".npy")
+        )
+        tmp_path = final_path.with_name(final_path.stem + ".tmp.npy")
+        np.save(tmp_path, values)
+        os.replace(tmp_path, final_path)
 
     @staticmethod
     def _first_present(mapping: dict, keys: tuple[str, ...]) -> Any:
@@ -874,8 +937,12 @@ def get_available_processors() -> Dict[str, Dict[str, Any]]:
     return {
         "dlc_inference_w_pd_sync": {
             "class": dlc_inference_w_pd_sync,
-            "name": getattr(dlc_inference_w_pd_sync, "PROCESSOR_NAME", "dlc_inference_w_pd_sync"),
-            "description": getattr(dlc_inference_w_pd_sync, "PROCESSOR_DESCRIPTION", ""),
+            "name": getattr(
+                dlc_inference_w_pd_sync, "PROCESSOR_NAME", "dlc_inference_w_pd_sync"
+            ),
+            "description": getattr(
+                dlc_inference_w_pd_sync, "PROCESSOR_DESCRIPTION", ""
+            ),
             "params": getattr(dlc_inference_w_pd_sync, "PROCESSOR_PARAMS", {}),
         }
     }
