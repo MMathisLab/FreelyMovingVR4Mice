@@ -14,8 +14,8 @@ params:
   - 15.0
   - 2
   slit_depth: 0.02
-  target_selection: 13.0
-  distractor_selection: 6.0
+  target_selection: 10.0
+  distractor_selection: 4.0
   occlusion_type: 1.0
   target_spread: 3.0
   target_rotation: 15.0
