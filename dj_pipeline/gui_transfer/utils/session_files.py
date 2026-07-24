@@ -116,9 +116,12 @@ def find_related_files(dataset_stem, path_by_key, get_type_fn, camera_number=Non
             suffix (single-camera rigs, DLC/PROC/teensy) are unaffected.
             If None (the file that was picked has no camera suffix, e.g.
             DLC/PROC/teensy), a role with several different camera numbers
-            present is ambiguous; DEFAULT_CAMERA_NUMBER is used rather than
-            whichever sorts first. A role where every match shares the same
-            number (or none has a number at all) is unaffected.
+            present is ambiguous; DEFAULT_CAMERA_NUMBER is used to resolve
+            it. If DEFAULT_CAMERA_NUMBER isn't among the candidates, there is
+            no safe default to autocomplete to, so that role is left out of
+            the result entirely (no fallback to e.g. the max camera number).
+            A role where every match shares the same number (or none has a
+            number at all) is unaffected.
 
     Returns:
         dict mapping transfer key -> Path
@@ -164,12 +167,13 @@ def find_related_files(dataset_stem, path_by_key, get_type_fn, camera_number=Non
         if camera_number is None:
             distinct_numbers = {n for n, _ in matches if n is not None}
             if len(distinct_numbers) > 1:
-                preferred = (
-                    DEFAULT_CAMERA_NUMBER
-                    if DEFAULT_CAMERA_NUMBER in distinct_numbers
-                    else max(distinct_numbers)
-                )
-                matches = [m for m in matches if m[0] == preferred]
+                if DEFAULT_CAMERA_NUMBER not in distinct_numbers:
+                    continue
+                matches = [m for m in matches if m[0] == DEFAULT_CAMERA_NUMBER]
+        else:
+            exact = [m for m in matches if m[0] == camera_number]
+            if exact:
+                matches = exact
         found[file_key] = matches[0][1]
 
     return found
