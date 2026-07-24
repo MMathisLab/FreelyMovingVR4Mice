@@ -265,6 +265,178 @@ def test_find_related_files(gui_modules, tmp_path):
     assert related["dlc_path"] == dlc
 
 
+def test_camera_number_from_filename():
+    from utils.session_files import camera_number_from_filename
+
+    assert (
+        camera_number_from_filename("TS_vr4mice_Yurumi_2026-07-23_1_CAMERA3.npy") == 3
+    )
+    assert camera_number_from_filename("vr4mice_Yurumi_2026-07-23_1_VIDEO3.avi") == 3
+    assert (
+        camera_number_from_filename("Imagingsource_Testmouse_2023-02-22_2_VIDEO.mp4")
+        is None
+    )
+    assert camera_number_from_filename("Testmouse_2023-02-22_2.pickle") is None
+
+
+def test_find_related_files_multi_camera_matches_selected_camera(gui_modules):
+    """
+    On a multi-camera rig, picking the CAMERA3 timestamps file should find the
+    matching VIDEO3 file, not whichever camera number sorts first.
+    """
+    from utils.session_files import find_related_files
+
+    def get_type(filename):
+        if "VIDEO" in filename:
+            return "video_path"
+        if "CAMERA" in filename:
+            return "camera_path"
+        return "teensy_path"
+
+    config_data = gui_modules["config_data"]
+    camera_dir = Path(config_data["camera_path"])
+    video_dir = Path(config_data["video_path"])
+    camera_dir.mkdir(parents=True, exist_ok=True)
+    video_dir.mkdir(parents=True, exist_ok=True)
+
+    stem = "Yurumi_2026-07-23_1"
+    for n in (1, 2, 3):
+        (camera_dir / f"TS_vr4mice_{stem}_CAMERA{n}.npy").write_text("t")
+        (video_dir / f"vr4mice_{stem}_VIDEO{n}.avi").write_text("v")
+
+    path_by_key = {
+        k: config_data[k]
+        for k in config_data
+        if k.endswith("_path") or k == "raw_data_src"
+    }
+
+    related = find_related_files(stem, path_by_key, get_type, camera_number=3)
+    assert related["camera_path"] == camera_dir / f"TS_vr4mice_{stem}_CAMERA3.npy"
+    assert related["video_path"] == video_dir / f"vr4mice_{stem}_VIDEO3.avi"
+
+
+def _setup_ambiguous_cameras(gui_modules, stem, camera_numbers, with_dlc=True):
+    def get_type(filename):
+        if "VIDEO" in filename:
+            return "video_path"
+        if "CAMERA" in filename:
+            return "camera_path"
+        if "DLC" in filename:
+            return "dlc_path"
+        return "teensy_path"
+
+    config_data = gui_modules["config_data"]
+    camera_dir = Path(config_data["camera_path"])
+    video_dir = Path(config_data["video_path"])
+    dlc_dir = Path(config_data["dlc_path"])
+    camera_dir.mkdir(parents=True, exist_ok=True)
+    video_dir.mkdir(parents=True, exist_ok=True)
+    dlc_dir.mkdir(parents=True, exist_ok=True)
+
+    for n in camera_numbers:
+        (camera_dir / f"TS_vr4mice_{stem}_CAMERA{n}.npy").write_text("t")
+        (video_dir / f"vr4mice_{stem}_VIDEO{n}.avi").write_text("v")
+    if with_dlc:
+        (dlc_dir / f"vr4mice_{stem}_DLC.hdf5").write_text("d")
+
+    path_by_key = {
+        k: config_data[k]
+        for k in config_data
+        if k.endswith("_path") or k == "raw_data_src"
+    }
+    return get_type, path_by_key, camera_dir, video_dir
+
+
+def test_find_related_files_multi_camera_leaves_blank_when_default_absent(
+    gui_modules,
+):
+    """
+    Picking a file with no camera suffix (e.g. DLC output) gives no camera
+    number to match on. When DEFAULT_CAMERA_NUMBER (3) isn't among the
+    present cameras, there's no safe default to autocomplete to, so those
+    roles are left out of the result rather than falling back to e.g. the
+    highest camera number.
+    """
+    from utils.session_files import find_related_files
+
+    stem = "Yurumi_2026-07-23_1"
+    get_type, path_by_key, camera_dir, video_dir = _setup_ambiguous_cameras(
+        gui_modules, stem, (1, 2, 4)
+    )
+
+    related = find_related_files(stem, path_by_key, get_type, camera_number=None)
+    assert "camera_path" not in related
+    assert "video_path" not in related
+
+
+def test_find_related_files_multi_camera_prefers_default_camera_when_ambiguous(
+    gui_modules,
+):
+    """
+    When DEFAULT_CAMERA_NUMBER (3) is among the present cameras, it should be
+    preferred over the max camera number.
+    """
+    from utils.session_files import find_related_files
+
+    stem = "Yurumi_2026-07-23_1"
+    get_type, path_by_key, camera_dir, video_dir = _setup_ambiguous_cameras(
+        gui_modules, stem, (1, 2, 3, 4)
+    )
+
+    related = find_related_files(stem, path_by_key, get_type, camera_number=None)
+    assert related["camera_path"] == camera_dir / f"TS_vr4mice_{stem}_CAMERA3.npy"
+    assert related["video_path"] == video_dir / f"vr4mice_{stem}_VIDEO3.avi"
+
+
+def test_find_related_files_explicit_camera_absent_leaves_role_unfilled(gui_modules):
+    """
+    If the requested camera_number has no matching file for a role, that
+    role is simply left out of the result rather than falling back.
+    """
+    from utils.session_files import find_related_files
+
+    stem = "Yurumi_2026-07-23_1"
+    get_type, path_by_key, camera_dir, video_dir = _setup_ambiguous_cameras(
+        gui_modules, stem, (1, 2), with_dlc=False
+    )
+
+    related = find_related_files(stem, path_by_key, get_type, camera_number=3)
+    assert "camera_path" not in related
+    assert "video_path" not in related
+
+
+def test_find_related_files_explicit_camera_prefers_exact_over_unnumbered(
+    gui_modules,
+):
+    """
+    When camera_number is set and a role has both an exact-numbered match
+    and a legacy unnumbered file, the exact match must win.
+    """
+    from utils.session_files import find_related_files
+
+    def get_type(filename):
+        return "video_path"
+
+    config_data = gui_modules["config_data"]
+    video_dir = Path(config_data["video_path"])
+    video_dir.mkdir(parents=True, exist_ok=True)
+
+    stem = "Yurumi_2026-07-23_1"
+    legacy = video_dir / f"vr4mice_{stem}_VIDEO.avi"
+    exact = video_dir / f"vr4mice_{stem}_VIDEO3.avi"
+    legacy.write_text("legacy")
+    exact.write_text("exact")
+
+    path_by_key = {
+        k: config_data[k]
+        for k in config_data
+        if k.endswith("_path") or k == "raw_data_src"
+    }
+
+    related = find_related_files(stem, path_by_key, get_type, camera_number=3)
+    assert related["video_path"] == exact
+
+
 def test_adjust_keys_uses_display_text(gui_modules):
     utils = gui_modules["utils"]
     info = {"Rig": "12 - AR"}
