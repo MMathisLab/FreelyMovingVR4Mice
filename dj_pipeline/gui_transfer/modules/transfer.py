@@ -14,6 +14,7 @@ from utils.helpers import get_max, get_pattern
 from utils.utils import check_files
 from utils.session_files import (
     PATH_KEYS_FOR_SEARCH,
+    camera_number_from_filename,
     dataset_stem_from_filename,
     find_related_files,
 )
@@ -402,16 +403,25 @@ class Transfer(Template):
     def _pre_fetch_files(self, filenames, skip_path=None):
         """
         Find sibling session files across configured rig folders.
+
+        On multi-camera rigs, the picked file's camera index (if any, e.g.
+        "..._CAMERA3.npy" / "..._VIDEO3.avi") constrains which sibling
+        camera/video file gets auto-filled, so it matches the camera the
+        user actually selected instead of whichever camera sorts first.
         """
         dataset_stem = dataset_stem_from_filename(filenames)
         if not dataset_stem:
             logger.warning(f"Could not parse session from filename: {filenames}")
             return []
 
+        camera_number = camera_number_from_filename(filenames)
+
         path_by_key = {
             path_key: config.get_path(path_key) for path_key in PATH_KEYS_FOR_SEARCH
         }
-        related = find_related_files(dataset_stem, path_by_key, get_type)
+        related = find_related_files(
+            dataset_stem, path_by_key, get_type, camera_number=camera_number
+        )
         skip_resolved = Path(skip_path).resolve() if skip_path else None
 
         processed_keys = list()
