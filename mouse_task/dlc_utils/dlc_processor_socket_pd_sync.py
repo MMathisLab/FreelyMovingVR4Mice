@@ -287,9 +287,10 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         try:
             target = Path(target)
             target.parent.mkdir(parents=True, exist_ok=True)
+            save_dict = self.save_latency_data()
 
             with target.open("wb") as f:
-                pickle.dump(self.save_latency_data(), f)
+                pickle.dump(save_dict, f)
 
             logger.info("Processor data saved to: %s", target)
             return 1
@@ -375,6 +376,12 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
     # ------------------------------------------------------------------
 
     def save_legacy_timestamp_npy(self) -> int:
+        # Reads timestamp JSON files written by DLCLiveGUI's video recorder, which is
+        # a separate component. If this is ever called from a teardown path that can
+        # run before the video recorder has finished flushing (e.g. before/without
+        # DLCLiveGUI's own "Stop"/"Save Video"), the JSON files may not exist yet or
+        # may be incomplete -- this degrades gracefully to a logged warning and
+        # `return 0` rather than raising, so that's safe, just possibly a no-op.
         json_paths = self._find_timestamp_json_files()
 
         if not json_paths:

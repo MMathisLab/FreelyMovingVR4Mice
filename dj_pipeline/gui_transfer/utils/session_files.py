@@ -158,7 +158,9 @@ def find_related_files(dataset_stem, path_by_key, get_type_fn, camera_number=Non
             ):
                 continue
             file_key = get_type_fn(filepath.name)
-            candidates.setdefault(file_key, []).append((file_camera_number, filepath))
+            candidates.setdefault(file_key, []).append(
+                (file_camera_number, filepath)
+            )
 
     found = {}
     for file_key, matches in candidates.items():
