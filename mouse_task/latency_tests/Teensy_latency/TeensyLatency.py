@@ -23,7 +23,10 @@ class TeensyLatency:
 
     def read_on_thread(self):
         while self.reading_teensy and not self.stop_event.is_set():
-            line = self.ser.readline().decode("utf-8").rstrip()
+            line_bytes = self.ser.readline()
+            if not line_bytes:
+                continue
+            line = line_bytes.decode("utf-8").rstrip()
             now = time.time()  # Current time
             try:
                 self._handle_line(line, now)
