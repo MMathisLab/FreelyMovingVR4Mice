@@ -280,6 +280,16 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
             except Exception:
                 logger.exception("Legacy timestamp npy save during stop() failed")
 
+            try:
+                self.copy_legacy_video_files()
+            except Exception:
+                logger.exception("Legacy video copy during stop() failed")
+
+            try:
+                self.copy_processor_outputs_to_primary_legacy_base()
+            except Exception:
+                logger.exception("Legacy output alignment during stop() failed")
+
             self._clear_legacy_pose_buffers()
             self._legacy_recording_active = False
 
