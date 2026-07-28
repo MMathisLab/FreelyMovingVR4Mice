@@ -32,7 +32,7 @@ class TeensyLatency:
 
     def start_read_buffer(self):
         """Start the reader thread for serial buffer, writer for `input_data`, save start time."""
-        self.ser = serial.Serial(self.com, self.baudrate)
+        self.ser = serial.Serial(self.com, self.baudrate, timeout=0.5)
         self.start_read_time = time.time()
         self._reader_thread = threading.Thread(target=self.read_on_thread, daemon=True)
         self._reader_thread.start()
