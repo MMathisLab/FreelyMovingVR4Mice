@@ -57,7 +57,7 @@ class DLCProcessor(dj.Imported):
     head_angle: <blob>
     teensy_time=NULL: <blob>  # ms timestamp from the Teensy microcontroller of the analog/digital read
     ttl_read=NULL: <blob>  # Barcode TTL signal for Ephys sync
-    has_ttl=false: bool  # True if the DLC session has a TTL signal for Ephys sync
+    has_ttl=0: bool  # True if the DLC session has a TTL signal for Ephys sync
     """
 
     def make(self, key):
