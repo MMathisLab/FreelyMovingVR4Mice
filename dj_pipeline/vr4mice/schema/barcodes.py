@@ -1,0 +1,118 @@
+"""Schema for barcodes recorded through the Teensy synchronization channel."""
+
+import datajoint as dj
+import numpy as np
+
+from vr4mice.analysis.barcodes import BarcodeDecoderConfig, decode_teensy_barcodes
+import vr4mice.analysis.dlc_helpers as dlc_helpers
+from vr4mice.schema import base_analysis, dlc, vr4mice
+from vr4mice.utils import logger, schema_config
+
+schema_name = "barcodes"
+schema = schema_config.get_schema(schema_name, locals())
+
+logger = logger.Logger.get_logger()
+
+
+@schema
+class TeensyBarcodes(dj.Computed):
+    """Barcode events decoded from the TTL signal sampled by the Teensy."""
+
+    definition = """
+    -> dlc.DLCProcessor
+    -> base_analysis.DataFrame
+    ---
+    decoder_parameters: <blob>  # Parameters supplied to the decoder
+    extraction_status: enum('success','no_events')  # Extraction outcome
+    event_count: int32  # Number of decoded barcode events
+    quality_summary: <blob>  # Decoder diagnostics and signal-quality values
+    """
+
+    key_source = (dlc.DLCProcessor & {"has_ttl": True}).proj() * (
+        base_analysis.DataFrame.proj()
+    )
+    decoder_config = BarcodeDecoderConfig()
+
+    class Event(dj.Part):
+        definition = """
+        -> master
+        barcode_index: int32  # Zero-based event order in the stream
+        ---
+        barcode_value: int64  # Integer payload encoded by the barcode
+        onset_sample: int64  # Teensy millisecond timestamp at event onset
+        onset_time: float64  # Corresponding photodiode_time acquisition timestamp
+        onset_time_relative: float64  # Nearest base_analysis.DataFrame step_time
+        """
+
+    def make(self, key):
+        """Decode and store all barcodes in one Teensy TTL recording."""
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
+        try:
+            teensy_time, ttl_read, photodiode_time = (dlc.DLCProcessor & key).fetch1(
+                "teensy_time",
+                "ttl_read",
+                "photodiode_time",
+            )
+            result = decode_teensy_barcodes(
+                teensy_time,
+                ttl_read,
+                photodiode_time,
+                config=self.decoder_config,
+            )
+            game_start_time = float(
+                np.asarray(
+                    (vr4mice.State & {"dataset": key["dataset"]}).fetch1("start_time")
+                ).item()
+            )
+            step_time = (base_analysis.DataFrame & key).fetch1("step_time")
+            event_step_times = dlc_helpers.align_timestamps_to_step_time(
+                [event.onset_time - game_start_time for event in result.events],
+                step_time,
+            )
+            status = "success" if result.events else "no_events"
+            self.insert1(
+                {
+                    **key,
+                    "decoder_parameters": self.decoder_config.to_dict(),
+                    "extraction_status": status,
+                    "event_count": len(result.events),
+                    "quality_summary": result.quality,
+                }
+            )
+            if result.events:
+                self.Event.insert(
+                    [
+                        {
+                            **key,
+                            "barcode_index": event.index,
+                            "barcode_value": event.value,
+                            "onset_sample": event.onset_sample,
+                            "onset_time": event.onset_time,
+                            "onset_time_relative": onset_step_time,
+                        }
+                        for event, onset_step_time in zip(
+                            result.events, event_step_times, strict=True
+                        )
+                    ]
+                )
+            logger.info(
+                "%s extracted %d Teensy barcodes for %s",
+                self.__class__.__name__,
+                len(result.events),
+                key,
+            )
+
+        except Exception as err:
+            dataset = key["dataset"]
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
+            logger.warning(
+                "Can't populate %s, key: %s. Error: %s.",
+                self.__class__.__name__,
+                key,
+                err,
+            )
+            return None

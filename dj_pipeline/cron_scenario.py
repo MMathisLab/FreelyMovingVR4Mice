@@ -84,6 +84,7 @@ def main():
 
     def import_core_schemas():
         from vr4mice.schema import (
+            barcodes,
             base_analysis,
             dlc,
             vr4mice,
@@ -94,6 +95,7 @@ def main():
         )
 
         return (
+            barcodes,
             base_analysis,
             dlc,
             vr4mice,
@@ -111,6 +113,7 @@ def main():
         )
 
         (
+            barcodes,
             base_analysis,
             dlc,
             vr4mice,
@@ -153,10 +156,10 @@ def main():
             lambda: populate_pending(dlc.DLCProcessor, vr4mice.DLC, logger=logger),
         )
         run_step(
-            "dlc.TeensyBarcodes.populate",
+            "barcodes.TeensyBarcodes.populate",
             lambda: populate_pending(
-                dlc.TeensyBarcodes,
-                dlc.TeensyBarcodes.key_source,
+                barcodes.TeensyBarcodes,
+                barcodes.TeensyBarcodes.key_source,
                 logger=logger,
             ),
         )
