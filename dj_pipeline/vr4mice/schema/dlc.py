@@ -12,7 +12,7 @@ from vr4mice.analysis.barcodes import (
     has_teensy_ttl_data,
     normalize_ttl_read,
 )
-from vr4mice.schema import vr4mice
+from vr4mice.schema import base_analysis, vr4mice
 import vr4mice.analysis.dlc_helpers as dlc_helpers
 from vr4mice.utils import logger, schema_config
 
@@ -109,6 +109,7 @@ class TeensyBarcodes(dj.Computed):
 
     definition = """
     -> DLCProcessor
+    -> base_analysis.DataFrame
     ---
     decoder_parameters: <blob>  # Parameters supplied to the decoder
     extraction_status: enum('success','no_events')  # Extraction outcome
@@ -116,7 +117,9 @@ class TeensyBarcodes(dj.Computed):
     quality_summary: <blob>  # Decoder diagnostics and signal-quality values
     """
 
-    key_source = DLCProcessor & {"has_ttl": True}
+    key_source = (DLCProcessor & {"has_ttl": True}).proj() * (
+        base_analysis.DataFrame.proj()
+    )
     decoder_config = BarcodeDecoderConfig()
 
     class Event(dj.Part):
@@ -127,7 +130,7 @@ class TeensyBarcodes(dj.Computed):
         barcode_value: int64  # Integer payload encoded by the barcode
         onset_sample: int64  # Teensy millisecond timestamp at event onset
         onset_time: float64  # Corresponding photodiode_time acquisition timestamp
-        onset_time_relative: float64  # onset_time relative to the session start_time
+        onset_time_relative: float64  # Nearest base_analysis.DataFrame step_time
         """
 
     def make(self, key):
@@ -136,20 +139,26 @@ class TeensyBarcodes(dj.Computed):
             return
 
         try:
-            teensy_time, ttl_read, photodiode_time, start_time = (
-                DLCProcessor & key
-            ).fetch1(
+            teensy_time, ttl_read, photodiode_time = (DLCProcessor & key).fetch1(
                 "teensy_time",
                 "ttl_read",
                 "photodiode_time",
-                "start_time",
             )
             result = decode_teensy_barcodes(
                 teensy_time,
                 ttl_read,
                 photodiode_time,
-                start_time,
                 config=self.decoder_config,
+            )
+            game_start_time = float(
+                np.asarray(
+                    (vr4mice.State & {"dataset": key["dataset"]}).fetch1("start_time")
+                ).item()
+            )
+            step_time = (base_analysis.DataFrame & key).fetch1("step_time")
+            event_step_times = dlc_helpers.align_timestamps_to_step_time(
+                [event.onset_time - game_start_time for event in result.events],
+                step_time,
             )
             status = "success" if result.events else "no_events"
             self.insert1(
@@ -170,9 +179,11 @@ class TeensyBarcodes(dj.Computed):
                             "barcode_value": event.value,
                             "onset_sample": event.onset_sample,
                             "onset_time": event.onset_time,
-                            "onset_time_relative": event.onset_time_relative,
+                            "onset_time_relative": onset_step_time,
                         }
-                        for event in result.events
+                        for event, onset_step_time in zip(
+                            result.events, event_step_times, strict=True
+                        )
                     ]
                 )
             logger.info(

@@ -9,6 +9,7 @@ from barcodes import (
     has_teensy_ttl_data,
     normalize_ttl_read,
 )
+from dlc_helpers import align_timestamps_to_step_time
 
 
 def _barcode_edges(value: int, *, start_ms: int):
@@ -80,21 +81,16 @@ def test_decode_teensy_barcodes_from_string_samples():
         stop_ms=1_200,
     )
     photodiode_times = 1_785_000_000 + times * 0.0015
-    start_time = photodiode_times[0] - 0.25
 
     result = decode_teensy_barcodes(
         times.astype(str),
         states.astype(str),
         photodiode_times,
-        start_time,
     )
 
     assert [event.value for event in result.events] == [expected_value]
     assert result.events[0].onset_sample == 100
     assert result.events[0].onset_time == pytest.approx(photodiode_times[100])
-    assert result.events[0].onset_time_relative == pytest.approx(
-        photodiode_times[100] - start_time
-    )
     assert result.quality["edge_count"] == len(edges)
     assert result.quality["decoded_count"] == 1
 
@@ -104,7 +100,6 @@ def test_decode_teensy_barcodes_returns_no_events_for_constant_signal():
         np.arange(10).astype(str),
         np.zeros(10, dtype=int).astype(str),
         np.arange(10, dtype=float),
-        0.0,
     )
 
     assert result.events == ()
@@ -123,4 +118,15 @@ def test_decode_teensy_barcodes_validates_sample_arrays(
     times, states, photodiode_times, message
 ):
     with pytest.raises(ValueError, match=message):
-        decode_teensy_barcodes(times, states, photodiode_times, 10.0)
+        decode_teensy_barcodes(times, states, photodiode_times)
+
+
+def test_align_timestamps_to_data_frame_step_time():
+    step_time = np.asarray([0.10, 0.20, 0.30, 0.40])
+
+    result = align_timestamps_to_step_time(
+        np.asarray([0.14, 0.27, 0.39]),
+        step_time,
+    )
+
+    assert result.tolist() == pytest.approx([0.10, 0.30, 0.40])

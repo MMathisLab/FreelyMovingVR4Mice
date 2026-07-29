@@ -31,7 +31,6 @@ class DecodedBarcode:
     value: int
     onset_sample: int
     onset_time: float
-    onset_time_relative: float | None = None
 
 
 @dataclass(frozen=True)
@@ -74,7 +73,6 @@ def decode_teensy_barcodes(
     teensy_time,
     ttl_read,
     photodiode_time,
-    start_time,
     *,
     config: BarcodeDecoderConfig | None = None,
 ) -> BarcodeDecodeResult:
@@ -88,10 +86,6 @@ def decode_teensy_barcodes(
         continuous_times = np.asarray(photodiode_time).astype(np.float64)
     except (TypeError, ValueError) as error:
         raise ValueError("photodiode_time values must be numeric timestamps") from error
-    try:
-        session_start_time = float(np.asarray(start_time).item())
-    except (TypeError, ValueError) as error:
-        raise ValueError("start_time must be a numeric scalar timestamp") from error
 
     if times.ndim != 1:
         raise ValueError("teensy_time must be one-dimensional")
@@ -105,8 +99,6 @@ def decode_teensy_barcodes(
         raise ValueError("teensy_time must be strictly increasing")
     if not np.isfinite(continuous_times).all():
         raise ValueError("photodiode_time must contain only finite timestamps")
-    if not np.isfinite(session_start_time):
-        raise ValueError("start_time must be a finite timestamp")
 
     edge_mask = states[1:] != states[:-1]
     edge_times = times[1:][edge_mask]
@@ -125,9 +117,6 @@ def decode_teensy_barcodes(
         replace(
             event,
             onset_time=float(onset_time_by_sample[event.onset_sample]),
-            onset_time_relative=float(
-                onset_time_by_sample[event.onset_sample] - session_start_time
-            ),
         )
         for event in result.events
     )

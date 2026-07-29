@@ -151,7 +151,7 @@ if __name__ == "__main__":
         populate_pending(dlc.DLCProcessor, vr4mice.DLC, logger=logger)
         populate_pending(
             dlc.TeensyBarcodes,
-            dlc.DLCProcessor & {"has_ttl": True},
+            dlc.TeensyBarcodes.key_source,
             logger=logger,
         )
         populate_pending(dlc.DLCKptsDf, vr4mice.DLC, logger=logger)

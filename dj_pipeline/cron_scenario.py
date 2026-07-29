@@ -156,7 +156,7 @@ def main():
             "dlc.TeensyBarcodes.populate",
             lambda: populate_pending(
                 dlc.TeensyBarcodes,
-                dlc.DLCProcessor & {"has_ttl": True},
+                dlc.TeensyBarcodes.key_source,
                 logger=logger,
             ),
         )
