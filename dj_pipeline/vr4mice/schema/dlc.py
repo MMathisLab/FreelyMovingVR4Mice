@@ -6,6 +6,12 @@ import datajoint as dj
 import numpy as np
 import pandas as pd
 
+from vr4mice.analysis.barcodes import (
+    BarcodeDecoderConfig,
+    decode_teensy_barcodes,
+    has_teensy_ttl_data,
+    normalize_ttl_read,
+)
 from vr4mice.schema import vr4mice
 import vr4mice.analysis.dlc_helpers as dlc_helpers
 from vr4mice.utils import logger, schema_config
@@ -49,6 +55,9 @@ class DLCProcessor(dj.Imported):
     y_pos: <blob>
     heading_direction: <blob>
     head_angle: <blob>
+    teensy_time=NULL: <blob>  # ms timestamp from the Teensy microcontroller of the analog/digital read
+    ttl_read=NULL: <blob>  # Barcode TTL signal for Ephys sync
+    has_ttl=false: bool  # True if the DLC session has a TTL signal for Ephys sync
     """
 
     def make(self, key):
@@ -77,6 +86,9 @@ class DLCProcessor(dj.Imported):
                 **key,
                 **{attr: proc_data[attr] for attr in table_attrs if attr in proc_data},
             }
+            if "ttl_read" in data and data["ttl_read"] is not None:
+                data["ttl_read"] = normalize_ttl_read(data["ttl_read"])
+            data["has_ttl"] = has_teensy_ttl_data(proc_data)
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
@@ -88,6 +100,99 @@ class DLCProcessor(dj.Imported):
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
 
+            return None
+
+
+@schema
+class TeensyBarcodes(dj.Computed):
+    """Barcode events decoded from the TTL signal sampled by the Teensy."""
+
+    definition = """
+    -> DLCProcessor
+    ---
+    decoder_parameters: <blob>  # Parameters supplied to the decoder
+    extraction_status: enum('success','no_events')  # Extraction outcome
+    event_count: int32  # Number of decoded barcode events
+    quality_summary: <blob>  # Decoder diagnostics and signal-quality values
+    """
+
+    key_source = DLCProcessor & {"has_ttl": True}
+    decoder_config = BarcodeDecoderConfig()
+
+    class Event(dj.Part):
+        definition = """
+        -> master
+        barcode_index: int32  # Zero-based event order in the stream
+        ---
+        barcode_value: int64  # Integer payload encoded by the barcode
+        onset_sample: int64  # Teensy millisecond timestamp at event onset
+        onset_time: float64  # Corresponding photodiode_time acquisition timestamp
+        onset_time_relative: float64  # onset_time relative to the session start_time
+        """
+
+    def make(self, key):
+        """Decode and store all barcodes in one Teensy TTL recording."""
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
+        try:
+            teensy_time, ttl_read, photodiode_time, start_time = (
+                DLCProcessor & key
+            ).fetch1(
+                "teensy_time",
+                "ttl_read",
+                "photodiode_time",
+                "start_time",
+            )
+            result = decode_teensy_barcodes(
+                teensy_time,
+                ttl_read,
+                photodiode_time,
+                start_time,
+                config=self.decoder_config,
+            )
+            status = "success" if result.events else "no_events"
+            self.insert1(
+                {
+                    **key,
+                    "decoder_parameters": self.decoder_config.to_dict(),
+                    "extraction_status": status,
+                    "event_count": len(result.events),
+                    "quality_summary": result.quality,
+                }
+            )
+            if result.events:
+                self.Event.insert(
+                    [
+                        {
+                            **key,
+                            "barcode_index": event.index,
+                            "barcode_value": event.value,
+                            "onset_sample": event.onset_sample,
+                            "onset_time": event.onset_time,
+                            "onset_time_relative": event.onset_time_relative,
+                        }
+                        for event in result.events
+                    ]
+                )
+            logger.info(
+                "%s extracted %d Teensy barcodes for %s",
+                self.__class__.__name__,
+                len(result.events),
+                key,
+            )
+
+        except Exception as err:
+            dataset = key["dataset"]
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
+            logger.warning(
+                "Can't populate %s, key: %s. Error: %s.",
+                self.__class__.__name__,
+                key,
+                err,
+            )
             return None
 
 

@@ -454,6 +454,7 @@ class TestConnectMode:
         from vr4mice.schema import dlc
 
         assert hasattr(dlc, "DLCProcessor")
+        assert hasattr(dlc, "TeensyBarcodes")
         assert hasattr(dlc, "DLCKptsDf")
         assert hasattr(dlc, "SyncDLCKptsDf")
         assert hasattr(dlc, "OfflineKinematics")

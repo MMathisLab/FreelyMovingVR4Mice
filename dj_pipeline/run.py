@@ -149,6 +149,11 @@ if __name__ == "__main__":
 
         create_folder_if_not_exist("/data/summary_plots")
         populate_pending(dlc.DLCProcessor, vr4mice.DLC, logger=logger)
+        populate_pending(
+            dlc.TeensyBarcodes,
+            dlc.DLCProcessor & {"has_ttl": True},
+            logger=logger,
+        )
         populate_pending(dlc.DLCKptsDf, vr4mice.DLC, logger=logger)
         populate_pending(dlc.SyncDLCKptsDf, dlc.DLCKptsDf, logger=logger)
         populate_pending(dlc.OfflineKinematics, dlc.SyncDLCKptsDf, logger=logger)
