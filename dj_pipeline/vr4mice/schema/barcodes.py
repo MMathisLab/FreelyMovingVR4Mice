@@ -41,7 +41,7 @@ class TeensyBarcodes(dj.Computed):
         barcode_value: int64  # Integer payload encoded by the barcode
         onset_sample: int64  # Teensy millisecond timestamp at event onset
         onset_time: float64  # Corresponding photodiode_time acquisition timestamp
-        onset_time_relative: float64  # Nearest base_analysis.DataFrame step_time
+        onset_time_unity: float64  # Nearest base_analysis.DataFrame step_time
         """
 
     def make(self, key):
@@ -90,7 +90,7 @@ class TeensyBarcodes(dj.Computed):
                             "barcode_value": event.value,
                             "onset_sample": event.onset_sample,
                             "onset_time": event.onset_time,
-                            "onset_time_relative": onset_step_time,
+                            "onset_time_unity": onset_step_time,
                         }
                         for event, onset_step_time in zip(
                             result.events, event_step_times, strict=True
