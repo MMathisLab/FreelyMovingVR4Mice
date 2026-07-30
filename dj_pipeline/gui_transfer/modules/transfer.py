@@ -212,7 +212,7 @@ class Transfer(Template):
         Returns:
           dict or None: The transfer file for the specified key, or all transfer files.
         """
-        if key is not None and key in self.get_keys():
+        if key is not None and key in self.transfer_file:
             return self.transfer_file[key]
 
         if send is True:
@@ -227,10 +227,17 @@ class Transfer(Template):
     def get_processed_files(self):
         """
         Get files that should be moved to processed_path after a successful submit.
+
+        Every file that was actually transferred (i.e. not remote-only, see
+        _path_is_remote) moves to processed_path once submit succeeds -
+        that's teensy/dlc/camera/proc plus the GUI-generated gui_output.
+        video_path is excluded: videos stay on the rig, they're never
+        transferred, so there's nothing to move.
         """
         ret = list()
-        for key in ("gui_output", "teensy_path"):
-            info = self.get_transfer_files(key=key)
+        for key, info in self.transfer_file.items():
+            if _path_is_remote(key):
+                continue
             if info:
                 ret.append(info)
         return ret
