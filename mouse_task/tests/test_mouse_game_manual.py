@@ -42,7 +42,7 @@ class TestPositionCoordinates(unittest.TestCase):
         self.mouse_report_delay = 0.0
         self.slit_size = [4.0, 4.0, 1]
         self.slit_depth = 0.1
-        self.target_selection = 4.0
+        self.target_selection = 2.0
         self.distractor_selection = 3.0
         self.occlusion_type = 0.0
         self.camera_type = 1.0
