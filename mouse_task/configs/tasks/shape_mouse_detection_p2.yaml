@@ -13,10 +13,9 @@ params:
   - 4.0
   - 1
   slit_depth: 0.02
-  target_selection: 10.0
-  distractor_selection: 4.0
+  target_selection: 4.0
+  distractor_selection: 10.0
   target_spread: 3.0
   target_rotation: 15.0
-  velocity_threshold: 5.0
   distractor: 0.0
   target_distance: 4.0
