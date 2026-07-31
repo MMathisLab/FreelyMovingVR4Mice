@@ -33,6 +33,12 @@ DEFAULT_TAIL_LENGTH = SPHERE_RADIUS * 2.1
 
 # Set this to the absolute path of the directory where you want to export objects.
 EXPORT_DIR = "/tmp/freelymovingvr4mice_exports"
+if EXPORT_DIR == "/tmp/freelymovingvr4mice_exports":
+    raise ValueError(
+        "Set EXPORT_DIR to your own absolute export directory before running this script."
+    )
+if not os.path.isabs(EXPORT_DIR):
+    raise ValueError("EXPORT_DIR must be an absolute path.")
 
 
 def create_shared_sphere(name, location):
