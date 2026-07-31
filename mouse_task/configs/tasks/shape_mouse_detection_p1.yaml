@@ -18,5 +18,6 @@ params:
   target_spread: 3.0
   target_rotation: 15.0
   start_box_delay: 0.1
+  velocity_threshold: 20.0
   distractor: 0.0
   target_distance: 4.0
