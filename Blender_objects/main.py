@@ -31,7 +31,8 @@ TAIL_VERTS = 64
 TANGENT_EPSILON = SPHERE_RADIUS * 1e-4
 DEFAULT_TAIL_LENGTH = SPHERE_RADIUS * 2.1
 
-EXPORT_DIR = "/your/absolute/path/"  # <-- change this before running
+# Set this to the absolute path of the directory where you want to export objects.
+EXPORT_DIR = "/tmp/freelymovingvr4mice_exports"
 
 
 def create_shared_sphere(name, location):
