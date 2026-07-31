@@ -8,7 +8,7 @@ params:
   session_label:
   - ar_shape_discrim_narrow_occluders_inv
   epoch_labels:
-  - pacman_vs_teardrop
+  - teardrop_vs_pacman
   slit_size:
   - 5.0
   - 15.0

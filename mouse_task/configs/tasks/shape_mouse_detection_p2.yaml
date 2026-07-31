@@ -7,7 +7,7 @@ params:
   session_label:
   - ar_shape_detection_velthr
   epoch_labels:
-  - single_wide_pacman
+  - single_teardrop
   slit_size:
   - 4.0
   - 4.0
