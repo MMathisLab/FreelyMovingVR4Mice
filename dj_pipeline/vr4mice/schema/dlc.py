@@ -6,10 +6,6 @@ import datajoint as dj
 import numpy as np
 import pandas as pd
 
-from vr4mice.analysis.barcodes import (
-    has_teensy_ttl_data,
-    normalize_ttl_read,
-)
 from vr4mice.schema import vr4mice
 import vr4mice.analysis.dlc_helpers as dlc_helpers
 from vr4mice.utils import logger, schema_config
@@ -18,6 +14,8 @@ schema_name = "dlc"
 schema = schema_config.get_schema(schema_name, locals())
 
 logger = logger.Logger.get_logger()
+
+_LEGACY_TEENSY_ATTRIBUTES = {"teensy_time", "ttl_read", "has_ttl"}
 
 
 def _complete_dlc_key(key: dict) -> dict:
@@ -53,9 +51,6 @@ class DLCProcessor(dj.Imported):
     y_pos: <blob>
     heading_direction: <blob>
     head_angle: <blob>
-    teensy_time=NULL: <blob>  # ms timestamp from the Teensy microcontroller of the analog/digital read
-    ttl_read=NULL: <blob>  # Barcode TTL signal for Ephys sync
-    has_ttl=0: bool  # True if the DLC session has a TTL signal for Ephys sync
     """
 
     def make(self, key):
@@ -79,14 +74,15 @@ class DLCProcessor(dj.Imported):
             key = _complete_dlc_key(key)  # TODO: add allow_direct_insert in arg
 
             # PROC files may include metadata (e.g. signal_type) not stored in DLCProcessor
-            table_attrs = set(self.heading.names) - set(self.primary_key)
+            table_attrs = (
+                set(self.heading.names)
+                - set(self.primary_key)
+                - _LEGACY_TEENSY_ATTRIBUTES
+            )
             data = {
                 **key,
                 **{attr: proc_data[attr] for attr in table_attrs if attr in proc_data},
             }
-            if "ttl_read" in data and data["ttl_read"] is not None:
-                data["ttl_read"] = normalize_ttl_read(data["ttl_read"])
-            data["has_ttl"] = has_teensy_ttl_data(proc_data)
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 

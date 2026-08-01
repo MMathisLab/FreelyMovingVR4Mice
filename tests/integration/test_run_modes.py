@@ -462,6 +462,7 @@ class TestConnectMode:
         """Verify barcodes schema imports without error."""
         from vr4mice.schema import barcodes
 
+        assert hasattr(barcodes, "TeensyTTL")
         assert hasattr(barcodes, "TeensyBarcodes")
 
     def test_interpolated_trajectories_schema_imports(self, dj_config):

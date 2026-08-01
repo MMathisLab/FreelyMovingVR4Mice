@@ -150,6 +150,11 @@ if __name__ == "__main__":
         create_folder_if_not_exist("/data/summary_plots")
         populate_pending(dlc.DLCProcessor, vr4mice.DLC, logger=logger)
         populate_pending(
+            barcodes.TeensyTTL,
+            barcodes.TeensyTTL.key_source,
+            logger=logger,
+        )
+        populate_pending(
             barcodes.TeensyBarcodes,
             barcodes.TeensyBarcodes.key_source,
             logger=logger,

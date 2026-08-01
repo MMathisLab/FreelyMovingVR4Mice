@@ -3,7 +3,12 @@
 import datajoint as dj
 import numpy as np
 
-from vr4mice.analysis.barcodes import BarcodeDecoderConfig, decode_teensy_barcodes
+from vr4mice.analysis.barcodes import (
+    BarcodeDecoderConfig,
+    decode_teensy_barcodes,
+    has_teensy_ttl_data,
+    normalize_ttl_read,
+)
 import vr4mice.analysis.dlc_helpers as dlc_helpers
 from vr4mice.schema import base_analysis, dlc, vr4mice
 from vr4mice.utils import logger, schema_config
@@ -13,12 +18,74 @@ schema = schema_config.get_schema(schema_name, locals())
 
 logger = logger.Logger.get_logger()
 
+TEENSY_TTL_START_DATE = "2026-07-01"
+
+
+@schema
+class TeensyTTL(dj.Imported):
+    """Raw Teensy barcode channel imported from a DLC PROC file."""
+
+    definition = """
+    -> vr4mice.DLC
+    ---
+    teensy_time=NULL: <blob>  # Teensy millisecond timestamp for each TTL sample
+    ttl_read=NULL: <blob>  # Barcode TTL samples stored as integer zero or one
+    has_ttl=0: bool  # True when aligned, non-empty Teensy TTL arrays are available
+    """
+
+    key_source = vr4mice.DLC & f"doe > '{TEENSY_TTL_START_DATE}'"
+
+    def make(self, key):
+        """Load the raw Teensy TTL arrays from one DLC PROC file."""
+        if self & key:
+            logger.debug(
+                "%s already contains key %s; skipping duplicate",
+                self.__class__.__name__,
+                key,
+            )
+            return
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+
+        try:
+            proc_filepath = (vr4mice.DLC & key).fetch1("proc_filepath")
+            proc_data = np.load(proc_filepath, allow_pickle=True)
+            if isinstance(proc_data, np.ndarray) and proc_data.ndim == 0:
+                proc_data = proc_data.item()
+
+            data = {
+                **key,
+                "has_ttl": has_teensy_ttl_data(proc_data),
+            }
+            if "teensy_time" in proc_data:
+                data["teensy_time"] = proc_data["teensy_time"]
+            if "ttl_read" in proc_data and proc_data["ttl_read"] is not None:
+                data["ttl_read"] = normalize_ttl_read(proc_data["ttl_read"])
+
+            self.insert1(data, allow_direct_insert=True)
+            logger.info("%s populated for %s", self.__class__.__name__, key)
+
+        except Exception as err:
+            dataset = key["dataset"]
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
+            logger.warning(
+                "Can't populate %s, key: %s. Error: %s.",
+                self.__class__.__name__,
+                key,
+                err,
+            )
+            return None
+
 
 @schema
 class TeensyBarcodes(dj.Computed):
     """Barcode events decoded from the TTL signal sampled by the Teensy."""
 
     definition = """
+    -> TeensyTTL
     -> dlc.DLCProcessor
     -> base_analysis.DataFrame
     ---
@@ -28,8 +95,10 @@ class TeensyBarcodes(dj.Computed):
     quality_summary: <blob>  # Decoder diagnostics and signal-quality values
     """
 
-    key_source = (dlc.DLCProcessor & {"has_ttl": True}).proj() * (
-        base_analysis.DataFrame.proj()
+    key_source = (
+        (TeensyTTL & {"has_ttl": True}).proj()
+        * dlc.DLCProcessor.proj()
+        * base_analysis.DataFrame.proj()
     )
     decoder_config = BarcodeDecoderConfig()
 
@@ -50,9 +119,11 @@ class TeensyBarcodes(dj.Computed):
             return
 
         try:
-            teensy_time, ttl_read, photodiode_time = (dlc.DLCProcessor & key).fetch1(
+            teensy_time, ttl_read = (TeensyTTL & key).fetch1(
                 "teensy_time",
                 "ttl_read",
+            )
+            photodiode_time = (dlc.DLCProcessor & key).fetch1(
                 "photodiode_time",
             )
             result = decode_teensy_barcodes(

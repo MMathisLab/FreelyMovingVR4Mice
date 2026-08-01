@@ -156,6 +156,14 @@ def main():
             lambda: populate_pending(dlc.DLCProcessor, vr4mice.DLC, logger=logger),
         )
         run_step(
+            "barcodes.TeensyTTL.populate",
+            lambda: populate_pending(
+                barcodes.TeensyTTL,
+                barcodes.TeensyTTL.key_source,
+                logger=logger,
+            ),
+        )
+        run_step(
             "barcodes.TeensyBarcodes.populate",
             lambda: populate_pending(
                 barcodes.TeensyBarcodes,
