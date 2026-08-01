@@ -15,8 +15,6 @@ schema = schema_config.get_schema(schema_name, locals())
 
 logger = logger.Logger.get_logger()
 
-_LEGACY_TEENSY_ATTRIBUTES = {"teensy_time", "ttl_read", "has_ttl"}
-
 
 def _complete_dlc_key(key: dict) -> dict:
     """Return the full `vr4mice.DLC` primary key for `key` when needed."""
@@ -74,11 +72,7 @@ class DLCProcessor(dj.Imported):
             key = _complete_dlc_key(key)  # TODO: add allow_direct_insert in arg
 
             # PROC files may include metadata (e.g. signal_type) not stored in DLCProcessor
-            table_attrs = (
-                set(self.heading.names)
-                - set(self.primary_key)
-                - _LEGACY_TEENSY_ATTRIBUTES
-            )
+            table_attrs = set(self.heading.names) - set(self.primary_key)
             data = {
                 **key,
                 **{attr: proc_data[attr] for attr in table_attrs if attr in proc_data},
