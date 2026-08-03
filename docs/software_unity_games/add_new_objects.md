@@ -118,3 +118,59 @@ To add this newly made object to the list of objects that are used in the game:
 You just created a new target! 💫 The object can then be selected when running the `Vr4mice` game by changing either the `Target_selection` or `Distractor_selection` parameters in the python GUI with the number used corresponding to the index within the `Targets` list.
 
 Now, to make the object available for all users (and your future self), you can follow {doc}`../../docs/Unity_games/update_Unity_Game` to push the changes on the GitHub repo.
+
+## Current objects available in the game
+
+(sec:target-distractor-list)=
+
+```{list-table} **List of available targets/distractors**
+:align: center
+:width: 500px
+:header-rows: 1
+
+* - ID
+  - Name
+  - Notes
+* - `0.`
+  - white cube
+  - Used internally. Do NOT modify
+* - `1.`
+  - black cube
+  - Used internally. Do NOT modify
+* - `2.`
+  - white teardrop
+  - Original white teardrop
+* - `3.`
+  - black teardrop
+  - Original black teardrop
+* - `4.`
+  - white teardrop
+  - v2 iteration of white teardrop
+* - `5.`
+  - black teardrop
+  - v2 iteration of black teardrop
+* - `6.`
+  - white pacman 10
+  - v2
+* - `7.`
+  - black pacman 10
+  - v2
+* - `8.`
+  - white pacman 20
+  - v2
+* - `9.`
+  - black pacman 20
+  - v2
+* - `10.`
+  - white pacman 30
+  - v2
+* - `11.`
+  - black pacman 30
+  - v2
+* - `12.`
+  - white threetails
+  - v2
+* - `13.`
+  - black threetails
+  - v2
+```
