@@ -18,7 +18,7 @@ schema = schema_config.get_schema(schema_name, locals())
 
 logger = logger.Logger.get_logger()
 
-TEENSY_TTL_START_DATE = "2026-07-01"
+TEENSY_TTL_START_DATE = "2026-06-01"
 
 
 @schema
