@@ -351,6 +351,26 @@ def find_closest_indices(pose_time: List[int], step_time: List[int]) -> List[int
     return closest_indices
 
 
+def align_timestamps_to_step_time(
+    timestamps: Union[List[float], npt.NDArray],
+    step_time: Union[List[float], npt.NDArray],
+) -> npt.NDArray:
+    """Map timestamps to their nearest values on a game ``step_time`` timebase."""
+    timestamps = np.asarray(timestamps, dtype=float)
+    step_time = np.asarray(step_time, dtype=float)
+    if timestamps.ndim != 1 or step_time.ndim != 1:
+        raise ValueError("timestamps and step_time must be one-dimensional")
+    if step_time.size == 0:
+        raise ValueError("step_time must not be empty")
+    if not np.isfinite(timestamps).all() or not np.isfinite(step_time).all():
+        raise ValueError("timestamps and step_time must contain only finite values")
+    if np.any(np.diff(step_time) < 0):
+        raise ValueError("step_time must be sorted in ascending order")
+
+    indices = find_closest_indices(step_time.tolist(), timestamps.tolist())
+    return step_time[np.asarray(indices, dtype=int)]
+
+
 def compute_circular_angular_velocity(
     angles: Union[list, npt.NDArray], time_intervals: Union[list, npt.NDArray]
 ) -> npt.NDArray:

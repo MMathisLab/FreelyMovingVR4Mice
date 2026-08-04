@@ -88,7 +88,7 @@ if __name__ == "__main__":
     connect(tag="")
 
     if args.mode == "connect":
-        from vr4mice.schema import vr4mice, base_analysis, dlc, base
+        from vr4mice.schema import barcodes, base, base_analysis, dlc, vr4mice
 
         pass
 
@@ -144,11 +144,21 @@ if __name__ == "__main__":
 
     elif args.mode == "dlc":
         # NOTE: populate and analysis have to be run before
-        from vr4mice.schema import dlc, vr4mice
+        from vr4mice.schema import barcodes, dlc, vr4mice
         from vr4mice.utils.populate_helpers import populate_pending
 
         create_folder_if_not_exist("/data/summary_plots")
         populate_pending(dlc.DLCProcessor, vr4mice.DLC, logger=logger)
+        populate_pending(
+            barcodes.TeensyTTL,
+            barcodes.TeensyTTL.key_source,
+            logger=logger,
+        )
+        populate_pending(
+            barcodes.TeensyBarcodes,
+            barcodes.TeensyBarcodes.key_source,
+            logger=logger,
+        )
         populate_pending(dlc.DLCKptsDf, vr4mice.DLC, logger=logger)
         populate_pending(dlc.SyncDLCKptsDf, dlc.DLCKptsDf, logger=logger)
         populate_pending(dlc.OfflineKinematics, dlc.SyncDLCKptsDf, logger=logger)
