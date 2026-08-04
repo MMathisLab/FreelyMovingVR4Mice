@@ -1,6 +1,14 @@
 import numpy as np
 from dlclive.processor.processor import Processor
-from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor
+
+try:
+    from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor
+except ModuleNotFoundError:
+    PROCESSOR_REGISTRY = {}
+
+    def register_processor(cls):
+        """No-op fallback when dlclivegui is not installed."""
+        return cls
 from math import sqrt, acos, atan2, copysign, degrees
 import pickle
 

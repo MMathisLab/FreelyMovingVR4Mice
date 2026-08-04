@@ -5,7 +5,15 @@ import warnings
 from pathlib import Path
 
 from typing import Any, Dict
-from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor
+
+try:
+    from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor
+except ModuleNotFoundError:
+    PROCESSOR_REGISTRY = {}
+
+    def register_processor(cls):
+        """No-op fallback when dlclivegui is not installed."""
+        return cls
 
 try:
     from latency_tests.Teensy_latency.TeensyLatency import TeensyLatency

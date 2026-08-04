@@ -43,12 +43,10 @@ class TeensyLatency:
         self.start_read_time = time.time()
         self._reader_thread = threading.Thread(target=self.read_on_thread, daemon=True)
         self._reader_thread.start()
-
     def _stop_reading(self):
         """Stop reading from teensy and close serial connection."""
         self.reading_teensy = False
         self.stop_event.set()
-
     def close_serial(self):
         self._stop_reading()
         if hasattr(self, '_reader_thread') and self._reader_thread.is_alive():
