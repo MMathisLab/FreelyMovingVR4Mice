@@ -1,4 +1,4 @@
-class_name: DetectionWithVelocityThresholdTask
+class_name: DetWithVelThrTask
 description: |
   Detection task with velocity threshold to initiate the trials.
 
@@ -9,7 +9,7 @@ params:
   epoch_labels:
   - single_teardrop
   slit_size:
-  - 19.0
-  - 20.0
-  - 2
+  - 4.0
+  - 4.0
+  - 1
   distractor: 0.0

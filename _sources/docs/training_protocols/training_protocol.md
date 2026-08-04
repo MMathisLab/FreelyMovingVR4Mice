@@ -321,43 +321,6 @@ This is currently the **test stage**. Mice that have reached it should do **== 5
 
 Note that you can mix and match different targets and distators by changing the `target_selection` and `distractor_selection` parameters. See {ref}`sec:target-distractor-list` for a list of the floats used and their corresponding targets/distractors that can be spawned.
 
-(sec:target-distractor-list)=
-
-```{list-table} **List of available targets/distractors**
-:align: center
-:width: 300px
-:header-rows: 1
-
-* - ID
-  - Name
-* - `0.`
-  - white cube
-* - `1.`
-  - black cube
-* - `2.`
-  - grey teardrop
-* - `3.`
-  - grey pacman
-* - `4.`
-  - black teardrop
-* - `5.`
-  - black pacman
-* - `6.`
-  - white teardrop
-* - `7.`
-  - white pacman
-* - `8.`
-  - zebra teardrop
-* - `9.`
-  - zebra ball
-* - `10.`
-  - white ball
-* - `11.`
-  - light gray zebra teardrop
-* - `12.`
-  - dark gray zebra teardrop
-```
-
 ## Materials
 
 - Transfer tunnels: [Braintree Scientific, inc., Red Rodent Tunnel (REDTUN-M)](https://www.braintreesci.com/restraint-containment-handling/handlingenrichment/red-rodent-tunnel/)

@@ -118,3 +118,7 @@ To add this newly made object to the list of objects that are used in the game:
 You just created a new target! 💫 The object can then be selected when running the `Vr4mice` game by changing either the `Target_selection` or `Distractor_selection` parameters in the python GUI with the number used corresponding to the index within the `Targets` list.
 
 Now, to make the object available for all users (and your future self), you can follow {doc}`../../docs/Unity_games/update_Unity_Game` to push the changes on the GitHub repo.
+
+## Current objects available in the game
+
+See {ref}`sec:target-distractor-list` in {doc}`../training_protocols/task_objects` for the up-to-date list of objects and their IDs. Remember to add your new object there so the list stays in sync with the `Targets` list.

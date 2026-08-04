@@ -70,7 +70,7 @@ const thebe_selector_output = ".output, .cell_output"
     <link rel="shortcut icon" href="../../_static/logo.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Contrast discrimination game parameters" href="contrast_discrimination_training_parameters.html" />
+    <link rel="next" title="Task objects" href="task_objects.html" />
     <link rel="prev" title="DLC processor file" href="../software_package/dlc_processor.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -262,6 +262,7 @@ const thebe_selector_output = ".output, .cell_output"
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Experiments - Training protocol and parameters</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Mouse training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="task_objects.html">Task objects</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contrast_discrimination_training_parameters.html">Contrast discrimination game parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="shape_discrimination_training_parameters.html">Shape discrimination game parameters</a></li>
 </ul>
@@ -628,7 +629,7 @@ rim of arena more than once)</p></li>
 <li><p>Shape discrimination task: mice are trained to distinguish between a Pacman (target) and a teardrop (distractor) with identical color (white).</p></li>
 </ul>
 <p>Below, the training stages are outlined in more detail, referencing the game parameters and the Python task script used for both protocols. In both protocols, the test stage consists of adding occluders to (partially) hide the objects, encouraging mice to find a way to gather more information before making a decision.</p>
-<p>Note that it is possible to custom-select the objects for the tasks. To select the target type, change the <code class="docutils literal notranslate"><span class="pre">target_selection</span></code> parameter in the GUI (i.e. <code class="docutils literal notranslate"><span class="pre">target_selection</span> <span class="pre">=</span> <span class="pre">6.0</span></code> for the white single teardrop object). To change the distractor type, change the value of the <code class="docutils literal notranslate"><span class="pre">distractor_type</span></code> parameter. For a comprehensive list of available objects to select from, have a look at the <a class="reference internal" href="#sec-target-distractor-list"><span class="std std-ref">List of available targets/distractors</span></a>.</p>
+<p>Note that it is possible to custom-select the objects for the tasks. To select the target type, change the <code class="docutils literal notranslate"><span class="pre">target_selection</span></code> parameter in the GUI (i.e. <code class="docutils literal notranslate"><span class="pre">target_selection</span> <span class="pre">=</span> <span class="pre">6.0</span></code> for the white single teardrop object). To change the distractor type, change the value of the <code class="docutils literal notranslate"><span class="pre">distractor_type</span></code> parameter. For a comprehensive list of available objects to select from, have a look at the <a class="reference internal" href="task_objects.html#sec-target-distractor-list"><span class="std std-ref">List of available targets/distractors</span></a>.</p>
 <div class="admonition-important-applies-to-all-training-stages admonition">
 <p class="admonition-title">Important (applies to <strong>ALL</strong> training stages)</p>
 <p>On each training day, between sessions with different mice, make sure to clean the arena. First, wipe the floor with paper towels and some water, then take some new paper towels and wipe both floor and walls with either 70% isopropyl alcohol or 70% ethanol. This is to make sure no odors from the previous mouse remain and is necessary to reduce stress in the animals.</p>
@@ -812,57 +813,7 @@ rim of arena more than once)</p></li>
 <li><p>Hover over stimulus to view if desired.</p></li>
 <li><p>Note start time.</p></li>
 </ul>
-<p>Note that you can mix and match different targets and distators by changing the <code class="docutils literal notranslate"><span class="pre">target_selection</span></code> and <code class="docutils literal notranslate"><span class="pre">distractor_selection</span></code> parameters. See <a class="reference internal" href="#sec-target-distractor-list"><span class="std std-ref">List of available targets/distractors</span></a> for a list of the floats used and their corresponding targets/distractors that can be spawned.</p>
-<div class="pst-scrollable-table-container"><span id="sec-target-distractor-list"></span><table class="table table-center" id="id2" style="width: 300px">
-<caption><span class="caption-number">Table 1 </span><span class="caption-text"><strong>List of available targets/distractors</strong></span><a class="headerlink" href="#id2" title="Permalink to this table">#</a></caption>
-<thead>
-<tr class="row-odd"><th class="head"><p>ID</p></th>
-<th class="head"><p>Name</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">0.</span></code></p></td>
-<td><p>white cube</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">1.</span></code></p></td>
-<td><p>black cube</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">2.</span></code></p></td>
-<td><p>grey teardrop</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">3.</span></code></p></td>
-<td><p>grey pacman</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">4.</span></code></p></td>
-<td><p>black teardrop</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">5.</span></code></p></td>
-<td><p>black pacman</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">6.</span></code></p></td>
-<td><p>white teardrop</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">7.</span></code></p></td>
-<td><p>white pacman</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">8.</span></code></p></td>
-<td><p>zebra teardrop</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">9.</span></code></p></td>
-<td><p>zebra ball</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">10.</span></code></p></td>
-<td><p>white ball</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">11.</span></code></p></td>
-<td><p>light gray zebra teardrop</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">12.</span></code></p></td>
-<td><p>dark gray zebra teardrop</p></td>
-</tr>
-</tbody>
-</table>
-</div>
+<p>Note that you can mix and match different targets and distators by changing the <code class="docutils literal notranslate"><span class="pre">target_selection</span></code> and <code class="docutils literal notranslate"><span class="pre">distractor_selection</span></code> parameters. See <a class="reference internal" href="task_objects.html#sec-target-distractor-list"><span class="std std-ref">List of available targets/distractors</span></a> for a list of the floats used and their corresponding targets/distractors that can be spawned.</p>
 </section>
 </section>
 <section id="materials">
@@ -915,11 +866,11 @@ rim of arena more than once)</p></li>
       </div>
     </a>
     <a class="right-next"
-       href="contrast_discrimination_training_parameters.html"
+       href="task_objects.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Contrast discrimination game parameters</p>
+        <p class="prev-next-title">Task objects</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

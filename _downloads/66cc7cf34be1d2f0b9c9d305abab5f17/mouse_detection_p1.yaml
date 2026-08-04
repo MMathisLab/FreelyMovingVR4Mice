@@ -1,4 +1,4 @@
-class_name: DetectionWithoutVelocityThresholdTask
+class_name: DetWithoutVelThrTask
 description: |
   Detection task without velocity threshold to initiate the trials.
 

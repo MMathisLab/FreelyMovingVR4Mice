@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Add new target objects &#8212; FreelyMovingVR4Mice</title>
+    <title>Task objects &#8212; FreelyMovingVR4Mice</title>
   
   
   
@@ -64,12 +64,12 @@ const thebe_selector_input = "pre"
 const thebe_selector_output = ".output, .cell_output"
 </script>
     <script async="async" src="../../_static/sphinx-thebe.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'docs/software_unity_games/add_new_objects';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'docs/training_protocols/task_objects';</script>
     <link rel="shortcut icon" href="../../_static/logo.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Setup &amp; Usage" href="../software/install_dj_pipeline.html" />
-    <link rel="prev" title="Rebuild a Unity game" href="build_unity_game.html" />
+    <link rel="next" title="Contrast discrimination game parameters" href="contrast_discrimination_training_parameters.html" />
+    <link rel="prev" title="Mouse training" href="training_protocol.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -236,11 +236,11 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="../software_installation/create_desktop_icon.html">Create a desktop icon to launch Teensy experiments</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - Unity Games</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="ar_game.html">Install the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
-<li class="toctree-l1"><a class="reference internal" href="update_unity_game.html">Update the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
-<li class="toctree-l1"><a class="reference internal" href="build_unity_game.html">Rebuild a Unity game</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Add new target objects</a></li>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../software_unity_games/ar_game.html">Install the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../software_unity_games/update_unity_game.html">Update the <code class="docutils literal notranslate"><span class="pre">AugmentedReality</span></code> game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../software_unity_games/build_unity_game.html">Rebuild a Unity game</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../software_unity_games/add_new_objects.html">Add new target objects</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Software - VR4Mice DataJoint</span></p>
 <ul class="nav bd-sidenav">
@@ -258,11 +258,11 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l1"><a class="reference internal" href="../software_package/dlc_processor.html">DLC processor file</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Experiments - Training protocol and parameters</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../training_protocols/training_protocol.html">Mouse training</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../training_protocols/task_objects.html">Task objects</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../training_protocols/contrast_discrimination_training_parameters.html">Contrast discrimination game parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../training_protocols/shape_discrimination_training_parameters.html">Shape discrimination game parameters</a></li>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="training_protocol.html">Mouse training</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Task objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrast_discrimination_training_parameters.html">Contrast discrimination game parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shape_discrimination_training_parameters.html">Shape discrimination game parameters</a></li>
 </ul>
 
     </div>
@@ -317,7 +317,7 @@ const thebe_selector_output = ".output, .cell_output"
       
       
       
-      <li><a href="../../_sources/docs/software_unity_games/add_new_objects.md" target="_blank"
+      <li><a href="../../_sources/docs/training_protocols/task_objects.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -388,9 +388,7 @@ document.write(`
   </button>
 `);
 </script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="fa-solid fa-list"></span>
-</label>
+
 </div></div>
       
     </div>
@@ -401,23 +399,11 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Add new target objects</h1>
+    <h1>Task objects</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
             
-            <div>
-                <h2> Contents </h2>
-            </div>
-            <nav aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sculpting-objects-in-blender">Sculpting objects in Blender</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#importing-the-file-into-unity">Importing the file into Unity</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-a-material">Adding a material</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-the-object-to-the-list-of-targets-and-distractors">Adding the object to the list of targets and distractors</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#current-objects-available-in-the-game">Current objects available in the game</a></li>
-</ul>
-            </nav>
         </div>
     </div>
 </div>
@@ -427,83 +413,82 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="add-new-target-objects">
-<h1>Add new target objects<a class="headerlink" href="#add-new-target-objects" title="Permalink to this heading">#</a></h1>
-<p>This page describes how to add new targets and distractor objects to the unity game such as the tear drop and the white pacman below.</p>
-<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/black_white_pacman.png"><img alt="black_white" class="bg-primary mb-1 align-center" src="../../_images/black_white_pacman.png" style="width: 800px;" /></a>
-<section id="sculpting-objects-in-blender">
-<h2>Sculpting objects in Blender<a class="headerlink" href="#sculpting-objects-in-blender" title="Permalink to this heading">#</a></h2>
-<p>To create new objects, or to edit the shape of existing objects, you will need to use <a class="reference external" href="https://www.blender.org/">Blender</a>:</p>
-<ol class="arabic simple">
-<li><p>To install Blender visit <a class="reference external" href="https://www.blender.org/">their website</a>.</p></li>
-</ol>
-<p><strong>Useful resources on how to use Blender:</strong></p>
-<ul class="simple">
-<li><p>Details on how to make and sculpt objects can be found in this <a class="reference external" href="https://www.youtube.com/watch?v=AMQcuRHWyOg">youtube tutorial</a>.</p></li>
-<li><p><a class="reference external" href="https://blender.stackexchange.com/questions/199456/how-to-model-a-teardrop-shape">This tutorial</a> was useful for creating the original tear drop.</p></li>
-</ul>
-<ol class="arabic" start="2">
-<li><p>When saving objects from Blender to use in Unity you want to export the selected object as a <code class="docutils literal notranslate"><span class="pre">.FBX</span> <span class="pre">format</span></code>. This is a format that is also readable by Unity. To do this you want to follow these steps:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">File</span></code> &gt;&gt; <code class="docutils literal notranslate"><span class="pre">Export</span></code> &gt;&gt; <code class="docutils literal notranslate"><span class="pre">Fbx</span></code>.</p></li>
-</ol>
-<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/save_as_fbx.png"><img alt="save_as_fbx" class="bg-primary mb-1 align-center" src="../../_images/save_as_fbx.png" style="width: 700px;" /></a>
-<ol class="arabic simple" start="2">
-<li><p>Make sure you tick <code class="docutils literal notranslate"><span class="pre">Selected</span> <span class="pre">Objects</span></code> only and click on <code class="docutils literal notranslate"><span class="pre">Export</span> <span class="pre">FBX</span></code>.</p></li>
-</ol>
-<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/fbx_save_options.png"><img alt="fbx_save_options" class="bg-primary mb-1 align-center" src="../../_images/fbx_save_options.png" style="width: 700px;" /></a>
-</li>
-</ol>
-<p>ℹ️ If you have any issues with this, you can find more detailed steps alongside an explanation of the different save options <a class="reference external" href="https://all3dp.com/2/blender-to-unity-how-to-import-blender-models-in-unity/#:~:text=Importing%20a%20Blender%20File%20to%20Unity,-Importing%20a%20Blender&amp;text=Alternatively%2C%20move%20and%20save%20the,That's%20it">here</a>.</p>
-</section>
-<section id="importing-the-file-into-unity">
-<h2>Importing the file into Unity<a class="headerlink" href="#importing-the-file-into-unity" title="Permalink to this heading">#</a></h2>
-<p>To import the object into Unity</p>
-<ul>
-<li><p>Open the Unity editor.</p></li>
-<li><p>Click on the <code class="docutils literal notranslate"><span class="pre">asset</span> <span class="pre">tab</span></code> and then <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">asset</span></code> and find the <code class="docutils literal notranslate"><span class="pre">.fbx</span></code> file that you want to import.</p></li>
-<li><p>Once imported the object will appear in the editor. Put the object into the prefab folder in the unity project. You should see that this object has a little play button on it. If you click on this play button the object will unravel and reveal multiple objects. We only want the object that looks like a “mesh” so drag this into the game and it should appear as a pink object - the reason that the object is pink is because it has no material attached to it.</p>
-<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/importing_to_unity.png"><img alt="importing_to_unity" class="bg-primary mb-1 align-center" src="../../_images/importing_to_unity.png" style="width: 700px;" /></a>
-</li>
-</ul>
-</section>
-<section id="adding-a-material">
-<h2>Adding a material<a class="headerlink" href="#adding-a-material" title="Permalink to this heading">#</a></h2>
-<p>To create a new material:</p>
-<ul>
-<li><p>Click on the materials folder in the asset folder of the project tab.</p></li>
-<li><p>Right click on a spare space within this <code class="docutils literal notranslate"><span class="pre">folder</span></code> &gt;&gt; <code class="docutils literal notranslate"><span class="pre">Create</span></code> &gt;&gt; <code class="docutils literal notranslate"><span class="pre">Material</span></code>.</p>
-<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/create_material.png"><img alt="create_material" class="bg-primary mb-1 align-center" src="../../_images/create_material.png" style="width: 700px;" /></a>
-</li>
-<li><p>Give the material a name, i.e. <code class="docutils literal notranslate"><span class="pre">blue</span></code>.</p></li>
-<li><p>Click on it to get the inspector window for that object to pop up. Then you can click on the color picker and change the color of the material. In this case I have gone for a blue.</p>
-<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/create_material_2.png"><img alt="create_material_2" class="bg-primary mb-1 align-center" src="../../_images/create_material_2.png" style="width: 700px;" /></a>
-</li>
-<li><p>Drag an drop the material onto the object we just imported and it will turn it to the color of the material.</p>
-<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/create_material_3.png"><img alt="create_material_3" class="bg-primary mb-1 align-center" src="../../_images/create_material_3.png" style="width: 700px;" /></a>
-</li>
-<li><p>Drag this colored object into the prefab folder so that we can programmatically spawn it (rather than it always being present in the game!). And give it a clear name.</p></li>
-</ul>
-</section>
-<section id="adding-the-object-to-the-list-of-targets-and-distractors">
-<h2>Adding the object to the list of targets and distractors<a class="headerlink" href="#adding-the-object-to-the-list-of-targets-and-distractors" title="Permalink to this heading">#</a></h2>
-<p>To add this newly made object to the list of objects that are used in the game:</p>
-<ul>
-<li><p>In the hierarchy window, select <code class="docutils literal notranslate"><span class="pre">scenario</span></code> &gt;&gt; <code class="docutils literal notranslate"><span class="pre">plane</span></code>. This will open the inspector window for the plane object on the right hand side of the screen.</p>
-<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/target_spawner_1.png"><img alt="target_spawner_1" class="bg-primary mb-1 align-center" src="../../_images/target_spawner_1.png" style="width: 700px;" /></a>
-</li>
-<li><p>Scroll down in this window until you find the <code class="docutils literal notranslate"><span class="pre">target</span> <span class="pre">spawner</span></code> script.</p></li>
-<li><p>Scroll down some more and you will see a field called <code class="docutils literal notranslate"><span class="pre">Targets</span></code>. This <code class="docutils literal notranslate"><span class="pre">Targets</span></code> object is a list of individual game objects which can be spawned in the game. To add a new object increase the <code class="docutils literal notranslate"><span class="pre">size</span></code> parameter by 1 and then you will see an empty slot appear (it will say <code class="docutils literal notranslate"><span class="pre">None</span> <span class="pre">(Game</span> <span class="pre">Object)</span></code>). You can simply drag an drop the object that you recently imported onto this slot.</p>
-<a class="bg-primary mb-1 reference internal image-reference" href="../../_images/target_spawner_2.png"><img alt="target_spawner_2" class="bg-primary mb-1 align-center" src="../../_images/target_spawner_2.png" style="width: 400px;" /></a>
-</li>
-</ul>
-<p>You just created a new target! 💫 The object can then be selected when running the <code class="docutils literal notranslate"><span class="pre">Vr4mice</span></code> game by changing either the <code class="docutils literal notranslate"><span class="pre">Target_selection</span></code> or <code class="docutils literal notranslate"><span class="pre">Distractor_selection</span></code> parameters in the python GUI with the number used corresponding to the index within the <code class="docutils literal notranslate"><span class="pre">Targets</span></code> list.</p>
-<p>Now, to make the object available for all users (and your future self), you can follow <span class="xref std std-doc">../../docs/Unity_games/update_Unity_Game</span> to push the changes on the GitHub repo.</p>
-</section>
-<section id="current-objects-available-in-the-game">
-<h2>Current objects available in the game<a class="headerlink" href="#current-objects-available-in-the-game" title="Permalink to this heading">#</a></h2>
-<p>See <a class="reference internal" href="../training_protocols/task_objects.html#sec-target-distractor-list"><span class="std std-ref">List of available targets/distractors</span></a> in <a class="reference internal" href="../training_protocols/task_objects.html"><span class="doc">Task objects</span></a> for the up-to-date list of objects and their IDs. Remember to add your new object there so the list stays in sync with the <code class="docutils literal notranslate"><span class="pre">Targets</span></code> list.</p>
-</section>
+  <section class="tex2jax_ignore mathjax_ignore" id="task-objects">
+<h1>Task objects<a class="headerlink" href="#task-objects" title="Permalink to this heading">#</a></h1>
+<p>This is the single reference list of the objects that can be spawned as targets and
+distractors in the <code class="docutils literal notranslate"><span class="pre">Vr4mice</span></code> game. Select them by setting the <code class="docutils literal notranslate"><span class="pre">target_selection</span></code> and
+<code class="docutils literal notranslate"><span class="pre">distractor_selection</span></code> parameters in the python GUI to the ID of the object you want.</p>
+<p>Objects are matched by their index within the <code class="docutils literal notranslate"><span class="pre">Targets</span></code> list of the <code class="docutils literal notranslate"><span class="pre">target</span> <span class="pre">spawner</span></code>
+script, so the IDs below must stay in sync with that list. See
+<a class="reference internal" href="../software_unity_games/add_new_objects.html"><span class="doc">Add new target objects</span></a> for how to add a new object.</p>
+<div class="pst-scrollable-table-container"><span id="sec-target-distractor-list"></span><table class="table table-center" id="id1" style="width: 500px">
+<caption><span class="caption-number">Table 1 </span><span class="caption-text"><strong>List of available targets/distractors</strong></span><a class="headerlink" href="#id1" title="Permalink to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>ID</p></th>
+<th class="head"><p>Name</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">0.</span></code></p></td>
+<td><p>white cube</p></td>
+<td><p>Used internally. Do NOT modify</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">1.</span></code></p></td>
+<td><p>black cube</p></td>
+<td><p>Used internally. Do NOT modify</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">2.</span></code></p></td>
+<td><p>white teardrop</p></td>
+<td><p>Original white teardrop</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">3.</span></code></p></td>
+<td><p>black teardrop</p></td>
+<td><p>Original black teardrop</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">4.</span></code></p></td>
+<td><p>white teardrop</p></td>
+<td><p>v2 iteration of white teardrop</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">5.</span></code></p></td>
+<td><p>black teardrop</p></td>
+<td><p>v2 iteration of black teardrop</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">6.</span></code></p></td>
+<td><p>white pacman 10</p></td>
+<td><p>v2</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">7.</span></code></p></td>
+<td><p>black pacman 10</p></td>
+<td><p>v2</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">8.</span></code></p></td>
+<td><p>white pacman 20</p></td>
+<td><p>v2</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">9.</span></code></p></td>
+<td><p>black pacman 20</p></td>
+<td><p>v2</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">10.</span></code></p></td>
+<td><p>white pacman 30</p></td>
+<td><p>v2</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">11.</span></code></p></td>
+<td><p>black pacman 30</p></td>
+<td><p>v2</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">12.</span></code></p></td>
+<td><p>white threetails</p></td>
+<td><p>v2</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">13.</span></code></p></td>
+<td><p>black threetails</p></td>
+<td><p>v2</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </section>
 
     <script type="text/x-thebe-config">
@@ -519,7 +504,7 @@ document.write(`
         },
         kernelOptions: {
             name: "python3",
-            path: "./docs/software_unity_games"
+            path: "./docs/training_protocols"
         },
         predefinedOutput: true
     }
@@ -537,20 +522,20 @@ document.write(`
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="build_unity_game.html"
+       href="training_protocol.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Rebuild a Unity game</p>
+        <p class="prev-next-title">Mouse training</p>
       </div>
     </a>
     <a class="right-next"
-       href="../software/install_dj_pipeline.html"
+       href="contrast_discrimination_training_parameters.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Setup &amp; Usage</p>
+        <p class="prev-next-title">Contrast discrimination game parameters</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -560,25 +545,6 @@ document.write(`
             </div>
             
             
-              
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-
-  <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> Contents
-  </div>
-  <nav class="bd-toc-nav page-toc">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sculpting-objects-in-blender">Sculpting objects in Blender</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#importing-the-file-into-unity">Importing the file into Unity</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-a-material">Adding a material</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-the-object-to-the-list-of-targets-and-distractors">Adding the object to the list of targets and distractors</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#current-objects-available-in-the-game">Current objects available in the game</a></li>
-</ul>
-  </nav></div>
-
-</div></div>
               
             
           </div>
