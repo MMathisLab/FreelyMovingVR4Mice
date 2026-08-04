@@ -1,5 +1,6 @@
 """Core VR4Mice schema tables for datasets, metadata, and raw signals."""
 
+import datetime
 import os
 
 import datajoint as dj
@@ -91,6 +92,76 @@ class Dataset(dj.Manual):
                 )
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
+
+
+@schema
+class Batch(dj.Lookup):
+    """
+    Batch definition table:
+    experiment batches (e.g. mouse cohorts run under a different setup),
+    each starting on a given date. A dataset belongs to whichever batch has
+    the latest start_date that is still <= its own experiment date, so new
+    batches are added over time by inserting a new row here, not by editing
+    code.
+    """
+
+    definition = """
+    batch_name : varchar(32)
+    ---
+    start_date : date          # datasets on/after this date fall in this batch
+    description : varchar(255)
+    has_neural_data : bool
+    """
+
+    contents = [
+        ("batch1", "2000-01-01", "behavioral_cohort", False),
+        ("batch2", "2026-06-01", "ephys_cohort", True),
+    ]
+
+    @classmethod
+    def resolve(cls, doe):
+        """Return the batch_name for an experiment date (latest start_date <= doe)."""
+        rows = (cls & f"start_date <= '{doe}'").fetch(
+            "batch_name", order_by="start_date DESC", limit=1
+        )
+        if len(rows) == 0:
+            raise ValueError(f"No {cls.__name__} defined with start_date <= {doe}")
+        return rows[0]
+
+
+@schema
+class DatasetBatch(dj.Computed):
+    """
+    DatasetBatch definition table:
+    resolves each dataset to a Batch, based on the experiment date (doe)
+    encoded in its name (see Dataset docstring: mouse_name_doe_attempt)
+    """
+
+    definition = """
+    -> Dataset
+    ---
+    -> Batch
+    doe : date   # experiment date parsed from the dataset name
+    """
+
+    def make(self, key):
+        parts = key["dataset"].split("_")
+        if len(parts) < 2:
+            logger.warning(f"Could not parse date from dataset '{key['dataset']}'")
+            return
+        try:
+            doe = datetime.date.fromisoformat(parts[1])
+        except ValueError:
+            logger.warning(f"Could not parse date from dataset '{key['dataset']}'")
+            return
+
+        try:
+            batch_name = Batch.resolve(doe)
+        except ValueError as err:
+            logger.warning(f"{err} (dataset '{key['dataset']}')")
+            return
+
+        self.insert1({**key, "batch_name": batch_name, "doe": doe})
 
 
 @schema

@@ -123,7 +123,7 @@ def sync_lookup_contents():
     On deployed databases, new rows added to ``contents`` in code must be
     back-filled explicitly (parent rows before ``ExperimentMember.populate``).
     """
-    for table in (ExperimentSet, ExperimentStage, SessionLabel):
+    for table in (ExperimentSet, ExperimentStage, SessionLabel, vr4mice.Batch):
         if table.contents:
             table.insert(table.contents, skip_duplicates=True)
 
@@ -132,7 +132,8 @@ def sync_lookup_contents():
 class ExperimentMember(dj.Imported):
     """
     ExperimentMember definition table:
-    links each dataset to an experiment set, stage, and session label
+    links each dataset to an experiment set, stage, session label, and batch
+    (batch is resolved from the dataset's experiment date, see vr4mice.Batch)
     """
 
     definition = """
@@ -141,6 +142,7 @@ class ExperimentMember(dj.Imported):
     -> ExperimentSet
     -> ExperimentStage
     -> SessionLabel
+    -> vr4mice.Batch
     """
 
     def make(self, key):
@@ -164,12 +166,20 @@ class ExperimentMember(dj.Imported):
 
             label_info = label_info[0]
 
+            batch_info = (vr4mice.DatasetBatch & key).fetch(as_dict=True)
+            if not batch_info:
+                raise ValueError(
+                    f"DatasetBatch missing for '{key['dataset']}'; "
+                    "run vr4mice.DatasetBatch.populate() first"
+                )
+
             self.insert1(
                 {
                     "dataset": key["dataset"],
                     "set_name": label_info["set_name"],
                     "stage_name": label_info["stage_name"],
                     "session_label": session_label,
+                    "batch_name": batch_info[0]["batch_name"],
                 }
             )
         except Exception as err:
@@ -404,6 +414,7 @@ class PredictionModel(dj.Computed):
     -> ModelParams
     -> ExperimentSet
     -> ExperimentStage
+    -> vr4mice.Batch
     ---
     coefficients : <blob>     # coefficients per session (per_mouse=True)
     n_sessions : int            # number of sessions included
@@ -611,6 +622,7 @@ class PredictionModel10Windows(dj.Computed):
     -> ModelParams
     -> ExperimentSet
     -> ExperimentStage
+    -> vr4mice.Batch
     ---
     coefficients_by_window : <blob>    # dict mapping window_id (0-9) -> coefficients
     scalers_by_window : <blob>         # dict mapping window_id (0-9) -> list of scaler params per fold
