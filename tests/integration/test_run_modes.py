@@ -458,6 +458,13 @@ class TestConnectMode:
         assert hasattr(dlc, "SyncDLCKptsDf")
         assert hasattr(dlc, "OfflineKinematics")
 
+    def test_barcodes_schema_imports(self, dj_config):
+        """Verify barcodes schema imports without error."""
+        from vr4mice.schema import barcodes
+
+        assert hasattr(barcodes, "TeensyTTL")
+        assert hasattr(barcodes, "TeensyBarcodes")
+
     def test_interpolated_trajectories_schema_imports(self, dj_config):
         """Verify interpolated_trajectories schema imports without error."""
         from vr4mice.schema import interpolated_trajectories

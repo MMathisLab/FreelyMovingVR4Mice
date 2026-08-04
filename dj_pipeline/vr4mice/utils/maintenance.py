@@ -33,6 +33,7 @@ def _schema_pairs() -> Iterable[Tuple[str, object]]:
     """
     from base_schemas.schemas import exp, mice
     from vr4mice.schema import (
+        barcodes,
         base,
         base_analysis,
         decision,
@@ -53,6 +54,7 @@ def _schema_pairs() -> Iterable[Tuple[str, object]]:
         ("base_analysis", base_analysis.schema),
         ("summary_emails", summary_emails.schema),
         ("dlc", dlc.schema),
+        ("barcodes", barcodes.schema),
         ("session_metrics", session_metrics.schema),
         ("interpolated_trajectories", interpolated_trajectories.schema),
         ("latency_tests", latency_tests.schema),
