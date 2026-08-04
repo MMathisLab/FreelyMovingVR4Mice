@@ -199,8 +199,8 @@ public class Target_spawner : MonoBehaviour
 		slitDepth = environmentParameters.GetWithDefault("slit_depth", 0.2f);
 		object_on_left = environmentParameters.GetWithDefault("object_on_left", 0.0f);
 		wall_height = environmentParameters.GetWithDefault("wall_height", 2f);
-		target_selection = environmentParameters.GetWithDefault("target_selection", 13f);
-		distractor_selection = environmentParameters.GetWithDefault("distractor_selection", 6f);
+		target_selection = environmentParameters.GetWithDefault("target_selection", 2f);
+		distractor_selection = environmentParameters.GetWithDefault("distractor_selection", 3f);
 		occlusion_type = environmentParameters.GetWithDefault("occlusion_type", 1f);
 		targetsZpos = environmentParameters.GetWithDefault("targetsZpos", 3f);
         target_rotation =environmentParameters.GetWithDefault("target_rotation", 15f);
