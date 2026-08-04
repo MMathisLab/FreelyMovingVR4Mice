@@ -11,9 +11,9 @@ params:
   epoch_labels:
   - single_teardrop
   slit_size:
-  - 19.0
-  - 20.0
-  - 2
+  - 4.0
+  - 4.0
+  - 1
   target_selection: 3.0
   distractor_selection: 2.0
   distractor: 0.0
