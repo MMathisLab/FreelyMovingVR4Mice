@@ -232,6 +232,24 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         logger.info("Processor DLC h5 path set to %s", self.dlc_h5_path)
         logger.info("Processor timestamp path set to %s", self.legacy_timestamp_path)
 
+    def _save_legacy_outputs(self):
+        """Save all legacy outputs, attempting each independently so one failure
+        does not prevent the remaining outputs from being written."""
+        for name, method in [
+            ("PROC save", self.save),
+            ("DLC h5 save", self.save_legacy_dlc_h5),
+            ("timestamp npy save", self.save_legacy_timestamp_npy),
+            ("video copy", self.copy_legacy_video_files),
+            ("output alignment", self.copy_processor_outputs_to_primary_legacy_base),
+        ]:
+            try:
+                result = method()
+                logger.info("Processor legacy %s result: %r", name, result)
+            except Exception:
+                logger.exception("Processor %s failed during legacy save", name)
+
+        self._clear_legacy_pose_buffers()
+
     def on_recording_stopped(self, context: dict) -> None:
         """Save all custom legacy outputs after GUI recording stops."""
         previous_context = dict(getattr(self, "recording_context", {}) or {})
@@ -239,23 +257,20 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         self.recording_context = previous_context
 
         self._legacy_recording_active = False
+        self._save_legacy_outputs()
 
-        proc_result = self.save()
-        logger.info("Processor legacy PROC save result: %r", proc_result)
+    def stop(self, save: bool = False, file=None):
+        """Save all buffered data before tearing down resources.
 
-        dlc_h5_result = self.save_legacy_dlc_h5()
-        logger.info("Processor legacy DLC h5 save result: %r", dlc_h5_result)
+        This guards against data loss when ``stop()`` is called
+        before ``on_recording_stopped`` (e.g. during DLCLiveWorker
+        shutdown, socket disconnect, or task auto-stop).
+        """
+        if self._legacy_recording_active and self.save_path is not None:
+            self._save_legacy_outputs()
+            self._legacy_recording_active = False
 
-        npy_ts_result = self.save_legacy_timestamp_npy()
-        logger.info("Processor legacy timestamp npy save result: %r", npy_ts_result)
-
-        video_copy_result = self.copy_legacy_video_files()
-        logger.info("Processor legacy video copy result: %r", video_copy_result)
-
-        align_result = self.copy_processor_outputs_to_primary_legacy_base()
-        logger.info("Processor legacy output alignment result: %r", align_result)
-
-        self._clear_legacy_pose_buffers()
+        super().stop(save=False, file=file)
 
     # ------------------------------------------------------------------
     # Primary PROC save

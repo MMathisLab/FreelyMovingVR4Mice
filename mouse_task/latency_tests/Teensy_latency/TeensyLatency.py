@@ -23,7 +23,10 @@ class TeensyLatency:
 
     def read_on_thread(self):
         while self.reading_teensy and not self.stop_event.is_set():
-            line = self.ser.readline().decode("utf-8").rstrip()
+            line_bytes = self.ser.readline()
+            if not line_bytes:
+                continue
+            line = line_bytes.decode("utf-8").rstrip()
             now = time.time()  # Current time
             try:
                 self._handle_line(line, now)
@@ -32,15 +35,16 @@ class TeensyLatency:
 
     def start_read_buffer(self):
         """Start the reader thread for serial buffer, writer for `input_data`, save start time."""
-        self.ser = serial.Serial(self.com, self.baudrate)
+        self.ser = serial.Serial(self.com, self.baudrate, timeout=0.5)
         self.start_read_time = time.time()
-        threading.Thread(target=self.read_on_thread, daemon=True).start()
-
+        self._reader_thread = threading.Thread(target=self.read_on_thread, daemon=True)
+        self._reader_thread.start()
     def _stop_reading(self):
         """Stop reading from teensy and close serial connection."""
         self.reading_teensy = False
         self.stop_event.set()
-
     def close_serial(self):
         self._stop_reading()
+        if hasattr(self, '_reader_thread') and self._reader_thread.is_alive():
+            self._reader_thread.join(timeout=2.0)
         self.ser.close()
