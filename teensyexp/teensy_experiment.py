@@ -1,10 +1,10 @@
-"""
-GUI to run teensy experiments
-    - system setup information taken from system_setup.json (which is written by system_setup.py)
+"""Teensy experiment GUI.
 
-GK 05/07/2019
+Loads rig and task setup from JSON configuration files and runs experiment
+sessions.
 
-Note(mary): API documentation added 11/08/2022
+Original implementation: GK (2019-05-07)
+API documentation additions: mary (2022-11-08)
 """
 
 import os

@@ -1,3 +1,9 @@
+"""Socket-based DLC client using deque-backed buffers.
+
+Starts a background reader thread that receives DLC frames from DLCLiveGUI
+and keeps the newest values in deques for low-overhead access.
+"""
+
 import numpy as np
 import time
 import threading
@@ -16,17 +22,24 @@ class DLCClient(object):
         self.start_time = time.time()
 
     def read_on_thread(self):
-        self.conn = Client(self.address, authkey=b"secret password")
-        while self.reading:
-            try:
-                this_read = self.conn.recv()
-                self.input_data.append(this_read)
+        conn = None
+        try:
+            conn = Client(self.address, authkey=b"secret password")
+            self.conn = conn
+            while self.reading:
+                try:
+                    this_read = conn.recv()
+                    self.input_data.append(this_read)
 
-            except (EOFError, OSError):
-                # EOFError: remote side closed cleanly. OSError: local conn.close()
-                # ran while recv() was blocked (e.g. from close()).
-                self.reading = False
-                break
+                except (EOFError, OSError):
+                    # EOFError: remote side closed cleanly. OSError: local conn.close()
+                    # ran while recv() was blocked (e.g. from close()).
+                    self.reading = False
+                    break
+        finally:
+            if conn is not None:
+                conn.close()
+            self.conn = None
 
     def start_read_buffer(self):
         self._read_thread = threading.Thread(target=self.read_on_thread, daemon=True)

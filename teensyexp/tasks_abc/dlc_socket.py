@@ -1,3 +1,9 @@
+"""Socket-based DLC client using a list-backed read buffer.
+
+Starts a background reader thread that receives DLC frames from DLCLiveGUI
+and stores them for task consumption.
+"""
+
 import numpy as np
 import time
 import threading
@@ -15,18 +21,25 @@ class DLCClient(object):
        
 
     def read_on_thread(self):
-        # start connection to the socket
-        self.conn = Client(self.address, authkey=b'secret password')
-        # start reading and add data to a list
-        while self.reading == True:
-            try:
-                this_read = self.conn.recv()
-                self.input_data.append(list((time.time(),this_read)))
-            # if the connection on the DLCLiveGUI is closed, or close() ran while
-            # recv() was blocked, stop the thread reading in a clean way
-            except (EOFError, OSError):
-                self.reading = False
-                break
+        conn = None
+        try:
+            # start connection to the socket
+            conn = Client(self.address, authkey=b'secret password')
+            self.conn = conn
+            # start reading and add data to a list
+            while self.reading == True:
+                try:
+                    this_read = conn.recv()
+                    self.input_data.append(list((time.time(),this_read)))
+                # if the connection on the DLCLiveGUI is closed, or close() ran while
+                # recv() was blocked, stop the thread reading in a clean way
+                except (EOFError, OSError):
+                    self.reading = False
+                    break
+        finally:
+            if conn is not None:
+                conn.close()
+            self.conn = None
 
     def start_read_buffer(self):
         # start reading from DLClivegui in thread
