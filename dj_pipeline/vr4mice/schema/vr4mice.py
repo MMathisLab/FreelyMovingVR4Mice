@@ -165,7 +165,7 @@ class DatasetBatch(dj.Computed):
 
 
 @schema
-class ExcludedDataset(dj.Manual):
+class ExcludedDataset(dj.Lookup):
     """
     ExcludedDataset definition table:
     datasets excluded from decision analyses - curation calls, known
@@ -212,8 +212,8 @@ class ExcludedDataset(dj.Manual):
         """Return a `dataset`-column restriction string excluding every pattern here.
 
         Use as e.g. `Dataset() & ExcludedDataset.exclusion_filter()` in ad
-        hoc queries that build a cohort directly from Dataset/TrialMetrics 
-        instead of going through decision.ExperimentMember/InclusionStatus, 
+        hoc queries that build a cohort directly from Dataset/TrialMetrics
+        instead of going through decision.ExperimentMember/InclusionStatus,
         which already apply this exclusion automatically.
         """
         patterns = cls.fetch("dataset_pattern")
