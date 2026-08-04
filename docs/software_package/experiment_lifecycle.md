@@ -25,8 +25,9 @@ see [Saving the data](#saving-the-data) below for why.
    connect to `("localhost", 6000)` on a background thread, and opens the Unity build via `UnityEnvironment`.
 2. **DLCLiveGUI**: `Init Cam` &rarr; `Set Proc` (loads e.g. `dlc_inference_w_pd_sync`, which opens the `Listener` on port 6000 and, if
    `use_teensy=1`, its own `TeensyLatency`/`TeensyLatencySync` serial connection to the photodiode Teensy) &rarr; `Init DLC`.
-3. Whichever side starts first just waits/retries until the other side's socket endpoint exists — there's no explicit handshake beyond
-   the `multiprocessing.connection` auth key.
+3. There's no explicit handshake beyond the `multiprocessing.connection` auth key. In the current implementation,
+  the task-side `DLCClient` attempts its socket connect once on a background thread during task init; if the
+  listener is not available yet, that connect attempt fails and the task must be re-initialized to reconnect.
 
 ## During the run
 
@@ -70,9 +71,10 @@ or force-quit before that trigger loses whatever hasn't been flushed yet on that
 
 vr4mice does warn about unsaved data at two points: clicking **"Ready"** to initialize a new task (which replaces `self.task`, making
 the previous task's in-memory data unreachable) shows a one-time, dismissible reminder if the current task hasn't been saved yet; and
-closing the window (via the "Close" button, the window's `[X]`, or Ctrl+C in the terminal) shows a blocking "did you save?" confirmation
-if `saved_ok` is still `False`. Neither is a hard requirement — you can proceed either way — they're just there so an unsaved session
-isn't discarded purely by accident.
+closing the window (via the "Close" button or the window's `[X]`) shows a blocking "did you save?" confirmation if `saved_ok` is still
+`False`. Ctrl+C in the terminal is handled separately: it shows a warning dialog telling the experimenter to use the GUI buttons, and
+keeps the GUI running. Neither unsaved-data warning is a hard requirement — you can proceed either way — they're just there so an
+unsaved session isn't discarded purely by accident.
 
 ## Failure handling
 
@@ -86,6 +88,9 @@ A few things worth knowing about how this stack behaves under partial failure:
   failures and just resets `self.conn`; it re-`accept()`s a fresh client on the next frame. `ActiveSensingTask.stop()` closes its
   `dlcClient` (and joins its reader thread) so the socket/thread don't linger past the task's lifetime; this is safe precisely because
   the processor side already tolerates a client disconnecting at any time.
+- **Task-side DLC socket teardown is race-safe around startup** — `DLCClient.read_on_thread()` now owns the connection lifecycle and
+  closes the local connection in a `finally` block. This prevents leaking a socket/FD if `close()` is called while the background
+  thread is still establishing the connection.
 - **Neither side's save is atomic** — both write pickle/HDF5/npy files directly to their final path. A crash or disk-full condition
   mid-write can leave a truncated file at that path, including overwriting a previously-good one if re-saving to the same filename.
 - **`save_legacy_timestamp_npy()`** (DLC processor side) depends on timestamp JSON files written by DLCLiveGUI's video recorder, a
