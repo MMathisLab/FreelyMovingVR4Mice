@@ -208,14 +208,13 @@ class ExcludedDataset(dj.Manual):
         return rows[0]["reason"]
 
     @classmethod
-    def restriction(cls):
+    def exclusion_filter(cls):
         """Return a `dataset`-column restriction string excluding every pattern here.
 
-        Use as e.g. `Dataset() & ExcludedDataset.restriction()` in ad hoc
-        queries (notebooks, one-off scripts) that build a cohort directly
-        from Dataset/TrialMetrics instead of going through
-        decision.ExperimentMember/InclusionStatus, which already apply this
-        exclusion automatically.
+        Use as e.g. `Dataset() & ExcludedDataset.exclusion_filter()` in ad
+        hoc queries that build a cohort directly from Dataset/TrialMetrics 
+        instead of going through decision.ExperimentMember/InclusionStatus, 
+        which already apply this exclusion automatically.
         """
         patterns = cls.fetch("dataset_pattern")
         if len(patterns) == 0:
