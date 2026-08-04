@@ -435,6 +435,18 @@ class PredictionModel(dj.Computed):
     bic : float                 # Bayesian Information Criterion for the model
     """
 
+    @property
+    def key_source(self):
+        # Restrict to (set_name, stage_name, batch_name) combos that actually
+        # have included sessions, instead of the full cartesian product with
+        # LabelSet/ModelParams/ExperimentSet/ExperimentStage/Batch - most
+        # combos have no data (e.g. "training" stage, or a batch that hasn't
+        # run a given task yet), and make() raises for those.
+        included_combos = dj.U("set_name", "stage_name", "batch_name") & (
+            InclusionStatus * ExperimentMember & {"included": 1}
+        )
+        return LabelSet.proj() * ModelParams.proj() * included_combos
+
     class SessionPrediction(dj.Part):
         definition = """
         -> master
@@ -645,6 +657,15 @@ class PredictionModel10Windows(dj.Computed):
     cross_window_accuracy_matrix : <blob>  # nested dict: train_window -> test_window -> accuracy
     cross_window_accuracy_mean : float       # mean off-diagonal cross-window accuracy
     """
+
+    @property
+    def key_source(self):
+        # See PredictionModel.key_source: restrict to (set_name, stage_name,
+        # batch_name) combos that actually have included sessions.
+        included_combos = dj.U("set_name", "stage_name", "batch_name") & (
+            InclusionStatus * ExperimentMember & {"included": 1}
+        )
+        return LabelSet.proj() * ModelParams.proj() * included_combos
 
     class SessionPrediction(dj.Part):
         definition = """
