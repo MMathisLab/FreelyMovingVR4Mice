@@ -19,7 +19,14 @@ import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
 
-from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor  # type: ignore[import-not-found]
+try:
+    from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor  # type: ignore[import-not-found]
+except ModuleNotFoundError:
+    PROCESSOR_REGISTRY = {}
+
+    def register_processor(cls):
+        """No-op fallback when dlclivegui is not installed."""
+        return cls
 
 
 try:
