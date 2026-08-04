@@ -197,6 +197,7 @@ class ExcludedDataset(dj.Lookup):
             "Excluded via legacy Groups curation; reason not recorded",
         ),
         ("Hamster_2026-02-02_1", "Missing DLC data"),
+        ("Whale%", "Ephys recording didn't work; stopped at detection stage"),
     ]
 
     @classmethod
