@@ -189,12 +189,12 @@ class ExperimentMember(dj.Imported):
 
             label_info = label_info[0]
 
-            batch_info = (vr4mice.DatasetBatch & key).fetch(as_dict=True)
-            if not batch_info:
+            if not (vr4mice.DatasetBatch & key):
                 raise ValueError(
                     f"DatasetBatch missing for '{key['dataset']}'; "
                     "run vr4mice.DatasetBatch.populate() first"
                 )
+            batch_name = (vr4mice.DatasetBatch & key).fetch1("batch_name")
 
             self.insert1(
                 {
@@ -202,7 +202,7 @@ class ExperimentMember(dj.Imported):
                     "set_name": label_info["set_name"],
                     "stage_name": label_info["stage_name"],
                     "session_label": session_label,
-                    "batch_name": batch_info[0]["batch_name"],
+                    "batch_name": batch_name,
                 }
             )
         except Exception as err:
