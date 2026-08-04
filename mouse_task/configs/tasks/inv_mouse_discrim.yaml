@@ -1,4 +1,4 @@
-class_name: InvDiscrimTask
+class_name: InvDiscTask
 description: |
   Discrimination task (without occluders).
   Black teardrop as target, white teardrop as distractor.
@@ -7,5 +7,5 @@ description: |
 params:
   session_label:
   - ar_discrim_inv
-  target_selection: 4.0
-  distractor_selection: 6.0
+  target_selection: 3.0
+  distractor_selection: 2.0

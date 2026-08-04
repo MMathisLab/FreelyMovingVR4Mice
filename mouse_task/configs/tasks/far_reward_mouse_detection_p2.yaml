@@ -1,4 +1,4 @@
-class_name: FarDetectionWithVelocityThresholdTask
+class_name: FarDetWithVelThrTask
 description: |
   Detection task with velocity threshold to initiate the trials.
 
