@@ -1,4 +1,4 @@
-class_name: InvDetectionVelThrTask
+class_name: InvDetVelThrTask
 description: |
   Detection task with velocity threshold to initiate the trials.
 

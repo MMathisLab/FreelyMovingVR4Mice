@@ -1,4 +1,4 @@
-class_name: ShapeDetectionWithoutVelocityThresholdTask
+class_name: ShapeDetWithoutVelThrTask
 description: |
   Detection of shape task without velocity threshold to initiate the trials.
 

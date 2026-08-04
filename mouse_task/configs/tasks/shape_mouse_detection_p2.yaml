@@ -1,4 +1,4 @@
-class_name: ShapeDetectionWithVelocityThresholdTask
+class_name: ShapeDetWithVelThrTask
 description: |
   Detection of shape task with a lower velocity threshold to initiate the trials.
 

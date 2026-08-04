@@ -1,4 +1,4 @@
-class_name: ShapeDiscrimNarrowOccluders
+class_name: ShapeDisNarrowOccludersTask
 description: |
   Shape discrimination task, with occluders of different sizes
   Mouse must report the white pacman location and ignore the teardrop.

@@ -1,4 +1,4 @@
-class_name: InvDiscrimMultiOccludersTask
+class_name: InvDisMultiOccludersTask
 description: |
   Discrimination task with multiple occluders.
 

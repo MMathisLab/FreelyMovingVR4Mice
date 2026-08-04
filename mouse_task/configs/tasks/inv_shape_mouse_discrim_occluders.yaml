@@ -1,4 +1,4 @@
-class_name: InvShapeDiscrimOccluders
+class_name: InvShapeDisOccludersTask
 description: |
   Shape discrimination task,  with occluders of different sizes
   The mouse must report the location of the black teardrop object and ignore the wide Pacman.
@@ -10,8 +10,8 @@ params:
   epoch_labels:
   - teardrop_vs_pacman
   slit_size:
-  - 8.0
-  - 15.0
+  - 4.3
+  - 12.0
   - 2
   slit_depth: 0.02
   target_selection: 5.0

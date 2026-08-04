@@ -1,4 +1,4 @@
-class_name: InvDetectionNoVelThrTask
+class_name: InvDetNoVelThrTask
 description: |
   Inverse Detection task without velocity threshold to initiate the trials.
 

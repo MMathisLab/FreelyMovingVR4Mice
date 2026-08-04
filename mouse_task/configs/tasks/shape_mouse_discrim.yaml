@@ -1,4 +1,4 @@
-class_name: ShapeDiscrim
+class_name: ShapeDisTask
 description: |
   Discrimination for shape task,with velocity threshold for trial initiation, no occluders.
   The mouse must report the location of the white Pacman object and ignore the teardrop.
