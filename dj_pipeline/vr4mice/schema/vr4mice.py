@@ -18,13 +18,18 @@ logger = Logger.get_logger()
 class Camera(dj.Lookup):
     """
     Camera definition table:
-    to be updated if new camera name comes
+    to be updated if new camera name comes.
+
+    "unknown" is a deliberate fallback (see helpers_dj.get_camera): a file
+    prefix that doesn't match a registered camera name (e.g. rig
+    misconfiguration) maps to "unknown" rather than silently registering
+    every stray prefix as a new "real" camera.
     """
 
     definition = """
     camera: varchar(128)
     """
-    contents = [["Imagingsource"], ["TISCam"]]
+    contents = [["Imagingsource"], ["TISCam"], ["unknown"]]
 
 
 @schema
