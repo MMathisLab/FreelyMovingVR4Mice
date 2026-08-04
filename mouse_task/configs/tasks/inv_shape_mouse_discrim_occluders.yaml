@@ -1,6 +1,6 @@
 class_name: InvShapeDiscOccludersTask
 description: |
-  Shape discrimination task,  with occluders of different sizes
+  Shape discrimination task, with occluders on.
   The mouse must report the location of the black teardrop object and ignore the wide Pacman.
 
 # Only the parameters that differ from configs/common.yaml.
