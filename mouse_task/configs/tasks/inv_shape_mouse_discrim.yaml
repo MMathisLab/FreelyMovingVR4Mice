@@ -1,4 +1,4 @@
-class_name: InvShapeDisTask
+class_name: InvShapeDiscTask
 description: |
   Discrimination for shape task,with velocity threshold for trial initiation, no occluders.
   The mouse must report the location of the black teardrop object and ignore the wide Pacman.

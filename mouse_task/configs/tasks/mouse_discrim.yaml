@@ -1,4 +1,4 @@
-class_name: DisTask
+class_name: DiscTask
 description: |
   Discrimination task (without occluders).
 

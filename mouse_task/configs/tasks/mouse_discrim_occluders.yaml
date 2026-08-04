@@ -1,4 +1,4 @@
-class_name: DisWithOccludersTask
+class_name: DiscWithOccludersTask
 description: |
   Discrimination task with occluders on.
 

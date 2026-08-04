@@ -1,4 +1,4 @@
-class_name: InvDisTask
+class_name: InvDiscTask
 description: |
   Discrimination task (without occluders).
   Black teardrop as target, white teardrop as distractor.
