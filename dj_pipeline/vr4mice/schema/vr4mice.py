@@ -165,6 +165,65 @@ class DatasetBatch(dj.Computed):
 
 
 @schema
+class ExcludedDataset(dj.Manual):
+    """
+    ExcludedDataset definition table:
+    datasets excluded from decision analyses - curation calls, known
+    data-quality issues, or whole test/debug mice - even though their raw
+    data may still be ingested normally through the rest of the pipeline.
+
+    dataset_pattern is either an exact dataset name (excludes that one
+    session) or a SQL LIKE pattern such as "Testmouse%" (excludes every
+    matching dataset, past and future, without needing a row per session).
+    Not a -> Dataset FK, since a "%" pattern doesn't name a real row.
+    """
+
+    definition = """
+    dataset_pattern : varchar(512)   # exact dataset name, or a SQL LIKE pattern
+    ---
+    reason : varchar(255)
+    """
+
+    contents = [
+        ("Testmouse%", "Test/debug mouse used to exercise the rig"),
+        # NOTE(celia): inherited from the dropped Groups table (DJ 2.0
+        # migration); the original curation reason was not recorded.
+        (
+            "Lemming_2024-08-09_1",
+            "Excluded via legacy Groups curation; reason not recorded",
+        ),
+        (
+            "Lemming_2024-08-09_2",
+            "Excluded via legacy Groups curation; reason not recorded",
+        ),
+        ("Hamster_2026-02-02_1", "Missing DLC data"),
+    ]
+
+    @classmethod
+    def matches(cls, dataset):
+        """Return the matching row's reason, or None if dataset isn't excluded."""
+        rows = (cls & f"'{dataset}' LIKE dataset_pattern").fetch(as_dict=True)
+        if not rows:
+            return None
+        return rows[0]["reason"]
+
+    @classmethod
+    def restriction(cls):
+        """Return a `dataset`-column restriction string excluding every pattern here.
+
+        Use as e.g. `Dataset() & ExcludedDataset.restriction()` in ad hoc
+        queries (notebooks, one-off scripts) that build a cohort directly
+        from Dataset/TrialMetrics instead of going through
+        decision.ExperimentMember/InclusionStatus, which already apply this
+        exclusion automatically.
+        """
+        patterns = cls.fetch("dataset_pattern")
+        if len(patterns) == 0:
+            return "TRUE"
+        return " AND ".join(f'dataset NOT LIKE "{p}"' for p in patterns)
+
+
+@schema
 class FailedSession(dj.Manual):
     """Tracks dataset/table pairs that failed during populate/compute."""
 

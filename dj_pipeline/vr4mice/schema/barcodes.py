@@ -18,8 +18,6 @@ schema = schema_config.get_schema(schema_name, locals())
 
 logger = logger.Logger.get_logger()
 
-TEENSY_TTL_START_DATE = "2026-06-01"
-
 
 @schema
 class TeensyTTL(dj.Imported):
@@ -33,7 +31,9 @@ class TeensyTTL(dj.Imported):
     has_ttl=0: bool  # True when aligned, non-empty Teensy TTL arrays are available
     """
 
-    key_source = vr4mice.DLC & f"doe > '{TEENSY_TTL_START_DATE}'"
+    # Teensy barcodes were only wired up starting with the batch2 (Neuropixels) cohort
+    _batch2_start_date = (vr4mice.Batch & {"batch_name": "batch2"}).fetch1("start_date")
+    key_source = vr4mice.DLC & f"doe > '{_batch2_start_date}'"
 
     def make(self, key):
         """Load the raw Teensy TTL arrays from one DLC PROC file."""

@@ -13,6 +13,7 @@ from vr4mice.schema.session_metrics import TrialMetrics
 from vr4mice.schema.interpolated_trajectories import InterpolatedTrials
 
 from vr4mice.utils.logger import Logger
+from vr4mice.utils.populate_helpers import BEHAVIOR_DATASET_RESTRICTION
 
 from vr4mice.utils.schema_config import get_schema
 
@@ -123,7 +124,13 @@ def sync_lookup_contents():
     On deployed databases, new rows added to ``contents`` in code must be
     back-filled explicitly (parent rows before ``ExperimentMember.populate``).
     """
-    for table in (ExperimentSet, ExperimentStage, SessionLabel, vr4mice.Batch):
+    for table in (
+        ExperimentSet,
+        ExperimentStage,
+        SessionLabel,
+        vr4mice.Batch,
+        vr4mice.ExcludedDataset,
+    ):
         if table.contents:
             table.insert(table.contents, skip_duplicates=True)
 
@@ -133,7 +140,10 @@ class ExperimentMember(dj.Imported):
     """
     ExperimentMember definition table:
     links each dataset to an experiment set, stage, session label, and batch
-    (batch is resolved from the dataset's experiment date, see vr4mice.Batch)
+    (batch_name resolved from vr4mice.DatasetBatch; run its populate() first).
+
+    Latencytest* sessions and datasets matched by vr4mice.ExcludedDataset
+    are skipped and never get a row here.
     """
 
     definition = """
@@ -147,6 +157,19 @@ class ExperimentMember(dj.Imported):
 
     def make(self, key):
         try:
+            if not (Dataset & key & BEHAVIOR_DATASET_RESTRICTION):
+                logger.debug(
+                    f"Skipping latency test session for {self.__class__.__name__}: {key['dataset']}"
+                )
+                return
+
+            excluded_reason = vr4mice.ExcludedDataset.matches(key["dataset"])
+            if excluded_reason:
+                logger.debug(
+                    f"Skipping excluded dataset for {self.__class__.__name__}: {key['dataset']} ({excluded_reason})"
+                )
+                return
+
             session_label = (Dataset & key).fetch1("session_label")
 
             if not session_label:
@@ -218,31 +241,19 @@ class InclusionStatus(dj.Computed):
                 self.insert1({**key, "included": False})
                 return
 
-            # NOTE(celia): this is a fix to exclude datasets that were not manually added by tom
-            # in the Groups() table, but this table was not consistently populated for all datasets
-            # so we exclude these datasets in this hardcoded way for now
-            # We could also drop the Groups table entirely if it's not used elsewhere
-            # NOTE(celia): (update) for now kept, but the Groups table was dropped in the DJ 2.0 migration so the
-            # code should get the correct set of datasets without it now.
-            # if (
-            #     session_label == "ar_discrim_occluders"
-            #     or session_label == "ar_discrim_5_occluders"
-            # ):
-            #     tables = TrialMetrics() * vr4mice.Groups() * (Dataset() & key)
-            # else:
+            excluded_reason = vr4mice.ExcludedDataset.matches(key["dataset"])
+            if excluded_reason:
+                logger.debug(
+                    f"Skipping excluded dataset for {self.__class__.__name__}: {key['dataset']} ({excluded_reason})"
+                )
+                self.insert1({**key, "included": False})
+                return
+
             tables = TrialMetrics() * (Dataset() & key)
 
             trial_df = tables.fetch(as_dict=True)
 
-            # NOTE(celia):
-            # "Lemming_2024-08-09_1" and "Lemming_2024-08-09_2" were dropped through the Groups table for now,
-            # but kept if we decide to drop it
-            # "Hamster_2026-02-02_1" is missing the dlc data
-            if not trial_df or key in [
-                {"dataset": "Hamster_2026-02-02_1"},
-                {"dataset": "Lemming_2024-08-09_1"},
-                {"dataset": "Lemming_2024-08-09_2"},
-            ]:
+            if not trial_df:
                 self.insert1({**key, "included": False})
                 return
 
