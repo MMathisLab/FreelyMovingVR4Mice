@@ -15,6 +15,7 @@ testing without DataJoint connection.
 import numpy as np
 import pytest
 from pathlib import Path
+import helpers_dj
 
 # Import from helpers_dj (mocks configured in conftest.py)
 from helpers_dj import (
@@ -224,16 +225,14 @@ class TestGetCamera:
     """Tests for get_camera function - extracts camera name from filename."""
 
     def test_get_camera_from_dlc_path(self, mock_json_metadata):
-        """Should extract camera name from DLC filename."""
+        """Should return unknown when camera prefix is not registered."""
         # The DLC filename follows pattern: {Camera}_{dataset}_DLC.hdf5
         raw_data = {"dlc_path": mock_json_metadata["dlc_path"]}
         result = get_camera(raw_data=raw_data)
-        # mock_json_metadata has filename: mock_DLC.hdf5
-        # Camera should be "mock"
-        assert result == "mock"
+        assert result == "unknown"
 
     def test_get_camera_extracts_first_part(self):
-        """Should extract the first part before underscore."""
+        """Should return unknown for unregistered camera names."""
         raw_data = {
             "dlc_path": {
                 "filename": "TestCamera_Mouse_2024-01-01_1_DLC.hdf5",
@@ -242,7 +241,37 @@ class TestGetCamera:
             }
         }
         result = get_camera(raw_data=raw_data)
+        assert result == "unknown"
+
+    def test_get_camera_returns_registered_camera_prefix(self, monkeypatch):
+        """Should return parsed camera prefix when it is registered."""
+        monkeypatch.setattr(helpers_dj, "_get_registered_cameras", lambda: {"TestCamera"})
+        raw_data = {
+            "dlc_path": {
+                "filename": "TestCamera_Mouse_2024-01-01_1_DLC.hdf5",
+                "dst": "/some/path",
+                "src": "/source/path",
+            }
+        }
+
+        result = get_camera(raw_data=raw_data)
+
         assert result == "TestCamera"
+
+    def test_get_camera_unregistered_even_with_other_registered(self, monkeypatch):
+        """Should still return unknown when prefix is absent from registered set."""
+        monkeypatch.setattr(helpers_dj, "_get_registered_cameras", lambda: {"OtherCamera"})
+        raw_data = {
+            "dlc_path": {
+                "filename": "TestCamera_Mouse_2024-01-01_1_DLC.hdf5",
+                "dst": "/some/path",
+                "src": "/source/path",
+            }
+        }
+
+        result = get_camera(raw_data=raw_data)
+
+        assert result == "unknown"
 
 
 # ==============================================================================
