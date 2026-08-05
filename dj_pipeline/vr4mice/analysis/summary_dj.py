@@ -6,6 +6,7 @@ from typing import Dict
 
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
 
 from vr4mice.utils.logger import Logger
 
@@ -14,6 +15,76 @@ logger = Logger.get_logger()
 
 # Filter out the UserWarning related to the deprecated features
 warnings.filterwarnings("ignore", category=UserWarning)
+
+
+def _get_interpolated_summary_df(key: Dict, df, database: bool):
+    """Return interpolated trajectory data used by summary velocity/heading panels."""
+    from vr4mice.analysis import utils
+
+    if database:
+        from vr4mice.schema import interpolated_trajectories
+
+        try:
+            rel = interpolated_trajectories.InterpolatedTrials() & key
+            if len(rel) == 0:
+                logger.info(f"Populating InterpolatedTrials for {key}")
+                interpolated_trajectories.InterpolatedTrials().populate(key)
+                rel = interpolated_trajectories.InterpolatedTrials() & key
+
+            if len(rel) > 0:
+                interpolated_df = pd.DataFrame(
+                    rel.fetch(
+                        "dataset",
+                        "trial",
+                        "trial_length",
+                        "aperture",
+                        "trial_rewarded",
+                        "trial_left_choice",
+                        "heading_dir",
+                        "velocity",
+                        as_dict=True,
+                    )[0]
+                )
+                interpolated_df["trial_right_choice"] = (
+                    1 - interpolated_df["trial_left_choice"]
+                )
+                interpolated_df = interpolated_df.rename(
+                    columns={"heading_dir": "head_dir"}
+                )
+                return interpolated_df
+
+            logger.warning(
+                f"InterpolatedTrials missing for {key}; falling back to inline interpolation."
+            )
+        except Exception as err:
+            logger.warning(
+                f"Could not fetch InterpolatedTrials for {key}; falling back to inline interpolation. Error: {err}"
+            )
+
+    columns = [
+        "y",
+        "head_dir",
+        "trial_tortuosity",
+        "trial_duration",
+        "x",
+        "aperture",
+        "velocity",
+        "velocity_x",
+        "velocity_y",
+        "trial_traj_path_length",
+        "flip_one_side",
+    ]
+
+    interpolated_df = utils.interpolate(
+        df,
+        n_points=200,
+        value_columns=["trial_right_choice", "trial_rewarded"] + columns,
+    )
+    interpolated_df["trial_step"] = interpolated_df.groupby(
+        ["dataset", "trial"]
+    ).trial.cumcount()
+    interpolated_df["trial_length"] = interpolated_df["trial_step"] / 200
+    return interpolated_df
 
 
 def fetch_data(key: Dict, database: bool):
@@ -313,30 +384,7 @@ def vr4mice_summary_plots(
     )
     axes["time_choice"].set_ylabel("Trial Duration / Choice")
 
-    # Interpolation on variable of interest
-    columns = [
-        "y",
-        "head_dir",
-        "trial_tortuosity",
-        "trial_duration",
-        "x",
-        "aperture",
-        "velocity",
-        "velocity_x",
-        "velocity_y",
-        "trial_traj_path_length",
-        "flip_one_side",
-    ]
-
-    interpolated_df = utils.interpolate(
-        df,
-        n_points=200,
-        value_columns=["trial_right_choice", "trial_rewarded"] + columns,
-    )
-    interpolated_df["trial_step"] = interpolated_df.groupby(
-        ["dataset", "trial"]
-    ).trial.cumcount()
-    interpolated_df["trial_length"] = interpolated_df["trial_step"] / 200
+    interpolated_df = _get_interpolated_summary_df(key, df, database)
 
     # Display the speed
     # 1: per aperture
