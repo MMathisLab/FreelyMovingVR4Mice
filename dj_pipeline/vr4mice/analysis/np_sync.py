@@ -37,6 +37,11 @@ def align_barcodes(
 ) -> BarcodeAlignmentFit:
     """Fit VR time -> NP time from barcode values shared between both streams.
 
+    Alignment approach (intersect1d + linregress + interp1d) ported from
+    cross_analysis_schemas/schemas/vr_np_sync.py::BarcodeSync.align_barcodes in
+    https://github.com/AdaptiveMotorControlLab/auxPipelines-DataJoint_Mathis,
+    adapted for this repo's VR (vr4mice) / NP (np_pipeline) schemas.
+
     Args:
         vr_times: VR-side barcode onset times, ordered by event index (chronological).
         vr_values: VR-side barcode integer payloads, same order as `vr_times`.

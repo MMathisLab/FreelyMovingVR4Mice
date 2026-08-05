@@ -33,7 +33,16 @@ logger = Logger.get_logger()
 
 @schema
 class BarcodeSync(dj.Computed):
-    """Linear fit + interpolator mapping VR Unity/game time to NP OneBox DAQ time."""
+    """Linear fit + interpolator mapping VR Unity/game time to NP OneBox DAQ time.
+
+    One row per (dataset, recording, OneBox DAQ stream) triple that has a linked NP
+    recording and successfully decoded barcodes on both sides. Populated only for
+    those keys — see ``key_source`` — so ``populate()`` is a no-op, not an error, for
+    VR-only sessions with no matching neural recording.
+
+    Downstream code should not fetch ``slope``/``intercept``/``interpol_func``
+    directly; use ``align_timepoints``/``align_timepoints_lin`` instead.
+    """
 
     definition = """
     -> base.Base
@@ -57,7 +66,16 @@ class BarcodeSync(dj.Computed):
     skip_first_n_barcodes = DEFAULT_SKIP_FIRST_N_BARCODES
 
     def make(self, key):
-        """Fit a VR-time-to-NP-time alignment from shared barcode events."""
+        """Fit and insert one VR-time-to-NP-time alignment.
+
+        Fetches decoded barcode events for one dataset/recording/DAQ key from both
+        `vr_barcodes.TeensyBarcodes.Event` (VR side) and
+        `np_barcodes.OneBoxBarcodeExtraction.Event` (NP side), fits the alignment via
+        `vr4mice.analysis.np_sync.align_barcodes`, and inserts the resulting fit
+        parameters and pickled interpolator. On failure, records the error in
+        `vr4mice.FailedSession` and logs a warning instead of raising, matching the
+        error-handling convention used by `barcodes.TeensyTTL`/`TeensyBarcodes`.
+        """
         if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
@@ -109,14 +127,41 @@ class BarcodeSync(dj.Computed):
             return None
 
     @classmethod
-    def align_timepoints(cls, sess_key, timepoints: list):
-        """Convert VR times to NP times using interpolation (accounts for clock drift)."""
-        interpol_func = pickle.loads((cls & sess_key).fetch1("interpol_func"))
+    def align_timepoints(cls, key, timepoints: list):
+        """Convert a list of VR times to NP times via the fitted interpolator.
+
+        Preferred over `align_timepoints_lin` for most uses: the interpolator is fit
+        only within the range spanned by the shared barcode events, so it captures
+        any small clock drift between the VR and NP streams rather than assuming a
+        perfectly constant offset/rate.
+
+        Args:
+            key: A restriction identifying exactly one `BarcodeSync` row (e.g. a
+                dataset/recording/DAQ key).
+            timepoints: VR-side times (`onset_time_unity`-style values) to convert.
+                `None` entries pass through as `None`; DataJoint-`NULL`/`NaN`-producing
+                extrapolation misses become `None` as well.
+
+        Returns:
+            A list of NP-side times (or `None`), same length and order as `timepoints`.
+        """
+        interpol_func = pickle.loads((cls & key).fetch1("interpol_func"))
         timepoints = np.array(timepoints, dtype=np.float64)
         return [float(tx) if not np.isnan(tx) else None for tx in interpol_func(timepoints)]
 
     @classmethod
-    def align_timepoints_lin(cls, sess_key, timepoints: list):
-        """Convert VR times to NP times using the linear fit only."""
-        slope, intercept = (cls & sess_key).fetch1("slope", "intercept")
+    def align_timepoints_lin(cls, key, timepoints: list):
+        """Convert a list of VR times to NP times via the fitted line only (`y = slope*x + intercept`).
+
+        Faster than `align_timepoints` and fine for a single global rate/offset, but
+        ignores any local clock drift the interpolator would otherwise correct for.
+
+        Args:
+            key: A restriction identifying exactly one `BarcodeSync` row.
+            timepoints: VR-side times to convert; `None` entries pass through as `None`.
+
+        Returns:
+            A list of NP-side times (or `None`), same length and order as `timepoints`.
+        """
+        slope, intercept = (cls & key).fetch1("slope", "intercept")
         return [tx * slope + intercept if tx is not None else None for tx in timepoints]
