@@ -278,6 +278,28 @@ def main():
             lambda: summary_emails.send_pending_summary_emails(logger=logger),
         )
 
+    def import_np_sync_schema():
+        # np_sync depends on the separate np_pipeline package/repo, unlike the
+        # core_schemas above. Imported in its own run_import call (not bundled
+        # into import_core_schemas) so a missing/unreachable NP repo only skips
+        # this one step, without nulling out the rest of the behavioral pipeline.
+        from vr4mice.schema import np_sync
+
+        return np_sync
+
+    np_sync = run_import("import np_sync schema", import_np_sync_schema)
+    if np_sync:
+        from vr4mice.utils.populate_helpers import populate_pending
+
+        run_step(
+            "np_sync.BarcodeSync.populate",
+            lambda: populate_pending(
+                np_sync.BarcodeSync,
+                np_sync.BarcodeSync.key_source,
+                logger=logger,
+            ),
+        )
+
     def import_decision_schema():
         from vr4mice.schema import decision
 

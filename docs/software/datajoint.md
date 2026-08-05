@@ -428,3 +428,8 @@ time, from barcode values shared between `barcodes.TeensyBarcodes.Event` and
 datasets with a linked, successfully barcode-decoded NP recording, so `populate()`
 is a no-op — not an error — for VR-only sessions with no neural data. Use
 `align_timepoints`/`align_timepoints_lin` to convert VR times to NP times.
+
+> **Cross-repo foreign keys.** `BarcodeSync` references `np_pipeline` tables
+> directly via `-> `. Requires `vr4mice` and `np_pipeline` to share one MySQL
+> server (`DJ_HOST`). `np_sync` is imported as its own isolated step in
+> `run.py`/`cron_scenario.py`, so a missing `np_pipeline` only skips NP sync.

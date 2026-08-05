@@ -3,6 +3,13 @@
 Not every VR ``Dataset`` has a corresponding NP recording; ``BarcodeSync.key_source``
 intersects with the NP-side linkage tables so ``populate()`` simply never calls
 ``make()`` for behavior-only sessions, instead of raising.
+
+Cross-repo foreign keys: ``BarcodeSync`` references ``np_pipeline`` tables
+directly via ``-> ``. This requires ``vr4mice`` and ``np_pipeline`` to share one
+MySQL server (``DJ_HOST``) and one process-global ``dj.conn()`` — both already
+satisfied by this repo's connection setup. `np_sync` is imported as its own
+isolated step in ``run.py``/``cron_scenario.py``, so a missing ``np_pipeline``
+only skips NP sync, not the rest of the pipeline.
 """
 
 import pickle
