@@ -175,9 +175,9 @@ class TestDateAndEligibility:
 class TestBuildAndPending:
     def test_build_summary_email_key_success(self, summary_emails):
         parsed = {"mouse_name": "Whale", "day": "2026-07-08", "attempt": 1}
-        summary_emails.base_analysis.SummaryPlots.return_value.parse_dataset.return_value = parsed
-
-        result = summary_emails.build_summary_email_key("Whale_2026-07-08_1")
+        with patch.object(summary_emails.base_analysis, "SummaryPlots") as mock_summary_plots:
+            mock_summary_plots.return_value.parse_dataset.return_value = parsed
+            result = summary_emails.build_summary_email_key("Whale_2026-07-08_1")
 
         assert result == {
             "dataset": "Whale_2026-07-08_1",
@@ -187,8 +187,9 @@ class TestBuildAndPending:
         }
 
     def test_build_summary_email_key_returns_none_if_unparsed(self, summary_emails):
-        summary_emails.base_analysis.SummaryPlots.return_value.parse_dataset.return_value = {}
-        assert summary_emails.build_summary_email_key("Whale_2026-07-08_1") is None
+        with patch.object(summary_emails.base_analysis, "SummaryPlots") as mock_summary_plots:
+            mock_summary_plots.return_value.parse_dataset.return_value = {}
+            assert summary_emails.build_summary_email_key("Whale_2026-07-08_1") is None
 
     def test_pending_summary_email_keys_filters_sent_and_old(self, summary_emails):
         rows = [
@@ -205,8 +206,8 @@ class TestBuildAndPending:
             summary_emails,
             "summary_email_since",
             return_value=summary_emails.date(2026, 7, 9),
-        ):
-            summary_emails.base_analysis.SummaryPlots.return_value.fetch.return_value = rows
+        ), patch.object(summary_emails.base_analysis, "SummaryPlots") as mock_summary_plots:
+            mock_summary_plots.return_value.fetch.return_value = rows
             result = summary_emails.pending_summary_email_keys()
 
         assert result == [{"dataset": "Whale_2026-07-09_1", "filename": "/tmp/b.png"}]
