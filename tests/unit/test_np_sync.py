@@ -1,9 +1,19 @@
-"""Unit tests for the VR-to-NP barcode alignment fit."""
+"""Unit tests for the VR-to-NP barcode alignment fit, plus guards that
+behavioral analysis stays unaffected when np_pipeline is unavailable.
+"""
+
+import importlib
+import sys
+from pathlib import Path
 
 import numpy as np
 import pytest
 
 from np_sync import align_barcodes
+
+REPO_ROOT = Path(__file__).parent.parent.parent
+RUN_PY = REPO_ROOT / "dj_pipeline" / "run.py"
+CRON_SCENARIO_PY = REPO_ROOT / "dj_pipeline" / "cron_scenario.py"
 
 
 def _linear_barcode_streams(*, n=20, slope=2.0, intercept=100.0, skip_vr=0, skip_np=0):
@@ -72,3 +82,51 @@ def test_align_barcodes_interpol_func_maps_vr_time_to_np_time():
     fit = align_barcodes(vr_times, vr_values, np_times, np_values)
 
     assert fit.interpol_func(5.0) == pytest.approx(110.0)
+
+
+def test_analysis_np_sync_has_no_datajoint_or_np_pipeline_dependency(monkeypatch):
+    """The pure alignment math must import and run with np_pipeline/datajoint absent."""
+    monkeypatch.setitem(sys.modules, "datajoint", None)
+    monkeypatch.setitem(sys.modules, "np_pipeline", None)
+
+    import np_sync as np_sync_analysis
+
+    importlib.reload(np_sync_analysis)
+
+    vr_times, vr_values, np_times, np_values = _linear_barcode_streams(
+        slope=2.0, intercept=100.0
+    )
+    fit = np_sync_analysis.align_barcodes(vr_times, vr_values, np_times, np_values)
+    assert fit.slope == pytest.approx(2.0)
+
+
+def _function_source(file_text: str, def_line: str) -> str:
+    """Return the source of a top-level-indented function, up to the next `def `."""
+    start = file_text.index(def_line)
+    rest = file_text[start + len(def_line) :]
+    end = rest.find("\n    def ")
+    return def_line + (rest if end == -1 else rest[:end])
+
+
+def test_cron_scenario_core_schemas_import_excludes_np_sync():
+    """import_core_schemas() must not import np_sync, so a missing np_pipeline
+    can't null out the whole behavioral core_schemas tuple (see import_np_sync_schema,
+    which is deliberately a separate run_import() call)."""
+    text = CRON_SCENARIO_PY.read_text()
+    core_schemas_src = _function_source(text, "    def import_core_schemas():")
+
+    assert "np_sync" not in core_schemas_src
+    assert "def import_np_sync_schema():" in text
+
+
+def test_run_py_np_sync_mode_catches_broad_exception():
+    """The np_sync CLI mode must not let an import/connection failure crash the
+    process; it should catch broadly and warn, not just ModuleNotFoundError."""
+    text = RUN_PY.read_text()
+    start = text.index('elif args.mode == "np_sync":')
+    end = text.index('elif args.mode == "fetch":')
+    block = text[start:end]
+
+    assert "from vr4mice.schema import np_sync" in block
+    assert "except Exception as err:" in block
+    assert "except ModuleNotFoundError" not in block
