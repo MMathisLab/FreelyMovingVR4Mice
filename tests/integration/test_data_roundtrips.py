@@ -17,6 +17,7 @@ gracefully if data is not available.
 
 import numpy as np
 import pytest
+import helpers_dj
 
 pytestmark = pytest.mark.slow
 
@@ -472,13 +473,20 @@ class TestMetadataExtraction:
         assert isinstance(width, int), f"Width type {type(width)} should be int"
         assert isinstance(height, int), f"Height type {type(height)} should be int"
 
-    def test_camera_name_matches_filename(self, require_golden_data, integration_json_metadata):
-        """Extracted camera name should match DLC filename prefix."""
+    def test_camera_name_matches_registered_behavior(
+        self,
+        require_golden_data,
+        integration_json_metadata,
+    ):
+        """Camera extraction should return prefix if registered, else unknown."""
         json_metadata = integration_json_metadata
         result = get_camera(raw_data=json_metadata)
         filename = json_metadata["dlc_path"]["filename"]
+        prefix = filename.split("_")[0]
+        registered_cameras = helpers_dj._get_registered_cameras()
+        expected = prefix if prefix in registered_cameras else "unknown"
 
-        assert result == filename.split("_")[0]
+        assert result == expected
 
     def test_model_name_matches_filename(self, require_golden_data, integration_json_metadata):
         """Extracted model name should match DLC filename suffix."""
@@ -489,6 +497,22 @@ class TestMetadataExtraction:
         # Model name is last part before .hdf5
         expected = filename.replace(".hdf5", "").split("_")[-1]
         assert result == expected
+
+    def test_dlc_filename_middle_segment_matches_dataset(
+        self,
+        require_golden_data,
+        integration_json_metadata,
+        test_dataset_name,
+    ):
+        """Middle DLC filename segment should match dataset name."""
+        filename = integration_json_metadata["dlc_path"]["filename"]
+        stem_parts = filename.replace(".hdf5", "").split("_")
+
+        # Expected format: <camera>_<dataset>_<model>.hdf5
+        assert len(stem_parts) >= 3
+        dataset_segment = "_".join(stem_parts[1:-1])
+
+        assert dataset_segment == test_dataset_name
 
     def test_session_label_extraction(self, require_golden_data, integration_pickle_data):
         """Session label should extract first element from list."""
