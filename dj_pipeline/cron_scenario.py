@@ -297,7 +297,7 @@ def main():
             # Local server: do not recompute batch1 decision outputs locally;
             # batch1 decision results are produced on AWS, as it needs to be
             # combined to other sessions from the other labs.
-            # batch2 decision outputs are produced locally, as they are only 
+            # batch2 decision outputs are produced locally, as they are only
             # for local sessions.
             decision_restriction = (
                 vr4mice_schema.DatasetBatch & 'batch_name != "batch1"'
