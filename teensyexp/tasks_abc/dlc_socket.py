@@ -7,24 +7,59 @@ and stores them for task consumption.
 import numpy as np
 import time
 import threading
-from multiprocessing.connection import Client
-import numpy as np
-import time
+import socket
+from multiprocessing.connection import Connection, answer_challenge, deliver_challenge
+
 
 class DLCClient(object):
     def __init__(self, address = ('localhost', 6000)):
         # start read buffer
         self.address = address
+        self.authkey = b'secret password'
+        self.connect_timeout = 0.2
+        self._stop_event = threading.Event()
         self.reading = True
         self.input_data = []
         self.start_read_buffer()
-       
+
+
+    def _connect_with_timeout(self):
+        sock = None
+        conn = None
+
+        try:
+            if isinstance(self.address, tuple):
+                sock = socket.create_connection(self.address, timeout=self.connect_timeout)
+            else:
+                sock = socket.socket(socket.AF_UNIX)
+                sock.settimeout(self.connect_timeout)
+                sock.connect(self.address)
+            sock.settimeout(None)
+            conn = Connection(sock.detach())
+            answer_challenge(conn, self.authkey)
+            deliver_challenge(conn, self.authkey)
+            return conn
+        except Exception:
+            if conn is not None:
+                conn.close()
+            elif sock is not None:
+                sock.close()
+            raise
 
     def read_on_thread(self):
         conn = None
         try:
-            # start connection to the socket
-            conn = Client(self.address, authkey=b'secret password')
+            # Keep connect attempts bounded so close() can wait synchronously.
+            while self.reading and not self._stop_event.is_set():
+                try:
+                    conn = self._connect_with_timeout()
+                    break
+                except (TimeoutError, socket.timeout):
+                    continue
+
+            if conn is None:
+                return
+
             self.conn = conn
             # start reading and add data to a list
             while self.reading == True:
@@ -59,6 +94,7 @@ class DLCClient(object):
     def stop(self):
         """Change the reading class attribute to False (switch flag)."""
         self.reading = False
+        self._stop_event.set()
 
     def get_input_data(self, format='array'):
         """
@@ -81,7 +117,10 @@ class DLCClient(object):
             conn.close()
         read_thread = getattr(self, "_read_thread", None)
         if read_thread is not None:
-            read_thread.join(timeout=2)
+            read_thread.join()
+
+
+
 
 
 
