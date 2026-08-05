@@ -90,7 +90,8 @@ def _set_labels():
 def _path_is_remote(key):
     """
     Determines whether the specified file type is expected to have a remote path or not.
-    Currently, it's the case only of video_path-typed file
+    Currently, it's the case only of video_path-typed file. In this module,
+    "remote" means the file is not part of the transfer/move set (it stays on rig).
 
     Args:
       key (str): The file type (key) to check.
@@ -212,8 +213,10 @@ class Transfer(Template):
         Returns:
           dict or None: The transfer file for the specified key, or all transfer files.
         """
-        if key is not None and key in self.get_keys():
-            return self.transfer_file[key]
+        if key is not None:
+            if key in self.transfer_file:
+                return self.transfer_file[key]
+            return None
 
         if send is True:
             ret = dict()
@@ -227,10 +230,17 @@ class Transfer(Template):
     def get_processed_files(self):
         """
         Get files that should be moved to processed_path after a successful submit.
+
+        Every file that was actually transferred (i.e. not remote-only, see
+        _path_is_remote) moves to processed_path once submit succeeds -
+        that's teensy/dlc/camera/proc plus the GUI-generated gui_output.
+        video_path is excluded: videos stay on the rig, they're never
+        transferred, so there's nothing to move.
         """
         ret = list()
-        for key in ("gui_output", "teensy_path"):
-            info = self.get_transfer_files(key=key)
+        for key, info in self.transfer_file.items():
+            if _path_is_remote(key):
+                continue
             if info:
                 ret.append(info)
         return ret
