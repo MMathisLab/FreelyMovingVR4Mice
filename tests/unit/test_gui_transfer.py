@@ -181,6 +181,81 @@ def test_get_type(transfer_module):
     assert get_type("Testmouse_2023-02-22_2.pickle") == "teensy_path"
 
 
+def test_get_processed_files_includes_gui_output(transfer_module, tmp_path):
+    """
+    Regression test: get_transfer_files(key="gui_output") used to fall back to
+    returning the *entire* transfer_file dict, since "gui_output" is not one of
+    the button-driven keys in self.keys. get_processed_files() then handed that
+    whole blob to move_files(), which crashed with KeyError('src') on submit.
+    """
+    Transfer = transfer_module.Transfer
+
+    class StubWidget:
+        main_layout = None
+
+    transfer = Transfer(widget=StubWidget(), keys=["teensy_path"])
+
+    teensy_file = tmp_path / "Testmouse_2023-02-22_2.pickle"
+    teensy_file.write_text("p")
+    transfer._set_file("teensy_path", str(teensy_file))
+
+    npy_file = tmp_path / "Testmouse_2023-02-22_2.npy"
+    npy_file.write_text("n")
+    transfer.set_npy(str(npy_file))
+
+    processed = transfer.get_processed_files()
+    assert len(processed) == 2
+    for info in processed:
+        assert isinstance(info, dict)
+        assert "src" in info
+        assert "filename" in info
+
+
+def test_get_processed_files_moves_all_transferred_types_but_not_video(
+    transfer_module, tmp_path
+):
+    """
+    dlc_path/camera_path/proc_path get scp'd to the server just like teensy_path,
+    so their rig originals must also be queued for processed_path - previously
+    only teensy_path and gui_output were. video_path is the one exception: videos
+    stay on the rig and are never transferred, so it must NOT show up here.
+    """
+    Transfer = transfer_module.Transfer
+
+    class StubWidget:
+        main_layout = None
+
+    keys = ["teensy_path", "dlc_path", "camera_path", "video_path", "proc_path"]
+    transfer = Transfer(widget=StubWidget(), keys=keys)
+
+    for key, suffix in [
+        ("teensy_path", ".pickle"),
+        ("dlc_path", "_DLC.hdf5"),
+        ("camera_path", "_TS.npy"),
+        ("video_path", "_VIDEO3.avi"),
+        ("proc_path", "_PROC"),
+    ]:
+        f = tmp_path / f"Testmouse_2023-02-22_2{suffix}"
+        f.write_text("x")
+        transfer._set_file(key, str(f))
+
+    npy_file = tmp_path / "Testmouse_2023-02-22_2.npy"
+    npy_file.write_text("n")
+    transfer.set_npy(str(npy_file))
+
+    processed = transfer.get_processed_files()
+    processed_filenames = {info["filename"] for info in processed}
+
+    assert processed_filenames == {
+        "Testmouse_2023-02-22_2.pickle",
+        "Testmouse_2023-02-22_2_DLC.hdf5",
+        "Testmouse_2023-02-22_2_TS.npy",
+        "Testmouse_2023-02-22_2_PROC",
+        "Testmouse_2023-02-22_2.npy",
+    }
+    assert "Testmouse_2023-02-22_2_VIDEO3.avi" not in processed_filenames
+
+
 def test_transfer_file_localhost_copy(gui_modules, tmp_path):
     utils = gui_modules["utils"]
     src_dir = tmp_path / "src"
