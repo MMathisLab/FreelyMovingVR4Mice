@@ -397,3 +397,34 @@ class AlignedVideoFrame(dj.Computed)
 ```
 **Depends on:** `VideoSyncSignal`, `vr4mice.State`  
 Aligns game steps to video frames using photodiode when available; stores QA metrics.
+
+### `barcodes.py`
+
+*Schema for barcodes recorded through the Teensy synchronization channel.*
+
+```python
+class TeensyTTL(dj.Imported)
+```
+**Depends on:** `vr4mice.DLC`  
+Raw Teensy barcode channel imported from a DLC PROC file.
+
+```python
+class TeensyBarcodes(dj.Computed)
+```
+**Depends on:** `TeensyTTL`, `dlc.DLCProcessor`, `base_analysis.DataFrame`  
+Barcode events decoded from the TTL signal sampled by the Teensy.
+
+### `np_sync.py`
+
+*Alignment of VR (behavior) time to Neuropixels (NP) native time via shared barcodes.*
+
+```python
+class BarcodeSync(dj.Computed)
+```
+**Depends on:** `base.Base`, `np_pipeline.schemas.session_link.RecordingSessionLink`, `np_pipeline.schemas.acquisition.OneBoxDaq`  
+Fits a linear regression + interpolator mapping VR Unity/game time to NP OneBox DAQ
+time, from barcode values shared between `barcodes.TeensyBarcodes.Event` and
+`np_pipeline`'s `OneBoxBarcodeExtraction.Event`. `key_source` is restricted to
+datasets with a linked, successfully barcode-decoded NP recording, so `populate()`
+is a no-op — not an error — for VR-only sessions with no neural data. Use
+`align_timepoints`/`align_timepoints_lin` to convert VR times to NP times.
