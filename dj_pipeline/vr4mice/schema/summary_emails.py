@@ -2,7 +2,7 @@
 
 import os
 import re
-from datetime import UTC, date, datetime
+from datetime import date, datetime, timezone
 from typing import List, Optional
 
 import datajoint as dj
@@ -171,7 +171,7 @@ def record_summary_plot_email(
     row = (SummaryPlotEmail() & key).fetch(as_dict=True)
     data = {
         **key,
-        "sent_at": datetime.now(UTC),
+        "sent_at": datetime.now(timezone.utc),
         "recipients": ", ".join(recipients),
         "email_type": email_type,
         "send_error": send_error,

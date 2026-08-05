@@ -298,7 +298,7 @@ class TestInterpolatedErrorPaths:
             interp_module.InterpolatedTrials.make(table, key)
 
         table.insert1.assert_not_called()
-        failed_session_row.add_entry.assert_not_called()
+        failed_session_row.add_entry.assert_called_once()
 
     def test_interpolated_trials_records_failed_session_on_interpolate_error(self, interp_module):
         key, failed_session_row = self._setup_base_analysis(interp_module)

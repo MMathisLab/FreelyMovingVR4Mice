@@ -78,6 +78,13 @@ class InterpolatedTrials(dj.Computed):
                     columns=["heading_dir", "head_angle"], key=key
                 )
                 if not isinstance(offline_kinematics_df, pd.DataFrame):
+                    reason = (
+                        "Missing OfflineKinematics; likely missing DLC/sync inputs. "
+                        "Skipping populate."
+                    )
+                    vr4mice.FailedSession().add_entry(
+                        f"{key['dataset']}", f"{self.__class__.__name__}", reason
+                    )
                     logger.warning(
                         f"{self.__class__.__name__}: missing OfflineKinematics for key {key}; likely missing DLC/sync inputs. Skipping populate."
                     )
