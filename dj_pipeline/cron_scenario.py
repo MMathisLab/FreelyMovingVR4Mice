@@ -289,30 +289,57 @@ def main():
             "decision.sync_lookup_contents",
             decision.sync_lookup_contents,
         )
+
+        decision_restriction = None
+        if not args.aws:
+            from vr4mice.schema import vr4mice as vr4mice_schema
+
+            # Local server: do not recompute batch1 decision outputs locally;
+            # batch1 decision results are produced on AWS, as it needs to be
+            # combined to other sessions from the other labs.
+            # batch2 decision outputs are produced locally, as they are only
+            # for local sessions.
+            decision_restriction = (
+                vr4mice_schema.DatasetBatch & 'batch_name != "batch1"'
+            )
+
         run_step(
             "decision.ExperimentMember.populate",
-            lambda: decision.ExperimentMember().populate(),
+            lambda: decision.ExperimentMember().populate(decision_restriction)
+            if decision_restriction is not None
+            else decision.ExperimentMember().populate(),
         )
         run_step(
             "decision.InclusionStatus.populate",
-            lambda: decision.InclusionStatus().populate(),
+            lambda: decision.InclusionStatus().populate(decision_restriction)
+            if decision_restriction is not None
+            else decision.InclusionStatus().populate(),
         )
         run_step("decision.LabelSet.fill", lambda: decision.LabelSet.fill())
+
         run_step(
             "decision.PredictionModel.populate",
-            lambda: decision.PredictionModel().populate(),
+            lambda: decision.PredictionModel().populate(decision_restriction)
+            if decision_restriction is not None
+            else decision.PredictionModel().populate(),
         )
         run_step(
             "decision.DecisionPoints.populate",
-            lambda: decision.DecisionPoints().populate(),
+            lambda: decision.DecisionPoints().populate(decision_restriction)
+            if decision_restriction is not None
+            else decision.DecisionPoints().populate(),
         )
         run_step(
             "decision.PredictionModel10Windows.populate",
-            lambda: decision.PredictionModel10Windows().populate(),
+            lambda: decision.PredictionModel10Windows().populate(decision_restriction)
+            if decision_restriction is not None
+            else decision.PredictionModel10Windows().populate(),
         )
         run_step(
             "decision.DecisionPoints10Windows.populate",
-            lambda: decision.DecisionPoints10Windows().populate(),
+            lambda: decision.DecisionPoints10Windows().populate(decision_restriction)
+            if decision_restriction is not None
+            else decision.DecisionPoints10Windows().populate(),
         )
 
     if not args.aws:
