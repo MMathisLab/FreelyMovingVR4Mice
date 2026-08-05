@@ -18,6 +18,20 @@ logger = Logger.get_logger()
 
 _SESSION_DATE_RE = re.compile(r"(?:(?P<mouse>[^_]+)_)?(?P<day>\d{4}-\d{2}-\d{2})")
 
+# These reasons are intentionally recorded in FailedSession as permanent skips,
+# not as unexpected pipeline failures.
+_INTENTIONAL_FAILED_SESSION_REASONS = (
+    "No photodiode signal in PROC file",
+    "No trials after excluding initialization trial 1",
+)
+
+
+def _is_intentional_failed_session_reason(error_message: str) -> bool:
+    """Return True when a FailedSession reason is an expected permanent skip."""
+    if not error_message:
+        return False
+    return error_message.strip() in _INTENTIONAL_FAILED_SESSION_REASONS
+
 
 def summary_email_recipient_names() -> List[str]:
     """Experimenter names from VR4MICE_EMAIL_RECIPIENTS (comma-separated, set in .env)."""
@@ -138,19 +152,24 @@ def resolve_summary_email_recipients(dataset: str) -> List[str]:
 
 
 def session_failed_tables_message(dataset: str) -> Optional[str]:
-    """Return a formatted warning block with all failed tables for a dataset."""
+    """Return a formatted warning block for unexpected failed tables."""
     from vr4mice.schema import vr4mice
 
     rows = (vr4mice.FailedSession() & {"dataset": dataset}).fetch(
         "failed_table_name", "error_message", as_dict=True
     )
-    if not rows:
+    actionable_rows = [
+        row
+        for row in rows
+        if not _is_intentional_failed_session_reason(row.get("error_message", ""))
+    ]
+    if not actionable_rows:
         return None
 
     lines = [
         "Pipeline warnings for this session (plot generated, but some tables failed):"
     ]
-    for row in rows:
+    for row in actionable_rows:
         table_name = row.get("failed_table_name", "unknown_table")
         err = row.get("error_message", "")
         if err and len(err) > 240:

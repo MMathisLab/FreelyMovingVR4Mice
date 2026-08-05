@@ -3,6 +3,7 @@
 import importlib.util
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -261,3 +262,67 @@ class TestSendAndRecord:
 
         assert not ok
         record.assert_called_once()
+
+
+class TestSessionFailedTablesMessage:
+    def test_returns_none_for_only_intentional_skips(self, summary_emails):
+        rows = [
+            {
+                "failed_table_name": "LatencyTests",
+                "error_message": "No photodiode signal in PROC file",
+            },
+            {
+                "failed_table_name": "DataFrame",
+                "error_message": "No trials after excluding initialization trial 1",
+            },
+        ]
+
+        mock_failed_session = MagicMock()
+        mock_failed_session.return_value.__and__.return_value.fetch.return_value = rows
+        mock_vr4mice = SimpleNamespace(FailedSession=mock_failed_session)
+        mock_schema_pkg = SimpleNamespace(vr4mice=mock_vr4mice)
+
+        with patch.dict(
+            sys.modules,
+            {
+                "vr4mice.schema": mock_schema_pkg,
+                "vr4mice.schema.vr4mice": mock_vr4mice,
+            },
+            clear=False,
+        ):
+            result = summary_emails.session_failed_tables_message("Whale_2026-07-08_1")
+
+        assert result is None
+
+    def test_keeps_unexpected_failures_and_truncates_long_messages(self, summary_emails):
+        long_error = "x" * 260
+        rows = [
+            {
+                "failed_table_name": "LatencyTests",
+                "error_message": "No photodiode signal in PROC file",
+            },
+            {
+                "failed_table_name": "SummaryPlots",
+                "error_message": long_error,
+            },
+        ]
+
+        mock_failed_session = MagicMock()
+        mock_failed_session.return_value.__and__.return_value.fetch.return_value = rows
+        mock_vr4mice = SimpleNamespace(FailedSession=mock_failed_session)
+        mock_schema_pkg = SimpleNamespace(vr4mice=mock_vr4mice)
+
+        with patch.dict(
+            sys.modules,
+            {
+                "vr4mice.schema": mock_schema_pkg,
+                "vr4mice.schema.vr4mice": mock_vr4mice,
+            },
+            clear=False,
+        ):
+            result = summary_emails.session_failed_tables_message("Whale_2026-07-08_1")
+
+        assert result is not None
+        assert "No photodiode signal in PROC file" not in result
+        assert "- SummaryPlots: " in result
+        assert "..." in result

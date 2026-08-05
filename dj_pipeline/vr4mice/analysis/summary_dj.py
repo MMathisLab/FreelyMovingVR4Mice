@@ -18,7 +18,12 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 
 def _get_interpolated_summary_df(key: Dict, df, database: bool):
-    """Return interpolated trajectory data used by summary velocity/heading panels."""
+    """Return interpolated trajectory data used by summary velocity/heading panels.
+
+    When ``database=True``, this helper may lazily populate
+    ``InterpolatedTrials`` if the row is missing, matching the existing
+    fetch-or-populate pattern used in this module.
+    """
     from vr4mice.analysis import utils
 
     if database:
@@ -27,11 +32,13 @@ def _get_interpolated_summary_df(key: Dict, df, database: bool):
         try:
             rel = interpolated_trajectories.InterpolatedTrials() & key
             if len(rel) == 0:
-                logger.info(f"Populating InterpolatedTrials for {key}")
+                # Intentional side effect: keep summary behavior aligned with other
+                # fetch-or-populate table accesses in this file.
+                logger.info("Populating InterpolatedTrials for %s", key)
                 interpolated_trajectories.InterpolatedTrials().populate(key)
                 rel = interpolated_trajectories.InterpolatedTrials() & key
 
-            if len(rel) > 0:
+            if len(rel) == 1:
                 interpolated_df = pd.DataFrame(
                     rel.fetch(
                         "dataset",
@@ -53,9 +60,20 @@ def _get_interpolated_summary_df(key: Dict, df, database: bool):
                 )
                 return interpolated_df
 
-            logger.warning(
-                f"InterpolatedTrials missing for {key}; falling back to inline interpolation."
-            )
+            if len(rel) > 1:
+                logger.warning(
+                    "Expected exactly one InterpolatedTrials row for %s, got %d; "
+                    "falling back to inline interpolation.",
+                    key,
+                    len(rel),
+                )
+
+            if len(rel) == 0:
+                logger.warning(
+                    "InterpolatedTrials still missing for %s after populate; "
+                    "falling back to inline interpolation.",
+                    key,
+                )
         except Exception as err:
             logger.warning(
                 f"Could not fetch InterpolatedTrials for {key}; falling back to inline interpolation. Error: {err}"
@@ -112,6 +130,8 @@ def fetch_data(key: Dict, database: bool):
             if df is not False or df is not None:
                 logger.info(f"Data fetched for {key}")
             else:
+                # Intentional side effect: summary generation lazily populates
+                # DataFrame when source rows are missing.
                 logger.info(f"Populating DataFrame data for {key}")
                 df = base_analysis.DataFrame().populate(key)
                 df = base_analysis.DataFrame().get_data(key)
@@ -131,6 +151,8 @@ def fetch_data(key: Dict, database: bool):
             if box_df_output is not False or box_df_output is not None:
                 logger.info(f"Box data fetched for {key}")
             else:
+                # Intentional side effect: summary generation lazily populates
+                # BoxDataFrame when source rows are missing.
                 logger.info(f"Populating BoxDataFrame data for {key}")
                 box_df_output = base_analysis.BoxDataFrame().populate(key)
                 box_df_output = base_analysis.BoxDataFrame().get_data(key)
