@@ -841,7 +841,11 @@ class TeensyExperimentGUI(object):
             messagebox.showerror("Task Open", "Task is currently open. Please stop task before closing.",
                                  parent=self.window)
         elif not self.saved_ok:
-            if messagebox.askokcancel("Exit", "ARE YOU SURE YOU SAVED YOUR Data?"):
+            if messagebox.askokcancel(
+                "Exit",
+                "ARE YOU SURE YOU SAVED YOUR Data?",
+                parent=self.window,
+            ):
                 self.gui_on = False
         else:
             self.gui_on = False
@@ -1024,6 +1028,19 @@ class TeensyExperimentGUI(object):
         print_delay = .01
         last_print = time.time()
 
+        def _warn_use_gui_close():
+            try:
+                messagebox.showwarning(
+                    "Use the GUI to Close",
+                    "Ctrl+C does not safely close this program.\n"
+                    "Please use the \"Stop\"/\"Close\" buttons in the GUI instead.",
+                    parent=self.window,
+                )
+            except KeyboardInterrupt:
+                # Repeated Ctrl+C while the modal warning is focused should not abort
+                # cleanup handling.
+                pass
+
         while self.gui_on:
             try:
                 curr_time = time.time()
@@ -1041,14 +1058,15 @@ class TeensyExperimentGUI(object):
                 # Ctrl+C is not a supported way to close this GUI (see run_a_session.md):
                 # it can skip Teensy/Unity/socket cleanup, so just warn and keep running
                 # instead of exiting -- the experimenter should use "Close"/"Stop" instead.
-                messagebox.showwarning(
-                    "Use the GUI to Close",
-                    "Ctrl+C does not safely close this program.\n"
-                    "Please use the \"Stop\"/\"Close\" buttons in the GUI instead.",
-                    parent=self.window,
-                )
+                _warn_use_gui_close()
 
-        self.close_window()
+        while True:
+            try:
+                self.close_window()
+                break
+            except KeyboardInterrupt:
+                # Keep trying to shut down even if Ctrl+C is pressed during teardown.
+                continue
 
 
 def main():
