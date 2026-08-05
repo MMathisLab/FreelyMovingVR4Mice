@@ -2,7 +2,7 @@
 
 import os
 import re
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import List, Optional
 
 import datajoint as dj
@@ -17,6 +17,20 @@ schema = get_schema(schema_name, locals())
 logger = Logger.get_logger()
 
 _SESSION_DATE_RE = re.compile(r"(?:(?P<mouse>[^_]+)_)?(?P<day>\d{4}-\d{2}-\d{2})")
+
+# These reasons are intentionally recorded in FailedSession as permanent skips,
+# not as unexpected pipeline failures.
+_INTENTIONAL_FAILED_SESSION_REASONS = (
+    "No photodiode signal in PROC file",
+    "No trials after excluding initialization trial 1",
+)
+
+
+def _is_intentional_failed_session_reason(error_message: str) -> bool:
+    """Return True when a FailedSession reason is an expected permanent skip."""
+    if not error_message:
+        return False
+    return error_message.strip() in _INTENTIONAL_FAILED_SESSION_REASONS
 
 
 def summary_email_recipient_names() -> List[str]:
@@ -137,6 +151,33 @@ def resolve_summary_email_recipients(dataset: str) -> List[str]:
     return toaddr
 
 
+def session_failed_tables_message(dataset: str) -> Optional[str]:
+    """Return a formatted warning block for unexpected failed tables."""
+    from vr4mice.schema import vr4mice
+
+    rows = (vr4mice.FailedSession() & {"dataset": dataset}).fetch(
+        "failed_table_name", "error_message", as_dict=True
+    )
+    actionable_rows = [
+        row
+        for row in rows
+        if not _is_intentional_failed_session_reason(row.get("error_message", ""))
+    ]
+    if not actionable_rows:
+        return None
+
+    lines = [
+        "Pipeline warnings for this session (plot generated, but some tables failed):"
+    ]
+    for row in actionable_rows:
+        table_name = row.get("failed_table_name", "unknown_table")
+        err = row.get("error_message", "")
+        if err and len(err) > 240:
+            err = err[:240] + "..."
+        lines.append(f"- {table_name}: {err}" if err else f"- {table_name}")
+    return "\n".join(lines)
+
+
 def record_summary_plot_email(
     dataset: str,
     *,
@@ -149,7 +190,7 @@ def record_summary_plot_email(
     row = (SummaryPlotEmail() & key).fetch(as_dict=True)
     data = {
         **key,
-        "sent_at": datetime.utcnow(),
+        "sent_at": datetime.now(timezone.utc),
         "recipients": ", ".join(recipients),
         "email_type": email_type,
         "send_error": send_error,
@@ -168,6 +209,7 @@ def send_and_record_summary_email(
     plot_path: str,
     *,
     err_msg: Optional[str] = None,
+    info_msg: Optional[str] = None,
     logger=None,
 ) -> bool:
     """Send a summary or error email and record the outcome in SummaryPlotEmail."""
@@ -194,7 +236,7 @@ def send_and_record_summary_email(
             email_key,
             toaddr,
             plot_path,
-            message=err_msg,
+            message=(err_msg if err_msg is not None else info_msg),
             error=err_msg is not None,
         )
     except Exception as err:
@@ -299,6 +341,7 @@ def send_pending_summary_emails(*, logger=None, prompt: bool = False) -> int:
             dataset,
             email_key,
             row["filename"],
+            info_msg=session_failed_tables_message(dataset),
             logger=log,
         ):
             sent += 1

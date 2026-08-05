@@ -62,6 +62,8 @@ def email(
     else:
         subject = f"{pipeline_name}: Mouse: {mouse}. Training Performance on day {day}, attempt {attempt}."
         body = f"Please find attached the {pipeline_name} summary report for the mouse {mouse}. The training performance reported here is on {day} and attempt {attempt}"
+        if message:
+            body = f"{body}\n\n{message}"
         msg.attach(MIMEText(body, "plain"))
 
         try:
