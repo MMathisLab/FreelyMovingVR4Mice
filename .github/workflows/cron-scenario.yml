@@ -128,8 +128,8 @@ jobs:
               && python cron_scenario.py \
               && local_experiment_member_batch1_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision._experiment_member WHERE batch_name = 'batch1';\")\" \
               && local_experiment_member_batch2_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision._experiment_member WHERE batch_name = 'batch2';\")\" \
-              && local_inclusion_status_batch1_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status WHERE batch_name = 'batch1';\")\" \
-              && local_inclusion_status_batch2_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status WHERE batch_name = 'batch2';\")\" \
+              && local_inclusion_status_batch1_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) WHERE m.batch_name = 'batch1';\")\" \
+              && local_inclusion_status_batch2_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) WHERE m.batch_name = 'batch2';\")\" \
               && echo \"Local run decision._experiment_member batch1 rows: \${local_experiment_member_batch1_count}\" \
               && echo \"Local run decision._experiment_member batch2 rows: \${local_experiment_member_batch2_count}\" \
               && echo \"Local run decision.__inclusion_status batch1 rows: \${local_inclusion_status_batch1_count}\" \
@@ -142,8 +142,8 @@ jobs:
               && python cron_scenario.py --aws \
               && aws_experiment_member_batch1_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision._experiment_member WHERE batch_name = 'batch1';\")\" \
               && aws_experiment_member_batch2_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision._experiment_member WHERE batch_name = 'batch2';\")\" \
-              && aws_inclusion_status_batch1_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status WHERE batch_name = 'batch1';\")\" \
-              && aws_inclusion_status_batch2_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status WHERE batch_name = 'batch2';\")\" \
+              && aws_inclusion_status_batch1_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) WHERE m.batch_name = 'batch1';\")\" \
+              && aws_inclusion_status_batch2_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) WHERE m.batch_name = 'batch2';\")\" \
               && echo \"AWS run decision._experiment_member batch1 rows: \${aws_experiment_member_batch1_count}\" \
               && echo \"AWS run decision._experiment_member batch2 rows: \${aws_experiment_member_batch2_count}\" \
               && echo \"AWS run decision.__inclusion_status batch1 rows: \${aws_inclusion_status_batch1_count}\" \
@@ -302,8 +302,8 @@ jobs:
           experiment_member_batch1_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision._experiment_member WHERE batch_name = "batch1";')"
           experiment_member_batch2_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision._experiment_member WHERE batch_name = "batch2";')"
           inclusion_status_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__inclusion_status;')"
-          inclusion_status_batch1_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__inclusion_status WHERE batch_name = "batch1";')"
-          inclusion_status_batch2_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__inclusion_status WHERE batch_name = "batch2";')"
+            inclusion_status_batch1_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) WHERE m.batch_name = "batch1";')"
+            inclusion_status_batch2_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) WHERE m.batch_name = "batch2";')"
           label_set_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.`#label_set`;')"
           prediction_model_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__prediction_model;')"
           decision_points_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__decision_points;')"
