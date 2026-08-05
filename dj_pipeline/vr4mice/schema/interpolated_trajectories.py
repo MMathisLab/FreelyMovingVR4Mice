@@ -4,13 +4,11 @@ import subprocess
 import os
 import re
 from pathlib import Path
-from typing import List, Optional
 
 import datajoint as dj
 import pandas as pd
 import numpy as np
 
-from vr4mice.analysis.analysis import get_jshaped_trials
 from vr4mice.schema import vr4mice, base_analysis, dlc
 from vr4mice.utils.logger import Logger
 from vr4mice.utils.schema_config import get_schema
@@ -79,6 +77,11 @@ class InterpolatedTrials(dj.Computed):
                 offline_kinematics_df = (dlc.OfflineKinematics()).get_data(
                     columns=["heading_dir", "head_angle"], key=key
                 )
+                if not isinstance(offline_kinematics_df, pd.DataFrame):
+                    logger.warning(
+                        f"{self.__class__.__name__}: missing OfflineKinematics for key {key}; likely missing DLC/sync inputs. Skipping populate."
+                    )
+                    return
                 df = pd.concat([df, offline_kinematics_df], axis=1)
                 df = df[df.iti == 0.0]
                 interpolated_df = interpolate_j_shaped(df, box_df=box_df)

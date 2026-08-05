@@ -250,8 +250,15 @@ class OfflineKinematics(dj.Computed):
 
             sync_keypoints = SyncDLCKptsDf().get_data(key)
             if sync_keypoints is False or sync_keypoints is None:
-                logger.info(
-                    f"The SyncDLCKptsDf for could not be returned {self.__class__.__name__} could not be populated for {key}"
+                reason = (
+                    "Missing SyncDLCKptsDf data; likely missing DLC file or failed DLC sync step."
+                )
+                dataset = key["dataset"]
+                vr4mice.FailedSession().add_entry(
+                    f"{dataset}", f"{self.__class__.__name__}", reason
+                )
+                logger.warning(
+                    f"{self.__class__.__name__} could not be populated for {key}: {reason}"
                 )
                 return None
 
