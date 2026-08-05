@@ -126,32 +126,32 @@ jobs:
             bash -lc "set -euo pipefail \
               && pip install --no-deps /app/base/base_min_schemas /app/base/base_actions \
               && python cron_scenario.py \
-              && local_experiment_member_batch1_count=\"$(mysql -h \"${DJ_HOST}\" -P \"${DJ_PORT}\" -u \"${DJ_USER}\" -p\"${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision._experiment_member WHERE batch_name = 'batch1';\")\" \
-              && local_experiment_member_batch2_count=\"$(mysql -h \"${DJ_HOST}\" -P \"${DJ_PORT}\" -u \"${DJ_USER}\" -p\"${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision._experiment_member WHERE batch_name = 'batch2';\")\" \
-              && local_inclusion_status_batch1_count=\"$(mysql -h \"${DJ_HOST}\" -P \"${DJ_PORT}\" -u \"${DJ_USER}\" -p\"${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status WHERE batch_name = 'batch1';\")\" \
-              && local_inclusion_status_batch2_count=\"$(mysql -h \"${DJ_HOST}\" -P \"${DJ_PORT}\" -u \"${DJ_USER}\" -p\"${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status WHERE batch_name = 'batch2';\")\" \
-              && echo \"Local run decision._experiment_member batch1 rows: ${local_experiment_member_batch1_count}\" \
-              && echo \"Local run decision._experiment_member batch2 rows: ${local_experiment_member_batch2_count}\" \
-              && echo \"Local run decision.__inclusion_status batch1 rows: ${local_inclusion_status_batch1_count}\" \
-              && echo \"Local run decision.__inclusion_status batch2 rows: ${local_inclusion_status_batch2_count}\" \
-              && test \"${local_experiment_member_batch1_count}\" -eq 0 \
-              && test \"${local_inclusion_status_batch1_count}\" -eq 0 \
-              && test \"${local_experiment_member_batch2_count}\" -ge 1 \
-              && test \"${local_inclusion_status_batch2_count}\" -ge 1 \
-              && mysql -h \"${DJ_HOST}\" -P \"${DJ_PORT}\" -u \"${DJ_USER}\" -p\"${DJ_PASS}\" -e 'DELETE FROM vr4mice.failed_session;' \
+              && local_experiment_member_batch1_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision._experiment_member WHERE batch_name = 'batch1';\")\" \
+              && local_experiment_member_batch2_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision._experiment_member WHERE batch_name = 'batch2';\")\" \
+              && local_inclusion_status_batch1_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status WHERE batch_name = 'batch1';\")\" \
+              && local_inclusion_status_batch2_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status WHERE batch_name = 'batch2';\")\" \
+              && echo \"Local run decision._experiment_member batch1 rows: \${local_experiment_member_batch1_count}\" \
+              && echo \"Local run decision._experiment_member batch2 rows: \${local_experiment_member_batch2_count}\" \
+              && echo \"Local run decision.__inclusion_status batch1 rows: \${local_inclusion_status_batch1_count}\" \
+              && echo \"Local run decision.__inclusion_status batch2 rows: \${local_inclusion_status_batch2_count}\" \
+              && test \"\${local_experiment_member_batch1_count}\" -eq 0 \
+              && test \"\${local_inclusion_status_batch1_count}\" -eq 0 \
+              && test \"\${local_experiment_member_batch2_count}\" -ge 1 \
+              && test \"\${local_inclusion_status_batch2_count}\" -ge 1 \
+              && mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -e 'DELETE FROM vr4mice.failed_session;' \
               && python cron_scenario.py --aws \
-              && aws_experiment_member_batch1_count=\"$(mysql -h \"${DJ_HOST}\" -P \"${DJ_PORT}\" -u \"${DJ_USER}\" -p\"${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision._experiment_member WHERE batch_name = 'batch1';\")\" \
-              && aws_experiment_member_batch2_count=\"$(mysql -h \"${DJ_HOST}\" -P \"${DJ_PORT}\" -u \"${DJ_USER}\" -p\"${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision._experiment_member WHERE batch_name = 'batch2';\")\" \
-              && aws_inclusion_status_batch1_count=\"$(mysql -h \"${DJ_HOST}\" -P \"${DJ_PORT}\" -u \"${DJ_USER}\" -p\"${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status WHERE batch_name = 'batch1';\")\" \
-              && aws_inclusion_status_batch2_count=\"$(mysql -h \"${DJ_HOST}\" -P \"${DJ_PORT}\" -u \"${DJ_USER}\" -p\"${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status WHERE batch_name = 'batch2';\")\" \
-              && echo \"AWS run decision._experiment_member batch1 rows: ${aws_experiment_member_batch1_count}\" \
-              && echo \"AWS run decision._experiment_member batch2 rows: ${aws_experiment_member_batch2_count}\" \
-              && echo \"AWS run decision.__inclusion_status batch1 rows: ${aws_inclusion_status_batch1_count}\" \
-              && echo \"AWS run decision.__inclusion_status batch2 rows: ${aws_inclusion_status_batch2_count}\" \
-              && test \"${aws_experiment_member_batch1_count}\" -ge 1 \
-              && test \"${aws_inclusion_status_batch1_count}\" -ge 1 \
-              && test \"${aws_experiment_member_batch2_count}\" -ge 1 \
-              && test \"${aws_inclusion_status_batch2_count}\" -ge 1 \
+              && aws_experiment_member_batch1_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision._experiment_member WHERE batch_name = 'batch1';\")\" \
+              && aws_experiment_member_batch2_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision._experiment_member WHERE batch_name = 'batch2';\")\" \
+              && aws_inclusion_status_batch1_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status WHERE batch_name = 'batch1';\")\" \
+              && aws_inclusion_status_batch2_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status WHERE batch_name = 'batch2';\")\" \
+              && echo \"AWS run decision._experiment_member batch1 rows: \${aws_experiment_member_batch1_count}\" \
+              && echo \"AWS run decision._experiment_member batch2 rows: \${aws_experiment_member_batch2_count}\" \
+              && echo \"AWS run decision.__inclusion_status batch1 rows: \${aws_inclusion_status_batch1_count}\" \
+              && echo \"AWS run decision.__inclusion_status batch2 rows: \${aws_inclusion_status_batch2_count}\" \
+              && test \"\${aws_experiment_member_batch1_count}\" -ge 1 \
+              && test \"\${aws_inclusion_status_batch1_count}\" -ge 1 \
+              && test \"\${aws_experiment_member_batch2_count}\" -ge 1 \
+              && test \"\${aws_inclusion_status_batch2_count}\" -ge 1 \
               && cd /app \
               && python -u tests/verify_summary_emails_after_cron.py"
 
