@@ -298,8 +298,7 @@ def main():
             # local runs only populate datasets whose batch is marked to
             # compute decision tables locally.
             decision_restriction = (
-                vr4mice_schema.DatasetBatch
-                * vr4mice_schema.Batch
+                vr4mice_schema.DatasetBatch * vr4mice_schema.Batch
                 & {"compute_locally": True}
             )
 
@@ -327,11 +326,15 @@ def main():
         )
         run_step(
             "decision.PredictionModel10Windows.populate",
-            lambda: decision.PredictionModel10Windows().populate(*decision_populate_args),
+            lambda: decision.PredictionModel10Windows().populate(
+                *decision_populate_args
+            ),
         )
         run_step(
             "decision.DecisionPoints10Windows.populate",
-            lambda: decision.DecisionPoints10Windows().populate(*decision_populate_args),
+            lambda: decision.DecisionPoints10Windows().populate(
+                *decision_populate_args
+            ),
         )
 
     if not args.aws:
