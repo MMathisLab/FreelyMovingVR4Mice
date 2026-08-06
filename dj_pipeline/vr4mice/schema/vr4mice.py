@@ -2,6 +2,7 @@
 
 import datetime
 import os
+import re
 
 import datajoint as dj
 import numpy as np
@@ -115,12 +116,13 @@ class Batch(dj.Lookup):
     ---
     start_date : date          # datasets on/after this date fall in this batch
     description : varchar(255)
-    has_neural_data : bool
+    has_neural_data : bool   # cohort metadata; sessions may still be mixed
+    compute_locally : bool   # local cron computes decision tables for this batch
     """
 
     contents = [
-        ("batch1", "2000-01-01", "behavioral_cohort", False),
-        ("batch2", "2026-06-01", "ephys_cohort", True),
+        ("batch1", "2000-01-01", "behavioral_cohort", False, False),
+        ("batch2", "2026-06-01", "ephys_cohort", True, True),
     ]
 
     @classmethod
@@ -178,8 +180,9 @@ class ExcludedDataset(dj.Lookup):
     data may still be ingested normally through the rest of the pipeline.
 
     dataset_pattern is either an exact dataset name (excludes that one
-    session) or a SQL LIKE pattern such as "Testmouse%" (excludes every
-    matching dataset, past and future, without needing a row per session).
+    session) or a SQL LIKE-style wildcard pattern using "%" such as
+    "Testmouse%" (excludes every matching dataset, past and future,
+    without needing a row per session).
     Not a -> Dataset FK, since a "%" pattern doesn't name a real row.
     """
 
@@ -208,10 +211,25 @@ class ExcludedDataset(dj.Lookup):
     @classmethod
     def matches(cls, dataset):
         """Return the matching row's reason, or None if dataset isn't excluded."""
-        rows = (cls & f"'{dataset}' LIKE dataset_pattern").fetch(as_dict=True)
-        if not rows:
-            return None
-        return rows[0]["reason"]
+        rows = cls.fetch("dataset_pattern", "reason", as_dict=True)
+        for row in rows:
+            pattern = row["dataset_pattern"]
+            if cls._dataset_matches_pattern(dataset, pattern):
+                return row["reason"]
+        return None
+
+    @staticmethod
+    def _dataset_matches_pattern(dataset, pattern):
+        """Match dataset against an exact or '%' wildcard pattern.
+
+        Patterns without '%' are treated as exact dataset names, so '_' stays
+        literal and does not act as a SQL single-character wildcard.
+        """
+        if "%" not in pattern:
+            return dataset == pattern
+
+        regex = "^" + re.escape(pattern).replace(r"\%", ".*") + "$"
+        return re.match(regex, dataset) is not None
 
     @classmethod
     def exclusion_filter(cls):
@@ -225,7 +243,14 @@ class ExcludedDataset(dj.Lookup):
         patterns = cls.fetch("dataset_pattern")
         if len(patterns) == 0:
             return "TRUE"
-        return " AND ".join(f'dataset NOT LIKE "{p}"' for p in patterns)
+        clauses = []
+        for pattern in patterns:
+            escaped = pattern.replace('"', r'\"')
+            if "%" in pattern:
+                clauses.append(f'dataset NOT LIKE "{escaped}"')
+            else:
+                clauses.append(f'dataset != "{escaped}"')
+        return " AND ".join(clauses)
 
 
 @schema
