@@ -245,7 +245,7 @@ class ExcludedDataset(dj.Lookup):
             return "TRUE"
         clauses = []
         for pattern in patterns:
-            escaped = pattern.replace('"', r'\"')
+            escaped = pattern.replace('"', r"\"")
             if "%" in pattern:
                 clauses.append(f'dataset NOT LIKE "{escaped}"')
             else:
