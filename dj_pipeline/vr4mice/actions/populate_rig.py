@@ -428,7 +428,7 @@ def _select_prefix_by_existing_files(
             Path(dlc_video_path).joinpath(f"{prefix}_{dataset}_DLC.hdf5"),
             Path(dlc_video_path).joinpath(f"{prefix}_{dataset}_DLC.h5"),
         ]
-        if any(p.exists() for p in proc_candidates + dlc_candidates):
+        if any(p.is_file() for p in proc_candidates + dlc_candidates):
             return prefix
     return candidates[0]
 
@@ -440,7 +440,7 @@ def _resolve_dlc_filename(prefix: str, dataset: str, dlc_video_path: str) -> str
         Path(dlc_video_path).joinpath(f"{prefix}_{dataset}_DLC.h5"),
     ]
     for candidate in candidates:
-        if candidate.exists():
+        if candidate.is_file():
             return candidate.name
     return f"{prefix}_{dataset}_DLC.hdf5"
 
@@ -452,7 +452,7 @@ def _resolve_proc_filename(prefix: str, dataset: str, dlc_video_path: str) -> st
         Path(dlc_video_path).joinpath(f"{prefix}_{dataset}_PROC.npy"),
     ]
     for candidate in candidates:
-        if candidate.exists():
+        if candidate.is_file():
             return candidate.name
     return f"{prefix}_{dataset}_PROC"
 

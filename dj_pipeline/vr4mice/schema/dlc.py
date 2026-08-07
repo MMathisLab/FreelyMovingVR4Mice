@@ -69,7 +69,7 @@ class DLCProcessor(dj.Imported):
             fpath_raw = (vr4mice.DLC & key).fetch1("proc_filepath")
             proc_path = Path(str(fpath_raw)).expanduser()
 
-            if not proc_path.exists():
+            if not proc_path.is_file():
                 raise FileNotFoundError(
                     "DLC PROC file not found. "
                     f"Looked for: '{proc_path}' (raw proc_filepath={fpath_raw!r})"
