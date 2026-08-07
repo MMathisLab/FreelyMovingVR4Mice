@@ -5,26 +5,53 @@
 #   make -f mysql.mk replication-status
 #   make -f mysql.mk mysql
 #
-# Defaults match docker-compose (.env.compose). Override on the command line, e.g.:
-#   make -f mysql.mk MYSQL_HOST=db.example.com MYSQL_PORT=3306 replication-status
+# Credentials (first defined value wins for each variable):
+#   1. Command-line override, e.g. MYSQL_PASSWORD=... MYSQL_USER=...
+#   2. .env.compose — MYSQL_ROOT_PASSWORD, DB_PORT, COMPOSE_PROJECT, …
+#   3. .env — local DJ_USER / DJ_PWD only (never DJ_MAIN_*)
+#   4. Built-in defaults (user root, password simple)
 #
-# Host access without Docker: configure ~/.my.cnf or export MYSQL_PWD, then:
+# This makefile talks to the LOCAL Docker/pipeline DB only.
+# It never uses DJ_MAIN_HOST / DJ_MAIN_USER / DJ_MAIN_PWD (parent sync DB).
+#
+# Examples:
+#   make -f mysql.mk replication-summary
+#   make -f mysql.mk USE_DJ_CREDS=1 replication-summary   # local DJ_USER/DJ_PWD from .env
+#   make -f mysql.mk MYSQL_PASSWORD=secret replication-summary
 #   make -f mysql.mk USE_DOCKER=0 mysql
+#
+# Note: if .env.compose already sets MYSQL_ROOT_PASSWORD, that wins over DJ_PWD
+# unless you pass MYSQL_PASSWORD=... or USE_DJ_CREDS=1.
 
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 -include .env.compose
+-include .env
 
 COMPOSE_PROJECT     ?= vr4mice
 DB_CONTAINER_NAME   ?= vr4mice_db
 DB_BIND_IP          ?= 127.0.0.1
 DB_PORT             ?= 3309
+# Prefer compose root password; else local pipeline DJ_PWD (not DJ_MAIN_PWD); else "simple".
+MYSQL_ROOT_PASSWORD ?= $(DJ_PWD)
 MYSQL_ROOT_PASSWORD ?= simple
 MYSQL_USER          ?= root
+MYSQL_PASSWORD      ?= $(MYSQL_ROOT_PASSWORD)
 MYSQL_HOST          ?= $(DB_BIND_IP)
 MYSQL_PORT          ?= $(DB_PORT)
 USE_DOCKER          ?= 1
+# Use LOCAL pipeline .env login (DJ_USER / DJ_PWD) — never DJ_MAIN_*.
+#   make -f mysql.mk USE_DJ_CREDS=1 replication-summary
+ifeq ($(USE_DJ_CREDS),1)
+  MYSQL_USER := $(DJ_USER)
+  MYSQL_PASSWORD := $(DJ_PWD)
+  ifneq ($(USE_DOCKER),1)
+    # Local DJ_HOST is host:port — never DJ_MAIN_HOST
+    MYSQL_HOST := $(shell printf '%s' '$(DJ_HOST)' | cut -d: -f1)
+    MYSQL_PORT := $(shell printf '%s' '$(DJ_HOST)' | cut -d: -f2)
+  endif
+endif
 
 # ---------------------------------------------------------------------------
 # mysql client wrappers
@@ -32,9 +59,9 @@ USE_DOCKER          ?= 1
 
 ifeq ($(USE_DOCKER),1)
   MYSQL = docker compose -p $(COMPOSE_PROJECT) exec db \
-    mysql -uroot -p$(MYSQL_ROOT_PASSWORD)
+    mysql -u$(MYSQL_USER) -p$(MYSQL_PASSWORD)
 else
-  MYSQL = mysql -h $(MYSQL_HOST) -P $(MYSQL_PORT) -u $(MYSQL_USER)
+  MYSQL = mysql -h $(MYSQL_HOST) -P $(MYSQL_PORT) -u $(MYSQL_USER) -p$(MYSQL_PASSWORD)
 endif
 
 .PHONY: help mysql mysql-host mysql-docker \
