@@ -759,18 +759,9 @@ class TestCleanupOrphanExpMice:
         assert deleted_mice == 1  # FutureMouse has no Dataset
 
 
-class TestRunRecoveryOrder:
-    def test_sync_mice_before_base_populate(self, monkeypatch):
-        monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
+class TestRunRecoveryPopulateOnly:
+    def test_does_not_sync_or_cleanup(self, monkeypatch):
         order = []
-
-        def track_cleanup(**kwargs):
-            order.append("cleanup")
-            return (0, 0)
-
-        def track_sync(log=None, **kwargs):
-            order.append("sync_mice")
-            return 0
 
         def track_gui(*args, **kwargs):
             order.append("populate")
@@ -779,16 +770,18 @@ class TestRunRecoveryOrder:
         with patch.object(
             recover_base, "check_replication_off"
         ), patch.object(
-            recover_base, "cleanup_orphan_exp_mice", side_effect=track_cleanup
-        ), patch.object(
-            recover_base, "sync_mice_from_main", side_effect=track_sync
-        ), patch.object(
             recover_base, "recover_base_from_gui", side_effect=track_gui
         ), patch.object(
             recover_base, "warn_incomplete_mice"
-        ):
-            recover_base.run_recovery(force=False)
-        assert order == ["sync_mice", "populate", "cleanup"]
+        ), patch.object(
+            recover_base, "cleanup_orphan_exp_mice"
+        ) as mock_cleanup, patch(
+            "vr4mice.actions.mouse_sync.sync_mice_from_main"
+        ) as mock_sync:
+            recover_base.run_recovery()
+        assert order == ["populate"]
+        mock_cleanup.assert_not_called()
+        mock_sync.assert_not_called()
 
 
 class TestSessionKeyFromDataset:
@@ -921,11 +914,13 @@ class TestRunBaseCliSurface:
         for mode in (
             "sync_mice",
             "sync_exp",
-            "cleanup_mice",
             "recover_base",
+            "cleanup_orphans",
+            "cleanup_mice",
         ):
             assert f'"{mode}"' in text
         for removed in ("sync_days", "fetch", "populate"):
             # modes list only — allow mentions in comments/docstrings
             assert f'            "{removed}",' not in text
         assert "--force" in text
+        assert "sync_mice →" not in text  # recover_base must not chain sync/cleanup

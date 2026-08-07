@@ -4,11 +4,12 @@ Entry point for exp/mice recovery and parent-DB sync (not a replacement for cron
 Normal ingest: python run.py populate | analysis | dlc | ...
 With GUI=True, that populate path writes exp/mice from session .npy as usual.
 
-Recovery / registry sync (DJ_MAIN_HOST):
-    sync_mice     — pull Mouse metadata from main (Dataset and/or Session mice)
-    sync_exp      — optional: push missing local (non-collab) exp.Session to main
-    cleanup_mice  — remove stub Mouse rows without local sessions
-    recover_base  — sync_mice → populate unpopulated GUI → optional orphan cleanup
+Recovery / registry sync (run separately; see docs/software/base_schema_sync.md):
+    sync_mice        — pull Mouse metadata from main (Dataset/Session/GUI names)
+    recover_base     — populate unpopulated GUI .npy into local exp/mice only
+    cleanup_orphans  — list/delete local exp/mice with no vr4mice.Dataset
+    cleanup_mice     — remove stub Mouse rows without local sessions
+    sync_exp         — optional: push missing local (non-collab) sessions to main
 """
 
 import argparse
@@ -32,15 +33,16 @@ if __name__ == "__main__":
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Apply destructive cleanup (cleanup_mice, recover_base).",
+        help="Apply destructive cleanup (cleanup_orphans, cleanup_mice).",
     )
     parser.add_argument(
         "mode",
         choices=[
             "sync_mice",
             "sync_exp",
-            "cleanup_mice",
             "recover_base",
+            "cleanup_orphans",
+            "cleanup_mice",
         ],
         help="Recovery / sync mode to execute.",
     )
@@ -60,12 +62,21 @@ if __name__ == "__main__":
 
         sync_exp_to_main(log=logger)
 
+    elif args.mode == "recover_base":
+        from vr4mice.actions.recover_base import run_recovery
+
+        run_recovery()
+
+    elif args.mode == "cleanup_orphans":
+        from vr4mice.actions.recover_base import (
+            check_replication_off,
+            cleanup_orphan_exp_mice,
+        )
+
+        check_replication_off(log=logger)
+        cleanup_orphan_exp_mice(dry_run=not args.force)
+
     elif args.mode == "cleanup_mice":
         from vr4mice.actions.mouse_sync import cleanup_mice_without_sessions
 
         cleanup_mice_without_sessions(dry_run=not args.force, stubs_only=True)
-
-    elif args.mode == "recover_base":
-        from vr4mice.actions.recover_base import run_recovery
-
-        run_recovery(force=args.force)
