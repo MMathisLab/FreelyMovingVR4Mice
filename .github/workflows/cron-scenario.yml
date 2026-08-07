@@ -19,7 +19,7 @@ env:
   DJ_LAB: test
   GUI: "FALSE"
   EMAIL: "False"
-  IMG_SRC: Imagingsource
+  IMG_SRC: "Imagingsource,vr4mice"
   DJ_SUPPORT_FILEPATH_MANAGEMENT: "TRUE"
   DJ_SUPPORT_ADAPTED_TYPES: "TRUE"
   MPLBACKEND: Agg
