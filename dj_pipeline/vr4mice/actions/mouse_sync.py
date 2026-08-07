@@ -222,38 +222,46 @@ def _require_dj_main_host() -> None:
         )
 
 
-def _env_flag(name: str, default: bool = False) -> bool:
-    raw = os.environ.get(name)
-    if raw is None:
-        return default
-    return raw.strip().lower() in ("1", "true", "yes", "on")
-
-
 @contextmanager
 def _main_database():
     """Temporarily point DataJoint at DJ_MAIN_HOST, then restore local config."""
     keys = ("database.host", "database.user", "database.password")
     saved = {key: dj.config[key] for key in keys}
-    saved_tls = dj.config.get("database.use_tls")
+    # Leave database.use_tls alone — DJ try-TLS-then-fallback already works here.
+    # Optional override only if set: DJ_MAIN_USE_TLS=true|false
+    tls_override = os.environ.get("DJ_MAIN_USE_TLS")
+    had_tls = "database.use_tls" in dj.config
+    saved_tls = dj.config["database.use_tls"] if had_tls else None
     dj.config["database.host"] = os.environ["DJ_MAIN_HOST"]
     dj.config["database.user"] = os.environ.get("DJ_MAIN_USER", saved["database.user"])
     dj.config["database.password"] = os.environ.get(
         "DJ_MAIN_PWD", saved["database.password"]
     )
-    # Lab MySQL often has no working TLS; DJ's try-TLS-then-fallback can still
-    # yield empty/broken sessions. Default off; set DJ_MAIN_USE_TLS=true to force.
-    dj.config["database.use_tls"] = _env_flag("DJ_MAIN_USE_TLS", default=False)
+    if tls_override is not None:
+        dj.config["database.use_tls"] = tls_override.strip().lower() in (
+            "1",
+            "true",
+            "yes",
+            "on",
+        )
     dj.conn(reset=True)
     try:
         yield
     finally:
         for key, value in saved.items():
             dj.config[key] = value
-        if saved_tls is None:
-            dj.config.pop("database.use_tls", None)
-        else:
-            dj.config["database.use_tls"] = saved_tls
-        dj.conn(reset=True)
+        try:
+            if tls_override is not None:
+                if had_tls:
+                    dj.config["database.use_tls"] = saved_tls
+                elif "database.use_tls" in dj.config:
+                    del dj.config["database.use_tls"]
+        except Exception:
+            pass
+        try:
+            dj.conn(reset=True)
+        except Exception:
+            pass
 
 
 def _upsert_rows(table, rows: Iterable[dict]) -> int:
@@ -282,24 +290,31 @@ def sync_mice_from_main(log=None, *, gui_paths: Optional[Sequence[str]] = None) 
     _require_dj_main_host()
 
     log.info(
-        "Fetching full mice registry from main DB (%s)…",
+        "Fetching full mice registry from main DB (%s)...",
         os.environ["DJ_MAIN_HOST"],
     )
 
-    with _main_database():
-        strain_rows = list(mice.Strain().fetch(as_dict=True))
-        fetched: List[tuple] = []
-        mouse_count = 0
-        for table in MOUSE_SYNC_TABLES:
-            rows = list(table().fetch(as_dict=True))
-            fetched.append((table, rows))
-            if table is mice.Mouse:
-                mouse_count = len(rows)
+    try:
+        with _main_database():
+            strain_rows = list(mice.Strain().fetch(as_dict=True))
+            fetched: List[tuple] = []
+            mouse_count = 0
+            for table in MOUSE_SYNC_TABLES:
+                rows = list(table().fetch(as_dict=True))
+                fetched.append((table, rows))
+                if table is mice.Mouse:
+                    mouse_count = len(rows)
+    except Exception:
+        log.exception(
+            "Failed fetching mice registry from main DB (%s). "
+            "Check DJ_MAIN_HOST (include :port), DJ_MAIN_USER/PWD, DJ_MAIN_USE_TLS.",
+            os.environ["DJ_MAIN_HOST"],
+        )
+        raise
 
     if mouse_count == 0:
         log.warning(
-            "Main DB (%s) returned 0 Mouse rows — check DJ_MAIN_HOST/port/user "
-            "and TLS (default DJ_MAIN_USE_TLS=false).",
+            "Main DB (%s) returned 0 Mouse rows — check DJ_MAIN_HOST/port/user.",
             os.environ["DJ_MAIN_HOST"],
         )
 
