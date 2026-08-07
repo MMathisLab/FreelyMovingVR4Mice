@@ -60,10 +60,6 @@ class TeensyExperimentGUI(object):
         self.teensy = None
         self.gui_on = True
         self.saved_ok = False
-        # Ensures the "unsaved data" warning on Ready only nags once per unsaved
-        # task, not on every click -- the experimenter may deliberately not want
-        # to save (e.g. a test/aborted run).
-        self._unsaved_data_warned = False
 
     def _get_default_path(self):
         """
@@ -607,16 +603,18 @@ class TeensyExperimentGUI(object):
             self.task_on.set(1)
         else:
             # Re-initializing replaces self.task, so any unsaved data from the
-            # previous task becomes unreachable. Just a heads-up, not a blocker,
-            # and only shown once per unsaved task -- the experimenter may
-            # deliberately choose not to save (e.g. a test/aborted run).
-            if self.task is not None and not self.saved_ok and not self._unsaved_data_warned:
-                messagebox.showwarning(
+            # previous task becomes unreachable. Let experimenters cancel to
+            # save first, or explicitly proceed and discard old task access.
+            if self.task is not None and not self.saved_ok:
+                proceed = messagebox.askokcancel(
                     "Unsaved Data",
-                    "The previous task's data has not been saved.\nInitializing a new task will discard access to it.",
+                    "The previous task's data has not been saved.\n"
+                    "Click Cancel to save first, or OK to initialize a new task and discard access to the previous task data.",
                     parent=self.window,
                 )
-                self._unsaved_data_warned = True
+                if not proceed:
+                    self.task_on.set(0)
+                    return
 
             task_object = getattr(self.task_module, self.task_name.get())
             task_params = copy.deepcopy(self.task_params[self.task_name.get()])
@@ -643,7 +641,6 @@ class TeensyExperimentGUI(object):
             # This is a fresh task with nothing saved yet, regardless of whether
             # the previous task's data was ever saved.
             self.saved_ok = False
-            self._unsaved_data_warned = False
             parent_class = [c.__name__ for c in self.task.__class__.__mro__]
             self.gui_task = True if 'GuiTask' in parent_class else False
             self.unity_task = True if 'UnityTask' in parent_class else False
@@ -779,7 +776,6 @@ class TeensyExperimentGUI(object):
 
         messagebox.showinfo("File Saved", "File saved to %s" % filename, parent=self.window)
         self.saved_ok = True
-        self._unsaved_data_warned = False
 
     def add_note(self):
         """

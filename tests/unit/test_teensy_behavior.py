@@ -75,6 +75,47 @@ class TestTeensyLatencyReadExceptions(unittest.TestCase):
 class TestTeensyGuiCloseBehavior(unittest.TestCase):
     """Regression tests for GUI close behavior and Ctrl+C handling."""
 
+    def test_init_task_unsaved_data_confirmation_cancel_reverts_ready(self):
+        gui = TeensyExperimentGUI.__new__(TeensyExperimentGUI)
+        gui.teensy = object()
+        gui.task_on_button = False
+        gui.task = object()
+        gui.saved_ok = False
+        gui.window = object()
+        gui.task_on = MagicMock()
+
+        with patch("teensyexp.teensy_experiment.messagebox.askokcancel", return_value=False) as askokcancel:
+            gui.init_task()
+
+        askokcancel.assert_called_once_with(
+            "Unsaved Data",
+            "The previous task's data has not been saved.\n"
+            "Click Cancel to save first, or OK to initialize a new task and discard access to the previous task data.",
+            parent=gui.window,
+        )
+        gui.task_on.set.assert_called_once_with(0)
+
+    def test_init_task_unsaved_data_confirmation_ok_keeps_ready_flow(self):
+        gui = TeensyExperimentGUI.__new__(TeensyExperimentGUI)
+        gui.teensy = object()
+        gui.task_on_button = False
+        gui.task = object()
+        gui.saved_ok = False
+        gui.window = object()
+        gui.task_on = MagicMock()
+        gui.task_name = MagicMock()
+        gui.task_name.get.return_value = "FakeTask"
+        gui.task_params = {"FakeTask": {}}
+        gui.task_module = types.SimpleNamespace(FakeTask=MagicMock(return_value=MagicMock()))
+        gui._reset_progress_labels = MagicMock()
+        gui.task_label = {}
+
+        with patch("teensyexp.teensy_experiment.messagebox.askokcancel", return_value=True):
+            gui.init_task()
+
+        gui.task_on.set.assert_any_call(-1)
+        self.assertNotIn(unittest.mock.call(0), gui.task_on.set.mock_calls)
+
     def test_check_close_unsaved_uses_parented_warning(self):
         gui = TeensyExperimentGUI.__new__(TeensyExperimentGUI)
         gui.task_on = MagicMock()
