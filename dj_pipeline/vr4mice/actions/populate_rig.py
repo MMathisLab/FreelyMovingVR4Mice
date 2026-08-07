@@ -387,12 +387,61 @@ def parse_date(filename):
         return None
 
 
+def _img_src_candidates() -> list:
+    """Return IMG_SRC candidate prefixes from env as an ordered list."""
+    raw = os.environ.get("IMG_SRC", "Imagingsource")
+    # Support comma/semicolon separated lists while remaining backward compatible.
+    parts = [p.strip() for chunk in raw.split(";") for p in chunk.split(",")]
+    candidates = [p for p in parts if p]
+    return candidates or ["Imagingsource"]
+
+
+def _select_prefix_by_existing_files(dataset: str, dlc_video_path: str, candidates: list) -> str:
+    """Pick the first prefix whose DLC/PROC file exists; otherwise return first candidate."""
+    for prefix in candidates:
+        proc_candidates = [
+            Path(dlc_video_path).joinpath(f"{prefix}_{dataset}_PROC"),
+            Path(dlc_video_path).joinpath(f"{prefix}_{dataset}_PROC.npy"),
+        ]
+        dlc_candidates = [
+            Path(dlc_video_path).joinpath(f"{prefix}_{dataset}_DLC.hdf5"),
+            Path(dlc_video_path).joinpath(f"{prefix}_{dataset}_DLC.h5"),
+        ]
+        if any(p.exists() for p in proc_candidates + dlc_candidates):
+            return prefix
+    return candidates[0]
+
+
+def _resolve_dlc_filename(prefix: str, dataset: str, dlc_video_path: str) -> str:
+    """Resolve existing DLC keypoints filename, supporting .hdf5 and .h5."""
+    candidates = [
+        Path(dlc_video_path).joinpath(f"{prefix}_{dataset}_DLC.hdf5"),
+        Path(dlc_video_path).joinpath(f"{prefix}_{dataset}_DLC.h5"),
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate.name
+    return f"{prefix}_{dataset}_DLC.hdf5"
+
+
+def _resolve_proc_filename(prefix: str, dataset: str, dlc_video_path: str) -> str:
+    """Resolve existing PROC filename, supporting extensionless and .npy."""
+    candidates = [
+        Path(dlc_video_path).joinpath(f"{prefix}_{dataset}_PROC"),
+        Path(dlc_video_path).joinpath(f"{prefix}_{dataset}_PROC.npy"),
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate.name
+    return f"{prefix}_{dataset}_PROC"
+
+
 def get_files_paths(
     dataset,
     remote_src: Optional[str] = None,
     local_src: str = "/data",
     data: str = "/data",
-    filename: str = os.environ["IMG_SRC"],
+    filename: Optional[str] = None,
 ):
     """
     Simulation of data from gui .npy, if it's missing
@@ -402,10 +451,28 @@ def get_files_paths(
         remote_src: The source path for remote files.
         local_src: The source path for local files.
         data: The data path.
-        filename: The base filename for the video files.
+        filename: Optional base filename prefix. If not provided, uses IMG_SRC
+            candidates from env (e.g. "Imagingsource,vr4mice") and picks the
+            first one matching files on disk.
 
     """
     dlc_video_path = local_src + "/dlc_video"
+
+    if filename is not None and str(filename).strip():
+        prefix = str(filename).strip()
+    else:
+        candidates = _img_src_candidates()
+        prefix = _select_prefix_by_existing_files(dataset, dlc_video_path, candidates)
+
+    dlc_filename = _resolve_dlc_filename(prefix, dataset, dlc_video_path)
+    proc_filename = _resolve_proc_filename(prefix, dataset, dlc_video_path)
+
+    logger.debug(
+        "Resolved file prefix for %s: %s (IMG_SRC=%r)",
+        dataset,
+        prefix,
+        os.environ.get("IMG_SRC"),
+    )
 
     files_info = {
         "teensy_path": {
@@ -414,22 +481,22 @@ def get_files_paths(
             "dst": local_src + data,
         },
         "dlc_path": {
-            "filename": filename + "_" + dataset + "_DLC.hdf5",
+            "filename": dlc_filename,
             "src": remote_src,
             "dst": dlc_video_path,
         },
         "camera_path": {
-            "filename": filename + "_" + dataset + "_TS.npy",
+            "filename": prefix + "_" + dataset + "_TS.npy",
             "src": remote_src,
             "dst": dlc_video_path,
         },
         "video_path": {
-            "filename": filename + "_" + dataset + "_VIDEO.avi",
-            "src": filename + "_" + dataset + "_VIDEO.avi",
+            "filename": prefix + "_" + dataset + "_VIDEO.avi",
+            "src": prefix + "_" + dataset + "_VIDEO.avi",
             "dst": dlc_video_path,  # false (remote only)
         },
         "proc_path": {
-            "filename": filename + "_" + dataset + "_PROC",
+            "filename": proc_filename,
             "src": remote_src,
             "dst": dlc_video_path,
         },

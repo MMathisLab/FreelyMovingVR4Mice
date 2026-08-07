@@ -1,5 +1,7 @@
 """Schema for barcodes recorded through the Teensy synchronization channel."""
 
+from pathlib import Path
+
 import datajoint as dj
 import numpy as np
 
@@ -48,9 +50,19 @@ class TeensyTTL(dj.Imported):
         if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
+        proc_filepath_raw = None
+        proc_path = None
         try:
-            proc_filepath = (vr4mice.DLC & key).fetch1("proc_filepath")
-            proc_data = np.load(proc_filepath, allow_pickle=True)
+            proc_filepath_raw = (vr4mice.DLC & key).fetch1("proc_filepath")
+            proc_path = Path(str(proc_filepath_raw)).expanduser()
+
+            if not proc_path.exists():
+                raise FileNotFoundError(
+                    "DLC PROC file not found for TeensyTTL. "
+                    f"Looked for: '{proc_path}' (raw proc_filepath={proc_filepath_raw!r})"
+                )
+
+            proc_data = np.load(proc_path, allow_pickle=True)
             if isinstance(proc_data, np.ndarray) and proc_data.ndim == 0:
                 proc_data = proc_data.item()
 
@@ -66,15 +78,30 @@ class TeensyTTL(dj.Imported):
             self.insert1(data, allow_direct_insert=True)
             logger.info("%s populated for %s", self.__class__.__name__, key)
 
-        except Exception as err:
-            dataset = key["dataset"]
+        except FileNotFoundError as err:
+            dataset = key.get("dataset", "unknown")
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
             logger.warning(
-                "Can't populate %s, key: %s. Error: %s.",
+                "Can't populate %s, key: %s. %s",
                 self.__class__.__name__,
                 key,
+                err,
+            )
+            return None
+
+        except Exception as err:
+            dataset = key.get("dataset", "unknown")
+            vr4mice.FailedSession().add_entry(
+                f"{dataset}", f"{self.__class__.__name__}", str(err)
+            )
+            logger.warning(
+                "Can't populate %s, key: %s. proc_filepath=%r, looked_for=%s. Error: %s.",
+                self.__class__.__name__,
+                key,
+                proc_filepath_raw,
+                proc_path,
                 err,
             )
             return None
