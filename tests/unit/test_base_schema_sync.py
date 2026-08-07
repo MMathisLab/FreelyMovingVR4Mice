@@ -98,24 +98,65 @@ class TestMouseNameFromRaw:
 
 
 class TestEnsureMouseForSession:
-    def test_skips_when_mouse_exists(self):
+    def test_skips_when_full_mouse_exists(self):
+        existing = {
+            "mouse_name": "Flamingo",
+            "mouse_id": 1,
+            "dob": "2020-01-01",
+            "sex": "F",
+            "strain": "X",
+        }
+        query = MagicMock()
+        query.fetch.return_value = [existing]
         with patch.object(mouse_sync, "mice") as mock_mice:
-            mock_mice.Mouse.return_value.__and__ = MagicMock(return_value=True)
+            mock_mice.Mouse.return_value.__and__ = MagicMock(return_value=query)
             inserted = mouse_sync.ensure_mouse_for_session(
                 {
                     "mouse_name": "Flamingo",
-                    "mouse_id": 1,
+                    "mouse_id": 99,
                     "dob": "2020-01-01",
                     "sex": "F",
                     "strain": "X",
                 }
             )
         assert inserted is False
+        mock_mice.Mouse.insert1.assert_not_called()
+
+    def test_upgrades_stub_when_npy_has_full_metadata(self):
+        log = MagicMock()
+        stub = {
+            "mouse_name": "Flamingo",
+            "mouse_id": mouse_sync.STUB_MOUSE_ID,
+            "dob": mouse_sync.STUB_DOB,
+            "sex": "U",
+            "strain": "N/A",
+        }
+        query = MagicMock()
+        query.fetch.return_value = [stub]
+        with patch.object(mouse_sync, "mice") as mock_mice:
+            mock_mice.Mouse.return_value.__and__ = MagicMock(return_value=query)
+            mock_mice.Mouse.insert1 = MagicMock()
+            inserted = mouse_sync.ensure_mouse_for_session(
+                {
+                    "mouse_name": "Flamingo",
+                    "mouse_id": 7,
+                    "dob": "2024-01-15",
+                    "sex": "F",
+                    "strain": "C57",
+                },
+                log=log,
+            )
+        assert inserted is True
+        mock_mice.Mouse.insert1.assert_called_once()
+        assert mock_mice.Mouse.insert1.call_args.kwargs.get("replace") is True
+        log.info.assert_called()
 
     def test_inserts_stub_when_missing(self):
         log = MagicMock()
+        query = MagicMock()
+        query.fetch.return_value = []
         with patch.object(mouse_sync, "mice") as mock_mice:
-            mock_mice.Mouse.return_value.__and__ = MagicMock(return_value=False)
+            mock_mice.Mouse.return_value.__and__ = MagicMock(return_value=query)
             mock_mice.Strain.insert1 = MagicMock()
             mock_mice.Mouse.insert1 = MagicMock()
             inserted = mouse_sync.ensure_mouse_for_session(
@@ -236,13 +277,48 @@ class TestSyncExpToMain:
             mock_exp.Session.primary_key = ["mouse_name", "day", "attempt"]
             mock_exp.Session.return_value.fetch.return_value = [session]
             mock_exp.SessionScoreSheet.return_value.fetch.return_value = []
-            # On main: mouse missing
             mock_mice.Mouse.return_value.__and__ = MagicMock(return_value=False)
-            mock_exp.Session.return_value.__and__ = MagicMock(return_value=False)
             assert mouse_sync.sync_exp_to_main(log=log) == 0
         log.warning.assert_called()
 
     def test_inserts_missing_session_on_main(self, monkeypatch):
+        monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
+        log = MagicMock()
+        session = {
+            "mouse_name": "Flamingo",
+            "day": 1,
+            "attempt": 1,
+            "doe": "2026-02-05",
+        }
+        prepared = {
+            "mouse_name": "Flamingo",
+            "day": 3,
+            "attempt": 1,
+            "doe": datetime.date(2026, 2, 5),
+        }
+        pushable = {("Flamingo", "2026-02-05", 1)}
+        with patch.object(mouse_sync, "exp") as mock_exp, patch.object(
+            mouse_sync, "mice"
+        ) as mock_mice, patch.object(
+            mouse_sync, "get_pushable_local_session_keys", return_value=pushable
+        ), patch.object(
+            mouse_sync, "_prepare_session_row_for_main", return_value=("ready", prepared)
+        ), patch.object(mouse_sync, "_main_database") as mock_main:
+            mock_main.return_value.__enter__ = MagicMock()
+            mock_main.return_value.__exit__ = MagicMock(return_value=False)
+            mock_exp.Session.primary_key = ["mouse_name", "day", "attempt"]
+            mock_exp.Session.return_value.fetch.return_value = [session]
+            mock_exp.SessionScoreSheet.return_value.fetch.return_value = []
+            mock_mice.Mouse.return_value.__and__ = MagicMock(return_value=True)
+            mock_exp.Session.insert1 = MagicMock()
+            mock_exp.SessionScoreSheet.return_value.__and__ = MagicMock(
+                return_value=False
+            )
+            count = mouse_sync.sync_exp_to_main(log=log)
+        assert count >= 1
+        mock_exp.Session.insert1.assert_called_once_with(prepared)
+
+    def test_skips_when_doe_already_on_main(self, monkeypatch):
         monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
         log = MagicMock()
         session = {
@@ -256,6 +332,8 @@ class TestSyncExpToMain:
             mouse_sync, "mice"
         ) as mock_mice, patch.object(
             mouse_sync, "get_pushable_local_session_keys", return_value=pushable
+        ), patch.object(
+            mouse_sync, "_prepare_session_row_for_main", return_value=("exists", None)
         ), patch.object(mouse_sync, "_main_database") as mock_main:
             mock_main.return_value.__enter__ = MagicMock()
             mock_main.return_value.__exit__ = MagicMock(return_value=False)
@@ -263,17 +341,9 @@ class TestSyncExpToMain:
             mock_exp.Session.return_value.fetch.return_value = [session]
             mock_exp.SessionScoreSheet.return_value.fetch.return_value = []
             mock_mice.Mouse.return_value.__and__ = MagicMock(return_value=True)
-            # Session missing on main, then present after insert
-            session_and = MagicMock()
-            session_and.__bool__ = MagicMock(side_effect=[False, False, True])
-            mock_exp.Session.return_value.__and__ = MagicMock(return_value=session_and)
             mock_exp.Session.insert1 = MagicMock()
-            mock_exp.SessionScoreSheet.return_value.__and__ = MagicMock(
-                return_value=False
-            )
-            count = mouse_sync.sync_exp_to_main(log=log)
-        assert count >= 1
-        mock_exp.Session.insert1.assert_called_once_with(session)
+            assert mouse_sync.sync_exp_to_main(log=log) == 0
+            mock_exp.Session.insert1.assert_not_called()
 
     def test_skips_sessions_without_local_dataset(self, monkeypatch):
         monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
@@ -310,11 +380,14 @@ class TestSyncExpToMain:
             "attempt": 1,
             "doe": "2026-02-06",
         }
+        prepared = dict(local)
         pushable = {("LocalMouse", "2026-02-05", 1)}
         with patch.object(mouse_sync, "exp") as mock_exp, patch.object(
             mouse_sync, "mice"
         ) as mock_mice, patch.object(
             mouse_sync, "get_pushable_local_session_keys", return_value=pushable
+        ), patch.object(
+            mouse_sync, "_prepare_session_row_for_main", return_value=("ready", prepared)
         ), patch.object(mouse_sync, "_main_database") as mock_main:
             mock_main.return_value.__enter__ = MagicMock()
             mock_main.return_value.__exit__ = MagicMock(return_value=False)
@@ -322,13 +395,74 @@ class TestSyncExpToMain:
             mock_exp.Session.return_value.fetch.return_value = [local, collab]
             mock_exp.SessionScoreSheet.return_value.fetch.return_value = []
             mock_mice.Mouse.return_value.__and__ = MagicMock(return_value=True)
-            mock_exp.Session.return_value.__and__ = MagicMock(return_value=False)
             mock_exp.Session.insert1 = MagicMock()
             mock_exp.SessionScoreSheet.return_value.__and__ = MagicMock(
                 return_value=False
             )
             mouse_sync.sync_exp_to_main(log=log)
-        mock_exp.Session.insert1.assert_called_once_with(local)
+        mock_exp.Session.insert1.assert_called_once_with(prepared)
+
+
+class TestPrepareSessionRowForMain:
+    def test_exists_by_doe_not_day(self):
+        log = MagicMock()
+        row = {
+            "mouse_name": "Flamingo",
+            "day": 1,
+            "attempt": 1,
+            "doe": "2026-02-05",
+        }
+        exists_q = MagicMock()
+        exists_q.__bool__ = MagicMock(return_value=True)
+        session_table = MagicMock()
+        # First restriction chain: mouse+attempt & doe → exists
+        session_table.__and__ = MagicMock(return_value=exists_q)
+        exists_q.__and__ = MagicMock(return_value=exists_q)
+        with patch.object(mouse_sync, "exp") as mock_exp:
+            mock_exp.Session.return_value = session_table
+            status, out = mouse_sync._prepare_session_row_for_main(row, log=log)
+        assert status == "exists"
+        assert out is None
+
+    def test_assigns_day_from_main_timeline(self):
+        log = MagicMock()
+        row = {
+            "mouse_name": "Flamingo",
+            "day": 1,
+            "attempt": 1,
+            "doe": "2026-02-05",
+        }
+        # Build a query mock: doe-check empty, fetch returns earlier session, pk free
+        doe_miss = MagicMock()
+        doe_miss.__bool__ = MagicMock(return_value=False)
+        mouse_q = MagicMock()
+        mouse_q.fetch.return_value = [
+            {"mouse_name": "Flamingo", "day": 1, "attempt": 1, "doe": "2026-01-01"}
+        ]
+        pk_miss = MagicMock()
+        pk_miss.__bool__ = MagicMock(return_value=False)
+
+        def and_side_effect(restriction):
+            if isinstance(restriction, str) and restriction.startswith("doe="):
+                return doe_miss
+            if isinstance(restriction, dict) and set(restriction) == {"mouse_name"}:
+                return mouse_q
+            if isinstance(restriction, dict) and "day" in restriction:
+                return pk_miss
+            # mouse_name + attempt
+            chained = MagicMock()
+            chained.__and__ = MagicMock(side_effect=and_side_effect)
+            chained.__bool__ = MagicMock(return_value=False)
+            return chained
+
+        session_table = MagicMock()
+        session_table.__and__ = MagicMock(side_effect=and_side_effect)
+        with patch.object(mouse_sync, "exp") as mock_exp:
+            mock_exp.Session.return_value = session_table
+            status, out = mouse_sync._prepare_session_row_for_main(row, log=log)
+        assert status == "ready"
+        assert out["day"] == 36  # 2026-02-05 - 2026-01-01 + 1
+        assert out["doe"] == datetime.date(2026, 2, 5)
 
 
 class TestGetPushableLocalSessionKeys:
@@ -641,6 +775,37 @@ class TestPopulateBaseFlags:
             ]
             schemas = _schemas_for_dataset({"x": 1}, populate_base=True)
             assert schemas == [{"name": "base"}, {"name": "vr4mice"}]
+
+    def test_gui_folder_skips_without_dataset(self, tmp_path):
+        import numpy as np
+        import populate_rig
+
+        npy = tmp_path / "Orphan_2026-02-05_1.npy"
+        np.save(str(npy), {"day": 1, "mouse_name": "Orphan"})
+
+        fake_vr4mice = MagicMock()
+        fake_vr4mice.Dataset.return_value.fetch.return_value = ["Keep_2026-02-05_1"]
+
+        import types
+
+        schema_pkg = types.ModuleType("vr4mice.schema")
+        schema_pkg.__path__ = []
+        schema_pkg.vr4mice = fake_vr4mice
+
+        with patch.dict(
+            sys.modules,
+            {
+                "vr4mice.schema": schema_pkg,
+                "vr4mice.schema.vr4mice": fake_vr4mice,
+            },
+        ), patch.object(
+            populate_rig, "populate_dataset_tables"
+        ) as mock_pop:
+            ok, failed = populate_rig.populate_base_from_gui_folder(
+                str(tmp_path), restrict_to_datasets=True
+            )
+        assert ok == 0 and failed == 0
+        mock_pop.assert_not_called()
 
 
 class TestRunBaseCliSurface:

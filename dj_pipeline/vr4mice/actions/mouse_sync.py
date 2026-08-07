@@ -110,6 +110,7 @@ def ensure_mouse_for_session(
 
     Inserts a full row when .npy metadata is available, otherwise a stub
     identified by mouse_id=-1 until sync_mice pulls records from the main DB.
+    If a stub already exists and .npy now has full metadata, replace the stub.
     """
     log = log or logger
     mouse_name = _mouse_name_from_raw(raw_data, dataset)
@@ -117,8 +118,16 @@ def ensure_mouse_for_session(
         log.warning("Could not resolve mouse_name for dataset %s.", dataset)
         return False
 
-    if mice.Mouse() & {"mouse_name": mouse_name}:
-        return False
+    existing = (mice.Mouse() & {"mouse_name": mouse_name}).fetch(as_dict=True)
+    if existing:
+        if not is_stub_mouse(existing[0]):
+            return False
+        row = _mouse_row_from_raw(raw_data, mouse_name)
+        if is_stub_mouse(row):
+            return False
+        mice.Mouse.insert1(row, replace=True)
+        log.info("Upgraded stub Mouse for %s from session metadata.", mouse_name)
+        return True
 
     row = _mouse_row_from_raw(raw_data, mouse_name)
     mice.Mouse.insert1(row, skip_duplicates=True)
@@ -195,7 +204,8 @@ def sync_mice_from_main(log=None) -> int:
     Copy Mouse-related rows from the main database onto this local DB.
 
     Fetches on DJ_MAIN_HOST, then upserts locally. Only incomplete/stub mice
-    that already have a local exp.Session are synced.
+    that already have a local exp.Session are synced. Strain lookup rows are
+    pulled first so Mouse replace does not fail on missing FK targets.
     """
     log = log or logger
     _require_dj_main_host()
@@ -222,15 +232,29 @@ def sync_mice_from_main(log=None) -> int:
     )
 
     fetched: List[tuple] = []
+    strain_names: Set[str] = set()
+    strain_rows: List[dict] = []
     with _main_database():
         for name in targets:
             restriction = {"mouse_name": name}
             for table in MOUSE_SYNC_TABLES:
                 rows = (table() & restriction).fetch(as_dict=True)
-                if rows:
-                    fetched.append((table, rows))
+                if not rows:
+                    continue
+                fetched.append((table, rows))
+                if table is mice.Mouse:
+                    for row in rows:
+                        strain = row.get("strain")
+                        if strain:
+                            strain_names.add(strain)
+        for strain in sorted(strain_names):
+            strain_rows.extend(
+                (mice.Strain() & {"strain": strain}).fetch(as_dict=True)
+            )
 
     inserted = 0
+    if strain_rows:
+        inserted += _upsert_rows(mice.Strain(), strain_rows)
     for table, rows in fetched:
         inserted += _upsert_rows(table(), rows)
 
@@ -338,6 +362,84 @@ def get_pushable_local_session_keys(log=None) -> Set[Tuple[str, str, int]]:
     return pushable
 
 
+def _doe_str(doe) -> str:
+    if hasattr(doe, "isoformat"):
+        return doe.isoformat()
+    return str(doe)[:10]
+
+
+def _as_date(doe) -> datetime.date:
+    if isinstance(doe, datetime.date) and not isinstance(doe, datetime.datetime):
+        return doe
+    if isinstance(doe, datetime.datetime):
+        return doe.date()
+    return datetime.date.fromisoformat(_doe_str(doe))
+
+
+def _prepare_session_row_for_main(row: dict, log=None) -> Tuple[str, Optional[dict]]:
+    """
+    Adapt a local Session row for insert on main (caller must be on main).
+
+    Existence is judged by (mouse_name, doe, attempt), not local day.
+    Returns (status, row) where status is ``exists``, ``conflict``, or ``ready``.
+    """
+    log = log or logger
+    mouse_name = row["mouse_name"]
+    attempt = int(row["attempt"])
+    doe_s = _doe_str(row["doe"])
+    doe_date = _as_date(row["doe"])
+
+    if (
+        exp.Session()
+        & {"mouse_name": mouse_name, "attempt": attempt}
+        & f'doe="{doe_s}"'
+    ):
+        return "exists", None
+
+    main_sessions = (exp.Session() & {"mouse_name": mouse_name}).fetch(as_dict=True)
+    same_doe_days = [
+        int(s["day"]) for s in main_sessions if _doe_str(s["doe"]) == doe_s
+    ]
+    if same_doe_days:
+        day = same_doe_days[0]
+    elif main_sessions:
+        start = min(_as_date(s["doe"]) for s in main_sessions)
+        day = (doe_date - start).days + 1
+        if day < 1:
+            log.warning(
+                "Cannot push %s doe=%s attempt=%s: date is before the mouse's "
+                "first session on main (start=%s); resolve day numbering manually.",
+                mouse_name,
+                doe_s,
+                attempt,
+                start.isoformat(),
+            )
+            return "conflict", None
+    else:
+        day = 1
+
+    if exp.Session() & {
+        "mouse_name": mouse_name,
+        "day": day,
+        "attempt": attempt,
+    }:
+        log.warning(
+            "Cannot push %s doe=%s attempt=%s: main already has "
+            "(day=%s, attempt=%s) for a different session.",
+            mouse_name,
+            doe_s,
+            attempt,
+            day,
+            attempt,
+        )
+        return "conflict", None
+
+    out = dict(row)
+    out["day"] = day
+    out["doe"] = doe_date
+    return "ready", out
+
+
 def sync_exp_to_main(log=None) -> int:
     """
     Optional: push missing local (non-collab) exp.Session rows to parent.
@@ -346,6 +448,8 @@ def sync_exp_to_main(log=None) -> int:
     are candidates — collaborator Collab datasets are never pushed.
     Requires ``DJ_MAIN_HOST`` and write access on main ``exp``.
 
+    Matches existing parent sessions by ``(mouse_name, doe, attempt)`` (not local
+    ``day``). Assigns ``day`` from the parent mouse timeline when inserting.
     Inserts missing parent rows only — never deletes or overwrites on main.
     Mouse must already exist on main.
     """
@@ -372,14 +476,14 @@ def sync_exp_to_main(log=None) -> int:
         log.info("No local non-collab sessions to push.")
         return 0
 
-    sheets_by_key = {
+    sheets_by_local_pk = {
         _pk_tuple(_session_primary_key(row)): row
         for row in exp.SessionScoreSheet().fetch(as_dict=True)
     }
 
     log.info(
         "Pushing missing local (non-collab) exp.Session row(s) to main DB (%s) "
-        "(%d candidate session(s))",
+        "(%d candidate session(s); match by mouse/doe/attempt)",
         os.environ["DJ_MAIN_HOST"],
         len(candidates),
     )
@@ -387,29 +491,41 @@ def sync_exp_to_main(log=None) -> int:
     inserted = 0
     skipped_missing_mouse: List[str] = []
     skipped_existing = 0
+    skipped_conflict = 0
     failed: List[str] = []
 
     with _main_database():
         for row in candidates:
-            key = _session_primary_key(row)
             mouse_name = row.get("mouse_name")
             if not (mice.Mouse() & {"mouse_name": mouse_name}):
                 skipped_missing_mouse.append(mouse_name or "?")
                 continue
 
-            if exp.Session() & key:
+            status, main_row = _prepare_session_row_for_main(row, log=log)
+            if status == "exists":
                 skipped_existing += 1
                 continue
+            if status == "conflict" or main_row is None:
+                skipped_conflict += 1
+                continue
 
+            local_pk = _session_primary_key(row)
             try:
-                exp.Session.insert1(row)
+                exp.Session.insert1(main_row)
                 inserted += 1
-                sheet_row = sheets_by_key.get(_pk_tuple(key))
-                if sheet_row is not None and not (exp.SessionScoreSheet() & key):
-                    exp.SessionScoreSheet.insert1(sheet_row)
-                    inserted += 1
+                sheet_row = sheets_by_local_pk.get(_pk_tuple(local_pk))
+                if sheet_row is not None:
+                    main_sheet = dict(sheet_row)
+                    main_sheet["day"] = main_row["day"]
+                    sheet_key = _session_primary_key(main_sheet)
+                    if not (exp.SessionScoreSheet() & sheet_key):
+                        exp.SessionScoreSheet.insert1(main_sheet)
+                        inserted += 1
             except Exception as err:
-                failed.append(f"{key}: {err}")
+                failed.append(
+                    f"{mouse_name} doe={_doe_str(row.get('doe'))} "
+                    f"attempt={row.get('attempt')}: {err}"
+                )
 
     if skipped_missing_mouse:
         missing = sorted(set(skipped_missing_mouse))
@@ -421,7 +537,16 @@ def sync_exp_to_main(log=None) -> int:
             SYNC_EXP_COMMAND,
         )
     if skipped_existing:
-        log.info("Skipped %d session(s) already present on main.", skipped_existing)
+        log.info(
+            "Skipped %d session(s) already present on main (same mouse/doe/attempt).",
+            skipped_existing,
+        )
+    if skipped_conflict:
+        log.warning(
+            "Skipped %d session(s) due to day/PK conflicts on main "
+            "(see warnings above).",
+            skipped_conflict,
+        )
     if failed:
         log.warning("Failed to push %d row(s): %s", len(failed), "; ".join(failed[:10]))
     log.info("Pushed %d exp row(s) to main DB.", inserted)

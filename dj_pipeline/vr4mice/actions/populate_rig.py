@@ -500,12 +500,17 @@ def populate_base_from_gui_folder(
     folder_path: str,
     *,
     srcf: str = "/data",
+    restrict_to_datasets: bool = True,
 ) -> tuple[int, int]:
     """
     Populate base/exp schema (stub Mouse rows only) from GUI .npy files in a folder.
 
     Call sync_days() once over all GUI folders before batch populate so day
     numbering stays consistent. Used by recover_base, not by normal cron ingest.
+
+    When ``restrict_to_datasets`` is True (default), only rebuild sessions whose
+    stem matches an existing ``vr4mice.Dataset`` — keeps recover aligned with
+    Dataset-orphan cleanup (a second ``--force`` will not wipe these rows).
 
     Returns (completed_count, failed_count).
     """
@@ -519,12 +524,33 @@ def populate_base_from_gui_folder(
         logger.info("No GUI .npy files in %s", folder_path)
         return (0, 0)
 
+    allowed = None
+    if restrict_to_datasets:
+        from vr4mice.schema import vr4mice
+
+        allowed = set(vr4mice.Dataset().fetch("dataset"))
+        if not allowed:
+            logger.warning(
+                "No vr4mice.Dataset rows; skipping base populate in %s "
+                "(recover only rebuilds Dataset-backed sessions).",
+                folder_path,
+            )
+            return (0, 0)
+
     dstf = _dstf_for_folder(folder_path, srcf)
     ok, failed = 0, 0
+    skipped = 0
 
     for npy_file in dir_list[".npy"]:
         try:
             raw_data_npy, dataset = get_new_file(npy_file, folder_path)
+            if allowed is not None and dataset not in allowed:
+                skipped += 1
+                logger.info(
+                    "Skipping %s: no vr4mice.Dataset (not rebuilding).",
+                    dataset,
+                )
+                continue
             raw_data = _prepare_gui_raw_data(
                 dataset, raw_data_npy, srcf=srcf, file_dir=folder_path
             )
@@ -549,6 +575,12 @@ def populate_base_from_gui_folder(
                 "Base populate failed for %s in %s: %s", npy_file, folder_path, e
             )
 
+    if skipped:
+        logger.info(
+            "Skipped %d GUI .npy file(s) in %s without matching Dataset.",
+            skipped,
+            folder_path,
+        )
     return (ok, failed)
 
 

@@ -30,8 +30,9 @@ POST_RECOVERY_NOTE = """
 Recovery finished — sync with the main database
 ================================================================================
 
-This recovery script only rebuilds LOCAL exp/mice rows from GUI files on disk.
-It uses stub Mouse rows (mouse_id=-1, minimal fields) so sessions can be inserted.
+This recovery script only rebuilds LOCAL exp/mice rows from GUI files on disk
+for sessions that already have a matching ``vr4mice.Dataset``. It uses stub
+Mouse rows (mouse_id=-1, minimal fields) so sessions can be inserted.
 
 Two DataJoint connections are involved (local DJ_HOST vs main DJ_MAIN_HOST):
 
