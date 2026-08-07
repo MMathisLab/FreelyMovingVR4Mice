@@ -444,7 +444,9 @@ class DLC(dj.Manual):
                         raise FileNotFoundError(
                             f"Existing DLC row missing {field}: '{resolved}'"
                         )
-                logger.debug("%s already populated for key %s", self.__class__.__name__, key)
+                logger.debug(
+                    "%s already populated for key %s", self.__class__.__name__, key
+                )
                 return
 
             paths = get_files_paths(key["dataset"])
