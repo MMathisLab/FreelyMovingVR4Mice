@@ -417,7 +417,7 @@ Typical sequence:
 
 `run.py populate` with `GUI=True` writes `mice` / `exp` from session `.npy` in the
 usual ingest path. Use **`run_base.py`** only for recovery and parent sync
-(`recover_base`, `sync_mice`, `sync_exp`, `cleanup_mice`) — see
+(`sync_mice`, `recover_base`, `cleanup_orphans`, `sync_exp`, …) — see
 [`docs/software/base_schema_sync.md`](../docs/software/base_schema_sync.md).
 
 One-off after a DataJoint upgrade or when adding a new schema:
