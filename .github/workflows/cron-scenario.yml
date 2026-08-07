@@ -71,6 +71,7 @@ jobs:
 
           for i in $(seq 1 30); do
             status="$(docker inspect -f '{{.State.Health.Status}}' vr4mice-mysql)"
+            echo "MySQL health check attempt ${i}/30: ${status}"
             if [ "$status" = "healthy" ]; then
               break
             fi
@@ -126,10 +127,10 @@ jobs:
             bash -lc "set -euo pipefail \
               && pip install --no-deps /app/base/base_min_schemas /app/base/base_actions \
               && python cron_scenario.py \
-              && local_experiment_member_nonlocal_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e 'SELECT COUNT(*) FROM decision._experiment_member m JOIN vr4mice.`#batch` b USING (batch_name) WHERE b.compute_locally = 0;')\" \
-              && local_experiment_member_local_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e 'SELECT COUNT(*) FROM decision._experiment_member m JOIN vr4mice.`#batch` b USING (batch_name) WHERE b.compute_locally = 1;')\" \
-              && local_inclusion_status_nonlocal_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e 'SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) JOIN vr4mice.`#batch` b USING (batch_name) WHERE b.compute_locally = 0;')\" \
-              && local_inclusion_status_local_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e 'SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) JOIN vr4mice.`#batch` b USING (batch_name) WHERE b.compute_locally = 1;')\" \
+              && local_experiment_member_nonlocal_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e 'SELECT COUNT(*) FROM decision._experiment_member m JOIN vr4mice.\`#batch\` b USING (batch_name) WHERE b.compute_locally = 0;')\" \
+              && local_experiment_member_local_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e 'SELECT COUNT(*) FROM decision._experiment_member m JOIN vr4mice.\`#batch\` b USING (batch_name) WHERE b.compute_locally = 1;')\" \
+              && local_inclusion_status_nonlocal_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e 'SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) JOIN vr4mice.\`#batch\` b USING (batch_name) WHERE b.compute_locally = 0;')\" \
+              && local_inclusion_status_local_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e 'SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) JOIN vr4mice.\`#batch\` b USING (batch_name) WHERE b.compute_locally = 1;')\" \
               && echo \"Local run decision._experiment_member compute_locally=0 rows: \${local_experiment_member_nonlocal_count}\" \
               && echo \"Local run decision._experiment_member compute_locally=1 rows: \${local_experiment_member_local_count}\" \
               && echo \"Local run decision.__inclusion_status compute_locally=0 rows: \${local_inclusion_status_nonlocal_count}\" \
@@ -140,10 +141,10 @@ jobs:
               && test \"\${local_inclusion_status_local_count}\" -ge 1 \
               && mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -e 'DELETE FROM vr4mice.failed_session;' \
               && python cron_scenario.py --aws \
-              && aws_experiment_member_nonlocal_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e 'SELECT COUNT(*) FROM decision._experiment_member m JOIN vr4mice.`#batch` b USING (batch_name) WHERE b.compute_locally = 0;')\" \
-              && aws_experiment_member_local_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e 'SELECT COUNT(*) FROM decision._experiment_member m JOIN vr4mice.`#batch` b USING (batch_name) WHERE b.compute_locally = 1;')\" \
-              && aws_inclusion_status_nonlocal_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e 'SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) JOIN vr4mice.`#batch` b USING (batch_name) WHERE b.compute_locally = 0;')\" \
-              && aws_inclusion_status_local_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e 'SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) JOIN vr4mice.`#batch` b USING (batch_name) WHERE b.compute_locally = 1;')\" \
+              && aws_experiment_member_nonlocal_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e 'SELECT COUNT(*) FROM decision._experiment_member m JOIN vr4mice.\`#batch\` b USING (batch_name) WHERE b.compute_locally = 0;')\" \
+              && aws_experiment_member_local_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e 'SELECT COUNT(*) FROM decision._experiment_member m JOIN vr4mice.\`#batch\` b USING (batch_name) WHERE b.compute_locally = 1;')\" \
+              && aws_inclusion_status_nonlocal_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e 'SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) JOIN vr4mice.\`#batch\` b USING (batch_name) WHERE b.compute_locally = 0;')\" \
+              && aws_inclusion_status_local_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e 'SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) JOIN vr4mice.\`#batch\` b USING (batch_name) WHERE b.compute_locally = 1;')\" \
               && echo \"AWS run decision._experiment_member compute_locally=0 rows: \${aws_experiment_member_nonlocal_count}\" \
               && echo \"AWS run decision._experiment_member compute_locally=1 rows: \${aws_experiment_member_local_count}\" \
               && echo \"AWS run decision.__inclusion_status compute_locally=0 rows: \${aws_inclusion_status_nonlocal_count}\" \
@@ -244,6 +245,7 @@ jobs:
 
           for i in $(seq 1 30); do
             status="$(docker inspect -f '{{.State.Health.Status}}' vr4mice-mysql-restore)"
+            echo "MySQL restore health check attempt ${i}/30: ${status}"
             if [ "$status" = "healthy" ]; then
               break
             fi
