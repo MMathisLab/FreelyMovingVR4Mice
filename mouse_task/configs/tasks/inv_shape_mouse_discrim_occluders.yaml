@@ -6,7 +6,7 @@ description: |
 # Only the parameters that differ from configs/common.yaml.
 params:
   session_label:
-  - ar_shape_discrim_occluders_inv
+  - ar_shape_discrim_narrow_occluders_inv
   epoch_labels:
   - teardrop_vs_pacman
   slit_size:
