@@ -23,10 +23,20 @@ class TeensyLatency:
 
     def read_on_thread(self):
         while self.reading_teensy and not self.stop_event.is_set():
-            line_bytes = self.ser.readline()
-            if not line_bytes:
-                continue
-            line = line_bytes.decode("utf-8").rstrip()
+            try:
+                raw_line = self.ser.readline()
+            except (serial.SerialException, OSError):
+                # Serial port was closed (e.g. by close_serial()) while readline() was blocked.
+                break
+            except TypeError as err:
+                # On some Windows/pyserial versions, close() racing readline()
+                # raises: "byref() argument must be a ctypes instance, not 'NoneType'".
+                if "byref() argument must be a ctypes instance" in str(err):
+                    break
+                raise
+            if not raw_line:
+                continue  # timeout with no data
+            line = raw_line.decode("utf-8").rstrip()
             now = time.time()  # Current time
             try:
                 self._handle_line(line, now)
