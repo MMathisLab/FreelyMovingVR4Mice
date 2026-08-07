@@ -12,6 +12,18 @@ from vr4mice.utils.logger import Logger
 
 logger = Logger.get_logger()
 
+_registered_cameras = None
+
+
+def _get_registered_cameras():
+    """Lazily fetch and cache registered camera names from DataJoint."""
+    global _registered_cameras
+    if _registered_cameras is None:
+        from vr4mice.schema import vr4mice
+
+        _registered_cameras = set(vr4mice.Camera().fetch("camera"))
+    return _registered_cameras
+
 
 def get_session_incr(raw_data=None, **kwargs):
     """
@@ -212,12 +224,23 @@ def get_model_name(raw_data=None, key=None, transformer=None, **kwargs):
 
 def get_camera(raw_data=None, key=None, transformer=None, **kwargs):
     """
-    Extracts the camera name from the dlc file name
+    Extracts the camera name from the dlc file name.
+
+    Falls back to "unknown" if the parsed prefix isn't a registered
+    Camera (e.g. a rig misconfiguration produced an unexpected prefix),
+    rather than silently registering every stray prefix as a new camera.
     """
     file_info = raw_data["dlc_path"]
     filename = file_info["filename"]
     arr = str(Path(filename).stem).split("_")
     name = arr[0]
+
+    registered_cameras = _get_registered_cameras()
+    if name not in registered_cameras:
+        logger.warning(
+            f"Camera prefix '{name}' not in registered Camera table; using 'unknown' instead."
+        )
+        return "unknown"
     return name
 
 
