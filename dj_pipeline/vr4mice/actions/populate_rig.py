@@ -396,7 +396,9 @@ def _img_src_candidates() -> list:
     return candidates or ["Imagingsource"]
 
 
-def _select_prefix_by_existing_files(dataset: str, dlc_video_path: str, candidates: list) -> str:
+def _select_prefix_by_existing_files(
+    dataset: str, dlc_video_path: str, candidates: list
+) -> str:
     """Pick the first prefix whose DLC/PROC file exists; otherwise return first candidate."""
     for prefix in candidates:
         proc_candidates = [
