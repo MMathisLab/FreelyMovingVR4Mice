@@ -24,7 +24,7 @@ created. Those stubs are **not** full registry records.
 left stubs / incomplete Mouse rows), run:
 
 ```bash
-python run_base.py sync_mice   # pull full Mouse (+ Surgery, score sheets) from parent
+python run_base.py sync_mice   # pull full Mouse (+ Strain, Surgery, score sheets) from parent
 python run.py fetch            # refresh GUI menu if needed
 ```
 
@@ -49,9 +49,9 @@ Use **`python run_base.py …`** only for **recovery and parent-DB sync**:
 
 | Mode | Purpose |
 |------|---------|
-| `recover_base` | Replication check → optional orphan cleanup → rebuild base from GUI `.npy` |
-| `sync_mice` | Parent → local Mouse (+ Surgery, score sheets) for stub/incomplete session mice |
-| `sync_exp` | **Optional.** Local → parent missing `exp.Session` (this lab only; not collab) |
+| `recover_base` | Replication check → optional orphan cleanup → rebuild base **only for Dataset-backed** GUI `.npy` |
+| `sync_mice` | Parent → local Mouse (+ Strain, Surgery, score sheets) for stub/incomplete session mice |
+| `sync_exp` | **Optional.** Local → parent missing `exp.Session` (this lab only; match by doe, not local day) |
 | `cleanup_mice` | Remove **stub** mice with no local Session (lighter than recover orphans) |
 
 Session files should still exist under `/data/data` and/or `/data/processed`.
@@ -254,5 +254,5 @@ python run.py populate   # GUI=True still fills exp/mice for new sessions
 ## 5. Tests
 
 `tests/unit/test_base_schema_sync.py` — stubs, sync direction, replication gate,
-orphan dry-run, sync_days helpers, GUI⇒base schema selection, `run_base` modes,
-and **`sync_exp` local-vs-collab filtering**.
+orphan dry-run, Dataset-gated recover populate, sync_days helpers, GUI⇒base
+schema selection, `run_base` modes, and **`sync_exp` local-vs-collab + doe matching**.

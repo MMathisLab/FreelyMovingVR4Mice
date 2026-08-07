@@ -248,9 +248,7 @@ def sync_mice_from_main(log=None) -> int:
                         if strain:
                             strain_names.add(strain)
         for strain in sorted(strain_names):
-            strain_rows.extend(
-                (mice.Strain() & {"strain": strain}).fetch(as_dict=True)
-            )
+            strain_rows.extend((mice.Strain() & {"strain": strain}).fetch(as_dict=True))
 
     inserted = 0
     if strain_rows:
@@ -327,9 +325,7 @@ def get_pushable_local_session_keys(log=None) -> Set[Tuple[str, str, int]]:
     log = log or logger
     lab_by_key = _dataset_lab_by_session_key(log=log)
     if not lab_by_key:
-        log.info(
-            "No local vr4mice.Dataset rows; sync_exp will not push any sessions."
-        )
+        log.info("No local vr4mice.Dataset rows; sync_exp will not push any sessions.")
         return set()
 
     dj_lab = os.environ.get("DJ_LAB")
@@ -462,9 +458,7 @@ def sync_exp_to_main(log=None) -> int:
         return 0
 
     pushable = get_pushable_local_session_keys(log=log)
-    candidates = [
-        row for row in local_sessions if _session_identity(row) in pushable
-    ]
+    candidates = [row for row in local_sessions if _session_identity(row) in pushable]
     skipped_non_local = len(local_sessions) - len(candidates)
     if skipped_non_local:
         log.info(
