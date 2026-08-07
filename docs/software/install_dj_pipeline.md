@@ -558,9 +558,9 @@ Typical sequence:
 ...
 ```
 
-`run.py populate` (with `GUI=True` and `POPULATE_BASE`, default on) still writes
-`mice` / `exp` in the usual ingest path. Use **`run_base.py`** for recovery,
-parent sync (`sync_mice` / `sync_exp`), and orphan cleanup — see
+`run.py populate` with `GUI=True` writes `mice` / `exp` from session `.npy` in the
+usual ingest path. Use **`run_base.py`** only for recovery and parent sync
+(`recover_base`, `sync_mice`, `sync_exp`, `cleanup_mice`) — see
 {ref}`Base schema sync (mice / exp) <base-schema-sync>`.
 
 One-off after a DataJoint upgrade or when adding a new schema:

@@ -30,12 +30,6 @@ MOUSE_SYNC_TABLES = (
     mice.MouseScoreSheet_WaterRestriction,
 )
 
-# Local → parent: session rows (Mouse must already exist on main).
-EXP_SYNC_TABLES = (
-    exp.Session,
-    exp.SessionScoreSheet,
-)
-
 
 def is_stub_mouse(row: dict) -> bool:
     """Return True for placeholder rows created during local ingest."""
@@ -50,12 +44,20 @@ def get_session_mouse_names() -> Set[str]:
 
 def get_incomplete_mouse_names() -> List[str]:
     """Session mice that are missing or still have stub Mouse records."""
-    incomplete = []
-    for name in sorted(get_session_mouse_names()):
-        rows = (mice.Mouse() & {"mouse_name": name}).fetch(as_dict=True)
-        if not rows or is_stub_mouse(rows[0]):
-            incomplete.append(name)
-    return incomplete
+    session_mice = sorted(get_session_mouse_names())
+    if not session_mice:
+        return []
+
+    by_name = {
+        row["mouse_name"]: row
+        for row in mice.Mouse().fetch(as_dict=True)
+        if row.get("mouse_name")
+    }
+    return [
+        name
+        for name in session_mice
+        if name not in by_name or is_stub_mouse(by_name[name])
+    ]
 
 
 def _mouse_name_from_raw(raw_data: dict, dataset: Optional[str] = None) -> Optional[str]:
@@ -148,8 +150,16 @@ def warn_incomplete_mice(log=None) -> List[str]:
     return incomplete
 
 
+def _require_dj_main_host() -> None:
+    if not os.environ.get("DJ_MAIN_HOST"):
+        raise ValueError(
+            "DJ_MAIN_HOST is not set. Example: export DJ_MAIN_HOST=main.server:3306"
+        )
+
+
 @contextmanager
 def _main_database():
+    """Temporarily point DataJoint at DJ_MAIN_HOST, then restore local config."""
     keys = ("database.host", "database.user", "database.password")
     saved = {key: dj.config[key] for key in keys}
     dj.config["database.host"] = os.environ["DJ_MAIN_HOST"]
@@ -180,15 +190,13 @@ def _upsert_rows(table, rows: Iterable[dict]) -> int:
 
 def sync_mice_from_main(log=None) -> int:
     """
-    Copy Mouse-related rows from the main database for local session mice only.
+    Copy Mouse-related rows from the main database onto this local DB.
 
-    Requires DJ_MAIN_HOST. Only mice listed in exp.Session locally are synced.
+    Fetches on DJ_MAIN_HOST, then upserts locally. Only incomplete/stub mice
+    that already have a local exp.Session are synced.
     """
     log = log or logger
-    if not os.environ.get("DJ_MAIN_HOST"):
-        raise ValueError(
-            "DJ_MAIN_HOST is not set. Example: export DJ_MAIN_HOST=main.server:3306"
-        )
+    _require_dj_main_host()
 
     mouse_names = sorted(get_session_mouse_names())
     if not mouse_names:
@@ -204,23 +212,27 @@ def sync_mice_from_main(log=None) -> int:
         return 0
 
     log.info(
-        "Syncing %d/%d session mice from main DB (%s): %s",
+        "Fetching %d/%d session mice from main DB (%s): %s",
         len(targets),
         len(mouse_names),
         os.environ["DJ_MAIN_HOST"],
         ", ".join(targets),
     )
 
-    inserted = 0
+    fetched: List[tuple] = []
     with _main_database():
         for name in targets:
             restriction = {"mouse_name": name}
             for table in MOUSE_SYNC_TABLES:
                 rows = (table() & restriction).fetch(as_dict=True)
                 if rows:
-                    inserted += _upsert_rows(table(), rows)
+                    fetched.append((table, rows))
 
-    log.info("Synced mouse metadata from main DB (%d rows upserted).", inserted)
+    inserted = 0
+    for table, rows in fetched:
+        inserted += _upsert_rows(table(), rows)
+
+    log.info("Synced mouse metadata onto local DB (%d rows upserted).", inserted)
     remaining = get_incomplete_mouse_names()
     if remaining:
         log.warning(
@@ -231,13 +243,6 @@ def sync_mice_from_main(log=None) -> int:
     return inserted
 
 
-def _require_dj_main_host() -> None:
-    if not os.environ.get("DJ_MAIN_HOST"):
-        raise ValueError(
-            "DJ_MAIN_HOST is not set. Example: export DJ_MAIN_HOST=main.server:3306"
-        )
-
-
 def _session_primary_key(row: dict) -> dict:
     return {field: row[field] for field in exp.Session.primary_key if field in row}
 
@@ -246,14 +251,12 @@ def _pk_tuple(key: dict) -> tuple:
     return tuple(key[field] for field in exp.Session.primary_key)
 
 
-def sync_exp_to_main(log=None, *, only_missing: bool = True) -> int:
+def sync_exp_to_main(log=None) -> int:
     """
-    Push local exp.Session (+ SessionScoreSheet) rows to the parent database.
+    Push local exp.Session (+ SessionScoreSheet) rows that are missing on parent.
 
-    Requires DJ_MAIN_HOST and write access on main ``exp``. Mouse rows must
-    already exist on main (run ``sync_mice`` / ensure registry first). By
-    default only inserts sessions that are missing on parent (does not
-    overwrite existing parent sessions).
+    Requires DJ_MAIN_HOST and write access on main ``exp``. Does not overwrite
+    existing parent sessions. Mouse must already exist on main.
     """
     log = log or logger
     _require_dj_main_host()
@@ -269,10 +272,10 @@ def sync_exp_to_main(log=None, *, only_missing: bool = True) -> int:
     }
 
     log.info(
-        "Pushing up to %d local exp.Session row(s) to main DB (%s)%s",
-        len(local_sessions),
+        "Pushing missing local exp.Session row(s) to main DB (%s) "
+        "(%d local session(s) to consider)",
         os.environ["DJ_MAIN_HOST"],
-        " (only missing)" if only_missing else " (upsert)",
+        len(local_sessions),
     )
 
     inserted = 0
@@ -288,27 +291,15 @@ def sync_exp_to_main(log=None, *, only_missing: bool = True) -> int:
                 skipped_missing_mouse.append(mouse_name or "?")
                 continue
 
-            exists = bool(exp.Session() & key)
-            if only_missing and exists:
+            if exp.Session() & key:
                 skipped_existing += 1
                 continue
 
             try:
-                if exists and not only_missing:
-                    (exp.SessionScoreSheet() & key).delete(safemode=False)
-                    (exp.Session() & key).delete(safemode=False)
-                if not (exp.Session() & key):
-                    exp.Session.insert1(row)
-                    inserted += 1
-
+                exp.Session.insert1(row)
+                inserted += 1
                 sheet_row = sheets_by_key.get(_pk_tuple(key))
-                if sheet_row is None:
-                    continue
-                if exp.SessionScoreSheet() & key:
-                    if only_missing:
-                        continue
-                    (exp.SessionScoreSheet() & key).delete(safemode=False)
-                if not (exp.SessionScoreSheet() & key):
+                if sheet_row is not None and not (exp.SessionScoreSheet() & key):
                     exp.SessionScoreSheet.insert1(sheet_row)
                     inserted += 1
             except Exception as err:
@@ -337,7 +328,8 @@ def cleanup_mice_without_sessions(*, dry_run: bool = True, stubs_only: bool = Tr
     """
     Remove Mouse rows that are not referenced by any local Session.
 
-    By default only stub rows (mouse_id=-1) are removed.
+    By default only stub rows (mouse_id=-1) are removed. For Dataset-based
+    orphan Session/Mouse cleanup, use recover_base instead.
     """
     session_mice = get_session_mouse_names()
     candidates = []

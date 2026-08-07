@@ -4,78 +4,59 @@
 
 ## Normal ingest (usual workflow)
 
-When `GUI=True`, **daily populate still writes `exp` / `mice`** as part of the
-normal pipeline:
+When `GUI=True`, **daily populate writes `exp` / `mice`** together with `vr4mice`:
 
 ```bash
-python run.py populate    # POPULATE_BASE defaults to True; uses GUI .npy → exp/mice
+python run.py populate    # GUI .npy → exp/mice + vr4mice tables
 python run.py analysis
 # …
 ```
 
-Cron / `run.py` are unchanged in that sense: session ingest with GUI metadata
-populates base tables together with `vr4mice` tables. Set `POPULATE_BASE=false`
-only if you explicitly want to skip base on that path.
+No separate base cron path. Base populate follows the `GUI` flag
+(`GUI=True` ⇒ include `exp`/`mice`; `GUI=False` ⇒ `vr4mice` only).
 
 ---
 
 ## When you need `run_base.py`
 
-Use **`python run_base.py …`** for **recovery and parent-DB sync**, not as a
-replacement for cron:
+Use **`python run_base.py …`** only for **recovery and parent-DB sync**:
 
-- Local `mice` / `exp` are outdated, empty, or inconsistent
-- You need to clean orphans, pull mice from the parent registry, or push
-  recovered sessions back to parent
+| Mode | Purpose |
+|------|---------|
+| `recover_base` | Replication check → optional orphan cleanup → rebuild base from GUI `.npy` |
+| `sync_mice` | Parent → local Mouse (+ Surgery, score sheets) for stub/incomplete session mice |
+| `sync_exp` | Local → parent missing `exp.Session` (+ `SessionScoreSheet`) |
+| `cleanup_mice` | Remove **stub** mice with no local Session (lighter than recover orphans) |
 
 Session files should still exist under `/data/data` and/or `/data/processed`.
 
 ---
 
-## 1. Where to put credentials
+## 1. Credentials
 
-Same client env file as the local DB — typically `dj_pipeline/.env`
-(loaded into the Docker client via compose):
+In `dj_pipeline/.env` (loaded into the Docker client):
 
 ```bash
 # Local DB (this rig)
 DJ_HOST=local-db-host:3306
 DJ_USER=your-user
 DJ_PWD=your-password
+GUI=True
 
 # Parent / main lab DB (second DataJoint connection)
 DJ_MAIN_HOST=main-db.example.com:3306
 DJ_MAIN_USER=...          # optional; falls back to DJ_USER
 DJ_MAIN_PWD=...           # optional; falls back to DJ_PWD
-
-POPULATE_BASE=True
-GUI=True
 ```
 
 | Variable | Meaning |
 |----------|---------|
-| `DJ_HOST` / `DJ_USER` / `DJ_PWD` | Local database (pipeline + local `mice`/`exp`) |
-| `DJ_MAIN_HOST` (+ optional user/pwd) | Parent DB: **pull** mice metadata, **push** sessions |
+| `DJ_HOST` / `DJ_USER` / `DJ_PWD` | Local database |
+| `DJ_MAIN_HOST` (+ optional user/pwd) | Parent: **pull** mice (`sync_mice`), **push** sessions (`sync_exp`) |
 
 ---
 
-## 2. What recovery/sync automates
-
-| Goal | Direction | How |
-|------|-----------|-----|
-| Daily ingest of new sessions (GUI) | disk → local `vr4mice` + `exp`/`mice` | `python run.py populate` |
-| Rebuild / backfill local `exp` (+ stub `mice`) from GUI `.npy` | disk → local | `recover_base` or `run_base.py populate` |
-| Full Mouse / Surgery / score sheets | parent → local | `python run_base.py sync_mice` |
-| `exp.Session` (+ `SessionScoreSheet`) | local → parent | `python run_base.py sync_exp` |
-| Copy `exp` from parent onto this rig | parent → local | **Not done** — local sessions come from GUI files on disk |
-
-`sync_exp` inserts **only missing** sessions on parent (does not overwrite
-existing parent rows). The mouse must already exist on main; otherwise that
-session is skipped and logged.
-
----
-
-## 3. Why replication must be off for cleaning
+## 2. Why replication must be off for cleaning
 
 Local `mice` / `exp` are often a **MySQL replica** of the lab parent DB.
 
@@ -88,161 +69,92 @@ That is unsafe while replication is active:
    rows you just deleted, or stop replication with conflicts mid-cleanup.
 2. **Read-only replica** — deletes fail or leave a half-updated DB.
 3. **Cleanup is a local decision** — “orphan” means “no `vr4mice.Dataset` here”,
-   not “delete on the parent registry”. Do not clean while the replica stream
-   still treats parent as the live writer for the same tables.
+   not “delete on the parent registry”.
 
 **So:** stop replication before `--force` cleanup. The script **blocks** if
 replica IO/SQL is `Yes` or the DB is `read_only` / `super_read_only`.
 
 `sync_mice` / `sync_exp` use a **second** connection (`DJ_MAIN_HOST`) and do
-not require replica threads to be stopped — but `recover_base` always checks
-replication first, because the same command can delete when you pass `--force`.
-
-Check status:
+not require replica threads stopped — but `recover_base` always checks first
+because `--force` can delete.
 
 ```bash
 make -f mysql.mk replication-summary
-# Replica_IO_Running / Replica_SQL_Running should not be Yes; DB not read_only
 ```
 
 ---
 
-## 4. Step-by-step recovery (copy-paste)
+## 3. Step-by-step recovery
 
-Run inside the client container (or any env with the `.env` above loaded).
+### A — credentials + replication
 
-### Step A — credentials + replication
+1. Set `DJ_HOST` and `DJ_MAIN_*` in `.env`.
+2. Confirm replication is off / DB writable.
 
-1. Edit `.env` with `DJ_HOST` and `DJ_MAIN_*` (section 1).
-2. Confirm replication is off / DB writable (section 3).
-
-### Step B — preview orphans (safe: no deletes)
+### B — preview orphans (no deletes)
 
 ```bash
 python run_base.py recover_base
 ```
 
-This:
+Lists Session/Mouse with no matching `vr4mice.Dataset`, then tries to populate
+base from `/data/data` + `/data/processed`. **Read the “would delete …” list.**
 
-1. Checks replication (aborts if active).
-2. **Lists** `exp.Session` / `mice.Mouse` with no matching `vr4mice.Dataset`
-   (“would delete …”).
-3. Still tries to populate base from `/data/data` + `/data/processed` GUI `.npy`.
+### C — optional destructive cleanup
 
-**Read the “would delete …” list carefully.**
-
-### Step C — optional destructive cleanup
-
-Only if the orphan list is OK (see caution below):
+Only if the orphan list is OK:
 
 ```bash
 python run_base.py recover_base --force
 ```
 
-Deletes those orphans, then repopulates from `/data/data` + `/data/processed`.
+**Caution — future mice:** `--force` deletes any local mouse **not** referenced
+by a Dataset — including mice synced for upcoming experiments. Prefer dry-run
+first.
 
-**Caution — future mice:** `--force` deletes **any** local mouse **not**
-referenced by a `vr4mice.Dataset` name — including real mice you synced for
-upcoming experiments (no session/dataset yet).
-
-If you need those mice:
-
-- do **not** use `--force`, or
-- note the names from the dry-run and re-sync them afterward.
-
-Safer light cleanup (stub mice with **no** local Session only):
+Lighter cleanup (stubs with **no** Session only):
 
 ```bash
 python run_base.py cleanup_mice          # dry-run
-python run_base.py cleanup_mice --force   # delete those stubs only
+python run_base.py cleanup_mice --force
 ```
 
-### Step D — populate without deleting (if you skipped `--force`)
-
-Either continue with recovery tools:
+### D — sync with parent
 
 ```bash
-python run_base.py sync_days
-python run_base.py populate
+python run_base.py sync_mice   # parent → local mouse metadata (stubs → full)
+python run_base.py sync_exp    # local → parent missing sessions (needs write on main exp)
 ```
 
-Or, for normal ongoing ingest after recovery, use the usual cron path:
+### E — optional GUI menu
 
 ```bash
-python run.py populate
+python run.py fetch
 ```
 
-Both honor `POPULATE_BASE` (default on). With `GUI=True`, `.npy` metadata drives
-`exp`/`mice` as in the usual workflow.
-
-### Step E — pull full mouse metadata from parent
-
-Needs local `exp.Session` first (steps B–D):
+### F — resume normal cron
 
 ```bash
-python run_base.py sync_mice
+python run.py populate   # GUI=True still fills exp/mice for new sessions
 ```
-
-Only incomplete/stub mice that have local sessions are updated from
-`DJ_MAIN_HOST`.
-
-### Step F — push local sessions to parent
-
-```bash
-python run_base.py sync_exp
-```
-
-Requires **write access** on main `exp`. Inserts missing `exp.Session` (+
-`SessionScoreSheet`) on parent. Skips mice that do not exist on main.
-
-### Step G — optional GUI menu refresh
-
-```bash
-python run_base.py fetch
-# or: python run.py fetch
-```
-
-Writes `/shared/gui_menu.npy` (mice limited to those with local sessions).
 
 ---
 
-## 5. Minimal “happy path” (recovery)
+## 4. Minimal happy path
 
 ```text
-1. Put DJ_MAIN_HOST (+ USER/PWD) in .env next to DJ_HOST
-2. Stop replication / ensure writable local DB
-3. python run_base.py recover_base              # inspect orphans
-4. python run_base.py recover_base --force      # ONLY if orphan list is OK
-   # OR: sync_days + populate without deleting
-5. python run_base.py sync_mice                # parent → local mouse metadata
-6. python run_base.py sync_exp                 # local → parent sessions
-7. (optional) fetch
-8. Re-enable replication only after mice/exp look consistent on both sides
-9. Resume normal cron: python run.py populate (GUI=True still fills exp/mice)
+1. DJ_MAIN_* in .env; replication OFF
+2. python run_base.py recover_base
+3. python run_base.py recover_base --force   # only if orphan list is OK
+4. python run_base.py sync_mice
+5. python run_base.py sync_exp
+6. Re-enable replication when both sides look consistent
+7. Resume: python run.py populate
 ```
 
 ---
 
-## 6. Command cheat sheet
+## 5. Tests
 
-| Command | What it does |
-|---------|----------------|
-| `python run.py populate` | **Usual ingest** — with `GUI=True` / `POPULATE_BASE`, writes `vr4mice` + `exp`/`mice` |
-| `python run_base.py recover_base` | Replication check → list orphans → populate from data + processed |
-| `python run_base.py recover_base --force` | Same, but **deletes** orphans first |
-| `python run_base.py sync_days` | Fix experiment day in GUI `.npy` (data + processed together) |
-| `python run_base.py populate` | Same ingest helper as above (optional `--no-populate-base`) |
-| `python run_base.py sync_mice` | Parent → local Mouse (+ Surgery, score sheets) |
-| `python run_base.py sync_exp` | Local → parent Session (+ SessionScoreSheet), missing only |
-| `python run_base.py cleanup_mice` | Dry-run: stub mice with no local Session |
-| `python run_base.py cleanup_mice --force` | Delete those stubs |
-| `python run_base.py fetch` / `run.py fetch` | Export GUI menu `.npy` |
-| `make -f mysql.mk replication-summary` | Replica / read-only diagnostics |
-
----
-
-## 7. Tests
-
-Unit coverage (CI, no MySQL): `tests/unit/test_base_schema_sync.py` — stubs,
-`DJ_MAIN_HOST` gates, replication block, orphan dry-run, `sync_exp` helpers,
-sync_days helpers, `POPULATE_BASE`, and `run_base.py` modes.
+`tests/unit/test_base_schema_sync.py` — stubs, sync direction, replication gate,
+orphan dry-run, sync_days helpers, GUI⇒base schema selection, `run_base` modes.

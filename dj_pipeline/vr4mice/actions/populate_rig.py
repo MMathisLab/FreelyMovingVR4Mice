@@ -23,13 +23,6 @@ logger = Logger.get_logger()
 SKIP_DUPLICATES = True
 
 
-def _env_bool(name: str, default: bool = True) -> bool:
-    value = os.environ.get(name)
-    if value is None:
-        return default
-    return value.lower() in ("true", "1", "yes")
-
-
 def _schemas_for_dataset(raw_data_npy, *, populate_base: bool) -> list:
     """Return schema list for a dataset (base+vr4mice or vr4mice-only)."""
     if raw_data_npy is None or not populate_base:
@@ -507,13 +500,12 @@ def populate_base_from_gui_folder(
     folder_path: str,
     *,
     srcf: str = "/data",
-    sync_days_first: bool = False,
 ) -> tuple[int, int]:
     """
     Populate base/exp schema (stub Mouse rows only) from GUI .npy files in a folder.
 
-    Day sync is off by default here; call sync_days() once over all GUI folders
-    (data + processed) before batch populate so numbering stays consistent.
+    Call sync_days() once over all GUI folders before batch populate so day
+    numbering stays consistent. Used by recover_base, not by normal cron ingest.
 
     Returns (completed_count, failed_count).
     """
@@ -521,11 +513,6 @@ def populate_base_from_gui_folder(
     if not os.path.isdir(folder_path):
         logger.debug("GUI folder %s does not exist; skipping.", folder_path)
         return (0, 0)
-
-    if sync_days_first:
-        from vr4mice.actions.sync_days import sync_days
-
-        sync_days()
 
     dir_list = get_filenames([".npy"], folder_path)
     if ".npy" not in dir_list:
@@ -565,86 +552,6 @@ def populate_base_from_gui_folder(
     return (ok, failed)
 
 
-def populate_processed_gui(
-    *,
-    srcf: str = "/data",
-    dstf: str = "processed",
-    populate_base: bool = True,
-) -> None:
-    """
-    Backfill base (exp/mice) schema from all GUI .npy files in the processed folder.
-
-    Corrects experiment day in each .npy via sync_days before population.
-    """
-    if not populate_base:
-        return
-
-    processed_path = os.path.join(srcf, dstf)
-    if not os.path.isdir(processed_path):
-        logger.debug(
-            "Processed folder %s does not exist; skipping GUI backfill.", processed_path
-        )
-        return
-
-    from vr4mice.actions.sync_days import sync_days
-
-    logger.info(
-        "Syncing experiment days in GUI files (data + processed) before backfill."
-    )
-    sync_days()
-
-    dir_list = get_filenames([".npy"], processed_path)
-    if ".npy" not in dir_list:
-        logger.info("No GUI .npy files in %s", processed_path)
-        return
-
-    logger.info(
-        "Backfilling base schema from %d GUI file(s) in %s",
-        len(dir_list[".npy"]),
-        processed_path,
-    )
-
-    for npy_file in dir_list[".npy"]:
-        try:
-            raw_data_npy, dataset = get_new_file(npy_file, processed_path)
-            pickle_path = Path(processed_path) / f"{dataset}.pickle"
-            raw_data_pickle = None
-            if pickle_path.is_file():
-                raw_data_pickle, _ = get_new_file(pickle_path.name, processed_path)
-
-            if raw_data_pickle:
-                raw_data = {
-                    **_prepare_gui_raw_data(
-                        dataset, raw_data_npy, srcf=srcf, file_dir=processed_path
-                    ),
-                    **raw_data_pickle,
-                    **raw_data_npy,
-                }
-                schemas = _schemas_for_dataset(raw_data_npy, populate_base=True)
-            else:
-                raw_data = _prepare_gui_raw_data(
-                    dataset, raw_data_npy, srcf=srcf, file_dir=processed_path
-                )
-                schemas = [base]
-
-            complete = populate_dataset_tables(
-                dataset,
-                raw_data,
-                schemas,
-                srcf=srcf,
-                dstf=dstf,
-            )
-            if complete:
-                logger.info("Processed GUI backfill complete for %s", dataset)
-            else:
-                logger.warning(
-                    "Processed GUI backfill incomplete for %s (will retry on next run).",
-                    dataset,
-                )
-        except Exception as e:
-            logger.warning("Processed GUI backfill failed for %s: %s", npy_file, e)
-
-
 def move_dataset_files(
     dataset_name: str,
     base_path: str,
@@ -681,8 +588,8 @@ def populate_rig(
 
     Args:
         path (str): The path to the directory containing data files.
-        populate_base (bool | None): Populate exp/mice base schema from .npy metadata.
-            Defaults to True, or the POPULATE_BASE environment variable when None.
+        populate_base (bool | None): Populate exp/mice from .npy metadata.
+            When None, follows the GUI env flag (GUI=True ⇒ populate base).
     Raises:
         OSError: If the specified directory does not exist.
 
@@ -702,10 +609,9 @@ def populate_rig(
 
     dataset = name of file : mouse_name_doe_attempt
     """
-    if populate_base is None:
-        populate_base = _env_bool("POPULATE_BASE", default=True)
-
     gui = os.environ.get("GUI", "false").lower() in ["true", "1", "yes"]
+    if populate_base is None:
+        populate_base = gui
 
     if not populate_base:
         logger.info(
@@ -800,6 +706,3 @@ def populate_rig(
                     move_dataset_files(dataset, path, dstf, srcf=srcf)
             except Exception as e:
                 logger.warning(f"Population of raw data failed for {npy_file}: {e}")
-
-    if populate_base:
-        populate_processed_gui(srcf=srcf, dstf=dstf, populate_base=populate_base)

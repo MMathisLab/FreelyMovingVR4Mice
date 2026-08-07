@@ -1,23 +1,17 @@
 """
 Entry point for exp/mice recovery and parent-DB sync (not a replacement for cron).
 
-Normal ingest still uses: python run.py populate | analysis | dlc | ...
-When GUI=True (and POPULATE_BASE is on, default), that populate path writes
-exp/mice from session .npy as usual.
+Normal ingest: python run.py populate | analysis | dlc | ...
+With GUI=True, that populate path writes exp/mice from session .npy as usual.
 
-Use this script for one-off recovery and registry sync with DJ_MAIN_HOST:
-    sync_mice     — pull Mouse metadata from main DB
-    sync_exp      — push local exp.Session (+ SessionScoreSheet) to main DB
+Recovery / registry sync (DJ_MAIN_HOST):
+    sync_mice     — pull Mouse metadata from main DB onto local
+    sync_exp      — push missing local exp.Session (+ SessionScoreSheet) to main
     cleanup_mice  — remove stub Mouse rows without local sessions
-    recover_base  — recovery: cleanup orphans, repopulate exp/mice from GUI files
-    sync_days     — fix experiment day in GUI .npy files (data + processed)
-    fetch         — export gui_menu.npy for the rig GUI dropdowns
-    populate      — same ingest as run.py populate (optional --no-populate-base)
+    recover_base  — replication check, optional orphan cleanup, base from GUI files
 """
 
 import argparse
-import os
-import sys
 
 from base_actions.connect import connect
 from vr4mice.utils.bootstrap import configure_runtime
@@ -26,15 +20,9 @@ from vr4mice.utils.logger import Logger
 logger = Logger.get_logger()
 
 
-def check_folder_existence(folder_path: str) -> None:
-    if not os.path.exists(folder_path):
-        logger.warning("Folder '%s' does not exist. Exiting.", folder_path)
-        sys.exit(1)
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="exp/mice recovery and parent-DB sync (run.py remains the normal cron ingest)."
+        description="exp/mice recovery and parent-DB sync (run.py remains normal cron ingest)."
     )
     parser.add_argument(
         "--verbose",
@@ -42,19 +30,9 @@ if __name__ == "__main__":
         help="Enable verbose logging (DEBUG level).",
     )
     parser.add_argument(
-        "--aws",
-        action="store_true",
-        help="AWS layout: read from /data/processed, do not move files.",
-    )
-    parser.add_argument(
         "--force",
         action="store_true",
         help="Apply destructive cleanup (cleanup_mice, recover_base).",
-    )
-    parser.add_argument(
-        "--no-populate-base",
-        action="store_true",
-        help="For populate mode only: skip exp/mice base schema (vr4mice only).",
     )
     parser.add_argument(
         "mode",
@@ -63,11 +41,8 @@ if __name__ == "__main__":
             "sync_exp",
             "cleanup_mice",
             "recover_base",
-            "sync_days",
-            "fetch",
-            "populate",
         ],
-        help="Base-schema mode to execute.",
+        help="Recovery / sync mode to execute.",
     )
 
     args = parser.parse_args()
@@ -94,34 +69,3 @@ if __name__ == "__main__":
         from vr4mice.actions.recover_base import run_recovery
 
         run_recovery(force=args.force)
-
-    elif args.mode == "sync_days":
-        from vr4mice.actions.sync_days import sync_days
-
-        sync_days()
-
-    elif args.mode == "fetch":
-        from vr4mice.actions.fetch_data import fetch_data
-
-        check_folder_existence("/shared")
-        fetch_data(dst="/shared/gui_menu.npy")
-
-    elif args.mode == "populate":
-        from vr4mice.actions.populate_rig import populate_rig
-        from vr4mice.schema import vr4mice
-        from vr4mice.utils.populate_helpers import populate_pending
-
-        if args.aws:
-            path = "/data/processed"
-            move = False
-        else:
-            path = "/data/data"
-            move = True
-
-        check_folder_existence(path)
-        populate_rig(
-            path=path,
-            move=move,
-            populate_base=not args.no_populate_base,
-        )
-        populate_pending(vr4mice.Collab, vr4mice.Dataset, logger=logger)

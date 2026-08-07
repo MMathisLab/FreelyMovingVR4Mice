@@ -12,6 +12,7 @@ import os
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+from contextlib import contextmanager
 
 import pytest
 
@@ -26,7 +27,7 @@ sys.modules["vr4mice.actions.populate_rig"] = populate_rig
 
 import recover_base  # noqa: E402
 import sync_days  # noqa: E402
-from populate_rig import _env_bool, _schemas_for_dataset  # noqa: E402
+from populate_rig import _schemas_for_dataset  # noqa: E402
 from sync_days import _days_from_exp_dates, _normalize_paths  # noqa: E402
 
 
@@ -143,6 +144,48 @@ class TestSyncMiceFromMain:
             mouse_sync, "get_session_mouse_names", return_value={"Flamingo"}
         ), patch.object(mouse_sync, "get_incomplete_mouse_names", return_value=[]):
             assert mouse_sync.sync_mice_from_main(log=log) == 0
+
+    def test_fetches_on_main_upserts_on_local(self, monkeypatch):
+        """Rows are read inside _main_database, then upserted after leaving it."""
+        monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
+        log = MagicMock()
+        main_row = {"mouse_name": "Flamingo", "mouse_id": 7}
+        table = MagicMock()
+        table.return_value = table
+        table.__and__ = MagicMock(return_value=table)
+        table.fetch.return_value = [main_row]
+
+        phase = {"on_main": False}
+
+        @contextmanager
+        def fake_main():
+            phase["on_main"] = True
+            try:
+                yield
+            finally:
+                phase["on_main"] = False
+
+        upsert_phases = []
+
+        def fake_upsert(tbl, rows):
+            upsert_phases.append(phase["on_main"])
+            return len(list(rows))
+
+        with patch.object(
+            mouse_sync, "get_session_mouse_names", return_value={"Flamingo"}
+        ), patch.object(
+            mouse_sync, "get_incomplete_mouse_names", return_value=["Flamingo"]
+        ), patch.object(
+            mouse_sync, "MOUSE_SYNC_TABLES", (table,)
+        ), patch.object(
+            mouse_sync, "_main_database", fake_main
+        ), patch.object(
+            mouse_sync, "_upsert_rows", side_effect=fake_upsert
+        ):
+            count = mouse_sync.sync_mice_from_main(log=log)
+
+        assert count == 1
+        assert upsert_phases == [False]  # upsert after leaving main connection
 
 
 class TestSyncExpToMain:
@@ -409,14 +452,6 @@ class TestNormalizePaths:
 
 
 class TestPopulateBaseFlags:
-    def test_env_bool(self, monkeypatch):
-        monkeypatch.setenv("POPULATE_BASE", "false")
-        assert _env_bool("POPULATE_BASE", default=True) is False
-        monkeypatch.setenv("POPULATE_BASE", "1")
-        assert _env_bool("POPULATE_BASE", default=False) is True
-        monkeypatch.delenv("POPULATE_BASE", raising=False)
-        assert _env_bool("POPULATE_BASE", default=True) is True
-
     def test_schemas_for_dataset_respects_flag(self):
         with patch("populate_rig.base", {"name": "base"}), patch(
             "populate_rig.vr4mice", {"name": "vr4mice"}
@@ -424,14 +459,11 @@ class TestPopulateBaseFlags:
             assert _schemas_for_dataset({"x": 1}, populate_base=False) == [
                 {"name": "vr4mice"}
             ]
-            assert _schemas_for_dataset(None, populate_base=True) == [{"name": "vr4mice"}]
+            assert _schemas_for_dataset(None, populate_base=True) == [
+                {"name": "vr4mice"}
+            ]
             schemas = _schemas_for_dataset({"x": 1}, populate_base=True)
             assert schemas == [{"name": "base"}, {"name": "vr4mice"}]
-
-
-# ==============================================================================
-# run_base.py CLI surface (source-level smoke for CI)
-# ==============================================================================
 
 
 class TestRunBaseCliSurface:
@@ -443,10 +475,9 @@ class TestRunBaseCliSurface:
             "sync_exp",
             "cleanup_mice",
             "recover_base",
-            "sync_days",
-            "fetch",
-            "populate",
         ):
             assert f'"{mode}"' in text
+        for removed in ("sync_days", "fetch", "populate"):
+            # modes list only — allow mentions in comments/docstrings
+            assert f'            "{removed}",' not in text
         assert "--force" in text
-        assert "DJ_MAIN_HOST" in text or "sync_mice" in text
