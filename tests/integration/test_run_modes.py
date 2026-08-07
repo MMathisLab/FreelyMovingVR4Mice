@@ -458,6 +458,13 @@ class TestConnectMode:
         assert hasattr(dlc, "SyncDLCKptsDf")
         assert hasattr(dlc, "OfflineKinematics")
 
+    def test_barcodes_schema_imports(self, dj_config):
+        """Verify barcodes schema imports without error."""
+        from vr4mice.schema import barcodes
+
+        assert hasattr(barcodes, "TeensyTTL")
+        assert hasattr(barcodes, "TeensyBarcodes")
+
     def test_interpolated_trajectories_schema_imports(self, dj_config):
         """Verify interpolated_trajectories schema imports without error."""
         from vr4mice.schema import interpolated_trajectories
@@ -1327,18 +1334,6 @@ class TestSummaryPlots:
             base_analysis,
             "vr4mice_summary_plots",
             mock_summary_plots,
-        )
-
-        # Monkeypatch insert_send_email to skip email recipient lookup.
-        # The test exp.Experimenter table only has default entries; the
-        # production "mathislab" experimenter doesn't exist in tests.
-        # We still exercise the DB insert; only the email lookup is skipped.
-        def mock_insert_send_email(key, tuple_, table, filename, send=False):
-            table.insert1(tuple_, allow_direct_insert=True)
-
-        monkeypatch.setattr(
-            "vr4mice.schema.base_analysis.insert_send_email",
-            mock_insert_send_email,
         )
 
         # Populate SummaryPlots

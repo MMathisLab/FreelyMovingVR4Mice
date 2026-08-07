@@ -2,6 +2,7 @@ from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
 from utils.alert import AlertMsg
+from utils.logger import Logger
 from utils.utils import (
     adjust_keys,
     check_missing_data,
@@ -10,6 +11,9 @@ from utils.utils import (
     move_files,
     transfer_files,
 )
+
+
+logger = Logger.get_logger()
 
 
 """
@@ -102,8 +106,10 @@ class Gui(QWidget):
             dlg.exec()
             return False
 
-        # move files in processed:
-        # move_files(args["transfer"].get_processed_files())
+        try:
+            move_files(args["transfer"].get_processed_files())
+        except Exception as e:
+            logger.warning(f"Could not move files to processed folder: {e}")
 
         self.submitted = True
         args["mouse"].set_auto(True)

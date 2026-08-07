@@ -91,7 +91,7 @@ Additional tubing material and synringes to complete the water delivery system:
 - Teensy 4.0
 - TSL257, with a built-in circuit
 
-<u>Mathis lab setup</u>:
+<u>MLAI lab setup</u>:
 
 - OPT101 (Texas Instruments)
 - Mounting board for the photodiode - CJMCU-101

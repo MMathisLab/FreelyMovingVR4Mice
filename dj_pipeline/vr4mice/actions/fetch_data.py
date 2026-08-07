@@ -67,11 +67,12 @@ def _fetch_session_mice() -> list:
 
     Excludes sacrificed and breeding mice. Mice synced from a main database
     but without local sessions are intentionally omitted from the GUI menu.
+
+    DJ 2.x rejects chained table subtraction (Mouse - Sacrificed - Breed) because
+    mouse_name has incompatible lineages across dependent tables.
     """
     session_mice = {
-        name
-        for name in exp.Session().fetch("mouse_name")
-        if name
+        name for name in exp.Session().fetch("mouse_name") if name
     }
     excluded = {
         *mice.Sacrificed().fetch("mouse_name"),
@@ -80,8 +81,7 @@ def _fetch_session_mice() -> list:
     return [
         row
         for row in mice.Mouse().fetch(as_dict=True)
-        if row["mouse_name"] in session_mice
-        and row["mouse_name"] not in excluded
+        if row["mouse_name"] in session_mice and row["mouse_name"] not in excluded
     ]
 
 

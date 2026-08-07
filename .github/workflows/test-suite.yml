@@ -86,6 +86,7 @@ jobs:
             -e EMAIL="${EMAIL}" \
             -e IMG_SRC="${IMG_SRC}" \
             -e DATABASE_USE_TLS="${DATABASE_USE_TLS}" \
+            -e QT_QPA_PLATFORM=offscreen \
             -v "$GITHUB_WORKSPACE:/app" \
             --entrypoint bash \
             vr4mice_app:test-image \

@@ -1,0 +1,22 @@
+class_name: ShapeDiscWideOccludersTask
+description: |
+  Shape discrimination task, with occluders on, intermediate level for learning.
+  Mouse must report the white pacman location and ignore the teardrop.
+
+# Only the parameters that differ from configs/common.yaml.
+params:
+  session_label:
+  - ar_shape_discrim_occluders
+  epoch_labels:
+  - teardrop_vs_pacman
+  slit_size:
+  - 8.0
+  - 12.0
+  - 2
+  slit_depth: 0.02
+  target_selection: 4.0
+  distractor_selection: 10.0
+  occlusion_type: 1.0
+  target_spread: 3.0
+  target_rotation: 15.0
+  target_distance: 3.5

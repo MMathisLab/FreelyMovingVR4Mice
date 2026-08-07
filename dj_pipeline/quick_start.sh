@@ -332,6 +332,7 @@ DJ_PWD=${DJ_PWD}
 DJ_LAB=mathis-lab
 GUI=$( [ "${GUI_FLAG}" = "yes" ] && echo "True" || echo "False" )
 EMAIL=$( [ "${EMAIL_FLAG}" = "yes" ] && echo "True" || echo "False" )
+VR4MICE_EMAIL_RECIPIENTS=mathislab
 DJ_SUPPORT_FILEPATH_MANAGEMENT=TRUE
 DJ_SUPPORT_ADAPTED_TYPES=TRUE
 EOF

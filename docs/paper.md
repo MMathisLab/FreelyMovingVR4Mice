@@ -4,11 +4,9 @@
 
 This page collects the figure notebooks, supplementary videos, and reproducibility resources for the paper.
 
-## 📝 Authors
+## 📝 Citation
 
-Célia Benquet*, Thomas Sainsbury*, Léo Bruneau, Yang Lin, Chenchen Cai, Mariia Popova, Kayla Ponder, Lydia Ntanavara, Rachel Froebe, Zheng Tan, Paul Fahey, Katrin Franke, Luis M. Franco, Keaton Jones, Yizhou Chen, Reece Keller, Xaq Pitkow, Cristopher M. Niell, Andreas S. Tolias, Mackenzie Weygandt Mathis
-
-\* Equal contribution.
+Benquet C*, Sainsbury T*, Bruneau L, Lin Y, Cai C, Popova M, Ponder K, Ntanavara L, Froebe R, Tan Z, Fahey P, Franke K, Franco LM, Jones K, Chen Y, Keller R, Pitkow X, Niell CM, Tolias AS, Mathis MW. [Visual uncertainty and task demands shape active sensing strategies in mice.](https://www.cell.com/current-biology/fulltext/S0960-9822(26)00722-0?) *Current Biology*. 20 July 2026. DOI: [10.1016/j.cub.2026.06.011](https://doi.org/10.1016/j.cub.2026.06.011).
 
 ## ✨ Highlights
 

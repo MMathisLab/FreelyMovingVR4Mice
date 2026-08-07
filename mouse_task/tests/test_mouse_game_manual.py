@@ -42,8 +42,8 @@ class TestPositionCoordinates(unittest.TestCase):
         self.mouse_report_delay = 0.0
         self.slit_size = [4.0, 4.0, 1]
         self.slit_depth = 0.1
-        self.target_selection = 6.0
-        self.distractor_selection = 0.0
+        self.target_selection = 2.0
+        self.distractor_selection = 3.0
         self.occlusion_type = 0.0
         self.camera_type = 1.0
         self.target_spread = 4.0
@@ -53,14 +53,14 @@ class TestPositionCoordinates(unittest.TestCase):
         self.block_length = 1.0
         self.start_box_delay = 0.1
         self.velocity_threshold = 20.0
-        self.distractor = 0.0
+        self.distractor = 1.0
         self.grey_screen_active = 0.0
         self.target_distance = 3.0
         self.use_dlc = False
         self.prob_block_coherence = 1.0
 
         game_path = select_executable()
-        self.config = {"ar_env_unity_absolute_path": game_path}
+        self.config = {"ar_env_unity_absolute_path": None}
 
         with patch(
             "mouse_task.task_active_sensing.process_config",

@@ -58,4 +58,4 @@ Install both in the same order:
 - If you now click on the ▶️ play icon, the game should start to run with no compile errors.
  -->
 
-ℹ️ If you encounter any problems, let the Mathis lab (as of now - 07.12.23 - contact Célia Benquet) know so that they can update this document with solutions!
+ℹ️ If you encounter any problems, let the MLAI lab (as of now - 07.12.23 - contact Célia Benquet) know so that they can update this document with solutions!

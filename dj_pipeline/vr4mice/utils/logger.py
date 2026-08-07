@@ -73,7 +73,9 @@ class Logger:
 
 def config_logger(level="INFO", debug=False):
     logger = Logger.get_logger()
-    log_level = logging.DEBUG if debug else getattr(logging, level.upper(), logging.INFO)
+    log_level = (
+        logging.DEBUG if debug else getattr(logging, level.upper(), logging.INFO)
+    )
     logger.setLevel(log_level)
 
     dj.config["loglevel"] = "DEBUG" if debug else "WARNING"

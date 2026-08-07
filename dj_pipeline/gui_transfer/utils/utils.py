@@ -7,8 +7,9 @@ from pathlib import Path
 from PyQt5.QtWidgets import QComboBox, QLabel, QLineEdit, QPlainTextEdit
 
 import numpy as np
-from utils.alert import AlertMsg
 from config.config import config, logger
+from utils.alert import AlertMsg
+from utils.session_files import check_file_format
 
 
 def load_dj_input(path_dj_data, path_json):
@@ -188,86 +189,13 @@ def check_missing_data(widget, args):
 def check_files(key, filename, format, current_mouse=None):
     """
     Checks if the specified file or files exist and have the correct file format.
-
-    Args:
-       key (str): A key that identifies the file to be checked.
-       filename (str or list or tuple): The name or names of the file(s) to be checked.
-       format (str): The expected file format.
-       current_mouse (str or None): The name of the mouse associated with the file(s), if any.
-
-    Returns:
-       The name of the file(s) if they exist and have the correct file format, or False otherwise.
     """
+    if isinstance(filename, (list, tuple)):
+        if not filename:
+            return False
+        return check_file_format(key, filename, format, current_mouse)
 
-    if (
-        filename and isinstance(filename, list) or isinstance(filename, tuple)
-    ):  # dlc (2 files case)
-        ret = False
-        for f in filename:
-            ret = check_file_format(key, f, format, current_mouse)
-            if isinstance(ret, bool) and ret is False:
-                return False
-        return ret
-
-    ret = check_file_format(key, filename, format, current_mouse)
-
-    if isinstance(ret, bool) and ret is False:
-        return False
-    return ret
-
-
-def check_file_format(key, filename, format, current_mouse=None):
-    """
-    Check if the file format of the given file matches the expected format for the given key.
-
-    Args:
-        key (str): A string specifying the type of file to check, must be one of:
-            - 'teensy': for a pickle file with the format '*_*_*.pickle'
-            - 'video': for a video file with the format '*_*_*_*.*', where * is a wildcard for the file type and duration
-            - 'camera': for a camera file with either of the formats 'TIMESTAMP_*_*_*_*.npy' or 'TS_*_*_*_*.npy'
-            - 'dlc': for a DeepLabCut file with either of the formats '*DLC*.h5' or '*DLC*_meta.pickle', specifying the model name
-
-        filename (str): The name of the file to check.
-        format (str or tuple): The expected format of the filename. Must be a string with underscores separating the different parts of the filename (e.g. 'mouse1_20220310_01' for a camera file).
-            Alternatively, if the expected format contains multiple possible formats, pass a tuple of strings instead.
-
-        current_mouse (str, optional): The name of the mouse for which to check the file, only applicable for camera files. Defaults to None.
-
-    Returns:
-        If the format of the file matches the expected format, returns a tuple with the mouse name, attempt number, and date (in that order) extracted from the filename.
-        Otherwise, returns False.
-    """
-    """
-        "teensy": "*_*_*.pickle",
-        "video": "*_*_*_*.*",  # get video type, duration
-        "camera": ["TIMESTAMP_*_*_*_*.npy", "TS_*_*_*_*.npy"],
-        "dlc": ["*DLC*.h5", "*DLC*_meta.pickle"],  # precise type : model name
-    """
-    name = Path(filename).stem
-    ext = Path(filename).suffix
-    # all_ext = get_ext(key)
-
-    # if ext not in all_ext:
-    #    logger.info("wrong ext")
-    #    return False
-
-    arr = name.split("_")
-    default = format
-    if isinstance(default, list) or isinstance(default, tuple):
-        return True
-
-    if len(arr) != len(default.split("_")):
-        logger.info("wrong l")
-        return False
-
-    i = 0
-    if key == "camera":
-        i += 1
-    mouse_name = arr[i]
-    date = arr[i + 1]
-    attempt = arr[i + 2]
-
-    return mouse_name, attempt, date
+    return check_file_format(key, filename, format, current_mouse)
 
 
 def _transfer_file(file_info, ip):
@@ -359,17 +287,22 @@ def transfer_files(transfer_files):
 
 def move_files(files_info):
     """
-    Moves files specified in `files_info` to the destination path obtained from the configuration file.
-
-    Args:
-    files_info (list): A list of dictionaries, where each dictionary contains the following keys:
-        - `src` (str): The source path of the file to be moved.
-        - `filename` (str): The filename of the file to be moved.
+    Move submitted rig files into the configured processed folder.
     """
-    dst = config.get_processed_path
-    for file_info in files_info[0].values():
-        src = str(Path(file_info["src"]).joinpath(file_info["filename"]))
-        shutil.move(src, dst)
+    dst = Path(config.get_processed_path)
+    dst.mkdir(parents=True, exist_ok=True)
+
+    for file_info in files_info:
+        if not file_info:
+            continue
+        src = Path(file_info["src"]).joinpath(file_info["filename"])
+        if not src.exists():
+            logger.warning(f"Processed move skipped, missing file: {src}")
+            continue
+        target = dst / src.name
+        if src.resolve() == target.resolve():
+            continue
+        shutil.move(str(src), str(target))
 
 
 def init_watcher():  # launch dlc + wait/transfer once created (queue), init watcher on  folder
@@ -410,8 +343,11 @@ def adjust_keys(info, values, key2info, primary_keys):
     for key in values.keys():
         if primary_keys is not None:
             if key in primary_keys.keys():
-                k = hash(info[key])
-                primary_value = key2info[k]
+                display = info[key]
+                if display not in key2info:
+                    logger.warning(f"No lookup entry for dropdown value: {display}")
+                    continue
+                primary_value = key2info[display]
                 primary_key = primary_keys[key]
                 del info[key]
                 info[primary_key] = primary_value
@@ -475,10 +411,6 @@ def build_option_text(choices, key, key2info, primary_keys):
         if not skip:
             concat = concat[:-2]
             primary_key = primary_keys[key]
-            k = hash(concat)
-            key2info[k] = line[primary_key]  # value
-            # choices[key][pk]
-            # associate string of options to primary key: main key is known
-            # transform keys
+            key2info[concat] = line[primary_key]
             options.append(concat)
     return options

@@ -81,7 +81,8 @@ Stores dataset names representing VR experiments; keeps raw pickle and npy files
 ```python
 class FailedSession(dj.Manual)
 ```
-Tracks dataset/table pairs that failed during populate/compute.
+Tracks dataset/table pairs that failed during populate/compute. Primary key is
+`(dataset, failed_table_name)`; populate skips a dataset only for the table that failed.
 
 ```python
 class Labels(dj.Lookup)
@@ -185,14 +186,26 @@ Stores per-trial report and target box coordinates derived from `DataFrame`.
 ```python
 class SummaryPlots(dj.Computed)
 ```
-**Depends on:** `vr4mice.Dataset`, `DataFrame`, `BoxDataFrame`  
-Stores paths to generated per-session summary plot figures.
+**Depends on:** `vr4mice.Dataset`  
+Stores paths to generated per-session summary plot figures. Cron populates only sessions
+that have both `DataFrame` and `BoxDataFrame`.
 
 ```python
 class GitCommit(dj.Computed)
 ```
 **Depends on:** `DataFrame`  
 Stores git commit hash and changed files for analysis reproducibility.
+
+### `summary_emails.py`
+
+*Tracks summary plot notification emails sent per session.*
+
+```python
+class SummaryPlotEmail(dj.Manual)
+```
+**Depends on:** `base_analysis.SummaryPlots`  
+Records send time, recipients, email type, and optional error message. Cron retries
+sessions with no successful send (and session date on/after `VR4MICE_EMAIL_SINCE`).
 
 ### `dlc.py`
 

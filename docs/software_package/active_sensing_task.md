@@ -17,7 +17,7 @@ In this task, a mouse the mouse looks through a slit in the wall and has to repo
 
 
 ## Task active sensing - Outline
-The python [class](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/mouse_task/task_active_sensing.py) acts as an interface between DLClive and the unity build and the teensy. This task can be imported in different task scripts such as [mouse_detection_p1.py](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/mouse_task/mouse_detection_p1.py) where the input parameters are changed for the different phases of training. These tasks then be selected from within the teensy experiments GUI using the task drop down menu. The parameters can also be manually edited by clicking clicking on the "edit" button. Here parameters such as reward size and the probability that the OOI will appear on the left can be set. This python script then logs all the data about the experiment such as the mouses position in the arena, when water was given and which side the mouse reported that the target was on. 
+The python [class](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/mouse_task/task_active_sensing.py) acts as an interface between DLClive and the unity build and the teensy. Rather than one near-identical script per task type, each task variant is now described by a small YAML file in [mouse_task/configs/tasks/](https://github.com/MMathisLab/FreelyMovingVR4Mice/tree/main/mouse_task/configs/tasks) that lists only the parameters which differ from the shared defaults in [configs/common.yaml](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/mouse_task/configs/common.yaml). At import time, [`mouse_task/_registry.py`](https://github.com/MMathisLab/FreelyMovingVR4Mice/blob/main/mouse_task/_registry.py) generates one `ActiveSensingTask` subclass per YAML (passing its name as the `task_config` argument), so each variant still appears as a named task in the teensy experiments GUI drop-down menu. The parameters can also be manually edited by clicking clicking on the "edit" button. Here parameters such as reward size and the probability that the OOI will appear on the left can be set. This python script then logs all the data about the experiment such as the mouses position in the arena, when water was given and which side the mouse reported that the target was on. 
 
 In takes the form of a parent class over a base class (called `unity_task`) and receives inputs within the `__init__()` function. These inputs can easily be modified from within the teensy experiments GUI by first loading the task and clicking on the edit button. This will present you with a window where these inputs can be modified. When the task is run (by clicking ready, followed by start) these inputs are assigned to class variables so that they can be made available to all the methods of the class.
 
@@ -60,8 +60,8 @@ Here is an explanation of the parameters that can be set in the GUI. Such parame
         mouse_report_delay=0.0,
         slit_size=[4.0, 4.0, 1],
         slit_depth=0.2,
-        target_selection=6.0,
-        distractor_selection=4.0,
+        target_selection=2.0,
+        distractor_selection=3.0,
         occlusion_type=0.0,
         camera_type=1.0,
         target_spread=4.0,
@@ -98,8 +98,8 @@ Here is an explanation of the parameters that can be set in the GUI. Such parame
 17. `mouse_report_delay`: Float, mouse report delay default is `0`.
 18. `slit_size`= slit_size: List, this is a list of numbers [min_slit_size, max_slit_size, number_of_slit_sizes] ie. [10,20,5] would give a range of 5 slit sizes with 10 being the minimum and 20 being the max. If you want to pass a custom number on multiple slit sizes you can pass this in as a list of numbers ie [12,8,6,5,3] as long as the len of that list if > 3
 19. `slit_depth`= Float, this parameter controls the depth or thickness of the walls (default = 0.2)
-20. `target_selection`: Integer, this parameter selects what object for the OOI (`0.` = white cube, `1.` = black cube, `2.` = teardrop grey, `3.` = pacman grey, `4.` = teardrop black, `5.` = pacman black, `6.` = teardrop white, `7.` = pacman white,`8.`= zebra teardrop, `9.`= zebra ball, `10.`=white ball, `11.`=light gray zebra teardrop, `12.` = dark gray zebra teardrop)
-21. `distractor_selection`: Integer, this parameter selects what object for the distractor (`0.` = white cube, `1.` = black cube, `2.` = teardrop grey, `3.` = pacman grey, `4.` = teardrop black, `5.` = pacman black, `6.` = teardrop white, `7.` = pacman white,`8.`= zebra teardrop, `9.`= zebra ball, `10.`=white ball, `11.`=light gray zebra teardrop, `12.` = dark gray zebra teardrop )
+20. `target_selection`: Integer, this parameter selects what object is used for the OOI. See {ref}`sec:target-distractor-list` in {doc}`../training_protocols/task_objects` for the available IDs.
+21. `distractor_selection`: Integer, this parameter selects what object is used for the distractor (same list of IDs as `target_selection`).
 22. `occlusion_type`: Integer, allows the user to select the type of occlusion that they want to use. (`0` = no occlusion, `1` = slit occlusion, `2` = central wall), default is no occlusion.
 23.  `camera_type`: Integer, allows the user to select between on (Camera_type = `0`) and off axis camera (Camera_type = `1`) modes.
 24. `target_spread`: Float, specifies the distance between the targets.

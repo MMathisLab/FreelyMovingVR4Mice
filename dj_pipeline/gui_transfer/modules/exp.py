@@ -179,18 +179,16 @@ class Exp(Template):
         if key == "Task":
             if restriction in self.choices.keys():
                 type = self.get_choices(restriction)[0]
+                task_choices = list(choices[key])
                 ret = list()
-                idx = 0
                 delete = list()
-                for choice in choices[key]:
+                for choice in task_choices:
                     if choice["task_name"] != str(type):
                         delete.append(choice)
-                    idx += 1
                 for d in delete:
-                    choices[key].remove(d)
-
-        # if key == "Rig":
-        #    choices[key] = [choices[key][11]]
+                    task_choices.remove(d)
+                choices = dict(choices)
+                choices[key] = task_choices
         return choices
 
     def _doe(self, key, date, **kwargs):

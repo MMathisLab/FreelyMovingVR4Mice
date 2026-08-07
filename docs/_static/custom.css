@@ -1,0 +1,26 @@
+/* Hide the primary sidebar toggle in the top header. */
+label.sidebar-toggle.primary-toggle,
+label[for="__primary"],
+#__primary {
+  display: none !important;
+}
+
+/* Show custom icon links in the article header next to fullscreen/theme buttons. */
+.bd-header-article .navbar-icon-links {
+  align-items: center;
+  column-gap: 0.5rem;
+  margin: 0;
+}
+
+.bd-header-article .navbar-icon-links .nav-item {
+  line-height: 1;
+}
+
+.bd-header-article .navbar-icon-links .nav-link {
+  color: var(--pst-color-text-muted);
+  padding: 0 0.25rem;
+}
+
+.bd-header-article .navbar-icon-links .nav-link:hover {
+  color: var(--pst-color-text-base);
+}

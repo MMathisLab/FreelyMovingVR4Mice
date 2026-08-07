@@ -62,6 +62,11 @@ class SessionLabel(dj.Lookup):
             "shape_black_teardrop_target",
             "dual_occlusion",
         ),
+        (
+            "ar_shape_discrim_multi_occluders_inv",
+            "shape_black_teardrop_target",
+            "multi_occlusion",
+        ),
         # NOTE(celia): 2-stage occlusion for this task, first one is still training
         ("ar_shape_discrim_occluders", "shape_pacman_target", "training"),
         ("ar_shape_discrim_narrow_occluders", "shape_pacman_target", "dual_occlusion"),

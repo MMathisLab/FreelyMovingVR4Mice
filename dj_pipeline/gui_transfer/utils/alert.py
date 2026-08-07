@@ -15,8 +15,8 @@ class AlertMsg(QDialog):
     """
 
     def __init__(self, parent=None, msg="", cancel=False):
-        if msg == "":
-            return False
+        if not msg:
+            raise ValueError("Alert message text cannot be empty")
 
         super().__init__(parent)
 

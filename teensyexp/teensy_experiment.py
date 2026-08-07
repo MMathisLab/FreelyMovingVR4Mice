@@ -262,7 +262,15 @@ class TeensyExperimentGUI(object):
             try:
                 self.task_module = importlib.util.module_from_spec(task_spec)
                 task_spec.loader.exec_module(self.task_module)
-                task_list = [t for t in dir(self.task_module) if '__' not in t]
+                from teensyexp.tasks_abc.task import Task
+                task_list = []
+                # Only load real Task subclasses; task packages may export helper symbols too.
+                for t in dir(self.task_module):
+                    if t.startswith('_'):
+                        continue
+                    obj = getattr(self.task_module, t)
+                    if inspect.isclass(obj) and issubclass(obj, Task):
+                        task_list.append(t)
             except AttributeError:
                 if hasattr(self, "window"):
                     messagebox.showerror("Failed to load tasks!",
@@ -276,10 +284,22 @@ class TeensyExperimentGUI(object):
         self.task_params = {}
         for t in task_list:
             obj = getattr(self.task_module, t)  # TODO no getattr
-            args = inspect.getargspec(obj)
             self.task_params[t] = {}
-            for i in range(2, len(args[0])):
-                self.task_params[t][args[0][i]] = args[3][i - 2]
+            try:
+                # signature() is safer than getargspec for modern/dynamic callables.
+                signature = inspect.signature(obj.__init__)
+            except (TypeError, ValueError):
+                continue
+
+            for name, param in signature.parameters.items():
+                if name in ('self', 'teensy'):
+                    continue
+                if param.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD):
+                    continue
+                if param.default is inspect.Parameter.empty:
+                    self.task_params[t][name] = None
+                else:
+                    self.task_params[t][name] = param.default
 
         if hasattr(self, 'task_entry'):  # TODO no hasattr
             self.task_name.set("")  # gui interaction : update
@@ -584,7 +604,26 @@ class TeensyExperimentGUI(object):
         else:
             task_object = getattr(self.task_module, self.task_name.get())
             task_params = copy.deepcopy(self.task_params[self.task_name.get()])
-            self.task = task_object(self.teensy, **task_params)
+            try:
+                self.task = task_object(self.teensy, **task_params)
+            except Exception as err:
+                self.task = None
+                self.task_info = {}
+                self.task_label["text"] = "No Task"
+                self.task_on.set(0)
+                try:
+                    self._reset_progress_labels()
+                except Exception:
+                    pass
+                finally:
+                    self.info_labels = []
+                    self.value_labels = []
+                messagebox.showerror(
+                    "Task Initialization Failed",
+                    f"Could not initialize task '{self.task_name.get()}'.\n{err}",
+                    parent=self.window,
+                )
+                return
             parent_class = [c.__name__ for c in self.task.__class__.__mro__]
             self.gui_task = True if 'GuiTask' in parent_class else False
             self.unity_task = True if 'UnityTask' in parent_class else False
@@ -605,6 +644,9 @@ class TeensyExperimentGUI(object):
         """Track the real time task state on GUI and get information from task_info dictionary."""
         if info is None:
             info = self.task_info
+
+        if not isinstance(info, dict):
+            return
 
         index = 0
         if len(self.info_labels) == 0:

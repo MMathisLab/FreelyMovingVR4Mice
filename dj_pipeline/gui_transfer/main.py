@@ -2,7 +2,7 @@ import sys
 
 from PyQt5.QtWidgets import QApplication
 
-from config.config import config
+from config.config import config, logger
 from gui import Gui
 from modules.exp import Exp
 from modules.mouse import Mouse
@@ -11,6 +11,11 @@ from modules.transfer import Transfer
 from utils.utils import load_dj_input
 
 if __name__ == "__main__":
+
+    ok, message = config.validate()
+    if not ok:
+        logger.warning(message)
+        sys.exit(1)
 
     menu = config.get_menu_path
     if menu is False:

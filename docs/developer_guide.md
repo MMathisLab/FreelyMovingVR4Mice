@@ -2,7 +2,7 @@
 
 ## Goverance 
 
-This repository is maintained by the Mathis Lab. 
+This repository is maintained by the MLAI lab. 
 
 ### Core Development Team
 
