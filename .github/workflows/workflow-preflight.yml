@@ -1,0 +1,70 @@
+name: Workflow Preflight
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/**
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/**
+
+jobs:
+  validate-workflows:
+    name: Validate workflow files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install yamllint
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install yamllint
+
+      - name: Validate GitHub Actions workflow syntax
+        uses: rhysd/actionlint@v1
+
+      - name: Validate YAML formatting
+        run: |
+          yamllint -d '{extends: default, rules: {truthy: disable, document-start: disable, line-length: {max: 400, level: error}}}' .github/workflows/*.yml
+
+      - name: Guard MySQL quoting in workflow commands
+        run: |
+          python - <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          workflows = sorted(pathlib.Path('.github/workflows').glob('*.yml'))
+          # mysql -e with double-quoted SQL must not include backticked identifiers
+          # because nested shells can treat backticks as command substitution.
+          pattern = re.compile(r'mysql[^\n]*\s-e\s"[^"\n]*`[^"\n]*"')
+
+          violations = []
+          for wf in workflows:
+              text = wf.read_text()
+              for match in pattern.findall(text):
+                  violations.append((str(wf), match))
+
+          if violations:
+              print(
+                  'Unsafe mysql quoting detected: backticks inside double-quoted -e SQL.',
+                  file=sys.stderr,
+              )
+              print("Use single-quoted SQL: -e 'SELECT ... `#table` ...'", file=sys.stderr)
+              for idx, (wf, snippet) in enumerate(violations, start=1):
+                  print(f'{idx}. {wf}: {snippet}', file=sys.stderr)
+              sys.exit(1)
+
+          print('MySQL quoting guard passed.')
+          PY
