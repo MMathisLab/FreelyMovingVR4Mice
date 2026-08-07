@@ -285,9 +285,8 @@ class TestSyncMiceFromMain:
         assert upsert_phases == [False]  # upsert after leaving main connection
         assert any("full mice registry" in str(c) for c in log.info.call_args_list)
 
-    def test_main_database_leaves_tls_alone_by_default(self, monkeypatch):
+    def test_main_database_switches_host_and_restores(self, monkeypatch):
         monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
-        monkeypatch.delenv("DJ_MAIN_USE_TLS", raising=False)
         cfg = {
             "database.host": "local",
             "database.user": "u",
@@ -302,31 +301,8 @@ class TestSyncMiceFromMain:
             mouse_sync.dj, "conn", FakeConn()
         ):
             with mouse_sync._main_database():
-                assert "database.use_tls" not in cfg
                 assert cfg["database.host"] == "main.example:3306"
             assert cfg["database.host"] == "local"
-
-    def test_main_database_honors_tls_override(self, monkeypatch):
-        monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
-        monkeypatch.setenv("DJ_MAIN_USE_TLS", "false")
-        cfg = {
-            "database.host": "local",
-            "database.user": "u",
-            "database.password": "p",
-        }
-        seen = {}
-
-        class FakeConn:
-            def __call__(self, reset=False):
-                return None
-
-        with patch.object(mouse_sync.dj, "config", cfg), patch.object(
-            mouse_sync.dj, "conn", FakeConn()
-        ):
-            with mouse_sync._main_database():
-                seen["use_tls"] = cfg.get("database.use_tls")
-            assert seen["use_tls"] is False
-            assert "database.use_tls" not in cfg
 
 
 class TestUpsertRows:

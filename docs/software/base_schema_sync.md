@@ -42,8 +42,6 @@ Requirements:
 
 - `sync_mice` copies **all** `Strain` / `Mouse` / `Surgery` / score-sheet rows
   from `DJ_MAIN_HOST` onto local (replace upsert; never deletes on main).
-- TLS: leave unset (DataJoint try-then-fallback). Optional
-  `DJ_MAIN_USE_TLS=true|false` only if you need to force it.
 - **`sync_exp` is optional** — this lab only (not collab). See §D.
 
 ---
@@ -86,14 +84,12 @@ GUI=True
 DJ_MAIN_HOST=main-db.example.com:3306
 DJ_MAIN_USER=...          # optional; falls back to DJ_USER
 DJ_MAIN_PWD=...           # optional; falls back to DJ_PWD
-# DJ_MAIN_USE_TLS=false   # optional override; leave unset for DJ default
 ```
 
 | Variable | Meaning |
 |----------|---------|
 | `DJ_HOST` / `DJ_USER` / `DJ_PWD` | Local database |
 | `DJ_MAIN_HOST` (+ optional user/pwd) | Parent: **pull** full mice registry (`sync_mice`); optional **push** sessions (`sync_exp`) |
-| `DJ_MAIN_USE_TLS` | Optional override only; unset = DataJoint try-TLS-then-fallback |
 
 ---
 

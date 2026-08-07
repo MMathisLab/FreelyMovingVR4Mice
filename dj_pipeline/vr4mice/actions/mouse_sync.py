@@ -225,43 +225,22 @@ def _require_dj_main_host() -> None:
 @contextmanager
 def _main_database():
     """Temporarily point DataJoint at DJ_MAIN_HOST, then restore local config."""
+    # Do not use `key in dj.config` — DJ Config.__contains__ breaks (int keys).
+    # Do not touch database.use_tls; leave DJ try-TLS-then-fallback as-is.
     keys = ("database.host", "database.user", "database.password")
     saved = {key: dj.config[key] for key in keys}
-    # Leave database.use_tls alone — DJ try-TLS-then-fallback already works here.
-    # Optional override only if set: DJ_MAIN_USE_TLS=true|false
-    tls_override = os.environ.get("DJ_MAIN_USE_TLS")
-    had_tls = "database.use_tls" in dj.config
-    saved_tls = dj.config["database.use_tls"] if had_tls else None
     dj.config["database.host"] = os.environ["DJ_MAIN_HOST"]
     dj.config["database.user"] = os.environ.get("DJ_MAIN_USER", saved["database.user"])
     dj.config["database.password"] = os.environ.get(
         "DJ_MAIN_PWD", saved["database.password"]
     )
-    if tls_override is not None:
-        dj.config["database.use_tls"] = tls_override.strip().lower() in (
-            "1",
-            "true",
-            "yes",
-            "on",
-        )
     dj.conn(reset=True)
     try:
         yield
     finally:
         for key, value in saved.items():
             dj.config[key] = value
-        try:
-            if tls_override is not None:
-                if had_tls:
-                    dj.config["database.use_tls"] = saved_tls
-                elif "database.use_tls" in dj.config:
-                    del dj.config["database.use_tls"]
-        except Exception:
-            pass
-        try:
-            dj.conn(reset=True)
-        except Exception:
-            pass
+        dj.conn(reset=True)
 
 
 def _upsert_rows(table, rows: Iterable[dict]) -> int:
@@ -307,7 +286,7 @@ def sync_mice_from_main(log=None, *, gui_paths: Optional[Sequence[str]] = None) 
     except Exception:
         log.exception(
             "Failed fetching mice registry from main DB (%s). "
-            "Check DJ_MAIN_HOST (include :port), DJ_MAIN_USER/PWD, DJ_MAIN_USE_TLS.",
+            "Check DJ_MAIN_HOST (include :port) and DJ_MAIN_USER/PWD.",
             os.environ["DJ_MAIN_HOST"],
         )
         raise
