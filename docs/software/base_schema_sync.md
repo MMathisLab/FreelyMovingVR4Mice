@@ -15,6 +15,30 @@ python run.py analysis
 No separate base cron path. Base populate follows the `GUI` flag
 (`GUI=True` ⇒ include `exp`/`mice`; `GUI=False` ⇒ `vr4mice` only).
 
+### When new mice appear
+
+Ingest can insert **stub** Mouse rows (`mouse_id=-1`) so `exp.Session` can be
+created. Those stubs are **not** full registry records.
+
+**Whenever new mice show up** (first session on this rig, or after recover/populate
+left stubs / incomplete Mouse rows), run:
+
+```bash
+python run_base.py sync_mice   # pull full Mouse (+ Surgery, score sheets) from parent
+python run.py fetch            # refresh GUI menu if needed
+```
+
+Requirements:
+
+- Mice must already exist on the **parent** DB (`DJ_MAIN_HOST`).
+- `sync_mice` only updates mice that already have a **local** `exp.Session`
+  (stub or incomplete). It does not invent mice that never ran here.
+- After new sessions are recovered or ingested, also push them upstream if needed:
+  `python run_base.py sync_exp`.
+
+If populate/fetch logs warn about stub or incomplete mice, treat that as a signal
+to run `sync_mice` before relying on GUI metadata or parent consistency.
+
 ---
 
 ## When you need `run_base.py`
@@ -119,12 +143,16 @@ python run_base.py cleanup_mice          # dry-run
 python run_base.py cleanup_mice --force
 ```
 
-### D — sync with parent
+### D — sync with parent (required if new / stub mice appeared)
 
 ```bash
 python run_base.py sync_mice   # parent → local mouse metadata (stubs → full)
 python run_base.py sync_exp    # local → parent missing sessions (needs write on main exp)
 ```
+
+Run **`sync_mice` whenever new mice appeared** as stubs or incomplete local
+records after populate/recover. Skip only if every session mouse already has a
+full Mouse row (no stub warnings).
 
 ### E — optional GUI menu
 
@@ -146,10 +174,11 @@ python run.py populate   # GUI=True still fills exp/mice for new sessions
 1. DJ_MAIN_* in .env; replication OFF
 2. python run_base.py recover_base
 3. python run_base.py recover_base --force   # only if orphan list is OK
-4. python run_base.py sync_mice
+4. python run_base.py sync_mice             # required if new/stub mice appeared
 5. python run_base.py sync_exp
 6. Re-enable replication when both sides look consistent
 7. Resume: python run.py populate
+   # when new mice appear later → sync_mice again (+ fetch if GUI needs update)
 ```
 
 ---

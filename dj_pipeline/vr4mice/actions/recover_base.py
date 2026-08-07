@@ -15,7 +15,6 @@ from typing import Iterable, List, Set, Tuple
 
 import datajoint as dj
 from base_schemas.schemas import exp, mice
-
 from vr4mice.actions.mouse_sync import (
     SYNC_EXP_COMMAND,
     SYNC_MICE_COMMAND,
@@ -58,7 +57,9 @@ sync directions (mice from main, sessions to main) are consistent.
 
 MySQL diagnostics: make -f mysql.mk replication-summary
 ================================================================================
-""".format(sync_mice=SYNC_MICE_COMMAND, sync_exp=SYNC_EXP_COMMAND)
+""".format(
+    sync_mice=SYNC_MICE_COMMAND, sync_exp=SYNC_EXP_COMMAND
+)
 
 
 def _session_key_from_dataset(dataset: str) -> Tuple[str, str, int]:
@@ -113,7 +114,9 @@ def check_replication_off(log=None) -> None:
 
     if status:
         io_running = status.get("Replica_IO_Running") or status.get("Slave_IO_Running")
-        sql_running = status.get("Replica_SQL_Running") or status.get("Slave_SQL_Running")
+        sql_running = status.get("Replica_SQL_Running") or status.get(
+            "Slave_SQL_Running"
+        )
         if io_running == "Yes" or sql_running == "Yes":
             raise RuntimeError(
                 "MySQL replication is active "

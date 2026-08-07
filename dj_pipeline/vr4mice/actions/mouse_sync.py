@@ -9,19 +9,14 @@ from typing import Iterable, List, Optional, Set
 
 import datajoint as dj
 from base_schemas.schemas import exp, mice
-
 from vr4mice.utils.logger import Logger
 
 logger = Logger.get_logger()
 
 STUB_MOUSE_ID = -1
 STUB_DOB = datetime.date(1970, 1, 1)
-SYNC_MICE_COMMAND = (
-    "python run_base.py sync_mice  # set DJ_MAIN_HOST (and optionally DJ_MAIN_USER/DJ_MAIN_PWD)"
-)
-SYNC_EXP_COMMAND = (
-    "python run_base.py sync_exp  # set DJ_MAIN_HOST; requires write access on main exp schema"
-)
+SYNC_MICE_COMMAND = "python run_base.py sync_mice  # set DJ_MAIN_HOST (and optionally DJ_MAIN_USER/DJ_MAIN_PWD)"
+SYNC_EXP_COMMAND = "python run_base.py sync_exp  # set DJ_MAIN_HOST; requires write access on main exp schema"
 
 MOUSE_SYNC_TABLES = (
     mice.Mouse,
@@ -60,7 +55,9 @@ def get_incomplete_mouse_names() -> List[str]:
     ]
 
 
-def _mouse_name_from_raw(raw_data: dict, dataset: Optional[str] = None) -> Optional[str]:
+def _mouse_name_from_raw(
+    raw_data: dict, dataset: Optional[str] = None
+) -> Optional[str]:
     mouse_name = raw_data.get("mouse_name")
     if mouse_name:
         return mouse_name
@@ -317,14 +314,14 @@ def sync_exp_to_main(log=None) -> int:
     if skipped_existing:
         log.info("Skipped %d session(s) already present on main.", skipped_existing)
     if failed:
-        log.warning(
-            "Failed to push %d row(s): %s", len(failed), "; ".join(failed[:10])
-        )
+        log.warning("Failed to push %d row(s): %s", len(failed), "; ".join(failed[:10]))
     log.info("Pushed %d exp row(s) to main DB.", inserted)
     return inserted
 
 
-def cleanup_mice_without_sessions(*, dry_run: bool = True, stubs_only: bool = True) -> int:
+def cleanup_mice_without_sessions(
+    *, dry_run: bool = True, stubs_only: bool = True
+) -> int:
     """
     Remove Mouse rows that are not referenced by any local Session.
 

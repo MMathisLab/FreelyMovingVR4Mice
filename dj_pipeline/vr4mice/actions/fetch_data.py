@@ -5,7 +5,6 @@ import sys
 import datajoint as dj
 import numpy as np
 from base_schemas.schemas import exp, mice
-
 from vr4mice.actions.mouse_sync import warn_incomplete_mice
 from vr4mice.utils.logger import Logger
 
@@ -71,9 +70,7 @@ def _fetch_session_mice() -> list:
     DJ 2.x rejects chained table subtraction (Mouse - Sacrificed - Breed) because
     mouse_name has incompatible lineages across dependent tables.
     """
-    session_mice = {
-        name for name in exp.Session().fetch("mouse_name") if name
-    }
+    session_mice = {name for name in exp.Session().fetch("mouse_name") if name}
     excluded = {
         *mice.Sacrificed().fetch("mouse_name"),
         *mice.Breed().fetch("mouse_name"),

@@ -10,17 +10,16 @@ from __future__ import annotations
 import datetime
 import os
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from contextlib import contextmanager
-
-import pytest
 
 # Import action modules from ACTIONS_PATH (conftest), then re-register them under
 # the vr4mice.actions.* names recover_base/sync_days expect. conftest mocks
 # vr4mice.actions as a MagicMock package, which would otherwise block submodule imports.
 import mouse_sync
 import populate_rig
+import pytest
 
 sys.modules["vr4mice.actions.mouse_sync"] = mouse_sync
 sys.modules["vr4mice.actions.populate_rig"] = populate_rig
@@ -29,7 +28,6 @@ import recover_base  # noqa: E402
 import sync_days  # noqa: E402
 from populate_rig import _schemas_for_dataset  # noqa: E402
 from sync_days import _days_from_exp_dates, _normalize_paths  # noqa: E402
-
 
 # ==============================================================================
 # mouse_sync helpers
@@ -104,7 +102,13 @@ class TestEnsureMouseForSession:
         with patch.object(mouse_sync, "mice") as mock_mice:
             mock_mice.Mouse.return_value.__and__ = MagicMock(return_value=True)
             inserted = mouse_sync.ensure_mouse_for_session(
-                {"mouse_name": "Flamingo", "mouse_id": 1, "dob": "2020-01-01", "sex": "F", "strain": "X"}
+                {
+                    "mouse_name": "Flamingo",
+                    "mouse_id": 1,
+                    "dob": "2020-01-01",
+                    "sex": "F",
+                    "strain": "X",
+                }
             )
         assert inserted is False
 
@@ -364,7 +368,9 @@ class TestCleanupOrphanExpMice:
             recover_base, "get_vr4mice_session_keys", return_value=dataset_keys
         ), patch.object(
             recover_base, "get_vr4mice_mouse_names", return_value={"Flamingo"}
-        ), patch.object(recover_base, "exp") as mock_exp, patch.object(
+        ), patch.object(
+            recover_base, "exp"
+        ) as mock_exp, patch.object(
             recover_base, "mice"
         ) as mock_mice:
             mock_exp.Session.return_value.fetch.return_value = sessions
@@ -439,7 +445,9 @@ class TestNormalizePaths:
         data.mkdir()
         processed.mkdir()
         monkeypatch.setattr(
-            sync_days, "DEFAULT_GUI_PATHS", (str(data), str(processed), str(tmp_path / "x"))
+            sync_days,
+            "DEFAULT_GUI_PATHS",
+            (str(data), str(processed), str(tmp_path / "x")),
         )
         paths = _normalize_paths(None)
         assert str(data) in paths or os.path.normpath(str(data)) in paths
