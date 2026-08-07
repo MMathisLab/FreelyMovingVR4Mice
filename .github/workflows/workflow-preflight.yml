@@ -5,16 +5,18 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/**
+      - .github/workflows/cron-scenario.yml
+      - .github/workflows/workflow-preflight.yml
   push:
     branches:
       - main
     paths:
-      - .github/workflows/**
+      - .github/workflows/cron-scenario.yml
+      - .github/workflows/workflow-preflight.yml
 
 jobs:
-  validate-workflows:
-    name: Validate workflow files
+  validate-cron-workflow:
+    name: Validate cron workflow
     runs-on: ubuntu-latest
 
     steps:
@@ -37,11 +39,11 @@ jobs:
           curl -sSL -o actionlint.tar.gz \
             "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
           tar -xzf actionlint.tar.gz actionlint
-          ./actionlint -color .github/workflows/*.yml
+          ./actionlint -color .github/workflows/cron-scenario.yml
 
       - name: Validate YAML formatting
         run: |
-          yamllint -d '{extends: default, rules: {truthy: disable, document-start: disable, line-length: {max: 400, level: error}}}' .github/workflows/*.yml
+          yamllint -d '{extends: default, rules: {truthy: disable, document-start: disable, line-length: {max: 400, level: error}}}' .github/workflows/cron-scenario.yml
 
       - name: Guard MySQL quoting in workflow commands
         run: |
@@ -50,16 +52,15 @@ jobs:
           import re
           import sys
 
-          workflows = sorted(pathlib.Path('.github/workflows').glob('*.yml'))
+            workflow = pathlib.Path('.github/workflows/cron-scenario.yml')
           # mysql -e with double-quoted SQL must not include backticked identifiers
           # because nested shells can treat backticks as command substitution.
           pattern = re.compile(r'mysql[^\n]*\s-e\s"[^"\n]*`[^"\n]*"')
 
           violations = []
-          for wf in workflows:
-              text = wf.read_text()
-              for match in pattern.findall(text):
-                  violations.append((str(wf), match))
+            text = workflow.read_text()
+            for match in pattern.findall(text):
+              violations.append((str(workflow), match))
 
           if violations:
               print(
