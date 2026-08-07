@@ -107,9 +107,12 @@ That is unsafe while replication is active — stop replication before `--force`
 `recover_base` also blocks if replica IO/SQL is `Yes` or the DB is read-only
 (because it writes Sessions).
 
-**Check** status (does **not** stop replication):
+**Check** status (does **not** stop replication). From `dj_pipeline/`,
+`mysql.mk` logs in with **only** local `.env` `DJ_USER`/`DJ_PWD`
+(never `DJ_MAIN_*`, never compose root). Verify with:
 
 ```bash
+make -f mysql.mk creds
 make -f mysql.mk replication-summary
 ```
 
