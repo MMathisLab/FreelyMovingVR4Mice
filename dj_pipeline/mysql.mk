@@ -65,7 +65,7 @@ replication-status: ## Full SHOW REPLICA STATUS (MySQL 8+; use replication-statu
 replication-status-legacy: ## Full SHOW SLAVE STATUS (MySQL 5.7)
 	$(MYSQL) -e "SHOW SLAVE STATUS\G"
 
-replication-summary: ## Short replica health check (IO/SQL running, lag, last errors)
+replication-summary: ## Short replica health check only (does NOT stop replication)
 	$(MYSQL) -e "SHOW REPLICA STATUS\G" \
 		| egrep 'Replica_(IO|SQL)_Running|Seconds_Behind|Last_(IO|SQL)_Error|Source_Host|Source_Port|Replica_SQL_Running_State' \
 		|| $(MYSQL) -e "SHOW SLAVE STATUS\G" \

@@ -5,7 +5,7 @@ from __future__ import annotations
 import datetime
 import os
 from contextlib import contextmanager
-from typing import Iterable, List, Optional, Set
+from typing import Iterable, List, Optional, Set, Tuple
 
 import datajoint as dj
 from base_schemas.schemas import exp, mice
@@ -16,7 +16,10 @@ logger = Logger.get_logger()
 STUB_MOUSE_ID = -1
 STUB_DOB = datetime.date(1970, 1, 1)
 SYNC_MICE_COMMAND = "python run_base.py sync_mice  # set DJ_MAIN_HOST (and optionally DJ_MAIN_USER/DJ_MAIN_PWD)"
-SYNC_EXP_COMMAND = "python run_base.py sync_exp  # set DJ_MAIN_HOST; requires write access on main exp schema"
+SYNC_EXP_COMMAND = (
+    "python run_base.py sync_exp  # optional; DJ_MAIN_HOST + write on main exp; "
+    "local (non-collab) sessions only"
+)
 
 MOUSE_SYNC_TABLES = (
     mice.Mouse,
@@ -174,13 +177,15 @@ def _main_database():
 
 
 def _upsert_rows(table, rows: Iterable[dict]) -> int:
+    """
+    Insert or replace rows locally without cascading deletes.
+
+    Uses ``replace=True`` (not delete-then-insert) so refreshing a Mouse stub
+    cannot wipe dependent local ``exp.Session`` rows.
+    """
     count = 0
-    pk = table.primary_key
     for row in rows:
-        key = {field: row[field] for field in pk if field in row}
-        if key and table & key:
-            (table & key).delete()
-        table.insert1(row)
+        table.insert1(row, replace=True)
         count += 1
     return count
 
@@ -248,12 +253,101 @@ def _pk_tuple(key: dict) -> tuple:
     return tuple(key[field] for field in exp.Session.primary_key)
 
 
+def _session_identity(row: dict) -> Tuple[str, str, int]:
+    """(mouse_name, doe_iso, attempt) — matches recover_base / Dataset naming."""
+    doe = row["doe"]
+    if hasattr(doe, "isoformat"):
+        doe = doe.isoformat()
+    return (row["mouse_name"], str(doe), int(row["attempt"]))
+
+
+def _dataset_lab_by_session_key(log=None) -> dict:
+    """
+    Map session identity → collaborating lab name for local vr4mice.Dataset rows.
+
+    Sessions without a Dataset are omitted (not push candidates).
+    Lab is None when Collab has not been populated for that dataset yet.
+    """
+    log = log or logger
+    from vr4mice.schema import vr4mice
+    from vr4mice.schema.base import parse_filename
+
+    lab_by_key: dict = {}
+    collab_lab = {
+        row["dataset"]: row["lab"]
+        for row in (vr4mice.Collab() * vr4mice.Labs()).fetch(
+            "dataset", "lab", as_dict=True
+        )
+    }
+
+    for row in vr4mice.Dataset().fetch("dataset", as_dict=True):
+        dataset = row["dataset"]
+        try:
+            parsed = parse_filename(dataset)
+        except ValueError as err:
+            log.warning("Skipping unparseable dataset %r: %s", dataset, err)
+            continue
+        key = (parsed["mouse_name"], parsed["date"], int(parsed["attempt"]))
+        lab_by_key[key] = collab_lab.get(dataset)
+    return lab_by_key
+
+
+def get_pushable_local_session_keys(log=None) -> Set[Tuple[str, str, int]]:
+    """
+    Session keys safe to push with sync_exp: local Dataset, this lab only.
+
+    Excludes collaborator datasets (vr4mice.Collab → Labs.lab != DJ_LAB).
+    Requires DJ_LAB when any Collab row is present so collab sessions are not
+    pushed by accident.
+    """
+    log = log or logger
+    lab_by_key = _dataset_lab_by_session_key(log=log)
+    if not lab_by_key:
+        log.info(
+            "No local vr4mice.Dataset rows; sync_exp will not push any sessions."
+        )
+        return set()
+
+    dj_lab = os.environ.get("DJ_LAB")
+    has_collab = any(lab is not None for lab in lab_by_key.values())
+    if has_collab and not dj_lab:
+        raise ValueError(
+            "DJ_LAB must be set to run sync_exp when vr4mice.Collab is populated "
+            "(needed to exclude collaborator datasets)."
+        )
+
+    pushable: Set[Tuple[str, str, int]] = set()
+    skipped_collab = 0
+    for key, lab in lab_by_key.items():
+        if lab is None:
+            # Dataset present, Collab not yet populated — treat as local ingest.
+            pushable.add(key)
+            continue
+        if lab == dj_lab:
+            pushable.add(key)
+        else:
+            skipped_collab += 1
+
+    if skipped_collab:
+        log.info(
+            "Excluding %d collaborator dataset session(s) from sync_exp "
+            "(Collab lab != DJ_LAB=%r).",
+            skipped_collab,
+            dj_lab,
+        )
+    return pushable
+
+
 def sync_exp_to_main(log=None) -> int:
     """
-    Push local exp.Session (+ SessionScoreSheet) rows that are missing on parent.
+    Optional: push missing local (non-collab) exp.Session rows to parent.
 
-    Requires DJ_MAIN_HOST and write access on main ``exp``. Does not overwrite
-    existing parent sessions. Mouse must already exist on main.
+    Only sessions backed by a local ``vr4mice.Dataset`` for this lab (``DJ_LAB``)
+    are candidates — collaborator Collab datasets are never pushed.
+    Requires ``DJ_MAIN_HOST`` and write access on main ``exp``.
+
+    Inserts missing parent rows only — never deletes or overwrites on main.
+    Mouse must already exist on main.
     """
     log = log or logger
     _require_dj_main_host()
@@ -263,16 +357,31 @@ def sync_exp_to_main(log=None) -> int:
         log.info("No local exp.Session rows; nothing to push.")
         return 0
 
+    pushable = get_pushable_local_session_keys(log=log)
+    candidates = [
+        row for row in local_sessions if _session_identity(row) in pushable
+    ]
+    skipped_non_local = len(local_sessions) - len(candidates)
+    if skipped_non_local:
+        log.info(
+            "Skipped %d session(s) without a local (non-collab) Dataset "
+            "(registry/replica/collab only — not pushed).",
+            skipped_non_local,
+        )
+    if not candidates:
+        log.info("No local non-collab sessions to push.")
+        return 0
+
     sheets_by_key = {
         _pk_tuple(_session_primary_key(row)): row
         for row in exp.SessionScoreSheet().fetch(as_dict=True)
     }
 
     log.info(
-        "Pushing missing local exp.Session row(s) to main DB (%s) "
-        "(%d local session(s) to consider)",
+        "Pushing missing local (non-collab) exp.Session row(s) to main DB (%s) "
+        "(%d candidate session(s))",
         os.environ["DJ_MAIN_HOST"],
-        len(local_sessions),
+        len(candidates),
     )
 
     inserted = 0
@@ -281,7 +390,7 @@ def sync_exp_to_main(log=None) -> int:
     failed: List[str] = []
 
     with _main_database():
-        for row in local_sessions:
+        for row in candidates:
             key = _session_primary_key(row)
             mouse_name = row.get("mouse_name")
             if not (mice.Mouse() & {"mouse_name": mouse_name}):

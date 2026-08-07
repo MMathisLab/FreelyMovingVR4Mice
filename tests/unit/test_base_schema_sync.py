@@ -192,6 +192,16 @@ class TestSyncMiceFromMain:
         assert upsert_phases == [False]  # upsert after leaving main connection
 
 
+class TestUpsertRows:
+    def test_uses_replace_not_delete(self):
+        table = MagicMock()
+        row = {"mouse_name": "Flamingo", "mouse_id": 7}
+        count = mouse_sync._upsert_rows(table, [row])
+        assert count == 1
+        table.insert1.assert_called_once_with(row, replace=True)
+        table.delete.assert_not_called()
+
+
 class TestSyncExpToMain:
     def test_requires_dj_main_host(self, monkeypatch):
         monkeypatch.delenv("DJ_MAIN_HOST", raising=False)
@@ -215,9 +225,12 @@ class TestSyncExpToMain:
             "attempt": 1,
             "doe": "2026-02-05",
         }
+        pushable = {("Flamingo", "2026-02-05", 1)}
         with patch.object(mouse_sync, "exp") as mock_exp, patch.object(
             mouse_sync, "mice"
-        ) as mock_mice, patch.object(mouse_sync, "_main_database") as mock_main:
+        ) as mock_mice, patch.object(
+            mouse_sync, "get_pushable_local_session_keys", return_value=pushable
+        ), patch.object(mouse_sync, "_main_database") as mock_main:
             mock_main.return_value.__enter__ = MagicMock()
             mock_main.return_value.__exit__ = MagicMock(return_value=False)
             mock_exp.Session.primary_key = ["mouse_name", "day", "attempt"]
@@ -238,9 +251,12 @@ class TestSyncExpToMain:
             "attempt": 1,
             "doe": "2026-02-05",
         }
+        pushable = {("Flamingo", "2026-02-05", 1)}
         with patch.object(mouse_sync, "exp") as mock_exp, patch.object(
             mouse_sync, "mice"
-        ) as mock_mice, patch.object(mouse_sync, "_main_database") as mock_main:
+        ) as mock_mice, patch.object(
+            mouse_sync, "get_pushable_local_session_keys", return_value=pushable
+        ), patch.object(mouse_sync, "_main_database") as mock_main:
             mock_main.return_value.__enter__ = MagicMock()
             mock_main.return_value.__exit__ = MagicMock(return_value=False)
             mock_exp.Session.primary_key = ["mouse_name", "day", "attempt"]
@@ -258,6 +274,159 @@ class TestSyncExpToMain:
             count = mouse_sync.sync_exp_to_main(log=log)
         assert count >= 1
         mock_exp.Session.insert1.assert_called_once_with(session)
+
+    def test_skips_sessions_without_local_dataset(self, monkeypatch):
+        monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
+        log = MagicMock()
+        session = {
+            "mouse_name": "CollabOnly",
+            "day": 1,
+            "attempt": 1,
+            "doe": "2026-02-05",
+        }
+        with patch.object(mouse_sync, "exp") as mock_exp, patch.object(
+            mouse_sync, "get_pushable_local_session_keys", return_value=set()
+        ), patch.object(mouse_sync, "_main_database") as mock_main:
+            mock_exp.Session.return_value.fetch.return_value = [session]
+            assert mouse_sync.sync_exp_to_main(log=log) == 0
+            mock_main.assert_not_called()
+        assert any(
+            "No local non-collab" in str(c) for c in log.info.call_args_list
+        )
+
+    def test_skips_collab_lab_sessions(self, monkeypatch):
+        monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
+        monkeypatch.setenv("DJ_LAB", "mathis-lab")
+        log = MagicMock()
+        local = {
+            "mouse_name": "LocalMouse",
+            "day": 1,
+            "attempt": 1,
+            "doe": "2026-02-05",
+        }
+        collab = {
+            "mouse_name": "CollabMouse",
+            "day": 1,
+            "attempt": 1,
+            "doe": "2026-02-06",
+        }
+        pushable = {("LocalMouse", "2026-02-05", 1)}
+        with patch.object(mouse_sync, "exp") as mock_exp, patch.object(
+            mouse_sync, "mice"
+        ) as mock_mice, patch.object(
+            mouse_sync, "get_pushable_local_session_keys", return_value=pushable
+        ), patch.object(mouse_sync, "_main_database") as mock_main:
+            mock_main.return_value.__enter__ = MagicMock()
+            mock_main.return_value.__exit__ = MagicMock(return_value=False)
+            mock_exp.Session.primary_key = ["mouse_name", "day", "attempt"]
+            mock_exp.Session.return_value.fetch.return_value = [local, collab]
+            mock_exp.SessionScoreSheet.return_value.fetch.return_value = []
+            mock_mice.Mouse.return_value.__and__ = MagicMock(return_value=True)
+            mock_exp.Session.return_value.__and__ = MagicMock(return_value=False)
+            mock_exp.Session.insert1 = MagicMock()
+            mock_exp.SessionScoreSheet.return_value.__and__ = MagicMock(
+                return_value=False
+            )
+            mouse_sync.sync_exp_to_main(log=log)
+        mock_exp.Session.insert1.assert_called_once_with(local)
+
+
+class TestGetPushableLocalSessionKeys:
+    def test_excludes_other_lab_collab(self, monkeypatch):
+        monkeypatch.setenv("DJ_LAB", "mathis-lab")
+        log = MagicMock()
+
+        class FakeJoin:
+            def fetch(self, *args, **kwargs):
+                return [
+                    {"dataset": "Local_2026-02-05_1", "lab": "mathis-lab"},
+                    {"dataset": "Other_2026-02-06_1", "lab": "tolias-lab"},
+                ]
+
+        class FakeCollab:
+            def __mul__(self, _labs):
+                return FakeJoin()
+
+        class FakeDataset:
+            def fetch(self, *args, **kwargs):
+                return [
+                    {"dataset": "Local_2026-02-05_1"},
+                    {"dataset": "Other_2026-02-06_1"},
+                ]
+
+        fake_vr4mice = MagicMock()
+        fake_vr4mice.Collab.return_value = FakeCollab()
+        fake_vr4mice.Labs.return_value = MagicMock()
+        fake_vr4mice.Dataset.return_value = FakeDataset()
+
+        import types
+
+        base_mod = types.ModuleType("vr4mice.schema.base")
+        base_mod.parse_filename = lambda filename: {
+            "mouse_name": filename.split("_")[0],
+            "date": filename.split("_")[1],
+            "attempt": int(filename.split("_")[2]),
+        }
+        schema_pkg = types.ModuleType("vr4mice.schema")
+        schema_pkg.__path__ = []
+        schema_pkg.vr4mice = fake_vr4mice
+
+        with patch.dict(
+            sys.modules,
+            {
+                "vr4mice.schema": schema_pkg,
+                "vr4mice.schema.base": base_mod,
+                "vr4mice.schema.vr4mice": fake_vr4mice,
+            },
+        ):
+            keys = mouse_sync.get_pushable_local_session_keys(log=log)
+
+        assert ("Local", "2026-02-05", 1) in keys
+        assert ("Other", "2026-02-06", 1) not in keys
+
+    def test_requires_dj_lab_when_collab_present(self, monkeypatch):
+        monkeypatch.delenv("DJ_LAB", raising=False)
+        log = MagicMock()
+
+        class FakeJoin:
+            def fetch(self, *args, **kwargs):
+                return [{"dataset": "Local_2026-02-05_1", "lab": "mathis-lab"}]
+
+        class FakeCollab:
+            def __mul__(self, _labs):
+                return FakeJoin()
+
+        class FakeDataset:
+            def fetch(self, *args, **kwargs):
+                return [{"dataset": "Local_2026-02-05_1"}]
+
+        fake_vr4mice = MagicMock()
+        fake_vr4mice.Collab.return_value = FakeCollab()
+        fake_vr4mice.Labs.return_value = MagicMock()
+        fake_vr4mice.Dataset.return_value = FakeDataset()
+
+        import types
+
+        base_mod = types.ModuleType("vr4mice.schema.base")
+        base_mod.parse_filename = lambda filename: {
+            "mouse_name": "Local",
+            "date": "2026-02-05",
+            "attempt": 1,
+        }
+        schema_pkg = types.ModuleType("vr4mice.schema")
+        schema_pkg.__path__ = []
+        schema_pkg.vr4mice = fake_vr4mice
+
+        with patch.dict(
+            sys.modules,
+            {
+                "vr4mice.schema": schema_pkg,
+                "vr4mice.schema.base": base_mod,
+                "vr4mice.schema.vr4mice": fake_vr4mice,
+            },
+        ):
+            with pytest.raises(ValueError, match="DJ_LAB"):
+                mouse_sync.get_pushable_local_session_keys(log=log)
 
 
 class TestCleanupMiceWithoutSessions:

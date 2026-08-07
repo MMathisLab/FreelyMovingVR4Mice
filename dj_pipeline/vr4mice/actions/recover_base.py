@@ -42,18 +42,19 @@ Two DataJoint connections are involved (local DJ_HOST vs main DJ_MAIN_HOST):
 
      Requires: DJ_MAIN_HOST (and optionally DJ_MAIN_USER / DJ_MAIN_PWD)
 
-  2. Local → main (Experiment sessions) — automated
-     Push recovered/new exp.Session (+ SessionScoreSheet) to the parent exp
-     schema (inserts missing rows only; does not overwrite existing parent
-     sessions). Mouse must already exist on main:
+  2. Local → main (Experiment sessions) — optional
+     Only if this rig should publish sessions upstream. Pushes missing
+     exp.Session (+ SessionScoreSheet) for this lab’s local Datasets only
+     (Collab lab == DJ_LAB); never collaborator sessions. Mouse must already
+     exist on main:
        {sync_exp}
 
-     Requires: DJ_MAIN_HOST and write access on main exp.
+     Requires: DJ_MAIN_HOST, write access on main exp, DJ_LAB when Collab exists.
 
 Replication: recover_base aborts if replica IO/SQL threads are running or the
 DB is read-only. Orphan cleanup (--force) is only safe with replication OFF.
-Keep replication OFF while editing local tables; re-enable only after both
-sync directions (mice from main, sessions to main) are consistent.
+Keep replication OFF while editing local tables; re-enable after sync_mice
+(and optional sync_exp) look consistent.
 
 MySQL diagnostics: make -f mysql.mk replication-summary
 ================================================================================
@@ -202,9 +203,10 @@ def _delete_mice(mouse_names: Iterable[str], *, dry_run: bool) -> int:
 
 def cleanup_orphan_exp_mice(*, dry_run: bool = True) -> Tuple[int, int]:
     """
-    Remove exp/mice rows that are not backed by a vr4mice.Dataset entry.
+    Remove **local** exp/mice rows that are not backed by a vr4mice.Dataset.
 
-    vr4mice.Dataset is the source of truth for which sessions exist in this pipeline.
+    Never touches the parent DB. vr4mice.Dataset is the source of truth for
+    which sessions/mice belong on this rig; rows without a Dataset are orphans.
     """
     dataset_keys = get_vr4mice_session_keys()
     dataset_mice = get_vr4mice_mouse_names()
