@@ -440,9 +440,9 @@ class DLC(dj.Manual):
                             f"Existing DLC row has invalid {field}: {value!r}."
                         )
                     resolved = Path(value_text).expanduser()
-                    if not resolved.exists():
+                    if not resolved.is_file():
                         raise FileNotFoundError(
-                            f"Existing DLC row missing {field}: '{resolved}'"
+                            f"Existing DLC row has non-file {field}: '{resolved}'"
                         )
                 logger.debug(
                     "%s already populated for key %s", self.__class__.__name__, key
@@ -467,9 +467,9 @@ class DLC(dj.Manual):
                         f"Invalid {field} for DLC insert: {value!r}."
                     )
                 resolved = Path(value_text).expanduser()
-                if not resolved.exists():
+                if not resolved.is_file():
                     raise FileNotFoundError(
-                        f"DLC source file not found for {field}: '{resolved}'"
+                        f"DLC source path is not a file for {field}: '{resolved}'"
                     )
 
             data = {
@@ -612,7 +612,7 @@ class SignalsPhotodiode(dj.Computed):
             proc_filepath = (
                 f"{paths['proc_path']['dst']}/{paths['proc_path']['filename']}"
             )
-            if not os.path.exists(proc_filepath):
+            if not Path(proc_filepath).expanduser().is_file():
                 logger.debug(
                     "PROC file not found, skipping latency for %s",
                     key["dataset"],
