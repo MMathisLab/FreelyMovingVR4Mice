@@ -22,17 +22,17 @@ Each step is its own `run_base.py` mode — nothing is chained inside
 
 ```bash
 # 1. Pull full Mouse rows from parent (Dataset / Session / GUI .npy names)
-python run_base.py sync_mice
+python3 run_base.py sync_mice
 
 # 2. Rebuild local exp/mice from unpopulated GUI .npy only
-python run_base.py recover_base
+python3 run_base.py recover_base
 
 # 3. Optional — list local exp/mice with no vr4mice.Dataset
-python run_base.py cleanup_orphans
-python run_base.py cleanup_orphans --force   # apply deletes (local only)
+python3 run_base.py cleanup_orphans
+python3 run_base.py cleanup_orphans --force   # apply deletes (local only)
 
 # 4. Optional — push missing local (non-collab) sessions to parent
-python run_base.py sync_exp
+python3 run_base.py sync_exp
 
 python run.py fetch   # refresh GUI menu if needed
 ```
@@ -137,7 +137,7 @@ STOP SLAVE;
 ### B — sync mice first
 
 ```bash
-python run_base.py sync_mice
+python3 run_base.py sync_mice
 ```
 
 Pulls full Mouse (+ Strain, Surgery, score sheets) for names found in Dataset,
@@ -146,7 +146,7 @@ Session, and/or GUI `.npy` stems.
 ### C — recover base (populate only)
 
 ```bash
-python run_base.py recover_base
+python3 run_base.py recover_base
 ```
 
 Rebuilds local `exp`/`mice` from **unpopulated** GUI `.npy` under `/data/data`
@@ -155,8 +155,8 @@ Rebuilds local `exp`/`mice` from **unpopulated** GUI `.npy` under `/data/data`
 ### D — optional orphan cleanup
 
 ```bash
-python run_base.py cleanup_orphans          # dry-run
-python run_base.py cleanup_orphans --force  # apply
+python3 run_base.py cleanup_orphans          # dry-run
+python3 run_base.py cleanup_orphans --force  # apply
 ```
 
 Deletes local sessions/mice with no `vr4mice.Dataset`. Review the dry-run list
@@ -166,14 +166,14 @@ ones synced for upcoming experiments).
 Lighter stub-only helper:
 
 ```bash
-python run_base.py cleanup_mice          # dry-run
-python run_base.py cleanup_mice --force
+python3 run_base.py cleanup_mice          # dry-run
+python3 run_base.py cleanup_mice --force
 ```
 
 ### E — optional sync_exp
 
 ```bash
-python run_base.py sync_exp
+python3 run_base.py sync_exp
 ```
 
 Push missing local (non-collab) sessions to parent. Match by
@@ -193,11 +193,11 @@ python run.py populate   # normal cron
 
 ```text
 1. DJ_MAIN_* in .env; replication OFF for cleanup
-2. python run_base.py sync_mice
-3. python run_base.py recover_base
-4. python run_base.py cleanup_orphans          # review list
-5. python run_base.py cleanup_orphans --force  # only if OK
-6. python run_base.py sync_exp                # optional
+2. python3 run_base.py sync_mice
+3. python3 run_base.py recover_base
+4. python3 run_base.py cleanup_orphans          # review list
+5. python3 run_base.py cleanup_orphans --force  # only if OK
+6. python3 run_base.py sync_exp                # optional
 7. Re-enable replication; resume run.py populate
 ```
 

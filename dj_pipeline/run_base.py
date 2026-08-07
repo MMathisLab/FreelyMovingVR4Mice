@@ -1,15 +1,16 @@
+#!/usr/bin/env python3
 """
 Entry point for exp/mice recovery and parent-DB sync (not a replacement for cron).
 
-Normal ingest: python run.py populate | analysis | dlc | ...
+Normal ingest: python3 run.py populate | analysis | dlc | ...
 With GUI=True, that populate path writes exp/mice from session .npy as usual.
 
 Recovery / registry sync (run separately; see docs/software/base_schema_sync.md):
-    sync_mice        — pull Mouse metadata from main (Dataset/Session/GUI names)
-    recover_base     — populate unpopulated GUI .npy into local exp/mice only
-    cleanup_orphans  — list/delete local exp/mice with no vr4mice.Dataset
-    cleanup_mice     — remove stub Mouse rows without local sessions
-    sync_exp         — optional: push missing local (non-collab) sessions to main
+    sync_mice        - pull Mouse metadata from main (Dataset/Session/GUI names)
+    recover_base     - populate unpopulated GUI .npy into local exp/mice only
+    cleanup_orphans  - list/delete local exp/mice with no vr4mice.Dataset
+    cleanup_mice     - remove stub Mouse rows without local sessions
+    sync_exp         - optional: push missing local (non-collab) sessions to main
 """
 
 import argparse
