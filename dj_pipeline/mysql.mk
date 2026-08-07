@@ -5,23 +5,19 @@
 #   make -f mysql.mk replication-status
 #   make -f mysql.mk mysql
 #
-# Credentials (first defined value wins for each variable):
-#   1. Command-line override, e.g. MYSQL_PASSWORD=... MYSQL_USER=...
-#   2. .env.compose — MYSQL_ROOT_PASSWORD, DB_PORT, COMPOSE_PROJECT, …
-#   3. .env — local DJ_USER / DJ_PWD only (never DJ_MAIN_*)
-#   4. Built-in defaults (user root, password simple)
+# Credentials (local DB only — never DJ_MAIN_*):
+#   1. Command-line: MYSQL_USER=... MYSQL_PASSWORD=...
+#   2. Default login: local .env DJ_USER / DJ_PWD (when set)
+#   3. Fallback: .env.compose MYSQL_ROOT_PASSWORD as user root
+#   4. Last resort: root / simple
 #
-# This makefile talks to the LOCAL Docker/pipeline DB only.
-# It never uses DJ_MAIN_HOST / DJ_MAIN_USER / DJ_MAIN_PWD (parent sync DB).
+# Force compose root instead of DJ_*:
+#   make -f mysql.mk USE_ROOT=1 replication-summary
 #
 # Examples:
 #   make -f mysql.mk replication-summary
-#   make -f mysql.mk USE_DJ_CREDS=1 replication-summary   # local DJ_USER/DJ_PWD from .env
-#   make -f mysql.mk MYSQL_PASSWORD=secret replication-summary
+#   make -f mysql.mk USE_ROOT=1 replication-summary
 #   make -f mysql.mk USE_DOCKER=0 mysql
-#
-# Note: if .env.compose already sets MYSQL_ROOT_PASSWORD, that wins over DJ_PWD
-# unless you pass MYSQL_PASSWORD=... or USE_DJ_CREDS=1.
 
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
@@ -33,23 +29,32 @@ COMPOSE_PROJECT     ?= vr4mice
 DB_CONTAINER_NAME   ?= vr4mice_db
 DB_BIND_IP          ?= 127.0.0.1
 DB_PORT             ?= 3309
-# Prefer compose root password; else local pipeline DJ_PWD (not DJ_MAIN_PWD); else "simple".
-MYSQL_ROOT_PASSWORD ?= $(DJ_PWD)
 MYSQL_ROOT_PASSWORD ?= simple
-MYSQL_USER          ?= root
-MYSQL_PASSWORD      ?= $(MYSQL_ROOT_PASSWORD)
 MYSQL_HOST          ?= $(DB_BIND_IP)
 MYSQL_PORT          ?= $(DB_PORT)
 USE_DOCKER          ?= 1
-# Use LOCAL pipeline .env login (DJ_USER / DJ_PWD) — never DJ_MAIN_*.
-#   make -f mysql.mk USE_DJ_CREDS=1 replication-summary
-ifeq ($(USE_DJ_CREDS),1)
-  MYSQL_USER := $(DJ_USER)
-  MYSQL_PASSWORD := $(DJ_PWD)
-  ifneq ($(USE_DOCKER),1)
-    # Local DJ_HOST is host:port — never DJ_MAIN_HOST
-    MYSQL_HOST := $(shell printf '%s' '$(DJ_HOST)' | cut -d: -f1)
-    MYSQL_PORT := $(shell printf '%s' '$(DJ_HOST)' | cut -d: -f2)
+USE_ROOT            ?= 0
+
+# Default: LOCAL pipeline .env (DJ_USER / DJ_PWD). Never DJ_MAIN_*.
+# USE_ROOT=1 → root + MYSQL_ROOT_PASSWORD from .env.compose.
+ifeq ($(USE_ROOT),1)
+  MYSQL_USER := root
+  MYSQL_PASSWORD := $(MYSQL_ROOT_PASSWORD)
+else ifneq ($(strip $(DJ_USER)),)
+  MYSQL_USER ?= $(DJ_USER)
+  MYSQL_PASSWORD ?= $(DJ_PWD)
+else
+  MYSQL_USER ?= root
+  MYSQL_PASSWORD ?= $(MYSQL_ROOT_PASSWORD)
+endif
+
+ifneq ($(USE_DOCKER),1)
+  ifneq ($(strip $(DJ_HOST)),)
+    ifneq ($(USE_ROOT),1)
+      # Local DJ_HOST is host:port — never DJ_MAIN_HOST
+      MYSQL_HOST := $(shell printf '%s' '$(DJ_HOST)' | cut -d: -f1)
+      MYSQL_PORT := $(shell printf '%s' '$(DJ_HOST)' | cut -d: -f2)
+    endif
   endif
 endif
 
