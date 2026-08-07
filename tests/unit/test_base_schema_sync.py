@@ -302,7 +302,9 @@ class TestSyncMiceFromMain:
         ):
             with mouse_sync._main_database():
                 assert cfg["database.host"] == "main.example:3306"
+                assert cfg["database.use_tls"] is False
             assert cfg["database.host"] == "local"
+            assert "database.use_tls" not in cfg
 
 
 class TestUpsertRows:

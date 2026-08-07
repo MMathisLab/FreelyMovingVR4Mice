@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime
 import os
+import traceback
 from contextlib import contextmanager
 from typing import Iterable, List, Optional, Sequence, Set, Tuple
 
@@ -225,22 +226,46 @@ def _require_dj_main_host() -> None:
 @contextmanager
 def _main_database():
     """Temporarily point DataJoint at DJ_MAIN_HOST, then restore local config."""
-    # Do not use `key in dj.config` — DJ Config.__contains__ breaks (int keys).
-    # Do not touch database.use_tls; leave DJ try-TLS-then-fallback as-is.
+    # Never use `key in dj.config` — DJ Config.__contains__ breaks (int keys).
     keys = ("database.host", "database.user", "database.password")
     saved = {key: dj.config[key] for key in keys}
+    saved_tls = None
+    try:
+        saved_tls = dj.config["database.use_tls"]
+    except Exception:
+        pass
+
     dj.config["database.host"] = os.environ["DJ_MAIN_HOST"]
     dj.config["database.user"] = os.environ.get("DJ_MAIN_USER", saved["database.user"])
     dj.config["database.password"] = os.environ.get(
         "DJ_MAIN_PWD", saved["database.password"]
     )
-    dj.conn(reset=True)
+    # Skip TLS handshake (lab MySQL); assignment only — never `in dj.config`.
+    dj.config["database.use_tls"] = False
+    try:
+        dj.conn(reset=True)
+    except Exception:
+        traceback.print_exc()
+        raise
     try:
         yield
     finally:
         for key, value in saved.items():
             dj.config[key] = value
-        dj.conn(reset=True)
+        try:
+            if saved_tls is None:
+                try:
+                    del dj.config["database.use_tls"]
+                except Exception:
+                    pass
+            else:
+                dj.config["database.use_tls"] = saved_tls
+        except Exception:
+            pass
+        try:
+            dj.conn(reset=True)
+        except Exception:
+            pass
 
 
 def _upsert_rows(table, rows: Iterable[dict]) -> int:
@@ -284,6 +309,7 @@ def sync_mice_from_main(log=None, *, gui_paths: Optional[Sequence[str]] = None) 
                 if table is mice.Mouse:
                     mouse_count = len(rows)
     except Exception:
+        traceback.print_exc()
         log.exception(
             "Failed fetching mice registry from main DB (%s). "
             "Check DJ_MAIN_HOST (include :port) and DJ_MAIN_USER/PWD.",

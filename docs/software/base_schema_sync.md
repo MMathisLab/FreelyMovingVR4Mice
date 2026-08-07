@@ -42,6 +42,8 @@ Requirements:
 
 - `sync_mice` copies **all** `Strain` / `Mouse` / `Surgery` / score-sheet rows
   from `DJ_MAIN_HOST` onto local (replace upsert; never deletes on main).
+- Main connection sets `database.use_tls=False` (assignment only; avoids SSL
+  handshake failure on lab MySQL).
 - **`sync_exp` is optional** — this lab only (not collab). See §D.
 
 ---
