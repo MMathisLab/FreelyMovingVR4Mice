@@ -6,19 +6,22 @@
 #   make -f mysql.mk replication-summary
 #   make -f mysql.mk mysql
 #
-# Login credentials: ONLY local .env DJ_USER / DJ_PWD (shell-parsed).
-# Never DJ_MAIN_*, never .env.compose MYSQL_ROOT_PASSWORD, never CLI overrides.
+# Default: host mysql client via .env DJ_HOST / DJ_USER / DJ_PWD
+# (same TCP login as the pipeline — not docker exec).
 #
-# .env.compose is used only for COMPOSE_PROJECT / ports (Docker targeting).
+# Never DJ_MAIN_*, never .env.compose MYSQL_ROOT_PASSWORD, never CLI password overrides.
+#
+# Optional Docker exec (socket login inside the container — often different auth):
+#   make -f mysql.mk USE_DOCKER=1 replication-summary
 #
 # Examples:
 #   make -f mysql.mk replication-summary
-#   make -f mysql.mk USE_DOCKER=0 mysql
+#   make -f mysql.mk mysql
 
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-# Compose settings only (project name, ports) — not MySQL login.
+# Compose settings only when USE_DOCKER=1 (project name).
 -include .env.compose
 
 # Read one KEY from local .env (never use for DJ_MAIN_*).
@@ -34,19 +37,18 @@ override MYSQL_PASSWORD := $(call env_get,DJ_PWD)
 ENV_DJ_HOST             := $(call env_get,DJ_HOST)
 
 COMPOSE_PROJECT     ?= vr4mice
-DB_CONTAINER_NAME   ?= vr4mice_db
 DB_BIND_IP          ?= 127.0.0.1
 DB_PORT             ?= 3309
-MYSQL_HOST          ?= $(DB_BIND_IP)
-MYSQL_PORT          ?= $(DB_PORT)
-USE_DOCKER          ?= 1
+# Host client (default) — matches pipeline / DataJoint TCP login
+USE_DOCKER          ?= 0
 
-ifneq ($(USE_DOCKER),1)
-  ifneq ($(strip $(ENV_DJ_HOST)),)
-    # Local DJ_HOST is host:port — never DJ_MAIN_HOST
-    MYSQL_HOST := $(shell printf '%s' '$(ENV_DJ_HOST)' | cut -d: -f1)
-    MYSQL_PORT := $(shell printf '%s' '$(ENV_DJ_HOST)' | cut -d: -f2)
-  endif
+# Local DJ_HOST is host:port — never DJ_MAIN_HOST
+ifneq ($(strip $(ENV_DJ_HOST)),)
+  MYSQL_HOST := $(shell printf '%s' '$(ENV_DJ_HOST)' | cut -d: -f1)
+  MYSQL_PORT := $(shell printf '%s' '$(ENV_DJ_HOST)' | cut -d: -f2)
+else
+  MYSQL_HOST ?= $(DB_BIND_IP)
+  MYSQL_PORT ?= $(DB_PORT)
 endif
 
 # ---------------------------------------------------------------------------
@@ -71,31 +73,39 @@ help: ## List MySQL diagnostic targets
 
 check-creds:
 	@if [ ! -f .env ]; then \
-		echo "error: .env missing — run from dj_pipeline/ with DJ_USER and DJ_PWD set"; \
+		echo "error: .env missing — run from dj_pipeline/ with DJ_HOST, DJ_USER, DJ_PWD set"; \
 		exit 1; \
 	fi
 	@if [ -z "$(MYSQL_USER)" ] || [ -z "$(MYSQL_PASSWORD)" ]; then \
 		echo "error: need DJ_USER and DJ_PWD in .env (local only; never DJ_MAIN_*)"; \
 		exit 1; \
 	fi
+	@if [ "$(USE_DOCKER)" != "1" ] && [ -z "$(ENV_DJ_HOST)" ]; then \
+		echo "error: need DJ_HOST=host:port in .env for host mysql client"; \
+		exit 1; \
+	fi
 
 creds: ## Show which .env credentials will be used (password masked)
 	@$(MAKE) -f $(firstword $(MAKEFILE_LIST)) check-creds
 	@echo "cwd: $$(pwd)"
-	@echo "source: .env → DJ_USER / DJ_PWD only"
+	@echo "source: .env → DJ_HOST / DJ_USER / DJ_PWD only"
+	@if [ "$(USE_DOCKER)" = "1" ]; then \
+		echo "client: docker compose exec (USE_DOCKER=1)"; \
+	else \
+		echo "client: host mysql → $(MYSQL_HOST):$(MYSQL_PORT)"; \
+	fi
 	@echo "MYSQL_USER: $(MYSQL_USER)"
 	@echo "MYSQL_PASSWORD: $$(printf '%s' '$(MYSQL_PASSWORD)' | sed 's/./*/g') (len=$$(printf '%s' '$(MYSQL_PASSWORD)' | wc -c | tr -d ' '))"
-	@echo "COMPOSE_PROJECT: $(COMPOSE_PROJECT) (from .env.compose if set)"
 	@echo "(Never reads DJ_MAIN_* or MYSQL_ROOT_PASSWORD)"
 
-mysql: check-creds ## Open interactive mysql (Docker db service by default)
+mysql: check-creds ## Open interactive mysql (host client via DJ_HOST by default)
 	$(MYSQL)
+
+mysql-host: ## Interactive mysql on DJ_HOST from .env (default)
+	@$(MAKE) -f $(firstword $(MAKEFILE_LIST)) USE_DOCKER=0 mysql
 
 mysql-docker: ## Interactive mysql via docker compose exec
 	@$(MAKE) -f $(firstword $(MAKEFILE_LIST)) USE_DOCKER=1 mysql
-
-mysql-host: ## Interactive mysql on DJ_HOST from .env (USE_DOCKER=0)
-	@$(MAKE) -f $(firstword $(MAKEFILE_LIST)) USE_DOCKER=0 mysql
 
 # ---------------------------------------------------------------------------
 # Replication diagnostics

@@ -108,8 +108,9 @@ That is unsafe while replication is active — stop replication before `--force`
 (because it writes Sessions).
 
 **Check** status (does **not** stop replication). From `dj_pipeline/`,
-`mysql.mk` logs in with **only** local `.env` `DJ_USER`/`DJ_PWD`
-(never `DJ_MAIN_*`, never compose root). Verify with:
+`mysql.mk` uses the **host** `mysql` client with `.env` `DJ_HOST` /
+`DJ_USER` / `DJ_PWD` (same TCP login as the pipeline; never `DJ_MAIN_*`).
+Verify with:
 
 ```bash
 make -f mysql.mk creds
