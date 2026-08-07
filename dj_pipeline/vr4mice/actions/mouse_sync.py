@@ -222,22 +222,37 @@ def _require_dj_main_host() -> None:
         )
 
 
+def _env_flag(name: str, default: bool = False) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in ("1", "true", "yes", "on")
+
+
 @contextmanager
 def _main_database():
     """Temporarily point DataJoint at DJ_MAIN_HOST, then restore local config."""
     keys = ("database.host", "database.user", "database.password")
     saved = {key: dj.config[key] for key in keys}
+    saved_tls = dj.config.get("database.use_tls")
     dj.config["database.host"] = os.environ["DJ_MAIN_HOST"]
     dj.config["database.user"] = os.environ.get("DJ_MAIN_USER", saved["database.user"])
     dj.config["database.password"] = os.environ.get(
         "DJ_MAIN_PWD", saved["database.password"]
     )
+    # Lab MySQL often has no working TLS; DJ's try-TLS-then-fallback can still
+    # yield empty/broken sessions. Default off; set DJ_MAIN_USE_TLS=true to force.
+    dj.config["database.use_tls"] = _env_flag("DJ_MAIN_USE_TLS", default=False)
     dj.conn(reset=True)
     try:
         yield
     finally:
         for key, value in saved.items():
             dj.config[key] = value
+        if saved_tls is None:
+            dj.config.pop("database.use_tls", None)
+        else:
+            dj.config["database.use_tls"] = saved_tls
         dj.conn(reset=True)
 
 
@@ -257,72 +272,49 @@ def _upsert_rows(table, rows: Iterable[dict]) -> int:
 
 def sync_mice_from_main(log=None, *, gui_paths: Optional[Sequence[str]] = None) -> int:
     """
-    Copy Mouse-related rows from the main database onto this local DB.
+    Copy the full mice registry from the main database onto this local DB.
 
-    Fetches on DJ_MAIN_HOST, then upserts locally. Targets incomplete/stub (or
-    missing) mice referenced by local ``exp.Session``, ``vr4mice.Dataset``,
-    **or GUI ``.npy`` stems on disk** — so recover can sync registry rows before
-    base populate even when Dataset/Session tables are empty.
-    Strain lookup rows are pulled first so Mouse replace does not fail on
-    missing FK targets.
+    Fetches **all** ``Strain``, ``Mouse``, ``Surgery``, and score-sheet rows on
+    ``DJ_MAIN_HOST``, then upserts locally (``replace=True``; never deletes on
+    main). ``gui_paths`` is accepted for API compatibility and ignored.
     """
     log = log or logger
     _require_dj_main_host()
 
-    known = sorted(get_known_local_mouse_names(gui_paths=gui_paths))
-    if not known:
-        log.info("No local Session, Dataset, or GUI .npy mice found; nothing to sync.")
-        return 0
-
-    targets = get_incomplete_mouse_names(gui_paths=gui_paths)
-    if not targets:
-        log.info(
-            "All %d known local mice already have full Mouse records.",
-            len(known),
-        )
-        return 0
-
     log.info(
-        "Fetching %d/%d known local mice from main DB (%s): %s",
-        len(targets),
-        len(known),
+        "Fetching full mice registry from main DB (%s)…",
         os.environ["DJ_MAIN_HOST"],
-        ", ".join(targets),
     )
 
-    fetched: List[tuple] = []
-    strain_names: Set[str] = set()
-    strain_rows: List[dict] = []
     with _main_database():
-        for name in targets:
-            restriction = {"mouse_name": name}
-            for table in MOUSE_SYNC_TABLES:
-                rows = (table() & restriction).fetch(as_dict=True)
-                if not rows:
-                    continue
-                fetched.append((table, rows))
-                if table is mice.Mouse:
-                    for row in rows:
-                        strain = row.get("strain")
-                        if strain:
-                            strain_names.add(strain)
-        for strain in sorted(strain_names):
-            strain_rows.extend((mice.Strain() & {"strain": strain}).fetch(as_dict=True))
+        strain_rows = list(mice.Strain().fetch(as_dict=True))
+        fetched: List[tuple] = []
+        mouse_count = 0
+        for table in MOUSE_SYNC_TABLES:
+            rows = list(table().fetch(as_dict=True))
+            fetched.append((table, rows))
+            if table is mice.Mouse:
+                mouse_count = len(rows)
+
+    if mouse_count == 0:
+        log.warning(
+            "Main DB (%s) returned 0 Mouse rows — check DJ_MAIN_HOST/port/user "
+            "and TLS (default DJ_MAIN_USE_TLS=false).",
+            os.environ["DJ_MAIN_HOST"],
+        )
 
     inserted = 0
     if strain_rows:
         inserted += _upsert_rows(mice.Strain(), strain_rows)
     for table, rows in fetched:
-        inserted += _upsert_rows(table(), rows)
+        if rows:
+            inserted += _upsert_rows(table(), rows)
 
-    log.info("Synced mouse metadata onto local DB (%d rows upserted).", inserted)
-    remaining = get_incomplete_mouse_names(gui_paths=gui_paths)
-    if remaining:
-        log.warning(
-            "Still incomplete after sync: %s. "
-            "Those mice may not exist on the main database.",
-            ", ".join(remaining),
-        )
+    log.info(
+        "Synced mice registry from main (%d Mouse rows; %d total rows upserted).",
+        mouse_count,
+        inserted,
+    )
     return inserted
 
 

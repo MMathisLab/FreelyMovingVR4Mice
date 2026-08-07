@@ -128,10 +128,10 @@ client_down: client_stop
 	@$(DOCKER_COMPOSE) rm client
 
 ipython: git_info
-	@$(DOCKER_COMPOSE) exec --user "$(USER_NAME)" client bash -lc "python -m IPython"
+	@$(DOCKER_COMPOSE) exec --user "$(USER_NAME)" client bash -lc 'set -a && [ -f .env ] && source .env; set +a && python -m IPython'
 
 bash: git_info
-	@$(DOCKER_COMPOSE) exec --user "$(USER_NAME)" client bash
+	@$(DOCKER_COMPOSE) exec --user "$(USER_NAME)" client bash -lc 'set -a && [ -f .env ] && source .env; set +a && exec bash'
 
 mysql: git_info
 	@mysql --defaults-group-suffix=-vr4mice -A

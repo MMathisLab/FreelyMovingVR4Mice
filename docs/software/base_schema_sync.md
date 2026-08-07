@@ -21,30 +21,30 @@ Each step is its own `run_base.py` mode — nothing is chained inside
 `recover_base`.
 
 ```bash
-# 1. Pull full Mouse rows from parent (Dataset / Session / GUI .npy names)
-python3 run_base.py sync_mice
+# inside: make bash
+# 1. Pull entire mice registry from parent → local
+python run_base.py sync_mice
 
 # 2. Rebuild local exp/mice from unpopulated GUI .npy only
-python3 run_base.py recover_base
+python run_base.py recover_base
 
 # 3. Optional — list local exp/mice with no vr4mice.Dataset
-python3 run_base.py cleanup_orphans
-python3 run_base.py cleanup_orphans --force   # apply deletes (local only)
+python run_base.py cleanup_orphans
+python run_base.py cleanup_orphans --force   # apply deletes (local only)
 
 # 4. Optional — push missing local (non-collab) sessions to parent
-python3 run_base.py sync_exp
+python run_base.py sync_exp
 
 python run.py fetch   # refresh GUI menu if needed
 ```
 
 Requirements:
 
-- Mice must already exist on the **parent** DB (`DJ_MAIN_HOST`) for a full sync.
-- `sync_mice` targets mice from **`vr4mice.Dataset`**, **`exp.Session`**, and/or
-  **GUI `.npy` stems on disk** that are missing or still stubs.
+- `sync_mice` copies **all** `Strain` / `Mouse` / `Surgery` / score-sheet rows
+  from `DJ_MAIN_HOST` onto local (replace upsert; never deletes on main).
+- Main MySQL TLS defaults **off** (`DJ_MAIN_USE_TLS=false`); set
+  `DJ_MAIN_USE_TLS=true` only if the parent requires SSL.
 - **`sync_exp` is optional** — this lab only (not collab). See §D.
-
-If populate/fetch logs warn about stub mice, run `sync_mice`.
 
 ---
 
@@ -52,7 +52,7 @@ If populate/fetch logs warn about stub mice, run `sync_mice`.
 
 | Mode | Purpose |
 |------|---------|
-| `sync_mice` | Parent → local Mouse (+ Strain, Surgery, score sheets) |
+| `sync_mice` | Parent → local **full** mice registry (Strain, Mouse, Surgery, score sheets) |
 | `recover_base` | Replication check + populate **unpopulated GUI `.npy`** into local `exp`/`mice` only |
 | `cleanup_orphans` | List/delete local `exp`/`mice` with **no** `vr4mice.Dataset` (dry-run unless `--force`) |
 | `cleanup_mice` | Remove **stub** mice with no local Session (narrower helper) |
@@ -86,12 +86,14 @@ GUI=True
 DJ_MAIN_HOST=main-db.example.com:3306
 DJ_MAIN_USER=...          # optional; falls back to DJ_USER
 DJ_MAIN_PWD=...           # optional; falls back to DJ_PWD
+# DJ_MAIN_USE_TLS=false   # default; set true only if parent requires SSL
 ```
 
 | Variable | Meaning |
 |----------|---------|
 | `DJ_HOST` / `DJ_USER` / `DJ_PWD` | Local database |
-| `DJ_MAIN_HOST` (+ optional user/pwd) | Parent: **pull** mice (`sync_mice`); optional **push** sessions (`sync_exp`) |
+| `DJ_MAIN_HOST` (+ optional user/pwd) | Parent: **pull** full mice registry (`sync_mice`); optional **push** sessions (`sync_exp`) |
+| `DJ_MAIN_USE_TLS` | Optional; default `false` (skip SSL handshake to parent) |
 
 ---
 
@@ -137,11 +139,12 @@ STOP SLAVE;
 ### B — sync mice first
 
 ```bash
-python3 run_base.py sync_mice
+# inside make bash
+python run_base.py sync_mice
 ```
 
-Pulls full Mouse (+ Strain, Surgery, score sheets) for names found in Dataset,
-Session, and/or GUI `.npy` stems.
+Pulls the **entire** mice registry from parent (`Strain`, `Mouse`, `Surgery`,
+score sheets) onto local. TLS to main is off by default.
 
 ### C — recover base (populate only)
 
