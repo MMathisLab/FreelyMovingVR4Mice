@@ -22,8 +22,11 @@ Each step is its own `run_base.py` mode — nothing is chained inside
 
 ```bash
 # inside: make bash
-# 1. Pull Mouse rows from parent for local Dataset / GUI / Session names
+# 1a. Pull Mouse rows from parent for local Dataset / GUI / Session names
 python run_base.py sync_mice
+# 1b. Or preload specific mice before any recordings exist
+python run_base.py sync_mice --mouse Flamingo
+python run_base.py sync_mice --mouse Flamingo --mouse Whale
 
 # 2. Rebuild local exp/mice from unpopulated GUI .npy only
 python run_base.py recover_base
@@ -40,9 +43,9 @@ python run.py fetch   # refresh GUI menu if needed
 
 Requirements:
 
-- `sync_mice` pulls only mice already needed locally: names from
-  ``vr4mice.Dataset``, GUI ``.npy`` under the data folders, and/or
-  ``exp.Session`` that are missing or still stubs — not the full main registry.
+- `sync_mice` (default) pulls incomplete local names from ``vr4mice.Dataset``,
+  GUI ``.npy``, and/or ``exp.Session``. Use ``--mouse NAME`` (repeatable) to
+  preload mice from main before recordings exist.
 - Main connection sets `database.use_tls=False` (assignment only; avoids SSL
   handshake failure on lab MySQL).
 - **`sync_exp` is optional** — this lab only (not collab). See §D.
@@ -53,7 +56,7 @@ Requirements:
 
 | Mode | Purpose |
 |------|---------|
-| `sync_mice` | Parent → local Mouse (+ Strain, Surgery, score sheets) for Dataset / GUI / Session names |
+| `sync_mice` | Parent → local Mouse (+ Strain, Surgery, score sheets); Dataset/GUI/Session names, or `--mouse NAME` |
 | `recover_base` | Replication check + populate **unpopulated GUI `.npy`** into local `exp`/`mice` only |
 | `cleanup_orphans` | List/delete local `exp`/`mice` with **no** `vr4mice.Dataset` (dry-run unless `--force`) |
 | `cleanup_mice` | Remove **stub** mice with no local Session (narrower helper) |
@@ -142,8 +145,8 @@ STOP SLAVE;
 python run_base.py sync_mice
 ```
 
-Pulls Mouse (+ Strain, Surgery, score sheets) from parent only for names found
-in local Dataset, GUI `.npy`, and/or Session that are missing or stubs.
+Pulls Mouse (+ Strain, Surgery, score sheets) from parent for incomplete local
+Dataset / GUI / Session names, or for explicit ``--mouse NAME`` (preload).
 
 ### C — recover base (populate only)
 

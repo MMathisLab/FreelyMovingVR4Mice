@@ -2,11 +2,16 @@
 """
 Entry point for exp/mice recovery and parent-DB sync (not a replacement for cron).
 
-Normal ingest: python3 run.py populate | analysis | dlc | ...
-With GUI=True, that populate path writes exp/mice from session .npy as usual.
+Run inside the Docker client (make bash), not host python:
 
-Recovery / registry sync (run separately; see docs/software/base_schema_sync.md):
-    sync_mice        - pull Mouse metadata from main (Dataset/Session/GUI names)
+    python run_base.py sync_mice
+    python run_base.py sync_mice --mouse Flamingo
+    python run_base.py sync_mice --mouse Flamingo --mouse Whale
+
+Normal ingest (also in client): python run.py populate | analysis | dlc | ...
+
+Modes (see docs/software/base_schema_sync.md):
+    sync_mice        - pull Mouse metadata from main (local names, or --mouse)
     recover_base     - populate unpopulated GUI .npy into local exp/mice only
     cleanup_orphans  - list/delete local exp/mice with no vr4mice.Dataset
     cleanup_mice     - remove stub Mouse rows without local sessions
@@ -14,12 +19,27 @@ Recovery / registry sync (run separately; see docs/software/base_schema_sync.md)
 """
 
 import argparse
+import os
 
-from base_actions.connect import connect
+from base_actions.utils.login import LoginUser
+from base_actions.utils.schema_config import connect_to_database
 from vr4mice.utils.bootstrap import configure_runtime
 from vr4mice.utils.logger import Logger
 
 logger = Logger.get_logger()
+
+
+def _connect_from_env() -> None:
+    """Connect via DJ_* env vars (do not parse sys.argv — unlike connect())."""
+    connect_to_database(
+        LoginUser(
+            user_name=os.environ["DJ_USER"],
+            user_password=os.environ["DJ_PWD"],
+            db_host=os.environ["DJ_HOST"],
+        ),
+        prefix="",
+        create_tables=True,
+    )
 
 
 if __name__ == "__main__":
@@ -37,6 +57,14 @@ if __name__ == "__main__":
         help="Apply destructive cleanup (cleanup_orphans, cleanup_mice).",
     )
     parser.add_argument(
+        "--mouse",
+        action="append",
+        dest="mice",
+        metavar="NAME",
+        help="With sync_mice: pull this mouse from main (repeatable). "
+        "Use to preload before recordings. Default: incomplete local Dataset/GUI/Session names.",
+    )
+    parser.add_argument(
         "mode",
         choices=[
             "sync_mice",
@@ -51,12 +79,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     logger = configure_runtime(verbose=args.verbose, debug=args.verbose)
-    connect(tag="")
+    _connect_from_env()
 
     if args.mode == "sync_mice":
         from vr4mice.actions.mouse_sync import sync_mice_from_main
 
-        sync_mice_from_main(log=logger)
+        sync_mice_from_main(log=logger, mouse_names=args.mice)
 
     elif args.mode == "sync_exp":
         from vr4mice.actions.mouse_sync import sync_exp_to_main

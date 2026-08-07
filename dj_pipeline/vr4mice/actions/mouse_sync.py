@@ -16,7 +16,10 @@ logger = Logger.get_logger()
 
 STUB_MOUSE_ID = -1
 STUB_DOB = datetime.date(1970, 1, 1)
-SYNC_MICE_COMMAND = "python run_base.py sync_mice  # set DJ_MAIN_HOST (and optionally DJ_MAIN_USER/DJ_MAIN_PWD)"
+SYNC_MICE_COMMAND = (
+    "python run_base.py sync_mice  # or: sync_mice --mouse NAME; "
+    "set DJ_MAIN_HOST (and optionally DJ_MAIN_USER/DJ_MAIN_PWD)"
+)
 SYNC_EXP_COMMAND = (
     "python run_base.py sync_exp  # optional; DJ_MAIN_HOST + write on main exp; "
     "local (non-collab) sessions only"
@@ -282,44 +285,63 @@ def _upsert_rows(table, rows: Iterable[dict]) -> int:
     return count
 
 
-def sync_mice_from_main(log=None, *, gui_paths: Optional[Sequence[str]] = None) -> int:
+def sync_mice_from_main(
+    log=None,
+    *,
+    gui_paths: Optional[Sequence[str]] = None,
+    mouse_names: Optional[Sequence[str]] = None,
+) -> int:
     """
-    Pull Mouse metadata from main for mice already needed locally.
+    Pull Mouse metadata from main for selected or locally needed mice.
 
-    Targets incomplete/stub (or missing) names from local ``vr4mice.Dataset``,
-    ``exp.Session``, and/or GUI ``.npy`` stems under the data folders — not the
-    full main registry. Fetches on ``DJ_MAIN_HOST``, then upserts locally
-    (``replace=True``; never deletes on main). Strain rows are pulled first.
+    If ``mouse_names`` is set, sync those names from main (for preloading
+    before recordings). Otherwise sync incomplete/stub names from local
+    ``vr4mice.Dataset``, ``exp.Session``, and/or GUI ``.npy`` stems.
+
+    Fetches on ``DJ_MAIN_HOST``, then upserts locally (``replace=True``; never
+    deletes on main). Strain rows are pulled first.
     """
     log = log or logger
     _require_dj_main_host()
 
-    known = sorted(get_known_local_mouse_names(gui_paths=gui_paths))
-    if not known:
+    explicit = [n.strip() for n in (mouse_names or []) if n and str(n).strip()]
+    if explicit:
+        targets = sorted(set(explicit))
         log.info(
-            "No local Dataset, Session, or GUI .npy mice found; nothing to sync."
+            "Fetching %d named mice from main DB (%s): %s",
+            len(targets),
+            os.environ["DJ_MAIN_HOST"],
+            ", ".join(targets),
         )
-        return 0
+    else:
+        known = sorted(get_known_local_mouse_names(gui_paths=gui_paths))
+        if not known:
+            log.info(
+                "No local Dataset, Session, or GUI .npy mice found; nothing to sync. "
+                "Pass --mouse NAME to preload a mouse before recordings."
+            )
+            return 0
 
-    targets = get_incomplete_mouse_names(gui_paths=gui_paths)
-    if not targets:
+        targets = get_incomplete_mouse_names(gui_paths=gui_paths)
+        if not targets:
+            log.info(
+                "All %d known local mice already have full Mouse records.",
+                len(known),
+            )
+            return 0
+
         log.info(
-            "All %d known local mice already have full Mouse records.",
+            "Fetching %d/%d known local mice from main DB (%s): %s",
+            len(targets),
             len(known),
+            os.environ["DJ_MAIN_HOST"],
+            ", ".join(targets),
         )
-        return 0
-
-    log.info(
-        "Fetching %d/%d known local mice from main DB (%s): %s",
-        len(targets),
-        len(known),
-        os.environ["DJ_MAIN_HOST"],
-        ", ".join(targets),
-    )
 
     fetched: List[tuple] = []
     strain_names: Set[str] = set()
     strain_rows: List[dict] = []
+    found_on_main: Set[str] = set()
     try:
         with _main_database():
             for name in targets:
@@ -330,6 +352,7 @@ def sync_mice_from_main(log=None, *, gui_paths: Optional[Sequence[str]] = None) 
                         continue
                     fetched.append((table, rows))
                     if table is mice.Mouse:
+                        found_on_main.add(name)
                         for row in rows:
                             strain = row.get("strain")
                             if strain:
@@ -347,6 +370,13 @@ def sync_mice_from_main(log=None, *, gui_paths: Optional[Sequence[str]] = None) 
         )
         raise
 
+    missing_on_main = [n for n in targets if n not in found_on_main]
+    if missing_on_main:
+        log.warning(
+            "Not found on main DB: %s.",
+            ", ".join(missing_on_main),
+        )
+
     inserted = 0
     if strain_rows:
         inserted += _upsert_rows(mice.Strain(), strain_rows)
@@ -354,13 +384,14 @@ def sync_mice_from_main(log=None, *, gui_paths: Optional[Sequence[str]] = None) 
         inserted += _upsert_rows(table(), rows)
 
     log.info("Synced mouse metadata onto local DB (%d rows upserted).", inserted)
-    remaining = get_incomplete_mouse_names(gui_paths=gui_paths)
-    if remaining:
-        log.warning(
-            "Still incomplete after sync: %s. "
-            "Those mice may not exist on the main database.",
-            ", ".join(remaining),
-        )
+    if not explicit:
+        remaining = get_incomplete_mouse_names(gui_paths=gui_paths)
+        if remaining:
+            log.warning(
+                "Still incomplete after sync: %s. "
+                "Those mice may not exist on the main database.",
+                ", ".join(remaining),
+            )
     return inserted
 
 

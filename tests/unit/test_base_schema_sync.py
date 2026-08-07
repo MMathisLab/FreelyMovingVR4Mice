@@ -243,6 +243,37 @@ class TestSyncMiceFromMain:
         ), patch.object(mouse_sync, "get_incomplete_mouse_names", return_value=[]):
             assert mouse_sync.sync_mice_from_main(log=log) == 0
 
+    def test_explicit_mouse_names_skip_local_discovery(self, monkeypatch):
+        monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
+        log = MagicMock()
+        table = MagicMock()
+        table.return_value = table
+        table.__and__ = MagicMock(return_value=table)
+        table.fetch.return_value = [
+            {"mouse_name": "Flamingo", "mouse_id": 7, "strain": "C57"}
+        ]
+
+        with patch.object(
+            mouse_sync, "get_known_local_mouse_names"
+        ) as mock_known, patch.object(
+            mouse_sync, "MOUSE_SYNC_TABLES", (table,)
+        ), patch.object(
+            mouse_sync, "_main_database"
+        ) as mock_main, patch.object(
+            mouse_sync, "_upsert_rows", return_value=1
+        ), patch.object(mouse_sync, "mice") as mock_mice:
+            mock_main.return_value.__enter__ = MagicMock()
+            mock_main.return_value.__exit__ = MagicMock(return_value=False)
+            mock_mice.Mouse = table
+            mock_mice.Strain.return_value = table
+            count = mouse_sync.sync_mice_from_main(
+                log=log, mouse_names=["Flamingo", " Flamingo "]
+            )
+
+        assert count >= 1
+        mock_known.assert_not_called()
+        assert any("named mice" in str(c) for c in log.info.call_args_list)
+
     def test_fetches_targets_on_main_upserts_on_local(self, monkeypatch):
         """Named targets are read inside _main_database, then upserted locally."""
         monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
