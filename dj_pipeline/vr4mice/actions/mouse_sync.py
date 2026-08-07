@@ -19,12 +19,21 @@ STUB_DOB = datetime.date(1970, 1, 1)
 SYNC_MICE_COMMAND = (
     "python run_base.py sync_mice  # set DJ_MAIN_HOST (and optionally DJ_MAIN_USER/DJ_MAIN_PWD)"
 )
+SYNC_EXP_COMMAND = (
+    "python run_base.py sync_exp  # set DJ_MAIN_HOST; requires write access on main exp schema"
+)
 
 MOUSE_SYNC_TABLES = (
     mice.Mouse,
     mice.Surgery,
     mice.MouseScoreSheet,
     mice.MouseScoreSheet_WaterRestriction,
+)
+
+# Local → parent: session rows (Mouse must already exist on main).
+EXP_SYNC_TABLES = (
+    exp.Session,
+    exp.SessionScoreSheet,
 )
 
 
@@ -219,6 +228,108 @@ def sync_mice_from_main(log=None) -> int:
             "Those mice may not exist on the main database.",
             ", ".join(remaining),
         )
+    return inserted
+
+
+def _require_dj_main_host() -> None:
+    if not os.environ.get("DJ_MAIN_HOST"):
+        raise ValueError(
+            "DJ_MAIN_HOST is not set. Example: export DJ_MAIN_HOST=main.server:3306"
+        )
+
+
+def _session_primary_key(row: dict) -> dict:
+    return {field: row[field] for field in exp.Session.primary_key if field in row}
+
+
+def _pk_tuple(key: dict) -> tuple:
+    return tuple(key[field] for field in exp.Session.primary_key)
+
+
+def sync_exp_to_main(log=None, *, only_missing: bool = True) -> int:
+    """
+    Push local exp.Session (+ SessionScoreSheet) rows to the parent database.
+
+    Requires DJ_MAIN_HOST and write access on main ``exp``. Mouse rows must
+    already exist on main (run ``sync_mice`` / ensure registry first). By
+    default only inserts sessions that are missing on parent (does not
+    overwrite existing parent sessions).
+    """
+    log = log or logger
+    _require_dj_main_host()
+
+    local_sessions = exp.Session().fetch(as_dict=True)
+    if not local_sessions:
+        log.info("No local exp.Session rows; nothing to push.")
+        return 0
+
+    sheets_by_key = {
+        _pk_tuple(_session_primary_key(row)): row
+        for row in exp.SessionScoreSheet().fetch(as_dict=True)
+    }
+
+    log.info(
+        "Pushing up to %d local exp.Session row(s) to main DB (%s)%s",
+        len(local_sessions),
+        os.environ["DJ_MAIN_HOST"],
+        " (only missing)" if only_missing else " (upsert)",
+    )
+
+    inserted = 0
+    skipped_missing_mouse: List[str] = []
+    skipped_existing = 0
+    failed: List[str] = []
+
+    with _main_database():
+        for row in local_sessions:
+            key = _session_primary_key(row)
+            mouse_name = row.get("mouse_name")
+            if not (mice.Mouse() & {"mouse_name": mouse_name}):
+                skipped_missing_mouse.append(mouse_name or "?")
+                continue
+
+            exists = bool(exp.Session() & key)
+            if only_missing and exists:
+                skipped_existing += 1
+                continue
+
+            try:
+                if exists and not only_missing:
+                    (exp.SessionScoreSheet() & key).delete(safemode=False)
+                    (exp.Session() & key).delete(safemode=False)
+                if not (exp.Session() & key):
+                    exp.Session.insert1(row)
+                    inserted += 1
+
+                sheet_row = sheets_by_key.get(_pk_tuple(key))
+                if sheet_row is None:
+                    continue
+                if exp.SessionScoreSheet() & key:
+                    if only_missing:
+                        continue
+                    (exp.SessionScoreSheet() & key).delete(safemode=False)
+                if not (exp.SessionScoreSheet() & key):
+                    exp.SessionScoreSheet.insert1(sheet_row)
+                    inserted += 1
+            except Exception as err:
+                failed.append(f"{key}: {err}")
+
+    if skipped_missing_mouse:
+        missing = sorted(set(skipped_missing_mouse))
+        log.warning(
+            "Skipped %d session(s): mouse not on main DB: %s. "
+            "Ensure mice exist on parent, then re-run: %s",
+            len(skipped_missing_mouse),
+            ", ".join(missing),
+            SYNC_EXP_COMMAND,
+        )
+    if skipped_existing:
+        log.info("Skipped %d session(s) already present on main.", skipped_existing)
+    if failed:
+        log.warning(
+            "Failed to push %d row(s): %s", len(failed), "; ".join(failed[:10])
+        )
+    log.info("Pushed %d exp row(s) to main DB.", inserted)
     return inserted
 
 

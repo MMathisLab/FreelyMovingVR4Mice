@@ -6,6 +6,7 @@ The main pipeline remains: python run.py populate | analysis | dlc | ...
 
 Modes:
     sync_mice     — pull Mouse metadata from main DB (DJ_MAIN_HOST)
+    sync_exp      — push local exp.Session (+ SessionScoreSheet) to main DB
     cleanup_mice  — remove stub Mouse rows without local sessions
     recover_base  — recovery: cleanup orphans, repopulate exp/mice from GUI files
     sync_days     — fix experiment day in GUI .npy files (data + processed)
@@ -58,6 +59,7 @@ if __name__ == "__main__":
         "mode",
         choices=[
             "sync_mice",
+            "sync_exp",
             "cleanup_mice",
             "recover_base",
             "sync_days",
@@ -76,6 +78,11 @@ if __name__ == "__main__":
         from vr4mice.actions.mouse_sync import sync_mice_from_main
 
         sync_mice_from_main(log=logger)
+
+    elif args.mode == "sync_exp":
+        from vr4mice.actions.mouse_sync import sync_exp_to_main
+
+        sync_exp_to_main(log=logger)
 
     elif args.mode == "cleanup_mice":
         from vr4mice.actions.mouse_sync import cleanup_mice_without_sessions

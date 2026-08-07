@@ -17,6 +17,7 @@ import datajoint as dj
 from base_schemas.schemas import exp, mice
 
 from vr4mice.actions.mouse_sync import (
+    SYNC_EXP_COMMAND,
     SYNC_MICE_COMMAND,
     warn_incomplete_mice,
 )
@@ -25,14 +26,9 @@ from vr4mice.utils.logger import Logger
 
 logger = Logger.get_logger()
 
-SYNC_EXP_COMMAND = (
-    "python run_base.py sync_exp  # not yet implemented; push local exp.Session to main DB "
-    "(set DJ_MAIN_HOST; requires write access on main exp schema)"
-)
-
 POST_RECOVERY_NOTE = """
 ================================================================================
-Recovery finished — manual sync with the main database is still required
+Recovery finished — sync with the main database
 ================================================================================
 
 This recovery script only rebuilds LOCAL exp/mice rows from GUI files on disk.
@@ -47,16 +43,18 @@ Two DataJoint connections are involved (local DJ_HOST vs main DJ_MAIN_HOST):
 
      Requires: DJ_MAIN_HOST (and optionally DJ_MAIN_USER / DJ_MAIN_PWD)
 
-  2. Local → main (Experiment sessions)
-     New or recovered exp.Session rows on this rig must be pushed to the main
-     exp schema so the central database stays authoritative:
+  2. Local → main (Experiment sessions) — automated
+     Push recovered/new exp.Session (+ SessionScoreSheet) to the parent exp
+     schema (inserts missing rows only; does not overwrite existing parent
+     sessions). Mouse must already exist on main:
        {sync_exp}
 
-     This direction is not automated yet. Until sync_exp exists, export sessions
-     manually or coordinate with the lab DBA.
+     Requires: DJ_MAIN_HOST and write access on main exp.
 
-Verify replication is still OFF while editing local tables, then re-enable
-replication only after both sync directions are consistent.
+Replication: recover_base aborts if replica IO/SQL threads are running or the
+DB is read-only. Orphan cleanup (--force) is only safe with replication OFF.
+Keep replication OFF while editing local tables; re-enable only after both
+sync directions (mice from main, sessions to main) are consistent.
 
 MySQL diagnostics: make -f mysql.mk replication-summary
 ================================================================================

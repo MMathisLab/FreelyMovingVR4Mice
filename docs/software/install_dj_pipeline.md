@@ -558,6 +558,10 @@ Typical sequence:
 ...
 ```
 
+`run.py populate` does **not** write `mice` / `exp`. For local base-schema recovery,
+mouse sync from the parent DB, and orphan cleanup, see
+{ref}`Base schema sync (mice / exp) <base-schema-sync>`.
+
 One-off after a DataJoint upgrade or when adding a new schema:
 
 ```bash
