@@ -42,9 +42,9 @@ unless `--force`)**.
 Requirements:
 
 - Mice must already exist on the **parent** DB (`DJ_MAIN_HOST`) for a full sync.
-- `sync_mice` targets mice referenced by local **`vr4mice.Dataset` and/or
-  `exp.Session`** that are missing or still stubs — it can run before Sessions
-  exist.
+- `sync_mice` targets mice referenced by local **`vr4mice.Dataset`**,
+  **`exp.Session`**, and/or **GUI `.npy` stems on disk** that are missing or
+  still stubs — so it works on a cold recover before Sessions/Datasets exist.
 - **`sync_exp` is optional.** Only run it if this rig should push missing
   sessions upstream. It must only push **this lab’s local** sessions (backed by
   `vr4mice.Dataset` with `Collab` lab == `DJ_LAB`) — **not** collaborator

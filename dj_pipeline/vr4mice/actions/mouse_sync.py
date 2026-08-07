@@ -5,7 +5,7 @@ from __future__ import annotations
 import datetime
 import os
 from contextlib import contextmanager
-from typing import Iterable, List, Optional, Set, Tuple
+from typing import Iterable, List, Optional, Sequence, Set, Tuple
 
 import datajoint as dj
 from base_schemas.schemas import exp, mice
@@ -20,6 +20,7 @@ SYNC_EXP_COMMAND = (
     "python run_base.py sync_exp  # optional; DJ_MAIN_HOST + write on main exp; "
     "local (non-collab) sessions only"
 )
+DEFAULT_GUI_PATHS = ("/data/data", "/data/processed")
 
 MOUSE_SYNC_TABLES = (
     mice.Mouse,
@@ -54,19 +55,50 @@ def get_dataset_mouse_names() -> Set[str]:
     return names
 
 
-def get_known_local_mouse_names() -> Set[str]:
-    """Mouse names referenced by local Sessions and/or Datasets."""
-    return get_session_mouse_names() | get_dataset_mouse_names()
-
-
-def get_incomplete_mouse_names() -> List[str]:
+def get_gui_mouse_names(paths: Optional[Sequence[str]] = None) -> Set[str]:
     """
-    Known local mice (Session and/or Dataset) that are missing or still stubs.
+    Mouse names from GUI ``.npy`` stems under data/ and processed/.
 
-    Used so sync_mice can run *before* base populate (Dataset names only) and
-    also repair stubs after ingest.
+    Lets ``sync_mice`` run before Dataset/Session rows exist (cold recover).
     """
-    candidates = sorted(get_known_local_mouse_names())
+    from vr4mice.actions.populate_rig import get_filenames
+    from vr4mice.schema.base import parse_filename
+
+    candidates = list(DEFAULT_GUI_PATHS if paths is None else paths)
+    existing = [os.path.normpath(p) for p in candidates if os.path.isdir(p)]
+    names: Set[str] = set()
+    for folder in existing:
+        for filename in get_filenames([".npy"], folder).get(".npy", []):
+            stem = filename.rsplit(".", 1)[0]
+            try:
+                names.add(parse_filename(stem)["mouse_name"])
+            except ValueError as err:
+                logger.warning(
+                    "Skipping unparseable GUI file %r in %s: %s", filename, folder, err
+                )
+    return names
+
+
+def get_known_local_mouse_names(
+    *, gui_paths: Optional[Sequence[str]] = None
+) -> Set[str]:
+    """Mouse names from Sessions, Datasets, and/or GUI .npy stems on disk."""
+    return (
+        get_session_mouse_names()
+        | get_dataset_mouse_names()
+        | get_gui_mouse_names(gui_paths)
+    )
+
+
+def get_incomplete_mouse_names(
+    *, gui_paths: Optional[Sequence[str]] = None
+) -> List[str]:
+    """
+    Known local mice (Session, Dataset, and/or GUI files) that are missing/stubs.
+
+    Used so sync_mice can run before base populate on a cold recover.
+    """
+    candidates = sorted(get_known_local_mouse_names(gui_paths=gui_paths))
     if not candidates:
         return []
 
@@ -223,25 +255,26 @@ def _upsert_rows(table, rows: Iterable[dict]) -> int:
     return count
 
 
-def sync_mice_from_main(log=None) -> int:
+def sync_mice_from_main(log=None, *, gui_paths: Optional[Sequence[str]] = None) -> int:
     """
     Copy Mouse-related rows from the main database onto this local DB.
 
     Fetches on DJ_MAIN_HOST, then upserts locally. Targets incomplete/stub (or
-    missing) mice referenced by local ``exp.Session`` **or** ``vr4mice.Dataset``
-    — so recover can sync registry rows *before* base populate and avoid stubs.
+    missing) mice referenced by local ``exp.Session``, ``vr4mice.Dataset``,
+    **or GUI ``.npy`` stems on disk** — so recover can sync registry rows before
+    base populate even when Dataset/Session tables are empty.
     Strain lookup rows are pulled first so Mouse replace does not fail on
     missing FK targets.
     """
     log = log or logger
     _require_dj_main_host()
 
-    known = sorted(get_known_local_mouse_names())
+    known = sorted(get_known_local_mouse_names(gui_paths=gui_paths))
     if not known:
-        log.info("No local Session or Dataset mice found; nothing to sync.")
+        log.info("No local Session, Dataset, or GUI .npy mice found; nothing to sync.")
         return 0
 
-    targets = get_incomplete_mouse_names()
+    targets = get_incomplete_mouse_names(gui_paths=gui_paths)
     if not targets:
         log.info(
             "All %d known local mice already have full Mouse records.",
@@ -283,7 +316,7 @@ def sync_mice_from_main(log=None) -> int:
         inserted += _upsert_rows(table(), rows)
 
     log.info("Synced mouse metadata onto local DB (%d rows upserted).", inserted)
-    remaining = get_incomplete_mouse_names()
+    remaining = get_incomplete_mouse_names(gui_paths=gui_paths)
     if remaining:
         log.warning(
             "Still incomplete after sync: %s. "

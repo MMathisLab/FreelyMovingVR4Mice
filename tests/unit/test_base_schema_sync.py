@@ -169,6 +169,57 @@ class TestEnsureMouseForSession:
         log.warning.assert_called()
 
 
+class TestGetGuiMouseNames:
+    def test_parses_npy_stems(self, tmp_path):
+        (tmp_path / "Flamingo_2026-02-05_1.npy").write_bytes(b"x")
+        (tmp_path / "Other_2026-01-01_2.npy").write_bytes(b"x")
+        (tmp_path / "not-a-dataset.npy").write_bytes(b"x")
+
+        import types
+
+        base_mod = types.ModuleType("vr4mice.schema.base")
+
+        def parse_filename(filename):
+            parts = filename.split("_")
+            if len(parts) < 3:
+                raise ValueError("bad")
+            return {
+                "mouse_name": parts[0],
+                "date": parts[1],
+                "attempt": int(parts[2]),
+            }
+
+        base_mod.parse_filename = parse_filename
+        schema_pkg = types.ModuleType("vr4mice.schema")
+        schema_pkg.__path__ = []
+
+        with patch.dict(
+            sys.modules,
+            {"vr4mice.schema": schema_pkg, "vr4mice.schema.base": base_mod},
+        ), patch(
+            "vr4mice.actions.populate_rig.get_filenames",
+            return_value={
+                ".npy": [
+                    "Flamingo_2026-02-05_1.npy",
+                    "Other_2026-01-01_2.npy",
+                    "not-a-dataset.npy",
+                ]
+            },
+        ):
+            names = mouse_sync.get_gui_mouse_names([str(tmp_path)])
+        assert names == {"Flamingo", "Other"}
+
+    def test_known_names_include_gui(self):
+        with patch.object(
+            mouse_sync, "get_session_mouse_names", return_value=set()
+        ), patch.object(
+            mouse_sync, "get_dataset_mouse_names", return_value=set()
+        ), patch.object(
+            mouse_sync, "get_gui_mouse_names", return_value={"FromDisk"}
+        ):
+            assert mouse_sync.get_known_local_mouse_names() == {"FromDisk"}
+
+
 class TestSyncMiceFromMain:
     def test_requires_dj_main_host(self, monkeypatch):
         monkeypatch.delenv("DJ_MAIN_HOST", raising=False)
@@ -717,7 +768,7 @@ class TestRunRecoveryOrder:
             order.append("cleanup")
             return (0, 0)
 
-        def track_sync(log=None):
+        def track_sync(log=None, **kwargs):
             order.append("sync_mice")
             return 0
 

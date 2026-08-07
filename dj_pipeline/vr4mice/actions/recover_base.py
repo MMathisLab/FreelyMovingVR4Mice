@@ -3,8 +3,9 @@ Recovery workflow for local base/exp/mice schema (not part of the main cron pipe
 
 Steps:
   1. Verify MySQL replication is not actively running on the local database.
-  2. Sync Mouse metadata from parent for Dataset/session mice (when DJ_MAIN_HOST
-     is set) so base populate can use full registry rows instead of stubs.
+  2. Sync Mouse metadata from parent for Dataset/session/GUI mice (when
+     DJ_MAIN_HOST is set) so base populate can use full registry rows instead
+     of stubs — works even when Dataset/Session tables are still empty.
   3. Repopulate exp from all unpopulated GUI .npy files in data/ and processed/.
   4. Optionally list/delete local exp/mice orphans with no vr4mice.Dataset
      (dry-run unless --force).
@@ -288,11 +289,11 @@ def run_recovery(
 
     if os.environ.get("DJ_MAIN_HOST"):
         logger.info(
-            "Syncing Mouse metadata from parent for Dataset/session mice "
+            "Syncing Mouse metadata from parent for Dataset/session/GUI mice "
             "before base populate…"
         )
         try:
-            sync_mice_from_main(log=logger)
+            sync_mice_from_main(log=logger, gui_paths=[data_dir, processed_dir])
         except Exception as err:
             logger.warning(
                 "sync_mice before populate failed (%s). "
