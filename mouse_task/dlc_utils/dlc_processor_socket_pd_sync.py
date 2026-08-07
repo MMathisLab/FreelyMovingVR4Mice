@@ -19,14 +19,7 @@ import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
 
-try:
-    from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor  # type: ignore[import-not-found]
-except ModuleNotFoundError:
-    PROCESSOR_REGISTRY = {}
-
-    def register_processor(cls):
-        """No-op fallback when dlclivegui is not installed."""
-        return cls
+from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor  # type: ignore[import-not-found]
 
 
 try:
@@ -57,6 +50,17 @@ except ModuleNotFoundError as e:
 
 PROCESSOR_REGISTRY.pop("dlc_inference_w_pd_sync", None)
 logger = logging.getLogger(__name__)
+
+
+def build_session_stem(
+    mouse: str,
+    date: str,
+    attempt: str,
+    namespace: str | None = None,
+) -> str:
+    """Build <mouse>_<date>_<attempt>, optionally with a namespace prefix."""
+    stem = f"{mouse}_{date}_{attempt}"
+    return f"{namespace}_{stem}" if namespace else stem
 
 
 @register_processor
@@ -602,7 +606,12 @@ class dlc_inference_w_pd_sync(dlc_inference_w_pd):
         date = self._date_from_context_or_run_dir(run_dir)
         attempt = self._attempt_from_context(default="1")
 
-        return run_dir / f"vr4mice_{prefix}_{date}_{attempt}"
+        return run_dir / build_session_stem(
+            prefix,
+            date,
+            attempt,
+            namespace="vr4mice",
+        )
 
     def _fallback_output_dir(self) -> Path:
         base_path = self._context_processor_base_path()

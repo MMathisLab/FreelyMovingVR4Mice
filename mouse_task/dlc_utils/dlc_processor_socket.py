@@ -12,14 +12,7 @@ from typing import Any, Dict, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-try:
-    from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor  # type: ignore[import-not-found]
-except ModuleNotFoundError:
-    PROCESSOR_REGISTRY = {}
-
-    def register_processor(cls):
-        """No-op fallback when dlclivegui is not installed."""
-        return cls
+from dlclivegui.processors import PROCESSOR_REGISTRY, register_processor  # type: ignore[import-not-found]
 
 try:
     from dlc_utils.processor_with_signal import ProcessorWithSignal
