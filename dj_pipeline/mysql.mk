@@ -118,10 +118,16 @@ replication-status-legacy: check-creds ## Full SHOW SLAVE STATUS (MySQL 5.7)
 	$(MYSQL) -e "SHOW SLAVE STATUS\G"
 
 replication-summary: check-creds ## Short replica health check only (does NOT stop replication)
-	$(MYSQL) -e "SHOW REPLICA STATUS\G" \
-		| egrep 'Replica_(IO|SQL)_Running|Seconds_Behind|Last_(IO|SQL)_Error|Source_Host|Source_Port|Replica_SQL_Running_State' \
-		|| $(MYSQL) -e "SHOW SLAVE STATUS\G" \
-		| egrep 'Slave_(IO|SQL)_Running|Seconds_Behind|Last_(IO|SQL)_Error|Master_Host|Master_Port|Slave_SQL_Running_State'
+	@set -o pipefail; \
+	out=$$( ($(MYSQL) -e "SHOW REPLICA STATUS\G" 2>/dev/null \
+		|| $(MYSQL) -e "SHOW SLAVE STATUS\G") \
+		| egrep 'Replica_(IO|SQL)_Running|Slave_(IO|SQL)_Running|Seconds_Behind|Last_(IO|SQL)_Error|Source_Host|Source_Port|Master_Host|Master_Port|Replica_SQL_Running_State|Slave_SQL_Running_State' \
+		|| true); \
+	if [ -z "$$out" ]; then \
+		echo "No replica/slave status rows (not a replica, or empty SHOW REPLICA/SLAVE STATUS)."; \
+		exit 0; \
+	fi; \
+	printf '%s\n' "$$out"
 
 replication-variables: check-creds ## Replication-related global variables
 	$(MYSQL) -e "SHOW VARIABLES WHERE Variable_name IN ( \
