@@ -465,44 +465,6 @@ class TestConnectMode:
         assert hasattr(barcodes, "TeensyTTL")
         assert hasattr(barcodes, "TeensyBarcodes")
 
-    def test_excluded_dataset_exact_pattern_treats_underscore_literal(self, dj_config):
-        """Exact patterns containing '_' should not act as SQL single-char wildcards."""
-        from vr4mice.schema import vr4mice
-
-        vr4mice.ExcludedDataset.insert(
-            vr4mice.ExcludedDataset.contents,
-            skip_duplicates=True,
-        )
-
-        assert (
-            vr4mice.ExcludedDataset.matches("Hamster_2026-02-02_1")
-            == "Missing DLC data"
-        )
-        assert vr4mice.ExcludedDataset.matches("Hamster-2026-02-02-1") is None
-
-        exclusion = vr4mice.ExcludedDataset.exclusion_filter()
-        assert 'dataset != "Hamster_2026-02-02_1"' in exclusion
-
-    def test_barcodes_schema_imports_without_batch2(self, dj_config, clean_schemas):
-        """Importing barcodes should not fail when batch2 row is absent."""
-        import importlib
-        import sys
-
-        from vr4mice.schema import vr4mice
-
-        # Ensure lookup rows exist first, then remove batch2 for this scenario.
-        vr4mice.Batch.insert(vr4mice.Batch.contents, skip_duplicates=True)
-        (vr4mice.Batch & {"batch_name": "batch2"}).delete()
-
-        # Force a fresh import to exercise module import-time behavior.
-        sys.modules.pop("vr4mice.schema.barcodes", None)
-        barcodes = importlib.import_module("vr4mice.schema.barcodes")
-
-        assert hasattr(barcodes, "TeensyTTL")
-        assert hasattr(barcodes, "TeensyBarcodes")
-        # Accessing key_source should also remain non-fatal.
-        _ = barcodes.TeensyTTL().key_source
-
     def test_interpolated_trajectories_schema_imports(self, dj_config):
         """Verify interpolated_trajectories schema imports without error."""
         from vr4mice.schema import interpolated_trajectories

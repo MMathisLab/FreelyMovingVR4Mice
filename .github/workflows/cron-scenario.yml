@@ -41,12 +41,8 @@ jobs:
           mkdir -p "$RUNNER_TEMP/vr4mice-data/processed"
           mkdir -p "$RUNNER_TEMP/vr4mice-data/summary_plots"
           mkdir -p "$RUNNER_TEMP/vr4mice-shared"
-          mkdir -p "$RUNNER_TEMP/vr4mice-input-data"
           mkdir -p "$RUNNER_TEMP/vr4mice-screen-recordings/raw_screen_recordings"
           cp -a "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/." "$RUNNER_TEMP/vr4mice-data/processed/"
-          cp -a "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_ephys/." "$RUNNER_TEMP/vr4mice-data/processed/"
-          cp -a "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/." "$RUNNER_TEMP/vr4mice-input-data/"
-          cp -a "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_ephys/." "$RUNNER_TEMP/vr4mice-input-data/"
           ln -sf \
             "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/Imagingsource_Flamingo_2026-02-05_1_VIDEO.avi" \
             "$RUNNER_TEMP/vr4mice-screen-recordings/raw_screen_recordings/Flamingo_2026-02-05_1.mkv"
@@ -116,8 +112,8 @@ jobs:
             -e DJ_SUPPORT_ADAPTED_TYPES="${DJ_SUPPORT_ADAPTED_TYPES}" \
             -e MPLBACKEND="${MPLBACKEND}" \
             -v "$GITHUB_WORKSPACE/dj_pipeline:/app" \
-            -v "$RUNNER_TEMP/vr4mice-input-data:/data/data/" \
-            -v "$RUNNER_TEMP/vr4mice-input-data:/data/dlc_video/" \
+            -v "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/:/data/data/" \
+            -v "$GITHUB_WORKSPACE/dj_pipeline/tests/data/w_photodiode/:/data/dlc_video/" \
             -v "$RUNNER_TEMP/vr4mice-data/processed:/data/processed" \
             -v "$RUNNER_TEMP/vr4mice-data/summary_plots:/data/summary_plots" \
             -v "$RUNNER_TEMP/vr4mice-shared:/shared" \
@@ -126,32 +122,8 @@ jobs:
             bash -lc "set -euo pipefail \
               && pip install --no-deps /app/base/base_min_schemas /app/base/base_actions \
               && python cron_scenario.py \
-              && local_experiment_member_nonlocal_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision._experiment_member m JOIN vr4mice.\`#batch\` b USING (batch_name) WHERE b.compute_locally = 0;\")\" \
-              && local_experiment_member_local_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision._experiment_member m JOIN vr4mice.\`#batch\` b USING (batch_name) WHERE b.compute_locally = 1;\")\" \
-              && local_inclusion_status_nonlocal_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) JOIN vr4mice.\`#batch\` b USING (batch_name) WHERE b.compute_locally = 0;\")\" \
-              && local_inclusion_status_local_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) JOIN vr4mice.\`#batch\` b USING (batch_name) WHERE b.compute_locally = 1;\")\" \
-              && echo \"Local run decision._experiment_member compute_locally=0 rows: \${local_experiment_member_nonlocal_count}\" \
-              && echo \"Local run decision._experiment_member compute_locally=1 rows: \${local_experiment_member_local_count}\" \
-              && echo \"Local run decision.__inclusion_status compute_locally=0 rows: \${local_inclusion_status_nonlocal_count}\" \
-              && echo \"Local run decision.__inclusion_status compute_locally=1 rows: \${local_inclusion_status_local_count}\" \
-              && test \"\${local_experiment_member_nonlocal_count}\" -eq 0 \
-              && test \"\${local_inclusion_status_nonlocal_count}\" -eq 0 \
-              && test \"\${local_experiment_member_local_count}\" -ge 1 \
-              && test \"\${local_inclusion_status_local_count}\" -ge 1 \
-              && mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -e 'DELETE FROM vr4mice.failed_session;' \
+              && mysql -h \"${DJ_HOST}\" -P \"${DJ_PORT}\" -u \"${DJ_USER}\" -p\"${DJ_PASS}\" -e 'DELETE FROM vr4mice.failed_session;' \
               && python cron_scenario.py --aws \
-              && aws_experiment_member_nonlocal_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision._experiment_member m JOIN vr4mice.\`#batch\` b USING (batch_name) WHERE b.compute_locally = 0;\")\" \
-              && aws_experiment_member_local_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision._experiment_member m JOIN vr4mice.\`#batch\` b USING (batch_name) WHERE b.compute_locally = 1;\")\" \
-              && aws_inclusion_status_nonlocal_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) JOIN vr4mice.\`#batch\` b USING (batch_name) WHERE b.compute_locally = 0;\")\" \
-              && aws_inclusion_status_local_count=\"\$(mysql -h \"\${DJ_HOST}\" -P \"\${DJ_PORT}\" -u \"\${DJ_USER}\" -p\"\${DJ_PASS}\" -N -e \"SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) JOIN vr4mice.\`#batch\` b USING (batch_name) WHERE b.compute_locally = 1;\")\" \
-              && echo \"AWS run decision._experiment_member compute_locally=0 rows: \${aws_experiment_member_nonlocal_count}\" \
-              && echo \"AWS run decision._experiment_member compute_locally=1 rows: \${aws_experiment_member_local_count}\" \
-              && echo \"AWS run decision.__inclusion_status compute_locally=0 rows: \${aws_inclusion_status_nonlocal_count}\" \
-              && echo \"AWS run decision.__inclusion_status compute_locally=1 rows: \${aws_inclusion_status_local_count}\" \
-              && test \"\${aws_experiment_member_nonlocal_count}\" -ge 1 \
-              && test \"\${aws_inclusion_status_nonlocal_count}\" -ge 1 \
-              && test \"\${aws_experiment_member_local_count}\" -ge 1 \
-              && test \"\${aws_inclusion_status_local_count}\" -ge 1 \
               && cd /app \
               && python -u tests/verify_summary_emails_after_cron.py"
 
@@ -265,9 +237,6 @@ jobs:
           done < "$RUNNER_TEMP/mysql-dump/schemas.txt"
 
           dataset_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM vr4mice.dataset;')"
-          batch_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM vr4mice.`#batch`;')"
-          dataset_batch_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM vr4mice.__dataset_batch;')"
-          collab_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM vr4mice.__collab;')"
           state_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM vr4mice.state;')"
           dataframe_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM base_analysis.__data_frame;')"
           summary_plot_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM base_analysis.__summary_plots;')"
@@ -280,18 +249,12 @@ jobs:
           fi
 
           echo "vr4mice.dataset rows: ${dataset_count}"
-          echo "vr4mice.#batch rows: ${batch_count}"
-          echo "vr4mice.__dataset_batch rows: ${dataset_batch_count}"
-          echo "vr4mice.__collab rows: ${collab_count}"
           echo "vr4mice.state rows: ${state_count}"
           echo "base_analysis.__data_frame rows: ${dataframe_count}"
           echo "base_analysis.__summary_plots rows: ${summary_plot_count}"
           echo "summary_emails.summary_plot_email successful rows: ${summary_email_count}"
 
           test "${dataset_count}" -ge 1
-          test "${batch_count}" -ge 2
-          test "${dataset_batch_count}" -ge 1
-          test "${collab_count}" -ge 1
           test "${state_count}" -ge 1
           test "${dataframe_count}" -ge 1
           test "${summary_plot_count}" -ge 1
@@ -299,11 +262,7 @@ jobs:
       - name: Verify decision tables (--aws populated)
         run: |
           experiment_member_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision._experiment_member;')"
-          experiment_member_batch1_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision._experiment_member WHERE batch_name = "batch1";')"
-          experiment_member_batch2_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision._experiment_member WHERE batch_name = "batch2";')"
           inclusion_status_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__inclusion_status;')"
-          inclusion_status_batch1_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) WHERE m.batch_name = "batch1";')"
-          inclusion_status_batch2_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) WHERE m.batch_name = "batch2";')"
           label_set_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.`#label_set`;')"
           prediction_model_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__prediction_model;')"
           decision_points_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__decision_points;')"
@@ -311,11 +270,7 @@ jobs:
           decision_points10_windows_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__decision_points10_windows;')"
 
           echo "decision._experiment_member rows: ${experiment_member_count}"
-          echo "decision._experiment_member batch1 rows: ${experiment_member_batch1_count}"
-          echo "decision._experiment_member batch2 rows: ${experiment_member_batch2_count}"
           echo "decision.__inclusion_status rows: ${inclusion_status_count}"
-          echo "decision.__inclusion_status batch1 rows: ${inclusion_status_batch1_count}"
-          echo "decision.__inclusion_status batch2 rows: ${inclusion_status_batch2_count}"
           echo "decision.#label_set rows: ${label_set_count}"
           echo "decision.__prediction_model rows: ${prediction_model_count}"
           echo "decision.__decision_points rows: ${decision_points_count}"
@@ -323,9 +278,6 @@ jobs:
           echo "decision.__decision_points10_windows rows: ${decision_points10_windows_count}"
 
           test "${experiment_member_count}" -ge 1
-          test "${experiment_member_batch1_count}" -ge 1
           test "${inclusion_status_count}" -ge 1
-          test "${inclusion_status_batch1_count}" -ge 1
           test "${label_set_count}" -ge 1
-          # batch2 counts are logged for visibility and depend on available batch2 input datasets.
           # PredictionModel/DecisionPoints and PredictionModel10Windows/DecisionPoints10Windows need multi-session data to train so no test; logged for visibility only

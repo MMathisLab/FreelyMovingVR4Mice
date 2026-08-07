@@ -88,7 +88,7 @@ if __name__ == "__main__":
     connect(tag="")
 
     if args.mode == "connect":
-        from vr4mice.schema import base, base_analysis, dlc, vr4mice, barcodes
+        from vr4mice.schema import barcodes, base, base_analysis, dlc, vr4mice
 
         pass
 
@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
     elif args.mode == "dlc":
         # NOTE: populate and analysis have to be run before
-        from vr4mice.schema import dlc, vr4mice, barcodes
+        from vr4mice.schema import barcodes, dlc, vr4mice
         from vr4mice.utils.populate_helpers import populate_pending
 
         create_folder_if_not_exist("/data/summary_plots")
@@ -261,7 +261,6 @@ if __name__ == "__main__":
         from vr4mice.schema import decision
 
         decision.sync_lookup_contents()
-        vr4mice.DatasetBatch().populate()
         decision.ExperimentMember().populate()
         decision.InclusionStatus().populate()
         decision.LabelSet().fill()

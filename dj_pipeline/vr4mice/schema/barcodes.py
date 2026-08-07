@@ -20,17 +20,12 @@ schema = schema_config.get_schema(schema_name, locals())
 
 logger = logger.Logger.get_logger()
 
+TEENSY_TTL_START_DATE = "2026-06-01"
+
 
 @schema
 class TeensyTTL(dj.Imported):
-    """Raw Teensy barcode channel imported from a DLC PROC file.
-
-    Threshold semantics:
-    a session is eligible when its resolved Batch (via DatasetBatch) has
-    ``has_neural_data=True``. Batch membership boundaries come from
-    ``Batch.resolve`` (latest ``start_date <= doe``), so boundary dates are
-    inclusive for the newer batch.
-    """
+    """Raw Teensy barcode channel imported from a DLC PROC file."""
 
     definition = """
     -> vr4mice.DLC
@@ -40,14 +35,7 @@ class TeensyTTL(dj.Imported):
     has_ttl=0: bool  # True when aligned, non-empty Teensy TTL arrays are available
     """
 
-    # Gate by resolved batch membership (not direct date filtering here):
-    # DLC session -> DatasetBatch -> Batch(has_neural_data=True).
-    # Per-session mixed TTL availability is still handled by has_ttl.
-    key_source = (
-        vr4mice.DLC.proj()
-        * vr4mice.DatasetBatch.proj("batch_name")
-        * (vr4mice.Batch & {"has_neural_data": True}).proj("batch_name")
-    )
+    key_source = vr4mice.DLC & f"doe > '{TEENSY_TTL_START_DATE}'"
 
     def make(self, key):
         """Load the raw Teensy TTL arrays from one DLC PROC file."""
