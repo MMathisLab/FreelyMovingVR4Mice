@@ -22,7 +22,7 @@ Each step is its own `run_base.py` mode — nothing is chained inside
 
 ```bash
 # inside: make bash
-# 1. Pull entire mice registry from parent → local
+# 1. Pull Mouse rows from parent for local Dataset / GUI / Session names
 python run_base.py sync_mice
 
 # 2. Rebuild local exp/mice from unpopulated GUI .npy only
@@ -40,8 +40,9 @@ python run.py fetch   # refresh GUI menu if needed
 
 Requirements:
 
-- `sync_mice` copies **all** `Strain` / `Mouse` / `Surgery` / score-sheet rows
-  from `DJ_MAIN_HOST` onto local (replace upsert; never deletes on main).
+- `sync_mice` pulls only mice already needed locally: names from
+  ``vr4mice.Dataset``, GUI ``.npy`` under the data folders, and/or
+  ``exp.Session`` that are missing or still stubs — not the full main registry.
 - Main connection sets `database.use_tls=False` (assignment only; avoids SSL
   handshake failure on lab MySQL).
 - **`sync_exp` is optional** — this lab only (not collab). See §D.
@@ -52,7 +53,7 @@ Requirements:
 
 | Mode | Purpose |
 |------|---------|
-| `sync_mice` | Parent → local **full** mice registry (Strain, Mouse, Surgery, score sheets) |
+| `sync_mice` | Parent → local Mouse (+ Strain, Surgery, score sheets) for Dataset / GUI / Session names |
 | `recover_base` | Replication check + populate **unpopulated GUI `.npy`** into local `exp`/`mice` only |
 | `cleanup_orphans` | List/delete local `exp`/`mice` with **no** `vr4mice.Dataset` (dry-run unless `--force`) |
 | `cleanup_mice` | Remove **stub** mice with no local Session (narrower helper) |
@@ -91,7 +92,7 @@ DJ_MAIN_PWD=...           # optional; falls back to DJ_PWD
 | Variable | Meaning |
 |----------|---------|
 | `DJ_HOST` / `DJ_USER` / `DJ_PWD` | Local database |
-| `DJ_MAIN_HOST` (+ optional user/pwd) | Parent: **pull** full mice registry (`sync_mice`); optional **push** sessions (`sync_exp`) |
+| `DJ_MAIN_HOST` (+ optional user/pwd) | Parent: **pull** needed mice (`sync_mice`); optional **push** sessions (`sync_exp`) |
 
 ---
 
@@ -141,8 +142,8 @@ STOP SLAVE;
 python run_base.py sync_mice
 ```
 
-Pulls the **entire** mice registry from parent (`Strain`, `Mouse`, `Surgery`,
-score sheets) onto local.
+Pulls Mouse (+ Strain, Surgery, score sheets) from parent only for names found
+in local Dataset, GUI `.npy`, and/or Session that are missing or stubs.
 
 ### C — recover base (populate only)
 

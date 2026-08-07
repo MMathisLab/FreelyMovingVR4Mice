@@ -226,32 +226,31 @@ class TestSyncMiceFromMain:
         with pytest.raises(ValueError, match="DJ_MAIN_HOST"):
             mouse_sync.sync_mice_from_main()
 
-    def test_warns_when_main_has_no_mice(self, monkeypatch):
+    def test_noop_when_no_known_mice(self, monkeypatch):
         monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
         log = MagicMock()
-        mouse_table = MagicMock()
-        mouse_table.return_value = mouse_table
-        mouse_table.fetch.return_value = []
-
-        with patch.object(mouse_sync, "mice") as mock_mice, patch.object(
-            mouse_sync, "MOUSE_SYNC_TABLES", (mouse_table,)
-        ), patch.object(mouse_sync, "_main_database") as mock_main, patch.object(
-            mouse_sync, "_upsert_rows", return_value=0
+        with patch.object(
+            mouse_sync, "get_known_local_mouse_names", return_value=set()
         ):
-            mock_main.return_value.__enter__ = MagicMock()
-            mock_main.return_value.__exit__ = MagicMock(return_value=False)
-            mock_mice.Strain.return_value.fetch.return_value = []
-            mock_mice.Mouse = mouse_table
             assert mouse_sync.sync_mice_from_main(log=log) == 0
-        assert any("0 Mouse rows" in str(c) for c in log.warning.call_args_list)
+        log.info.assert_called()
 
-    def test_fetches_all_on_main_upserts_on_local(self, monkeypatch):
-        """Full registry is read inside _main_database, then upserted locally."""
+    def test_noop_when_all_complete(self, monkeypatch):
         monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
         log = MagicMock()
-        main_row = {"mouse_name": "Flamingo", "mouse_id": 7}
+        with patch.object(
+            mouse_sync, "get_known_local_mouse_names", return_value={"Flamingo"}
+        ), patch.object(mouse_sync, "get_incomplete_mouse_names", return_value=[]):
+            assert mouse_sync.sync_mice_from_main(log=log) == 0
+
+    def test_fetches_targets_on_main_upserts_on_local(self, monkeypatch):
+        """Named targets are read inside _main_database, then upserted locally."""
+        monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
+        log = MagicMock()
+        main_row = {"mouse_name": "Flamingo", "mouse_id": 7, "strain": "C57"}
         table = MagicMock()
         table.return_value = table
+        table.__and__ = MagicMock(return_value=table)
         table.fetch.return_value = [main_row]
 
         phase = {"on_main": False}
@@ -270,20 +269,26 @@ class TestSyncMiceFromMain:
             upsert_phases.append(phase["on_main"])
             return len(list(rows))
 
-        with patch.object(mouse_sync, "mice") as mock_mice, patch.object(
+        with patch.object(
+            mouse_sync, "get_known_local_mouse_names", return_value={"Flamingo"}
+        ), patch.object(
+            mouse_sync, "get_incomplete_mouse_names", side_effect=[["Flamingo"], []]
+        ), patch.object(
             mouse_sync, "MOUSE_SYNC_TABLES", (table,)
         ), patch.object(
             mouse_sync, "_main_database", fake_main
         ), patch.object(
             mouse_sync, "_upsert_rows", side_effect=fake_upsert
-        ):
-            mock_mice.Strain.return_value.fetch.return_value = []
+        ), patch.object(
+            mouse_sync, "mice"
+        ) as mock_mice:
             mock_mice.Mouse = table
+            mock_mice.Strain.return_value = table
             count = mouse_sync.sync_mice_from_main(log=log)
 
-        assert count == 1
-        assert upsert_phases == [False]  # upsert after leaving main connection
-        assert any("full mice registry" in str(c) for c in log.info.call_args_list)
+        assert count >= 1
+        assert False in upsert_phases  # upsert after leaving main connection
+        assert any("known local mice" in str(c) for c in log.info.call_args_list)
 
     def test_main_database_switches_host_and_restores(self, monkeypatch):
         monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")

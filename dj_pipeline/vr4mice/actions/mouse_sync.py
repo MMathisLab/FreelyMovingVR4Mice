@@ -284,57 +284,83 @@ def _upsert_rows(table, rows: Iterable[dict]) -> int:
 
 def sync_mice_from_main(log=None, *, gui_paths: Optional[Sequence[str]] = None) -> int:
     """
-    Copy the full mice registry from the main database onto this local DB.
+    Pull Mouse metadata from main for mice already needed locally.
 
-    Fetches **all** ``Strain``, ``Mouse``, ``Surgery``, and score-sheet rows on
-    ``DJ_MAIN_HOST``, then upserts locally (``replace=True``; never deletes on
-    main). ``gui_paths`` is accepted for API compatibility and ignored.
+    Targets incomplete/stub (or missing) names from local ``vr4mice.Dataset``,
+    ``exp.Session``, and/or GUI ``.npy`` stems under the data folders — not the
+    full main registry. Fetches on ``DJ_MAIN_HOST``, then upserts locally
+    (``replace=True``; never deletes on main). Strain rows are pulled first.
     """
     log = log or logger
     _require_dj_main_host()
 
+    known = sorted(get_known_local_mouse_names(gui_paths=gui_paths))
+    if not known:
+        log.info(
+            "No local Dataset, Session, or GUI .npy mice found; nothing to sync."
+        )
+        return 0
+
+    targets = get_incomplete_mouse_names(gui_paths=gui_paths)
+    if not targets:
+        log.info(
+            "All %d known local mice already have full Mouse records.",
+            len(known),
+        )
+        return 0
+
     log.info(
-        "Fetching full mice registry from main DB (%s)...",
+        "Fetching %d/%d known local mice from main DB (%s): %s",
+        len(targets),
+        len(known),
         os.environ["DJ_MAIN_HOST"],
+        ", ".join(targets),
     )
 
+    fetched: List[tuple] = []
+    strain_names: Set[str] = set()
+    strain_rows: List[dict] = []
     try:
         with _main_database():
-            strain_rows = list(mice.Strain().fetch(as_dict=True))
-            fetched: List[tuple] = []
-            mouse_count = 0
-            for table in MOUSE_SYNC_TABLES:
-                rows = list(table().fetch(as_dict=True))
-                fetched.append((table, rows))
-                if table is mice.Mouse:
-                    mouse_count = len(rows)
+            for name in targets:
+                restriction = {"mouse_name": name}
+                for table in MOUSE_SYNC_TABLES:
+                    rows = list((table() & restriction).fetch(as_dict=True))
+                    if not rows:
+                        continue
+                    fetched.append((table, rows))
+                    if table is mice.Mouse:
+                        for row in rows:
+                            strain = row.get("strain")
+                            if strain:
+                                strain_names.add(strain)
+            for strain in sorted(strain_names):
+                strain_rows.extend(
+                    list((mice.Strain() & {"strain": strain}).fetch(as_dict=True))
+                )
     except Exception:
         traceback.print_exc()
         log.exception(
-            "Failed fetching mice registry from main DB (%s). "
+            "Failed fetching mice from main DB (%s). "
             "Check DJ_MAIN_HOST (include :port) and DJ_MAIN_USER/PWD.",
             os.environ["DJ_MAIN_HOST"],
         )
         raise
 
-    if mouse_count == 0:
-        log.warning(
-            "Main DB (%s) returned 0 Mouse rows — check DJ_MAIN_HOST/port/user.",
-            os.environ["DJ_MAIN_HOST"],
-        )
-
     inserted = 0
     if strain_rows:
         inserted += _upsert_rows(mice.Strain(), strain_rows)
     for table, rows in fetched:
-        if rows:
-            inserted += _upsert_rows(table(), rows)
+        inserted += _upsert_rows(table(), rows)
 
-    log.info(
-        "Synced mice registry from main (%d Mouse rows; %d total rows upserted).",
-        mouse_count,
-        inserted,
-    )
+    log.info("Synced mouse metadata onto local DB (%d rows upserted).", inserted)
+    remaining = get_incomplete_mouse_names(gui_paths=gui_paths)
+    if remaining:
+        log.warning(
+            "Still incomplete after sync: %s. "
+            "Those mice may not exist on the main database.",
+            ", ".join(remaining),
+        )
     return inserted
 
 
