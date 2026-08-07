@@ -27,7 +27,7 @@ logger = Logger.get_logger()
     "decision": analyze decision-making metrics
     "maintenance": rebuild DataJoint lineage tables (one-time setup)
 
-    exp/mice base schema (sync_mice, recover_base, …): use run_base.py
+    Recovery / parent sync (recover_base, sync_mice, sync_exp, …): see run_base.py
 """
 
 
@@ -110,7 +110,7 @@ if __name__ == "__main__":
         # Intentionally not calling sync_days here: day synchronization should be
         # run explicitly via the "sync_days" mode when needed, rather than on every
         # populate run.
-        populate_rig(path=path, move=move, populate_base=False)
+        populate_rig(path=path, move=move)
         populate_pending(vr4mice.Collab, vr4mice.Dataset, logger=logger)
 
     elif args.mode == "analysis":

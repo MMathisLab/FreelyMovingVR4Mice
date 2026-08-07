@@ -1,17 +1,18 @@
 """
-Entry point for exp/mice base-schema workflows (separate from the main vr4mice cron).
+Entry point for exp/mice recovery and parent-DB sync (not a replacement for cron).
 
-Use this script on rigs that sync local exp/mice with a main database registry.
-The main pipeline remains: python run.py populate | analysis | dlc | ...
+Normal ingest still uses: python run.py populate | analysis | dlc | ...
+When GUI=True (and POPULATE_BASE is on, default), that populate path writes
+exp/mice from session .npy as usual.
 
-Modes:
-    sync_mice     — pull Mouse metadata from main DB (DJ_MAIN_HOST)
+Use this script for one-off recovery and registry sync with DJ_MAIN_HOST:
+    sync_mice     — pull Mouse metadata from main DB
     sync_exp      — push local exp.Session (+ SessionScoreSheet) to main DB
     cleanup_mice  — remove stub Mouse rows without local sessions
     recover_base  — recovery: cleanup orphans, repopulate exp/mice from GUI files
     sync_days     — fix experiment day in GUI .npy files (data + processed)
     fetch         — export gui_menu.npy for the rig GUI dropdowns
-    populate      — ingest with exp/mice base schema (POPULATE_BASE on)
+    populate      — same ingest as run.py populate (optional --no-populate-base)
 """
 
 import argparse
@@ -33,7 +34,7 @@ def check_folder_existence(folder_path: str) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="exp/mice base schema utilities (separate from run.py cron pipeline)."
+        description="exp/mice recovery and parent-DB sync (run.py remains the normal cron ingest)."
     )
     parser.add_argument(
         "--verbose",
