@@ -40,10 +40,34 @@ def get_session_mouse_names() -> Set[str]:
     return {name for name in names if name}
 
 
+def get_dataset_mouse_names() -> Set[str]:
+    """Mouse names inferred from local vr4mice.Dataset stems."""
+    from vr4mice.schema import vr4mice
+    from vr4mice.schema.base import parse_filename
+
+    names: Set[str] = set()
+    for row in vr4mice.Dataset().fetch("dataset", as_dict=True):
+        try:
+            names.add(parse_filename(row["dataset"])["mouse_name"])
+        except ValueError as err:
+            logger.warning("Skipping unparseable dataset %r: %s", row["dataset"], err)
+    return names
+
+
+def get_known_local_mouse_names() -> Set[str]:
+    """Mouse names referenced by local Sessions and/or Datasets."""
+    return get_session_mouse_names() | get_dataset_mouse_names()
+
+
 def get_incomplete_mouse_names() -> List[str]:
-    """Session mice that are missing or still have stub Mouse records."""
-    session_mice = sorted(get_session_mouse_names())
-    if not session_mice:
+    """
+    Known local mice (Session and/or Dataset) that are missing or still stubs.
+
+    Used so sync_mice can run *before* base populate (Dataset names only) and
+    also repair stubs after ingest.
+    """
+    candidates = sorted(get_known_local_mouse_names())
+    if not candidates:
         return []
 
     by_name = {
@@ -53,7 +77,7 @@ def get_incomplete_mouse_names() -> List[str]:
     }
     return [
         name
-        for name in session_mice
+        for name in candidates
         if name not in by_name or is_stub_mouse(by_name[name])
     ]
 
@@ -146,12 +170,12 @@ def ensure_mouse_for_session(
 
 
 def warn_incomplete_mice(log=None) -> List[str]:
-    """Log a warning for session mice that still need a main-DB sync."""
+    """Log a warning for Dataset/session mice that still need a main-DB sync."""
     log = log or logger
     incomplete = get_incomplete_mouse_names()
     if incomplete:
         log.warning(
-            "%d session mice have stub or missing Mouse records: %s. Run: %s",
+            "%d Dataset/session mice have stub or missing Mouse records: %s. Run: %s",
             len(incomplete),
             ", ".join(incomplete),
             SYNC_MICE_COMMAND,
@@ -203,30 +227,32 @@ def sync_mice_from_main(log=None) -> int:
     """
     Copy Mouse-related rows from the main database onto this local DB.
 
-    Fetches on DJ_MAIN_HOST, then upserts locally. Only incomplete/stub mice
-    that already have a local exp.Session are synced. Strain lookup rows are
-    pulled first so Mouse replace does not fail on missing FK targets.
+    Fetches on DJ_MAIN_HOST, then upserts locally. Targets incomplete/stub (or
+    missing) mice referenced by local ``exp.Session`` **or** ``vr4mice.Dataset``
+    — so recover can sync registry rows *before* base populate and avoid stubs.
+    Strain lookup rows are pulled first so Mouse replace does not fail on
+    missing FK targets.
     """
     log = log or logger
     _require_dj_main_host()
 
-    mouse_names = sorted(get_session_mouse_names())
-    if not mouse_names:
-        log.info("No local sessions found; nothing to sync.")
+    known = sorted(get_known_local_mouse_names())
+    if not known:
+        log.info("No local Session or Dataset mice found; nothing to sync.")
         return 0
 
     targets = get_incomplete_mouse_names()
     if not targets:
         log.info(
-            "All %d session mice already have full local Mouse records.",
-            len(mouse_names),
+            "All %d known local mice already have full Mouse records.",
+            len(known),
         )
         return 0
 
     log.info(
-        "Fetching %d/%d session mice from main DB (%s): %s",
+        "Fetching %d/%d known local mice from main DB (%s): %s",
         len(targets),
-        len(mouse_names),
+        len(known),
         os.environ["DJ_MAIN_HOST"],
         ", ".join(targets),
     )

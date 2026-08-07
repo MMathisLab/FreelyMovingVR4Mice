@@ -175,10 +175,12 @@ class TestSyncMiceFromMain:
         with pytest.raises(ValueError, match="DJ_MAIN_HOST"):
             mouse_sync.sync_mice_from_main()
 
-    def test_noop_when_no_local_sessions(self, monkeypatch):
+    def test_noop_when_no_known_mice(self, monkeypatch):
         monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
         log = MagicMock()
-        with patch.object(mouse_sync, "get_session_mouse_names", return_value=set()):
+        with patch.object(
+            mouse_sync, "get_known_local_mouse_names", return_value=set()
+        ):
             assert mouse_sync.sync_mice_from_main(log=log) == 0
         log.info.assert_called()
 
@@ -186,9 +188,30 @@ class TestSyncMiceFromMain:
         monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
         log = MagicMock()
         with patch.object(
-            mouse_sync, "get_session_mouse_names", return_value={"Flamingo"}
+            mouse_sync, "get_known_local_mouse_names", return_value={"Flamingo"}
         ), patch.object(mouse_sync, "get_incomplete_mouse_names", return_value=[]):
             assert mouse_sync.sync_mice_from_main(log=log) == 0
+
+    def test_syncs_dataset_mice_without_session(self, monkeypatch):
+        monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
+        log = MagicMock()
+        with patch.object(
+            mouse_sync, "get_known_local_mouse_names", return_value={"Flamingo"}
+        ), patch.object(
+            mouse_sync, "get_incomplete_mouse_names", return_value=["Flamingo"]
+        ), patch.object(
+            mouse_sync, "get_session_mouse_names", return_value=set()
+        ), patch.object(
+            mouse_sync, "MOUSE_SYNC_TABLES", ()
+        ), patch.object(
+            mouse_sync, "_main_database"
+        ) as mock_main, patch.object(
+            mouse_sync, "_upsert_rows", return_value=0
+        ):
+            mock_main.return_value.__enter__ = MagicMock()
+            mock_main.return_value.__exit__ = MagicMock(return_value=False)
+            mouse_sync.sync_mice_from_main(log=log)
+        assert any("known local mice" in str(c) for c in log.info.call_args_list)
 
     def test_fetches_on_main_upserts_on_local(self, monkeypatch):
         """Rows are read inside _main_database, then upserted after leaving it."""
@@ -217,7 +240,7 @@ class TestSyncMiceFromMain:
             return len(list(rows))
 
         with patch.object(
-            mouse_sync, "get_session_mouse_names", return_value={"Flamingo"}
+            mouse_sync, "get_known_local_mouse_names", return_value={"Flamingo"}
         ), patch.object(
             mouse_sync, "get_incomplete_mouse_names", return_value=["Flamingo"]
         ), patch.object(
@@ -683,6 +706,38 @@ class TestCleanupOrphanExpMice:
             )
         assert deleted_sessions == 1
         assert deleted_mice == 1  # FutureMouse has no Dataset
+
+
+class TestRunRecoveryOrder:
+    def test_sync_mice_before_base_populate(self, monkeypatch):
+        monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
+        order = []
+
+        def track_cleanup(**kwargs):
+            order.append("cleanup")
+            return (0, 0)
+
+        def track_sync(log=None):
+            order.append("sync_mice")
+            return 0
+
+        def track_gui(*args, **kwargs):
+            order.append("populate")
+            return (0, 0)
+
+        with patch.object(
+            recover_base, "check_replication_off"
+        ), patch.object(
+            recover_base, "cleanup_orphan_exp_mice", side_effect=track_cleanup
+        ), patch.object(
+            recover_base, "sync_mice_from_main", side_effect=track_sync
+        ), patch.object(
+            recover_base, "recover_base_from_gui", side_effect=track_gui
+        ), patch.object(
+            recover_base, "warn_incomplete_mice"
+        ):
+            recover_base.run_recovery(force=False)
+        assert order == ["sync_mice", "populate", "cleanup"]
 
 
 class TestSessionKeyFromDataset:

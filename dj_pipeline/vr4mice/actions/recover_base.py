@@ -3,9 +3,12 @@ Recovery workflow for local base/exp/mice schema (not part of the main cron pipe
 
 Steps:
   1. Verify MySQL replication is not actively running on the local database.
-  2. Remove orphan exp.Session and mice.Mouse rows not backed by vr4mice.Dataset.
-  3. Repopulate exp (and stub Mouse name-only rows) from GUI .npy files in data/ and processed/.
-  4. Print instructions for bidirectional sync with the main database via two DJ connections.
+  2. Sync Mouse metadata from parent for Dataset/session mice (when DJ_MAIN_HOST
+     is set) so base populate can use full registry rows instead of stubs.
+  3. Repopulate exp from all unpopulated GUI .npy files in data/ and processed/.
+  4. Optionally list/delete local exp/mice orphans with no vr4mice.Dataset
+     (dry-run unless --force).
+  5. Print notes for any remaining incomplete mice and optional sync_exp.
 """
 
 from __future__ import annotations
@@ -18,6 +21,7 @@ from base_schemas.schemas import exp, mice
 from vr4mice.actions.mouse_sync import (
     SYNC_EXP_COMMAND,
     SYNC_MICE_COMMAND,
+    sync_mice_from_main,
     warn_incomplete_mice,
 )
 from vr4mice.actions.populate_rig import populate_base_from_gui_folder
@@ -27,35 +31,25 @@ logger = Logger.get_logger()
 
 POST_RECOVERY_NOTE = """
 ================================================================================
-Recovery finished — sync with the main database
+Recovery finished — check optional cleanup / parent sync
 ================================================================================
 
-This recovery script only rebuilds LOCAL exp/mice rows from GUI files on disk
-for sessions that already have a matching ``vr4mice.Dataset``. It uses stub
-Mouse rows (mouse_id=-1, minimal fields) so sessions can be inserted.
+Order used: sync_mice (if DJ_MAIN_HOST) → base populate from unpopulated GUI
+.npy files → orphan cleanup (dry-run unless --force).
 
-Two DataJoint connections are involved (local DJ_HOST vs main DJ_MAIN_HOST):
+If Mouse rows are still stubs/incomplete, re-run:
+  {sync_mice}
 
-  1. Main → local (Mouse metadata)
-     Pull full Mouse records (dob, strain, surgery, score sheets, …) from the
-     main registry into this database:
-       {sync_mice}
+Optional — push missing local (non-collab) sessions to parent:
+  {sync_exp}
 
-     Requires: DJ_MAIN_HOST (and optionally DJ_MAIN_USER / DJ_MAIN_PWD)
-
-  2. Local → main (Experiment sessions) — optional
-     Only if this rig should publish sessions upstream. Pushes missing
-     exp.Session (+ SessionScoreSheet) for this lab’s local Datasets only
-     (Collab lab == DJ_LAB); never collaborator sessions. Mouse must already
-     exist on main:
-       {sync_exp}
-
-     Requires: DJ_MAIN_HOST, write access on main exp, DJ_LAB when Collab exists.
+Requires: DJ_MAIN_HOST; sync_exp also needs write access on main exp and
+DJ_LAB when Collab exists. Never deletes on main.
 
 Replication: recover_base aborts if replica IO/SQL threads are running or the
 DB is read-only. Orphan cleanup (--force) is only safe with replication OFF.
-Keep replication OFF while editing local tables; re-enable after sync_mice
-(and optional sync_exp) look consistent.
+Keep replication OFF while editing local tables; re-enable after sync looks
+consistent.
 
 MySQL diagnostics: make -f mysql.mk replication-summary
 ================================================================================
@@ -242,7 +236,13 @@ def recover_base_from_gui(
     *,
     srcf: str = "/data",
 ) -> Tuple[int, int]:
-    """Sync days and populate base/exp (+ stub Mouse) from GUI folders."""
+    """
+    Sync days and populate base/exp from all unpopulated GUI .npy files.
+
+    Does not restrict to existing ``vr4mice.Dataset`` rows — recovery rebuilds
+    from disk. Optional orphan cleanup *after* populate can drop Sessions that
+    still have no Dataset (dry-run unless ``--force``).
+    """
     from vr4mice.actions.sync_days import sync_days
 
     sync_days()
@@ -253,7 +253,9 @@ def recover_base_from_gui(
             logger.warning("GUI folder does not exist, skipping: %s", folder)
             continue
         logger.info("Populating base schema from GUI files in %s", folder)
-        ok, failed = populate_base_from_gui_folder(folder, srcf=srcf)
+        ok, failed = populate_base_from_gui_folder(
+            folder, srcf=srcf, restrict_to_datasets=False
+        )
         total_ok += ok
         total_failed += failed
         logger.info(
@@ -273,18 +275,47 @@ def run_recovery(
     processed_dir: str = "/data/processed",
 ) -> None:
     """
-    Full recovery: replication check → cleanup → GUI base populate → sync notes.
+    Full recovery: replication check → sync_mice → GUI base populate → cleanup.
+
+    1. Sync Dataset/session mice from the parent (when ``DJ_MAIN_HOST`` is set).
+    2. Populate base from all unpopulated GUI ``.npy`` files.
+    3. Optionally clean local exp/mice orphans with no ``vr4mice.Dataset``
+       (list only unless ``force=True``).
     """
     logger.info("=== recover_base: starting (force=%s) ===", force)
 
     check_replication_off(log=logger)
 
-    cleanup_orphan_exp_mice(dry_run=not force)
+    if os.environ.get("DJ_MAIN_HOST"):
+        logger.info(
+            "Syncing Mouse metadata from parent for Dataset/session mice "
+            "before base populate…"
+        )
+        try:
+            sync_mice_from_main(log=logger)
+        except Exception as err:
+            logger.warning(
+                "sync_mice before populate failed (%s). "
+                "Continuing; base populate may insert stubs. Re-run: %s",
+                err,
+                SYNC_MICE_COMMAND,
+            )
+    else:
+        logger.info(
+            "DJ_MAIN_HOST not set; skipping pre-populate sync_mice. "
+            "Base populate may insert stub Mouse rows."
+        )
 
     ok, failed = recover_base_from_gui([data_dir, processed_dir], srcf=srcf)
     logger.info(
         "GUI base populate summary: %d complete, %d failed/incomplete.", ok, failed
     )
+
+    logger.info(
+        "Orphan cleanup (exp/mice without vr4mice.Dataset)%s…",
+        "" if force else " — dry-run",
+    )
+    cleanup_orphan_exp_mice(dry_run=not force)
 
     warn_incomplete_mice(log=logger)
     logger.info(POST_RECOVERY_NOTE)

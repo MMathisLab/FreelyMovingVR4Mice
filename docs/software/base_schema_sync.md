@@ -15,31 +15,43 @@ python run.py analysis
 No separate base cron path. Base populate follows the `GUI` flag
 (`GUI=True` ⇒ include `exp`/`mice`; `GUI=False` ⇒ `vr4mice` only).
 
-### When new mice appear
+### Preferred order: sync mice → populate → optional clean
 
-Ingest can insert **stub** Mouse rows (`mouse_id=-1`) so `exp.Session` can be
-created. Those stubs are **not** full registry records.
+When recovering or bringing a new mouse onto this rig:
 
-**Whenever new mice show up** (first session on this rig, or after recover/populate
-left stubs / incomplete Mouse rows), run:
+1. **`sync_mice`** — pull full Mouse metadata from the parent (from
+   `vr4mice.Dataset` and/or known Session names).
+2. **Populate base** — create/update `exp.Session` from unpopulated GUI `.npy`
+   files (against those full Mouse rows; stubs only if the animal is missing on
+   parent).
+3. **Optional cleanup** — drop local `exp`/`mice` rows that still have **no**
+   matching `vr4mice.Dataset` (replica/registry junk). Dry-run by default;
+   `--force` to apply.
 
 ```bash
-python run_base.py sync_mice   # pull full Mouse (+ Strain, Surgery, score sheets) from parent
+python run_base.py sync_mice   # parent → local Mouse (+ Strain, Surgery, …)
+python run.py populate         # normal cron — or use recover_base below
 python run.py fetch            # refresh GUI menu if needed
 ```
 
+`recover_base` does this in one shot when `DJ_MAIN_HOST` is set:
+
+**`sync_mice` → populate all unpopulated GUI `.npy` → orphan cleanup (dry-run
+unless `--force`)**.
+
 Requirements:
 
-- Mice must already exist on the **parent** DB (`DJ_MAIN_HOST`).
-- `sync_mice` only updates mice that already have a **local** `exp.Session`
-  (stub or incomplete). It does not invent mice that never ran here.
+- Mice must already exist on the **parent** DB (`DJ_MAIN_HOST`) for a full sync.
+- `sync_mice` targets mice referenced by local **`vr4mice.Dataset` and/or
+  `exp.Session`** that are missing or still stubs — it can run before Sessions
+  exist.
 - **`sync_exp` is optional.** Only run it if this rig should push missing
   sessions upstream. It must only push **this lab’s local** sessions (backed by
   `vr4mice.Dataset` with `Collab` lab == `DJ_LAB`) — **not** collaborator
   datasets. See §D.
 
-If populate/fetch logs warn about stub or incomplete mice, treat that as a signal
-to run `sync_mice` before relying on GUI metadata or parent consistency.
+If populate/fetch logs warn about stub or incomplete mice, treat that as a
+signal to run `sync_mice`.
 
 ---
 
@@ -49,8 +61,8 @@ Use **`python run_base.py …`** only for **recovery and parent-DB sync**:
 
 | Mode | Purpose |
 |------|---------|
-| `recover_base` | Replication check → optional orphan cleanup → rebuild base **only for Dataset-backed** GUI `.npy` |
-| `sync_mice` | Parent → local Mouse (+ Strain, Surgery, score sheets) for stub/incomplete session mice |
+| `recover_base` | **`sync_mice` → populate unpopulated GUI → optional Dataset-orphan cleanup** |
+| `sync_mice` | Parent → local Mouse (+ Strain, Surgery, score sheets) for Dataset/session mice that are missing or stubs |
 | `sync_exp` | **Optional.** Local → parent missing `exp.Session` (this lab only; match by doe, not local day) |
 | `cleanup_mice` | Remove **stub** mice with no local Session (lighter than recover orphans) |
 
@@ -61,11 +73,11 @@ Session files should still exist under `/data/data` and/or `/data/processed`.
 1. **Never delete on main.** Parent `mice` / `exp` are read for `sync_mice`
    (fetch only) and may receive **inserts** of missing sessions from optional
    `sync_exp`. No mode deletes or overwrites existing parent rows.
-2. **Local deletes are Dataset orphans only** (via `recover_base --force`):
-   remove local `exp.Session` / `mice.Mouse` (and related score/surgery sheets)
-   that have **no** matching `vr4mice.Dataset` on this rig. Rows that match a
-   Dataset are kept. Recover populate only rebuilds Dataset-backed GUI files,
-   so cleanup and rebuild stay consistent.
+2. **Local deletes are Dataset orphans only** (via `recover_base --force` or
+   equivalent cleanup): remove local `exp.Session` / `mice.Mouse` (and related
+   score/surgery sheets) that have **no** matching `vr4mice.Dataset` on this
+   rig. Cleanup runs **after** populate so you can review the dry-run list of
+   rows that were not backed by a Dataset.
 3. **`cleanup_mice` is narrower:** local **stub** `Mouse` rows with **no**
    `exp.Session` (dry-run by default). Prefer `recover_base` for Dataset-based
    orphan cleanup.
@@ -142,7 +154,7 @@ STOP REPLICA;
 STOP SLAVE;
 ```
 
-After recover / `sync_mice` / `sync_exp` look consistent, re-enable yourself
+After recover / sync look consistent, re-enable yourself
 (`START REPLICA;` / `START SLAVE;`) if that is your lab’s normal setup.
 
 ---
@@ -157,17 +169,19 @@ After recover / `sync_mice` / `sync_exp` look consistent, re-enable yourself
    (`STOP REPLICA` / `STOP SLAVE`) and ensure the DB is writable before
    `--force` cleanup.
 
-### B — preview orphans (deletes dry-run; populate still runs)
+### B — recover (sync → populate → cleanup dry-run)
 
 ```bash
 python run_base.py recover_base
 ```
 
-Lists Session/Mouse with no matching `vr4mice.Dataset` (no deletes without
-`--force`), then rebuilds base **only for Dataset-backed** GUI `.npy` files
-under `/data/data` + `/data/processed`. This is **not** fully read-only:
-`sync_days` may rewrite `.npy` day fields and populate may insert missing
-Dataset-backed Sessions. **Read the “would delete …” list** before `--force`.
+1. **`sync_mice`** (if `DJ_MAIN_HOST` is set) for Dataset/session mice.
+2. **Populate** base from **all unpopulated** GUI `.npy` under `/data/data` +
+   `/data/processed` (`sync_days` may rewrite day fields).
+3. **Orphan cleanup dry-run** — lists Session/Mouse with no matching
+   `vr4mice.Dataset` (no deletes yet).
+
+**Read the “would delete …” list** before using `--force`.
 
 ### C — optional destructive cleanup
 
@@ -177,13 +191,11 @@ Only if the orphan list is OK:
 python run_base.py recover_base --force
 ```
 
-**Caution — future mice:** `--force` deletes any local mouse **not** referenced
-by a Dataset — including mice synced for upcoming experiments. Prefer dry-run
-first.
+Same as above, but orphan cleanup **applies** deletes for exp/mice without a
+Dataset. Prefer reviewing a dry-run first.
 
-Recover populate is Dataset-gated, so a second `--force` will not delete
-Sessions it just rebuilt (they match Dataset). GUI files without Dataset are
-skipped (run normal `populate` first if you need new Datasets).
+**Caution — future mice:** `--force` deletes any local mouse **not** referenced
+by a Dataset — including mice synced for upcoming experiments.
 
 Lighter cleanup (stubs with **no** Session only):
 
@@ -194,16 +206,16 @@ python run_base.py cleanup_mice --force
 
 ### D — sync with parent
 
+`recover_base` already runs **`sync_mice` before populate** when `DJ_MAIN_HOST`
+is set. Re-run only if stubs remain:
+
 ```bash
-python run_base.py sync_mice   # parent → local mouse metadata (stubs → full)
+python run_base.py sync_mice   # parent → local (Dataset and/or Session mice)
 # optional — only if this rig should publish sessions upstream:
 python run_base.py sync_exp    # local → parent missing sessions (needs write on main exp)
 ```
 
-Run **`sync_mice` whenever new mice appeared** as stubs or incomplete local
-records after populate/recover. Skip only if every session mouse already has a
-full Mouse row (no stub warnings). `sync_mice` also pulls `Strain` rows before
-Mouse replace so FK inserts succeed.
+`sync_mice` also pulls `Strain` rows before Mouse replace so FK inserts succeed.
 
 **`sync_exp` is optional** and is **not** part of normal recovery. Use it only
 when you intentionally need missing sessions on the parent `exp` schema.
@@ -241,18 +253,19 @@ python run.py populate   # GUI=True still fills exp/mice for new sessions
 ```text
 1. DJ_MAIN_* in .env; replication OFF
 2. python run_base.py recover_base
+   # internally: sync_mice → populate unpopulated GUI → cleanup dry-run
 3. python run_base.py recover_base --force   # only if orphan list is OK
-4. python run_base.py sync_mice             # required if new/stub mice appeared
+4. python run_base.py sync_mice             # only if stubs remain
 5. python run_base.py sync_exp              # optional; local non-collab only
 6. Re-enable replication when both sides look consistent
 7. Resume: python run.py populate
-   # when new mice appear later → sync_mice again (+ fetch if GUI needs update)
 ```
 
 ---
 
 ## 5. Tests
 
-`tests/unit/test_base_schema_sync.py` — stubs, sync direction, replication gate,
-orphan dry-run, Dataset-gated recover populate, sync_days helpers, GUI⇒base
-schema selection, `run_base` modes, and **`sync_exp` local-vs-collab + doe matching**.
+`tests/unit/test_base_schema_sync.py` — stubs, mice-before-sessions sync,
+recover order (sync → populate → cleanup), orphan dry-run, sync_days helpers,
+GUI⇒base schema selection, `run_base` modes, and **`sync_exp` local-vs-collab +
+doe matching**.

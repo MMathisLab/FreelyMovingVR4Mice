@@ -5,10 +5,10 @@ Normal ingest: python run.py populate | analysis | dlc | ...
 With GUI=True, that populate path writes exp/mice from session .npy as usual.
 
 Recovery / registry sync (DJ_MAIN_HOST):
-    sync_mice     — pull Mouse metadata from main DB onto local
+    sync_mice     — pull Mouse metadata from main (Dataset and/or Session mice)
     sync_exp      — optional: push missing local (non-collab) exp.Session to main
     cleanup_mice  — remove stub Mouse rows without local sessions
-    recover_base  — replication check, optional orphan cleanup, base from GUI files
+    recover_base  — sync_mice → populate unpopulated GUI → optional orphan cleanup
 """
 
 import argparse
