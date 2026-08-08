@@ -52,11 +52,13 @@ python run.py fetch   # refresh GUI menu if needed
 | `recover_base` | Populate unpopulated GUI `.npy` into local `exp`/`mice` |
 | `cleanup_orphans` | List/delete local `exp`/`mice` with no `vr4mice.Dataset` |
 | `cleanup_mice` | Remove **stub** mice with no local Session |
+| `check_session_days` | Exit 1 if `exp.Session.day` ≠ doe timeline |
+| `fix_session_days` | Rekey wrong `Session.day` (dry-run; `--force` applies) |
 
 ### Safety
 
 1. **Never delete on main.** mysql sync dumps only.
-2. Orphan deletes only via `cleanup_orphans --force` (replication must be off).
+2. Orphan deletes / `fix_session_days --force` need replication off.
 3. mysql sync may **REPLACE** local Mouse/Surgery/score-sheet rows.
 
 ---
@@ -121,6 +123,21 @@ python run_base.py cleanup_orphans
 python run_base.py cleanup_orphans --force
 python run_base.py cleanup_mice --force   # stubs without Session only
 ```
+
+### Fix wrong Session.day (PK rekey)
+
+If `check_session_days` fails after a bad populate (day stuck at 1, etc.):
+
+```bash
+python run_base.py check_session_days
+python run_base.py fix_session_days          # dry-run
+python run_base.py fix_session_days --force  # replication must be off
+python run_base.py check_session_days        # should pass
+```
+
+Rekeys `exp.Session`, `SessionScoreSheet`, and `base.Base` when present.
+Still run `python run.py sync_days` (or recover’s sync) so on-disk `.npy`
+`day` matches the DB.
 
 ### Resume
 

@@ -8,6 +8,8 @@ Run inside the Docker client (make bash), not host python:
     python run_base.py cleanup_orphans
     python run_base.py cleanup_mice --force
     python run_base.py check_session_days
+    python run_base.py fix_session_days
+    python run_base.py fix_session_days --force
 
 Mouse registry sync from parent is host-side only (no DataJoint):
 
@@ -21,6 +23,7 @@ Modes (see docs/software/base_schema_sync.md):
     cleanup_orphans    - list/delete local exp/mice with no vr4mice.Dataset
     cleanup_mice       - remove stub Mouse rows without local sessions
     check_session_days - exit 1 if any exp.Session.day disagrees with doe timeline
+    fix_session_days   - rekey Session.day to doe timeline (dry-run; --force applies)
 """
 
 import argparse
@@ -61,7 +64,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Apply destructive cleanup (cleanup_orphans, cleanup_mice).",
+        help=(
+            "Apply changes (cleanup_orphans, cleanup_mice, fix_session_days)."
+        ),
     )
     parser.add_argument(
         "mode",
@@ -70,6 +75,7 @@ if __name__ == "__main__":
             "cleanup_orphans",
             "cleanup_mice",
             "check_session_days",
+            "fix_session_days",
         ],
         help="Recovery mode to execute.",
     )
@@ -103,6 +109,11 @@ if __name__ == "__main__":
             from vr4mice.actions.recover_base import check_session_days
 
             check_session_days(raise_on_mismatch=True)
+
+        elif args.mode == "fix_session_days":
+            from vr4mice.actions.recover_base import fix_session_days
+
+            fix_session_days(dry_run=not args.force)
     except Exception:
         traceback.print_exc()
         sys.exit(1)

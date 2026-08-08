@@ -104,12 +104,177 @@ def check_session_days(*, raise_on_mismatch: bool = True) -> List[Dict[str, Any]
         )
     msg = (
         f"{len(mismatches)} exp.Session row(s) have wrong day "
-        "(see log). Fix .npy days + re-ingest or migrate Session PK."
+        "(see log). Preview migrate: python run_base.py fix_session_days "
+        "(then --force). Also run sync_days so .npy day matches."
     )
     if raise_on_mismatch:
         raise SessionDayMismatchError(msg)
     logger.warning(msg)
     return mismatches
+
+
+def plan_session_day_fixes(
+    sessions: Optional[Iterable[Dict[str, Any]]] = None,
+) -> List[Dict[str, Any]]:
+    """
+    Build rekey plan: stored_day → correct_day, with PK conflict flags.
+
+    Pass ``sessions`` for unit tests; otherwise fetches all exp.Session rows.
+    """
+    if sessions is None:
+        sessions = list(
+            exp.Session().fetch("mouse_name", "day", "attempt", "doe", as_dict=True)
+        )
+    else:
+        sessions = list(sessions)
+
+    mismatches = find_session_day_mismatches(sessions)
+    occupied: Set[Tuple[str, int, int]] = {
+        (r["mouse_name"], int(r["day"]), int(r["attempt"])) for r in sessions
+    }
+    claimed: Set[Tuple[str, int, int]] = set()
+    plans: List[Dict[str, Any]] = []
+
+    for row in mismatches:
+        target = (row["mouse_name"], int(row["correct_day"]), int(row["attempt"]))
+        conflict: Optional[str] = None
+        if target in occupied:
+            conflict = (
+                f"target PK already exists "
+                f"(day={row['correct_day']} attempt={row['attempt']})"
+            )
+        elif target in claimed:
+            conflict = (
+                f"another mismatch maps to the same PK "
+                f"(day={row['correct_day']} attempt={row['attempt']})"
+            )
+        else:
+            claimed.add(target)
+        plans.append({**row, "conflict": conflict})
+    return plans
+
+
+def _rekey_session_day(
+    *,
+    mouse_name: str,
+    stored_day: int,
+    attempt: int,
+    correct_day: int,
+) -> None:
+    """Move one Session (+ ScoreSheet + base.Base) to a new day PK."""
+    old_key = {
+        "mouse_name": mouse_name,
+        "day": stored_day,
+        "attempt": attempt,
+    }
+    if not (exp.Session() & old_key):
+        raise RuntimeError(f"Session disappeared before rekey: {old_key}")
+    if exp.Session() & {
+        "mouse_name": mouse_name,
+        "day": correct_day,
+        "attempt": attempt,
+    }:
+        raise RuntimeError(
+            f"Target Session PK already exists: "
+            f"{mouse_name} day={correct_day} attempt={attempt}"
+        )
+
+    session_row = (exp.Session() & old_key).fetch1()
+    exp.Session.insert1({**session_row, "day": correct_day})
+
+    try:
+        from vr4mice.schema.base import Base
+
+        for base_row in (Base() & old_key).fetch(as_dict=True):
+            (Base() & {"dataset": base_row["dataset"]}).delete(safemode=False)
+            Base.insert1(
+                {**base_row, "day": correct_day},
+                allow_direct_insert=True,
+            )
+    except Exception as err:
+        logger.warning(
+            "base.Base rekey skipped or partial for %s day %s→%s: %s: %s",
+            mouse_name,
+            stored_day,
+            correct_day,
+            type(err).__name__,
+            err,
+        )
+
+    for sheet in (exp.SessionScoreSheet() & old_key).fetch(as_dict=True):
+        exp.SessionScoreSheet.insert1({**sheet, "day": correct_day})
+    if exp.SessionScoreSheet() & old_key:
+        (exp.SessionScoreSheet() & old_key).delete(safemode=False)
+
+    (exp.Session() & old_key).delete(safemode=False)
+
+
+def fix_session_days(*, dry_run: bool = True) -> Tuple[int, int, int]:
+    """
+    Rekey exp.Session.day to match (doe − first doe) + 1.
+
+    Dry-run by default. With dry_run=False, requires replication off.
+    Also rekeys SessionScoreSheet and base.Base when present.
+
+    Returns (ok_count, conflict_count, error_count).
+    """
+    if not dry_run:
+        check_replication_off(log=logger)
+
+    plans = plan_session_day_fixes()
+    if not plans:
+        logger.info("fix_session_days: all Session.day values already match doe.")
+        return (0, 0, 0)
+
+    logger.info(
+        "fix_session_days: %d session(s) to rekey (%s).",
+        len(plans),
+        "dry-run" if dry_run else "APPLY",
+    )
+
+    n_ok = n_conflict = n_err = 0
+    for plan in plans:
+        label = (
+            f"{plan['mouse_name']} day {plan['stored_day']}→{plan['correct_day']} "
+            f"attempt={plan['attempt']} doe={plan['doe']}"
+        )
+        if plan["conflict"]:
+            logger.error("  CONFLICT %s — %s", label, plan["conflict"])
+            n_conflict += 1
+            continue
+        if dry_run:
+            logger.warning("  would rekey %s", label)
+            n_ok += 1
+            continue
+        try:
+            _rekey_session_day(
+                mouse_name=plan["mouse_name"],
+                stored_day=int(plan["stored_day"]),
+                attempt=int(plan["attempt"]),
+                correct_day=int(plan["correct_day"]),
+            )
+            logger.info("  rekeyed %s", label)
+            n_ok += 1
+        except Exception:
+            logger.exception("  failed %s", label)
+            n_err += 1
+
+    logger.info(
+        "fix_session_days summary: %d ok, %d conflict, %d error.",
+        n_ok,
+        n_conflict,
+        n_err,
+    )
+    if dry_run and n_ok:
+        logger.warning(
+            "Dry run only. Re-run: python run_base.py fix_session_days --force"
+        )
+    if n_conflict or n_err:
+        raise RuntimeError(
+            f"fix_session_days incomplete: {n_conflict} conflict(s), {n_err} error(s)."
+        )
+    return (n_ok, n_conflict, n_err)
+
 
 CLEANUP_ORPHANS_COMMAND = (
     "python run_base.py cleanup_orphans          # dry-run Dataset orphans\n"
@@ -134,10 +299,12 @@ Recommended order:
   3. Optional — remove local exp/mice with no vr4mice.Dataset:
        {cleanup_orphans}
 
-  4. Verify Session.day vs doe timeline:
+  4. Verify / fix Session.day vs doe timeline:
        python run_base.py check_session_days
+       python run_base.py fix_session_days          # dry-run
+       python run_base.py fix_session_days --force  # apply rekey
 
-Never deletes on main. Orphan cleanup (--force) needs replication OFF.
+Never deletes on main. Orphan cleanup / fix_session_days --force need replication OFF.
 
 MySQL diagnostics: make -f mysql.mk replication-summary
 ================================================================================

@@ -527,6 +527,54 @@ class TestSessionDayMismatches:
         assert recover_base.find_session_day_mismatches(sessions) == []
 
 
+class TestPlanSessionDayFixes:
+    def test_plans_rekey_without_conflict(self):
+        sessions = [
+            {
+                "mouse_name": "Flamingo",
+                "day": 1,
+                "attempt": 1,
+                "doe": datetime.date(2026, 1, 16),
+            },
+            {
+                "mouse_name": "Flamingo",
+                "day": 1,
+                "attempt": 2,
+                "doe": datetime.date(2026, 1, 28),
+            },
+        ]
+        plans = recover_base.plan_session_day_fixes(sessions)
+        assert len(plans) == 1
+        assert plans[0]["correct_day"] == 13
+        assert plans[0]["conflict"] is None
+
+    def test_flags_target_pk_conflict(self):
+        sessions = [
+            {
+                "mouse_name": "Flamingo",
+                "day": 1,
+                "attempt": 1,
+                "doe": datetime.date(2026, 1, 16),
+            },
+            {
+                "mouse_name": "Flamingo",
+                "day": 1,
+                "attempt": 2,
+                "doe": datetime.date(2026, 1, 28),
+            },
+            {
+                "mouse_name": "Flamingo",
+                "day": 13,
+                "attempt": 2,
+                "doe": datetime.date(2026, 1, 28),
+            },
+        ]
+        plans = recover_base.plan_session_day_fixes(sessions)
+        assert len(plans) == 1
+        assert plans[0]["conflict"] is not None
+        assert "already exists" in plans[0]["conflict"]
+
+
 # ==============================================================================
 # sync_days helpers
 # ==============================================================================
@@ -635,6 +683,8 @@ class TestRunBaseCliSurface:
             "recover_base",
             "cleanup_orphans",
             "cleanup_mice",
+            "check_session_days",
+            "fix_session_days",
         ):
             assert f'"{mode}"' in text
         for removed in ("sync_mice", "sync_exp", "sync_days", "fetch", "populate"):
