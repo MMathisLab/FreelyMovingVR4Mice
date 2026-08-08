@@ -104,9 +104,9 @@ make -f mysql.mk sync-mice-from-main
 make -f mysql.mk sync-mice-from-main MOUSE=Flamingo,Whale
 ```
 
-`scripts/sync_mice_mysql.sh` dumps Strain / Mouse / Surgery / score sheets from
-`DJ_MAIN_*` onto local `DJ_HOST`, maps `__`→`_` table names when needed, loads
-with `FOREIGN_KEY_CHECKS=0`.
+`scripts/sync_mice_mysql.sh` dumps Strain / SurgeryType (INSERT IGNORE), then
+Mouse / Surgery / score sheets (REPLACE) from `DJ_MAIN_*` onto local `DJ_HOST`,
+maps `__`→`_` table names when needed, loads with `FOREIGN_KEY_CHECKS=0`.
 
 ### Recover base
 

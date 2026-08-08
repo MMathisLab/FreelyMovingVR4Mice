@@ -5,7 +5,9 @@
 #   make -f mysql.mk sync-mice-from-main
 #   make -f mysql.mk sync-mice-from-main MOUSE=Flamingo,Whale
 #
-# Never deletes on main. Loads with FOREIGN_KEY_CHECKS=0 and REPLACE.
+# Never deletes on main. Loads with FOREIGN_KEY_CHECKS=0.
+# Manual tables use REPLACE; lookups (Strain, …) use INSERT IGNORE so we never
+# delete a parent PK that local Mouse rows already reference.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -56,12 +58,23 @@ SSL_OPTS=(--ssl-mode=DISABLED)
 MYSQL_LOCAL=(mysql "${SSL_OPTS[@]}" -h "$LOCAL_HOST" -P "$LOCAL_PORT" -u "$DJ_USER" -p"$DJ_PWD")
 MYSQL_MAIN=(mysql "${SSL_OPTS[@]}" -h "$MAIN_HOST" -P "$MAIN_PORT" -u "$MAIN_USER" -p"$MAIN_PWD")
 
-DUMP_BASE=(mysqldump "${SSL_OPTS[@]}" -h "$MAIN_HOST" -P "$MAIN_PORT" -u "$MAIN_USER" -p"$MAIN_PWD"
+DUMP_COMMON=(mysqldump "${SSL_OPTS[@]}" -h "$MAIN_HOST" -P "$MAIN_PORT" -u "$MAIN_USER" -p"$MAIN_PWD"
   --single-transaction --routines=false --triggers=false --events=false
-  --set-gtid-purged=OFF --no-create-info --replace --complete-insert --hex-blob)
+  --set-gtid-purged=OFF --no-create-info --complete-insert --hex-blob)
 if mysqldump --help 2>/dev/null | grep -q -- '--column-statistics'; then
-  DUMP_BASE+=(--column-statistics=0)
+  DUMP_COMMON+=(--column-statistics=0)
 fi
+# REPLACE refreshes Mouse/etc. Lookups must not REPLACE (deletes parent PK).
+DUMP_REPLACE=("${DUMP_COMMON[@]}" --replace)
+DUMP_LOOKUP=("${DUMP_COMMON[@]}" --insert-ignore)
+
+# Tables that are FK parents / lookups — never REPLACE.
+is_lookup_table() {
+  case "$1" in
+    strain|surgery_type|mouse_licensing_geneva) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 
 echo "Local:  ${LOCAL_HOST}:${LOCAL_PORT}"
 echo "Main:   ${MAIN_HOST}:${MAIN_PORT}"
@@ -109,8 +122,9 @@ resolve_pair() {
 }
 
 CANDIDATES=(
-  "#strain|"
-  "#surgery_type|"
+  # Lookups first (INSERT IGNORE), then manuals (REPLACE).
+  "strain|"
+  "surgery_type|"
   "#mouse_licensing_geneva|"
   "#mouse_score_sheet__body_condition|#mouse_score_sheet_body_condition"
   "#mouse_score_sheet__general_assay|#mouse_score_sheet_general_assay"
@@ -168,11 +182,22 @@ for pair in "${PAIRS[@]}"; do
   part="${TMPDIR_SYNC}/part.sql"
   echo "Dumping mice.\`${main_t}\` ..."
 
-  dump_cmd=("${DUMP_BASE[@]}" mice --tables "$main_t")
+  if is_lookup_table "$main_t"; then
+    dump_cmd=("${DUMP_LOOKUP[@]}" mice --tables "$main_t")
+  else
+    dump_cmd=("${DUMP_REPLACE[@]}" mice --tables "$main_t")
+  fi
   if [[ -n "$WHERE" ]]; then
     case "$main_t" in
       mouse|surgery|mouse_score_sheet|mouse_score_sheet__water_restriction|mouse_score_sheet_water_restriction)
         dump_cmd+=(--where="$WHERE")
+        ;;
+      strain)
+        # Only strains referenced by the filtered mice (full table if none match).
+        dump_cmd+=(--where="strain IN (SELECT DISTINCT strain FROM mice.mouse WHERE ${WHERE})")
+        ;;
+      surgery_type)
+        dump_cmd+=(--where="surgery_type IN (SELECT DISTINCT surgery_type FROM mice.surgery WHERE ${WHERE})")
         ;;
     esac
   fi
