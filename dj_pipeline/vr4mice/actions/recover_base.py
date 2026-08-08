@@ -28,6 +28,16 @@ class SessionDayMismatchError(RuntimeError):
     """Raised when exp.Session.day does not match the doe timeline."""
 
 
+def _dj_delete(restricted) -> None:
+    """Delete without prompt. DJ2 removed delete(safemode=...); use config."""
+    prev = dj.config.get("safemode", True)
+    dj.config["safemode"] = False
+    try:
+        restricted.delete()
+    finally:
+        dj.config["safemode"] = prev
+
+
 def _as_date(value: Union[date, datetime, str]) -> date:
     if isinstance(value, datetime):
         return value.date()
@@ -129,9 +139,10 @@ def plan_session_day_fixes(
         sessions = list(sessions)
 
     mismatches = find_session_day_mismatches(sessions)
-    occupied: Set[Tuple[str, int, int]] = {
-        (r["mouse_name"], int(r["day"]), int(r["attempt"])) for r in sessions
+    by_key: Dict[Tuple[str, int, int], Dict[str, Any]] = {
+        (r["mouse_name"], int(r["day"]), int(r["attempt"])): r for r in sessions
     }
+    occupied = set(by_key)
     claimed: Set[Tuple[str, int, int]] = set()
     plans: List[Dict[str, Any]] = []
 
@@ -139,16 +150,20 @@ def plan_session_day_fixes(
         target = (row["mouse_name"], int(row["correct_day"]), int(row["attempt"]))
         conflict: Optional[str] = None
         if target in occupied:
-            conflict = (
-                f"target PK already exists "
-                f"(day={row['correct_day']} attempt={row['attempt']})"
-            )
+            occ = by_key[target]
+            # Same doe → leftover from a partial prior rekey; allow resume.
+            if _as_date(occ["doe"]) != _as_date(row["doe"]):
+                conflict = (
+                    f"target PK already exists with different doe "
+                    f"(day={row['correct_day']} attempt={row['attempt']} "
+                    f"doe={_as_date(occ['doe']).isoformat()})"
+                )
         elif target in claimed:
             conflict = (
                 f"another mismatch maps to the same PK "
                 f"(day={row['correct_day']} attempt={row['attempt']})"
             )
-        else:
+        if conflict is None and target not in occupied:
             claimed.add(target)
         plans.append({**row, "conflict": conflict})
     return plans
@@ -161,35 +176,54 @@ def _rekey_session_day(
     attempt: int,
     correct_day: int,
 ) -> None:
-    """Move one Session (+ ScoreSheet + base.Base) to a new day PK."""
+    """Move one Session (+ ScoreSheet + base.Base) to a new day PK.
+
+    Resumes if a prior run already inserted the target row with the same doe.
+    """
     old_key = {
         "mouse_name": mouse_name,
         "day": stored_day,
         "attempt": attempt,
     }
-    if not (exp.Session() & old_key):
-        raise RuntimeError(f"Session disappeared before rekey: {old_key}")
-    if exp.Session() & {
+    new_key = {
         "mouse_name": mouse_name,
         "day": correct_day,
         "attempt": attempt,
-    }:
-        raise RuntimeError(
-            f"Target Session PK already exists: "
-            f"{mouse_name} day={correct_day} attempt={attempt}"
-        )
+    }
+    if not (exp.Session() & old_key):
+        if exp.Session() & new_key:
+            return
+        raise RuntimeError(f"Session disappeared before rekey: {old_key}")
 
     session_row = (exp.Session() & old_key).fetch1()
-    exp.Session.insert1({**session_row, "day": correct_day})
+    old_doe = _as_date(session_row["doe"])
+
+    if exp.Session() & new_key:
+        existing = (exp.Session() & new_key).fetch1()
+        if _as_date(existing["doe"]) != old_doe:
+            raise RuntimeError(
+                f"Target Session PK already exists with different doe: "
+                f"{mouse_name} day={correct_day} attempt={attempt}"
+            )
+        logger.info(
+            "Resuming rekey for %s day %s→%s attempt=%s (target already present).",
+            mouse_name,
+            stored_day,
+            correct_day,
+            attempt,
+        )
+    else:
+        exp.Session.insert1({**session_row, "day": correct_day})
 
     try:
         from vr4mice.schema.base import Base
 
         for base_row in (Base() & old_key).fetch(as_dict=True):
-            (Base() & {"dataset": base_row["dataset"]}).delete(safemode=False)
+            _dj_delete(Base() & {"dataset": base_row["dataset"]})
             Base.insert1(
                 {**base_row, "day": correct_day},
                 allow_direct_insert=True,
+                skip_duplicates=True,
             )
     except Exception as err:
         logger.warning(
@@ -202,11 +236,14 @@ def _rekey_session_day(
         )
 
     for sheet in (exp.SessionScoreSheet() & old_key).fetch(as_dict=True):
-        exp.SessionScoreSheet.insert1({**sheet, "day": correct_day})
+        exp.SessionScoreSheet.insert1(
+            {**sheet, "day": correct_day},
+            skip_duplicates=True,
+        )
     if exp.SessionScoreSheet() & old_key:
-        (exp.SessionScoreSheet() & old_key).delete(safemode=False)
+        _dj_delete(exp.SessionScoreSheet() & old_key)
 
-    (exp.Session() & old_key).delete(safemode=False)
+    _dj_delete(exp.Session() & old_key)
 
 
 def fix_session_days(*, dry_run: bool = True) -> Tuple[int, int, int]:
@@ -442,8 +479,8 @@ def _delete_sessions(sessions: Iterable[dict], *, dry_run: bool) -> int:
 
     for session_row in sessions:
         key = {field: session_row[field] for field in exp.Session.primary_key}
-        (exp.SessionScoreSheet() & key).delete(safemode=False)
-        (exp.Session() & key).delete(safemode=False)
+        _dj_delete(exp.SessionScoreSheet() & key)
+        _dj_delete(exp.Session() & key)
 
     logger.info("Deleted %d orphan exp.Session row(s).", len(sessions))
     return len(sessions)
@@ -471,8 +508,8 @@ def _delete_mice(mouse_names: Iterable[str], *, dry_run: bool) -> int:
     for name in names:
         restriction = {"mouse_name": name}
         for table in mouse_tables:
-            (table() & restriction).delete(safemode=False)
-        (mice.Mouse() & restriction).delete(safemode=False)
+            _dj_delete(table() & restriction)
+        _dj_delete(mice.Mouse() & restriction)
 
     logger.info("Deleted %d orphan mice.Mouse row(s).", len(names))
     return len(names)
