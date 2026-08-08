@@ -226,39 +226,21 @@ def _require_dj_main_host() -> None:
         )
 
 
-def _dj_conn_reset(*, use_tls=None):
-    """Reset DJ connection; pass use_tls into conn() when supported (DJ 2.x)."""
-    try:
-        if use_tls is None:
-            return dj.conn(reset=True)
-        return dj.conn(reset=True, use_tls=use_tls)
-    except TypeError:
-        # Older dj.conn() without use_tls kwarg
-        return dj.conn(reset=True)
-
-
 @contextmanager
 def _main_database():
     """Temporarily point DataJoint at DJ_MAIN_HOST, then restore local config."""
     # Never use `key in dj.config` — DJ Config.__contains__ breaks (int keys).
+    # Do not set database.use_tls: DJ 2.x default try-TLS-then-fallback works on
+    # lab MySQL; forcing use_tls=False still SSL-wraps and fails without fallback.
     keys = ("database.host", "database.user", "database.password")
     saved = {key: dj.config[key] for key in keys}
-    saved_tls = None
-    try:
-        saved_tls = dj.config["database.use_tls"]
-    except Exception:
-        pass
-
     dj.config["database.host"] = os.environ["DJ_MAIN_HOST"]
     dj.config["database.user"] = os.environ.get("DJ_MAIN_USER", saved["database.user"])
     dj.config["database.password"] = os.environ.get(
         "DJ_MAIN_PWD", saved["database.password"]
     )
-    # Config alone is not enough on DJ 2.x — conn() takes use_tls explicitly.
-    # Lab MySQL rejects TLS; False skips handshake (no try-then-fallback needed).
-    dj.config["database.use_tls"] = False
     try:
-        _dj_conn_reset(use_tls=False)
+        dj.conn(reset=True)
     except Exception:
         traceback.print_exc()
         raise
@@ -268,17 +250,7 @@ def _main_database():
         for key, value in saved.items():
             dj.config[key] = value
         try:
-            if saved_tls is None:
-                try:
-                    del dj.config["database.use_tls"]
-                except Exception:
-                    pass
-            else:
-                dj.config["database.use_tls"] = saved_tls
-        except Exception:
-            pass
-        try:
-            _dj_conn_reset()
+            dj.conn(reset=True)
         except Exception:
             pass
 

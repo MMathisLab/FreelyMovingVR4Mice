@@ -63,8 +63,8 @@ Requirements:
 - `sync_mice` (default) pulls incomplete local names from `vr4mice.Dataset`,
   GUI `.npy`, and/or `exp.Session`. Use `--mouse NAME` (repeatable) to
   preload mice from main before recordings exist.
-- Main connection sets `database.use_tls=False` (assignment only; avoids SSL
-  handshake failure on lab MySQL).
+- Main connection leaves TLS at DataJoint default (try SSL, then non-SSL
+  fallback). An SSL warning on connect is normal on lab MySQL.
 - **`sync_exp` is optional** — this lab only (not collab). See §E.
 
 ---

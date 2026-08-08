@@ -330,8 +330,8 @@ class TestSyncMiceFromMain:
         }
         conn_calls = []
 
-        def fake_conn(*, reset=False, use_tls=None):
-            conn_calls.append({"reset": reset, "use_tls": use_tls})
+        def fake_conn(*, reset=False, **kwargs):
+            conn_calls.append({"reset": reset, **kwargs})
             return None
 
         with patch.object(mouse_sync.dj, "config", cfg), patch.object(
@@ -339,11 +339,10 @@ class TestSyncMiceFromMain:
         ):
             with mouse_sync._main_database():
                 assert cfg["database.host"] == "main.example:3306"
-                assert cfg["database.use_tls"] is False
+                assert "database.use_tls" not in cfg
             assert cfg["database.host"] == "local"
-            assert "database.use_tls" not in cfg
-        assert conn_calls[0]["use_tls"] is False
         assert conn_calls[0]["reset"] is True
+        assert "use_tls" not in conn_calls[0]
 
 
 class TestUpsertRows:
