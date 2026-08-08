@@ -470,6 +470,63 @@ class TestSessionKeyFromDataset:
             )
 
 
+class TestSessionDayMismatches:
+    def test_reports_only_wrong_days(self):
+        sessions = [
+            {
+                "mouse_name": "Flamingo",
+                "day": 1,
+                "attempt": 1,
+                "doe": datetime.date(2026, 1, 16),
+            },
+            {
+                "mouse_name": "Flamingo",
+                "day": 1,
+                "attempt": 2,
+                "doe": datetime.date(2026, 1, 28),
+            },
+            {
+                "mouse_name": "OkMouse",
+                "day": 1,
+                "attempt": 1,
+                "doe": datetime.date(2026, 2, 1),
+            },
+            {
+                "mouse_name": "OkMouse",
+                "day": 3,
+                "attempt": 1,
+                "doe": datetime.date(2026, 2, 3),
+            },
+        ]
+        bad = recover_base.find_session_day_mismatches(sessions)
+        assert bad == [
+            {
+                "mouse_name": "Flamingo",
+                "stored_day": 1,
+                "attempt": 2,
+                "doe": "2026-01-28",
+                "correct_day": 13,
+            }
+        ]
+
+    def test_empty_when_all_match(self):
+        sessions = [
+            {
+                "mouse_name": "A",
+                "day": 1,
+                "attempt": 1,
+                "doe": "2026-01-01",
+            },
+            {
+                "mouse_name": "A",
+                "day": 5,
+                "attempt": 1,
+                "doe": "2026-01-05",
+            },
+        ]
+        assert recover_base.find_session_day_mismatches(sessions) == []
+
+
 # ==============================================================================
 # sync_days helpers
 # ==============================================================================

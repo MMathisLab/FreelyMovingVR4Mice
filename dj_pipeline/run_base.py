@@ -7,6 +7,7 @@ Run inside the Docker client (make bash), not host python:
     python run_base.py recover_base
     python run_base.py cleanup_orphans
     python run_base.py cleanup_mice --force
+    python run_base.py check_session_days
 
 Mouse registry sync from parent is host-side only (no DataJoint):
 
@@ -16,9 +17,10 @@ Mouse registry sync from parent is host-side only (no DataJoint):
 Normal ingest (also in client): python run.py populate | analysis | dlc | ...
 
 Modes (see docs/software/base_schema_sync.md):
-    recover_base     - populate unpopulated GUI .npy into local exp/mice only
-    cleanup_orphans  - list/delete local exp/mice with no vr4mice.Dataset
-    cleanup_mice     - remove stub Mouse rows without local sessions
+    recover_base       - populate unpopulated GUI .npy into local exp/mice only
+    cleanup_orphans    - list/delete local exp/mice with no vr4mice.Dataset
+    cleanup_mice       - remove stub Mouse rows without local sessions
+    check_session_days - exit 1 if any exp.Session.day disagrees with doe timeline
 """
 
 import argparse
@@ -67,6 +69,7 @@ if __name__ == "__main__":
             "recover_base",
             "cleanup_orphans",
             "cleanup_mice",
+            "check_session_days",
         ],
         help="Recovery mode to execute.",
     )
@@ -95,6 +98,11 @@ if __name__ == "__main__":
             from vr4mice.actions.mouse_sync import cleanup_mice_without_sessions
 
             cleanup_mice_without_sessions(dry_run=not args.force, stubs_only=True)
+
+        elif args.mode == "check_session_days":
+            from vr4mice.actions.recover_base import check_session_days
+
+            check_session_days(raise_on_mismatch=True)
     except Exception:
         traceback.print_exc()
         sys.exit(1)

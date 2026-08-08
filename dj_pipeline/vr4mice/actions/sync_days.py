@@ -17,6 +17,10 @@ logger = Logger.get_logger()
 DEFAULT_GUI_PATHS = ("/data/data", "/data/processed")
 
 
+class SyncDaysError(RuntimeError):
+    """Raised when day sync cannot load or rewrite a file that needs updating."""
+
+
 def mouse_in_db(name, date, date_format="%Y-%m-%d"):
     """
     A function that checks if a mouse is in the database,
@@ -110,6 +114,10 @@ def sync_days(
     - Otherwise day is inferred from session filenames on disk (earliest date = day 1),
       scanning all requested folders together so data/ and processed/ stay consistent.
 
+    Raises SyncDaysError if any file that needs a day check/update cannot be loaded
+    or rewritten (e.g. PermissionError). Callers that populate exp.Session must not
+    continue after that — wrong on-disk day values would be ingested.
+
     Args:
         paths: One folder, a list of folders, or None. When None, scans both
             /data/data and /data/processed together.
@@ -165,6 +173,8 @@ def sync_days(
             "Inferred days for %s from %d on-disk session(s).", name, len(sessions)
         )
 
+    failures: List[str] = []
+
     for folder, filename, dataset in file_entries:
         if dataset not in ret_arr:
             continue
@@ -173,21 +183,15 @@ def sync_days(
         try:
             raw_data_npy, _ = get_new_file(filename, folder)
         except Exception as err:
-            logger.warning(
-                "Skipping day sync for %s in %s: cannot load (%s: %s)",
-                dataset,
-                folder,
-                type(err).__name__,
-                err,
+            failures.append(
+                f"{folder}/{filename}: cannot load ({type(err).__name__}: {err})"
             )
             continue
 
         if not isinstance(raw_data_npy, dict):
-            logger.warning(
-                "Skipping day sync for %s in %s: .npy root is %s, not a dict",
-                dataset,
-                folder,
-                type(raw_data_npy).__name__,
+            failures.append(
+                f"{folder}/{filename}: .npy root is {type(raw_data_npy).__name__}, "
+                "not a dict"
             )
             continue
 
@@ -205,14 +209,21 @@ def sync_days(
         try:
             np.save(str(out_path), raw_data_npy)
         except Exception as err:
-            logger.warning(
-                "Skipping day sync write for %s (%s): %s: %s",
-                out_path,
-                dataset,
-                type(err).__name__,
-                err,
+            failures.append(
+                f"{out_path}: cannot write day {old_day} -> {day} "
+                f"({type(err).__name__}: {err})"
             )
             continue
         logger.info(
             "Updated day for %s in %s: %s -> %s", dataset, folder, old_day, day
+        )
+
+    if failures:
+        preview = "; ".join(failures[:10])
+        if len(failures) > 10:
+            preview += f"; ... and {len(failures) - 10} more"
+        raise SyncDaysError(
+            f"sync_days failed for {len(failures)} file(s); refusing to continue "
+            f"with possibly wrong day values. Fix permissions or files, then retry. "
+            f"{preview}"
         )

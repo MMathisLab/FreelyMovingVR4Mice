@@ -12,7 +12,8 @@ Parent mice sync (mysql.mk) and orphan cleanup are separate modes — see docs.
 from __future__ import annotations
 
 import os
-from typing import Any, Iterable, List, Optional, Set, Tuple
+from datetime import date, datetime
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import datajoint as dj
 from base_schemas.schemas import exp, mice
@@ -21,6 +22,94 @@ from vr4mice.actions.populate_rig import populate_base_from_gui_folder
 from vr4mice.utils.logger import Logger
 
 logger = Logger.get_logger()
+
+
+class SessionDayMismatchError(RuntimeError):
+    """Raised when exp.Session.day does not match the doe timeline."""
+
+
+def _as_date(value: Union[date, datetime, str]) -> date:
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    return datetime.strptime(str(value)[:10], "%Y-%m-%d").date()
+
+
+def find_session_day_mismatches(
+    sessions: Optional[Iterable[Dict[str, Any]]] = None,
+) -> List[Dict[str, Any]]:
+    """
+    Sessions where stored day != (doe − first doe for that mouse) + 1.
+
+    Same rule as sync_days / Mouse.get_starting_date. Pass ``sessions`` to
+    unit-test without DataJoint; otherwise fetches all exp.Session rows.
+    """
+    if sessions is None:
+        sessions = exp.Session().fetch(
+            "mouse_name", "day", "attempt", "doe", as_dict=True
+        )
+
+    by_mouse: Dict[str, List[Dict[str, Any]]] = {}
+    for row in sessions:
+        by_mouse.setdefault(row["mouse_name"], []).append(row)
+
+    mismatches: List[Dict[str, Any]] = []
+    for mouse_name, rows in sorted(by_mouse.items()):
+        start_doe = min(_as_date(r["doe"]) for r in rows)
+        for row in rows:
+            doe = _as_date(row["doe"])
+            correct_day = (doe - start_doe).days + 1
+            stored_day = int(row["day"])
+            if stored_day != correct_day:
+                mismatches.append(
+                    {
+                        "mouse_name": mouse_name,
+                        "stored_day": stored_day,
+                        "attempt": int(row["attempt"]),
+                        "doe": doe.isoformat(),
+                        "correct_day": correct_day,
+                    }
+                )
+    return mismatches
+
+
+def check_session_days(*, raise_on_mismatch: bool = True) -> List[Dict[str, Any]]:
+    """
+    Verify every exp.Session.day matches the mouse's doe timeline.
+
+    Logs mismatches and optionally raises SessionDayMismatchError (exit 1 via
+    run_base). Empty result means all sessions are consistent with that rule.
+    """
+    mismatches = find_session_day_mismatches()
+    if not mismatches:
+        logger.info(
+            "check_session_days: all %d exp.Session row(s) match doe timeline.",
+            len(exp.Session()),
+        )
+        return []
+
+    logger.error(
+        "check_session_days: %d session(s) have day != (doe - first doe) + 1:",
+        len(mismatches),
+    )
+    for row in mismatches:
+        logger.error(
+            "  %s day=%s attempt=%s doe=%s -> correct_day=%s",
+            row["mouse_name"],
+            row["stored_day"],
+            row["attempt"],
+            row["doe"],
+            row["correct_day"],
+        )
+    msg = (
+        f"{len(mismatches)} exp.Session row(s) have wrong day "
+        "(see log). Fix .npy days + re-ingest or migrate Session PK."
+    )
+    if raise_on_mismatch:
+        raise SessionDayMismatchError(msg)
+    logger.warning(msg)
+    return mismatches
 
 CLEANUP_ORPHANS_COMMAND = (
     "python run_base.py cleanup_orphans          # dry-run Dataset orphans\n"
@@ -44,6 +133,9 @@ Recommended order:
 
   3. Optional — remove local exp/mice with no vr4mice.Dataset:
        {cleanup_orphans}
+
+  4. Verify Session.day vs doe timeline:
+       python run_base.py check_session_days
 
 Never deletes on main. Orphan cleanup (--force) needs replication OFF.
 
@@ -259,15 +351,14 @@ def recover_base_from_gui(
     *,
     srcf: str = "/data",
 ) -> Tuple[int, int]:
-    """Sync days and populate base/exp from all unpopulated GUI .npy files."""
+    """Sync days and populate base/exp from all unpopulated GUI .npy files.
+
+    Aborts if sync_days cannot apply required .npy day updates — otherwise
+    populate would ingest wrong exp.Session.day values.
+    """
     from vr4mice.actions.sync_days import sync_days
 
-    try:
-        sync_days()
-    except Exception:
-        logger.exception(
-            "sync_days failed; continuing recover_base populate without day rewrite"
-        )
+    sync_days()
 
     total_ok, total_failed = 0, 0
     for folder in gui_paths:
