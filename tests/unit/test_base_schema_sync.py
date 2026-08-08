@@ -355,6 +355,17 @@ class TestSyncMiceFromMain:
         )
         assert alts_local[0] == full
 
+    def test_part_style_preserves_lookup_hash_prefix(self):
+        full = "`mice`.`#mouse_score_sheet_body_condition`"
+
+        class MouseScoreSheet_BodyCondition:
+            pass
+
+        assert (
+            mouse_sync._part_style_table_name(full, MouseScoreSheet_BodyCondition)
+            == "`mice`.`#mouse_score_sheet__body_condition`"
+        )
+
     def test_split_host_port(self):
         assert mouse_sync._split_host_port("db.example:3306") == ("db.example", 3306)
         assert mouse_sync._split_host_port("128.178.51.167") == ("128.178.51.167", 3306)

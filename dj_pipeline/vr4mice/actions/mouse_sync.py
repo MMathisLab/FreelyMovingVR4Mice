@@ -33,6 +33,15 @@ MOUSE_SYNC_TABLES = (
     mice.MouseScoreSheet_WaterRestriction,
 )
 
+# Small lookup tables required as FKs for Surgery / MouseScoreSheet upserts.
+MOUSE_LOOKUP_TABLES = (
+    mice.SurgeryType,
+    mice.MouseLicensingGeneva,
+    mice.MouseScoreSheet_BodyCondition,
+    mice.MouseScoreSheet_GeneralAssay,
+    mice.MouseScoreSheet_HousingAssesment,
+)
+
 
 def is_stub_mouse(row: dict) -> bool:
     """Return True for placeholder rows created during local ingest."""
@@ -359,10 +368,11 @@ def _camel_to_snake(name: str) -> str:
 
 def _part_style_table_name(full: str, table_cls) -> Optional[str]:
     """
-    Map ``ClassName_PartName`` → ```schema`.`class_name__part_name``.
+    Map ``ClassName_PartName`` → ```schema`.`[#]class_name__part_name``.
 
     Main uses DJ part-table ``__`` naming; local classes often expose a single
     ``_`` ``full_table_name`` (e.g. ``mouse_score_sheet_water_restriction``).
+    Preserves Lookup ``#`` / blob ``~`` tier prefixes.
     """
     if not full or "`.`" not in full:
         return None
@@ -372,8 +382,15 @@ def _part_style_table_name(full: str, table_cls) -> Optional[str]:
     left, _, right = cls_name.partition("_")
     if not left or not right:
         return None
-    schema_part, _, _ = full.partition("`.`")
-    return f"{schema_part}`.`{_camel_to_snake(left)}__{_camel_to_snake(right)}`"
+    schema_part, _, table_part = full.partition("`.`")
+    table = table_part.rstrip("`")
+    tier = ""
+    if table[:1] in ("#", "~"):
+        tier = table[0]
+    return (
+        f"{schema_part}`.`{tier}"
+        f"{_camel_to_snake(left)}__{_camel_to_snake(right)}`"
+    )
 
 
 def _table_name_alternates(
@@ -619,18 +636,49 @@ def _main_database():
             pass
 
 
-def _upsert_rows(table, rows: Iterable[dict]) -> int:
+def _upsert_rows(table, rows: Iterable[dict], *, log=None) -> int:
     """
     Insert or replace rows locally without cascading deletes.
 
     Uses ``replace=True`` (not delete-then-insert) so refreshing a Mouse stub
     cannot wipe dependent local ``exp.Session`` rows.
     """
+    log = log or logger
     count = 0
+    label = type(table).__name__
     for row in rows:
-        table.insert1(row, replace=True)
+        try:
+            table.insert1(row, replace=True)
+        except Exception:
+            log.exception(
+                "Local upsert failed for %s row keys=%s",
+                label,
+                {k: row.get(k) for k in list(row)[:8]},
+            )
+            raise
         count += 1
     return count
+
+
+def _assert_on_local(local_ep: Tuple[str, int], log=None) -> None:
+    """Refuse upserts if DataJoint is still pointed at main."""
+    log = log or logger
+    active = _active_endpoint()
+    if active != local_ep:
+        raise RuntimeError(
+            "Refusing local upsert: active endpoint %s:%s, expected local %s:%s"
+            % (active[0], active[1], local_ep[0], local_ep[1])
+        )
+    schema_port = _mysql_port(
+        getattr(getattr(mice, "schema", None), "connection", None)
+    )
+    if schema_port is not None and schema_port != local_ep[1]:
+        log.warning(
+            "mice.schema @@port=%s differs from local %s — rebinding before upsert.",
+            schema_port,
+            local_ep[1],
+        )
+        _rebind_schema_connection(dj.conn())
 
 
 def sync_mice_from_main(
@@ -689,8 +737,14 @@ def sync_mice_from_main(
     fetched: List[tuple] = []
     strain_names: Set[str] = set()
     strain_rows: List[dict] = []
+    lookup_rows: List[tuple] = []  # (table_cls, rows)
     found_on_main: Set[str] = set()
     name_on_main: dict = {}  # local/target name -> canonical mouse_name on main
+    try:
+        _local_port = dj.config["database.port"]
+    except Exception:
+        _local_port = None
+    local_ep = _endpoint_from_config(dj.config["database.host"], _local_port)
     try:
         # Yielded conn is the main endpoint; never use mice.Mouse() here — that
         # table object often still points at the local schema Connection.
@@ -797,6 +851,22 @@ def sync_mice_from_main(
                         resolved_names=resolved_names,
                     )
                 )
+            # FK parents for Surgery / MouseScoreSheet (main may use # / __ names).
+            need_lookups = any(
+                table is mice.Surgery or table is mice.MouseScoreSheet
+                for table, _ in fetched
+            )
+            if need_lookups:
+                for lookup in MOUSE_LOOKUP_TABLES:
+                    rows = _fetch_on_main(
+                        main_conn,
+                        lookup,
+                        log=log,
+                        missing_tables=missing_tables,
+                        resolved_names=resolved_names,
+                    )
+                    if rows:
+                        lookup_rows.append((lookup, rows))
     except Exception:
         traceback.print_exc()
         log.exception(
@@ -813,11 +883,23 @@ def sync_mice_from_main(
             ", ".join(missing_on_main),
         )
 
+    _assert_on_local(local_ep, log=log)
     inserted = 0
-    if strain_rows:
-        inserted += _upsert_rows(mice.Strain(), strain_rows)
-    for table, rows in fetched:
-        inserted += _upsert_rows(table(), rows)
+    try:
+        if strain_rows:
+            inserted += _upsert_rows(mice.Strain(), strain_rows, log=log)
+        for table, rows in lookup_rows:
+            inserted += _upsert_rows(table(), rows, log=log)
+        for table, rows in fetched:
+            inserted += _upsert_rows(table(), rows, log=log)
+    except Exception:
+        traceback.print_exc()
+        log.exception(
+            "Failed upserting mice onto local DB (%s:%s).",
+            local_ep[0],
+            local_ep[1],
+        )
+        raise
 
     log.info("Synced mouse metadata onto local DB (%d rows upserted).", inserted)
     if not explicit:
