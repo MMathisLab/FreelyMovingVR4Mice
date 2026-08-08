@@ -23,6 +23,8 @@ Modes (see docs/software/base_schema_sync.md):
 
 import argparse
 import os
+import sys
+import traceback
 
 from base_actions.utils.login import LoginUser
 from base_actions.utils.schema_config import connect_to_database
@@ -72,23 +74,27 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     logger = configure_runtime(verbose=args.verbose, debug=args.verbose)
-    _connect_from_env()
+    try:
+        _connect_from_env()
 
-    if args.mode == "recover_base":
-        from vr4mice.actions.recover_base import run_recovery
+        if args.mode == "recover_base":
+            from vr4mice.actions.recover_base import run_recovery
 
-        run_recovery()
+            run_recovery()
 
-    elif args.mode == "cleanup_orphans":
-        from vr4mice.actions.recover_base import (
-            check_replication_off,
-            cleanup_orphan_exp_mice,
-        )
+        elif args.mode == "cleanup_orphans":
+            from vr4mice.actions.recover_base import (
+                check_replication_off,
+                cleanup_orphan_exp_mice,
+            )
 
-        check_replication_off(log=logger)
-        cleanup_orphan_exp_mice(dry_run=not args.force)
+            check_replication_off(log=logger)
+            cleanup_orphan_exp_mice(dry_run=not args.force)
 
-    elif args.mode == "cleanup_mice":
-        from vr4mice.actions.mouse_sync import cleanup_mice_without_sessions
+        elif args.mode == "cleanup_mice":
+            from vr4mice.actions.mouse_sync import cleanup_mice_without_sessions
 
-        cleanup_mice_without_sessions(dry_run=not args.force, stubs_only=True)
+            cleanup_mice_without_sessions(dry_run=not args.force, stubs_only=True)
+    except Exception:
+        traceback.print_exc()
+        sys.exit(1)

@@ -141,6 +141,9 @@ def sync_days(
         seen_datasets.add(dataset)
 
         tmp = dataset.split("_")
+        if len(tmp) < 3:
+            logger.warning("Skipping unparseable dataset stem %r", dataset)
+            continue
         date = tmp[1]
         name = tmp[0]
         attempt = tmp[2]
@@ -166,12 +169,50 @@ def sync_days(
         if dataset not in ret_arr:
             continue
 
-        day = ret_arr[dataset]
-        raw_data_npy, _ = get_new_file(filename, folder)
-        if raw_data_npy["day"] != day:
-            old_day = raw_data_npy["day"]
-            raw_data_npy["day"] = day
-            np.save(str(Path(folder).joinpath(filename)), raw_data_npy)
-            logger.info(
-                "Updated day for %s in %s: %s -> %s", dataset, folder, old_day, day
+        day = int(ret_arr[dataset])
+        try:
+            raw_data_npy, _ = get_new_file(filename, folder)
+        except Exception as err:
+            logger.warning(
+                "Skipping day sync for %s in %s: cannot load (%s: %s)",
+                dataset,
+                folder,
+                type(err).__name__,
+                err,
             )
+            continue
+
+        if not isinstance(raw_data_npy, dict):
+            logger.warning(
+                "Skipping day sync for %s in %s: .npy root is %s, not a dict",
+                dataset,
+                folder,
+                type(raw_data_npy).__name__,
+            )
+            continue
+
+        old_day = raw_data_npy.get("day")
+        try:
+            old_day_int = int(old_day) if old_day is not None else None
+        except (TypeError, ValueError):
+            old_day_int = None
+
+        if old_day_int == day:
+            continue
+
+        raw_data_npy["day"] = day
+        out_path = Path(folder).joinpath(filename)
+        try:
+            np.save(str(out_path), raw_data_npy)
+        except Exception as err:
+            logger.warning(
+                "Skipping day sync write for %s (%s): %s: %s",
+                out_path,
+                dataset,
+                type(err).__name__,
+                err,
+            )
+            continue
+        logger.info(
+            "Updated day for %s in %s: %s -> %s", dataset, folder, old_day, day
+        )

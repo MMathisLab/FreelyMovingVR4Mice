@@ -262,7 +262,12 @@ def recover_base_from_gui(
     """Sync days and populate base/exp from all unpopulated GUI .npy files."""
     from vr4mice.actions.sync_days import sync_days
 
-    sync_days()
+    try:
+        sync_days()
+    except Exception:
+        logger.exception(
+            "sync_days failed; continuing recover_base populate without day rewrite"
+        )
 
     total_ok, total_failed = 0, 0
     for folder in gui_paths:
