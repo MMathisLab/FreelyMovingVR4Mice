@@ -202,35 +202,44 @@ def warn_incomplete_mice(log=None) -> List[str]:
 
 def ensure_water_restriction_on_fk_table(row: dict, *, log=None) -> bool:
     """
-    Mirror a water-restriction row into ``mouse_score_sheet__water_restriction``.
+    Ensure ``mouse_score_sheet__water_restriction`` has (mouse_name, doc).
 
     Some local DBs have both ``mouse_score_sheet_water_restriction`` (``_``) and
-    ``mouse_score_sheet__water_restriction`` (``__``). DataJoint may insert into
-    ``_`` while ``exp.session_score_sheet`` FKs to ``__``, causing populate to
-    fail after a successful WaterRestriction insert.
+    ``mouse_score_sheet__water_restriction`` (``__``). DataJoint / mysql sync
+    often fill ``_`` while ``exp.session_score_sheet`` FKs to ``__``.
     """
     log = log or logger
     conn = dj.conn()
     fk_table = "mouse_score_sheet__water_restriction"
+    src_table = "mouse_score_sheet_water_restriction"
     rows = conn.query(
         "SELECT table_name FROM information_schema.tables "
         "WHERE table_schema = 'mice' AND table_name LIKE '%water_restriction%'"
     ).fetchall()
-    tables = {r[0] for r in rows}
+    tables = {r[0] if not isinstance(r, dict) else next(iter(r.values())) for r in rows}
     if fk_table not in tables:
         return False
 
     key = {"mouse_name": row["mouse_name"], "doc": row["doc"]}
-    payload = {
-        "mouse_name": row["mouse_name"],
-        "doc": row["doc"],
-        "weight_percentage": row["weight_percentage"],
-    }
     ft = dj.FreeTable(conn, f"`mice`.`{fk_table}`")
     if ft & key:
         return False
+
+    weight = row.get("weight_percentage")
+    if weight in (None, "") and src_table in tables:
+        src = dj.FreeTable(conn, f"`mice`.`{src_table}`")
+        if src & key:
+            weight = (src & key).fetch1("weight_percentage")
+    if weight in (None, ""):
+        weight = "N/A"
+
+    payload = {
+        "mouse_name": key["mouse_name"],
+        "doc": key["doc"],
+        "weight_percentage": weight,
+    }
     ft.insert1(payload, skip_duplicates=True)
-    log.debug(
+    log.info(
         "Mirrored water restriction for %s doc=%s into %s (SessionScoreSheet FK).",
         key["mouse_name"],
         key["doc"],

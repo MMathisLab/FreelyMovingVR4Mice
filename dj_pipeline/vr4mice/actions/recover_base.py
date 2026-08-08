@@ -645,5 +645,15 @@ def run_recovery(
         "GUI base populate summary: %d complete, %d failed/incomplete.", ok, failed
     )
 
+    # keys2tables fills Manual mice/exp only; Base is Computed and needs populate().
+    from vr4mice.schema.base import Base
+
+    before = len(Base())
+    Base.populate(display_progress=True)
+    after = len(Base())
+    logger.info(
+        "base.Base.populate: %d → %d row(s) (+%d).", before, after, after - before
+    )
+
     warn_incomplete_mice(log=logger)
     logger.info(POST_RECOVERY_NOTE)

@@ -49,7 +49,7 @@ python run.py fetch   # refresh GUI menu if needed
 | Mode | Purpose |
 |------|---------|
 | `make -f mysql.mk sync-mice-from-main` | Parent → local mice registry via **mysqldump** |
-| `recover_base` | Populate unpopulated GUI `.npy` into local `exp`/`mice` |
+| `recover_base` | Populate unpopulated GUI `.npy` into local `exp`/`mice`, then `base.Base.populate()` |
 | `cleanup_orphans` | List/delete local `exp`/`mice` with no `vr4mice.Dataset` |
 | `cleanup_mice` | Remove **stub** mice with no local Session |
 | `check_session_days` | Exit 1 if `exp.Session.day` ≠ doe timeline |

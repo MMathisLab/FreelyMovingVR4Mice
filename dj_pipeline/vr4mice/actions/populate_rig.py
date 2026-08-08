@@ -339,6 +339,25 @@ def populate_dataset_tables(
                 dstf=dstf,
                 move=False,
             )
+            if table_name in (
+                "MouseScoreSheet_WaterRestriction",
+                "SessionScoreSheet",
+            ):
+                from vr4mice.actions.mouse_sync import (
+                    ensure_water_restriction_on_fk_table,
+                )
+
+                # SessionScoreSheet FKs the __water_restriction table; mirror
+                # even when the DJ `_` row already exists (common after mysql sync).
+                ensure_water_restriction_on_fk_table(
+                    {
+                        "mouse_name": row["mouse_name"],
+                        "doc": row["doc"],
+                        "weight_percentage": row.get("weight_percentage")
+                        or working_data.get("weight_percentage"),
+                    },
+                    log=logger,
+                )
             if row_exists(schema, table_name, row):
                 continue
 
@@ -346,12 +365,6 @@ def populate_dataset_tables(
             schema["dj_tables"][table_name].insert1(
                 row, skip_duplicates=SKIP_DUPLICATES
             )
-            if table_name == "MouseScoreSheet_WaterRestriction":
-                from vr4mice.actions.mouse_sync import (
-                    ensure_water_restriction_on_fk_table,
-                )
-
-                ensure_water_restriction_on_fk_table(row, log=logger)
             logger.info("[POPULATED OK] %s", table_name)
 
     complete = is_dataset_fully_populated(
@@ -423,11 +436,20 @@ def populate(
 
     logger.info(f"Populating: {table_name}")
 
-    schema["dj_tables"][table_name].insert1(data, skip_duplicates=SKIP_DUPLICATES)
-    if table_name == "MouseScoreSheet_WaterRestriction":
+    if table_name in ("MouseScoreSheet_WaterRestriction", "SessionScoreSheet"):
         from vr4mice.actions.mouse_sync import ensure_water_restriction_on_fk_table
 
-        ensure_water_restriction_on_fk_table(data, log=logger)
+        ensure_water_restriction_on_fk_table(
+            {
+                "mouse_name": data["mouse_name"],
+                "doc": data["doc"],
+                "weight_percentage": data.get("weight_percentage")
+                or raw_data.get("weight_percentage"),
+            },
+            log=logger,
+        )
+
+    schema["dj_tables"][table_name].insert1(data, skip_duplicates=SKIP_DUPLICATES)
     logger.info(f"[POPULATED OK] {table_name}")
 
 
