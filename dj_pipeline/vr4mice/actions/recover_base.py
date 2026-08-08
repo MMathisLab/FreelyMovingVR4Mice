@@ -258,6 +258,8 @@ def fix_session_days(*, dry_run: bool = True) -> Tuple[int, int, int]:
     if not dry_run:
         check_replication_off(log=logger)
 
+    log_mutation_target(action="fix_session_days", dry_run=dry_run)
+
     plans = plan_session_day_fixes()
     if not plans:
         logger.info("fix_session_days: all Session.day values already match doe.")
@@ -393,6 +395,43 @@ def _sql_row_get(row: Any, key: str, *, index: Optional[int] = None, default=Non
     return default
 
 
+def describe_connected_database() -> str:
+    """Human-readable target for the current DataJoint connection (DJ_HOST)."""
+    env_host = os.environ.get("DJ_HOST", "(DJ_HOST unset)")
+    env_user = os.environ.get("DJ_USER", "(DJ_USER unset)")
+    main_host = os.environ.get("DJ_MAIN_HOST", "")
+    try:
+        row = dj.conn().query(
+            "SELECT @@hostname AS h, @@port AS p, @@server_uuid AS u, "
+            "DATABASE() AS d"
+        ).fetchone()
+        if isinstance(row, dict):
+            hostname, port, uuid, db = (
+                row.get("h"),
+                row.get("p"),
+                row.get("u"),
+                row.get("d"),
+            )
+        else:
+            hostname, port, uuid, db = row[0], row[1], row[2], row[3]
+        uuid_s = str(uuid)[:8] + "..." if uuid else "?"
+        live = f"{hostname}:{port} uuid={uuid_s} db={db}"
+    except Exception as err:
+        live = f"(could not read @@port: {type(err).__name__})"
+    note = " (DJ_MAIN_HOST is set but unused by run_base)" if main_host else ""
+    return f"DJ_HOST={env_host} user={env_user} → live MySQL {live}{note}"
+
+
+def log_mutation_target(*, action: str, dry_run: bool = False, log=None) -> None:
+    """Log exactly which database will be read/mutated (never DJ_MAIN_HOST)."""
+    log = log or logger
+    target = describe_connected_database()
+    if dry_run:
+        log.warning("DRY-RUN %s on %s — no deletes/writes applied.", action, target)
+    else:
+        log.warning("APPLY %s on %s — mutations affect this DB only (not DJ_MAIN_HOST).", action, target)
+
+
 def check_replication_off(log=None) -> None:
     """
     Abort recovery when this MySQL instance is actively replicating.
@@ -522,6 +561,7 @@ def cleanup_orphan_exp_mice(*, dry_run: bool = True) -> Tuple[int, int]:
     Never touches the parent DB. Separate from ``recover_base`` — run via
     ``python run_base.py cleanup_orphans``.
     """
+    log_mutation_target(action="cleanup_orphans", dry_run=dry_run)
     dataset_keys = get_vr4mice_session_keys()
     dataset_mice = get_vr4mice_mouse_names()
 

@@ -24,6 +24,8 @@ Modes (see docs/software/base_schema_sync.md):
     cleanup_mice       - remove stub Mouse rows without local sessions
     check_session_days - exit 1 if any exp.Session.day disagrees with doe timeline
     fix_session_days   - rekey Session.day to doe timeline (dry-run; --force applies)
+
+Destructive modes log DJ_HOST + live MySQL host:port/uuid before any change.
 """
 
 import argparse
@@ -102,7 +104,11 @@ if __name__ == "__main__":
 
         elif args.mode == "cleanup_mice":
             from vr4mice.actions.mouse_sync import cleanup_mice_without_sessions
+            from vr4mice.actions.recover_base import log_mutation_target
 
+            log_mutation_target(
+                action="cleanup_mice", dry_run=not args.force, log=logger
+            )
             cleanup_mice_without_sessions(dry_run=not args.force, stubs_only=True)
 
         elif args.mode == "check_session_days":
