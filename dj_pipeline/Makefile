@@ -20,7 +20,9 @@ TAG ?=
 export UID GID USER USER_NAME TAG COMPOSE_PROJECT
 
 BASE_INSTALL_CMD = mkdir -p /app/.local /app/.cache/pip && python -m pip install --user --force-reinstall --no-deps /base_schemas/ && python -m pip install --user --force-reinstall --no-deps /base_actions/
-CLIENT_EXEC = $(DOCKER_COMPOSE) exec --user "$(USER_NAME)" client bash -c
+# Prefer numeric id — username may be missing in container passwd if entrypoint
+# only mapped PUID:PGID (common after switching host user, e.g. master vs mariia).
+CLIENT_EXEC = $(DOCKER_COMPOSE) exec --user "$(UID):$(GID)" client bash -c
 
 cron_script_path := $(CURDIR)/cron_script.sh
 cron_script_aws_path := $(CURDIR)/cron_script_aws.sh
@@ -128,10 +130,10 @@ client_down: client_stop
 	@$(DOCKER_COMPOSE) rm client
 
 ipython: git_info
-	@$(DOCKER_COMPOSE) exec --user "$(USER_NAME)" client bash -lc 'set -a && [ -f .env ] && source .env; set +a && python -m IPython'
+	@$(DOCKER_COMPOSE) exec --user "$(UID):$(GID)" client bash -lc 'set -a && [ -f .env ] && source .env; set +a && python -m IPython'
 
 bash: git_info
-	@$(DOCKER_COMPOSE) exec --user "$(USER_NAME)" client bash -lc 'set -a && [ -f .env ] && source .env; set +a && exec bash'
+	@$(DOCKER_COMPOSE) exec --user "$(UID):$(GID)" client bash -lc 'set -a && [ -f .env ] && source .env; set +a && exec bash'
 
 mysql: git_info
 	@mysql --defaults-group-suffix=-vr4mice -A
@@ -140,7 +142,7 @@ aws:
 	@mysql --defaults-group-suffix=-aws_vr4mice -A
 
 notebook:
-	@$(DOCKER_COMPOSE) exec --user "$(USER_NAME)" client bash -c "jupyter notebook --ip 0.0.0.0 --port=8887"
+	@$(DOCKER_COMPOSE) exec --user "$(UID):$(GID)" client bash -c "jupyter notebook --ip 0.0.0.0 --port=8887"
 
 sync_build:
 	cp ~/.my.cnf_vr4mice ./.my.cnf_vr4mice
@@ -179,5 +181,5 @@ import-dumps:
 	done
 
 export-dumps:
-	@$(DOCKER_COMPOSE) exec --user "$(USER_NAME)" client \
+	@$(DOCKER_COMPOSE) exec --user "$(UID):$(GID)" client \
 	  bash -c "cd /app && bash export_restricted_dump.sh"
