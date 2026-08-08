@@ -226,6 +226,17 @@ def _require_dj_main_host() -> None:
         )
 
 
+def _dj_conn_reset(*, use_tls=None):
+    """Reset DJ connection; pass use_tls into conn() when supported (DJ 2.x)."""
+    try:
+        if use_tls is None:
+            return dj.conn(reset=True)
+        return dj.conn(reset=True, use_tls=use_tls)
+    except TypeError:
+        # Older dj.conn() without use_tls kwarg
+        return dj.conn(reset=True)
+
+
 @contextmanager
 def _main_database():
     """Temporarily point DataJoint at DJ_MAIN_HOST, then restore local config."""
@@ -243,10 +254,11 @@ def _main_database():
     dj.config["database.password"] = os.environ.get(
         "DJ_MAIN_PWD", saved["database.password"]
     )
-    # Skip TLS handshake (lab MySQL); assignment only — never `in dj.config`.
+    # Config alone is not enough on DJ 2.x — conn() takes use_tls explicitly.
+    # Lab MySQL rejects TLS; False skips handshake (no try-then-fallback needed).
     dj.config["database.use_tls"] = False
     try:
-        dj.conn(reset=True)
+        _dj_conn_reset(use_tls=False)
     except Exception:
         traceback.print_exc()
         raise
@@ -266,7 +278,7 @@ def _main_database():
         except Exception:
             pass
         try:
-            dj.conn(reset=True)
+            _dj_conn_reset()
         except Exception:
             pass
 
