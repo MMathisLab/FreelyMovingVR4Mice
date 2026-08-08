@@ -465,6 +465,13 @@ class TestUpsertRows:
         table.insert1.assert_called_once_with(row, replace=True)
         table.delete.assert_not_called()
 
+    def test_lookups_use_skip_duplicates(self):
+        table = MagicMock()
+        row = {"strain": "WT", "formal_name": "C57", "stock_number": "na"}
+        count = mouse_sync._upsert_rows(table, [row], replace=False)
+        assert count == 1
+        table.insert1.assert_called_once_with(row, skip_duplicates=True)
+
 
 class TestSyncExpToMain:
     def test_requires_dj_main_host(self, monkeypatch):

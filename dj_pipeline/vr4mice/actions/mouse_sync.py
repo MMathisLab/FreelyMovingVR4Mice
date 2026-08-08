@@ -636,24 +636,32 @@ def _main_database():
             pass
 
 
-def _upsert_rows(table, rows: Iterable[dict], *, log=None) -> int:
+def _upsert_rows(
+    table, rows: Iterable[dict], *, log=None, replace: bool = True
+) -> int:
     """
-    Insert or replace rows locally without cascading deletes.
+    Insert rows locally.
 
-    Uses ``replace=True`` (not delete-then-insert) so refreshing a Mouse stub
-    cannot wipe dependent local ``exp.Session`` rows.
+    ``replace=True`` refreshes Mouse / dependent manual rows without a
+    cascading delete of Sessions. Lookups (Strain, SurgeryType, …) must use
+    ``replace=False`` (``skip_duplicates``): ``replace`` deletes the parent
+    PK and fails when existing Mouse rows reference that strain.
     """
     log = log or logger
     count = 0
     label = type(table).__name__
     for row in rows:
         try:
-            table.insert1(row, replace=True)
+            if replace:
+                table.insert1(row, replace=True)
+            else:
+                table.insert1(row, skip_duplicates=True)
         except Exception:
             log.exception(
-                "Local upsert failed for %s row keys=%s",
+                "Local upsert failed for %s row keys=%s (replace=%s)",
                 label,
                 {k: row.get(k) for k in list(row)[:8]},
+                replace,
             )
             raise
         count += 1
@@ -669,6 +677,7 @@ def _assert_on_local(local_ep: Tuple[str, int], log=None) -> None:
             "Refusing local upsert: active endpoint %s:%s, expected local %s:%s"
             % (active[0], active[1], local_ep[0], local_ep[1])
         )
+    conn = dj.conn()
     schema_port = _mysql_port(
         getattr(getattr(mice, "schema", None), "connection", None)
     )
@@ -678,7 +687,15 @@ def _assert_on_local(local_ep: Tuple[str, int], log=None) -> None:
             schema_port,
             local_ep[1],
         )
-        _rebind_schema_connection(dj.conn())
+        _rebind_schema_connection(conn)
+        schema_port = _mysql_port(
+            getattr(getattr(mice, "schema", None), "connection", None)
+        )
+        if schema_port is not None and schema_port != local_ep[1]:
+            raise RuntimeError(
+                "mice.schema still on @@port=%s after rebind; expected local %s"
+                % (schema_port, local_ep[1])
+            )
 
 
 def sync_mice_from_main(
@@ -886,12 +903,15 @@ def sync_mice_from_main(
     _assert_on_local(local_ep, log=log)
     inserted = 0
     try:
+        # Lookups: never replace=True (FK from mouse → #strain blocks DELETE).
         if strain_rows:
-            inserted += _upsert_rows(mice.Strain(), strain_rows, log=log)
+            inserted += _upsert_rows(
+                mice.Strain(), strain_rows, log=log, replace=False
+            )
         for table, rows in lookup_rows:
-            inserted += _upsert_rows(table(), rows, log=log)
+            inserted += _upsert_rows(table(), rows, log=log, replace=False)
         for table, rows in fetched:
-            inserted += _upsert_rows(table(), rows, log=log)
+            inserted += _upsert_rows(table(), rows, log=log, replace=True)
     except Exception:
         traceback.print_exc()
         log.exception(
