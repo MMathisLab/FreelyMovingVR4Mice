@@ -66,11 +66,18 @@ fi
 echo "Local:  ${LOCAL_HOST}:${LOCAL_PORT}"
 echo "Main:   ${MAIN_HOST}:${MAIN_PORT}"
 
-local_port_live="$("${MYSQL_LOCAL[@]}" -N -e "SELECT @@port" 2>/dev/null | tr -d '\r')"
-main_port_live="$("${MYSQL_MAIN[@]}" -N -e "SELECT @@port" 2>/dev/null | tr -d '\r')"
-[[ -n "$local_port_live" && -n "$main_port_live" ]] || die "could not connect to local/main MySQL"
-if [[ "$LOCAL_HOST" == "$MAIN_HOST" && "$local_port_live" == "$main_port_live" ]]; then
-  die "local and main are the same MySQL endpoint (@@port=${local_port_live})"
+if [[ "$LOCAL_HOST" == "$MAIN_HOST" && "$LOCAL_PORT" == "$MAIN_PORT" ]]; then
+  die "DJ_HOST and DJ_MAIN_HOST are the same host:port (${LOCAL_HOST}:${LOCAL_PORT})"
+fi
+
+# @@port is the server's *internal* listen port (often 3306 in Docker), not the
+# host-mapped TCP port — so do not use it to tell local/main apart.
+local_uuid="$("${MYSQL_LOCAL[@]}" -N -e "SELECT @@server_uuid" 2>/dev/null | tr -d '\r')"
+main_uuid="$("${MYSQL_MAIN[@]}" -N -e "SELECT @@server_uuid" 2>/dev/null | tr -d '\r')"
+[[ -n "$local_uuid" && -n "$main_uuid" ]] || die "could not connect to local/main MySQL"
+echo "server_uuid: local=${local_uuid}  main=${main_uuid}"
+if [[ "$local_uuid" == "$main_uuid" ]]; then
+  die "local and main hit the same MySQL instance (@@server_uuid=${local_uuid})"
 fi
 
 mapfile -t MAIN_TABLES < <("${MYSQL_MAIN[@]}" -N -e "SHOW TABLES FROM mice" 2>/dev/null | tr -d '\r')
