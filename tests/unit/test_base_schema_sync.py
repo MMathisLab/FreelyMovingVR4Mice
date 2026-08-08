@@ -574,6 +574,9 @@ class TestPlanSessionDayFixes:
         assert plans[0]["conflict"] is None
 
     def test_flags_target_pk_conflict_different_doe(self):
+        # Occupier at day=13 / doe=Feb1 is itself wrong (correct_day=17), so
+        # both that row and the Jan28 session appear in the plan; the Jan28
+        # rekey to day 13 must be flagged as a different-doe PK conflict.
         sessions = [
             {
                 "mouse_name": "Flamingo",
@@ -595,9 +598,15 @@ class TestPlanSessionDayFixes:
             },
         ]
         plans = recover_base.plan_session_day_fixes(sessions)
-        assert len(plans) == 1
-        assert plans[0]["conflict"] is not None
-        assert "different doe" in plans[0]["conflict"]
+        assert len(plans) == 2
+        blocked = [
+            p
+            for p in plans
+            if p["stored_day"] == 1 and p["attempt"] == 2 and p["doe"] == "2026-01-28"
+        ]
+        assert len(blocked) == 1
+        assert blocked[0]["conflict"] is not None
+        assert "different doe" in blocked[0]["conflict"]
 
 
 # ==============================================================================
