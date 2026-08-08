@@ -252,6 +252,49 @@ class TestCleanupMiceWithoutSessions:
         restricted.delete.assert_called_once()
 
 
+class TestEnsureWaterRestrictionOnFkTable:
+    def test_mirrors_into_dunder_table_when_missing(self):
+        conn = MagicMock()
+        conn.query.return_value.fetchall.return_value = [
+            ("mouse_score_sheet_water_restriction",),
+            ("mouse_score_sheet__water_restriction",),
+        ]
+        ft = MagicMock()
+        ft.__and__ = MagicMock(return_value=False)
+        row = {
+            "mouse_name": "Whale",
+            "doc": datetime.date(2026, 7, 13),
+            "weight_percentage": "95",
+        }
+        with patch.object(mouse_sync.dj, "conn", return_value=conn), patch.object(
+            mouse_sync.dj, "FreeTable", return_value=ft
+        ) as mock_ft:
+            assert mouse_sync.ensure_water_restriction_on_fk_table(row) is True
+        mock_ft.assert_called_once()
+        assert "mouse_score_sheet__water_restriction" in mock_ft.call_args[0][1]
+        ft.insert1.assert_called_once()
+
+    def test_noop_when_dunder_table_absent(self):
+        conn = MagicMock()
+        conn.query.return_value.fetchall.return_value = [
+            ("mouse_score_sheet_water_restriction",),
+        ]
+        with patch.object(mouse_sync.dj, "conn", return_value=conn), patch.object(
+            mouse_sync.dj, "FreeTable"
+        ) as mock_ft:
+            assert (
+                mouse_sync.ensure_water_restriction_on_fk_table(
+                    {
+                        "mouse_name": "Whale",
+                        "doc": datetime.date(2026, 7, 13),
+                        "weight_percentage": "95",
+                    }
+                )
+                is False
+            )
+        mock_ft.assert_not_called()
+
+
 # ==============================================================================
 # recover_base: replication gate + orphan cleanup
 # ==============================================================================

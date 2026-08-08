@@ -209,6 +209,16 @@ done
 echo "Loading into local mice ..."
 "${MYSQL_LOCAL[@]}" mice <"$COMBINED"
 
+# SessionScoreSheet FKs to mouse_score_sheet__water_restriction. Local DJ may
+# also write mouse_score_sheet_water_restriction — keep __ complete.
+if has_local "mouse_score_sheet__water_restriction" \
+  && has_local "mouse_score_sheet_water_restriction"; then
+  echo "Merging water_restriction _ → __ (SessionScoreSheet FK target) ..."
+  "${MYSQL_LOCAL[@]}" -e \
+    "INSERT IGNORE INTO mice.mouse_score_sheet__water_restriction
+     SELECT * FROM mice.mouse_score_sheet_water_restriction;"
+fi
+
 echo "Done."
 if [[ -n "$WHERE" ]]; then
   "${MYSQL_LOCAL[@]}" -e \

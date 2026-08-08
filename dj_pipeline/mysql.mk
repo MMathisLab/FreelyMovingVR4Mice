@@ -68,7 +68,7 @@ endif
         replication-status replication-status-legacy replication-summary \
         replication-variables replica-hosts server-id log-bin read-only \
         session-mice stub-mice mice-without-sessions databases \
-        sync-mice-from-main
+        sync-mice-from-main merge-water-restriction
 
 help: ## List MySQL diagnostic targets
 	@awk 'BEGIN {FS = ":.*##"; printf "Usage: make -f mysql.mk <target>\n\nTargets:\n"} \
@@ -184,3 +184,11 @@ check-main-creds: check-creds
 # Optional: MOUSE=Flamingo,Whale  (comma-separated). Default = full registry tables.
 sync-mice-from-main: check-main-creds ## Dump mice tables from DJ_MAIN_* onto local DJ_HOST (bash mysql)
 	@MOUSE="$(MOUSE)" bash "$(CURDIR)/scripts/sync_mice_mysql.sh"
+
+# Heal SessionScoreSheet FK when both _ and __ water_restriction tables exist.
+merge-water-restriction: check-creds ## INSERT IGNORE _ → __ water_restriction rows
+	@$(MYSQL) -e "INSERT IGNORE INTO mice.mouse_score_sheet__water_restriction \
+		SELECT * FROM mice.mouse_score_sheet_water_restriction; \
+		SELECT \
+		  (SELECT COUNT(*) FROM mice.mouse_score_sheet_water_restriction) AS underscore, \
+		  (SELECT COUNT(*) FROM mice.mouse_score_sheet__water_restriction) AS dunder;"

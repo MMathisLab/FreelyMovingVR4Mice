@@ -333,6 +333,12 @@ def populate_dataset_tables(
             schema["dj_tables"][table_name].insert1(
                 row, skip_duplicates=SKIP_DUPLICATES
             )
+            if table_name == "MouseScoreSheet_WaterRestriction":
+                from vr4mice.actions.mouse_sync import (
+                    ensure_water_restriction_on_fk_table,
+                )
+
+                ensure_water_restriction_on_fk_table(row, log=logger)
             logger.info("[POPULATED OK] %s", table_name)
 
     complete = is_dataset_fully_populated(
@@ -405,6 +411,10 @@ def populate(
     logger.info(f"Populating: {table_name}")
 
     schema["dj_tables"][table_name].insert1(data, skip_duplicates=SKIP_DUPLICATES)
+    if table_name == "MouseScoreSheet_WaterRestriction":
+        from vr4mice.actions.mouse_sync import ensure_water_restriction_on_fk_table
+
+        ensure_water_restriction_on_fk_table(data, log=logger)
     logger.info(f"[POPULATED OK] {table_name}")
 
 
