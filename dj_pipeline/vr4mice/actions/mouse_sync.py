@@ -504,16 +504,58 @@ def sync_mice_from_main(
     strain_names: Set[str] = set()
     strain_rows: List[dict] = []
     found_on_main: Set[str] = set()
+    name_on_main: dict = {}  # local/target name -> canonical mouse_name on main
     try:
         with _main_database():
-            main_mouse_count = len(mice.Mouse())
-            logger.info("Main mice.Mouse row count: %d", main_mouse_count)
+            main_names = list(mice.Mouse().fetch("mouse_name"))
+            main_exact = {n for n in main_names if n}
+            main_by_lower = {}
+            for n in main_exact:
+                main_by_lower.setdefault(str(n).lower(), n)
+            log.info(
+                "Main mice.Mouse row count: %d (sample: %s)",
+                len(main_exact),
+                ", ".join(sorted(main_exact)[:8]),
+            )
+
             for name in targets:
-                restriction = {"mouse_name": name}
+                canonical = name if name in main_exact else main_by_lower.get(name.lower())
+                if canonical is None:
+                    # raw SQL probe for near matches (proves which DB + spelling)
+                    try:
+                        conn = dj.conn()
+                        like = conn.query(
+                            "SELECT mouse_name FROM mice.mouse "
+                            "WHERE mouse_name = %s OR mouse_name LIKE %s LIMIT 5",
+                            (name, "%" + name + "%"),
+                        ).fetchall()
+                        log.warning(
+                            "No Mouse row for %r on main; SQL near-matches: %s",
+                            name,
+                            like,
+                        )
+                    except Exception as err:
+                        log.warning(
+                            "No Mouse row for %r on main (SQL probe failed: %s)",
+                            name,
+                            err,
+                        )
+                    continue
+
+                if canonical != name:
+                    log.info("Main name for %r is %r (case/spelling map)", name, canonical)
+                name_on_main[name] = canonical
+                restriction = {"mouse_name": canonical}
                 for table in MOUSE_SYNC_TABLES:
                     rows = list((table() & restriction).fetch(as_dict=True))
                     if not rows:
                         continue
+                    # Keep local/GUI spelling when main only differs by case.
+                    if canonical != name:
+                        rows = [
+                            {**row, "mouse_name": name} if "mouse_name" in row else row
+                            for row in rows
+                        ]
                     fetched.append((table, rows))
                     if table is mice.Mouse:
                         found_on_main.add(name)
