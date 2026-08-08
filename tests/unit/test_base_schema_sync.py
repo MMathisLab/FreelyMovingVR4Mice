@@ -321,10 +321,15 @@ class TestSyncMiceFromMain:
         assert False in upsert_phases  # upsert after leaving main connection
         assert any("known local mice" in str(c) for c in log.info.call_args_list)
 
-    def test_main_database_switches_host_and_restores(self, monkeypatch):
+    def test_split_host_port(self):
+        assert mouse_sync._split_host_port("db.example:3306") == ("db.example", 3306)
+        assert mouse_sync._split_host_port("128.178.51.167") == ("128.178.51.167", 3306)
+
+    def test_main_database_switches_host_port_and_restores(self, monkeypatch):
         monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
         cfg = {
-            "database.host": "local",
+            "database.host": "127.0.0.1",
+            "database.port": 3309,
             "database.user": "u",
             "database.password": "p",
         }
@@ -340,8 +345,10 @@ class TestSyncMiceFromMain:
             mock_ssl.return_value.__enter__ = MagicMock()
             mock_ssl.return_value.__exit__ = MagicMock(return_value=False)
             with mouse_sync._main_database():
-                assert cfg["database.host"] == "main.example:3306"
-            assert cfg["database.host"] == "local"
+                assert cfg["database.host"] == "main.example"
+                assert cfg["database.port"] == 3306
+            assert cfg["database.host"] == "127.0.0.1"
+            assert cfg["database.port"] == 3309
         assert conn_calls[0]["reset"] is True
         mock_ssl.assert_called()
 

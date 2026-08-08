@@ -259,20 +259,50 @@ def _pymysql_disable_ssl():
         pymysql.connect = original
 
 
+def _split_host_port(host_port: str, default_port: int = 3306) -> Tuple[str, int]:
+    """Parse ``host`` or ``host:port`` (DataJoint-style)."""
+    raw = (host_port or "").strip()
+    if not raw:
+        raise ValueError("Empty host")
+    # IPv6 like [::1]:3306 — keep simple host:port for lab IPv4/hostname.
+    if raw.count(":") == 1:
+        host, _, port_s = raw.partition(":")
+        return host, int(port_s) if port_s else default_port
+    return raw, default_port
+
+
 @contextmanager
 def _main_database():
     """Temporarily point DataJoint at DJ_MAIN_HOST, then restore local config."""
     # Never use `key in dj.config` — DJ Config.__contains__ breaks (int keys).
-    keys = ("database.host", "database.user", "database.password")
-    saved = {key: dj.config[key] for key in keys}
-    dj.config["database.host"] = os.environ["DJ_MAIN_HOST"]
-    dj.config["database.user"] = os.environ.get("DJ_MAIN_USER", saved["database.user"])
+    # Must switch host AND port: local is often :3309 while main is :3306 on the
+    # same IP. Leaving port at 3309 made sync query the local DB (empty / stubs).
+    keys = ("database.host", "database.user", "database.password", "database.port")
+    saved = {}
+    for key in keys:
+        try:
+            saved[key] = dj.config[key]
+        except Exception:
+            pass
+
+    main_host, main_port = _split_host_port(os.environ["DJ_MAIN_HOST"])
+    dj.config["database.host"] = main_host
+    dj.config["database.port"] = main_port
+    dj.config["database.user"] = os.environ.get(
+        "DJ_MAIN_USER", saved.get("database.user", dj.config["database.user"])
+    )
     dj.config["database.password"] = os.environ.get(
-        "DJ_MAIN_PWD", saved["database.password"]
+        "DJ_MAIN_PWD", saved.get("database.password", dj.config["database.password"])
     )
     try:
         with _pymysql_disable_ssl():
             dj.conn(reset=True)
+        logger.info(
+            "Main DB connection: %s:%s (user=%s)",
+            main_host,
+            main_port,
+            dj.config["database.user"],
+        )
     except Exception:
         traceback.print_exc()
         raise
@@ -360,6 +390,8 @@ def sync_mice_from_main(
     found_on_main: Set[str] = set()
     try:
         with _main_database():
+            main_mouse_count = len(mice.Mouse())
+            logger.info("Main mice.Mouse row count: %d", main_mouse_count)
             for name in targets:
                 restriction = {"mouse_name": name}
                 for table in MOUSE_SYNC_TABLES:

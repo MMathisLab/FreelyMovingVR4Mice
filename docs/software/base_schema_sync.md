@@ -104,15 +104,15 @@ DJ_PWD=your-password
 GUI=True
 
 # Parent / main lab DB (second DataJoint connection)
-DJ_MAIN_HOST=main-db.example.com:3306
+DJ_MAIN_HOST=main-db.example.com:3306   # include :port (main is often :3306, local :3309)
 DJ_MAIN_USER=...          # optional; falls back to DJ_USER
 DJ_MAIN_PWD=...           # optional; falls back to DJ_PWD
 ```
 
 | Variable | Meaning |
 |----------|---------|
-| `DJ_HOST` / `DJ_USER` / `DJ_PWD` | Local database |
-| `DJ_MAIN_HOST` (+ optional user/pwd) | Parent: **pull** needed mice (`sync_mice`); optional **push** sessions (`sync_exp`) |
+| `DJ_HOST` / `DJ_USER` / `DJ_PWD` | Local database (host:port) |
+| `DJ_MAIN_HOST` (+ optional user/pwd) | Parent host:port — **port is required if not 3306**; sync switches host and port |
 
 ---
 
