@@ -63,8 +63,20 @@ check_named_container "${CLIENT_NAME}" "Client"
 
 if command -v ss >/dev/null 2>&1; then
   if ss -ltn | awk '{print $4}' | grep -q ":${DB_PORT}$"; then
-    ours="$(bash docker/compose_env.sh compose ps -q db 2>/dev/null | wc -l | tr -d ' ')"
-    if [ "${ours}" = "0" ]; then
+    # Do not let a failed `docker compose` abort this script under set -e
+    # (was a silent make Error 125 with stderr discarded).
+    compose_ps_err=""
+    if ! ours_ids="$(bash docker/compose_env.sh compose ps -q db 2>/dev/null)"; then
+      compose_ps_err=1
+      ours_ids=""
+    fi
+    ours="$(printf '%s\n' "${ours_ids}" | sed '/^$/d' | wc -l | tr -d ' ')"
+    if [ -n "${compose_ps_err}" ]; then
+      warn "Port ${DB_PORT} is in use, but 'docker compose ps' failed — cannot tell if it is this project."
+      hint "As $(id -un): try  docker compose version  and  newgrp docker"
+      hint "If this is the existing vr4mice DB and you only need a new client: VR4MICE_COMPOSE_FORCE=1 make client_up"
+      conflicts=1
+    elif [ "${ours}" = "0" ]; then
       warn "Port ${DB_PORT} is already in use on this host."
       hint "Another MySQL/vr4mice stack may be running. Use a different DB_PORT and COMPOSE_PROJECT in .env.compose."
       conflicts=1
