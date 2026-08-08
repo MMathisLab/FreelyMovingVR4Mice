@@ -22,6 +22,15 @@ logger = Logger.get_logger()
 
 SKIP_DUPLICATES = True
 
+# Local MySQL is started with latin1 (see docker-compose). GUI notes often contain
+# Unicode (→, ⅓, …) that MySQL rejects with error 1366 unless coerced.
+_LATIN1_TEXT_KEYS = frozenset({"session_notes"})
+
+
+def _latin1_safe_text(value: str) -> str:
+    """Replace characters that cannot be stored in a latin1 column."""
+    return value.encode("latin-1", errors="replace").decode("latin-1")
+
 
 def _schemas_for_dataset(raw_data_npy, *, populate_base: bool) -> list:
     """Return schema list for a dataset (base+vr4mice or vr4mice-only)."""
@@ -206,6 +215,10 @@ def build_row(
                     data[a] = raw_data[label]
                     if change:
                         logger.debug("Note: %s variable name changed to %s", label, a)
+
+    for key in _LATIN1_TEXT_KEYS:
+        if key in data and isinstance(data[key], str):
+            data[key] = _latin1_safe_text(data[key])
 
     return data
 

@@ -115,5 +115,6 @@ if __name__ == "__main__":
 
             fix_session_days(dry_run=not args.force)
     except Exception:
+        logger.exception("run_base.py failed")
         traceback.print_exc()
         sys.exit(1)

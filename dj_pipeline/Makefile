@@ -68,7 +68,11 @@ up_all: check-compose-project
 	#git_info
 	@$(DOCKER_COMPOSE) up -d
 	$(verify_client_running)
-	@$(CLIENT_EXEC) "$(BASE_INSTALL_CMD)"
+	@if [ "$(SKIP_BASE_INSTALL)" = "1" ]; then \
+	  echo "Skipping base_install (SKIP_BASE_INSTALL=1)."; \
+	else \
+	  $(CLIENT_EXEC) "$(BASE_INSTALL_CMD)"; \
+	fi
 
 git_info:
 	@git log -n 1 | grep commit > git_commit && git status --porcelain  >> git_commit
@@ -118,7 +122,16 @@ client_build:
 client_up: git_info check-compose-project
 	@UID=$(UID) GID=$(GID) USER_NAME=$(USER_NAME) $(DOCKER_COMPOSE) up -d client
 	$(verify_client_running)
-	@$(CLIENT_EXEC) "$(BASE_INSTALL_CMD)"
+	@if [ "$(SKIP_BASE_INSTALL)" = "1" ]; then \
+	  echo "Skipping base_install (SKIP_BASE_INSTALL=1)."; \
+	else \
+	  $(CLIENT_EXEC) "$(BASE_INSTALL_CMD)" || { \
+	    echo "base_install failed (often Permission denied on base/*/…egg-info)." >&2; \
+	    echo "  Fix: chmod/chown base/base_min_schemas base/base_actions for your user, or" >&2; \
+	    echo "  Skip: SKIP_BASE_INSTALL=1 make client_up   then  make bash" >&2; \
+	    exit 1; \
+	  }; \
+	fi
 
 client_stop:
 	@$(DOCKER_COMPOSE) stop client
