@@ -395,6 +395,8 @@ class TestSyncMiceFromMain:
             mouse_sync, "_dj_connect", side_effect=fake_connect
         ), patch.object(
             mouse_sync, "_active_endpoint", side_effect=[("main.example", 3306)]
+        ), patch.object(
+            mouse_sync, "_ensure_schemas_on_connection"
         ), patch.object(mouse_sync.mice, "schema", schema):
             with mouse_sync._main_database() as conn:
                 assert cfg["database.host"] == "main.example"
@@ -423,6 +425,39 @@ class TestSyncMiceFromMain:
             with pytest.raises(RuntimeError, match="Still connected to local"):
                 with mouse_sync._main_database():
                     pass
+
+    def test_ensure_schemas_breaks_if_still_previous_session(self):
+        local_conn = MagicMock()
+        sticky_main = MagicMock()
+
+        def local_query(sql, *a, **k):
+            out = MagicMock()
+            out.fetchone.return_value = (99,)  # CONNECTION_ID / port
+            return out
+
+        def main_query(sql, *a, **k):
+            out = MagicMock()
+            out.fetchone.return_value = (42,)  # previous/main session
+            return out
+
+        local_conn.query.side_effect = local_query
+        sticky_main.query.side_effect = main_query
+        schema = MagicMock()
+        schema.connection = sticky_main
+
+        with patch.object(mouse_sync, "_active_endpoint", return_value=("h", 3309)), patch.object(
+            mouse_sync, "_rebind_schema_connection"
+        ), patch.object(mouse_sync.mice, "schema", schema), patch.object(
+            mouse_sync.exp, "schema", schema
+        ):
+            # rebind is a no-op → schema stays on CONNECTION_ID 42
+            with pytest.raises(RuntimeError, match="still on CONNECTION_ID=42"):
+                mouse_sync._ensure_schemas_on_connection(
+                    local_conn,
+                    expected_ep=("h", 3309),
+                    forbidden_connection_id=42,
+                    label="test",
+                )
 
     def test_pymysql_disable_ssl_sets_ssl_disabled(self):
         import pymysql

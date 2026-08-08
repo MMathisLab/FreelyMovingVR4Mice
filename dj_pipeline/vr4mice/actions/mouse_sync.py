@@ -344,6 +344,110 @@ def _mysql_port(conn) -> Optional[int]:
         return None
 
 
+def _mysql_connection_id(conn) -> Optional[int]:
+    """MySQL ``CONNECTION_ID()`` for a live session, or None."""
+    if conn is None:
+        return None
+    try:
+        return int(conn.query("SELECT CONNECTION_ID()").fetchone()[0])
+    except Exception:
+        return None
+
+
+def _ensure_schemas_on_connection(
+    conn,
+    *,
+    expected_ep: Tuple[str, int],
+    forbidden_connection_id: Optional[int] = None,
+    label: str = "connection",
+    log=None,
+) -> None:
+    """
+    Rebind mice/exp schemas to ``conn`` and abort if still on another session.
+
+    DJ2 leaves ``schema.connection`` on the previous MySQL session after
+    ``dj.conn(reset=True)``. Comparing ``CONNECTION_ID()`` catches that even
+    when host/port look plausible.
+    """
+    log = log or logger
+    if conn is None:
+        raise RuntimeError("%s: no DataJoint connection" % label)
+
+    _rebind_schema_connection(conn)
+    active = _active_endpoint()
+    if active != expected_ep:
+        raise RuntimeError(
+            "%s: dj.conn() is %s:%s, expected %s:%s"
+            % (label, active[0], active[1], expected_ep[0], expected_ep[1])
+        )
+
+    conn_id = _mysql_connection_id(conn)
+    conn_port = _mysql_port(conn)
+    if conn_id is None:
+        raise RuntimeError("%s: could not read CONNECTION_ID() from dj.conn()" % label)
+    if forbidden_connection_id is not None and conn_id == forbidden_connection_id:
+        raise RuntimeError(
+            "%s: dj.conn() still on previous MySQL session CONNECTION_ID=%s"
+            % (label, conn_id)
+        )
+    if conn_port is not None and conn_port != expected_ep[1]:
+        raise RuntimeError(
+            "%s: dj.conn() @@port=%s, expected %s"
+            % (label, conn_port, expected_ep[1])
+        )
+
+    schema_conn = getattr(getattr(mice, "schema", None), "connection", None)
+    schema_id = _mysql_connection_id(schema_conn)
+    if schema_id != conn_id:
+        log.warning(
+            "%s: mice.schema CONNECTION_ID=%s != dj.conn()=%s — rebinding again",
+            label,
+            schema_id,
+            conn_id,
+        )
+        _rebind_schema_connection(conn)
+        schema_conn = getattr(getattr(mice, "schema", None), "connection", None)
+        schema_id = _mysql_connection_id(schema_conn)
+
+    if schema_id != conn_id:
+        raise RuntimeError(
+            "%s: mice.schema still on CONNECTION_ID=%s after rebind; "
+            "dj.conn() is %s (forbidden/previous session was %s). "
+            "Refusing to continue — would read/write the wrong DB."
+            % (label, schema_id, conn_id, forbidden_connection_id)
+        )
+    if (
+        forbidden_connection_id is not None
+        and schema_id == forbidden_connection_id
+    ):
+        raise RuntimeError(
+            "%s: mice.schema still on previous MySQL session CONNECTION_ID=%s"
+            % (label, schema_id)
+        )
+
+    exp_schema = getattr(exp, "schema", None)
+    if exp_schema is not None:
+        exp_id = _mysql_connection_id(getattr(exp_schema, "connection", None))
+        if exp_id is not None and exp_id != conn_id:
+            _rebind_schema_connection(conn)
+            exp_id = _mysql_connection_id(
+                getattr(getattr(exp, "schema", None), "connection", None)
+            )
+            if exp_id != conn_id:
+                raise RuntimeError(
+                    "%s: exp.schema still on CONNECTION_ID=%s; dj.conn() is %s"
+                    % (label, exp_id, conn_id)
+                )
+
+    log.info(
+        "%s OK: endpoint %s:%s CONNECTION_ID=%s (schemas rebound)",
+        label,
+        expected_ep[0],
+        expected_ep[1],
+        conn_id,
+    )
+
+
 def _full_table_name(table_cls) -> Optional[str]:
     full = getattr(table_cls, "full_table_name", None)
     if isinstance(full, str) and "`" in full:
@@ -589,51 +693,60 @@ def _main_database():
                 % (local_ep[0], local_ep[1])
             )
         conn_port = _mysql_port(conn)
+        main_conn_id = _mysql_connection_id(conn)
         schema_conn = getattr(getattr(mice, "schema", None), "connection", None)
         schema_port = _mysql_port(schema_conn)
+        schema_conn_id = _mysql_connection_id(schema_conn)
         try:
             sql_count = conn.query("SELECT COUNT(*) FROM mice.mouse").fetchone()[0]
         except Exception as err:
             sql_count = "err:%s" % err
         logger.info(
-            "Main MySQL session: conn @@port=%s schema @@port=%s "
-            "SQL mice.mouse COUNT(*)=%s",
+            "Main MySQL session: conn @@port=%s CONNECTION_ID=%s "
+            "schema @@port=%s CONNECTION_ID=%s SQL mice.mouse COUNT(*)=%s",
             conn_port,
+            main_conn_id,
             schema_port,
+            schema_conn_id,
             sql_count,
         )
-        if schema_port is not None and conn_port is not None and schema_port != conn_port:
+        if schema_conn_id is not None and schema_conn_id != main_conn_id:
             logger.warning(
-                "mice.schema is still on @@port=%s (local) while main conn is "
-                "@@port=%s — fetches will use FreeTable on main conn.",
-                schema_port,
-                conn_port,
+                "mice.schema CONNECTION_ID=%s != main conn %s — "
+                "fetches use FreeTable on main conn (DJ2 sticky schema).",
+                schema_conn_id,
+                main_conn_id,
             )
     except Exception:
         traceback.print_exc()
         raise
+    main_conn_id = _mysql_connection_id(conn)
     try:
         yield conn
     finally:
         for key, value in saved.items():
             dj.config[key] = value
-        try:
-            # Restore local; host may be stored as host:port in config.
-            loc_host, loc_port = local_ep
-            loc_user = saved.get("database.user")
-            loc_password = saved.get("database.password")
-            if loc_user is not None and loc_password is not None:
-                _dj_connect(
-                    host=loc_host,
-                    port=loc_port,
-                    user=loc_user,
-                    password=loc_password,
-                    disable_ssl=False,
-                )
-            else:
-                dj.conn(reset=True)
-        except Exception:
-            pass
+        # Restore local and hard-fail if schemas still point at the main session.
+        loc_host, loc_port = local_ep
+        loc_user = saved.get("database.user")
+        loc_password = saved.get("database.password")
+        if loc_user is not None and loc_password is not None:
+            loc_conn = _dj_connect(
+                host=loc_host,
+                port=loc_port,
+                user=loc_user,
+                password=loc_password,
+                disable_ssl=False,
+            )
+        else:
+            loc_conn = dj.conn(reset=True)
+            _rebind_schema_connection(loc_conn)
+        _ensure_schemas_on_connection(
+            loc_conn,
+            expected_ep=local_ep,
+            forbidden_connection_id=main_conn_id,
+            label="local restore after main",
+        )
 
 
 def _upsert_rows(
@@ -668,34 +781,21 @@ def _upsert_rows(
     return count
 
 
-def _assert_on_local(local_ep: Tuple[str, int], log=None) -> None:
-    """Refuse upserts if DataJoint is still pointed at main."""
+def _assert_on_local(
+    local_ep: Tuple[str, int],
+    log=None,
+    *,
+    forbidden_connection_id: Optional[int] = None,
+) -> None:
+    """Refuse upserts if dj.conn() or mice.schema is still on the main session."""
     log = log or logger
-    active = _active_endpoint()
-    if active != local_ep:
-        raise RuntimeError(
-            "Refusing local upsert: active endpoint %s:%s, expected local %s:%s"
-            % (active[0], active[1], local_ep[0], local_ep[1])
-        )
-    conn = dj.conn()
-    schema_port = _mysql_port(
-        getattr(getattr(mice, "schema", None), "connection", None)
+    _ensure_schemas_on_connection(
+        dj.conn(),
+        expected_ep=local_ep,
+        forbidden_connection_id=forbidden_connection_id,
+        label="local upsert gate",
+        log=log,
     )
-    if schema_port is not None and schema_port != local_ep[1]:
-        log.warning(
-            "mice.schema @@port=%s differs from local %s — rebinding before upsert.",
-            schema_port,
-            local_ep[1],
-        )
-        _rebind_schema_connection(conn)
-        schema_port = _mysql_port(
-            getattr(getattr(mice, "schema", None), "connection", None)
-        )
-        if schema_port is not None and schema_port != local_ep[1]:
-            raise RuntimeError(
-                "mice.schema still on @@port=%s after rebind; expected local %s"
-                % (schema_port, local_ep[1])
-            )
 
 
 def sync_mice_from_main(
@@ -762,10 +862,12 @@ def sync_mice_from_main(
     except Exception:
         _local_port = None
     local_ep = _endpoint_from_config(dj.config["database.host"], _local_port)
+    main_session_id: Optional[int] = None
     try:
         # Yielded conn is the main endpoint; never use mice.Mouse() here — that
         # table object often still points at the local schema Connection.
         with _main_database() as main_conn:
+            main_session_id = _mysql_connection_id(main_conn)
 
             def _norm_name(raw) -> Optional[str]:
                 if raw is None:
@@ -900,7 +1002,9 @@ def sync_mice_from_main(
             ", ".join(missing_on_main),
         )
 
-    _assert_on_local(local_ep, log=log)
+    _assert_on_local(
+        local_ep, log=log, forbidden_connection_id=main_session_id
+    )
     inserted = 0
     try:
         # Lookups: never replace=True (FK from mouse → #strain blocks DELETE).
