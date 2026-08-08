@@ -12,7 +12,7 @@ Parent mice sync (mysql.mk) and orphan cleanup are separate modes — see docs.
 from __future__ import annotations
 
 import os
-from typing import Iterable, List, Set, Tuple
+from typing import Any, Iterable, List, Optional, Set, Tuple
 
 import datajoint as dj
 from base_schemas.schemas import exp, mice
@@ -86,6 +86,17 @@ def _session_tuple(session_row: dict) -> Tuple[str, str, int]:
     return (session_row["mouse_name"], str(doe), session_row["attempt"])
 
 
+def _sql_row_get(row: Any, key: str, *, index: Optional[int] = None, default=None):
+    """Read a column from a DJ/pymysql row (dict or tuple)."""
+    if row is None:
+        return default
+    if isinstance(row, dict):
+        return row.get(key, default)
+    if index is not None and isinstance(row, (list, tuple)) and len(row) > index:
+        return row[index]
+    return default
+
+
 def check_replication_off(log=None) -> None:
     """
     Abort recovery when this MySQL instance is actively replicating.
@@ -104,6 +115,14 @@ def check_replication_off(log=None) -> None:
         if rows:
             status = rows[0]
             break
+
+    if status is not None and not isinstance(status, dict):
+        # Tuple rows lack column names; skip IO/SQL parse (read_only check still runs).
+        log.warning(
+            "Replication status row is not a mapping (%s); skipping IO/SQL check.",
+            type(status).__name__,
+        )
+        status = None
 
     if status:
         io_running = status.get("Replica_IO_Running") or status.get("Slave_IO_Running")
@@ -130,9 +149,16 @@ def check_replication_off(log=None) -> None:
     except Exception:
         return
 
-    ro = read_only[0].get("Value") if read_only else "OFF"
-    sro = super_ro[0].get("Value") if super_ro else "OFF"
-    if ro == "ON" or sro == "ON":
+    # SHOW VARIABLES → dict {"Value": ...} or tuple (Variable_name, Value)
+    ro = _sql_row_get(
+        read_only[0] if read_only else None, "Value", index=1, default="OFF"
+    )
+    sro = _sql_row_get(
+        super_ro[0] if super_ro else None, "Value", index=1, default="OFF"
+    )
+    ro = "OFF" if ro is None else str(ro)
+    sro = "OFF" if sro is None else str(sro)
+    if ro.upper() == "ON" or sro.upper() == "ON":
         raise RuntimeError(
             f"Database is read-only (read_only={ro}, super_read_only={sro}). "
             "Recovery requires a writable local database with replication off."

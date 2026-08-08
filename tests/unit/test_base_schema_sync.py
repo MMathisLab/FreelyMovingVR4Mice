@@ -311,6 +311,47 @@ class TestCheckReplicationOff:
             with pytest.raises(RuntimeError, match="read-only"):
                 recover_base.check_replication_off(log=MagicMock())
 
+    def test_read_only_accepts_tuple_rows(self):
+        """DJ/pymysql often returns SHOW VARIABLES as (name, value) tuples."""
+        conn = MagicMock()
+
+        def query(sql):
+            result = MagicMock()
+            if "REPLICA STATUS" in sql or "SLAVE STATUS" in sql:
+                result.fetchall.return_value = []
+            elif "super_read_only" in sql:
+                result.fetchall.return_value = [("super_read_only", "OFF")]
+            elif "read_only" in sql:
+                result.fetchall.return_value = [("read_only", "OFF")]
+            else:
+                result.fetchall.return_value = []
+            return result
+
+        conn.query.side_effect = query
+        with patch.object(recover_base.dj, "conn", return_value=conn):
+            recover_base.check_replication_off(log=MagicMock())
+
+    def test_blocks_when_read_only_tuple_rows(self):
+        conn = MagicMock()
+
+        def query(sql):
+            result = MagicMock()
+            if "REPLICA STATUS" in sql or "SLAVE STATUS" in sql:
+                result.fetchall.return_value = []
+            elif "super_read_only" in sql:
+                result.fetchall.return_value = [("super_read_only", "OFF")]
+            elif "read_only" in sql:
+                result.fetchall.return_value = [("read_only", "ON")]
+            else:
+                result.fetchall.return_value = []
+            return result
+
+        conn.query.side_effect = query
+        with patch.object(recover_base.dj, "conn", return_value=conn), pytest.raises(
+            RuntimeError, match="read-only"
+        ):
+            recover_base.check_replication_off(log=MagicMock())
+
 
 class TestCleanupOrphanExpMice:
     def test_dry_run_reports_orphans(self):
