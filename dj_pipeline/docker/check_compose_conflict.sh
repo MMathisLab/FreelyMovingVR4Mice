@@ -20,6 +20,19 @@ DB_PORT="${DB_PORT:-3309}"
 warn() { printf 'WARNING: %s\n' "$*" >&2; }
 hint() { printf '  → %s\n' "$*" >&2; }
 
+# Docker exit 125 (and friends) used to abort make with no message when set -e
+# hit a failed `docker ps` (usually not in the docker group / bad socket).
+docker_names=""
+if ! docker_names="$(docker ps -a --format '{{.Names}}' 2>&1)"; then
+  warn "Cannot talk to Docker (needed for compose conflict check)."
+  hint "Command failed: docker ps -a"
+  hint "${docker_names}"
+  hint "As user $(id -un): groups=$(id -Gn)"
+  hint "Fix: sudo usermod -aG docker $(id -un) && newgrp docker   # then retry"
+  hint "Or run: newgrp docker   # if already in group but shell is stale"
+  exit 125
+fi
+
 conflicts=0
 
 compose_project_of() {
@@ -29,7 +42,7 @@ compose_project_of() {
 check_named_container() {
   local name="$1"
   local kind="$2"
-  if ! docker ps -a --format '{{.Names}}' | grep -qx "${name}"; then
+  if ! printf '%s\n' "${docker_names}" | grep -qx "${name}"; then
     return 0
   fi
   local other_project
