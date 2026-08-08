@@ -183,4 +183,4 @@ check-main-creds: check-creds
 
 # Optional: MOUSE=Flamingo,Whale  (comma-separated). Default = full registry tables.
 sync-mice-from-main: check-main-creds ## Dump mice tables from DJ_MAIN_* onto local DJ_HOST (bash mysql)
-	@MOUSE="$(MOUSE)" "$(CURDIR)/scripts/sync_mice_mysql.sh"
+	@MOUSE="$(MOUSE)" bash "$(CURDIR)/scripts/sync_mice_mysql.sh"
