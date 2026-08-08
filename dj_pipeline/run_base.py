@@ -66,9 +66,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--force",
         action="store_true",
-        help=(
-            "Apply changes (cleanup_orphans, cleanup_mice, fix_session_days)."
-        ),
+        help=("Apply changes (cleanup_orphans, cleanup_mice, fix_session_days)."),
     )
     parser.add_argument(
         "mode",

@@ -401,10 +401,14 @@ def describe_connected_database() -> str:
     env_user = os.environ.get("DJ_USER", "(DJ_USER unset)")
     main_host = os.environ.get("DJ_MAIN_HOST", "")
     try:
-        row = dj.conn().query(
-            "SELECT @@hostname AS h, @@port AS p, @@server_uuid AS u, "
-            "DATABASE() AS d"
-        ).fetchone()
+        row = (
+            dj.conn()
+            .query(
+                "SELECT @@hostname AS h, @@port AS p, @@server_uuid AS u, "
+                "DATABASE() AS d"
+            )
+            .fetchone()
+        )
         if isinstance(row, dict):
             hostname, port, uuid, db = (
                 row.get("h"),
@@ -429,7 +433,11 @@ def log_mutation_target(*, action: str, dry_run: bool = False, log=None) -> None
     if dry_run:
         log.warning("DRY-RUN %s on %s — no deletes/writes applied.", action, target)
     else:
-        log.warning("APPLY %s on %s — mutations affect this DB only (not DJ_MAIN_HOST).", action, target)
+        log.warning(
+            "APPLY %s on %s — mutations affect this DB only (not DJ_MAIN_HOST).",
+            action,
+            target,
+        )
 
 
 def check_replication_off(log=None) -> None:

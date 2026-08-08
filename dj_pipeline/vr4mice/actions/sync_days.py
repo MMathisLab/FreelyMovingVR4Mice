@@ -214,9 +214,7 @@ def sync_days(
                 f"({type(err).__name__}: {err})"
             )
             continue
-        logger.info(
-            "Updated day for %s in %s: %s -> %s", dataset, folder, old_day, day
-        )
+        logger.info("Updated day for %s in %s: %s -> %s", dataset, folder, old_day, day)
 
     if failures:
         preview = "; ".join(failures[:10])
