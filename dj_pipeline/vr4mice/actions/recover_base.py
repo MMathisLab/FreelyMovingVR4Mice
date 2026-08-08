@@ -6,7 +6,7 @@ Recovery workflow for local base/exp/mice schema (not part of the main cron pipe
   2. Repopulate exp from all unpopulated GUI .npy files in data/ and processed/.
   3. Warn about incomplete mice and print the recommended next commands.
 
-Parent sync and orphan cleanup are separate ``run_base.py`` modes — see docs.
+Parent mice sync (mysql.mk) and orphan cleanup are separate modes — see docs.
 """
 
 from __future__ import annotations
@@ -16,11 +16,7 @@ from typing import Iterable, List, Set, Tuple
 
 import datajoint as dj
 from base_schemas.schemas import exp, mice
-from vr4mice.actions.mouse_sync import (
-    SYNC_EXP_COMMAND,
-    SYNC_MICE_COMMAND,
-    warn_incomplete_mice,
-)
+from vr4mice.actions.mouse_sync import SYNC_MICE_COMMAND, warn_incomplete_mice
 from vr4mice.actions.populate_rig import populate_base_from_gui_folder
 from vr4mice.utils.logger import Logger
 
@@ -49,9 +45,6 @@ Recommended order:
   3. Optional — remove local exp/mice with no vr4mice.Dataset:
        {cleanup_orphans}
 
-  4. Optional — push missing local (non-collab) sessions to parent:
-       {sync_exp}
-
 Never deletes on main. Orphan cleanup (--force) needs replication OFF.
 
 MySQL diagnostics: make -f mysql.mk replication-summary
@@ -59,7 +52,6 @@ MySQL diagnostics: make -f mysql.mk replication-summary
 """.format(
     sync_mice=SYNC_MICE_COMMAND,
     cleanup_orphans=CLEANUP_ORPHANS_COMMAND,
-    sync_exp=SYNC_EXP_COMMAND,
 )
 
 

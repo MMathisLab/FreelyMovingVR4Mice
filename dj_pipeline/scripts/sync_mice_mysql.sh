@@ -1,16 +1,11 @@
 #!/usr/bin/env bash
 # Sync the mice registry from DJ_MAIN_* onto local DJ_HOST using mysqldump/mysql.
 #
-# Avoids DataJoint dual-connection (DJ2 sticky Schema.connection / same-IP port bugs).
-# Run on the host from dj_pipeline/ (needs mysql + mysqldump clients):
-#
-#   ./scripts/sync_mice_mysql.sh
-#   MOUSE=Flamingo,Whale ./scripts/sync_mice_mysql.sh
+# Run on the host from dj_pipeline/:
 #   make -f mysql.mk sync-mice-from-main
 #   make -f mysql.mk sync-mice-from-main MOUSE=Flamingo,Whale
 #
-# Never deletes on main. Loads with FOREIGN_KEY_CHECKS=0 and REPLACE so local
-# stubs / outdated Mouse rows can be refreshed.
+# Never deletes on main. Loads with FOREIGN_KEY_CHECKS=0 and REPLACE.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -24,7 +19,6 @@ if [[ -f .env ]]; then
 fi
 
 die() { echo "error: $*" >&2; exit 1; }
-
 need() { [[ -n "${!1:-}" ]] || die "$1 is not set (put it in .env)"; }
 
 need DJ_HOST
@@ -57,33 +51,26 @@ MAIN_PORT="$_PORT"
 command -v mysql >/dev/null || die "mysql client not found on PATH"
 command -v mysqldump >/dev/null || die "mysqldump not found on PATH"
 
+# Lab MySQL is usually plain TCP.
 SSL_OPTS=(--ssl-mode=DISABLED)
-if ! mysql "${SSL_OPTS[@]}" -h "$LOCAL_HOST" -P "$LOCAL_PORT" -u "$DJ_USER" -p"$DJ_PWD" \
-  -e "SELECT 1" &>/dev/null; then
-  SSL_OPTS=()
-fi
-
 MYSQL_LOCAL=(mysql "${SSL_OPTS[@]}" -h "$LOCAL_HOST" -P "$LOCAL_PORT" -u "$DJ_USER" -p"$DJ_PWD")
 MYSQL_MAIN=(mysql "${SSL_OPTS[@]}" -h "$MAIN_HOST" -P "$MAIN_PORT" -u "$MAIN_USER" -p"$MAIN_PWD")
 
 DUMP_BASE=(mysqldump "${SSL_OPTS[@]}" -h "$MAIN_HOST" -P "$MAIN_PORT" -u "$MAIN_USER" -p"$MAIN_PWD"
   --single-transaction --routines=false --triggers=false --events=false
   --set-gtid-purged=OFF --no-create-info --replace --complete-insert --hex-blob)
-# MySQL 8 clients only
 if mysqldump --help 2>/dev/null | grep -q -- '--column-statistics'; then
   DUMP_BASE+=(--column-statistics=0)
 fi
 
-echo "Local:  ${LOCAL_HOST}:${LOCAL_PORT} (DJ_HOST)"
-echo "Main:   ${MAIN_HOST}:${MAIN_PORT} (DJ_MAIN_HOST)"
-echo "User:   local=${DJ_USER}  main=${MAIN_USER}"
+echo "Local:  ${LOCAL_HOST}:${LOCAL_PORT}"
+echo "Main:   ${MAIN_HOST}:${MAIN_PORT}"
 
 local_port_live="$("${MYSQL_LOCAL[@]}" -N -e "SELECT @@port" 2>/dev/null | tr -d '\r')"
 main_port_live="$("${MYSQL_MAIN[@]}" -N -e "SELECT @@port" 2>/dev/null | tr -d '\r')"
-echo "Live @@port: local=${local_port_live} main=${main_port_live}"
-[[ -n "$local_port_live" && -n "$main_port_live" ]] || die "could not read @@port from local/main"
+[[ -n "$local_port_live" && -n "$main_port_live" ]] || die "could not connect to local/main MySQL"
 if [[ "$LOCAL_HOST" == "$MAIN_HOST" && "$local_port_live" == "$main_port_live" ]]; then
-  die "local and main MySQL sessions are the same endpoint (@@port=${local_port_live})"
+  die "local and main are the same MySQL endpoint (@@port=${local_port_live})"
 fi
 
 mapfile -t MAIN_TABLES < <("${MYSQL_MAIN[@]}" -N -e "SHOW TABLES FROM mice" 2>/dev/null | tr -d '\r')
@@ -92,25 +79,26 @@ mapfile -t LOCAL_TABLES < <("${MYSQL_LOCAL[@]}" -N -e "SHOW TABLES FROM mice" 2>
 has_main() { printf '%s\n' "${MAIN_TABLES[@]}" | grep -Fxq -- "$1"; }
 has_local() { printf '%s\n' "${LOCAL_TABLES[@]}" | grep -Fxq -- "$1"; }
 
+# Prefer preferred name; fall back to alt (__ vs _). Require a local target.
 resolve_pair() {
-  local preferred="$1" alt="$2"
+  local preferred="$1" alt="$2" main_t="" local_t=""
   if has_main "$preferred"; then
-    if has_local "$preferred"; then
-      echo "${preferred}|${preferred}"
-    elif [[ -n "$alt" ]] && has_local "$alt"; then
-      echo "${preferred}|${alt}"
-    else
-      echo "${preferred}|${preferred}"
-    fi
+    main_t="$preferred"
   elif [[ -n "$alt" ]] && has_main "$alt"; then
-    if has_local "$alt"; then
-      echo "${alt}|${alt}"
-    elif has_local "$preferred"; then
-      echo "${alt}|${preferred}"
-    else
-      echo "${alt}|${alt}"
-    fi
+    main_t="$alt"
+  else
+    return 1
   fi
+  if has_local "$main_t"; then
+    local_t="$main_t"
+  elif [[ -n "$alt" && "$alt" != "$main_t" ]] && has_local "$alt"; then
+    local_t="$alt"
+  elif [[ -n "$preferred" && "$preferred" != "$main_t" ]] && has_local "$preferred"; then
+    local_t="$preferred"
+  else
+    die "main has mice.\`${main_t}\` but no matching local table"
+  fi
+  echo "${main_t}|${local_t}"
 }
 
 CANDIDATES=(
@@ -136,7 +124,7 @@ done
 
 [[ ${#PAIRS[@]} -gt 0 ]] || die "no known mice tables found on main"
 
-echo "Tables to sync (main → local):"
+echo "Tables (main → local):"
 for pair in "${PAIRS[@]}"; do
   echo "  ${pair%%|*}  →  ${pair##*|}"
 done
@@ -157,7 +145,7 @@ if [[ -n "${MOUSE:-}" ]]; then
   echo "Filter: ${WHERE}"
 fi
 
-TMPDIR_SYNC="$(mktemp -d -t sync_mice_XXXXXX)"
+TMPDIR_SYNC="$(mktemp -d "${TMPDIR:-/tmp}/sync_mice.XXXXXX")"
 trap 'rm -rf "$TMPDIR_SYNC"' EXIT
 COMBINED="${TMPDIR_SYNC}/all.sql"
 
@@ -189,7 +177,6 @@ for pair in "${PAIRS[@]}"; do
   grep -v "Using a password" "${TMPDIR_SYNC}/dump.err" >&2 || true
 
   if [[ "$main_t" != "$local_t" ]]; then
-    # Rewrite only table identifiers for this chunk.
     python3 - "$part" "$main_t" "$local_t" <<'PY'
 import sys
 path, main_t, local_t = sys.argv[1], sys.argv[2], sys.argv[3]
@@ -202,7 +189,7 @@ for a, b in (
     text = text.replace(a, b)
 open(path, "w", encoding="utf-8").write(text)
 PY
-    echo "  rewrote dump table name ${main_t} → ${local_t}"
+    echo "  rewrote ${main_t} → ${local_t}"
   fi
   cat "$part" >>"$COMBINED"
 done
@@ -212,7 +199,7 @@ done
   echo "SET FOREIGN_KEY_CHECKS=1;"
 } >>"$COMBINED"
 
-echo "Loading dump into local mice schema ..."
+echo "Loading into local mice ..."
 "${MYSQL_LOCAL[@]}" mice <"$COMBINED"
 
 echo "Done."

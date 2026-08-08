@@ -27,7 +27,8 @@ logger = Logger.get_logger()
     "decision": analyze decision-making metrics
     "maintenance": rebuild DataJoint lineage tables (one-time setup)
 
-    Recovery / parent sync (recover_base, sync_mice, sync_exp, cleanup_mice): run_base.py
+    Recovery / cleanup (recover_base, cleanup_orphans, cleanup_mice): run_base.py
+    Mice registry sync: make -f mysql.mk sync-mice-from-main (host)
 """
 
 

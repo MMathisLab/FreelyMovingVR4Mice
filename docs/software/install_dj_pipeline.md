@@ -559,8 +559,8 @@ Typical sequence:
 ```
 
 `run.py populate` with `GUI=True` writes `mice` / `exp` from session `.npy` in the
-usual ingest path. Use **`run_base.py`** for recovery / cleanup / optional
-`sync_exp` (inside `make bash`). Parent → local **mice** sync is host-side:
+usual ingest path. Use **`run_base.py`** for recovery / cleanup (inside
+`make bash`). Parent → local **mice** sync is host-side:
 `make -f mysql.mk sync-mice-from-main` (optional `MOUSE=Name1,Name2`). See
 {ref}`Base schema sync (mice / exp) <base-schema-sync>`.
 

@@ -12,11 +12,11 @@
 cd dj_pipeline
 make client_up          # if needed
 make bash               # sources .env; shell in /app
-# then python run_base.py recover_base / cleanup_* / sync_exp
+# then python run_base.py recover_base / cleanup_*
 ```
 
 **Mouse registry from parent** is **host-side** (bash `mysqldump` / `mysql`) — not
-inside `make bash` — so we never open two DataJoint connections:
+inside `make bash`:
 
 ```bash
 cd dj_pipeline
@@ -24,227 +24,129 @@ make -f mysql.mk sync-mice-from-main
 make -f mysql.mk sync-mice-from-main MOUSE=Flamingo,Whale
 ```
 
-Exception: other `make -f mysql.mk …` diagnostics are also **host-side** MySQL
-(`.env` `DJ_*` over TCP).
-## Normal ingest (usual workflow)
+## Normal ingest
 
-When `GUI=True`, **daily populate writes `exp` / `mice`** together with `vr4mice`
-(via cron / client):
+When `GUI=True`, **daily populate writes `exp` / `mice`** with `vr4mice`:
 
 ```bash
 # inside make bash
-python run.py populate    # GUI .npy → exp/mice + vr4mice tables
-python run.py analysis
-# …
+python run.py populate
 ```
 
-No separate base cron path. Base populate follows the `GUI` flag
-(`GUI=True` ⇒ include `exp`/`mice`; `GUI=False` ⇒ `vr4mice` only).
-
-### Recommended order (separate commands)
-
-Each step is its own `run_base.py` mode — nothing is chained inside
-`recover_base`.
+### Recommended order
 
 ```bash
-# host, from dj_pipeline/ — preferred (no DataJoint dual-connect)
+# host, from dj_pipeline/
 make -f mysql.mk sync-mice-from-main
-make -f mysql.mk sync-mice-from-main MOUSE=Flamingo,Whale
 
-# inside make bash — recover / cleanup / optional sync_exp only
+# inside make bash
 python run_base.py recover_base
 python run_base.py cleanup_orphans
 python run_base.py cleanup_orphans --force   # apply deletes (local only)
-python run_base.py sync_exp
 python run.py fetch   # refresh GUI menu if needed
 ```
 
-Requirements:
-
-- **`sync_mice` (mysql.mk)** dumps Strain / Mouse / Surgery / score-sheet tables
-  from `DJ_MAIN_*` onto local `DJ_HOST` via `mysqldump` + `mysql`. Handles main
-  ``__`` vs local ``_`` table names. Optional `MOUSE=a,b` filters mouse-keyed
-  tables; lookups are always copied in full (small).
-- Do **not** use `python run_base.py sync_mice` for normal ops (it exits with
-  instructions to run ``make -f mysql.mk sync-mice-from-main``).
-- **`sync_exp` is optional** — this lab only (not collab). See §E.
----
-
-## When you need `run_base.py`
-
 | Mode | Purpose |
 |------|---------|
-| `make -f mysql.mk sync-mice-from-main` | Parent → local mice registry via **mysqldump** (preferred) |
-| `recover_base` | Replication check + populate **unpopulated GUI `.npy`** into local `exp`/`mice` only |
-| `cleanup_orphans` | List/delete local `exp`/`mice` with **no** `vr4mice.Dataset` (dry-run unless `--force`) |
-| `cleanup_mice` | Remove **stub** mice with no local Session (narrower helper) |
-| `sync_exp` | **Optional.** Local → parent missing `exp.Session` (this lab; match by doe) |
+| `make -f mysql.mk sync-mice-from-main` | Parent → local mice registry via **mysqldump** |
+| `recover_base` | Populate unpopulated GUI `.npy` into local `exp`/`mice` |
+| `cleanup_orphans` | List/delete local `exp`/`mice` with no `vr4mice.Dataset` |
+| `cleanup_mice` | Remove **stub** mice with no local Session |
 
-Session files for recover should exist under `/data/data` and/or `/data/processed`.
+### Safety
 
-### Safety invariants
-
-1. **Never delete on main.** mysql sync dumps only; `sync_exp` inserts missing
-   rows only.
-2. **Local Dataset-orphan deletes** only via `cleanup_orphans` (`--force` to
-   apply). Not part of `recover_base`.
-3. Prefer **host `make -f mysql.mk sync-mice-from-main`** (mysqldump). There is
-   no DataJoint dual-connect path for mice sync.
-4. mysql sync may **REPLACE** local Mouse/Surgery/score-sheet rows
-   (`FOREIGN_KEY_CHECKS=0` during load).
+1. **Never delete on main.** mysql sync dumps only.
+2. Orphan deletes only via `cleanup_orphans --force` (replication must be off).
+3. mysql sync may **REPLACE** local Mouse/Surgery/score-sheet rows.
 
 ---
 
-## 1. Credentials
+## Credentials
 
-In `dj_pipeline/.env` (loaded into the Docker client; `make bash` sources it):
+In `dj_pipeline/.env`:
 
 ```bash
-# Local DB (this rig)
 DJ_HOST=local-db-host:3306
 DJ_USER=your-user
 DJ_PWD=your-password
 GUI=True
 
-# Parent / main lab DB (second DataJoint connection)
-DJ_MAIN_HOST=main-db.example.com:3306   # include :port (main is often :3306, local :3309)
-DJ_MAIN_USER=...          # optional; falls back to DJ_USER
-DJ_MAIN_PWD=...           # optional; falls back to DJ_PWD
+# Parent DB (for mysql.mk sync-mice-from-main)
+DJ_MAIN_HOST=main-db.example.com:3306
+# DJ_MAIN_USER=...   # optional; falls back to DJ_USER
+# DJ_MAIN_PWD=...
 ```
-
-| Variable | Meaning |
-|----------|---------|
-| `DJ_HOST` / `DJ_USER` / `DJ_PWD` | Local database (host:port) |
-| `DJ_MAIN_HOST` (+ optional user/pwd) | Parent host:port — **port is required if not 3306**; sync switches host and port |
 
 ---
 
-## 2. Why replication must be off for cleaning
+## Replication must be off for cleanup
 
-Local `mice` / `exp` are often a **MySQL replica** of the lab parent DB.
-
-Orphan **cleanup** (`cleanup_orphans --force`) **deletes only on the local DB**:
-`exp.Session` / `mice.Mouse` rows with no matching `vr4mice.Dataset` here.
-It never deletes on the parent.
-
-That is unsafe while replication is active — stop replication before `--force`.
-`recover_base` also blocks if replica IO/SQL is `Yes` or the DB is read-only
-(because it writes Sessions).
-
-**Check** status (does **not** stop replication). From `dj_pipeline/` on the
-**host**, `mysql.mk` uses the host `mysql` client with `.env` `DJ_HOST` /
-`DJ_USER` / `DJ_PWD` (never `DJ_MAIN_*`):
+Local `mice` / `exp` are often a MySQL replica. Stop replication before
+`cleanup_orphans --force`. Check from the host:
 
 ```bash
-make -f mysql.mk creds
 make -f mysql.mk replication-summary
 ```
 
 ```sql
--- MySQL 8+
-STOP REPLICA;
--- MySQL 5.7
-STOP SLAVE;
+STOP REPLICA;   -- MySQL 8+
+-- STOP SLAVE;  -- MySQL 5.7
 ```
 
 ---
 
-## 3. Step-by-step recovery
+## Step-by-step
 
-### A — credentials + replication (host)
-
-1. Set `DJ_HOST` and `DJ_MAIN_*` in `.env`.
-2. `make -f mysql.mk replication-summary`. Stop replica if needed before
-   `--force` cleanup (and preferably before `recover_base` writes).
-3. Enter the client: `make client_up` (if needed), then `make bash`.
-
-### B — sync mice (host `mysql.mk`)
+### Sync mice (host)
 
 ```bash
-# from dj_pipeline/ on the host (not make bash)
 make -f mysql.mk sync-mice-from-main
 make -f mysql.mk sync-mice-from-main MOUSE=Flamingo,Whale
 ```
 
-Uses `scripts/sync_mice_mysql.sh`: separate `mysql`/`mysqldump` clients for
-`DJ_MAIN_*` and `DJ_HOST`, verifies live `@@port` differs, maps `__`→`_` table
-names when needed, loads with `FOREIGN_KEY_CHECKS=0`.
-Pulls Mouse (+ Strain, Surgery, score sheets) from parent for incomplete local
-Dataset / GUI / Session names, or for explicit `--mouse NAME`.
+`scripts/sync_mice_mysql.sh` dumps Strain / Mouse / Surgery / score sheets from
+`DJ_MAIN_*` onto local `DJ_HOST`, maps `__`→`_` table names when needed, loads
+with `FOREIGN_KEY_CHECKS=0`.
 
-### C — recover base (populate only)
+### Recover base
 
 ```bash
 python run_base.py recover_base
 ```
 
-Rebuilds local `exp`/`mice` from **unpopulated** GUI `.npy` under `/data/data`
-+ `/data/processed`. Does **not** sync or clean.
-
-### D — optional orphan cleanup
+### Orphan cleanup (optional)
 
 ```bash
-python run_base.py cleanup_orphans          # dry-run
-python run_base.py cleanup_orphans --force  # apply
+python run_base.py cleanup_orphans
+python run_base.py cleanup_orphans --force
+python run_base.py cleanup_mice --force   # stubs without Session only
 ```
 
-Deletes local sessions/mice with no `vr4mice.Dataset`. Review the dry-run list
-first. **Caution:** also removes mice not referenced by any Dataset (including
-ones synced for upcoming experiments).
-
-Lighter stub-only helper:
+### Resume
 
 ```bash
-python run_base.py cleanup_mice          # dry-run
-python run_base.py cleanup_mice --force
-```
-
-### E — optional sync_exp
-
-```bash
-python run_base.py sync_exp
-```
-
-Push missing local (non-collab) sessions to parent. Match by
-`(mouse_name, doe, attempt)`; assign `day` from parent timeline. Never deletes
-on main. Requires `DJ_LAB` when Collab is populated.
-
-### F — resume
-
-```bash
-python run.py fetch      # optional GUI menu
-python run.py populate   # or leave to cron
+python run.py fetch
+python run.py populate
 ```
 
 ---
 
-## 4. Minimal happy path
+## Minimal happy path
 
 ```bash
-# host (dj_pipeline/)
-# 1. DJ_MAIN_* in .env; replication OFF for cleanup
+# host
 make -f mysql.mk replication-summary
 make -f mysql.mk sync-mice-from-main
-# optional: make -f mysql.mk sync-mice-from-main MOUSE=Flamingo,Whale
-make client_up
 make bash
 
 # inside make bash
 python run_base.py recover_base
-python run_base.py cleanup_orphans          # review list
-python run_base.py cleanup_orphans --force  # only if OK
-python run_base.py sync_exp                 # optional
-python run.py fetch                        # optional
-# exit
-
-# host: re-enable replication; cron resumes run.py populate
+python run_base.py cleanup_orphans --force   # only if dry-run looked OK
 ```
 
 ---
 
-## 5. Tests
+## Tests
 
-`tests/unit/test_base_schema_sync.py` — stubs, GUI mouse discovery, recover
-populate-only, orphan cleanup, `sync_exp` local-vs-collab + doe matching.
-Mice registry sync from parent: `make -f mysql.mk sync-mice-from-main`
-(`scripts/sync_mice_mysql.sh`).
+`tests/unit/test_base_schema_sync.py` — stubs, GUI mouse discovery, recover,
+orphan cleanup. Mice sync: `make -f mysql.mk sync-mice-from-main`.
