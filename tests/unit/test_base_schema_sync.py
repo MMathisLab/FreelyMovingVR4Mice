@@ -246,12 +246,17 @@ class TestSyncMiceFromMain:
     def test_explicit_mouse_names_skip_local_discovery(self, monkeypatch):
         monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
         log = MagicMock()
+        main_row = {"mouse_name": "Flamingo", "mouse_id": 7, "strain": "C57"}
         table = MagicMock()
         table.return_value = table
         table.__and__ = MagicMock(return_value=table)
-        table.fetch.return_value = [
-            {"mouse_name": "Flamingo", "mouse_id": 7, "strain": "C57"}
-        ]
+
+        def fake_fetch(*args, **kwargs):
+            if args and args[0] == "mouse_name":
+                return ["Flamingo"]
+            return [main_row]
+
+        table.fetch.side_effect = fake_fetch
 
         with patch.object(
             mouse_sync, "get_known_local_mouse_names"
@@ -262,10 +267,10 @@ class TestSyncMiceFromMain:
         ) as mock_main, patch.object(
             mouse_sync, "_upsert_rows", return_value=1
         ), patch.object(mouse_sync, "mice") as mock_mice:
-            mock_main.return_value.__enter__ = MagicMock()
+            mock_main.return_value.__enter__ = MagicMock(return_value=None)
             mock_main.return_value.__exit__ = MagicMock(return_value=False)
             mock_mice.Mouse = table
-            mock_mice.Strain.return_value = table
+            mock_mice.Strain = table
             count = mouse_sync.sync_mice_from_main(
                 log=log, mouse_names=["Flamingo", " Flamingo "]
             )
@@ -282,7 +287,13 @@ class TestSyncMiceFromMain:
         table = MagicMock()
         table.return_value = table
         table.__and__ = MagicMock(return_value=table)
-        table.fetch.return_value = [main_row]
+
+        def fake_fetch(*args, **kwargs):
+            if args and args[0] == "mouse_name":
+                return ["Flamingo"]
+            return [main_row]
+
+        table.fetch.side_effect = fake_fetch
 
         phase = {"on_main": False}
 
@@ -290,7 +301,7 @@ class TestSyncMiceFromMain:
         def fake_main():
             phase["on_main"] = True
             try:
-                yield
+                yield None  # unit tests: _table_on_conn falls back to table_cls()
             finally:
                 phase["on_main"] = False
 
@@ -314,12 +325,17 @@ class TestSyncMiceFromMain:
             mouse_sync, "mice"
         ) as mock_mice:
             mock_mice.Mouse = table
-            mock_mice.Strain.return_value = table
+            mock_mice.Strain = table
             count = mouse_sync.sync_mice_from_main(log=log)
 
         assert count >= 1
         assert False in upsert_phases  # upsert after leaving main connection
         assert any("known local mice" in str(c) for c in log.info.call_args_list)
+
+    def test_table_on_conn_falls_back_without_conn(self):
+        table_cls = MagicMock(return_value="instance")
+        assert mouse_sync._table_on_conn(None, table_cls) == "instance"
+        table_cls.assert_called_once_with()
 
     def test_split_host_port(self):
         assert mouse_sync._split_host_port("db.example:3306") == ("db.example", 3306)
@@ -339,15 +355,22 @@ class TestSyncMiceFromMain:
             connect_calls.append(kwargs)
             cfg["database.host"] = kwargs["host"]
             cfg["database.port"] = kwargs["port"]
+            conn = MagicMock()
+            conn.query.return_value.fetchone.return_value = (kwargs["port"],)
+            conn.query.return_value.fetchall.return_value = [(kwargs["port"], None)]
+            return conn
 
+        schema = MagicMock()
+        schema.connection = None
         with patch.object(mouse_sync.dj, "config", cfg), patch.object(
             mouse_sync, "_dj_connect", side_effect=fake_connect
         ), patch.object(
             mouse_sync, "_active_endpoint", side_effect=[("main.example", 3306)]
-        ):
-            with mouse_sync._main_database():
+        ), patch.object(mouse_sync.mice, "schema", schema):
+            with mouse_sync._main_database() as conn:
                 assert cfg["database.host"] == "main.example"
                 assert cfg["database.port"] == 3306
+                assert conn is not None
         assert connect_calls[0]["host"] == "main.example"
         assert connect_calls[0]["port"] == 3306
         assert connect_calls[0]["disable_ssl"] is True
@@ -364,7 +387,7 @@ class TestSyncMiceFromMain:
             "database.password": "p",
         }
         with patch.object(mouse_sync.dj, "config", cfg), patch.object(
-            mouse_sync, "_dj_connect"
+            mouse_sync, "_dj_connect", return_value=MagicMock()
         ), patch.object(
             mouse_sync, "_active_endpoint", return_value=("127.0.0.1", 3309)
         ):
@@ -443,7 +466,7 @@ class TestSyncExpToMain:
         ) as mock_mice, patch.object(
             mouse_sync, "get_pushable_local_session_keys", return_value=pushable
         ), patch.object(mouse_sync, "_main_database") as mock_main:
-            mock_main.return_value.__enter__ = MagicMock()
+            mock_main.return_value.__enter__ = MagicMock(return_value=None)
             mock_main.return_value.__exit__ = MagicMock(return_value=False)
             mock_exp.Session.primary_key = ["mouse_name", "day", "attempt"]
             mock_exp.Session.return_value.fetch.return_value = [session]
@@ -475,19 +498,19 @@ class TestSyncExpToMain:
         ), patch.object(
             mouse_sync, "_prepare_session_row_for_main", return_value=("ready", prepared)
         ), patch.object(mouse_sync, "_main_database") as mock_main:
-            mock_main.return_value.__enter__ = MagicMock()
+            mock_main.return_value.__enter__ = MagicMock(return_value=None)
             mock_main.return_value.__exit__ = MagicMock(return_value=False)
             mock_exp.Session.primary_key = ["mouse_name", "day", "attempt"]
             mock_exp.Session.return_value.fetch.return_value = [session]
             mock_exp.SessionScoreSheet.return_value.fetch.return_value = []
             mock_mice.Mouse.return_value.__and__ = MagicMock(return_value=True)
-            mock_exp.Session.insert1 = MagicMock()
+            mock_exp.Session.return_value.insert1 = MagicMock()
             mock_exp.SessionScoreSheet.return_value.__and__ = MagicMock(
                 return_value=False
             )
             count = mouse_sync.sync_exp_to_main(log=log)
         assert count >= 1
-        mock_exp.Session.insert1.assert_called_once_with(prepared)
+        mock_exp.Session.return_value.insert1.assert_called_once_with(prepared)
 
     def test_skips_when_doe_already_on_main(self, monkeypatch):
         monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
@@ -506,15 +529,15 @@ class TestSyncExpToMain:
         ), patch.object(
             mouse_sync, "_prepare_session_row_for_main", return_value=("exists", None)
         ), patch.object(mouse_sync, "_main_database") as mock_main:
-            mock_main.return_value.__enter__ = MagicMock()
+            mock_main.return_value.__enter__ = MagicMock(return_value=None)
             mock_main.return_value.__exit__ = MagicMock(return_value=False)
             mock_exp.Session.primary_key = ["mouse_name", "day", "attempt"]
             mock_exp.Session.return_value.fetch.return_value = [session]
             mock_exp.SessionScoreSheet.return_value.fetch.return_value = []
             mock_mice.Mouse.return_value.__and__ = MagicMock(return_value=True)
-            mock_exp.Session.insert1 = MagicMock()
+            mock_exp.Session.return_value.insert1 = MagicMock()
             assert mouse_sync.sync_exp_to_main(log=log) == 0
-            mock_exp.Session.insert1.assert_not_called()
+            mock_exp.Session.return_value.insert1.assert_not_called()
 
     def test_skips_sessions_without_local_dataset(self, monkeypatch):
         monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
@@ -560,18 +583,18 @@ class TestSyncExpToMain:
         ), patch.object(
             mouse_sync, "_prepare_session_row_for_main", return_value=("ready", prepared)
         ), patch.object(mouse_sync, "_main_database") as mock_main:
-            mock_main.return_value.__enter__ = MagicMock()
+            mock_main.return_value.__enter__ = MagicMock(return_value=None)
             mock_main.return_value.__exit__ = MagicMock(return_value=False)
             mock_exp.Session.primary_key = ["mouse_name", "day", "attempt"]
             mock_exp.Session.return_value.fetch.return_value = [local, collab]
             mock_exp.SessionScoreSheet.return_value.fetch.return_value = []
             mock_mice.Mouse.return_value.__and__ = MagicMock(return_value=True)
-            mock_exp.Session.insert1 = MagicMock()
+            mock_exp.Session.return_value.insert1 = MagicMock()
             mock_exp.SessionScoreSheet.return_value.__and__ = MagicMock(
                 return_value=False
             )
             mouse_sync.sync_exp_to_main(log=log)
-        mock_exp.Session.insert1.assert_called_once_with(prepared)
+        mock_exp.Session.return_value.insert1.assert_called_once_with(prepared)
 
 
 class TestPrepareSessionRowForMain:

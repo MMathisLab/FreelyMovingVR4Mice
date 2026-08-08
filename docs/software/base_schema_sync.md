@@ -65,6 +65,8 @@ Requirements:
   preload mice from main before recordings exist.
 - Main connection skips SSL (pymysql ``ssl_disabled``); DJ ``use_tls=False``
   alone is not enough on this stack.
+- Fetches on main use ``dj.FreeTable`` on the main Connection — do not trust
+  ``mice.Mouse()`` after ``dj.conn(reset=True)`` (schema can stay on local).
 - **`sync_exp` is optional** — this lab only (not collab). See §E.
 
 ---

@@ -295,8 +295,9 @@ def _rebind_schema_connection(conn) -> None:
     Point base ``mice`` (and related) schemas at ``conn``.
 
     ``dj.Schema`` keeps the Connection from first import/connect. After
-    ``dj.conn(reset=True)`` to main, tables can still query the old local conn
-    unless we rebind.
+    ``dj.conn(reset=True)`` to main, ``mice.Mouse()`` can still query the old
+    local conn unless we rebind — and setattr on a read-only ``connection``
+    property is often a no-op. Prefer ``_table_on_conn`` for main fetches.
     """
     schemas = []
     try:
@@ -309,12 +310,50 @@ def _rebind_schema_connection(conn) -> None:
         pass
     for schema in schemas:
         for attr in ("connection", "_connection", "_conn"):
-            if not hasattr(schema, attr):
-                continue
+            try:
+                object.__setattr__(schema, attr, conn)
+            except Exception:
+                pass
+            try:
+                schema.__dict__[attr] = conn
+            except Exception:
+                pass
             try:
                 setattr(schema, attr, conn)
             except Exception:
                 pass
+
+
+def _mysql_port(conn) -> Optional[int]:
+    """``@@port`` for a live Connection, or None."""
+    if conn is None:
+        return None
+    try:
+        row = conn.query("SELECT @@port").fetchone()
+        return int(row[0])
+    except Exception:
+        return None
+
+
+def _table_on_conn(conn, table_cls):
+    """
+    Return a queryable table bound to ``conn``.
+
+    When ``conn`` is set, uses ``dj.FreeTable`` so we never accidentally read
+    through the schema's imported local Connection. Falls back to
+    ``table_cls()`` when ``conn`` is None or ``full_table_name`` is unavailable
+    (unit-test mocks).
+    """
+    if conn is None:
+        return table_cls()
+    full = getattr(table_cls, "full_table_name", None)
+    if not isinstance(full, str) or "`" not in full:
+        inst_full = getattr(table_cls(), "full_table_name", None)
+        if isinstance(inst_full, str) and "`" in inst_full:
+            full = inst_full
+        else:
+            return table_cls()
+    return dj.FreeTable(conn, full)
 
 
 def _dj_connect(*, host: str, port: int, user: str, password: str, disable_ssl: bool):
@@ -347,7 +386,7 @@ def _dj_connect(*, host: str, port: int, user: str, password: str, disable_ssl: 
 
 @contextmanager
 def _main_database():
-    """Temporarily point DataJoint at DJ_MAIN_HOST, then restore local config."""
+    """Temporarily point DataJoint at DJ_MAIN_HOST; yield that Connection."""
     # Never use `key in dj.config` — DJ Config.__contains__ breaks (int keys).
     # Must switch host AND port: local is often :3309 while main is :3306 on the
     # same IP. Leaving port at 3309 made sync query the local DB.
@@ -400,17 +439,32 @@ def _main_database():
                 "Check DJ_MAIN_HOST (include :3306) and database.port."
                 % (local_ep[0], local_ep[1])
             )
-        # Prove queries use this connection (schema rebind), not the previous local one.
+        conn_port = _mysql_port(conn)
+        schema_conn = getattr(getattr(mice, "schema", None), "connection", None)
+        schema_port = _mysql_port(schema_conn)
         try:
-            server_info = conn.query("SELECT @@port AS p, DATABASE() AS db").fetchall()
-            logger.info("Main MySQL session: %s", server_info)
+            sql_count = conn.query("SELECT COUNT(*) FROM mice.mouse").fetchone()[0]
         except Exception as err:
-            logger.warning("Could not read @@port/DATABASE(): %s", err)
+            sql_count = "err:%s" % err
+        logger.info(
+            "Main MySQL session: conn @@port=%s schema @@port=%s "
+            "SQL mice.mouse COUNT(*)=%s",
+            conn_port,
+            schema_port,
+            sql_count,
+        )
+        if schema_port is not None and conn_port is not None and schema_port != conn_port:
+            logger.warning(
+                "mice.schema is still on @@port=%s (local) while main conn is "
+                "@@port=%s — fetches will use FreeTable on main conn.",
+                schema_port,
+                conn_port,
+            )
     except Exception:
         traceback.print_exc()
         raise
     try:
-        yield
+        yield conn
     finally:
         for key, value in saved.items():
             dj.config[key] = value
@@ -506,28 +560,46 @@ def sync_mice_from_main(
     found_on_main: Set[str] = set()
     name_on_main: dict = {}  # local/target name -> canonical mouse_name on main
     try:
-        with _main_database():
-            main_names = list(mice.Mouse().fetch("mouse_name"))
-            main_exact = {n for n in main_names if n}
+        # Yielded conn is the main endpoint; never use mice.Mouse() here — that
+        # table object often still points at the local schema Connection.
+        with _main_database() as main_conn:
+
+            def _norm_name(raw) -> Optional[str]:
+                if raw is None:
+                    return None
+                if isinstance(raw, (bytes, bytearray)):
+                    raw = raw.decode("utf-8", errors="replace")
+                text = str(raw).strip()
+                return text or None
+
+            mouse_main = _table_on_conn(main_conn, mice.Mouse)
+            main_names = [
+                n for n in (_norm_name(x) for x in mouse_main.fetch("mouse_name")) if n
+            ]
+            main_exact = set(main_names)
             main_by_lower = {}
-            for n in main_exact:
-                main_by_lower.setdefault(str(n).lower(), n)
+            for n in main_names:
+                main_by_lower.setdefault(n.lower(), n)
+            sample = ", ".join(sorted(main_exact)[:12])
             log.info(
-                "Main mice.Mouse row count: %d (sample: %s)",
+                "Main mice.Mouse row count (via main conn): %d (sample: %s)",
                 len(main_exact),
-                ", ".join(sorted(main_exact)[:8]),
+                sample,
             )
 
             for name in targets:
-                canonical = name if name in main_exact else main_by_lower.get(name.lower())
+                name = _norm_name(name) or name
+                canonical = (
+                    name if name in main_exact else main_by_lower.get(name.lower())
+                )
                 if canonical is None:
-                    # raw SQL probe for near matches (proves which DB + spelling)
                     try:
-                        conn = dj.conn()
-                        like = conn.query(
+                        needle = "%" + name.lower() + "%"
+                        like = main_conn.query(
                             "SELECT mouse_name FROM mice.mouse "
-                            "WHERE mouse_name = %s OR mouse_name LIKE %s LIMIT 5",
-                            (name, "%" + name + "%"),
+                            "WHERE mouse_name = %s OR LOWER(mouse_name) LIKE %s "
+                            "LIMIT 8",
+                            (name, needle),
                         ).fetchall()
                         log.warning(
                             "No Mouse row for %r on main; SQL near-matches: %s",
@@ -543,11 +615,17 @@ def sync_mice_from_main(
                     continue
 
                 if canonical != name:
-                    log.info("Main name for %r is %r (case/spelling map)", name, canonical)
+                    log.info(
+                        "Main name for %r is %r (case/spelling map)", name, canonical
+                    )
                 name_on_main[name] = canonical
                 restriction = {"mouse_name": canonical}
                 for table in MOUSE_SYNC_TABLES:
-                    rows = list((table() & restriction).fetch(as_dict=True))
+                    rows = list(
+                        (_table_on_conn(main_conn, table) & restriction).fetch(
+                            as_dict=True
+                        )
+                    )
                     if not rows:
                         continue
                     # Keep local/GUI spelling when main only differs by case.
@@ -565,7 +643,12 @@ def sync_mice_from_main(
                                 strain_names.add(strain)
             for strain in sorted(strain_names):
                 strain_rows.extend(
-                    list((mice.Strain() & {"strain": strain}).fetch(as_dict=True))
+                    list(
+                        (
+                            _table_on_conn(main_conn, mice.Strain)
+                            & {"strain": strain}
+                        ).fetch(as_dict=True)
+                    )
                 )
     except Exception:
         traceback.print_exc()
@@ -706,27 +789,31 @@ def _as_date(doe) -> datetime.date:
     return datetime.date.fromisoformat(_doe_str(doe))
 
 
-def _prepare_session_row_for_main(row: dict, log=None) -> Tuple[str, Optional[dict]]:
+def _prepare_session_row_for_main(
+    row: dict, log=None, *, conn=None
+) -> Tuple[str, Optional[dict]]:
     """
     Adapt a local Session row for insert on main (caller must be on main).
 
     Existence is judged by (mouse_name, doe, attempt), not local day.
     Returns (status, row) where status is ``exists``, ``conflict``, or ``ready``.
+    Pass ``conn`` (main Connection) so Session is not read via the local schema.
     """
     log = log or logger
+    Session = _table_on_conn(conn, exp.Session)
     mouse_name = row["mouse_name"]
     attempt = int(row["attempt"])
     doe_s = _doe_str(row["doe"])
     doe_date = _as_date(row["doe"])
 
     if (
-        exp.Session()
+        Session
         & {"mouse_name": mouse_name, "attempt": attempt}
         & f'doe="{doe_s}"'
     ):
         return "exists", None
 
-    main_sessions = (exp.Session() & {"mouse_name": mouse_name}).fetch(as_dict=True)
+    main_sessions = (Session & {"mouse_name": mouse_name}).fetch(as_dict=True)
     same_doe_days = [
         int(s["day"]) for s in main_sessions if _doe_str(s["doe"]) == doe_s
     ]
@@ -748,7 +835,7 @@ def _prepare_session_row_for_main(row: dict, log=None) -> Tuple[str, Optional[di
     else:
         day = 1
 
-    if exp.Session() & {
+    if Session & {
         "mouse_name": mouse_name,
         "day": day,
         "attempt": attempt,
@@ -822,14 +909,19 @@ def sync_exp_to_main(log=None) -> int:
     skipped_conflict = 0
     failed: List[str] = []
 
-    with _main_database():
+    with _main_database() as main_conn:
+        Mouse = _table_on_conn(main_conn, mice.Mouse)
+        Session = _table_on_conn(main_conn, exp.Session)
+        ScoreSheet = _table_on_conn(main_conn, exp.SessionScoreSheet)
         for row in candidates:
             mouse_name = row.get("mouse_name")
-            if not (mice.Mouse() & {"mouse_name": mouse_name}):
+            if not (Mouse & {"mouse_name": mouse_name}):
                 skipped_missing_mouse.append(mouse_name or "?")
                 continue
 
-            status, main_row = _prepare_session_row_for_main(row, log=log)
+            status, main_row = _prepare_session_row_for_main(
+                row, log=log, conn=main_conn
+            )
             if status == "exists":
                 skipped_existing += 1
                 continue
@@ -839,15 +931,15 @@ def sync_exp_to_main(log=None) -> int:
 
             local_pk = _session_primary_key(row)
             try:
-                exp.Session.insert1(main_row)
+                Session.insert1(main_row)
                 inserted += 1
                 sheet_row = sheets_by_local_pk.get(_pk_tuple(local_pk))
                 if sheet_row is not None:
                     main_sheet = dict(sheet_row)
                     main_sheet["day"] = main_row["day"]
                     sheet_key = _session_primary_key(main_sheet)
-                    if not (exp.SessionScoreSheet() & sheet_key):
-                        exp.SessionScoreSheet.insert1(main_sheet)
+                    if not (ScoreSheet & sheet_key):
+                        ScoreSheet.insert1(main_sheet)
                         inserted += 1
             except Exception as err:
                 failed.append(
