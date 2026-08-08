@@ -337,6 +337,24 @@ class TestSyncMiceFromMain:
         assert mouse_sync._table_on_conn(None, table_cls) == "instance"
         table_cls.assert_called_once_with()
 
+    def test_table_name_alternates_prefers_main_part_style(self):
+        full = "`mice`.`mouse_score_sheet_water_restriction`"
+        part = "`mice`.`mouse_score_sheet__water_restriction`"
+
+        class MouseScoreSheet_WaterRestriction:
+            pass
+
+        alts = mouse_sync._table_name_alternates(
+            full, MouseScoreSheet_WaterRestriction, prefer_part_style=True
+        )
+        assert alts[0] == part
+        assert alts[1] == full
+
+        alts_local = mouse_sync._table_name_alternates(
+            full, MouseScoreSheet_WaterRestriction, prefer_part_style=False
+        )
+        assert alts_local[0] == full
+
     def test_split_host_port(self):
         assert mouse_sync._split_host_port("db.example:3306") == ("db.example", 3306)
         assert mouse_sync._split_host_port("128.178.51.167") == ("128.178.51.167", 3306)

@@ -335,7 +335,71 @@ def _mysql_port(conn) -> Optional[int]:
         return None
 
 
-def _table_on_conn(conn, table_cls):
+def _full_table_name(table_cls) -> Optional[str]:
+    full = getattr(table_cls, "full_table_name", None)
+    if isinstance(full, str) and "`" in full:
+        return full
+    try:
+        inst_full = getattr(table_cls(), "full_table_name", None)
+    except Exception:
+        return None
+    if isinstance(inst_full, str) and "`" in inst_full:
+        return inst_full
+    return None
+
+
+def _camel_to_snake(name: str) -> str:
+    out: List[str] = []
+    for i, ch in enumerate(name):
+        if ch.isupper() and i and (name[i - 1].islower() or name[i - 1].isdigit()):
+            out.append("_")
+        out.append(ch.lower())
+    return "".join(out)
+
+
+def _part_style_table_name(full: str, table_cls) -> Optional[str]:
+    """
+    Map ``ClassName_PartName`` → ```schema`.`class_name__part_name``.
+
+    Main uses DJ part-table ``__`` naming; local classes often expose a single
+    ``_`` ``full_table_name`` (e.g. ``mouse_score_sheet_water_restriction``).
+    """
+    if not full or "`.`" not in full:
+        return None
+    cls_name = getattr(table_cls, "__name__", "") or ""
+    if "_" not in cls_name:
+        return None
+    left, _, right = cls_name.partition("_")
+    if not left or not right:
+        return None
+    schema_part, _, _ = full.partition("`.`")
+    return f"{schema_part}`.`{_camel_to_snake(left)}__{_camel_to_snake(right)}`"
+
+
+def _table_name_alternates(
+    full: str, table_cls=None, *, prefer_part_style: bool = True
+) -> List[str]:
+    """
+    MySQL names to try for a table class.
+
+    On main, prefer ``__`` (part style). Local upserts always use the schema
+    class (single ``_``), not these FreeTable names.
+    """
+    names: List[str] = []
+    part = _part_style_table_name(full, table_cls) if table_cls is not None else None
+    local = full if full else None
+
+    if prefer_part_style:
+        ordered = [part, local]
+    else:
+        ordered = [local, part]
+    for name in ordered:
+        if name and name not in names:
+            names.append(name)
+    return names
+
+
+def _table_on_conn(conn, table_cls, *, full_name: Optional[str] = None):
     """
     Return a queryable table bound to ``conn``.
 
@@ -346,14 +410,82 @@ def _table_on_conn(conn, table_cls):
     """
     if conn is None:
         return table_cls()
-    full = getattr(table_cls, "full_table_name", None)
-    if not isinstance(full, str) or "`" not in full:
-        inst_full = getattr(table_cls(), "full_table_name", None)
-        if isinstance(inst_full, str) and "`" in inst_full:
-            full = inst_full
-        else:
-            return table_cls()
+    full = full_name or _full_table_name(table_cls)
+    if not full:
+        return table_cls()
     return dj.FreeTable(conn, full)
+
+
+def _fetch_on_main(
+    conn,
+    table_cls,
+    restriction: Optional[dict] = None,
+    *,
+    log=None,
+    missing_tables: Optional[Set[str]] = None,
+    resolved_names: Optional[Set[str]] = None,
+) -> List[dict]:
+    """
+    Fetch rows for ``table_cls`` on main ``conn``.
+
+    Main may use ``__`` table names while local ``full_table_name`` uses ``_``.
+    Upserts still go through local schema classes. Skips optional tables that
+    match neither name; Mouse/Strain errors propagate.
+    """
+    log = log or logger
+    if conn is None:
+        query = table_cls()
+        if restriction:
+            query = query & restriction
+        return list(query.fetch(as_dict=True))
+
+    full = _full_table_name(table_cls)
+    if not full:
+        query = table_cls()
+        if restriction:
+            query = query & restriction
+        return list(query.fetch(as_dict=True))
+
+    last_err: Optional[Exception] = None
+    label = getattr(table_cls, "__name__", full)
+    for candidate in _table_name_alternates(
+        full, table_cls, prefer_part_style=True
+    ):
+        try:
+            query = _table_on_conn(conn, table_cls, full_name=candidate)
+            if restriction:
+                query = query & restriction
+            rows = list(query.fetch(as_dict=True))
+            if (
+                candidate != full
+                and resolved_names is not None
+                and label not in resolved_names
+            ):
+                resolved_names.add(label)
+                log.info(
+                    "Reading main %s from %s (local table name is %s)",
+                    label,
+                    candidate,
+                    full,
+                )
+            return rows
+        except dj.DataJointError as err:
+            last_err = err
+            msg = str(err).lower()
+            if "not defined" not in msg and "not found" not in msg:
+                raise
+            continue
+
+    if missing_tables is not None and label not in missing_tables:
+        missing_tables.add(label)
+        log.warning(
+            "Skipping %s on main (%s) — tried __ and _ names.",
+            label,
+            last_err,
+        )
+    if table_cls is mice.Mouse or table_cls is mice.Strain:
+        raise last_err  # type: ignore[misc]
+    return []
 
 
 def _dj_connect(*, host: str, port: int, user: str, password: str, disable_ssl: bool):
@@ -572,9 +704,19 @@ def sync_mice_from_main(
                 text = str(raw).strip()
                 return text or None
 
-            mouse_main = _table_on_conn(main_conn, mice.Mouse)
+            missing_tables: Set[str] = set()
+            resolved_names: Set[str] = set()
+            mouse_rows = _fetch_on_main(
+                main_conn,
+                mice.Mouse,
+                log=log,
+                missing_tables=missing_tables,
+                resolved_names=resolved_names,
+            )
             main_names = [
-                n for n in (_norm_name(x) for x in mouse_main.fetch("mouse_name")) if n
+                n
+                for n in (_norm_name(row.get("mouse_name")) for row in mouse_rows)
+                if n
             ]
             main_exact = set(main_names)
             main_by_lower = {}
@@ -621,10 +763,13 @@ def sync_mice_from_main(
                 name_on_main[name] = canonical
                 restriction = {"mouse_name": canonical}
                 for table in MOUSE_SYNC_TABLES:
-                    rows = list(
-                        (_table_on_conn(main_conn, table) & restriction).fetch(
-                            as_dict=True
-                        )
+                    rows = _fetch_on_main(
+                        main_conn,
+                        table,
+                        restriction,
+                        log=log,
+                        missing_tables=missing_tables,
+                        resolved_names=resolved_names,
                     )
                     if not rows:
                         continue
@@ -643,11 +788,13 @@ def sync_mice_from_main(
                                 strain_names.add(strain)
             for strain in sorted(strain_names):
                 strain_rows.extend(
-                    list(
-                        (
-                            _table_on_conn(main_conn, mice.Strain)
-                            & {"strain": strain}
-                        ).fetch(as_dict=True)
+                    _fetch_on_main(
+                        main_conn,
+                        mice.Strain,
+                        {"strain": strain},
+                        log=log,
+                        missing_tables=missing_tables,
+                        resolved_names=resolved_names,
                     )
                 )
     except Exception:

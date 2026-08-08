@@ -67,6 +67,9 @@ Requirements:
   alone is not enough on this stack.
 - Fetches on main use ``dj.FreeTable`` on the main Connection — do not trust
   ``mice.Mouse()`` after ``dj.conn(reset=True)`` (schema can stay on local).
+- Main may store part tables with ``__`` (e.g.
+  ``mouse_score_sheet__water_restriction``) while local classes use a single
+  ``_``; ``sync_mice`` reads ``__`` on main, upserts via local classes.
 - **`sync_exp` is optional** — this lab only (not collab). See §E.
 
 ---
