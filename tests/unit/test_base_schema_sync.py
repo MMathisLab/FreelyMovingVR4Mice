@@ -336,13 +336,33 @@ class TestSyncMiceFromMain:
 
         with patch.object(mouse_sync.dj, "config", cfg), patch.object(
             mouse_sync.dj, "conn", fake_conn
-        ):
+        ), patch.object(mouse_sync, "_pymysql_disable_ssl") as mock_ssl:
+            mock_ssl.return_value.__enter__ = MagicMock()
+            mock_ssl.return_value.__exit__ = MagicMock(return_value=False)
             with mouse_sync._main_database():
                 assert cfg["database.host"] == "main.example:3306"
-                assert "database.use_tls" not in cfg
             assert cfg["database.host"] == "local"
         assert conn_calls[0]["reset"] is True
-        assert "use_tls" not in conn_calls[0]
+        mock_ssl.assert_called()
+
+    def test_pymysql_disable_ssl_sets_ssl_disabled(self):
+        import pymysql
+
+        seen = {}
+        original = pymysql.connect
+
+        def fake_connect(*args, **kwargs):
+            seen.update(kwargs)
+            return MagicMock()
+
+        pymysql.connect = fake_connect
+        try:
+            with mouse_sync._pymysql_disable_ssl():
+                pymysql.connect(host="h", user="u", password="p")
+        finally:
+            pymysql.connect = original
+        assert seen.get("ssl_disabled") is True
+        assert seen.get("ssl") is None
 
 
 class TestUpsertRows:

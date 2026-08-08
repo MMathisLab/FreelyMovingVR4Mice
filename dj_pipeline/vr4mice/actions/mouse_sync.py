@@ -227,11 +227,42 @@ def _require_dj_main_host() -> None:
 
 
 @contextmanager
+def _pymysql_disable_ssl():
+    """
+    Force plain MySQL (no TLS) for the next pymysql.connect().
+
+    DataJoint 2.x ``use_tls=False`` still ends up SSL-wrapping on this stack.
+    Patching pymysql is the reliable way to skip SSL for lab servers.
+    """
+    import pymysql
+
+    original = pymysql.connect
+
+    def connect_no_ssl(*args, **kwargs):
+        kwargs["ssl"] = None
+        kwargs["ssl_disabled"] = True
+        for key in (
+            "ssl_ca",
+            "ssl_cert",
+            "ssl_key",
+            "ssl_verify_cert",
+            "ssl_verify_identity",
+            "ssl_key_password",
+        ):
+            kwargs.pop(key, None)
+        return original(*args, **kwargs)
+
+    pymysql.connect = connect_no_ssl
+    try:
+        yield
+    finally:
+        pymysql.connect = original
+
+
+@contextmanager
 def _main_database():
     """Temporarily point DataJoint at DJ_MAIN_HOST, then restore local config."""
     # Never use `key in dj.config` — DJ Config.__contains__ breaks (int keys).
-    # Do not set database.use_tls: DJ 2.x default try-TLS-then-fallback works on
-    # lab MySQL; forcing use_tls=False still SSL-wraps and fails without fallback.
     keys = ("database.host", "database.user", "database.password")
     saved = {key: dj.config[key] for key in keys}
     dj.config["database.host"] = os.environ["DJ_MAIN_HOST"]
@@ -240,7 +271,8 @@ def _main_database():
         "DJ_MAIN_PWD", saved["database.password"]
     )
     try:
-        dj.conn(reset=True)
+        with _pymysql_disable_ssl():
+            dj.conn(reset=True)
     except Exception:
         traceback.print_exc()
         raise
