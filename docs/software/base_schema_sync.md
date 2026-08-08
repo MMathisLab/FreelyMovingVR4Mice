@@ -12,11 +12,20 @@
 cd dj_pipeline
 make client_up          # if needed
 make bash               # sources .env; shell in /app
-# then all python commands below
+# then python run_base.py recover_base / cleanup_* / sync_exp
 ```
 
-Exception: `make -f mysql.mk …` is **host-side** MySQL (`.env` `DJ_*` over TCP).
+**Mouse registry from parent** is **host-side** (bash `mysqldump` / `mysql`) — not
+inside `make bash` — so we never open two DataJoint connections:
 
+```bash
+cd dj_pipeline
+make -f mysql.mk sync-mice-from-main
+make -f mysql.mk sync-mice-from-main MOUSE=Flamingo,Whale
+```
+
+Exception: other `make -f mysql.mk …` diagnostics are also **host-side** MySQL
+(`.env` `DJ_*` over TCP).
 ## Normal ingest (usual workflow)
 
 When `GUI=True`, **daily populate writes `exp` / `mice`** together with `vr4mice`
@@ -38,47 +47,34 @@ Each step is its own `run_base.py` mode — nothing is chained inside
 `recover_base`.
 
 ```bash
-# inside make bash
-# 1a. Pull Mouse rows from parent for local Dataset / GUI / Session names
-python run_base.py sync_mice
-# 1b. Or preload specific mice before any recordings exist
-python run_base.py sync_mice --mouse Flamingo
-python run_base.py sync_mice --mouse Flamingo --mouse Whale
+# host, from dj_pipeline/ — preferred (no DataJoint dual-connect)
+make -f mysql.mk sync-mice-from-main
+make -f mysql.mk sync-mice-from-main MOUSE=Flamingo,Whale
 
-# 2. Rebuild local exp/mice from unpopulated GUI .npy only
+# inside make bash — recover / cleanup / optional sync_exp only
 python run_base.py recover_base
-
-# 3. Optional — list local exp/mice with no vr4mice.Dataset
 python run_base.py cleanup_orphans
 python run_base.py cleanup_orphans --force   # apply deletes (local only)
-
-# 4. Optional — push missing local (non-collab) sessions to parent
 python run_base.py sync_exp
-
 python run.py fetch   # refresh GUI menu if needed
 ```
 
 Requirements:
 
-- `sync_mice` (default) pulls incomplete local names from `vr4mice.Dataset`,
-  GUI `.npy`, and/or `exp.Session`. Use `--mouse NAME` (repeatable) to
-  preload mice from main before recordings exist.
-- Main connection skips SSL (pymysql ``ssl_disabled``); DJ ``use_tls=False``
-  alone is not enough on this stack.
-- Fetches on main use ``dj.FreeTable`` on the main Connection — do not trust
-  ``mice.Mouse()`` after ``dj.conn(reset=True)`` (schema can stay on local).
-- Main may store part tables with ``__`` (e.g.
-  ``mouse_score_sheet__water_restriction``) while local classes use a single
-  ``_``; ``sync_mice`` reads ``__`` on main, upserts via local classes.
+- **`sync_mice` (mysql.mk)** dumps Strain / Mouse / Surgery / score-sheet tables
+  from `DJ_MAIN_*` onto local `DJ_HOST` via `mysqldump` + `mysql`. Handles main
+  ``__`` vs local ``_`` table names. Optional `MOUSE=a,b` filters mouse-keyed
+  tables; lookups are always copied in full (small).
+- Do **not** use `python run_base.py sync_mice` for normal ops (it exits with
+  instructions to run ``make -f mysql.mk sync-mice-from-main``).
 - **`sync_exp` is optional** — this lab only (not collab). See §E.
-
 ---
 
 ## When you need `run_base.py`
 
 | Mode | Purpose |
 |------|---------|
-| `sync_mice` | Parent → local Mouse (+ Strain, Surgery, score sheets); Dataset/GUI/Session names, or `--mouse NAME` |
+| `make -f mysql.mk sync-mice-from-main` | Parent → local mice registry via **mysqldump** (preferred) |
 | `recover_base` | Replication check + populate **unpopulated GUI `.npy`** into local `exp`/`mice` only |
 | `cleanup_orphans` | List/delete local `exp`/`mice` with **no** `vr4mice.Dataset` (dry-run unless `--force`) |
 | `cleanup_mice` | Remove **stub** mice with no local Session (narrower helper) |
@@ -88,12 +84,14 @@ Session files for recover should exist under `/data/data` and/or `/data/processe
 
 ### Safety invariants
 
-1. **Never delete on main.** `sync_mice` fetches only; `sync_exp` inserts missing
+1. **Never delete on main.** mysql sync dumps only; `sync_exp` inserts missing
    rows only.
 2. **Local Dataset-orphan deletes** only via `cleanup_orphans` (`--force` to
    apply). Not part of `recover_base`.
-3. **`sync_mice` may replace** local Mouse/Surgery/score-sheet rows
-   (`replace=True`) — metadata refresh, not orphan deletion.
+3. Prefer **host `make -f mysql.mk sync-mice-from-main`** (mysqldump). There is
+   no DataJoint dual-connect path for mice sync.
+4. mysql sync may **REPLACE** local Mouse/Surgery/score-sheet rows
+   (`FOREIGN_KEY_CHECKS=0` during load).
 
 ---
 
@@ -160,14 +158,17 @@ STOP SLAVE;
    `--force` cleanup (and preferably before `recover_base` writes).
 3. Enter the client: `make client_up` (if needed), then `make bash`.
 
-### B — sync mice (`make bash`)
+### B — sync mice (host `mysql.mk`)
 
 ```bash
-python run_base.py sync_mice
-# or preload before recordings:
-python run_base.py sync_mice --mouse Flamingo
+# from dj_pipeline/ on the host (not make bash)
+make -f mysql.mk sync-mice-from-main
+make -f mysql.mk sync-mice-from-main MOUSE=Flamingo,Whale
 ```
 
+Uses `scripts/sync_mice_mysql.sh`: separate `mysql`/`mysqldump` clients for
+`DJ_MAIN_*` and `DJ_HOST`, verifies live `@@port` differs, maps `__`→`_` table
+names when needed, loads with `FOREIGN_KEY_CHECKS=0`.
 Pulls Mouse (+ Strain, Surgery, score sheets) from parent for incomplete local
 Dataset / GUI / Session names, or for explicit `--mouse NAME`.
 
@@ -220,15 +221,15 @@ python run.py populate   # or leave to cron
 ## 4. Minimal happy path
 
 ```bash
-# host
+# host (dj_pipeline/)
 # 1. DJ_MAIN_* in .env; replication OFF for cleanup
 make -f mysql.mk replication-summary
+make -f mysql.mk sync-mice-from-main
+# optional: make -f mysql.mk sync-mice-from-main MOUSE=Flamingo,Whale
 make client_up
 make bash
 
 # inside make bash
-python run_base.py sync_mice
-# optional preload: python run_base.py sync_mice --mouse Flamingo
 python run_base.py recover_base
 python run_base.py cleanup_orphans          # review list
 python run_base.py cleanup_orphans --force  # only if OK
@@ -243,6 +244,7 @@ python run.py fetch                        # optional
 
 ## 5. Tests
 
-`tests/unit/test_base_schema_sync.py` — stubs, GUI mouse discovery, targeted
-`sync_mice` (+ `--mouse` / `mouse_names`), recover populate-only, orphan
-cleanup, `sync_exp` local-vs-collab + doe matching.
+`tests/unit/test_base_schema_sync.py` — stubs, GUI mouse discovery, recover
+populate-only, orphan cleanup, `sync_exp` local-vs-collab + doe matching.
+Mice registry sync from parent: `make -f mysql.mk sync-mice-from-main`
+(`scripts/sync_mice_mysql.sh`).

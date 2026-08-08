@@ -16,6 +16,8 @@
 #
 # Examples:
 #   make -f mysql.mk replication-summary
+#   make -f mysql.mk sync-mice-from-main
+#   make -f mysql.mk sync-mice-from-main MOUSE=Flamingo,Whale
 #   make -f mysql.mk mysql
 
 SHELL := /bin/bash
@@ -62,10 +64,11 @@ else
   MYSQL = mysql -h $(MYSQL_HOST) -P $(MYSQL_PORT) -u $(MYSQL_USER) -p$(MYSQL_PASSWORD)
 endif
 
-.PHONY: help check-creds creds mysql mysql-host mysql-docker \
+.PHONY: help check-creds check-main-creds creds mysql mysql-host mysql-docker \
         replication-status replication-status-legacy replication-summary \
         replication-variables replica-hosts server-id log-bin read-only \
-        session-mice stub-mice mice-without-sessions databases
+        session-mice stub-mice mice-without-sessions databases \
+        sync-mice-from-main
 
 help: ## List MySQL diagnostic targets
 	@awk 'BEGIN {FS = ":.*##"; printf "Usage: make -f mysql.mk <target>\n\nTargets:\n"} \
@@ -167,3 +170,17 @@ mice-without-sessions: check-creds ## Mouse rows with no exp.session (candidates
 	$(MYSQL) -e "SELECT m.mouse_name, m.mouse_id FROM mice.mouse m \
 		LEFT JOIN exp.session s ON m.mouse_name = s.mouse_name \
 		WHERE s.mouse_name IS NULL ORDER BY m.mouse_name;"
+
+# ---------------------------------------------------------------------------
+# Parent → local mice registry (mysqldump; no DataJoint dual-connect)
+# ---------------------------------------------------------------------------
+
+check-main-creds: check-creds
+	@if [ -z "$$(grep -E '^DJ_MAIN_HOST=' .env 2>/dev/null | tail -1 | cut -d= -f2-)" ]; then \
+		echo "error: need DJ_MAIN_HOST in .env (parent host:port)"; \
+		exit 1; \
+	fi
+
+# Optional: MOUSE=Flamingo,Whale  (comma-separated). Default = full registry tables.
+sync-mice-from-main: check-main-creds ## Dump mice tables from DJ_MAIN_* onto local DJ_HOST (bash mysql)
+	@MOUSE="$(MOUSE)" "$(CURDIR)/scripts/sync_mice_mysql.sh"

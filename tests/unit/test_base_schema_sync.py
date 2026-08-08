@@ -220,151 +220,13 @@ class TestGetGuiMouseNames:
             assert mouse_sync.get_known_local_mouse_names() == {"FromDisk"}
 
 
-class TestSyncMiceFromMain:
-    def test_requires_dj_main_host(self, monkeypatch):
-        monkeypatch.delenv("DJ_MAIN_HOST", raising=False)
-        with pytest.raises(ValueError, match="DJ_MAIN_HOST"):
-            mouse_sync.sync_mice_from_main()
-
-    def test_noop_when_no_known_mice(self, monkeypatch):
-        monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
-        log = MagicMock()
-        with patch.object(
-            mouse_sync, "get_known_local_mouse_names", return_value=set()
-        ):
-            assert mouse_sync.sync_mice_from_main(log=log) == 0
-        log.info.assert_called()
-
-    def test_noop_when_all_complete(self, monkeypatch):
-        monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
-        log = MagicMock()
-        with patch.object(
-            mouse_sync, "get_known_local_mouse_names", return_value={"Flamingo"}
-        ), patch.object(mouse_sync, "get_incomplete_mouse_names", return_value=[]):
-            assert mouse_sync.sync_mice_from_main(log=log) == 0
-
-    def test_explicit_mouse_names_skip_local_discovery(self, monkeypatch):
-        monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
-        log = MagicMock()
-        main_row = {"mouse_name": "Flamingo", "mouse_id": 7, "strain": "C57"}
-        table = MagicMock()
-        table.return_value = table
-        table.__and__ = MagicMock(return_value=table)
-
-        def fake_fetch(*args, **kwargs):
-            if args and args[0] == "mouse_name":
-                return ["Flamingo"]
-            return [main_row]
-
-        table.fetch.side_effect = fake_fetch
-
-        with patch.object(
-            mouse_sync, "get_known_local_mouse_names"
-        ) as mock_known, patch.object(
-            mouse_sync, "MOUSE_SYNC_TABLES", (table,)
-        ), patch.object(
-            mouse_sync, "_main_database"
-        ) as mock_main, patch.object(
-            mouse_sync, "_upsert_rows", return_value=1
-        ), patch.object(mouse_sync, "mice") as mock_mice:
-            mock_main.return_value.__enter__ = MagicMock(return_value=None)
-            mock_main.return_value.__exit__ = MagicMock(return_value=False)
-            mock_mice.Mouse = table
-            mock_mice.Strain = table
-            count = mouse_sync.sync_mice_from_main(
-                log=log, mouse_names=["Flamingo", " Flamingo "]
-            )
-
-        assert count >= 1
-        mock_known.assert_not_called()
-        assert any("named mice" in str(c) for c in log.info.call_args_list)
-
-    def test_fetches_targets_on_main_upserts_on_local(self, monkeypatch):
-        """Named targets are read inside _main_database, then upserted locally."""
-        monkeypatch.setenv("DJ_MAIN_HOST", "main.example:3306")
-        log = MagicMock()
-        main_row = {"mouse_name": "Flamingo", "mouse_id": 7, "strain": "C57"}
-        table = MagicMock()
-        table.return_value = table
-        table.__and__ = MagicMock(return_value=table)
-
-        def fake_fetch(*args, **kwargs):
-            if args and args[0] == "mouse_name":
-                return ["Flamingo"]
-            return [main_row]
-
-        table.fetch.side_effect = fake_fetch
-
-        phase = {"on_main": False}
-
-        @contextmanager
-        def fake_main():
-            phase["on_main"] = True
-            try:
-                yield None  # unit tests: _table_on_conn falls back to table_cls()
-            finally:
-                phase["on_main"] = False
-
-        upsert_phases = []
-
-        def fake_upsert(tbl, rows):
-            upsert_phases.append(phase["on_main"])
-            return len(list(rows))
-
-        with patch.object(
-            mouse_sync, "get_known_local_mouse_names", return_value={"Flamingo"}
-        ), patch.object(
-            mouse_sync, "get_incomplete_mouse_names", side_effect=[["Flamingo"], []]
-        ), patch.object(
-            mouse_sync, "MOUSE_SYNC_TABLES", (table,)
-        ), patch.object(
-            mouse_sync, "_main_database", fake_main
-        ), patch.object(
-            mouse_sync, "_upsert_rows", side_effect=fake_upsert
-        ), patch.object(
-            mouse_sync, "mice"
-        ) as mock_mice:
-            mock_mice.Mouse = table
-            mock_mice.Strain = table
-            count = mouse_sync.sync_mice_from_main(log=log)
-
-        assert count >= 1
-        assert False in upsert_phases  # upsert after leaving main connection
-        assert any("known local mice" in str(c) for c in log.info.call_args_list)
+class TestMainDatabaseHelpers:
+    """Connection helpers still used by sync_exp."""
 
     def test_table_on_conn_falls_back_without_conn(self):
         table_cls = MagicMock(return_value="instance")
         assert mouse_sync._table_on_conn(None, table_cls) == "instance"
         table_cls.assert_called_once_with()
-
-    def test_table_name_alternates_prefers_main_part_style(self):
-        full = "`mice`.`mouse_score_sheet_water_restriction`"
-        part = "`mice`.`mouse_score_sheet__water_restriction`"
-
-        class MouseScoreSheet_WaterRestriction:
-            pass
-
-        alts = mouse_sync._table_name_alternates(
-            full, MouseScoreSheet_WaterRestriction, prefer_part_style=True
-        )
-        assert alts[0] == part
-        assert alts[1] == full
-
-        alts_local = mouse_sync._table_name_alternates(
-            full, MouseScoreSheet_WaterRestriction, prefer_part_style=False
-        )
-        assert alts_local[0] == full
-
-    def test_part_style_preserves_lookup_hash_prefix(self):
-        full = "`mice`.`#mouse_score_sheet_body_condition`"
-
-        class MouseScoreSheet_BodyCondition:
-            pass
-
-        assert (
-            mouse_sync._part_style_table_name(full, MouseScoreSheet_BodyCondition)
-            == "`mice`.`#mouse_score_sheet__body_condition`"
-        )
 
     def test_split_host_port(self):
         assert mouse_sync._split_host_port("db.example:3306") == ("db.example", 3306)
@@ -491,22 +353,6 @@ class TestSyncMiceFromMain:
         assert schema.connection is conn
         assert schema._connection is conn
 
-
-class TestUpsertRows:
-    def test_uses_replace_not_delete(self):
-        table = MagicMock()
-        row = {"mouse_name": "Flamingo", "mouse_id": 7}
-        count = mouse_sync._upsert_rows(table, [row])
-        assert count == 1
-        table.insert1.assert_called_once_with(row, replace=True)
-        table.delete.assert_not_called()
-
-    def test_lookups_use_skip_duplicates(self):
-        table = MagicMock()
-        row = {"strain": "WT", "formal_name": "C57", "stock_number": "na"}
-        count = mouse_sync._upsert_rows(table, [row], replace=False)
-        assert count == 1
-        table.insert1.assert_called_once_with(row, skip_duplicates=True)
 
 
 class TestSyncExpToMain:
@@ -967,13 +813,10 @@ class TestRunRecoveryPopulateOnly:
             recover_base, "warn_incomplete_mice"
         ), patch.object(
             recover_base, "cleanup_orphan_exp_mice"
-        ) as mock_cleanup, patch(
-            "vr4mice.actions.mouse_sync.sync_mice_from_main"
-        ) as mock_sync:
+        ) as mock_cleanup:
             recover_base.run_recovery()
         assert order == ["populate"]
         mock_cleanup.assert_not_called()
-        mock_sync.assert_not_called()
 
 
 class TestSessionKeyFromDataset:
@@ -1116,3 +959,5 @@ class TestRunBaseCliSurface:
             assert f'            "{removed}",' not in text
         assert "--force" in text
         assert "sync_mice →" not in text  # recover_base must not chain sync/cleanup
+        assert "mysql.mk sync-mice-from-main" in text
+        assert "SYNC_MICE_VIA_DJ" not in text

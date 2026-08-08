@@ -1,4 +1,8 @@
-"""Mouse registry helpers: stubs for local ingest, sync from main DB, cleanup."""
+"""Mouse registry helpers: stubs for local ingest, incomplete-mouse warnings, sync_exp, cleanup.
+
+Parent → local mice registry sync is host-side mysqldump (``make -f mysql.mk
+sync-mice-from-main``), not DataJoint dual-connect.
+"""
 
 from __future__ import annotations
 
@@ -17,7 +21,7 @@ logger = Logger.get_logger()
 STUB_MOUSE_ID = -1
 STUB_DOB = datetime.date(1970, 1, 1)
 SYNC_MICE_COMMAND = (
-    "python run_base.py sync_mice  # or: sync_mice --mouse NAME; "
+    "make -f mysql.mk sync-mice-from-main  # host; optional MOUSE=Name1,Name2; "
     "set DJ_MAIN_HOST (and optionally DJ_MAIN_USER/DJ_MAIN_PWD)"
 )
 SYNC_EXP_COMMAND = (
@@ -25,22 +29,6 @@ SYNC_EXP_COMMAND = (
     "local (non-collab) sessions only"
 )
 DEFAULT_GUI_PATHS = ("/data/data", "/data/processed")
-
-MOUSE_SYNC_TABLES = (
-    mice.Mouse,
-    mice.Surgery,
-    mice.MouseScoreSheet,
-    mice.MouseScoreSheet_WaterRestriction,
-)
-
-# Small lookup tables required as FKs for Surgery / MouseScoreSheet upserts.
-MOUSE_LOOKUP_TABLES = (
-    mice.SurgeryType,
-    mice.MouseLicensingGeneva,
-    mice.MouseScoreSheet_BodyCondition,
-    mice.MouseScoreSheet_GeneralAssay,
-    mice.MouseScoreSheet_HousingAssesment,
-)
 
 
 def is_stub_mouse(row: dict) -> bool:
@@ -314,9 +302,8 @@ def _rebind_schema_connection(conn) -> None:
     Point base ``mice`` (and related) schemas at ``conn``.
 
     ``dj.Schema`` keeps the Connection from first import/connect. After
-    ``dj.conn(reset=True)`` to main, ``mice.Mouse()`` can still query the old
-    local conn unless we rebind — and setattr on a read-only ``connection``
-    property is often a no-op. Prefer ``_table_on_conn`` for main fetches.
+    ``dj.conn(reset=True)`` to main (``sync_exp``), tables can still query the
+    old local conn unless we rebind.
     """
     schemas = []
     try:
@@ -471,63 +458,6 @@ def _full_table_name(table_cls) -> Optional[str]:
     return None
 
 
-def _camel_to_snake(name: str) -> str:
-    out: List[str] = []
-    for i, ch in enumerate(name):
-        if ch.isupper() and i and (name[i - 1].islower() or name[i - 1].isdigit()):
-            out.append("_")
-        out.append(ch.lower())
-    return "".join(out)
-
-
-def _part_style_table_name(full: str, table_cls) -> Optional[str]:
-    """
-    Map ``ClassName_PartName`` → ```schema`.`[#]class_name__part_name``.
-
-    Main uses DJ part-table ``__`` naming; local classes often expose a single
-    ``_`` ``full_table_name`` (e.g. ``mouse_score_sheet_water_restriction``).
-    Preserves Lookup ``#`` / blob ``~`` tier prefixes.
-    """
-    if not full or "`.`" not in full:
-        return None
-    cls_name = getattr(table_cls, "__name__", "") or ""
-    if "_" not in cls_name:
-        return None
-    left, _, right = cls_name.partition("_")
-    if not left or not right:
-        return None
-    schema_part, _, table_part = full.partition("`.`")
-    table = table_part.rstrip("`")
-    tier = ""
-    if table[:1] in ("#", "~"):
-        tier = table[0]
-    return (
-        f"{schema_part}`.`{tier}"
-        f"{_camel_to_snake(left)}__{_camel_to_snake(right)}`"
-    )
-
-
-def _table_name_alternates(
-    full: str, table_cls=None, *, prefer_part_style: bool = True
-) -> List[str]:
-    """
-    MySQL names to try for a table class.
-
-    On main, prefer ``__`` (part style). Local upserts always use the schema
-    class (single ``_``), not these FreeTable names.
-    """
-    names: List[str] = []
-    part = _part_style_table_name(full, table_cls) if table_cls is not None else None
-    local = full if full else None
-
-    if prefer_part_style:
-        ordered = [part, local]
-    else:
-        ordered = [local, part]
-    for name in ordered:
-        if name and name not in names:
-            names.append(name)
-    return names
 
 
 def _table_on_conn(conn, table_cls, *, full_name: Optional[str] = None):
@@ -547,76 +477,6 @@ def _table_on_conn(conn, table_cls, *, full_name: Optional[str] = None):
     return dj.FreeTable(conn, full)
 
 
-def _fetch_on_main(
-    conn,
-    table_cls,
-    restriction: Optional[dict] = None,
-    *,
-    log=None,
-    missing_tables: Optional[Set[str]] = None,
-    resolved_names: Optional[Set[str]] = None,
-) -> List[dict]:
-    """
-    Fetch rows for ``table_cls`` on main ``conn``.
-
-    Main may use ``__`` table names while local ``full_table_name`` uses ``_``.
-    Upserts still go through local schema classes. Skips optional tables that
-    match neither name; Mouse/Strain errors propagate.
-    """
-    log = log or logger
-    if conn is None:
-        query = table_cls()
-        if restriction:
-            query = query & restriction
-        return list(query.fetch(as_dict=True))
-
-    full = _full_table_name(table_cls)
-    if not full:
-        query = table_cls()
-        if restriction:
-            query = query & restriction
-        return list(query.fetch(as_dict=True))
-
-    last_err: Optional[Exception] = None
-    label = getattr(table_cls, "__name__", full)
-    for candidate in _table_name_alternates(
-        full, table_cls, prefer_part_style=True
-    ):
-        try:
-            query = _table_on_conn(conn, table_cls, full_name=candidate)
-            if restriction:
-                query = query & restriction
-            rows = list(query.fetch(as_dict=True))
-            if (
-                candidate != full
-                and resolved_names is not None
-                and label not in resolved_names
-            ):
-                resolved_names.add(label)
-                log.info(
-                    "Reading main %s from %s (local table name is %s)",
-                    label,
-                    candidate,
-                    full,
-                )
-            return rows
-        except dj.DataJointError as err:
-            last_err = err
-            msg = str(err).lower()
-            if "not defined" not in msg and "not found" not in msg:
-                raise
-            continue
-
-    if missing_tables is not None and label not in missing_tables:
-        missing_tables.add(label)
-        log.warning(
-            "Skipping %s on main (%s) — tried __ and _ names.",
-            label,
-            last_err,
-        )
-    if table_cls is mice.Mouse or table_cls is mice.Strain:
-        raise last_err  # type: ignore[misc]
-    return []
 
 
 def _close_dj_connection() -> None:
@@ -830,292 +690,6 @@ def _main_database():
         )
 
 
-def _upsert_rows(
-    table, rows: Iterable[dict], *, log=None, replace: bool = True
-) -> int:
-    """
-    Insert rows locally.
-
-    ``replace=True`` refreshes Mouse / dependent manual rows without a
-    cascading delete of Sessions. Lookups (Strain, SurgeryType, …) must use
-    ``replace=False`` (``skip_duplicates``): ``replace`` deletes the parent
-    PK and fails when existing Mouse rows reference that strain.
-    """
-    log = log or logger
-    count = 0
-    label = type(table).__name__
-    for row in rows:
-        try:
-            if replace:
-                table.insert1(row, replace=True)
-            else:
-                table.insert1(row, skip_duplicates=True)
-        except Exception:
-            log.exception(
-                "Local upsert failed for %s row keys=%s (replace=%s)",
-                label,
-                {k: row.get(k) for k in list(row)[:8]},
-                replace,
-            )
-            raise
-        count += 1
-    return count
-
-
-def _assert_on_local(
-    local_ep: Tuple[str, int],
-    log=None,
-    *,
-    forbidden_connection_id: Optional[int] = None,
-) -> None:
-    """Refuse upserts if dj.conn() or mice.schema is still on the main session."""
-    log = log or logger
-    _ensure_schemas_on_connection(
-        dj.conn(),
-        expected_ep=local_ep,
-        forbidden_connection_id=forbidden_connection_id,
-        label="local upsert gate",
-        log=log,
-    )
-
-
-def sync_mice_from_main(
-    log=None,
-    *,
-    gui_paths: Optional[Sequence[str]] = None,
-    mouse_names: Optional[Sequence[str]] = None,
-) -> int:
-    """
-    Pull Mouse metadata from main for selected or locally needed mice.
-
-    If ``mouse_names`` is set, sync those names from main (for preloading
-    before recordings). Otherwise sync incomplete/stub names from local
-    ``vr4mice.Dataset``, ``exp.Session``, and/or GUI ``.npy`` stems.
-
-    Fetches on ``DJ_MAIN_HOST``, then upserts locally (``replace=True``; never
-    deletes on main). Strain rows are pulled first.
-    """
-    log = log or logger
-    _require_dj_main_host()
-
-    explicit = [n.strip() for n in (mouse_names or []) if n and str(n).strip()]
-    if explicit:
-        targets = sorted(set(explicit))
-        log.info(
-            "Fetching %d named mice from main DB (%s): %s",
-            len(targets),
-            os.environ["DJ_MAIN_HOST"],
-            ", ".join(targets),
-        )
-    else:
-        known = sorted(get_known_local_mouse_names(gui_paths=gui_paths))
-        if not known:
-            log.info(
-                "No local Dataset, Session, or GUI .npy mice found; nothing to sync. "
-                "Pass --mouse NAME to preload a mouse before recordings."
-            )
-            return 0
-
-        targets = get_incomplete_mouse_names(gui_paths=gui_paths)
-        if not targets:
-            log.info(
-                "All %d known local mice already have full Mouse records.",
-                len(known),
-            )
-            return 0
-
-        log.info(
-            "Fetching %d/%d known local mice from main DB (%s): %s",
-            len(targets),
-            len(known),
-            os.environ["DJ_MAIN_HOST"],
-            ", ".join(targets),
-        )
-
-    fetched: List[tuple] = []
-    strain_names: Set[str] = set()
-    strain_rows: List[dict] = []
-    lookup_rows: List[tuple] = []  # (table_cls, rows)
-    found_on_main: Set[str] = set()
-    name_on_main: dict = {}  # local/target name -> canonical mouse_name on main
-    try:
-        _local_port = dj.config["database.port"]
-    except Exception:
-        _local_port = None
-    local_ep = _endpoint_from_config(dj.config["database.host"], _local_port)
-    main_session_id: Optional[int] = None
-    try:
-        # Yielded conn is the main endpoint; never use mice.Mouse() here — that
-        # table object often still points at the local schema Connection.
-        with _main_database() as main_conn:
-            main_session_id = _mysql_connection_id(main_conn)
-
-            def _norm_name(raw) -> Optional[str]:
-                if raw is None:
-                    return None
-                if isinstance(raw, (bytes, bytearray)):
-                    raw = raw.decode("utf-8", errors="replace")
-                text = str(raw).strip()
-                return text or None
-
-            missing_tables: Set[str] = set()
-            resolved_names: Set[str] = set()
-            mouse_rows = _fetch_on_main(
-                main_conn,
-                mice.Mouse,
-                log=log,
-                missing_tables=missing_tables,
-                resolved_names=resolved_names,
-            )
-            main_names = [
-                n
-                for n in (_norm_name(row.get("mouse_name")) for row in mouse_rows)
-                if n
-            ]
-            main_exact = set(main_names)
-            main_by_lower = {}
-            for n in main_names:
-                main_by_lower.setdefault(n.lower(), n)
-            sample = ", ".join(sorted(main_exact)[:12])
-            log.info(
-                "Main mice.Mouse row count (via main conn): %d (sample: %s)",
-                len(main_exact),
-                sample,
-            )
-
-            for name in targets:
-                name = _norm_name(name) or name
-                canonical = (
-                    name if name in main_exact else main_by_lower.get(name.lower())
-                )
-                if canonical is None:
-                    try:
-                        needle = "%" + name.lower() + "%"
-                        like = main_conn.query(
-                            "SELECT mouse_name FROM mice.mouse "
-                            "WHERE mouse_name = %s OR LOWER(mouse_name) LIKE %s "
-                            "LIMIT 8",
-                            (name, needle),
-                        ).fetchall()
-                        log.warning(
-                            "No Mouse row for %r on main; SQL near-matches: %s",
-                            name,
-                            like,
-                        )
-                    except Exception as err:
-                        log.warning(
-                            "No Mouse row for %r on main (SQL probe failed: %s)",
-                            name,
-                            err,
-                        )
-                    continue
-
-                if canonical != name:
-                    log.info(
-                        "Main name for %r is %r (case/spelling map)", name, canonical
-                    )
-                name_on_main[name] = canonical
-                restriction = {"mouse_name": canonical}
-                for table in MOUSE_SYNC_TABLES:
-                    rows = _fetch_on_main(
-                        main_conn,
-                        table,
-                        restriction,
-                        log=log,
-                        missing_tables=missing_tables,
-                        resolved_names=resolved_names,
-                    )
-                    if not rows:
-                        continue
-                    # Keep local/GUI spelling when main only differs by case.
-                    if canonical != name:
-                        rows = [
-                            {**row, "mouse_name": name} if "mouse_name" in row else row
-                            for row in rows
-                        ]
-                    fetched.append((table, rows))
-                    if table is mice.Mouse:
-                        found_on_main.add(name)
-                        for row in rows:
-                            strain = row.get("strain")
-                            if strain:
-                                strain_names.add(strain)
-            for strain in sorted(strain_names):
-                strain_rows.extend(
-                    _fetch_on_main(
-                        main_conn,
-                        mice.Strain,
-                        {"strain": strain},
-                        log=log,
-                        missing_tables=missing_tables,
-                        resolved_names=resolved_names,
-                    )
-                )
-            # FK parents for Surgery / MouseScoreSheet (main may use # / __ names).
-            need_lookups = any(
-                table is mice.Surgery or table is mice.MouseScoreSheet
-                for table, _ in fetched
-            )
-            if need_lookups:
-                for lookup in MOUSE_LOOKUP_TABLES:
-                    rows = _fetch_on_main(
-                        main_conn,
-                        lookup,
-                        log=log,
-                        missing_tables=missing_tables,
-                        resolved_names=resolved_names,
-                    )
-                    if rows:
-                        lookup_rows.append((lookup, rows))
-    except Exception:
-        traceback.print_exc()
-        log.exception(
-            "Failed fetching mice from main DB (%s). "
-            "Check DJ_MAIN_HOST (include :port) and DJ_MAIN_USER/PWD.",
-            os.environ["DJ_MAIN_HOST"],
-        )
-        raise
-
-    missing_on_main = [n for n in targets if n not in found_on_main]
-    if missing_on_main:
-        log.warning(
-            "Not found on main DB: %s.",
-            ", ".join(missing_on_main),
-        )
-
-    _assert_on_local(
-        local_ep, log=log, forbidden_connection_id=main_session_id
-    )
-    inserted = 0
-    try:
-        # Lookups: never replace=True (FK from mouse → #strain blocks DELETE).
-        if strain_rows:
-            inserted += _upsert_rows(
-                mice.Strain(), strain_rows, log=log, replace=False
-            )
-        for table, rows in lookup_rows:
-            inserted += _upsert_rows(table(), rows, log=log, replace=False)
-        for table, rows in fetched:
-            inserted += _upsert_rows(table(), rows, log=log, replace=True)
-    except Exception:
-        traceback.print_exc()
-        log.exception(
-            "Failed upserting mice onto local DB (%s:%s).",
-            local_ep[0],
-            local_ep[1],
-        )
-        raise
-
-    log.info("Synced mouse metadata onto local DB (%d rows upserted).", inserted)
-    if not explicit:
-        remaining = get_incomplete_mouse_names(gui_paths=gui_paths)
-        if remaining:
-            log.warning(
-                "Still incomplete after sync: %s. "
-                "Those mice may not exist on the main database.",
-                ", ".join(remaining),
-            )
-    return inserted
 
 
 def _session_primary_key(row: dict) -> dict:
