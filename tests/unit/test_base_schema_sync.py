@@ -391,6 +391,18 @@ class TestSyncMiceFromMain:
         assert seen.get("ssl_disabled") is True
         assert seen.get("ssl") is None
 
+    def test_rebind_schema_connection_sets_attrs(self):
+        conn = object()
+        schema = MagicMock()
+        schema.connection = None
+        schema._connection = None
+        with patch.object(mouse_sync.mice, "schema", schema), patch.object(
+            mouse_sync.exp, "schema", schema
+        ):
+            mouse_sync._rebind_schema_connection(conn)
+        assert schema.connection is conn
+        assert schema._connection is conn
+
 
 class TestUpsertRows:
     def test_uses_replace_not_delete(self):

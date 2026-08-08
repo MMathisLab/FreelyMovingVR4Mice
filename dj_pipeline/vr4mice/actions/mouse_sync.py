@@ -290,6 +290,33 @@ def _active_endpoint() -> Tuple[str, int]:
     return _endpoint_from_config(host, port)
 
 
+def _rebind_schema_connection(conn) -> None:
+    """
+    Point base ``mice`` (and related) schemas at ``conn``.
+
+    ``dj.Schema`` keeps the Connection from first import/connect. After
+    ``dj.conn(reset=True)`` to main, tables can still query the old local conn
+    unless we rebind.
+    """
+    schemas = []
+    try:
+        schemas.append(mice.schema)
+    except Exception:
+        pass
+    try:
+        schemas.append(exp.schema)
+    except Exception:
+        pass
+    for schema in schemas:
+        for attr in ("connection", "_connection", "_conn"):
+            if not hasattr(schema, attr):
+                continue
+            try:
+                setattr(schema, attr, conn)
+            except Exception:
+                pass
+
+
 def _dj_connect(*, host: str, port: int, user: str, password: str, disable_ssl: bool):
     """Connect with explicit host/port (do not leave local port stuck at 3309)."""
     dj.config["database.host"] = host
@@ -311,8 +338,11 @@ def _dj_connect(*, host: str, port: int, user: str, password: str, disable_ssl: 
 
     if disable_ssl:
         with _pymysql_disable_ssl():
-            return _call()
-    return _call()
+            conn = _call()
+    else:
+        conn = _call()
+    _rebind_schema_connection(conn)
+    return conn
 
 
 @contextmanager
@@ -348,7 +378,7 @@ def _main_database():
         )
 
     try:
-        _dj_connect(
+        conn = _dj_connect(
             host=main_host,
             port=main_port,
             user=main_user,
@@ -370,6 +400,12 @@ def _main_database():
                 "Check DJ_MAIN_HOST (include :3306) and database.port."
                 % (local_ep[0], local_ep[1])
             )
+        # Prove queries use this connection (schema rebind), not the previous local one.
+        try:
+            server_info = conn.query("SELECT @@port AS p, DATABASE() AS db").fetchall()
+            logger.info("Main MySQL session: %s", server_info)
+        except Exception as err:
+            logger.warning("Could not read @@port/DATABASE(): %s", err)
     except Exception:
         traceback.print_exc()
         raise
