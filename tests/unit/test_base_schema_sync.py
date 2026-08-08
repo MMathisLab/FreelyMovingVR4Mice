@@ -405,9 +405,10 @@ class TestSyncMiceFromMain:
         assert connect_calls[0]["host"] == "main.example"
         assert connect_calls[0]["port"] == 3306
         assert connect_calls[0]["disable_ssl"] is True
-        # restore local
+        # restore local (also SSL-off; same lab MySQL stack)
         assert connect_calls[1]["host"] == "127.0.0.1"
         assert connect_calls[1]["port"] == 3309
+        assert connect_calls[1]["disable_ssl"] is True
 
     def test_main_database_errors_if_still_on_local(self, monkeypatch):
         monkeypatch.setenv("DJ_MAIN_HOST", "127.0.0.1:3306")

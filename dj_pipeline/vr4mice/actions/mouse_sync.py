@@ -291,10 +291,20 @@ def _endpoint_from_config(host_value, port_value=None) -> Tuple[str, int]:
 
 
 def _active_endpoint() -> Tuple[str, int]:
-    """Best-effort host:port from the live DataJoint connection."""
+    """
+    Live host:port for the current DataJoint connection.
+
+    Prefer MySQL ``@@port`` over ``conn_info`` / config — DJ2 may leave the
+    TCP session on the previous port after ``reset=True`` while config already
+    shows the new port.
+    """
     conn = dj.conn()
     info = getattr(conn, "conn_info", None) or {}
     host = info.get("host") or dj.config["database.host"]
+    live_port = _mysql_port(conn)
+    if live_port is not None:
+        host_only, _ = _endpoint_from_config(host, live_port)
+        return host_only, live_port
     port = info.get("port") or dj.config["database.port"]
     return _endpoint_from_config(host, port)
 
@@ -609,30 +619,95 @@ def _fetch_on_main(
     return []
 
 
+def _close_dj_connection() -> None:
+    """Drop the current DJ Connection so the next ``conn(reset=True)`` reconnects."""
+    try:
+        prev = dj.conn()
+    except Exception:
+        prev = None
+    if prev is not None:
+        for meth in ("close", "disconnect"):
+            fn = getattr(prev, meth, None)
+            if callable(fn):
+                try:
+                    fn()
+                except Exception:
+                    pass
+    # DJ keeps a singleton on the ``conn`` callable / Connection class.
+    for holder in (getattr(dj, "conn", None), getattr(dj, "Connection", None)):
+        if holder is None:
+            continue
+        for attr in ("connection", "_connection", "_conn"):
+            if not hasattr(holder, attr):
+                continue
+            try:
+                setattr(holder, attr, None)
+            except Exception:
+                try:
+                    object.__setattr__(holder, attr, None)
+                except Exception:
+                    pass
+
+
 def _dj_connect(*, host: str, port: int, user: str, password: str, disable_ssl: bool):
-    """Connect with explicit host/port (do not leave local port stuck at 3309)."""
-    dj.config["database.host"] = host
-    dj.config["database.port"] = int(port)
+    """
+    Connect with explicit host/port and verify the live MySQL ``@@port``.
+
+    Same IP with different ports (local :3309 vs main :3306) is common. DJ2
+    ``conn(reset=True)`` often keeps the previous TCP session unless we close
+    it first; ``database.host=host:port`` also helps some stacks.
+    """
+    host_only, _ = _endpoint_from_config(host, port)
+    port = int(port)
+    host_port = "%s:%s" % (host_only, port)
+
+    dj.config["database.host"] = host_port
+    dj.config["database.port"] = port
     dj.config["database.user"] = user
     dj.config["database.password"] = password
+
+    _close_dj_connection()
 
     def _call():
         try:
             return dj.conn(
-                host=host,
+                host=host_port,
                 user=user,
                 password=password,
-                port=int(port),
+                port=port,
                 reset=True,
             )
         except TypeError:
-            return dj.conn(reset=True)
+            try:
+                return dj.conn(
+                    host=host_only,
+                    user=user,
+                    password=password,
+                    port=port,
+                    reset=True,
+                )
+            except TypeError:
+                return dj.conn(reset=True)
 
     if disable_ssl:
         with _pymysql_disable_ssl():
             conn = _call()
     else:
-        conn = _call()
+        # Lab MySQL is often plain TCP on both local and main — try SSL-off
+        # first so restore does not silently keep the previous session.
+        try:
+            with _pymysql_disable_ssl():
+                conn = _call()
+        except Exception:
+            conn = _call()
+
+    live = _mysql_port(conn)
+    if live is not None and live != port:
+        raise RuntimeError(
+            "Requested MySQL %s but session @@port=%s (DJ did not switch ports). "
+            "Close/reconnect failed."
+            % (host_port, live)
+        )
     _rebind_schema_connection(conn)
     return conn
 
@@ -730,17 +805,23 @@ def _main_database():
         loc_host, loc_port = local_ep
         loc_user = saved.get("database.user")
         loc_password = saved.get("database.password")
-        if loc_user is not None and loc_password is not None:
-            loc_conn = _dj_connect(
-                host=loc_host,
-                port=loc_port,
-                user=loc_user,
-                password=loc_password,
-                disable_ssl=False,
+        if loc_user is None or loc_password is None:
+            raise RuntimeError(
+                "Cannot restore local DB connection: missing saved database.user/password"
             )
-        else:
-            loc_conn = dj.conn(reset=True)
-            _rebind_schema_connection(loc_conn)
+        logger.info(
+            "Restoring local DB connection %s:%s (leaving main CONNECTION_ID=%s)",
+            loc_host,
+            loc_port,
+            main_conn_id,
+        )
+        loc_conn = _dj_connect(
+            host=loc_host,
+            port=loc_port,
+            user=loc_user,
+            password=loc_password,
+            disable_ssl=True,
+        )
         _ensure_schemas_on_connection(
             loc_conn,
             expected_ep=local_ep,
