@@ -271,12 +271,56 @@ def _split_host_port(host_port: str, default_port: int = 3306) -> Tuple[str, int
     return raw, default_port
 
 
+def _endpoint_from_config(host_value, port_value=None) -> Tuple[str, int]:
+    """Resolve host/port from config (host may already be ``host:port``)."""
+    host_s = "" if host_value is None else str(host_value).strip()
+    if host_s.count(":") == 1:
+        return _split_host_port(host_s)
+    if port_value is None or port_value == "":
+        return host_s, 3306
+    return host_s, int(port_value)
+
+
+def _active_endpoint() -> Tuple[str, int]:
+    """Best-effort host:port from the live DataJoint connection."""
+    conn = dj.conn()
+    info = getattr(conn, "conn_info", None) or {}
+    host = info.get("host") or dj.config["database.host"]
+    port = info.get("port") or dj.config["database.port"]
+    return _endpoint_from_config(host, port)
+
+
+def _dj_connect(*, host: str, port: int, user: str, password: str, disable_ssl: bool):
+    """Connect with explicit host/port (do not leave local port stuck at 3309)."""
+    dj.config["database.host"] = host
+    dj.config["database.port"] = int(port)
+    dj.config["database.user"] = user
+    dj.config["database.password"] = password
+
+    def _call():
+        try:
+            return dj.conn(
+                host=host,
+                user=user,
+                password=password,
+                port=int(port),
+                reset=True,
+            )
+        except TypeError:
+            return dj.conn(reset=True)
+
+    if disable_ssl:
+        with _pymysql_disable_ssl():
+            return _call()
+    return _call()
+
+
 @contextmanager
 def _main_database():
     """Temporarily point DataJoint at DJ_MAIN_HOST, then restore local config."""
     # Never use `key in dj.config` — DJ Config.__contains__ breaks (int keys).
     # Must switch host AND port: local is often :3309 while main is :3306 on the
-    # same IP. Leaving port at 3309 made sync query the local DB (empty / stubs).
+    # same IP. Leaving port at 3309 made sync query the local DB.
     keys = ("database.host", "database.user", "database.password", "database.port")
     saved = {}
     for key in keys:
@@ -285,24 +329,47 @@ def _main_database():
         except Exception:
             pass
 
+    local_ep = _endpoint_from_config(
+        saved.get("database.host", dj.config["database.host"]),
+        saved.get("database.port"),
+    )
     main_host, main_port = _split_host_port(os.environ["DJ_MAIN_HOST"])
-    dj.config["database.host"] = main_host
-    dj.config["database.port"] = main_port
-    dj.config["database.user"] = os.environ.get(
-        "DJ_MAIN_USER", saved.get("database.user", dj.config["database.user"])
-    )
-    dj.config["database.password"] = os.environ.get(
-        "DJ_MAIN_PWD", saved.get("database.password", dj.config["database.password"])
-    )
+    main_user = os.environ.get("DJ_MAIN_USER", saved.get("database.user"))
+    main_password = os.environ.get("DJ_MAIN_PWD", saved.get("database.password"))
+    main_ep = (main_host, main_port)
+
+    if main_ep == local_ep:
+        logger.error(
+            "DJ_MAIN_HOST=%s resolves to the same endpoint as local (%s:%s). "
+            "Sync would read the local DB. Set DJ_MAIN_HOST to the parent host:port.",
+            os.environ["DJ_MAIN_HOST"],
+            local_ep[0],
+            local_ep[1],
+        )
+
     try:
-        with _pymysql_disable_ssl():
-            dj.conn(reset=True)
+        _dj_connect(
+            host=main_host,
+            port=main_port,
+            user=main_user,
+            password=main_password,
+            disable_ssl=True,
+        )
+        active = _active_endpoint()
         logger.info(
-            "Main DB connection: %s:%s (user=%s)",
+            "Main DB connection requested %s:%s → active %s:%s (user=%s)",
             main_host,
             main_port,
-            dj.config["database.user"],
+            active[0],
+            active[1],
+            main_user,
         )
+        if active == local_ep:
+            raise RuntimeError(
+                "Still connected to local endpoint %s:%s after switching to main. "
+                "Check DJ_MAIN_HOST (include :3306) and database.port."
+                % (local_ep[0], local_ep[1])
+            )
     except Exception:
         traceback.print_exc()
         raise
@@ -312,7 +379,20 @@ def _main_database():
         for key, value in saved.items():
             dj.config[key] = value
         try:
-            dj.conn(reset=True)
+            # Restore local; host may be stored as host:port in config.
+            loc_host, loc_port = local_ep
+            loc_user = saved.get("database.user")
+            loc_password = saved.get("database.password")
+            if loc_user is not None and loc_password is not None:
+                _dj_connect(
+                    host=loc_host,
+                    port=loc_port,
+                    user=loc_user,
+                    password=loc_password,
+                    disable_ssl=False,
+                )
+            else:
+                dj.conn(reset=True)
         except Exception:
             pass
 

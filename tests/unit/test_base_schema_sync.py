@@ -333,24 +333,44 @@ class TestSyncMiceFromMain:
             "database.user": "u",
             "database.password": "p",
         }
-        conn_calls = []
+        connect_calls = []
 
-        def fake_conn(*, reset=False, **kwargs):
-            conn_calls.append({"reset": reset, **kwargs})
-            return None
+        def fake_connect(**kwargs):
+            connect_calls.append(kwargs)
+            cfg["database.host"] = kwargs["host"]
+            cfg["database.port"] = kwargs["port"]
 
         with patch.object(mouse_sync.dj, "config", cfg), patch.object(
-            mouse_sync.dj, "conn", fake_conn
-        ), patch.object(mouse_sync, "_pymysql_disable_ssl") as mock_ssl:
-            mock_ssl.return_value.__enter__ = MagicMock()
-            mock_ssl.return_value.__exit__ = MagicMock(return_value=False)
+            mouse_sync, "_dj_connect", side_effect=fake_connect
+        ), patch.object(
+            mouse_sync, "_active_endpoint", side_effect=[("main.example", 3306)]
+        ):
             with mouse_sync._main_database():
                 assert cfg["database.host"] == "main.example"
                 assert cfg["database.port"] == 3306
-            assert cfg["database.host"] == "127.0.0.1"
-            assert cfg["database.port"] == 3309
-        assert conn_calls[0]["reset"] is True
-        mock_ssl.assert_called()
+        assert connect_calls[0]["host"] == "main.example"
+        assert connect_calls[0]["port"] == 3306
+        assert connect_calls[0]["disable_ssl"] is True
+        # restore local
+        assert connect_calls[1]["host"] == "127.0.0.1"
+        assert connect_calls[1]["port"] == 3309
+
+    def test_main_database_errors_if_still_on_local(self, monkeypatch):
+        monkeypatch.setenv("DJ_MAIN_HOST", "127.0.0.1:3306")
+        cfg = {
+            "database.host": "127.0.0.1",
+            "database.port": 3309,
+            "database.user": "u",
+            "database.password": "p",
+        }
+        with patch.object(mouse_sync.dj, "config", cfg), patch.object(
+            mouse_sync, "_dj_connect"
+        ), patch.object(
+            mouse_sync, "_active_endpoint", return_value=("127.0.0.1", 3309)
+        ):
+            with pytest.raises(RuntimeError, match="Still connected to local"):
+                with mouse_sync._main_database():
+                    pass
 
     def test_pymysql_disable_ssl_sets_ssl_disabled(self):
         import pymysql
