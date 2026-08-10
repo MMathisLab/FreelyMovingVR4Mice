@@ -25,12 +25,22 @@ def _trim_to_common_length(arrays: dict, label: str) -> dict:
         raise ValueError(f"{label}: empty arrays after alignment ({lengths})")
 
     if len(set(lengths.values())) > 1:
-        logger.warning(
-            "%s length mismatch (%s); trimming to %d samples.",
-            label,
-            lengths,
-            target_len,
-        )
+        mismatch = max(lengths.values()) - min(lengths.values())
+        # Off-by-one mismatch is a common artifact from asynchronous capture start.
+        if mismatch == 1:
+            logger.info(
+                "%s length mismatch (%s); trimming to %d samples.",
+                label,
+                lengths,
+                target_len,
+            )
+        else:
+            logger.warning(
+                "%s length mismatch (%s); trimming to %d samples.",
+                label,
+                lengths,
+                target_len,
+            )
 
     return {name: np.asarray(values)[:target_len] for name, values in arrays.items()}
 
@@ -381,22 +391,32 @@ def get_signals(data, threshold=0.2):
     signal_time = signal_time - data["start_time"]
     send_time = send_time - data["start_time"]
 
-    signal = pd.DataFrame(
-        {
-            "time_stamp": signal_time,
-            "send_time": send_time,
-            "frame_to_socket_time": abs(signal_time - send_time),
-            "signal_read": signal_read,
-        }
+    signal = (
+        pd.DataFrame(
+            {
+                "time_stamp": signal_time,
+                "send_time": send_time,
+                "frame_to_socket_time": abs(signal_time - send_time),
+                "signal_read": signal_read,
+            }
+        )
+        .dropna(subset=["time_stamp"])
+        .sort_values("time_stamp")
+        .reset_index(drop=True)
     )
-    photodiode = pd.DataFrame(
-        {
-            "time_stamp": photodiode_time,
-            "photodiode_read": photodiode_read,
-            "photodiode_raw_scaled": raw_photodiode_signal_scaled,
-            "filtered_photodiode_scaled": filtered_photodiode_scaled,
-            "threshold": threshold,
-        }
+    photodiode = (
+        pd.DataFrame(
+            {
+                "time_stamp": photodiode_time,
+                "photodiode_read": photodiode_read,
+                "photodiode_raw_scaled": raw_photodiode_signal_scaled,
+                "filtered_photodiode_scaled": filtered_photodiode_scaled,
+                "threshold": threshold,
+            }
+        )
+        .dropna(subset=["time_stamp"])
+        .sort_values("time_stamp")
+        .reset_index(drop=True)
     )
     df = pd.merge_asof(left=photodiode, right=signal, on="time_stamp")
 

@@ -94,6 +94,21 @@ def _collect_git_metadata_from_repo():
     return None
 
 
+def _collect_git_metadata_from_env():
+    """Collect commit hash from CI/env vars when repo metadata is unavailable."""
+    env_commit_keys = (
+        "GITHUB_SHA",
+        "CI_COMMIT_SHA",
+        "GIT_COMMIT",
+        "BUILD_VCS_NUMBER",
+    )
+    for key in env_commit_keys:
+        value = os.environ.get(key)
+        if value:
+            return {"commit_hash": value.strip(), "changed_files": []}
+    return None
+
+
 def parse_git_commit_file(filename="git_commit"):
     """Parse a git commit file into hash and modified file list."""
     global _missing_commit_file_logged
@@ -109,6 +124,10 @@ def parse_git_commit_file(filename="git_commit"):
                 break
 
         if selected_path is None:
+            env_fallback = _collect_git_metadata_from_env()
+            if env_fallback is not None:
+                return env_fallback
+
             fallback = _collect_git_metadata_from_repo()
             if fallback is not None:
                 return fallback
@@ -117,10 +136,12 @@ def parse_git_commit_file(filename="git_commit"):
                 searched = ", ".join(
                     str(path) for path in _candidate_git_commit_paths(filename)
                 )
+                roots = ", ".join(str(path) for path in _candidate_git_roots())
                 logger.warning(
-                    "Git commit metadata file '%s' not found and git fallback failed; provenance fields will be empty. Checked: %s",
+                    "Git commit metadata file '%s' not found and git fallback failed; provenance fields will be empty. Checked: %s. Git roots tried: %s",
                     filename,
                     searched,
+                    roots,
                 )
                 _missing_commit_file_logged = True
             return {"commit_hash": "", "changed_files": []}

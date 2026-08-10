@@ -37,3 +37,17 @@ def test_get_signals_handles_off_by_one_generated_lengths():
     assert "signal_read" in df.columns
     assert "photodiode_read" in df.columns
     assert df["signal_read"].notna().any()
+
+
+def test_get_signals_sorts_unsorted_generated_timestamps():
+    """get_signals should sort merge keys before merge_asof."""
+    data = _build_proc_like_data()
+
+    data["generated_frame_time"] = np.array([0.0, 3.0, 1.0, 2.0, 4.0])
+    data["generated_send_time"] = np.array([0.01, 3.01, 1.01, 2.01, 4.01, 5.01])
+    data["generated_signal"] = np.array([0.0, 1.0, 0.0, 1.0, 0.0, 0.0])
+
+    df = get_signals(data)
+
+    assert not df.empty
+    assert df["time_stamp"].is_monotonic_increasing

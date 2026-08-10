@@ -40,6 +40,19 @@ def _safe_sem(values: pd.Series) -> float:
     return stats.sem(valid, nan_policy="omit")
 
 
+def _safe_se_interval(values: pd.Series) -> tuple[float, float]:
+    """Return mean +/- SEM interval for seaborn, or NaNs for <2 samples."""
+    valid = pd.Series(values).dropna()
+    if len(valid) < 2:
+        return (np.nan, np.nan)
+
+    mean = float(valid.mean())
+    sem = _safe_sem(valid)
+    if not np.isfinite(sem):
+        return (np.nan, np.nan)
+    return (mean - sem, mean + sem)
+
+
 def _create_axes(
     ax: Optional[matplotlib.axes.Axes], per_aperture: bool, num_aperture: int
 ):
@@ -595,7 +608,6 @@ def plot_session_3d(
                 dec_x = trial_decision["x"].values[0]
                 dec_y = trial_decision["y"].values[0]
                 dec_time = trial_decision["trial_length"].values[0]
-                print("Decision Time:", dec_time)
 
                 # Plot decision point as a larger marker
                 ax.scatter(
@@ -760,7 +772,7 @@ def _plot_bar_counts(
         hue="mouse_name" if per_mouse else "lab_id" if per_lab else None,
         alpha=0.7 if per_mouse else 1,
         color="black",
-        errorbar="se",
+        errorbar=_safe_se_interval,
         palette=(
             ["grey"] * counts["mouse_name"].nunique()
             if per_mouse
@@ -1226,6 +1238,7 @@ def plot_rate(
     ax: Optional[matplotlib.axes.Axes] = None,
     cmap: str = "Set1",
     color_sessions_by_lab: bool = True,
+    print_stats: bool = True,
 ):
     """Plot the rate for a given `label_x` column per session or per aperture.
 
@@ -1245,6 +1258,8 @@ def plot_rate(
         cmap (str, optional): Color map for the plot. Default is "Set1".
         color_sessions_by_lab (bool, optional): If True and per_lab=True with plot_bias=True,
             color individual session points by lab. If False, use grey. Default is True.
+        print_stats (bool, optional): If True, print per-aperture summary/t-test
+            diagnostics (useful for notebooks). Default is True.
     """
 
     num_aperture = len(df.aperture.unique())
@@ -1325,14 +1340,16 @@ def plot_rate(
         for i in data_for_stats.aperture.unique():
             for j in data_for_stats.aperture.unique():
                 if i < j:
-                    stat = stats.ttest_rel(
-                        counts[counts["aperture"] == i]["count"],
-                        counts[counts["aperture"] == j]["count"],
-                    )
-                    print(f"{i}-{j}: {stat}")
-            mean = counts[counts["aperture"] == i]["count"].mean()
-            sem = counts[counts["aperture"] == i]["count"].sem()
-            print(f"{i}: mean={mean:.3f} ± {sem:.3f}")
+                    left_vals = counts[counts["aperture"] == i]["count"]
+                    right_vals = counts[counts["aperture"] == j]["count"]
+                    if len(left_vals) > 1 and len(right_vals) > 1:
+                        stat = stats.ttest_rel(left_vals, right_vals)
+                        if print_stats:
+                            print(f"{i}-{j}: {stat}")
+            if print_stats:
+                mean = counts[counts["aperture"] == i]["count"].mean()
+                sem = counts[counts["aperture"] == i]["count"].sem()
+                print(f"{i}: mean={mean:.3f} ± {sem:.3f}")
 
     if plot_bias:
         data_for_stats = counts
@@ -1352,10 +1369,11 @@ def plot_rate(
                 # if multiple apertures, we run a FDR-corrected t-test later in the code
                 # so we do not compute it here.
                 if data_for_stats.aperture.nunique() < 3:
-                    t_null, p_null = stats.ttest_1samp(
-                        data_for_stats[data_for_stats["aperture"] == i]["count"], 0
-                    )
-                    print(f"{i} vs chance 0: t={t_null:.2f}, p={p_null:.3f}")
+                    vals = data_for_stats[data_for_stats["aperture"] == i]["count"]
+                    if len(vals) > 1:
+                        t_null, p_null = stats.ttest_1samp(vals, 0)
+                        if print_stats:
+                            print(f"{i} vs chance 0: t={t_null:.2f}, p={p_null:.3f}")
     return counts
 
 
@@ -1566,11 +1584,10 @@ def pairplot_std_decision_point(
     for i in counts.aperture.unique():
         for j in counts.aperture.unique():
             if i < j:
-                stat = stats.ttest_rel(
-                    counts[counts["aperture"] == i][label_parameter],
-                    counts[counts["aperture"] == j][label_parameter],
-                )
-                print(f"{i}-{j}: {stat}")
+                left_vals = counts[counts["aperture"] == i][label_parameter]
+                right_vals = counts[counts["aperture"] == j][label_parameter]
+                if len(left_vals) > 1 and len(right_vals) > 1:
+                    stats.ttest_rel(left_vals, right_vals)
 
 
 def pairplot_average_decision_point(
@@ -1648,19 +1665,13 @@ def pairplot_average_decision_point(
         aperture_values = counts[counts["aperture"] == i][label_parameter]
         for j in counts.aperture.unique():
             if i < j:
-                stat = stats.ttest_rel(
-                    counts[counts["aperture"] == i][label_parameter],
-                    counts[counts["aperture"] == j][label_parameter],
-                )
-                print(f"{i}-{j}: {stat}")
-                print(
-                    " mean difference: ",
-                    counts[counts["aperture"] == j][label_parameter].mean()
-                    - counts[counts["aperture"] == i][label_parameter].mean(),
-                )
-                stats_results.append((i, j, stat.statistic, stat.pvalue))
-        sem = _safe_sem(aperture_values)
-        print(f"mean: {aperture_values.mean()} +/- {sem}")
+                left_vals = counts[counts["aperture"] == i][label_parameter]
+                right_vals = counts[counts["aperture"] == j][label_parameter]
+                if len(left_vals) > 1 and len(right_vals) > 1:
+                    stat = stats.ttest_rel(left_vals, right_vals)
+                    stats_results.append((i, j, stat.statistic, stat.pvalue))
+                else:
+                    stats_results.append((i, j, np.nan, np.nan))
     return counts, stats_results
 
 

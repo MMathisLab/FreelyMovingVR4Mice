@@ -42,6 +42,7 @@ def test_parse_git_commit_file_missing_returns_empty_and_logs_once(tmp_path):
     missing_file = tmp_path / "does_not_exist_git_commit"
 
     # Force no git fallback so we exercise warning/empty-return path.
+    module._collect_git_metadata_from_env = lambda: None
     module._collect_git_metadata_from_repo = lambda: None
 
     ret1 = module.parse_git_commit_file(filename=str(missing_file))
@@ -54,6 +55,7 @@ def test_parse_git_commit_file_missing_returns_empty_and_logs_once(tmp_path):
     assert module.logger.warning.call_count == 1
     warning_args = module.logger.warning.call_args[0]
     assert "Checked:" in warning_args[0]
+    assert "Git roots tried:" in warning_args[0]
     assert str(missing_file) in warning_args[2]
 
 
@@ -68,7 +70,28 @@ def test_parse_git_commit_file_uses_git_fallback_when_file_missing(tmp_path):
         "commit_hash": "abc123",
         "changed_files": [" M dj_pipeline/vr4mice/utils/git_helpers.py"],
     }
+    module._collect_git_metadata_from_env = lambda: None
     module._collect_git_metadata_from_repo = lambda: expected
+
+    ret = module.parse_git_commit_file(filename=str(missing_file))
+
+    assert ret == expected
+    assert module.logger.warning.call_count == 0
+
+
+def test_parse_git_commit_file_uses_env_fallback_when_file_missing(tmp_path):
+    module = _import_git_helpers()
+
+    module._missing_commit_file_logged = False
+    module.logger.warning = MagicMock()
+
+    missing_file = tmp_path / "does_not_exist_git_commit"
+    expected = {
+        "commit_hash": "deadbeef",
+        "changed_files": [],
+    }
+    module._collect_git_metadata_from_env = lambda: expected
+    module._collect_git_metadata_from_repo = lambda: None
 
     ret = module.parse_git_commit_file(filename=str(missing_file))
 
