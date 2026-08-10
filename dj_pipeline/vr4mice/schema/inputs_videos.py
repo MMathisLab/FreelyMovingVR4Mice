@@ -66,8 +66,8 @@ class ProcessedVideo(dj.Computed):
     visual_video_path: varchar(255)  # cropped visual ROI video path
     sync_video_path: varchar(255)    # cropped sync ROI video path
     img_validation_path: varchar(255) # path to validation frame JPEGs
-    start_frame: int                # session start frame index (raw video)
-    end_frame: int                  # session end frame index (raw video)
+    start_frame: int32              # session start frame index (raw video)
+    end_frame: int32                # session end frame index (raw video)
     visual_roi: <blob>                # (x,y,w,h) for visual ROI in raw video coords
     sync_roi: <blob>                  # (x,y,w,h) for sync ROI in raw video coords
     """
@@ -165,8 +165,8 @@ class VideoSyncSignal(dj.Computed):
     definition = """
     -> ProcessedVideo             # cropped sync ROI video
     ---
-    video_fps: float              # FPS of the sync video
-    total_frames: int             # frame count of the sync video
+    video_fps: float32            # FPS of the sync video
+    total_frames: int32           # frame count of the sync video
     frame_ids: <blob>           # frame indices (0-based)
     timestamps: <blob>          # frame timestamps in seconds
     signals: <blob>             # binary sync signal per frame (0/1)
@@ -229,15 +229,15 @@ class AlignedVideoFrame(dj.Computed):
     -> VideoSyncSignal              # sync ROI signal per frame
     -> vr4mice.State                # game state (step, step_time, photodiode optional)
     ---
-    n_steps: int                    # number of steps in the session
+    n_steps: int32                  # number of steps in the session
     step: <blob>                  # step indices
     step_time: <blob>             # step timestamps (seconds)
     frame_ids: <blob>             # aligned video frame indices for each step
     align_path: varchar(32)         # 'photodiode' or 'fallback'
-    pair_count: float               # number of matched edges (if photodiode path)
-    rms: float                      # RMS residual of edge fit (seconds)
-    offset: float                   # fitted time offset (seconds)
-    drift: float                    # fitted drift factor
+    pair_count: float32             # number of matched edges (if photodiode path)
+    rms: float32                    # RMS residual of edge fit (seconds)
+    offset: float32                 # fitted time offset (seconds)
+    drift: float32                  # fitted drift factor
     align_error: varchar(255)       # error text if photodiode alignment failed
     """
 

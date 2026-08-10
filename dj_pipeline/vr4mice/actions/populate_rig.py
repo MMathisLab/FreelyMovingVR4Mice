@@ -23,6 +23,18 @@ logger = Logger.get_logger()
 SKIP_DUPLICATES = True
 
 
+def _is_nullable_field(schema: dict, table_name: str, field_name: str) -> bool:
+    """Return True when a table attribute is nullable in the DataJoint schema."""
+    try:
+        table = schema.get("dj_tables", {}).get(table_name)
+        if table is None:
+            return False
+        attribute = table.heading.attributes.get(field_name)
+        return bool(getattr(attribute, "nullable", False))
+    except Exception:
+        return False
+
+
 def get_filenames(ext, path: str = "/tmp") -> dict:
     """
     Get a dictionary of filenames with the specified extensions from the given path.
@@ -117,9 +129,16 @@ def check_keys(value, raw_data, key, schema, none=True) -> bool:
                         and (transformers_schema[v] not in raw_data.keys())
                     ):
                         if none:
-                            logger.warning(
-                                f"{v} not found; {v} will be presented as None."
-                            )
+                            if _is_nullable_field(schema, key, v):
+                                logger.debug(
+                                    "%s not found for %s; defaulting to None (nullable column).",
+                                    v,
+                                    key,
+                                )
+                            else:
+                                logger.warning(
+                                    f"{v} not found; {v} will be presented as None."
+                                )
                             none_vals[v] = None
                         else:
                             logger.warning(
@@ -438,6 +457,30 @@ def _resolve_proc_filename(prefix: str, dataset: str, dlc_video_path: str) -> st
     return f"{prefix}_{dataset}_PROC"
 
 
+def _resolve_timestamp_filename(prefix: str, dataset: str, dlc_video_path: str) -> str:
+    """Resolve existing timestamp filename across legacy and CAMERA* conventions."""
+    base = Path(dlc_video_path)
+
+    # Prefer exact historical convention when present.
+    exact = base.joinpath(f"{prefix}_{dataset}_TS.npy")
+    if exact.exists():
+        return exact.name
+
+    # Support newer timestamp conventions seen in rig outputs.
+    patterns = [
+        f"TS_{prefix}_{dataset}_CAMERA*.npy",
+        f"TS_{prefix}_{dataset}*.npy",
+        f"{prefix}_{dataset}_TS*.npy",
+    ]
+    for pattern in patterns:
+        matches = sorted(base.glob(pattern))
+        if matches:
+            return matches[0].name
+
+    # Keep backward-compatible default when no local file exists yet.
+    return f"{prefix}_{dataset}_TS.npy"
+
+
 def get_files_paths(
     dataset,
     remote_src: Optional[str] = None,
@@ -468,6 +511,7 @@ def get_files_paths(
 
     dlc_filename = _resolve_dlc_filename(prefix, dataset, dlc_video_path)
     proc_filename = _resolve_proc_filename(prefix, dataset, dlc_video_path)
+    timestamp_filename = _resolve_timestamp_filename(prefix, dataset, dlc_video_path)
 
     logger.debug(
         "Resolved file prefix for %s: %s (IMG_SRC=%r)",
@@ -488,7 +532,7 @@ def get_files_paths(
             "dst": dlc_video_path,
         },
         "camera_path": {
-            "filename": prefix + "_" + dataset + "_TS.npy",
+            "filename": timestamp_filename,
             "src": remote_src,
             "dst": dlc_video_path,
         },

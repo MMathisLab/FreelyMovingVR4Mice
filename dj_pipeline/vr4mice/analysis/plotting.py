@@ -32,6 +32,14 @@ colors_rewarded = ["black", "red"]
 reward_is_binary = lambda df: set(df["reward"].unique()) == {0.0, 1.0}
 
 
+def _safe_sem(values: pd.Series) -> float:
+    """Return SEM for >=2 non-NaN samples, else NaN without SciPy warnings."""
+    valid = pd.Series(values).dropna()
+    if len(valid) < 2:
+        return np.nan
+    return stats.sem(valid, nan_policy="omit")
+
+
 def _create_axes(
     ax: Optional[matplotlib.axes.Axes], per_aperture: bool, num_aperture: int
 ):
@@ -1637,6 +1645,7 @@ def pairplot_average_decision_point(
 
     stats_results = []
     for i in counts.aperture.unique():
+        aperture_values = counts[counts["aperture"] == i][label_parameter]
         for j in counts.aperture.unique():
             if i < j:
                 stat = stats.ttest_rel(
@@ -1650,9 +1659,8 @@ def pairplot_average_decision_point(
                     - counts[counts["aperture"] == i][label_parameter].mean(),
                 )
                 stats_results.append((i, j, stat.statistic, stat.pvalue))
-        print(
-            f"mean: {counts[counts['aperture'] == i][label_parameter].mean()} +/- {stats.sem(counts[counts['aperture'] == i][label_parameter], nan_policy='omit')}"
-        )
+        sem = _safe_sem(aperture_values)
+        print(f"mean: {aperture_values.mean()} +/- {sem}")
     return counts, stats_results
 
 
