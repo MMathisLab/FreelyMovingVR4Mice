@@ -289,30 +289,52 @@ def main():
             "decision.sync_lookup_contents",
             decision.sync_lookup_contents,
         )
+
+        decision_restriction = None
+        if not args.aws:
+            from vr4mice.schema import vr4mice as vr4mice_schema
+
+            # Decision routing is controlled by Batch.compute_locally:
+            # local runs only populate datasets whose batch is marked to
+            # compute decision tables locally.
+            decision_restriction = (
+                vr4mice_schema.DatasetBatch * vr4mice_schema.Batch
+                & {"compute_locally": True}
+            )
+
+        decision_populate_args = (
+            (decision_restriction,) if decision_restriction is not None else ()
+        )
+
         run_step(
             "decision.ExperimentMember.populate",
-            lambda: decision.ExperimentMember().populate(),
+            lambda: decision.ExperimentMember().populate(*decision_populate_args),
         )
         run_step(
             "decision.InclusionStatus.populate",
-            lambda: decision.InclusionStatus().populate(),
+            lambda: decision.InclusionStatus().populate(*decision_populate_args),
         )
         run_step("decision.LabelSet.fill", lambda: decision.LabelSet.fill())
+
         run_step(
             "decision.PredictionModel.populate",
-            lambda: decision.PredictionModel().populate(),
+            lambda: decision.PredictionModel().populate(*decision_populate_args),
         )
         run_step(
             "decision.DecisionPoints.populate",
-            lambda: decision.DecisionPoints().populate(),
+            lambda: decision.DecisionPoints().populate(*decision_populate_args),
         )
         run_step(
             "decision.PredictionModel10Windows.populate",
-            lambda: decision.PredictionModel10Windows().populate(),
+            lambda: decision.PredictionModel10Windows().populate(
+                *decision_populate_args
+            ),
         )
         run_step(
             "decision.DecisionPoints10Windows.populate",
-            lambda: decision.DecisionPoints10Windows().populate(),
+            lambda: decision.DecisionPoints10Windows().populate(
+                *decision_populate_args
+            ),
         )
 
     if not args.aws:

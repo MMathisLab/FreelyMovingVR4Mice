@@ -291,6 +291,46 @@ class TestGetFilesPaths:
 
         assert result["camera_path"]["filename"] == "Imagingsource_Mouse_2024-01-01_1_TS.npy"
 
+    def test_get_files_paths_video_path_filename(self, mock_env):
+        """Should generate correct game video filename."""
+        result = get_files_paths("Mouse_2024-01-01_1")
+
+        assert result["video_path"]["filename"] == "Imagingsource_Mouse_2024-01-01_1_VIDEO.avi"
+
+    def test_get_files_paths_video_path_src_is_filename(self, mock_env):
+        """video_path src should use the remote-only video filename convention."""
+        result = get_files_paths("Mouse_2024-01-01_1")
+
+        assert result["video_path"]["src"] == "Imagingsource_Mouse_2024-01-01_1_VIDEO.avi"
+
+    def test_get_files_paths_proc_path_filename(self, mock_env):
+        """Should generate correct PROC filename."""
+        result = get_files_paths("Mouse_2024-01-01_1")
+
+        assert result["proc_path"]["filename"] == "Imagingsource_Mouse_2024-01-01_1_PROC"
+
+    def test_get_files_paths_gui_output_filename(self, mock_env):
+        """Should generate gui output npy filename from dataset name."""
+        result = get_files_paths("Mouse_2024-01-01_1")
+
+        assert result["gui_output"]["filename"] == "Mouse_2024-01-01_1.npy"
+
+    def test_get_files_paths_screen_recording_output_filename(self, mock_env):
+        """Should generate screen recording output filename from dataset name."""
+        result = get_files_paths("Mouse_2024-01-01_1")
+
+        assert result["screen_recording_output"]["filename"] == "Mouse_2024-01-01_1.mkv"
+
+    def test_get_files_paths_remote_src_applied_to_non_video_entries(self, mock_env):
+        """remote_src should propagate to non-video path entries loaded from source."""
+        result = get_files_paths("Mouse_2024-01-01_1", remote_src="/remote/data")
+
+        assert result["teensy_path"]["src"] == "/remote/data"
+        assert result["dlc_path"]["src"] == "/remote/data"
+        assert result["camera_path"]["src"] == "/remote/data"
+        assert result["proc_path"]["src"] == "/remote/data"
+        assert result["gui_output"]["src"] == "/remote/data"
+
     def test_get_files_paths_video_meta_structure(self, mock_env):
         """Should have video_meta with None values initially."""
         result = get_files_paths("Mouse_2024-01-01_1")
