@@ -33,7 +33,7 @@ class Mouse(dj.Manual):
     definition = """ 
       mouse_name    : varchar(128)             # name of mouse (unique)
       ---
-      mouse_id      : int                      # unique mouse id, ATTENTION: take care that this is really unique
+            mouse_id      : int32                    # unique mouse id, ATTENTION: take care that this is really unique
       dob           : date                     # day of birth (year-month-day)
       sex           : enum('M', 'F', 'U')      # sex of mouse - Male, Female, or Unknown/Unclassified
       -> Strain                                # link to the genetic type of the mouse

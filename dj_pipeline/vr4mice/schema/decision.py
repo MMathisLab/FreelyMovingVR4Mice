@@ -318,7 +318,7 @@ class LabelSet(dj.Lookup):
     """
 
     definition = """
-    label_set_id : int
+    label_set_id : int32
     ---
     label_set_name : varchar(64)
     """
@@ -411,9 +411,9 @@ class ModelParams(dj.Lookup):
     """
 
     definition = """
-    param_id : int          # unique ID for hyperparam combo
+    param_id : int32        # unique ID for hyperparam combo
     ---
-    max_iter : int          # maximum number of iterations for logistic regression
+    max_iter : int32        # maximum number of iterations for logistic regression
     scale_data : bool       # whether to scale data before training
     """
     contents = [
@@ -433,11 +433,11 @@ class PredictionModel(dj.Computed):
     -> vr4mice.Batch
     ---
     coefficients : <blob>     # coefficients per session (per_mouse=True)
-    n_sessions : int            # number of sessions included
+    n_sessions : int32          # number of sessions included
     sessions : <blob>         # list of session dataset names
-    random_state : int          # random state used for reproducibility
-    mean_accuracy : float       # mean accuracy across sessions
-    bic : float                 # Bayesian Information Criterion for the model
+    random_state : int32        # random state used for reproducibility
+    mean_accuracy : float32     # mean accuracy across sessions
+    bic : float32               # Bayesian Information Criterion for the model
     """
 
     @property
@@ -457,9 +457,9 @@ class PredictionModel(dj.Computed):
         -> master
         -> Dataset
         ---
-        n_samples : int                # number of samples in the session
-        mean_accuracy : float          # mean accuracy for this session
-        mean_proba_left: float         # mean predicted probability for left choice
+        n_samples : int32              # number of samples in the session
+        mean_accuracy : float32        # mean accuracy for this session
+        mean_proba_left: float32       # mean predicted probability for left choice
         trial : <blob>               # trial numbers
         trial_length: <blob>         # trial progression
         proba_left : <blob>          # predicted probabilities for left choice
@@ -654,13 +654,13 @@ class PredictionModel10Windows(dj.Computed):
     ---
     coefficients_by_window : <blob>    # dict mapping window_id (0-9) -> coefficients
     scalers_by_window : <blob>         # dict mapping window_id (0-9) -> list of scaler params per fold
-    n_sessions : int                     # number of sessions included
+    n_sessions : int32                   # number of sessions included
     sessions : <blob>                  # list of session dataset names
-    random_state : int                   # random state used for reproducibility
+    random_state : int32                 # random state used for reproducibility
     mean_accuracy_by_window : <blob>   # dict mapping window_id (0-9) -> mean accuracy
     bic_by_window : <blob>             # dict mapping window_id (0-9) -> BIC
     cross_window_accuracy_matrix : <blob>  # nested dict: train_window -> test_window -> accuracy
-    cross_window_accuracy_mean : float       # mean off-diagonal cross-window accuracy
+    cross_window_accuracy_mean : float32     # mean off-diagonal cross-window accuracy
     """
 
     @property
@@ -677,9 +677,9 @@ class PredictionModel10Windows(dj.Computed):
         -> master
         -> Dataset
         ---
-        n_samples : int                  # number of samples in the session
-        mean_accuracy : float            # mean accuracy for this session
-        mean_proba_left : float          # mean predicted probability for left choice
+        n_samples : int32                # number of samples in the session
+        mean_accuracy : float32          # mean accuracy for this session
+        mean_proba_left : float32        # mean predicted probability for left choice
         trial : <blob>                 # trial numbers
         trial_length : <blob>          # trial progression
         proba_left : <blob>            # predicted probabilities for left choice

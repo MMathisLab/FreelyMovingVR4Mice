@@ -1,0 +1,99 @@
+name: Workflow Preflight
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/cron-scenario.yml
+      - .github/workflows/workflow-preflight.yml
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/cron-scenario.yml
+      - .github/workflows/workflow-preflight.yml
+
+jobs:
+  validate-cron-workflow:
+    name: Validate cron workflow
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install yamllint
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install yamllint
+
+      - name: Validate GitHub Actions workflow syntax
+        run: |
+          ACTIONLINT_VERSION=1.7.7
+          curl -sSL -o actionlint.tar.gz \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          tar -xzf actionlint.tar.gz actionlint
+          ./actionlint -color .github/workflows/cron-scenario.yml
+
+      - name: Validate YAML formatting
+        run: |
+          yamllint -d '{extends: default, rules: {truthy: disable, document-start: disable, line-length: {max: 400, level: error}}}' .github/workflows/cron-scenario.yml
+
+      - name: Guard MySQL quoting in workflow commands
+        run: |
+          python - <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          workflow = pathlib.Path('.github/workflows/cron-scenario.yml')
+          text = workflow.read_text()
+
+          violations = []
+
+          # Guard 1: mysql -e with double-quoted SQL containing backticks.
+          # This is unsafe in nested shells because backticks can become
+          # command substitution before mysql executes.
+          double_quoted_backtick_sql = re.compile(
+            r'mysql[^\n]*\s-e\s"[^"\n]*`[^"\n]*"'
+          )
+          for match in double_quoted_backtick_sql.findall(text):
+            violations.append(
+              (
+                'double-quoted mysql -e SQL contains backticks',
+                match,
+              )
+            )
+
+          # Guard 2: in the nested bash -lc "..." command, #batch must use
+          # escaped backticks (\`#batch\`) so the outer shell does not eat them.
+          bash_lc_match = re.search(
+            r'bash -lc "(?P<body>(?:[^"\\]|\\.)*)"',
+            text,
+            re.DOTALL,
+          )
+          if bash_lc_match:
+            body = bash_lc_match.group('body')
+            if re.search(r'(?<!\\)`#batch`', body):
+              violations.append(
+                (
+                  'unescaped `#batch` found inside nested bash -lc command',
+                  'use \\`#batch\\` in that block',
+                )
+              )
+
+          if violations:
+            print('Unsafe MySQL quoting detected in cron workflow:', file=sys.stderr)
+            for idx, (reason, snippet) in enumerate(violations, start=1):
+              print(f'{idx}. {reason}', file=sys.stderr)
+              print(f'   {snippet}', file=sys.stderr)
+            sys.exit(1)
+
+          print('MySQL quoting guard passed for cron-scenario.yml.')
+          PY
