@@ -2,6 +2,7 @@
 
 import importlib
 from pathlib import Path
+from unittest.mock import MagicMock
 
 
 def _import_git_helpers():
@@ -36,7 +37,7 @@ def test_parse_git_commit_file_missing_returns_empty_and_logs_once(tmp_path):
 
     # Reset module-level one-shot guard for deterministic test behavior.
     module._missing_commit_file_logged = False
-    module.logger.warning.reset_mock()
+    module.logger.warning = MagicMock()
 
     missing_file = tmp_path / "does_not_exist_git_commit"
 
@@ -60,7 +61,7 @@ def test_parse_git_commit_file_uses_git_fallback_when_file_missing(tmp_path):
     module = _import_git_helpers()
 
     module._missing_commit_file_logged = False
-    module.logger.warning.reset_mock()
+    module.logger.warning = MagicMock()
 
     missing_file = tmp_path / "does_not_exist_git_commit"
     expected = {
