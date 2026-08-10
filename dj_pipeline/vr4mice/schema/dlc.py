@@ -1,5 +1,6 @@
 """DLC-related schema tables for keypoints and derived kinematics."""
 
+from pathlib import Path
 from typing import List, Optional
 
 import datajoint as dj
@@ -62,9 +63,23 @@ class DLCProcessor(dj.Imported):
         if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
+        fpath_raw = None
+        proc_path = None
         try:
-            fpath = (vr4mice.DLC & key).fetch1("proc_filepath")
-            proc_data = np.load(fpath, allow_pickle=True)
+            fpath_raw = (vr4mice.DLC & key).fetch1("proc_filepath")
+            proc_path = Path(str(fpath_raw)).expanduser()
+
+            if not proc_path.is_file():
+                logger.warning(
+                    "Transient missing file for %s, key: %s. DLC PROC file not found. Looked for: '%s' (raw proc_filepath=%r)",
+                    self.__class__.__name__,
+                    key,
+                    proc_path,
+                    fpath_raw,
+                )
+                return
+
+            proc_data = np.load(proc_path, allow_pickle=True)
             if isinstance(proc_data, np.ndarray) and proc_data.ndim == 0:
                 proc_data = proc_data.item()
 
@@ -80,11 +95,15 @@ class DLCProcessor(dj.Imported):
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except Exception as err:
-            dataset = key["dataset"]
+            dataset = key.get("dataset", "unknown")
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
-            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            err = (
+                f"Can't populate {self.__class__.__name__}, key: {key}. "
+                f"proc_filepath={fpath_raw!r}, looked_for={proc_path!s}. "
+                f"Recorded in FailedSession. Error: {err}."
+            )
             logger.warning(err)
 
             return None

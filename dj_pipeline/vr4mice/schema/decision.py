@@ -13,6 +13,7 @@ from vr4mice.schema.session_metrics import TrialMetrics
 from vr4mice.schema.interpolated_trajectories import InterpolatedTrials
 
 from vr4mice.utils.logger import Logger
+from vr4mice.utils.populate_helpers import BEHAVIOR_DATASET_RESTRICTION
 
 from vr4mice.utils.schema_config import get_schema
 
@@ -128,7 +129,13 @@ def sync_lookup_contents():
     On deployed databases, new rows added to ``contents`` in code must be
     back-filled explicitly (parent rows before ``ExperimentMember.populate``).
     """
-    for table in (ExperimentSet, ExperimentStage, SessionLabel):
+    for table in (
+        ExperimentSet,
+        ExperimentStage,
+        SessionLabel,
+        vr4mice.Batch,
+        vr4mice.ExcludedDataset,
+    ):
         if table.contents:
             table.insert(table.contents, skip_duplicates=True)
 
@@ -137,7 +144,11 @@ def sync_lookup_contents():
 class ExperimentMember(dj.Imported):
     """
     ExperimentMember definition table:
-    links each dataset to an experiment set, stage, and session label
+    links each dataset to an experiment set, stage, session label, and batch
+    (batch_name resolved from vr4mice.DatasetBatch; run its populate() first).
+
+    Latencytest* sessions and datasets matched by vr4mice.ExcludedDataset
+    are skipped and never get a row here.
     """
 
     definition = """
@@ -146,10 +157,24 @@ class ExperimentMember(dj.Imported):
     -> ExperimentSet
     -> ExperimentStage
     -> SessionLabel
+    -> vr4mice.Batch
     """
 
     def make(self, key):
         try:
+            if not (Dataset & key & BEHAVIOR_DATASET_RESTRICTION):
+                logger.debug(
+                    f"Skipping latency test session for {self.__class__.__name__}: {key['dataset']}"
+                )
+                return
+
+            excluded_reason = vr4mice.ExcludedDataset.matches(key["dataset"])
+            if excluded_reason:
+                logger.debug(
+                    f"Skipping excluded dataset for {self.__class__.__name__}: {key['dataset']} ({excluded_reason})"
+                )
+                return
+
             session_label = (Dataset & key).fetch1("session_label")
 
             if not session_label:
@@ -169,12 +194,20 @@ class ExperimentMember(dj.Imported):
 
             label_info = label_info[0]
 
+            if not (vr4mice.DatasetBatch & key):
+                raise ValueError(
+                    f"DatasetBatch missing for '{key['dataset']}'; "
+                    "run vr4mice.DatasetBatch.populate() first"
+                )
+            batch_name = (vr4mice.DatasetBatch & key).fetch1("batch_name")
+
             self.insert1(
                 {
                     "dataset": key["dataset"],
                     "set_name": label_info["set_name"],
                     "stage_name": label_info["stage_name"],
                     "session_label": session_label,
+                    "batch_name": batch_name,
                 }
             )
         except Exception as err:
@@ -213,31 +246,19 @@ class InclusionStatus(dj.Computed):
                 self.insert1({**key, "included": False})
                 return
 
-            # NOTE(celia): this is a fix to exclude datasets that were not manually added by tom
-            # in the Groups() table, but this table was not consistently populated for all datasets
-            # so we exclude these datasets in this hardcoded way for now
-            # We could also drop the Groups table entirely if it's not used elsewhere
-            # NOTE(celia): (update) for now kept, but the Groups table was dropped in the DJ 2.0 migration so the
-            # code should get the correct set of datasets without it now.
-            # if (
-            #     session_label == "ar_discrim_occluders"
-            #     or session_label == "ar_discrim_5_occluders"
-            # ):
-            #     tables = TrialMetrics() * vr4mice.Groups() * (Dataset() & key)
-            # else:
+            excluded_reason = vr4mice.ExcludedDataset.matches(key["dataset"])
+            if excluded_reason:
+                logger.debug(
+                    f"Skipping excluded dataset for {self.__class__.__name__}: {key['dataset']} ({excluded_reason})"
+                )
+                self.insert1({**key, "included": False})
+                return
+
             tables = TrialMetrics() * (Dataset() & key)
 
             trial_df = tables.fetch(as_dict=True)
 
-            # NOTE(celia):
-            # "Lemming_2024-08-09_1" and "Lemming_2024-08-09_2" were dropped through the Groups table for now,
-            # but kept if we decide to drop it
-            # "Hamster_2026-02-02_1" is missing the dlc data
-            if not trial_df or key in [
-                {"dataset": "Hamster_2026-02-02_1"},
-                {"dataset": "Lemming_2024-08-09_1"},
-                {"dataset": "Lemming_2024-08-09_2"},
-            ]:
+            if not trial_df:
                 self.insert1({**key, "included": False})
                 return
 
@@ -297,7 +318,7 @@ class LabelSet(dj.Lookup):
     """
 
     definition = """
-    label_set_id : int
+    label_set_id : int32
     ---
     label_set_name : varchar(64)
     """
@@ -390,9 +411,9 @@ class ModelParams(dj.Lookup):
     """
 
     definition = """
-    param_id : int          # unique ID for hyperparam combo
+    param_id : int32        # unique ID for hyperparam combo
     ---
-    max_iter : int          # maximum number of iterations for logistic regression
+    max_iter : int32        # maximum number of iterations for logistic regression
     scale_data : bool       # whether to scale data before training
     """
     contents = [
@@ -409,23 +430,36 @@ class PredictionModel(dj.Computed):
     -> ModelParams
     -> ExperimentSet
     -> ExperimentStage
+    -> vr4mice.Batch
     ---
     coefficients : <blob>     # coefficients per session (per_mouse=True)
-    n_sessions : int            # number of sessions included
+    n_sessions : int32          # number of sessions included
     sessions : <blob>         # list of session dataset names
-    random_state : int          # random state used for reproducibility
-    mean_accuracy : float       # mean accuracy across sessions
-    bic : float                 # Bayesian Information Criterion for the model
+    random_state : int32        # random state used for reproducibility
+    mean_accuracy : float32     # mean accuracy across sessions
+    bic : float32               # Bayesian Information Criterion for the model
     """
+
+    @property
+    def key_source(self):
+        # Restrict to (set_name, stage_name, batch_name) combos that actually
+        # have included sessions, instead of the full cartesian product with
+        # LabelSet/ModelParams/ExperimentSet/ExperimentStage/Batch - most
+        # combos have no data (e.g. "training" stage, or a batch that hasn't
+        # run a given task yet), and make() raises for those.
+        included_combos = dj.U("set_name", "stage_name", "batch_name") & (
+            InclusionStatus * ExperimentMember & {"included": 1}
+        )
+        return LabelSet.proj() * ModelParams.proj() * included_combos
 
     class SessionPrediction(dj.Part):
         definition = """
         -> master
         -> Dataset
         ---
-        n_samples : int                # number of samples in the session
-        mean_accuracy : float          # mean accuracy for this session
-        mean_proba_left: float         # mean predicted probability for left choice
+        n_samples : int32              # number of samples in the session
+        mean_accuracy : float32        # mean accuracy for this session
+        mean_proba_left: float32       # mean predicted probability for left choice
         trial : <blob>               # trial numbers
         trial_length: <blob>         # trial progression
         proba_left : <blob>          # predicted probabilities for left choice
@@ -616,26 +650,36 @@ class PredictionModel10Windows(dj.Computed):
     -> ModelParams
     -> ExperimentSet
     -> ExperimentStage
+    -> vr4mice.Batch
     ---
     coefficients_by_window : <blob>    # dict mapping window_id (0-9) -> coefficients
     scalers_by_window : <blob>         # dict mapping window_id (0-9) -> list of scaler params per fold
-    n_sessions : int                     # number of sessions included
+    n_sessions : int32                   # number of sessions included
     sessions : <blob>                  # list of session dataset names
-    random_state : int                   # random state used for reproducibility
+    random_state : int32                 # random state used for reproducibility
     mean_accuracy_by_window : <blob>   # dict mapping window_id (0-9) -> mean accuracy
     bic_by_window : <blob>             # dict mapping window_id (0-9) -> BIC
     cross_window_accuracy_matrix : <blob>  # nested dict: train_window -> test_window -> accuracy
-    cross_window_accuracy_mean : float       # mean off-diagonal cross-window accuracy
+    cross_window_accuracy_mean : float32     # mean off-diagonal cross-window accuracy
     """
+
+    @property
+    def key_source(self):
+        # See PredictionModel.key_source: restrict to (set_name, stage_name,
+        # batch_name) combos that actually have included sessions.
+        included_combos = dj.U("set_name", "stage_name", "batch_name") & (
+            InclusionStatus * ExperimentMember & {"included": 1}
+        )
+        return LabelSet.proj() * ModelParams.proj() * included_combos
 
     class SessionPrediction(dj.Part):
         definition = """
         -> master
         -> Dataset
         ---
-        n_samples : int                  # number of samples in the session
-        mean_accuracy : float            # mean accuracy for this session
-        mean_proba_left : float          # mean predicted probability for left choice
+        n_samples : int32                # number of samples in the session
+        mean_accuracy : float32          # mean accuracy for this session
+        mean_proba_left : float32        # mean predicted probability for left choice
         trial : <blob>                 # trial numbers
         trial_length : <blob>          # trial progression
         proba_left : <blob>            # predicted probabilities for left choice
