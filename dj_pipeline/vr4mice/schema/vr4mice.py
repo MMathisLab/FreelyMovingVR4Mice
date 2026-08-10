@@ -423,11 +423,14 @@ class Collab(dj.Computed):
             data = {**key, **idx}
             self.insert1(data)
         except Exception as err:
-            dataset = key["dataset"]
+            dataset = key.get("dataset", "unknown")
             FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
-            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            err = (
+                f"Can't populate {self.__class__.__name__}, key: {key}. "
+                f"Recorded in FailedSession. Error: {err}."
+            )
             logger.warning(err)
 
 
@@ -546,23 +549,9 @@ class DLC(dj.Manual):
                 keys.append({**vk, **mn})
         return keys
 
-    def populate(self, *restrictions):
-        """Populate DLC rows, optionally restricted by DataJoint conditions."""
-        if restrictions:
-            # Restrict against the source key space (Video x ModelName), not existing
-            # DLC rows, so missing rows can still be created.
-            rel = Video() * ModelName()
-            for restriction in restrictions:
-                rel = rel & restriction
-            keys = rel.fetch(*self.primary_key, as_dict=True)
-            if len(keys) == 0:
-                logger.warning(
-                    "No DLC source keys matched restrictions: %s",
-                    restrictions,
-                )
-                return
-        else:
-            keys = self.get_keys()
+    def populate(self):
+        """Populate DLC rows from the full Video x ModelName key space."""
+        keys = self.get_keys()
         for key in keys:
             self.make(key)
 
@@ -577,28 +566,6 @@ class DLC(dj.Manual):
             logger.info(f"{key['dataset']}")
 
             if self & key:
-                existing_keypoints, existing_proc = (self & key).fetch1(
-                    "keypoints_filepath", "proc_filepath"
-                )
-                for field, value in (
-                    ("keypoints_filepath", existing_keypoints),
-                    ("proc_filepath", existing_proc),
-                ):
-                    value_text = str(value).strip() if value is not None else ""
-                    if value in (None, False, 0) or value_text in (
-                        "",
-                        "0",
-                        "False",
-                        "None",
-                    ):
-                        raise FileNotFoundError(
-                            f"Existing DLC row has invalid {field}: {value!r}."
-                        )
-                    resolved = Path(value_text).expanduser()
-                    if not resolved.is_file():
-                        raise FileNotFoundError(
-                            f"Existing DLC row has non-file {field}: '{resolved}'"
-                        )
                 logger.debug(
                     "%s already populated for key %s", self.__class__.__name__, key
                 )
@@ -618,14 +585,24 @@ class DLC(dj.Manual):
             ):
                 value_text = str(value).strip()
                 if value_text in ("", "0", "False", "None"):
-                    raise FileNotFoundError(
-                        f"Invalid {field} for DLC insert: {value!r}."
+                    logger.warning(
+                        "Transient missing file for %s, key: %s. Invalid %s for DLC insert: %r.",
+                        self.__class__.__name__,
+                        key,
+                        field,
+                        value,
                     )
+                    return
                 resolved = Path(value_text).expanduser()
                 if not resolved.is_file():
-                    raise FileNotFoundError(
-                        f"DLC source path is not a file for {field}: '{resolved}'"
+                    logger.warning(
+                        "Transient missing file for %s, key: %s. DLC source path is not a file for %s: '%s'.",
+                        self.__class__.__name__,
+                        key,
+                        field,
+                        resolved,
                     )
+                    return
 
             data = {
                 "keypoints_filepath": keypoints_filepath,
@@ -633,15 +610,6 @@ class DLC(dj.Manual):
             }
             data = {**key, **data}
             DLC().insert1(data, skip_duplicates=True)
-
-        except FileNotFoundError as err:
-            logger.warning(
-                "Transient missing file for %s, key: %s. %s",
-                self.__class__.__name__,
-                key,
-                err,
-            )
-            return
 
         except Exception as err:
             dataset = key["dataset"]

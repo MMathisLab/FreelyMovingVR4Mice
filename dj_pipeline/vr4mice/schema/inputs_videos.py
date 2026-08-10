@@ -40,11 +40,18 @@ class RawVideo(dj.Imported):
         logger.info(f"{key['dataset']}")
         paths = get_files_paths(key["dataset"])
         video_filepath = f"{paths['screen_recording_output']['dst']}/{paths['screen_recording_output']['filename']}"
+        resolved_video_path = pathlib.Path(video_filepath).expanduser()
+
+        if not resolved_video_path.is_file():
+            logger.warning(
+                "Transient missing file for %s, key: %s. Video file not found: %s",
+                self.__class__.__name__,
+                key,
+                resolved_video_path,
+            )
+            return
 
         try:
-            if not pathlib.Path(video_filepath).exists():
-                raise FileNotFoundError(f"Video file not found: {video_filepath}")
-
             self.insert1({**key, "video_path": video_filepath})
         except Exception as err:
             dataset = key.get("dataset") if isinstance(key, dict) else None
@@ -52,7 +59,12 @@ class RawVideo(dj.Imported):
                 vr4mice.FailedSession().add_entry(
                     f"{dataset}", f"{self.__class__.__name__}", str(err)
                 )
-            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
+            logger.warning(
+                "Error %s, key: %s. Recorded in FailedSession. Error: %s",
+                self.__class__.__name__,
+                key,
+                err,
+            )
             return None
 
 

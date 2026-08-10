@@ -70,10 +70,14 @@ class DLCProcessor(dj.Imported):
             proc_path = Path(str(fpath_raw)).expanduser()
 
             if not proc_path.is_file():
-                raise FileNotFoundError(
-                    "DLC PROC file not found. "
-                    f"Looked for: '{proc_path}' (raw proc_filepath={fpath_raw!r})"
+                logger.warning(
+                    "Transient missing file for %s, key: %s. DLC PROC file not found. Looked for: '%s' (raw proc_filepath=%r)",
+                    self.__class__.__name__,
+                    key,
+                    proc_path,
+                    fpath_raw,
                 )
+                return
 
             proc_data = np.load(proc_path, allow_pickle=True)
             if isinstance(proc_data, np.ndarray) and proc_data.ndim == 0:
@@ -90,15 +94,6 @@ class DLCProcessor(dj.Imported):
             self.insert1(data, allow_direct_insert=True)
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
-        except FileNotFoundError as err:
-            logger.warning(
-                "Transient missing file for %s, key: %s. %s",
-                self.__class__.__name__,
-                key,
-                err,
-            )
-            return
-
         except Exception as err:
             dataset = key.get("dataset", "unknown")
             vr4mice.FailedSession().add_entry(
@@ -106,7 +101,8 @@ class DLCProcessor(dj.Imported):
             )
             err = (
                 f"Can't populate {self.__class__.__name__}, key: {key}. "
-                f"proc_filepath={fpath_raw!r}, looked_for={proc_path!s}. Error: {err}."
+                f"proc_filepath={fpath_raw!r}, looked_for={proc_path!s}. "
+                f"Recorded in FailedSession. Error: {err}."
             )
             logger.warning(err)
 

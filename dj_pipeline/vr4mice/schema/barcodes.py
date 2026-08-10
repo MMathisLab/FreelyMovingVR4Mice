@@ -68,11 +68,15 @@ class TeensyTTL(dj.Imported):
             proc_filepath_raw = (vr4mice.DLC & key).fetch1("proc_filepath")
             proc_path = Path(str(proc_filepath_raw)).expanduser()
 
-            if not proc_path.exists():
-                raise FileNotFoundError(
-                    "DLC PROC file not found for TeensyTTL. "
-                    f"Looked for: '{proc_path}' (raw proc_filepath={proc_filepath_raw!r})"
+            if not proc_path.is_file():
+                logger.warning(
+                    "Transient missing file for %s, key: %s. DLC PROC file not found for TeensyTTL. Looked for: '%s' (raw proc_filepath=%r)",
+                    self.__class__.__name__,
+                    key,
+                    proc_path,
+                    proc_filepath_raw,
                 )
+                return
 
             proc_data = np.load(proc_path, allow_pickle=True)
             if isinstance(proc_data, np.ndarray) and proc_data.ndim == 0:
@@ -90,22 +94,13 @@ class TeensyTTL(dj.Imported):
             self.insert1(data, allow_direct_insert=True)
             logger.info("%s populated for %s", self.__class__.__name__, key)
 
-        except FileNotFoundError as err:
-            logger.warning(
-                "Transient missing file for %s, key: %s. %s",
-                self.__class__.__name__,
-                key,
-                err,
-            )
-            return
-
         except Exception as err:
             dataset = key.get("dataset", "unknown")
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
             logger.warning(
-                "Can't populate %s, key: %s. proc_filepath=%r, looked_for=%s. Error: %s.",
+                "Can't populate %s, key: %s. proc_filepath=%r, looked_for=%s. Recorded in FailedSession. Error: %s.",
                 self.__class__.__name__,
                 key,
                 proc_filepath_raw,
