@@ -634,6 +634,15 @@ class DLC(dj.Manual):
             data = {**key, **data}
             DLC().insert1(data, skip_duplicates=True)
 
+        except FileNotFoundError as err:
+            logger.warning(
+                "Transient missing file for %s, key: %s. %s",
+                self.__class__.__name__,
+                key,
+                err,
+            )
+            return
+
         except Exception as err:
             dataset = key["dataset"]
             FailedSession().add_entry(

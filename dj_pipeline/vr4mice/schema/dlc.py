@@ -91,14 +91,13 @@ class DLCProcessor(dj.Imported):
             logger.info(f"{self.__class__.__name__} populated for {key}.")
 
         except FileNotFoundError as err:
-            dataset = key.get("dataset", "unknown")
-            vr4mice.FailedSession().add_entry(
-                f"{dataset}", f"{self.__class__.__name__}", str(err)
-            )
             logger.warning(
-                f"Can't populate {self.__class__.__name__}, key: {key}. {err}"
+                "Transient missing file for %s, key: %s. %s",
+                self.__class__.__name__,
+                key,
+                err,
             )
-            return None
+            return
 
         except Exception as err:
             dataset = key.get("dataset", "unknown")

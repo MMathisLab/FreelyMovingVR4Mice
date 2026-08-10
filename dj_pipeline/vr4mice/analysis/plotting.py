@@ -1258,8 +1258,7 @@ def plot_rate(
         cmap (str, optional): Color map for the plot. Default is "Set1".
         color_sessions_by_lab (bool, optional): If True and per_lab=True with plot_bias=True,
             color individual session points by lab. If False, use grey. Default is True.
-        print_stats (bool, optional): If True, print per-aperture summary/t-test
-            diagnostics (useful for notebooks). Default is True.
+        print_stats (bool, optional): If True, print per-aperture stats and tests.
     """
 
     num_aperture = len(df.aperture.unique())
@@ -1340,15 +1339,15 @@ def plot_rate(
         for i in data_for_stats.aperture.unique():
             for j in data_for_stats.aperture.unique():
                 if i < j:
-                    left_vals = counts[counts["aperture"] == i]["count"]
-                    right_vals = counts[counts["aperture"] == j]["count"]
-                    if len(left_vals) > 1 and len(right_vals) > 1:
-                        stat = stats.ttest_rel(left_vals, right_vals)
-                        if print_stats:
-                            print(f"{i}-{j}: {stat}")
+                    stat = stats.ttest_rel(
+                        counts[counts["aperture"] == i]["count"],
+                        counts[counts["aperture"] == j]["count"],
+                    )
+                    if print_stats:
+                        print(f"{i}-{j}: {stat}")
+            mean = counts[counts["aperture"] == i]["count"].mean()
+            sem = counts[counts["aperture"] == i]["count"].sem()
             if print_stats:
-                mean = counts[counts["aperture"] == i]["count"].mean()
-                sem = counts[counts["aperture"] == i]["count"].sem()
                 print(f"{i}: mean={mean:.3f} ± {sem:.3f}")
 
     if plot_bias:
@@ -1369,11 +1368,11 @@ def plot_rate(
                 # if multiple apertures, we run a FDR-corrected t-test later in the code
                 # so we do not compute it here.
                 if data_for_stats.aperture.nunique() < 3:
-                    vals = data_for_stats[data_for_stats["aperture"] == i]["count"]
-                    if len(vals) > 1:
-                        t_null, p_null = stats.ttest_1samp(vals, 0)
-                        if print_stats:
-                            print(f"{i} vs chance 0: t={t_null:.2f}, p={p_null:.3f}")
+                    t_null, p_null = stats.ttest_1samp(
+                        data_for_stats[data_for_stats["aperture"] == i]["count"], 0
+                    )
+                    if print_stats:
+                        print(f"{i} vs chance 0: t={t_null:.2f}, p={p_null:.3f}")
     return counts
 
 
@@ -1536,6 +1535,7 @@ def pairplot_std_decision_point(
     per_mouse: bool = False,
     per_lab: bool = False,
     cmap: str = "Set2",
+    print_stats: bool = True,
 ):
     """Plot the decision point based on a specified label parameter.
 
@@ -1544,6 +1544,7 @@ def pairplot_std_decision_point(
         label_parameter (str): Column label for the parameter to plot.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
         per_mouse (bool): If True, group plots by mouse_name.
+        print_stats (bool): If True, print pairwise t-test diagnostics.
     """
     ax = _create_axes(ax=ax, per_aperture=False, num_aperture=1)
 
@@ -1584,10 +1585,12 @@ def pairplot_std_decision_point(
     for i in counts.aperture.unique():
         for j in counts.aperture.unique():
             if i < j:
-                left_vals = counts[counts["aperture"] == i][label_parameter]
-                right_vals = counts[counts["aperture"] == j][label_parameter]
-                if len(left_vals) > 1 and len(right_vals) > 1:
-                    stats.ttest_rel(left_vals, right_vals)
+                stat = stats.ttest_rel(
+                    counts[counts["aperture"] == i][label_parameter],
+                    counts[counts["aperture"] == j][label_parameter],
+                )
+                if print_stats:
+                    print(f"{i}-{j}: {stat}")
 
 
 def pairplot_average_decision_point(
@@ -1597,6 +1600,7 @@ def pairplot_average_decision_point(
     per_mouse: bool = False,
     per_lab: bool = False,
     cmap: str = "Set2",
+    print_stats: bool = True,
 ):
     """Plot the decision point based on a specified label parameter.
 
@@ -1604,6 +1608,7 @@ def pairplot_average_decision_point(
         df (pd.DataFrame): DataFrame containing the data to plot.
         label_parameter (str): Column label for the parameter to plot.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
+        print_stats (bool): If True, print pairwise and per-aperture stats.
     """
     ax = _create_axes(ax=ax, per_aperture=False, num_aperture=1)
 
@@ -1665,13 +1670,21 @@ def pairplot_average_decision_point(
         aperture_values = counts[counts["aperture"] == i][label_parameter]
         for j in counts.aperture.unique():
             if i < j:
-                left_vals = counts[counts["aperture"] == i][label_parameter]
-                right_vals = counts[counts["aperture"] == j][label_parameter]
-                if len(left_vals) > 1 and len(right_vals) > 1:
-                    stat = stats.ttest_rel(left_vals, right_vals)
-                    stats_results.append((i, j, stat.statistic, stat.pvalue))
-                else:
-                    stats_results.append((i, j, np.nan, np.nan))
+                stat = stats.ttest_rel(
+                    counts[counts["aperture"] == i][label_parameter],
+                    counts[counts["aperture"] == j][label_parameter],
+                )
+                if print_stats:
+                    print(f"{i}-{j}: {stat}")
+                    print(
+                        " mean difference: ",
+                        counts[counts["aperture"] == j][label_parameter].mean()
+                        - counts[counts["aperture"] == i][label_parameter].mean(),
+                    )
+                stats_results.append((i, j, stat.statistic, stat.pvalue))
+        sem = _safe_sem(aperture_values)
+        if print_stats:
+            print(f"mean: {aperture_values.mean()} +/- {sem}")
     return counts, stats_results
 
 

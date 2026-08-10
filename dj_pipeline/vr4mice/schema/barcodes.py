@@ -91,17 +91,13 @@ class TeensyTTL(dj.Imported):
             logger.info("%s populated for %s", self.__class__.__name__, key)
 
         except FileNotFoundError as err:
-            dataset = key.get("dataset", "unknown")
-            vr4mice.FailedSession().add_entry(
-                f"{dataset}", f"{self.__class__.__name__}", str(err)
-            )
             logger.warning(
-                "Can't populate %s, key: %s. %s",
+                "Transient missing file for %s, key: %s. %s",
                 self.__class__.__name__,
                 key,
                 err,
             )
-            return None
+            return
 
         except Exception as err:
             dataset = key.get("dataset", "unknown")
