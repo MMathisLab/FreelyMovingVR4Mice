@@ -196,11 +196,32 @@ class TestDlcErrorPaths:
 
         dlc_module.vr4mice.DLC = MagicMock(return_value=_SelfRelation(fetch1_value="/tmp/proc.npy"))
 
-        with patch.object(dlc_module.np, "load", side_effect=RuntimeError("bad proc")):
+        with patch.object(dlc_module.Path, "exists", return_value=True), patch.object(
+            dlc_module.np, "load", side_effect=RuntimeError("bad proc")
+        ):
             result = dlc_module.DLCProcessor.make(table, key)
 
         assert result is None
         failed_session_row.add_entry.assert_called_once()
+
+    def test_dlcprocessor_make_missing_file_is_transient_skip(self, dlc_module):
+        key = {"dataset": "Whale_2026-07-08_1"}
+        table = _AlwaysMissingTable()
+
+        failed_session_row = MagicMock()
+        failed_session_cls = MagicMock(return_value=failed_session_row)
+        failed_session_cls.should_skip = MagicMock(return_value=False)
+        dlc_module.vr4mice.FailedSession = failed_session_cls
+
+        dlc_module.vr4mice.DLC = MagicMock(
+            return_value=_SelfRelation(fetch1_value="/tmp/missing_proc.npy")
+        )
+
+        with patch.object(dlc_module.Path, "exists", return_value=False):
+            result = dlc_module.DLCProcessor.make(table, key)
+
+        assert result is None
+        failed_session_row.add_entry.assert_not_called()
 
     def test_syncdlckptsdf_make_records_failed_session_on_sync_error(self, dlc_module):
         key = {"dataset": "Whale_2026-07-08_1"}
