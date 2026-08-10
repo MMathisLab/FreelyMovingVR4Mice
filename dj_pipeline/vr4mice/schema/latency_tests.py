@@ -149,9 +149,24 @@ class AllLatencies(dj.Computed):
             raw_data = (vr4mice.SignalsPhotodiode() & key).fetch(
                 "generated_frame_time", "generated_send_time", as_dict=True
             )[0]
+            generated_frame_time = np.asarray(raw_data["generated_frame_time"])
+            generated_send_time = np.asarray(raw_data["generated_send_time"])
+            common_len = min(len(generated_frame_time), len(generated_send_time))
+            if common_len == 0:
+                raise ValueError(f"No generated timing data found for {key['dataset']}")
+            if len(generated_frame_time) != len(generated_send_time):
+                logger.warning(
+                    "Generated timing length mismatch for %s (%d vs %d); trimming to %d.",
+                    key["dataset"],
+                    len(generated_frame_time),
+                    len(generated_send_time),
+                    common_len,
+                )
+
+            start = 100 if common_len > 100 else 0
             latencies["frame_to_socket"] = np.mean(
-                raw_data["generated_send_time"][100:]
-                - raw_data["generated_frame_time"][100:]
+                generated_send_time[start:common_len]
+                - generated_frame_time[start:common_len]
             )
             data = latencies.to_dict()
             self.insert1(

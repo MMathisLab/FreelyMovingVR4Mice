@@ -196,7 +196,7 @@ def get_path(
                 path = str(processed)
         return path
     else:
-        logger.warning("Path doesn not exist: " + str(path))
+        logger.warning("Path does not exist: " + str(path))
         return False
 
 

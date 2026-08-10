@@ -38,6 +38,7 @@ def _require_env(*names: str) -> bool:
 
 
 def _mysql_scalar(query: str) -> int:
+    env = {**os.environ, "MYSQL_PWD": os.environ["DJ_PWD"]}
     result = subprocess.run(
         [
             "mysql",
@@ -47,11 +48,11 @@ def _mysql_scalar(query: str) -> int:
             os.environ["DJ_PORT"],
             "-u",
             os.environ["DJ_USER"],
-            f"-p{os.environ['DJ_PWD']}",
             "-N",
             "-e",
             query,
         ],
+        env=env,
         check=True,
         capture_output=True,
         text=True,

@@ -311,7 +311,7 @@ def vr4mice_summary_plots(
         hue="trial_right_choice" if num_apertures <= 2 else "aperture",
         palette=plotting.colors_choice if num_apertures <= 2 else "viridis",
         style="aperture" if num_apertures <= 2 else "trial_right_choice",
-        errorbar="se",
+        errorbar=plotting._safe_se_interval,
         ax=axes["j_mean"],
     )
     axes["j_mean"].set_xlim([-15, 15])
@@ -323,6 +323,7 @@ def vr4mice_summary_plots(
         df=df,
         label_x="trial_left_choice",
         per_aperture=True if num_apertures >= 2 else False,
+        print_stats=False,
         ax=axes["choice_rate"],
     )
     axes["choice_rate"].set_ylabel("Prob(Left Choice)")
@@ -340,6 +341,7 @@ def vr4mice_summary_plots(
         df=df,
         label_x="object_on_left",
         per_aperture=True if num_apertures >= 2 else False,
+        print_stats=False,
         ax=axes["target_rate"],
     )
     axes["target_rate"].hlines(
@@ -416,7 +418,7 @@ def vr4mice_summary_plots(
         y="velocity",
         palette=(plotting.colors_aperture[:2] if num_apertures == 2 else "viridis"),
         hue="aperture",
-        errorbar="se",
+        errorbar=plotting._safe_se_interval,
         ax=axes["vel_aperture"],
     )
     axes["vel_aperture"].set_ylabel("Speed / Aperture")
@@ -429,7 +431,7 @@ def vr4mice_summary_plots(
         y="velocity",
         palette=plotting.colors_rewarded,
         hue="trial_rewarded",
-        errorbar="se",
+        errorbar=plotting._safe_se_interval,
         ax=axes["vel_reward"],
     )
     axes["vel_reward"].set_ylabel("Speed / Reward")
@@ -442,7 +444,7 @@ def vr4mice_summary_plots(
         y="velocity",
         palette=plotting.colors_choice,
         hue="trial_right_choice",
-        errorbar="se",
+        errorbar=plotting._safe_se_interval,
         ax=axes["vel_choice"],
     )
     axes["vel_choice"].set_ylabel("Speed / Choice")
@@ -456,7 +458,7 @@ def vr4mice_summary_plots(
         hue="trial_right_choice" if num_apertures <= 2 else "aperture",
         palette=plotting.colors_choice if num_apertures <= 2 else "viridis",
         style="aperture" if num_apertures <= 2 else "trial_right_choice",
-        errorbar="se",
+        errorbar=plotting._safe_se_interval,
         ax=axes["heading"],
     )
     axes["heading"].set_ylabel("Heading direction")
@@ -467,6 +469,7 @@ def vr4mice_summary_plots(
         df=df,
         label_x="is_j_shaped",
         per_aperture=True if num_apertures >= 2 else False,
+        print_stats=False,
         ax=axes["j_rate"],
     )
     axes["j_rate"].set_ylabel("J-shaped trials rate")
