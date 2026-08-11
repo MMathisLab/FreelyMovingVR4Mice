@@ -43,8 +43,6 @@ transformer = {
     "tt_box_z_min": "TT_box_z_min",
     "tt_box_z_max": "TT_box_z_max",
     "tt_box_angle": "TT_box_angle",
-    "keypoints_filepath": "dlc_path",  # local : FS ?!
-    "proc_filepath": "proc_path",
     "exp_teensy_filepath": "teensy_path",  # pickle, local
     "timestamp_filepath": "camera_path",  # TS, : FS
     "video_filepath": "video_path",  # remote
@@ -71,8 +69,6 @@ local_def = {
     "report_right": get_state,
     "velocity": get_state,
     "frame_flip": get_state,
-    "keypoints_filepath": get_path,
-    "proc_filepath": get_path,
     "exp_teensy_filepath": get_path,
     "exp_session_filepath": get_path,
     "timestamp_filepath": get_path,
@@ -120,15 +116,6 @@ video = [
     "height",
     "video_filepath",
     "timestamp_filepath",
-]
-
-keypoints = [
-    "dataset",  #
-    "camera",  #
-    "doe",  #
-    "model_name",  #
-    "keypoints_filepath",
-    "proc_filepath",
 ]
 
 box = [
@@ -237,7 +224,11 @@ tables = {  # order matters (dependencies))
     "Metadata": metadata,
     "Box": box,
     "Video": video,
-    "DLC": keypoints,
+    # DLC intentionally excluded: it's populated exclusively via
+    # vr4mice.DLC().populate() (run.py "dlc" mode / cron_scenario.py), not
+    # here, so there's a single entry point for that table. See the NOTE on
+    # vr4mice.DLC for why (populate_rig only scans /data/data, but DLC files
+    # can arrive after a dataset's pickle was already moved to processed).
     "GuiParams": gui,
     # "VR4Mice": vr4mice_table, # note: old version artefact
 }
@@ -248,7 +239,6 @@ dj_tables = {  # in order
     "State": vr4mice.State(),
     "Metadata": vr4mice.Metadata(),
     "Box": vr4mice.Box(),
-    "DLC": vr4mice.DLC(),
     "Video": vr4mice.Video(),  # .npy
     "GuiParams": vr4mice.GuiParams(),
     # "VR4Mice": vr4mice.VR4Mice(),  # old version artefact

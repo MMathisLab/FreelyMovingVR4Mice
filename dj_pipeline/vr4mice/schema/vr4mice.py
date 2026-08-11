@@ -442,12 +442,13 @@ class Video(dj.Manual):
     and the path to the raw video on the rig's PC
 
     NOTE: normally populated live by populate_rig() (vr4mice/actions/populate_rig.py),
-    which moves each pickle to processed only once every table - including
-    Video/DLC - has a row. get_keys()/populate()/make() below are a working
-    but currently unused alternative (no caller exists for Video today; see
-    DLC for why one exists there). Safe alongside populate_rig() either way -
-    skip_duplicates=True + errors caught into FailedSession. Prefer
-    Video().populate({"dataset": ...}) over a full rescan if ever used.
+    which moves each pickle to processed only once every table it manages -
+    including Video, but NOT DLC (see DLC below) - has a row.
+    get_keys()/populate()/make() below are a working but currently unused
+    alternative (no caller exists for Video today). Safe alongside
+    populate_rig() either way - skip_duplicates=True + errors caught into
+    FailedSession. Prefer Video().populate({"dataset": ...}) over a full
+    rescan if ever used.
     """
 
     definition = """
@@ -553,14 +554,13 @@ class DLC(dj.Manual):
     DLC definition table:
     stores local paths to keypoints and processed keypoints files
 
-    NOTE: normally populated live via populate_rig(), same as Video above -
-    that handles a *missing* DLC file fine (dataset stays incomplete, retried
-    next run). It can't handle a DLC file arriving *after* the dataset was
-    already completed and its pickle moved to processed - no pickle left to
-    re-trigger anything. populate()/make() below cover exactly that gap:
-    check every Video x ModelName key regardless of pickle location, resolve
-    the path via IMG_SRC candidates, insert only if the file exists. Wired in
-    as a catch-up pass (not a replacement) in run.py ("dlc" mode) and
+    NOTE: unlike Video above, this is the ONE table populate_rig() does not
+    fill (deliberately excluded from keys2tables_vr4mice.py's `tables` dict) -
+    populate()/make() below are the sole entry point, so a DLC file arriving
+    late (after its dataset's pickle was already moved to processed) is
+    always picked up the same way, regardless of pickle location. They check
+    every Video x ModelName key, resolve the path via IMG_SRC candidates, and
+    insert only if the file exists. Wired into run.py ("dlc" mode) and
     cron_scenario.py. Use DLC().populate({"dataset": ...}) to backfill one
     known case.
     """
