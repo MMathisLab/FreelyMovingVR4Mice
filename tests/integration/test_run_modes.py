@@ -396,7 +396,7 @@ def populated_db(dj_config, pipeline_test_data, test_dataset_name, test_camera_p
     # local_src/data are overridden to point at the temp dirs used here instead
     # of the production "/data" default.
     vr4mice.DLC().populate(
-        {"dataset": test_dataset_name}, local_src=srcf, data=str(data_dir)
+        {"dataset": test_dataset_name}, local_src=srcf, data_root=str(data_dir)
     )
 
     # Verify the 5 core tables populated (fail fast if pipeline broke)
