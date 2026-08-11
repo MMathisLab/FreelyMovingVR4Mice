@@ -84,10 +84,10 @@ def main():
 
     def import_core_schemas():
         from vr4mice.schema import (
+            vr4mice,
             barcodes,
             base_analysis,
             dlc,
-            vr4mice,
             interpolated_trajectories,
             session_metrics,
             latency_tests,
@@ -95,10 +95,10 @@ def main():
         )
 
         return (
+            vr4mice,
             barcodes,
             base_analysis,
             dlc,
-            vr4mice,
             interpolated_trajectories,
             session_metrics,
             latency_tests,
@@ -113,10 +113,10 @@ def main():
         )
 
         (
+            vr4mice,
             barcodes,
             base_analysis,
             dlc,
-            vr4mice,
             interpolated_trajectories,
             session_metrics,
             latency_tests,
@@ -128,6 +128,14 @@ def main():
             lambda: create_folder_if_not_exist("/data/summary_plots"),
         )
 
+        run_step(
+            "vr4mice.Batch.sync_contents",
+            lambda: vr4mice.Batch.insert(vr4mice.Batch.contents, skip_duplicates=True),
+        )
+        run_step(
+            "vr4mice.DatasetBatch.populate",
+            lambda: vr4mice.DatasetBatch().populate(),
+        )
         run_step(
             "vr4mice.Collab.populate",
             lambda: populate_pending(vr4mice.Collab, vr4mice.Dataset, logger=logger),
@@ -270,45 +278,66 @@ def main():
             lambda: summary_emails.send_pending_summary_emails(logger=logger),
         )
 
-    if args.aws:
+    def import_decision_schema():
+        from vr4mice.schema import decision
 
-        def import_decision_schema():
-            from vr4mice.schema import decision
+        return decision
 
-            return decision
+    decision = run_import("import decision schema", import_decision_schema)
+    if decision:
+        run_step(
+            "decision.sync_lookup_contents",
+            decision.sync_lookup_contents,
+        )
 
-        decision = run_import("import decision schema", import_decision_schema)
-        if decision:
-            run_step(
-                "decision.sync_lookup_contents",
-                decision.sync_lookup_contents,
+        decision_restriction = None
+        if not args.aws:
+            from vr4mice.schema import vr4mice as vr4mice_schema
+
+            # Decision routing is controlled by Batch.compute_locally:
+            # local runs only populate datasets whose batch is marked to
+            # compute decision tables locally.
+            decision_restriction = (
+                vr4mice_schema.DatasetBatch * vr4mice_schema.Batch
+                & {"compute_locally": True}
             )
-            run_step(
-                "decision.ExperimentMember.populate",
-                lambda: decision.ExperimentMember().populate(),
-            )
-            run_step(
-                "decision.InclusionStatus.populate",
-                lambda: decision.InclusionStatus().populate(),
-            )
-            run_step("decision.LabelSet.fill", lambda: decision.LabelSet.fill())
-            run_step(
-                "decision.PredictionModel.populate",
-                lambda: decision.PredictionModel().populate(),
-            )
-            run_step(
-                "decision.DecisionPoints.populate",
-                lambda: decision.DecisionPoints().populate(),
-            )
-            run_step(
-                "decision.PredictionModel10Windows.populate",
-                lambda: decision.PredictionModel10Windows().populate(),
-            )
-            run_step(
-                "decision.DecisionPoints10Windows.populate",
-                lambda: decision.DecisionPoints10Windows().populate(),
-            )
-    else:
+
+        decision_populate_args = (
+            (decision_restriction,) if decision_restriction is not None else ()
+        )
+
+        run_step(
+            "decision.ExperimentMember.populate",
+            lambda: decision.ExperimentMember().populate(*decision_populate_args),
+        )
+        run_step(
+            "decision.InclusionStatus.populate",
+            lambda: decision.InclusionStatus().populate(*decision_populate_args),
+        )
+        run_step("decision.LabelSet.fill", lambda: decision.LabelSet.fill())
+
+        run_step(
+            "decision.PredictionModel.populate",
+            lambda: decision.PredictionModel().populate(*decision_populate_args),
+        )
+        run_step(
+            "decision.DecisionPoints.populate",
+            lambda: decision.DecisionPoints().populate(*decision_populate_args),
+        )
+        run_step(
+            "decision.PredictionModel10Windows.populate",
+            lambda: decision.PredictionModel10Windows().populate(
+                *decision_populate_args
+            ),
+        )
+        run_step(
+            "decision.DecisionPoints10Windows.populate",
+            lambda: decision.DecisionPoints10Windows().populate(
+                *decision_populate_args
+            ),
+        )
+
+    if not args.aws:
 
         def import_inputs_videos_schema():
             from vr4mice.schema import inputs_videos

@@ -2,6 +2,7 @@
 
 import os
 import re
+import traceback
 from pathlib import Path
 from typing import List, Optional
 
@@ -337,6 +338,7 @@ class SummaryPlots(dj.Computed):
                 )
                 err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
                 logger.warning(err)
+                logger.warning(traceback.format_exc())
                 return None
         else:
             logger.warning(

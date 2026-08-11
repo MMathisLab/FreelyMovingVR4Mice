@@ -60,7 +60,9 @@ def dlc_module():
     analysis_pkg = ModuleType("vr4mice.analysis")
     dlc_helpers_mod = ModuleType("vr4mice.analysis.dlc_helpers")
     dlc_helpers_mod.sync_keypoint_table = MagicMock()
-    dlc_helpers_mod.df_to_dj = MagicMock(return_value={"data": [], "headers": [], "scorer": None})
+    dlc_helpers_mod.df_to_dj = MagicMock(
+        return_value={"data": [], "headers": [], "scorer": None}
+    )
     dlc_helpers_mod.get_offline_dlc_variables = MagicMock(return_value=pd.DataFrame())
     analysis_pkg.dlc_helpers = dlc_helpers_mod
 
@@ -87,6 +89,9 @@ def dlc_module():
 def interp_module():
     dj_stub = ModuleType("datajoint")
     dj_stub.Computed = type("Computed", (), {})
+    dj_errors_mod = ModuleType("datajoint.errors")
+    dj_errors_mod.DuplicateError = type("DuplicateError", (Exception,), {})
+    dj_stub.errors = dj_errors_mod
 
     logger_mod = ModuleType("vr4mice.utils.logger")
     logger_mod.Logger = type(
@@ -131,6 +136,7 @@ def interp_module():
 
     stubs = {
         "datajoint": dj_stub,
+        "datajoint.errors": dj_errors_mod,
         "vr4mice": vr4mice_pkg,
         "vr4mice.schema": schema_pkg,
         "vr4mice.schema.vr4mice": vr4mice_schema_mod,
@@ -194,13 +200,36 @@ class TestDlcErrorPaths:
         failed_session_cls.should_skip = MagicMock(return_value=False)
         dlc_module.vr4mice.FailedSession = failed_session_cls
 
-        dlc_module.vr4mice.DLC = MagicMock(return_value=_SelfRelation(fetch1_value="/tmp/proc.npy"))
+        dlc_module.vr4mice.DLC = MagicMock(
+            return_value=_SelfRelation(fetch1_value="/tmp/proc.npy")
+        )
 
-        with patch.object(dlc_module.np, "load", side_effect=RuntimeError("bad proc")):
+        with patch.object(dlc_module.Path, "is_file", return_value=True), patch.object(
+            dlc_module.np, "load", side_effect=RuntimeError("bad proc")
+        ):
             result = dlc_module.DLCProcessor.make(table, key)
 
         assert result is None
         failed_session_row.add_entry.assert_called_once()
+
+    def test_dlcprocessor_make_missing_file_is_transient_skip(self, dlc_module):
+        key = {"dataset": "Whale_2026-07-08_1"}
+        table = _AlwaysMissingTable()
+
+        failed_session_row = MagicMock()
+        failed_session_cls = MagicMock(return_value=failed_session_row)
+        failed_session_cls.should_skip = MagicMock(return_value=False)
+        dlc_module.vr4mice.FailedSession = failed_session_cls
+
+        dlc_module.vr4mice.DLC = MagicMock(
+            return_value=_SelfRelation(fetch1_value="/tmp/missing_proc.npy")
+        )
+
+        with patch.object(dlc_module.Path, "is_file", return_value=False):
+            result = dlc_module.DLCProcessor.make(table, key)
+
+        assert result is None
+        failed_session_row.add_entry.assert_not_called()
 
     def test_syncdlckptsdf_make_records_failed_session_on_sync_error(self, dlc_module):
         key = {"dataset": "Whale_2026-07-08_1"}
@@ -211,7 +240,9 @@ class TestDlcErrorPaths:
         failed_session_cls.should_skip = MagicMock(return_value=False)
         dlc_module.vr4mice.FailedSession = failed_session_cls
 
-        dlc_module.dlc_helpers.sync_keypoint_table = MagicMock(side_effect=ValueError("sync failed"))
+        dlc_module.dlc_helpers.sync_keypoint_table = MagicMock(
+            side_effect=ValueError("sync failed")
+        )
 
         result = dlc_module.SyncDLCKptsDf.make(table, key)
 
@@ -300,14 +331,18 @@ class TestInterpolatedErrorPaths:
         table.insert1.assert_not_called()
         failed_session_row.add_entry.assert_called_once()
 
-    def test_interpolated_trials_records_failed_session_on_interpolate_error(self, interp_module):
+    def test_interpolated_trials_records_failed_session_on_interpolate_error(
+        self, interp_module
+    ):
         key, failed_session_row = self._setup_base_analysis(interp_module)
         table = _AlwaysMissingTable()
 
         interp_module.dlc.OfflineKinematics = MagicMock(
             return_value=MagicMock(
                 get_data=MagicMock(
-                    return_value=pd.DataFrame({"heading_dir": [0.0], "head_angle": [0.0]})
+                    return_value=pd.DataFrame(
+                        {"heading_dir": [0.0], "head_angle": [0.0]}
+                    )
                 )
             )
         )

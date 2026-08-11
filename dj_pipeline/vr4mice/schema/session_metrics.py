@@ -29,13 +29,13 @@ class SessionMetrics(dj.Computed):
     definition = """
     -> vr4mice.Dataset
     ---
-    session_reward:             float # proportion of rewarded trials
-    session_trial_duration:     float # mean trial duration in seconds
-    session_jshaped:            float # proportion of trials that are j_shaped
-    session_max_trial_number:   int # max trial number
-    session_duration:           float # total length of session in seconds
-    session_bias:               float # proportion of trials that mouse chose the left port 
-    session_tortuosity:         float # session mean tortuosity
+    session_reward:             float32 # proportion of rewarded trials
+    session_trial_duration:     float32 # mean trial duration in seconds
+    session_jshaped:            float32 # proportion of trials that are j_shaped
+    session_max_trial_number:   int32 # max trial number
+    session_duration:           float32 # total length of session in seconds
+    session_bias:               float32 # proportion of trials that mouse chose the left port 
+    session_tortuosity:         float32 # session mean tortuosity
     """
 
     def make(self, key):

@@ -36,7 +36,7 @@ class Anesthesia(dj.Lookup):
 @schema
 class Rig(dj.Lookup):
     definition = """
-    rig_id        : int             # Experimental setup number
+    rig_id        : int32           # Experimental setup number
     ---
     details       : varchar(2048)   # Description of the setup
     """
@@ -89,9 +89,9 @@ class Optogenetics(dj.Lookup):
 
     opto_name     : char(128)   # optogenetic protocol abbreviation
     -----
-    pulse_frequency    : double      # Pulse frequency in Hz
-    pulse_length       : double      # Pulse length in ms
-    laser_power        : double      # Input power at laser tip in mW
+    pulse_frequency    : float64     # Pulse frequency in Hz
+    pulse_length       : float64     # Pulse length in ms
+    laser_power        : float64     # Input power at laser tip in mW
     -> OptogeneticsRegion
     -> OptogeneticsTiming
     -> OptogeneticsVariant
@@ -132,18 +132,18 @@ class Task(dj.Lookup):
 class Session(dj.Manual):
     definition = """ # Experimental session
     -> mice.Mouse
-    day       : int       # days after start of the experiment
-    attempt   : int       # counter for sessions on same day (usually 1)
+    day       : int32     # days after start of the experiment
+    attempt   : int32     # counter for sessions on same day (usually 1)
     ---
     doe : date          # date of the Session
-    session_increment  : int           # counter of consecutive sessions for each mouse (manually)
+    session_increment  : int32         # counter of consecutive sessions for each mouse (manually)
     -> Rig              # links to the tables defining details of the session
     -> Experimenter
     -> Anesthesia
     -> Optogenetics
     -> Task
     session_notes = ""              : varchar(4095)       # free-text notes
-    session_ts = CURRENT_TIMESTAMP  : timestamp           # automatic
+    session_ts = CURRENT_TIMESTAMP  : datetime            # automatic
     """
 
     @classmethod
