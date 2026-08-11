@@ -508,9 +508,7 @@ class Video(dj.Manual):
 
         try:
             logger.info(f"{key['dataset']}")
-            paths = get_files_paths(
-                key["dataset"], local_src=local_src, data=data_root
-            )
+            paths = get_files_paths(key["dataset"], local_src=local_src, data=data_root)
             video_filepath = (
                 f"{paths['video_path']['dst']}/{paths['video_path']['filename']}"
             )
@@ -628,9 +626,7 @@ class DLC(dj.Manual):
                 )
                 return
 
-            paths = get_files_paths(
-                key["dataset"], local_src=local_src, data=data_root
-            )
+            paths = get_files_paths(key["dataset"], local_src=local_src, data=data_root)
             keypoints_filepath = (
                 f"{paths['dlc_path']['dst']}/{paths['dlc_path']['filename']}"
             )
