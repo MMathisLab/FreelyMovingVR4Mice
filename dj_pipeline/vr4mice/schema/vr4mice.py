@@ -509,7 +509,9 @@ class Video(dj.Manual):
         try:
             logger.info(f"{key['dataset']}")
             paths = get_files_paths(key["dataset"], local_src=local_src, data=data_root)
-            resolved_camera = str(Path(paths["dlc_path"]["filename"]).stem).split("_")[0]
+            resolved_camera = str(Path(paths["dlc_path"]["filename"]).stem).split("_")[
+                0
+            ]
             registered_cameras = set(Camera().fetch("camera"))
             if resolved_camera not in registered_cameras:
                 resolved_camera = "unknown"

@@ -404,7 +404,9 @@ class TestGetFilesPaths:
 
         assert "/custom/path" in result["teensy_path"]["dst"]
 
-    def test_get_files_paths_discovers_late_dlc_after_raw_move(self, mock_env, tmp_path):
+    def test_get_files_paths_discovers_late_dlc_after_raw_move(
+        self, mock_env, tmp_path
+    ):
         """Late DLC/PROC arrival should be discoverable after raw files were moved."""
         dataset = "Flamingo_2026-02-05_1"
         data_dir = tmp_path / "data"
@@ -981,6 +983,7 @@ class TestAtomicPopulationHelpers:
 
         def fake_get_path(raw_data=None, key=None, **kwargs):
             return False
+
         fake_get_path.__name__ = "get_path"
 
         table = self._FakeTable()
@@ -1012,6 +1015,7 @@ class TestAtomicPopulationHelpers:
             if not state["resolved"]:
                 return False
             return "/data/dlc_video/Imagingsource_Mouse_2024-01-01_1_TS.npy"
+
         fake_get_path.__name__ = "get_path"
 
         table = self._FakeTable()
@@ -1052,6 +1056,7 @@ class TestAtomicPopulationHelpers:
 
         def bool_false_local_def(raw_data=None, key=None, **kwargs):
             return False
+
         bool_false_local_def.__name__ = "some_other_resolver"
 
         table = self._FakeTable()
@@ -1080,6 +1085,7 @@ class TestAtomicPopulationHelpers:
 
         def fake_get_path(raw_data=None, key=None, **kwargs):
             return False
+
         fake_get_path.__name__ = "get_path"
 
         schema = {

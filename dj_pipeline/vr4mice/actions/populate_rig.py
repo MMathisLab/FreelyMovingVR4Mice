@@ -184,8 +184,7 @@ def build_row(
             # colliding with legitimate boolean False payload values.
             if (
                 value is False
-                and getattr(schema["local_def"].get(a), "__name__", None)
-                == "get_path"
+                and getattr(schema["local_def"].get(a), "__name__", None) == "get_path"
             ):
                 value = UNRESOLVED
             data[a] = value
