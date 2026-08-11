@@ -415,6 +415,12 @@ Typical sequence:
 ...
 ```
 
+`run.py populate` with `GUI=True` writes `mice` / `exp` from session `.npy` in the
+usual ingest path. Use **`run_base.py`** for recovery / cleanup (inside
+`make bash`). Parent → local **mice** sync is host-side:
+`make -f mysql.mk sync-mice-from-main` (optional `MOUSE=Name1,Name2`). See
+[`docs/software/base_schema_sync.md`](../docs/software/base_schema_sync.md).
+
 One-off after a DataJoint upgrade or when adding a new schema:
 
 ```bash

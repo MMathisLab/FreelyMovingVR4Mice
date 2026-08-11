@@ -20,6 +20,7 @@ DataJoint is an open-source data management framework designed for scientific wo
 **Related VR4Mice docs:**
 - {ref}`Setup & Usage <sec:install-dj-pipeline>`
 - {ref}`Deploy the DataJoint database locally <sec:import-sql-dump>`
+- {ref}`Base schema sync (mice / exp) <base-schema-sync>`
 - `docs/software/data_import_export.md`
 
 ## Repository Structure and Roles

@@ -26,6 +26,9 @@ logger = Logger.get_logger()
     "inputs_videos": process input videos and extract frames
     "decision": analyze decision-making metrics
     "maintenance": rebuild DataJoint lineage tables (one-time setup)
+
+    Recovery / cleanup (recover_base, cleanup_orphans, cleanup_mice): run_base.py
+    Mice registry sync: make -f mysql.mk sync-mice-from-main (host)
 """
 
 
@@ -284,7 +287,7 @@ if __name__ == "__main__":
     elif args.mode == "sync_days":
         from vr4mice.actions.sync_days import sync_days
 
-        sync_days(path="/data/data")
+        sync_days()
 
     elif args.mode == "maintenance":
         from vr4mice.utils.maintenance import rebuild_lineage

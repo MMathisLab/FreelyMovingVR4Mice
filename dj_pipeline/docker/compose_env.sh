@@ -59,6 +59,18 @@ vr4mice_compose_exec() {
   local uid_val="${UID:-$(id -u)}"
   local gid_val="${GID:-$(id -g)}"
   local user_name="${USER_NAME:-$(id -un)}"
+  local -a compose_cmd
+  # Prefer Compose V2 plugin; fall back to standalone docker-compose (v1).
+  if docker compose version >/dev/null 2>&1; then
+    compose_cmd=(docker compose)
+  elif command -v docker-compose >/dev/null 2>&1; then
+    compose_cmd=(docker-compose)
+  else
+    echo "error: neither 'docker compose' (plugin) nor 'docker-compose' is available." >&2
+    echo "  Install: sudo apt-get install -y docker-compose-plugin" >&2
+    echo "  Check:   docker compose version" >&2
+    exit 125
+  fi
   local -a args=(-p "${COMPOSE_PROJECT}")
   if [[ -f .env.compose ]]; then
     args+=(--env-file .env.compose)
@@ -74,7 +86,7 @@ vr4mice_compose_exec() {
     CLIENT_CONTAINER_NAME="${CLIENT_CONTAINER_NAME:-}" \
     DB_CONTAINER_NAME="${DB_CONTAINER_NAME:-}" \
     DB_IMAGE="${DB_IMAGE:-mysql:8.0}" \
-    docker compose "${args[@]}" "$@"
+    "${compose_cmd[@]}" "${args[@]}" "$@"
 }
 
 case "${1:-}" in

@@ -5,7 +5,7 @@ import sys
 import datajoint as dj
 import numpy as np
 from base_schemas.schemas import exp, mice
-
+from vr4mice.actions.mouse_sync import warn_incomplete_mice
 from vr4mice.utils.logger import Logger
 
 """
@@ -60,13 +60,17 @@ def _create_mice_dict(all_mice: dict) -> dict:
     return mice_dict
 
 
-def _fetch_alive_mice() -> list:
+def _fetch_session_mice() -> list:
     """
-    Return Mouse rows excluding sacrificed and breeding mice.
+    Return Mouse rows for mice that have Sessions in this database.
+
+    Excludes sacrificed and breeding mice. Mice synced from a main database
+    but without local sessions are intentionally omitted from the GUI menu.
 
     DJ 2.x rejects chained table subtraction (Mouse - Sacrificed - Breed) because
     mouse_name has incompatible lineages across dependent tables.
     """
+    session_mice = {name for name in exp.Session().fetch("mouse_name") if name}
     excluded = {
         *mice.Sacrificed().fetch("mouse_name"),
         *mice.Breed().fetch("mouse_name"),
@@ -74,7 +78,7 @@ def _fetch_alive_mice() -> list:
     return [
         row
         for row in mice.Mouse().fetch(as_dict=True)
-        if row["mouse_name"] not in excluded
+        if row["mouse_name"] in session_mice and row["mouse_name"] not in excluded
     ]
 
 
@@ -102,7 +106,8 @@ def fetch_tables() -> dict:
     - Some tables have been commented out entirely, indicating that they are not currently used in the pipeline
 
     """
-    all_mice = _fetch_alive_mice()
+    all_mice = _fetch_session_mice()
+    warn_incomplete_mice()
 
     return {
         # 'Mouse': all_mice,
