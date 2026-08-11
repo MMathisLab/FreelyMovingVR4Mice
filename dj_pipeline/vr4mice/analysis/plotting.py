@@ -1502,6 +1502,18 @@ def plot_time_to_reward(
     if label_x == "aperture":
         counts.aperture = counts.aperture.astype(float)
     counts.sort_values(by=label_x, inplace=True)
+
+    # Not every session has both categories of label_x (e.g. no incorrect
+    # trials, or no left choices); only keep the labels for categories that
+    # are actually present, in the same order, so tick positions and labels
+    # always match in count.
+    present = list(counts[label_x].unique())
+    if len(present) != len(xticks):
+        try:
+            xticks = [xticks[int(v)] for v in present]
+        except (ValueError, IndexError):
+            xticks = [str(v) for v in present]
+
     mean_counts = counts.groupby(["dataset", label_x], as_index=False)["count"].mean()
 
     mean_counts[label_x] = mean_counts[label_x].astype(str)
