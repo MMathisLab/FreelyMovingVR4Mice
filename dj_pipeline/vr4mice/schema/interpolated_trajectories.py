@@ -111,6 +111,11 @@ class InterpolatedTrials(dj.Computed):
             )
 
         except Exception as err:
+            if "Duplicate entry" in str(err):
+                logger.debug(
+                    f"{self.__class__.__name__}: key {key} was inserted concurrently; skipping."
+                )
+                return
             dataset = key["dataset"]
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)

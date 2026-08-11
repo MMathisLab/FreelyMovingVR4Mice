@@ -89,6 +89,9 @@ def dlc_module():
 def interp_module():
     dj_stub = ModuleType("datajoint")
     dj_stub.Computed = type("Computed", (), {})
+    dj_errors_mod = ModuleType("datajoint.errors")
+    dj_errors_mod.DuplicateError = type("DuplicateError", (Exception,), {})
+    dj_stub.errors = dj_errors_mod
 
     logger_mod = ModuleType("vr4mice.utils.logger")
     logger_mod.Logger = type(
@@ -133,6 +136,7 @@ def interp_module():
 
     stubs = {
         "datajoint": dj_stub,
+        "datajoint.errors": dj_errors_mod,
         "vr4mice": vr4mice_pkg,
         "vr4mice.schema": schema_pkg,
         "vr4mice.schema.vr4mice": vr4mice_schema_mod,
