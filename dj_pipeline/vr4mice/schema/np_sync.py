@@ -40,12 +40,12 @@ logger = Logger.get_logger()
 
 @schema
 class BarcodeSync(dj.Computed):
-    """Linear fit + interpolator mapping VR Unity/game time to NP OneBox DAQ time.
+    """Linear fit + interpolator mapping VR Unity/game time to NP probe time.
 
-    One row per (dataset, recording, OneBox DAQ stream) triple that has a linked NP
-    recording and successfully decoded barcodes on both sides. Populated only for
-    those keys — see ``key_source`` — so ``populate()`` is a no-op, not an error, for
-    VR-only sessions with no matching neural recording.
+    One row per (dataset, recording, probe) triple that has a linked NP recording and
+    successfully decoded barcodes on both sides. Populated only for those keys — see
+    ``key_source`` — so ``populate()`` is a no-op, not an error, for VR-only sessions
+    with no matching neural recording.
 
     Downstream code should not fetch ``slope``/``intercept``/``interpol_func``
     directly; use ``align_timepoints``/``align_timepoints_lin`` instead.
@@ -54,7 +54,7 @@ class BarcodeSync(dj.Computed):
     definition = """
     -> base.Base
     -> session_link.RecordingSessionLink
-    -> acquisition.OneBoxDaq
+    -> acquisition.RecordingProbe
     ---
     skip_first_n_barcodes: smallint unsigned  # leading VR barcode events excluded from the fit
     slope: float  # Slope of the linear fit mapping VR time to NP time
@@ -65,9 +65,9 @@ class BarcodeSync(dj.Computed):
     """
 
     key_source = (
-        base.Base * session_link.RecordingSessionLink * acquisition.OneBoxDaq
+        base.Base * session_link.RecordingSessionLink * acquisition.RecordingProbe
         & (vr_barcodes.TeensyBarcodes & 'extraction_status = "success"')
-        & (np_barcodes.OneBoxBarcodeExtraction & 'extraction_status = "success"')
+        & (np_barcodes.ProbeBarcodeExtraction & 'extraction_status = "success"')
     )
 
     skip_first_n_barcodes = DEFAULT_SKIP_FIRST_N_BARCODES
@@ -75,9 +75,9 @@ class BarcodeSync(dj.Computed):
     def make(self, key):
         """Fit and insert one VR-time-to-NP-time alignment.
 
-        Fetches decoded barcode events for one dataset/recording/DAQ key from both
+        Fetches decoded barcode events for one dataset/recording/probe key from both
         `vr_barcodes.TeensyBarcodes.Event` (VR side) and
-        `np_barcodes.OneBoxBarcodeExtraction.Event` (NP side), fits the alignment via
+        `np_barcodes.ProbeBarcodeExtraction.Event` (NP side), fits the alignment via
         `vr4mice.analysis.np_sync.align_barcodes`, and inserts the resulting fit
         parameters and pickled interpolator. On failure, records the error in
         `vr4mice.FailedSession` and logs a warning instead of raising, matching the
@@ -91,7 +91,7 @@ class BarcodeSync(dj.Computed):
                 "barcode_value", "onset_time_unity", order_by="barcode_index"
             )
             np_values, np_times = (
-                np_barcodes.OneBoxBarcodeExtraction.Event & key
+                np_barcodes.ProbeBarcodeExtraction.Event & key
             ).fetch("barcode_value", "onset_time", order_by="barcode_index")
 
             fit = align_barcodes(
