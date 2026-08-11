@@ -151,9 +151,12 @@ if __name__ == "__main__":
 
         create_folder_if_not_exist("/data/summary_plots")
 
-        # Catch-up pass: fills vr4mice.DLC for datasets whose pickle was
-        # already moved to processed before the DLC file arrived, which
-        # populate_rig() (scans /data/data only) will never revisit.
+        # Sole entry point for vr4mice.DLC (intentionally excluded from
+        # populate_rig()'s ingestion targets). Works regardless of pickle
+        # location, including DLC files that arrive after raw ingest.
+        # Load-bearing invariant: DLC.make treats missing DLC/PROC files as
+        # transient (log + return, no FailedSession row). If that changes,
+        # late-arriving datasets would be blacklisted by should_skip().
         vr4mice.DLC().populate()
 
         populate_pending(dlc.DLCProcessor, vr4mice.DLC, logger=logger)

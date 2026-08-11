@@ -509,6 +509,22 @@ class Video(dj.Manual):
         try:
             logger.info(f"{key['dataset']}")
             paths = get_files_paths(key["dataset"], local_src=local_src, data=data_root)
+            resolved_camera = str(Path(paths["dlc_path"]["filename"]).stem).split("_")[0]
+            registered_cameras = set(Camera().fetch("camera"))
+            if resolved_camera not in registered_cameras:
+                resolved_camera = "unknown"
+
+            # get_keys() returns Dataset x Camera; only insert the camera that
+            # matches the discovered file prefix for this dataset.
+            if key.get("camera") != resolved_camera:
+                logger.debug(
+                    "Skipping %s key %s: resolved camera is %s.",
+                    self.__class__.__name__,
+                    key,
+                    resolved_camera,
+                )
+                return
+
             video_filepath = (
                 f"{paths['video_path']['dst']}/{paths['video_path']['filename']}"
             )

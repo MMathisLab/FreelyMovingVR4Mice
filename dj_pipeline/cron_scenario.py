@@ -165,6 +165,9 @@ def main():
             # vr4mice.DLC). Works regardless of pickle location, so it
             # correctly handles a DLC file arriving after its dataset's
             # pickle was already moved to processed.
+            # Load-bearing invariant: DLC.make treats missing DLC/PROC files
+            # as transient (log + return, no FailedSession row), so later
+            # arrivals are retried instead of blacklisted by should_skip().
             "vr4mice.DLC.populate",
             lambda: vr4mice.DLC().populate(),
         )

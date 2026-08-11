@@ -21,6 +21,7 @@ logger = Logger.get_logger()
 
 
 SKIP_DUPLICATES = True
+UNRESOLVED = object()
 
 
 def _is_nullable_field(schema: dict, table_name: str, field_name: str) -> bool:
@@ -170,7 +171,7 @@ def build_row(
 
     for a in attributes:
         if a in schema["local_def"].keys():
-            data[a] = schema["local_def"][a](
+            value = schema["local_def"][a](
                 raw_data=raw_data,
                 key=a,
                 transformer=schema["transformer"],
@@ -178,6 +179,16 @@ def build_row(
                 dstf=dstf,
                 move=move,
             )
+            # get_path historically returns False when source files are missing.
+            # Convert that legacy signal to an explicit sentinel to avoid
+            # colliding with legitimate boolean False payload values.
+            if (
+                value is False
+                and getattr(schema["local_def"].get(a), "__name__", None)
+                == "get_path"
+            ):
+                value = UNRESOLVED
+            data[a] = value
         else:
             label = a
             change = False
@@ -308,7 +319,7 @@ def populate_dataset_tables(
             if row_exists(schema, table_name, row):
                 continue
 
-            unresolved = [field for field, value in row.items() if value is False]
+            unresolved = [field for field, value in row.items() if value is UNRESOLVED]
             if unresolved:
                 logger.warning(
                     "Skipping %s for dataset %s: could not resolve %s "
