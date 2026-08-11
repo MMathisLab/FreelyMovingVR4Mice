@@ -483,19 +483,22 @@ class Video(dj.Manual):
                 keys.append({**dk, **ck})
         return keys
 
-    def populate(self, restriction=None):
+    def populate(self, restriction=None, local_src="/data", data="/data"):
         """Populate Video by iterating all dataset/camera keys.
 
         Args:
             restriction: Optional DataJoint restriction (e.g. a key dict) to
                 scope population to a subset, e.g.
                 Video().populate({"dataset": "Xestia_2026-08-10_1"}).
+            local_src: Root passed through to get_files_paths() (defaults to
+                the production "/data"; override for tests/non-standard roots).
+            data: Data-folder root passed through to get_files_paths().
         """
         keys = self.get_keys(restriction)
         for key in keys:
-            self.make(key)
+            self.make(key, local_src=local_src, data=data)
 
-    def make(self, key):
+    def make(self, key, local_src="/data", data="/data"):
         """Insert a Video row from rig files for a dataset."""
         from vr4mice.actions.populate_rig import get_files_paths
 
@@ -504,7 +507,7 @@ class Video(dj.Manual):
 
         try:
             logger.info(f"{key['dataset']}")
-            paths = get_files_paths(key["dataset"])
+            paths = get_files_paths(key["dataset"], local_src=local_src, data=data)
             video_filepath = (
                 f"{paths['video_path']['dst']}/{paths['video_path']['filename']}"
             )
@@ -590,19 +593,22 @@ class DLC(dj.Manual):
                 keys.append({**vk, **mn})
         return keys
 
-    def populate(self, restriction=None):
+    def populate(self, restriction=None, local_src="/data", data="/data"):
         """Populate DLC rows from the Video x ModelName key space.
 
         Args:
             restriction: Optional DataJoint restriction (e.g. a key dict) to
                 scope population to a subset, e.g.
                 DLC().populate({"dataset": "Xestia_2026-08-10_1"}).
+            local_src: Root passed through to get_files_paths() (defaults to
+                the production "/data"; override for tests/non-standard roots).
+            data: Data-folder root passed through to get_files_paths().
         """
         keys = self.get_keys(restriction)
         for key in keys:
-            self.make(key)
+            self.make(key, local_src=local_src, data=data)
 
-    def make(self, key):
+    def make(self, key, local_src="/data", data="/data"):
         """Insert a DLC row using keypoints and processed paths."""
         from vr4mice.actions.populate_rig import get_files_paths
 
@@ -618,7 +624,7 @@ class DLC(dj.Manual):
                 )
                 return
 
-            paths = get_files_paths(key["dataset"])
+            paths = get_files_paths(key["dataset"], local_src=local_src, data=data)
             keypoints_filepath = (
                 f"{paths['dlc_path']['dst']}/{paths['dlc_path']['filename']}"
             )

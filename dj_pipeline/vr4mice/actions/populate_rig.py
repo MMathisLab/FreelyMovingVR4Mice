@@ -668,7 +668,7 @@ def populate_rig(path="/data/data", srcf="/data", dstf="processed", move=True) -
                     files_info = get_files_paths(
                         dataset=dataset,
                         remote_src=None,
-                        local_src="/data",
+                        local_src=srcf,
                         data=path,
                     )  # paths correspond to docker env
                     raw_data = {**files_info, **raw_data_pickle}
@@ -697,7 +697,7 @@ def populate_rig(path="/data/data", srcf="/data", dstf="processed", move=True) -
                 raw_data_npy["rig_id"] = 12
                 raw_data_npy["license"] = "N/A"
                 files_info = get_files_paths(
-                    dataset=dataset, remote_src=None, local_src="/data", data=path
+                    dataset=dataset, remote_src=None, local_src=srcf, data=path
                 )  # paths correspond to docker env
                 raw_data = {**files_info, **raw_data_npy}
                 schemas = [base]

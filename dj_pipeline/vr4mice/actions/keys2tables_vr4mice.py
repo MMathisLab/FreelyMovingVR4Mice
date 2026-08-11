@@ -13,9 +13,6 @@ from vr4mice.actions.helpers_dj import (
 )
 from vr4mice.schema import vr4mice
 
-# note: populates DLC too
-
-
 """
     Skeleton of vr4mice datajoint tables definitions used for the population:
     Define tables, attributes and order of population
