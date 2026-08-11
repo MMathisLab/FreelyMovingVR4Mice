@@ -367,7 +367,7 @@ def apply_inclusion_criteria(
     narrowest_aperture = min(aperture_values)
     widest_aperture = max(aperture_values)
 
-    min_wide_reward = 0.7
+    min_reward = 0.7
     max_reward_drop = 0.25
 
     # Calculate reward drop between widest and narrowest occluder
@@ -377,9 +377,13 @@ def apply_inclusion_criteria(
     )
 
     reward_table = pivoted_reward
-    pivoted_reward = pivoted_reward[
-        (pivoted_reward[("trial_rewarded", widest_aperture)] > min_wide_reward)
-    ]
+    best_extreme_reward = pivoted_reward[
+        [
+            ("trial_rewarded", widest_aperture),
+            ("trial_rewarded", narrowest_aperture),
+        ]
+    ].max(axis=1)
+    pivoted_reward = pivoted_reward[best_extreme_reward > min_reward]
     if consider_reward_drop:
         pivoted_reward = pivoted_reward[
             abs(pivoted_reward.reward_drop) < max_reward_drop
