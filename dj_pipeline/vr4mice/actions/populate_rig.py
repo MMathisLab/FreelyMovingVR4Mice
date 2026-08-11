@@ -429,7 +429,7 @@ def parse_date(filename):
 
 def _img_src_candidates() -> list:
     """Return IMG_SRC candidate prefixes from env as an ordered list."""
-    raw = os.environ.get("IMG_SRC", "Imagingsource")
+    raw = os.environ.get("IMG_SRC", "Imagingsource,vr4mice")
     # Support comma/semicolon separated lists while remaining backward compatible.
     parts = [p.strip() for chunk in raw.split(";") for p in chunk.split(",")]
     candidates = [p for p in parts if p]
