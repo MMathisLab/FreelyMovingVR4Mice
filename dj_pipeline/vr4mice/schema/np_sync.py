@@ -90,9 +90,9 @@ class BarcodeSync(dj.Computed):
             vr_values, vr_times = (vr_barcodes.TeensyBarcodes.Event & key).fetch(
                 "barcode_value", "onset_time_unity", order_by="barcode_index"
             )
-            np_values, np_times = (np_barcodes.OneBoxBarcodeExtraction.Event & key).fetch(
-                "barcode_value", "onset_time", order_by="barcode_index"
-            )
+            np_values, np_times = (
+                np_barcodes.OneBoxBarcodeExtraction.Event & key
+            ).fetch("barcode_value", "onset_time", order_by="barcode_index")
 
             fit = align_barcodes(
                 vr_times,
@@ -154,7 +154,9 @@ class BarcodeSync(dj.Computed):
         """
         interpol_func = pickle.loads((cls & key).fetch1("interpol_func"))
         timepoints = np.array(timepoints, dtype=np.float64)
-        return [float(tx) if not np.isnan(tx) else None for tx in interpol_func(timepoints)]
+        return [
+            float(tx) if not np.isnan(tx) else None for tx in interpol_func(timepoints)
+        ]
 
     @classmethod
     def align_timepoints_lin(cls, key, timepoints: list):
