@@ -97,8 +97,18 @@ class InterpolatedTrials(dj.Computed):
                 )
                 interpolated_df["x_flipped"] = df["x"] * df["flip_one_side"]
                 self.insert1(
-                    {**key, **interpolated_df.to_dict()}, allow_direct_insert=True
+                    {**key, **interpolated_df.to_dict()},
+                    allow_direct_insert=True,
+                    skip_duplicates=True,
                 )
+
+        except dj.errors.DuplicateError:
+            # Benign race: another populate call (e.g. triggered lazily from
+            # summary plot generation) inserted this key first. Not a real
+            # failure, so don't record it in FailedSession.
+            logger.debug(
+                f"{self.__class__.__name__}: key {key} was inserted concurrently; skipping."
+            )
 
         except Exception as err:
             dataset = key["dataset"]

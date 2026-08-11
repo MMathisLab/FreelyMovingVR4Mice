@@ -148,6 +148,9 @@ if __name__ == "__main__":
         from vr4mice.utils.populate_helpers import populate_pending
 
         create_folder_if_not_exist("/data/summary_plots")
+        vr4mice.Batch.insert(vr4mice.Batch.contents, skip_duplicates=True)
+        vr4mice.DatasetBatch().populate()
+
         populate_pending(dlc.DLCProcessor, vr4mice.DLC, logger=logger)
         populate_pending(
             barcodes.TeensyTTL,
