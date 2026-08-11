@@ -440,6 +440,14 @@ class Video(dj.Manual):
     Video definition table:
     Stores raw video files metadata, as well as timestamp files
     and the path to the raw video on the rig's PC
+
+    NOTE: normally populated live by populate_rig() (vr4mice/actions/populate_rig.py),
+    which moves each pickle to processed only once every table - including
+    Video/DLC - has a row. get_keys()/populate()/make() below are a working
+    but currently unused alternative (no caller exists for Video today; see
+    DLC for why one exists there). Safe alongside populate_rig() either way -
+    skip_duplicates=True + errors caught into FailedSession. Prefer
+    Video().populate({"dataset": ...}) over a full rescan if ever used.
     """
 
     definition = """
@@ -457,18 +465,32 @@ class Video(dj.Manual):
     """
     # idx to reference the video in analysis table
 
-    def get_keys(self):
+    def get_keys(self, restriction=None):
+        """Return the Dataset x Camera key space, optionally restricted.
+
+        Args:
+            restriction: Optional DataJoint restriction (e.g. a key dict such
+                as {"dataset": "Xestia_2026-08-10_1"}) applied to Dataset
+                before the cross-join with Camera.
+        """
         keys = []
-        dataset_keys = Dataset().fetch("dataset", as_dict=True)
+        dataset_query = Dataset() if restriction is None else Dataset() & restriction
+        dataset_keys = dataset_query.fetch("dataset", as_dict=True)
         camera_keys = Camera().fetch("camera", as_dict=True)
         for dk in dataset_keys:
             for ck in camera_keys:
                 keys.append({**dk, **ck})
         return keys
 
-    def populate(self):
-        """Populate Video by iterating all dataset/camera keys."""
-        keys = self.get_keys()
+    def populate(self, restriction=None):
+        """Populate Video by iterating all dataset/camera keys.
+
+        Args:
+            restriction: Optional DataJoint restriction (e.g. a key dict) to
+                scope population to a subset, e.g.
+                Video().populate({"dataset": "Xestia_2026-08-10_1"}).
+        """
+        keys = self.get_keys(restriction)
         for key in keys:
             self.make(key)
 
@@ -530,6 +552,17 @@ class DLC(dj.Manual):
     """
     DLC definition table:
     stores local paths to keypoints and processed keypoints files
+
+    NOTE: normally populated live via populate_rig(), same as Video above -
+    that handles a *missing* DLC file fine (dataset stays incomplete, retried
+    next run). It can't handle a DLC file arriving *after* the dataset was
+    already completed and its pickle moved to processed - no pickle left to
+    re-trigger anything. populate()/make() below cover exactly that gap:
+    check every Video x ModelName key regardless of pickle location, resolve
+    the path via IMG_SRC candidates, insert only if the file exists. Wired in
+    as a catch-up pass (not a replacement) in run.py ("dlc" mode) and
+    cron_scenario.py. Use DLC().populate({"dataset": ...}) to backfill one
+    known case.
     """
 
     definition = """
@@ -540,18 +573,32 @@ class DLC(dj.Manual):
     proc_filepath: varchar(255)  # computed dlc metrics
     """
 
-    def get_keys(self):
+    def get_keys(self, restriction=None):
+        """Return the Video x ModelName key space, optionally restricted.
+
+        Args:
+            restriction: Optional DataJoint restriction (e.g. a key dict such
+                as {"dataset": "Xestia_2026-08-10_1"}) applied to Video before
+                the cross-join with ModelName.
+        """
         keys = []
-        video_keys = Video().fetch("dataset", "camera", "doe", as_dict=True)
+        video_query = Video() if restriction is None else Video() & restriction
+        video_keys = video_query.fetch("dataset", "camera", "doe", as_dict=True)
         model_name = ModelName().fetch("model_name", as_dict=True)
         for vk in video_keys:
             for mn in model_name:
                 keys.append({**vk, **mn})
         return keys
 
-    def populate(self):
-        """Populate DLC rows from the full Video x ModelName key space."""
-        keys = self.get_keys()
+    def populate(self, restriction=None):
+        """Populate DLC rows from the Video x ModelName key space.
+
+        Args:
+            restriction: Optional DataJoint restriction (e.g. a key dict) to
+                scope population to a subset, e.g.
+                DLC().populate({"dataset": "Xestia_2026-08-10_1"}).
+        """
+        keys = self.get_keys(restriction)
         for key in keys:
             self.make(key)
 

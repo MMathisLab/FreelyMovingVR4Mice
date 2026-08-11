@@ -308,6 +308,17 @@ def populate_dataset_tables(
             if row_exists(schema, table_name, row):
                 continue
 
+            unresolved = [field for field, value in row.items() if value is False]
+            if unresolved:
+                logger.warning(
+                    "Skipping %s for dataset %s: could not resolve %s "
+                    "(source file likely missing). Will retry on a later run.",
+                    table_name,
+                    dataset,
+                    unresolved,
+                )
+                continue
+
             logger.info("Populating: %s", table_name)
             schema["dj_tables"][table_name].insert1(
                 row, skip_duplicates=SKIP_DUPLICATES

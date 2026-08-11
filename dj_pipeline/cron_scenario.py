@@ -160,6 +160,13 @@ def main():
         )
 
         run_step(
+            # Catch-up pass: fills vr4mice.DLC for datasets whose pickle was
+            # already moved to processed before the DLC file arrived, which
+            # populate_rig() (scans /data/data only) will never revisit.
+            "vr4mice.DLC.populate",
+            lambda: vr4mice.DLC().populate(),
+        )
+        run_step(
             "dlc.DLCProcessor.populate",
             lambda: populate_pending(dlc.DLCProcessor, vr4mice.DLC, logger=logger),
         )

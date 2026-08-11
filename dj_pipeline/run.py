@@ -151,6 +151,11 @@ if __name__ == "__main__":
 
         create_folder_if_not_exist("/data/summary_plots")
 
+        # Catch-up pass: fills vr4mice.DLC for datasets whose pickle was
+        # already moved to processed before the DLC file arrived, which
+        # populate_rig() (scans /data/data only) will never revisit.
+        vr4mice.DLC().populate()
+
         populate_pending(dlc.DLCProcessor, vr4mice.DLC, logger=logger)
         populate_pending(
             barcodes.TeensyTTL,
