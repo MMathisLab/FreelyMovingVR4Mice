@@ -114,6 +114,8 @@ if __name__ == "__main__":
         # populate run.
         populate_rig(path=path, move=move)
         populate_pending(vr4mice.Collab, vr4mice.Dataset, logger=logger)
+        vr4mice.Batch.insert(vr4mice.Batch.contents, skip_duplicates=True)
+        vr4mice.DatasetBatch().populate()
 
     elif args.mode == "analysis":
         from vr4mice.schema import base_analysis, vr4mice
@@ -152,6 +154,7 @@ if __name__ == "__main__":
         from vr4mice.utils.populate_helpers import populate_pending
 
         create_folder_if_not_exist("/data/summary_plots")
+
         populate_pending(dlc.DLCProcessor, vr4mice.DLC, logger=logger)
         populate_pending(
             barcodes.TeensyTTL,
