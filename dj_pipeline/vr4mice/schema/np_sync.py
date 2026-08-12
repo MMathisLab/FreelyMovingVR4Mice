@@ -52,6 +52,11 @@ def _dataset_identity(dataset: str):
         return None
 
 
+def _row_day_iso(row):
+    day = row.get("day")
+    return day.isoformat() if hasattr(day, "isoformat") else str(day)
+
+
 def _candidate_sort_key(row, identity):
     """Sort candidates by identity match first, then NP barcode event count."""
     event_count = int(row["np_event_count"])
@@ -64,9 +69,7 @@ def _candidate_sort_key(row, identity):
 
     expected_mouse, expected_day, expected_attempt = identity
     mouse_miss = 0 if row.get("mouse_name") == expected_mouse else 1
-    day = row.get("day")
-    day_iso = day.isoformat() if hasattr(day, "isoformat") else str(day)
-    day_miss = 0 if day_iso == expected_day else 1
+    day_miss = 0 if _row_day_iso(row) == expected_day else 1
     attempt_miss = 0 if row.get("attempt") == expected_attempt else 1
     return (
         mouse_miss,
@@ -78,27 +81,11 @@ def _candidate_sort_key(row, identity):
     )
 
 
-def _np_module_options():
-    """Return available NP schema-module triplets, preferring imported modules."""
-    options = [(acquisition, np_barcodes, session_link)]
-    legacy = (
-        dj.VirtualModule("np_acquisition_legacy", "acquisition"),
-        dj.VirtualModule("np_barcodes_legacy", "barcodes"),
-        dj.VirtualModule("np_session_link_legacy", "session_link"),
-    )
-    imported_lineage = acquisition.RecordingProbe.heading.attributes[
-        "recording_id"
-    ].lineage
-    legacy_lineage = legacy[0].RecordingProbe.heading.attributes["recording_id"].lineage
-    if legacy_lineage != imported_lineage:
-        options.append(legacy)
-    return options
-
-
-def _candidate_relation_for_modules(acq_mod, np_barcodes_mod, session_link_mod):
+def _candidate_relation():
     """Rows where one VR dataset has at least one NP probe with successful barcodes."""
+    vr_success = vr_barcodes.TeensyBarcodes & 'extraction_status = "success"'
     np_success = (
-        np_barcodes_mod.ProbeBarcodeExtraction & 'extraction_status = "success"'
+        np_barcodes.ProbeBarcodeExtraction & 'extraction_status = "success"'
     ).proj(
         "recording_id",
         "probe_serial_number",
@@ -106,10 +93,10 @@ def _candidate_relation_for_modules(acq_mod, np_barcodes_mod, session_link_mod):
     )
     return (
         base.Base
-        * acq_mod.RecordingProbe
-        * session_link_mod.RecordingSessionLink
+        * vr_success
+        * acquisition.RecordingProbe
+        * session_link.RecordingSessionLink
         * np_success
-        & (vr_barcodes.TeensyBarcodes & 'extraction_status = "success"')
     )
 
 
@@ -117,21 +104,20 @@ def _candidate_relation_for_modules(acq_mod, np_barcodes_mod, session_link_mod):
 class BarcodeSync(dj.Computed):
     """Linear fit + interpolator mapping VR Unity/game time to NP probe time.
 
-    One row per VR dataset that has at least one linked NP recording/probe with
-    successful barcodes on both sides. ``key_source`` enumerates VR datasets with
-    successful VR barcode extraction; strict NP-side eligibility is resolved in
-    ``make()``. Sessions with no strict NP match are recorded to
-    ``vr4mice.FailedSession`` and skipped.
+    One row per related VR/NP barcode pair with successful extraction on both sides.
+    The table is explicitly keyed by ``TeensyBarcodes`` (VR side) and
+    ``ProbeBarcodeExtraction`` (NP side). ``key_source`` enforces strict matching
+    through ``base.Base`` + ``RecordingSessionLink`` + ``recording_id`` so
+    ``populate()`` only visits related rows.
 
     Downstream code should not fetch ``slope``/``intercept``/``interpol_func``
     directly; use ``align_timepoints``/``align_timepoints_lin`` instead.
     """
 
     definition = """
-    -> base.Base
+    -> vr_barcodes.TeensyBarcodes
+    -> np_barcodes.ProbeBarcodeExtraction
     ---
-    recording_id: varchar(255)  # Linked NP recording selected for this dataset
-    probe_serial_number: varchar(64)  # Selected NP probe used for alignment
     skip_first_n_barcodes: int32  # leading VR barcode events excluded from the fit
     slope: float64  # Slope of the linear fit mapping VR time to NP time
     intercept: float64  # Intercept of the linear fit mapping VR time to NP time
@@ -142,9 +128,7 @@ class BarcodeSync(dj.Computed):
 
     @property
     def key_source(self):
-        return dj.U("dataset") & (
-            base.Base * (vr_barcodes.TeensyBarcodes & 'extraction_status = "success"')
-        )
+        return dj.U(*self.primary_key) & _candidate_relation()
 
     skip_first_n_barcodes = DEFAULT_SKIP_FIRST_N_BARCODES
 
@@ -164,28 +148,16 @@ class BarcodeSync(dj.Computed):
 
         try:
             selected = None
-            selected_modules = None
             identity = _dataset_identity(key["dataset"])
-            for modules in _np_module_options():
-                acq_mod, np_barcodes_mod, session_link_mod = modules
-                candidates = (
-                    _candidate_relation_for_modules(
-                        acq_mod, np_barcodes_mod, session_link_mod
-                    )
-                    & key
-                )
-                if len(candidates) == 0:
-                    continue
-                selected_modules = modules
+            candidates = _candidate_relation() & key
+            if len(candidates) != 0:
                 candidate_rows = candidates.fetch(as_dict=True)
-                candidate_rows = sorted(
+                selected = min(
                     candidate_rows,
                     key=lambda row: _candidate_sort_key(row, identity),
                 )
-                selected = candidate_rows[0]
-                break
 
-            if selected is None or selected_modules is None:
+            if selected is None:
                 reason = "No eligible NP barcode source for dataset from strict session-link matching"
                 vr4mice.FailedSession().add_entry(
                     f"{key['dataset']}", f"{self.__class__.__name__}", reason
@@ -198,16 +170,20 @@ class BarcodeSync(dj.Computed):
                 )
                 return
 
-            _, np_barcodes_mod, _ = selected_modules
             np_key = {
                 "recording_id": selected["recording_id"],
                 "probe_serial_number": selected["probe_serial_number"],
             }
-            vr_values, vr_times = (vr_barcodes.TeensyBarcodes.Event & key).fetch(
+            vr_key = {
+                name: key[name]
+                for name in vr_barcodes.TeensyBarcodes.primary_key
+                if name in key
+            }
+            vr_values, vr_times = (vr_barcodes.TeensyBarcodes.Event & vr_key).fetch(
                 "barcode_value", "onset_time_unity", order_by="barcode_index"
             )
             np_values, np_times = (
-                np_barcodes_mod.ProbeBarcodeExtraction.Event & np_key
+                np_barcodes.ProbeBarcodeExtraction.Event & np_key
             ).fetch("barcode_value", "onset_time", order_by="barcode_index")
 
             fit = align_barcodes(
