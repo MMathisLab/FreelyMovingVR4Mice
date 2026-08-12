@@ -56,12 +56,12 @@ class BarcodeSync(dj.Computed):
     -> session_link.RecordingSessionLink
     -> acquisition.RecordingProbe
     ---
-    skip_first_n_barcodes: smallint unsigned  # leading VR barcode events excluded from the fit
-    slope: float  # Slope of the linear fit mapping VR time to NP time
-    intercept: float  # Intercept of the linear fit mapping VR time to NP time
-    r2: float  # R-squared value of the linear fit
+    skip_first_n_barcodes: int32  # leading VR barcode events excluded from the fit
+    slope: float64  # Slope of the linear fit mapping VR time to NP time
+    intercept: float64  # Intercept of the linear fit mapping VR time to NP time
+    r2: float64  # R-squared value of the linear fit
     interpol_func: <blob>  # pickled scipy.interpolate.interp1d, VR time -> NP time
-    barcode_overlap: float  # Fraction of NP barcodes also found on the VR side
+    barcode_overlap: float64  # Fraction of NP barcodes also found on the VR side
     """
 
     key_source = (
