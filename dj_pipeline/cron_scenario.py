@@ -169,7 +169,7 @@ def main():
             # as transient (log + return, no FailedSession row), so later
             # arrivals are retried instead of blacklisted by should_skip().
             "vr4mice.DLC.populate",
-            lambda: vr4mice.DLC().populate(),
+            lambda: vr4mice.DLC().populate(pending_only=True),
         )
         run_step(
             "dlc.DLCProcessor.populate",

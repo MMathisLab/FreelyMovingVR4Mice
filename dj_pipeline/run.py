@@ -157,7 +157,7 @@ if __name__ == "__main__":
         # Load-bearing invariant: DLC.make treats missing DLC/PROC files as
         # transient (log + return, no FailedSession row). If that changes,
         # late-arriving datasets would be blacklisted by should_skip().
-        vr4mice.DLC().populate()
+        vr4mice.DLC().populate(pending_only=True)
 
         populate_pending(dlc.DLCProcessor, vr4mice.DLC, logger=logger)
         populate_pending(

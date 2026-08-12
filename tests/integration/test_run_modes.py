@@ -806,6 +806,39 @@ class TestAnalysisMode:
 class TestDlcMode:
     """Tests for dlc mode - requires populate."""
 
+    def test_dlc_pending_only_excludes_existing_keys(self, populated_db):
+        """Verify pending_only=True excludes already-populated DLC keys."""
+        vr4mice = populated_db["vr4mice"]
+        dataset = populated_db["dataset_key"]["dataset"]
+
+        all_keys = vr4mice.DLC().get_keys(
+            restriction={"dataset": dataset}, pending_only=False
+        )
+        pending_keys = vr4mice.DLC().get_keys(
+            restriction={"dataset": dataset}, pending_only=True
+        )
+
+        assert len(all_keys) == 1, "Expected one Video x ModelName key"
+        assert len(pending_keys) == 0, "No pending keys expected after insert"
+
+    def test_dlc_populate_pending_only_second_run_is_noop(self, populated_db):
+        """Verify a second pending_only populate run does not insert rows."""
+        vr4mice = populated_db["vr4mice"]
+        dataset = populated_db["dataset_key"]["dataset"]
+        data_dir = populated_db["test_data"]["data_dir"]
+        srcf = str(data_dir.parent)
+
+        before = len(vr4mice.DLC())
+        vr4mice.DLC().populate(
+            {"dataset": dataset},
+            local_src=srcf,
+            data_root=str(data_dir),
+            pending_only=True,
+        )
+        after = len(vr4mice.DLC())
+
+        assert before == after, "Second pending_only populate run should be a no-op"
+
     def test_dlcprocessor_populates(self, populated_db, golden_baseline):
         """Verify DLCProcessor.populate() creates entry."""
         from vr4mice.schema import dlc
