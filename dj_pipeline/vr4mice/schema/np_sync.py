@@ -1,8 +1,11 @@
 """Alignment of VR (behavior) time to Neuropixels (NP) native time via shared barcodes.
 
-Not every VR ``Dataset`` has a corresponding NP recording; ``BarcodeSync.key_source``
-intersects with the NP-side linkage tables so ``populate()`` simply never calls
-``make()`` for behavior-only sessions, instead of raising.
+Not every VR ``Dataset`` has a corresponding NP recording. ``BarcodeSync.key_source``
+includes datasets with successful VR barcode extraction, while strict NP linkage
+matching is performed inside ``make()`` via ``base.Base`` +
+``session_link.RecordingSessionLink`` + successful NP probe barcode extraction.
+Datasets with no strict NP match are recorded in ``vr4mice.FailedSession`` and
+skipped cleanly.
 
 Cross-repo foreign keys: ``BarcodeSync`` references ``np_pipeline`` tables
 directly via ``-> ``. This requires ``vr4mice`` and ``np_pipeline`` to share one
@@ -38,14 +41,87 @@ schema = get_schema(schema_name, locals())
 logger = Logger.get_logger()
 
 
+def _dataset_identity(dataset: str):
+    """Return (mouse_name, day_iso, attempt) parsed from dataset name."""
+    parts = dataset.split("_")
+    if len(parts) < 3:
+        return None
+    try:
+        return parts[0], parts[1], int(parts[2])
+    except ValueError:
+        return None
+
+
+def _candidate_sort_key(row, identity):
+    """Sort candidates by identity match first, then NP barcode event count."""
+    event_count = int(row["np_event_count"])
+    if identity is None:
+        return (
+            -event_count,
+            str(row.get("recording_id", "")),
+            str(row.get("probe_serial_number", "")),
+        )
+
+    expected_mouse, expected_day, expected_attempt = identity
+    mouse_miss = 0 if row.get("mouse_name") == expected_mouse else 1
+    day = row.get("day")
+    day_iso = day.isoformat() if hasattr(day, "isoformat") else str(day)
+    day_miss = 0 if day_iso == expected_day else 1
+    attempt_miss = 0 if row.get("attempt") == expected_attempt else 1
+    return (
+        mouse_miss,
+        day_miss,
+        attempt_miss,
+        -event_count,
+        str(row.get("recording_id", "")),
+        str(row.get("probe_serial_number", "")),
+    )
+
+
+def _np_module_options():
+    """Return available NP schema-module triplets, preferring imported modules."""
+    options = [(acquisition, np_barcodes, session_link)]
+    legacy = (
+        dj.VirtualModule("np_acquisition_legacy", "acquisition"),
+        dj.VirtualModule("np_barcodes_legacy", "barcodes"),
+        dj.VirtualModule("np_session_link_legacy", "session_link"),
+    )
+    imported_lineage = acquisition.RecordingProbe.heading.attributes[
+        "recording_id"
+    ].lineage
+    legacy_lineage = legacy[0].RecordingProbe.heading.attributes["recording_id"].lineage
+    if legacy_lineage != imported_lineage:
+        options.append(legacy)
+    return options
+
+
+def _candidate_relation_for_modules(acq_mod, np_barcodes_mod, session_link_mod):
+    """Rows where one VR dataset has at least one NP probe with successful barcodes."""
+    np_success = (
+        np_barcodes_mod.ProbeBarcodeExtraction & 'extraction_status = "success"'
+    ).proj(
+        "recording_id",
+        "probe_serial_number",
+        np_event_count="event_count",
+    )
+    return (
+        base.Base
+        * acq_mod.RecordingProbe
+        * session_link_mod.RecordingSessionLink
+        * np_success
+        & (vr_barcodes.TeensyBarcodes & 'extraction_status = "success"')
+    )
+
+
 @schema
 class BarcodeSync(dj.Computed):
     """Linear fit + interpolator mapping VR Unity/game time to NP probe time.
 
-    One row per (dataset, recording, probe) triple that has a linked NP recording and
-    successfully decoded barcodes on both sides. Populated only for those keys — see
-    ``key_source`` — so ``populate()`` is a no-op, not an error, for VR-only sessions
-    with no matching neural recording.
+    One row per VR dataset that has at least one linked NP recording/probe with
+    successful barcodes on both sides. ``key_source`` enumerates VR datasets with
+    successful VR barcode extraction; strict NP-side eligibility is resolved in
+    ``make()``. Sessions with no strict NP match are recorded to
+    ``vr4mice.FailedSession`` and skipped.
 
     Downstream code should not fetch ``slope``/``intercept``/``interpol_func``
     directly; use ``align_timepoints``/``align_timepoints_lin`` instead.
@@ -53,9 +129,9 @@ class BarcodeSync(dj.Computed):
 
     definition = """
     -> base.Base
-    -> session_link.RecordingSessionLink
-    -> acquisition.RecordingProbe
     ---
+    recording_id: varchar(255)  # Linked NP recording selected for this dataset
+    probe_serial_number: varchar(64)  # Selected NP probe used for alignment
     skip_first_n_barcodes: int32  # leading VR barcode events excluded from the fit
     slope: float64  # Slope of the linear fit mapping VR time to NP time
     intercept: float64  # Intercept of the linear fit mapping VR time to NP time
@@ -64,11 +140,11 @@ class BarcodeSync(dj.Computed):
     barcode_overlap: float64  # Fraction of NP barcodes also found on the VR side
     """
 
-    key_source = (
-        base.Base * session_link.RecordingSessionLink * acquisition.RecordingProbe
-        & (vr_barcodes.TeensyBarcodes & 'extraction_status = "success"')
-        & (np_barcodes.ProbeBarcodeExtraction & 'extraction_status = "success"')
-    )
+    @property
+    def key_source(self):
+        return dj.U("dataset") & (
+            base.Base * (vr_barcodes.TeensyBarcodes & 'extraction_status = "success"')
+        )
 
     skip_first_n_barcodes = DEFAULT_SKIP_FIRST_N_BARCODES
 
@@ -87,11 +163,51 @@ class BarcodeSync(dj.Computed):
             return
 
         try:
+            selected = None
+            selected_modules = None
+            identity = _dataset_identity(key["dataset"])
+            for modules in _np_module_options():
+                acq_mod, np_barcodes_mod, session_link_mod = modules
+                candidates = (
+                    _candidate_relation_for_modules(
+                        acq_mod, np_barcodes_mod, session_link_mod
+                    )
+                    & key
+                )
+                if len(candidates) == 0:
+                    continue
+                selected_modules = modules
+                candidate_rows = candidates.fetch(as_dict=True)
+                candidate_rows = sorted(
+                    candidate_rows,
+                    key=lambda row: _candidate_sort_key(row, identity),
+                )
+                selected = candidate_rows[0]
+                break
+
+            if selected is None or selected_modules is None:
+                reason = "No eligible NP barcode source for dataset from strict session-link matching"
+                vr4mice.FailedSession().add_entry(
+                    f"{key['dataset']}", f"{self.__class__.__name__}", reason
+                )
+                logger.warning(
+                    "%s %s for dataset %s",
+                    self.__class__.__name__,
+                    reason,
+                    key["dataset"],
+                )
+                return
+
+            _, np_barcodes_mod, _ = selected_modules
+            np_key = {
+                "recording_id": selected["recording_id"],
+                "probe_serial_number": selected["probe_serial_number"],
+            }
             vr_values, vr_times = (vr_barcodes.TeensyBarcodes.Event & key).fetch(
                 "barcode_value", "onset_time_unity", order_by="barcode_index"
             )
             np_values, np_times = (
-                np_barcodes.ProbeBarcodeExtraction.Event & key
+                np_barcodes_mod.ProbeBarcodeExtraction.Event & np_key
             ).fetch("barcode_value", "onset_time", order_by="barcode_index")
 
             fit = align_barcodes(
@@ -102,9 +218,16 @@ class BarcodeSync(dj.Computed):
                 skip_first_n_barcodes=self.skip_first_n_barcodes,
             )
 
+            insert_row = {}
+            for name in self.heading.names:
+                if name in key:
+                    insert_row[name] = key[name]
+                elif name in selected:
+                    insert_row[name] = selected[name]
+
             self.insert1(
                 {
-                    **key,
+                    **insert_row,
                     "skip_first_n_barcodes": self.skip_first_n_barcodes,
                     "slope": fit.slope,
                     "intercept": fit.intercept,

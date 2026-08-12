@@ -4,6 +4,7 @@ behavioral analysis stays unaffected when np_pipeline is unavailable.
 
 import importlib
 import sys
+import ast
 from pathlib import Path
 
 import numpy as np
@@ -14,6 +15,7 @@ from np_sync import align_barcodes
 REPO_ROOT = Path(__file__).parent.parent.parent
 RUN_PY = REPO_ROOT / "dj_pipeline" / "run.py"
 CRON_SCENARIO_PY = REPO_ROOT / "dj_pipeline" / "cron_scenario.py"
+SCHEMA_NP_SYNC_PY = REPO_ROOT / "dj_pipeline" / "vr4mice" / "schema" / "np_sync.py"
 
 
 def _linear_barcode_streams(*, n=20, slope=2.0, intercept=100.0, skip_vr=0, skip_np=0):
@@ -106,6 +108,104 @@ def _function_source(file_text: str, def_line: str) -> str:
     rest = file_text[start + len(def_line) :]
     end = rest.find("\n    def ")
     return def_line + (rest if end == -1 else rest[:end])
+
+
+def _top_level_function_source(file_text: str, function_name: str) -> str:
+    """Return source for a top-level function using AST locations."""
+    module = ast.parse(file_text)
+    for node in module.body:
+        if isinstance(node, ast.FunctionDef) and node.name == function_name:
+            return ast.get_source_segment(file_text, node)
+    raise ValueError(f"Function not found: {function_name}")
+
+
+def _load_schema_helpers():
+    """Load pure helper functions from schema np_sync source without importing DB deps."""
+    text = SCHEMA_NP_SYNC_PY.read_text()
+    namespace = {}
+    for function_name in (
+        "_dataset_identity",
+        "_candidate_sort_key",
+    ):
+        exec(_top_level_function_source(text, function_name), namespace)
+    return namespace
+
+
+def test_schema_dataset_identity_parses():
+    dataset_identity = _load_schema_helpers()["_dataset_identity"]
+
+    assert dataset_identity("Xestia_2026-07-01_1") == (
+        "Xestia",
+        "2026-07-01",
+        1,
+    )
+    assert dataset_identity("bad_name") is None
+
+
+def test_schema_candidate_sort_key_prefers_identity_then_event_count():
+    helper_ns = _load_schema_helpers()
+    candidate_sort_key = helper_ns["_candidate_sort_key"]
+
+    identity = ("Xestia", "2026-07-01", 2)
+
+    # Exact identity match should beat higher event count with wrong attempt.
+    exact = {
+        "mouse_name": "Xestia",
+        "day": "2026-07-01",
+        "attempt": 2,
+        "np_event_count": 10,
+        "recording_id": "rec_a",
+        "probe_serial_number": "p1",
+    }
+    wrong_attempt_but_more_events = {
+        "mouse_name": "Xestia",
+        "day": "2026-07-01",
+        "attempt": 1,
+        "np_event_count": 999,
+        "recording_id": "rec_b",
+        "probe_serial_number": "p1",
+    }
+
+    ranked = sorted(
+        [wrong_attempt_but_more_events, exact],
+        key=lambda row: candidate_sort_key(row, identity),
+    )
+    assert ranked[0]["recording_id"] == "rec_a"
+
+    # Within the same identity, higher np_event_count should win.
+    same_identity_low = {
+        **exact,
+        "np_event_count": 5,
+        "recording_id": "rec_low",
+    }
+    same_identity_high = {
+        **exact,
+        "np_event_count": 25,
+        "recording_id": "rec_high",
+    }
+    ranked_same = sorted(
+        [same_identity_low, same_identity_high],
+        key=lambda row: candidate_sort_key(row, identity),
+    )
+    assert ranked_same[0]["recording_id"] == "rec_high"
+
+
+def test_schema_candidate_sort_key_without_identity_prefers_event_count():
+    candidate_sort_key = _load_schema_helpers()["_candidate_sort_key"]
+
+    low = {
+        "np_event_count": 5,
+        "recording_id": "rec_low",
+        "probe_serial_number": "p1",
+    }
+    high = {
+        "np_event_count": 50,
+        "recording_id": "rec_high",
+        "probe_serial_number": "p2",
+    }
+
+    ranked = sorted([low, high], key=lambda row: candidate_sort_key(row, None))
+    assert ranked[0]["recording_id"] == "rec_high"
 
 
 def test_cron_scenario_core_schemas_import_excludes_np_sync():
