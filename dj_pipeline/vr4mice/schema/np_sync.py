@@ -20,12 +20,12 @@ import datajoint as dj
 import numpy as np
 
 try:
-    from np_pipeline.schemas import acquisition, barcodes as np_barcodes, session_link
+    from np_pipeline.schemas import barcodes as np_barcodes, session_link
 except ModuleNotFoundError:
     import sys
 
     sys.path.insert(0, "/np_pipeline")
-    from np_pipeline.schemas import acquisition, barcodes as np_barcodes, session_link
+    from np_pipeline.schemas import barcodes as np_barcodes, session_link
 
 from vr4mice.analysis.np_sync import DEFAULT_SKIP_FIRST_N_BARCODES, align_barcodes
 from vr4mice.schema import base
@@ -40,63 +40,18 @@ schema = get_schema(schema_name, locals())
 logger = Logger.get_logger()
 
 
-def _dataset_identity(dataset: str):
-    """Return (mouse_name, day_iso, attempt) parsed from dataset name."""
-    parts = dataset.split("_")
-    if len(parts) < 3:
-        return None
-    try:
-        return parts[0], parts[1], int(parts[2])
-    except ValueError:
-        return None
-
-
-def _row_day_iso(row):
-    day = row.get("day")
-    return day.isoformat() if hasattr(day, "isoformat") else str(day)
-
-
-def _candidate_sort_key(row, identity):
-    """Sort candidates by identity match first, then NP barcode event count."""
-    event_count = int(row["np_event_count"])
-    if identity is None:
-        return (
-            -event_count,
-            str(row.get("recording_id", "")),
-            str(row.get("probe_serial_number", "")),
-        )
-
-    expected_mouse, expected_day, expected_attempt = identity
-    mouse_miss = 0 if row.get("mouse_name") == expected_mouse else 1
-    day_miss = 0 if _row_day_iso(row) == expected_day else 1
-    attempt_miss = 0 if row.get("attempt") == expected_attempt else 1
-    return (
-        mouse_miss,
-        day_miss,
-        attempt_miss,
-        -event_count,
-        str(row.get("recording_id", "")),
-        str(row.get("probe_serial_number", "")),
-    )
-
-
 def _candidate_relation():
     """Rows where one VR dataset has at least one NP probe with successful barcodes."""
-    vr_success = vr_barcodes.TeensyBarcodes & 'extraction_status = "success"'
-    np_success = (
-        np_barcodes.ProbeBarcodeExtraction & 'extraction_status = "success"'
-    ).proj(
-        "recording_id",
-        "probe_serial_number",
-        np_event_count="event_count",
-    )
-    return (
+    vr = (
         base.Base
-        * vr_success
-        * acquisition.RecordingProbe
-        * session_link.RecordingSessionLink
-        * np_success
+        * (vr_barcodes.TeensyBarcodes & 'extraction_status = "success"').proj()
     )
+    npx = (
+        session_link.RecordingSessionLink
+        * (np_barcodes.ProbeBarcodeExtraction & 'extraction_status = "success"').proj()
+    )
+
+    return vr * npx
 
 
 @schema
@@ -128,7 +83,13 @@ class BarcodeSync(dj.Computed):
 
     @property
     def key_source(self):
-        return dj.U(*self.primary_key) & _candidate_relation()
+        source = _candidate_relation()
+        unexpected = sorted(set(source.heading.primary_key) - set(self.primary_key))
+        if unexpected:
+            raise dj.DataJointError(
+                f"key_source primary key has attributes BarcodeSync lacks: {unexpected}"
+            )
+        return source
 
     skip_first_n_barcodes = DEFAULT_SKIP_FIRST_N_BARCODES
 
@@ -147,21 +108,21 @@ class BarcodeSync(dj.Computed):
             return
 
         try:
-            selected = None
-            identity = _dataset_identity(key["dataset"])
-            candidates = _candidate_relation() & key
-            if len(candidates) != 0:
-                candidate_rows = candidates.fetch(as_dict=True)
-                selected = min(
-                    candidate_rows,
-                    key=lambda row: _candidate_sort_key(row, identity),
+            candidate_rows = (_candidate_relation() & key).to_dicts()
+            if not candidate_rows:
+                reason = "No NP candidate matched key fields"
+                vr4mice.FailedSession().add_entry(
+                    f"{key['dataset']}", f"{self.__class__.__name__}", reason
                 )
-
-            if selected is None:
-                reason = (
-                    "No eligible NP barcode source after key selection "
-                    "(possible concurrent data change)"
+                logger.warning(
+                    "%s %s for dataset %s",
+                    self.__class__.__name__,
+                    reason,
+                    key["dataset"],
                 )
+                return
+            if len(candidate_rows) > 1:
+                reason = "Ambiguous NP candidates matched key fields"
                 vr4mice.FailedSession().add_entry(
                     f"{key['dataset']}", f"{self.__class__.__name__}", reason
                 )
@@ -173,21 +134,12 @@ class BarcodeSync(dj.Computed):
                 )
                 return
 
-            np_key = {
-                "recording_id": selected["recording_id"],
-                "probe_serial_number": selected["probe_serial_number"],
-            }
-            vr_key = {
-                name: key[name]
-                for name in vr_barcodes.TeensyBarcodes.primary_key
-                if name in key
-            }
-            vr_values, vr_times = (vr_barcodes.TeensyBarcodes.Event & vr_key).fetch(
+            vr_values, vr_times = (vr_barcodes.TeensyBarcodes.Event & key).to_arrays(
                 "barcode_value", "onset_time_unity", order_by="barcode_index"
             )
             np_values, np_times = (
-                np_barcodes.ProbeBarcodeExtraction.Event & np_key
-            ).fetch("barcode_value", "onset_time", order_by="barcode_index")
+                np_barcodes.ProbeBarcodeExtraction.Event & key
+            ).to_arrays("barcode_value", "onset_time", order_by="barcode_index")
 
             if len(np_values) == 0:
                 reason = (
@@ -198,11 +150,10 @@ class BarcodeSync(dj.Computed):
                     f"{key['dataset']}", f"{self.__class__.__name__}", reason
                 )
                 logger.warning(
-                    "%s %s. key: %s, np_key: %s",
+                    "%s %s. key: %s",
                     self.__class__.__name__,
                     reason,
                     key,
-                    np_key,
                 )
                 return
 
@@ -214,22 +165,19 @@ class BarcodeSync(dj.Computed):
                 skip_first_n_barcodes=self.skip_first_n_barcodes,
             )
 
-            insert_row = {}
-            for name in self.heading.names:
-                if name in key:
-                    insert_row[name] = key[name]
-                elif name in selected:
-                    insert_row[name] = selected[name]
+            # Measure overlap on full streams (independent of fit-time skipping)
+            # so DEFAULT_SKIP_FIRST_N_BARCODES does not bias this quality metric.
+            full_shared_barcodes = np.intersect1d(vr_values, np_values)
 
             self.insert1(
                 {
-                    **insert_row,
+                    **key,
                     "skip_first_n_barcodes": self.skip_first_n_barcodes,
                     "slope": fit.slope,
                     "intercept": fit.intercept,
                     "r2": fit.r2,
                     "interpol_func": pickle.dumps(fit.interpol_func),
-                    "barcode_overlap": len(fit.shared_barcodes) / len(np_values),
+                    "barcode_overlap": len(full_shared_barcodes) / len(np_values),
                 }
             )
             logger.info(

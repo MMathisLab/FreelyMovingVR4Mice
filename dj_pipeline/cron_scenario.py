@@ -317,7 +317,7 @@ def main():
             "np_sync.BarcodeSync.populate",
             lambda: populate_pending(
                 np_sync.BarcodeSync,
-                np_sync.BarcodeSync.key_source,
+                np_sync.BarcodeSync().key_source,
                 logger=logger,
             ),
         )

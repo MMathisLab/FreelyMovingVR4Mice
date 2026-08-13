@@ -304,7 +304,7 @@ if __name__ == "__main__":
 
             populate_pending(
                 np_sync.BarcodeSync,
-                np_sync.BarcodeSync.key_source,
+                np_sync.BarcodeSync().key_source,
                 logger=logger,
             )
 

@@ -39,7 +39,7 @@ services:
       - "${SCREEN_RECORDINGS_PATH:-/mnt/neuropixel_data/vr4mice/raw_screen_recordings}:/vr4mice_screen_recordings"
       - "./base/base_min_schemas:/base_schemas"
       - "./base/base_actions:/base_actions"
-      - "${NP_PIPELINE_SRC_PATH:-./np_pipeline_stub}:/np_pipeline"
+      - "${NP_PIPELINE_SRC_PATH:-./np_pipeline_stub}:/app/np_pipeline"
     ports:
       - "${JUPYTER_PORT:-8887}:8888"
     working_dir: /app

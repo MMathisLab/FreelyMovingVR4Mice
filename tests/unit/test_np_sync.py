@@ -112,28 +112,6 @@ def _function_source(file_text: str, def_line: str) -> str:
     return def_line + (rest if end == -1 else rest[:end])
 
 
-def _top_level_function_source(file_text: str, function_name: str) -> str:
-    """Return source for a top-level function using AST locations."""
-    module = ast.parse(file_text)
-    for node in module.body:
-        if isinstance(node, ast.FunctionDef) and node.name == function_name:
-            return ast.get_source_segment(file_text, node)
-    raise ValueError(f"Function not found: {function_name}")
-
-
-def _load_schema_helpers():
-    """Load pure helper functions from schema np_sync source without importing DB deps."""
-    text = SCHEMA_NP_SYNC_PY.read_text()
-    namespace = {}
-    for function_name in (
-        "_dataset_identity",
-        "_row_day_iso",
-        "_candidate_sort_key",
-    ):
-        exec(_top_level_function_source(text, function_name), namespace)
-    return namespace
-
-
 def _load_schema_align_timepoints_method():
     """Load BarcodeSync.align_timepoints from source without importing DB deps."""
     text = SCHEMA_NP_SYNC_PY.read_text()
@@ -154,83 +132,6 @@ def _load_schema_align_timepoints_method():
     namespace = {"np": np, "pickle": pickle}
     exec(textwrap.dedent(method_src), namespace)
     return namespace["align_timepoints"]
-
-
-def test_schema_dataset_identity_parses():
-    dataset_identity = _load_schema_helpers()["_dataset_identity"]
-
-    assert dataset_identity("Xestia_2026-07-01_1") == (
-        "Xestia",
-        "2026-07-01",
-        1,
-    )
-    assert dataset_identity("bad_name") is None
-
-
-def test_schema_candidate_sort_key_prefers_identity_then_event_count():
-    helper_ns = _load_schema_helpers()
-    candidate_sort_key = helper_ns["_candidate_sort_key"]
-
-    identity = ("Xestia", "2026-07-01", 2)
-
-    # Exact identity match should beat higher event count with wrong attempt.
-    exact = {
-        "mouse_name": "Xestia",
-        "day": "2026-07-01",
-        "attempt": 2,
-        "np_event_count": 10,
-        "recording_id": "rec_a",
-        "probe_serial_number": "p1",
-    }
-    wrong_attempt_but_more_events = {
-        "mouse_name": "Xestia",
-        "day": "2026-07-01",
-        "attempt": 1,
-        "np_event_count": 999,
-        "recording_id": "rec_b",
-        "probe_serial_number": "p1",
-    }
-
-    ranked = sorted(
-        [wrong_attempt_but_more_events, exact],
-        key=lambda row: candidate_sort_key(row, identity),
-    )
-    assert ranked[0]["recording_id"] == "rec_a"
-
-    # Within the same identity, higher np_event_count should win.
-    same_identity_low = {
-        **exact,
-        "np_event_count": 5,
-        "recording_id": "rec_low",
-    }
-    same_identity_high = {
-        **exact,
-        "np_event_count": 25,
-        "recording_id": "rec_high",
-    }
-    ranked_same = sorted(
-        [same_identity_low, same_identity_high],
-        key=lambda row: candidate_sort_key(row, identity),
-    )
-    assert ranked_same[0]["recording_id"] == "rec_high"
-
-
-def test_schema_candidate_sort_key_without_identity_prefers_event_count():
-    candidate_sort_key = _load_schema_helpers()["_candidate_sort_key"]
-
-    low = {
-        "np_event_count": 5,
-        "recording_id": "rec_low",
-        "probe_serial_number": "p1",
-    }
-    high = {
-        "np_event_count": 50,
-        "recording_id": "rec_high",
-        "probe_serial_number": "p2",
-    }
-
-    ranked = sorted([low, high], key=lambda row: candidate_sort_key(row, None))
-    assert ranked[0]["recording_id"] == "rec_high"
 
 
 def test_schema_align_timepoints_preserves_none_entries():
@@ -280,6 +181,24 @@ def test_schema_make_handles_empty_np_events_with_clear_reason():
 
     assert "if len(np_values) == 0:" in make_src
     assert "No NP barcode events found for key at populate time" in make_src
+
+
+def test_schema_make_uses_key_only_without_identity_parsing():
+    text = SCHEMA_NP_SYNC_PY.read_text()
+    make_src = _function_source(text, "    def make(self, key):")
+
+    assert "_dataset_identity" not in make_src
+    assert "_identity_matches_row" not in make_src
+    assert "_select_rows_by_np_event_count" not in make_src
+    assert "No NP candidate matched key fields" in make_src
+
+
+def test_schema_make_fails_ambiguous_matches_directly_without_event_count_tie_break():
+    text = SCHEMA_NP_SYNC_PY.read_text()
+    make_src = _function_source(text, "    def make(self, key):")
+
+    assert "Ambiguous NP candidates matched key fields" in make_src
+    assert "event_count matching" not in make_src
 
 
 def test_schema_module_docstring_states_vr_only_sessions_excluded_from_key_source():
