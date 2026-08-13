@@ -3,7 +3,9 @@ Integration tests for the vr4mice pipeline using the golden dataset.
 
 Tests are organized by pipeline mode (matching run.py's mode argument):
 - connect: Schema imports and database connectivity
-- populate: Dataset, MouseState, State, Video, DLC table population
+- populate: Dataset, MouseState, State, Video table population (DLC is
+  populated separately via vr4mice.DLC().populate(), matching run.py "dlc"
+  mode - see the NOTE on vr4mice.DLC)
 - analysis: DataFrame, BoxDataFrame, SummaryPlots population
 - dlc: DLCProcessor, DLCKptsDf, SyncDLCKptsDf, OfflineKinematics population
 - interp: InterpolatedTrials, MeanXYTrajectory, YBinnedXYTrajectory,
@@ -370,7 +372,10 @@ def populated_db(dj_config, pipeline_test_data, test_dataset_name, test_camera_p
     raw_data["video_meta"] = session_metadata["video_meta"]
     raw_data["doe"] = files_info["doe"]
 
-    # Run check_keys + populate for each table, same as populate_rig()'s inner loop
+    # Run check_keys + populate for each table, same as populate_rig()'s inner loop.
+    # DLC is intentionally NOT in vr4mice_schema_dict["tables"] (it's excluded
+    # from populate_rig()'s path on purpose - see the NOTE on vr4mice.DLC) so
+    # it's populated separately below, the same way run.py "dlc" mode does.
     for table_name, attributes in vr4mice_schema_dict["tables"].items():
         flag, none_vals = check_keys(
             attributes, raw_data, table_name, schema=vr4mice_schema_dict
@@ -386,6 +391,13 @@ def populated_db(dj_config, pipeline_test_data, test_dataset_name, test_camera_p
                 dstf="processed",
                 move=False,
             )
+
+    # DLC's sole entry point: vr4mice.DLC().populate() (see run.py "dlc" mode).
+    # local_src/data are overridden to point at the temp dirs used here instead
+    # of the production "/data" default.
+    vr4mice.DLC().populate(
+        {"dataset": test_dataset_name}, local_src=srcf, data_root=str(data_dir)
+    )
 
     # Verify the 5 core tables populated (fail fast if pipeline broke)
     assert len(vr4mice.Dataset()) == 1, "Dataset not populated"
@@ -464,6 +476,44 @@ class TestConnectMode:
 
         assert hasattr(barcodes, "TeensyTTL")
         assert hasattr(barcodes, "TeensyBarcodes")
+
+    def test_excluded_dataset_exact_pattern_treats_underscore_literal(self, dj_config):
+        """Exact patterns containing '_' should not act as SQL single-char wildcards."""
+        from vr4mice.schema import vr4mice
+
+        vr4mice.ExcludedDataset.insert(
+            vr4mice.ExcludedDataset.contents,
+            skip_duplicates=True,
+        )
+
+        assert (
+            vr4mice.ExcludedDataset.matches("Hamster_2026-02-02_1")
+            == "Missing DLC data"
+        )
+        assert vr4mice.ExcludedDataset.matches("Hamster-2026-02-02-1") is None
+
+        exclusion = vr4mice.ExcludedDataset.exclusion_filter()
+        assert 'dataset != "Hamster_2026-02-02_1"' in exclusion
+
+    def test_barcodes_schema_imports_without_batch2(self, dj_config, clean_schemas):
+        """Importing barcodes should not fail when batch2 row is absent."""
+        import importlib
+        import sys
+
+        from vr4mice.schema import vr4mice
+
+        # Ensure lookup rows exist first, then remove batch2 for this scenario.
+        vr4mice.Batch.insert(vr4mice.Batch.contents, skip_duplicates=True)
+        (vr4mice.Batch & {"batch_name": "batch2"}).delete()
+
+        # Force a fresh import to exercise module import-time behavior.
+        sys.modules.pop("vr4mice.schema.barcodes", None)
+        barcodes = importlib.import_module("vr4mice.schema.barcodes")
+
+        assert hasattr(barcodes, "TeensyTTL")
+        assert hasattr(barcodes, "TeensyBarcodes")
+        # Accessing key_source should also remain non-fatal.
+        _ = barcodes.TeensyTTL().key_source
 
     def test_interpolated_trajectories_schema_imports(self, dj_config):
         """Verify interpolated_trajectories schema imports without error."""
@@ -755,6 +805,39 @@ class TestAnalysisMode:
 
 class TestDlcMode:
     """Tests for dlc mode - requires populate."""
+
+    def test_dlc_pending_only_excludes_existing_keys(self, populated_db):
+        """Verify pending_only=True excludes already-populated DLC keys."""
+        vr4mice = populated_db["vr4mice"]
+        dataset = populated_db["dataset_key"]["dataset"]
+
+        all_keys = vr4mice.DLC().get_keys(
+            restriction={"dataset": dataset}, pending_only=False
+        )
+        pending_keys = vr4mice.DLC().get_keys(
+            restriction={"dataset": dataset}, pending_only=True
+        )
+
+        assert len(all_keys) == 1, "Expected one Video x ModelName key"
+        assert len(pending_keys) == 0, "No pending keys expected after insert"
+
+    def test_dlc_populate_pending_only_second_run_is_noop(self, populated_db):
+        """Verify a second pending_only populate run does not insert rows."""
+        vr4mice = populated_db["vr4mice"]
+        dataset = populated_db["dataset_key"]["dataset"]
+        data_dir = populated_db["test_data"]["data_dir"]
+        srcf = str(data_dir.parent)
+
+        before = len(vr4mice.DLC())
+        vr4mice.DLC().populate(
+            {"dataset": dataset},
+            local_src=srcf,
+            data_root=str(data_dir),
+            pending_only=True,
+        )
+        after = len(vr4mice.DLC())
+
+        assert before == after, "Second pending_only populate run should be a no-op"
 
     def test_dlcprocessor_populates(self, populated_db, golden_baseline):
         """Verify DLCProcessor.populate() creates entry."""

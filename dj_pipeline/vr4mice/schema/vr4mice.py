@@ -1,6 +1,9 @@
 """Core VR4Mice schema tables for datasets, metadata, and raw signals."""
 
+import datetime
 import os
+import re
+from pathlib import Path
 
 import datajoint as dj
 import numpy as np
@@ -99,6 +102,159 @@ class Dataset(dj.Manual):
 
 
 @schema
+class Batch(dj.Lookup):
+    """
+    Batch definition table:
+    experiment batches (e.g. mouse cohorts run under a different setup),
+    each starting on a given date. A dataset belongs to whichever batch has
+    the latest start_date that is still <= its own experiment date, so new
+    batches are added over time by inserting a new row here, not by editing
+    code.
+    """
+
+    definition = """
+    batch_name : varchar(32)
+    ---
+    start_date : date          # datasets on/after this date fall in this batch
+    description : varchar(255)
+    has_neural_data : bool   # cohort metadata; sessions may still be mixed
+    compute_locally : bool   # local cron computes decision tables for this batch
+    """
+
+    contents = [
+        ("batch1", "2000-01-01", "behavioral_cohort", False, False),
+        ("batch2", "2026-06-01", "ephys_cohort", True, True),
+    ]
+
+    @classmethod
+    def resolve(cls, doe):
+        """Return the batch_name for an experiment date (latest start_date <= doe)."""
+        rows = (cls & f"start_date <= '{doe}'").fetch(
+            "batch_name", order_by="start_date DESC", limit=1
+        )
+        if len(rows) == 0:
+            raise ValueError(f"No {cls.__name__} defined with start_date <= {doe}")
+        return rows[0]
+
+
+@schema
+class DatasetBatch(dj.Computed):
+    """
+    DatasetBatch definition table:
+    resolves each dataset to a Batch, based on the experiment date (doe)
+    encoded in its name (see Dataset docstring: mouse_name_doe_attempt)
+    """
+
+    definition = """
+    -> Dataset
+    ---
+    -> Batch
+    doe : date   # experiment date parsed from the dataset name
+    """
+
+    def make(self, key):
+        parts = key["dataset"].split("_")
+        if len(parts) < 2:
+            logger.warning(f"Could not parse date from dataset '{key['dataset']}'")
+            return
+        try:
+            doe = datetime.date.fromisoformat(parts[1])
+        except ValueError:
+            logger.warning(f"Could not parse date from dataset '{key['dataset']}'")
+            return
+
+        try:
+            batch_name = Batch.resolve(doe)
+        except ValueError as err:
+            logger.warning(f"{err} (dataset '{key['dataset']}')")
+            return
+
+        self.insert1({**key, "batch_name": batch_name, "doe": doe})
+
+
+@schema
+class ExcludedDataset(dj.Lookup):
+    """
+    ExcludedDataset definition table:
+    datasets excluded from decision analyses - curation calls, known
+    data-quality issues, or whole test/debug mice - even though their raw
+    data may still be ingested normally through the rest of the pipeline.
+
+    dataset_pattern is either an exact dataset name (excludes that one
+    session) or a SQL LIKE-style wildcard pattern using "%" such as
+    "Testmouse%" (excludes every matching dataset, past and future,
+    without needing a row per session).
+    Not a -> Dataset FK, since a "%" pattern doesn't name a real row.
+    """
+
+    definition = """
+    dataset_pattern : varchar(512)   # exact dataset name, or a SQL LIKE pattern
+    ---
+    reason : varchar(255)
+    """
+
+    contents = [
+        ("Testmouse%", "Test/debug mouse used to exercise the rig"),
+        # NOTE(celia): inherited from the dropped Groups table (DJ 2.0
+        # migration); the original curation reason was not recorded.
+        (
+            "Lemming_2024-08-09_1",
+            "Excluded via legacy Groups curation; reason not recorded",
+        ),
+        (
+            "Lemming_2024-08-09_2",
+            "Excluded via legacy Groups curation; reason not recorded",
+        ),
+        ("Hamster_2026-02-02_1", "Missing DLC data"),
+        ("Whale%", "Ephys recording didn't work; stopped at detection stage"),
+    ]
+
+    @classmethod
+    def matches(cls, dataset):
+        """Return the matching row's reason, or None if dataset isn't excluded."""
+        rows = cls.fetch("dataset_pattern", "reason", as_dict=True)
+        for row in rows:
+            pattern = row["dataset_pattern"]
+            if cls._dataset_matches_pattern(dataset, pattern):
+                return row["reason"]
+        return None
+
+    @staticmethod
+    def _dataset_matches_pattern(dataset, pattern):
+        """Match dataset against an exact or '%' wildcard pattern.
+
+        Patterns without '%' are treated as exact dataset names, so '_' stays
+        literal and does not act as a SQL single-character wildcard.
+        """
+        if "%" not in pattern:
+            return dataset == pattern
+
+        regex = "^" + re.escape(pattern).replace(r"\%", ".*") + "$"
+        return re.match(regex, dataset) is not None
+
+    @classmethod
+    def exclusion_filter(cls):
+        """Return a `dataset`-column restriction string excluding every pattern here.
+
+        Use as e.g. `Dataset() & ExcludedDataset.exclusion_filter()` in ad
+        hoc queries that build a cohort directly from Dataset/TrialMetrics
+        instead of going through decision.ExperimentMember/InclusionStatus,
+        which already apply this exclusion automatically.
+        """
+        patterns = cls.fetch("dataset_pattern")
+        if len(patterns) == 0:
+            return "TRUE"
+        clauses = []
+        for pattern in patterns:
+            escaped = pattern.replace('"', r"\"")
+            if "%" in pattern:
+                clauses.append(f'dataset NOT LIKE "{escaped}"')
+            else:
+                clauses.append(f'dataset != "{escaped}"')
+        return " AND ".join(clauses)
+
+
+@schema
 class FailedSession(dj.Manual):
     """Tracks dataset/table pairs that failed during populate/compute."""
 
@@ -172,7 +328,7 @@ class Labels(dj.Lookup):
     """
 
     definition = """
-    idx: int
+    idx: int32
     ---
     label: varchar(128)
     """
@@ -235,7 +391,7 @@ class Labs(dj.Lookup):
     """
 
     definition = """
-    idx: int
+    idx: int32
     ---
     lab: varchar(128)
     """
@@ -267,11 +423,14 @@ class Collab(dj.Computed):
             data = {**key, **idx}
             self.insert1(data)
         except Exception as err:
-            dataset = key["dataset"]
+            dataset = key.get("dataset", "unknown")
             FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
-            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
+            err = (
+                f"Can't populate {self.__class__.__name__}, key: {key}. "
+                f"Recorded in FailedSession. Error: {err}."
+            )
             logger.warning(err)
 
 
@@ -281,6 +440,14 @@ class Video(dj.Manual):
     Video definition table:
     Stores raw video files metadata, as well as timestamp files
     and the path to the raw video on the rig's PC
+
+    NOTE: populated by populate_rig() ingestion
+    (vr4mice/actions/populate_rig.py), which inserts Video rows as part of
+    the Dataset ingestion transaction before moving source files.
+
+    Video does not expose a custom table-level populate path; this avoids a
+    speculative/unused API surface that can diverge from production ingest.
+    If a dataset needs backfill, re-run populate_rig() for the relevant data.
     """
 
     definition = """
@@ -288,63 +455,14 @@ class Video(dj.Manual):
     -> Camera
     doe: date  # YYYY-MM-DD
     ---  
-    duration=NULL: int
-    fps=NULL: int
-    width=NULL: int
-    height=NULL: int
+    duration=NULL: int32
+    fps=NULL: int32
+    width=NULL: int32
+    height=NULL: int32
     video_filepath="": varchar(255)
     timestamp_filepath="": varchar(255)
     
     """
-    # idx to reference the video in analysis table
-
-    def get_keys(self):
-        keys = []
-        dataset_keys = Dataset().fetch("dataset", as_dict=True)
-        camera_keys = Camera().fetch("camera", as_dict=True)
-        for dk in dataset_keys:
-            for ck in camera_keys:
-                keys.append({**dk, **ck})
-        return keys
-
-    def populate(self):
-        """Populate Video by iterating all dataset/camera keys."""
-        keys = self.get_keys()
-        for key in keys:
-            self.make(key)
-
-    def make(self, key):
-        """Insert a Video row from rig files for a dataset."""
-        from vr4mice.actions.populate_rig import get_files_paths
-
-        if FailedSession.should_skip(key, self.__class__.__name__, logger):
-            return
-
-        try:
-            logger.info(f"{key['dataset']}")
-            paths = get_files_paths(key["dataset"])
-            video_filepath = (
-                f"{paths['video_path']['dst']}/{paths['video_path']['filename']}"
-            )
-            timestamp_filepath = (
-                f"{paths['camera_path']['dst']}/{paths['camera_path']['filename']}"
-            )
-            video_meta = paths["video_meta"]
-            data = {
-                "doe": paths["doe"],
-                "video_filepath": video_filepath,
-                "timestamp_filepath": timestamp_filepath,
-            }
-            data = {**key, **data, **video_meta}
-            Video().insert1(data, skip_duplicates=True)
-
-        except Exception as err:
-            dataset = key["dataset"]
-            FailedSession().add_entry(
-                f"{dataset}", f"{self.__class__.__name__}", str(err)
-            )
-            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
-            logger.warning(err)
 
 
 @schema
@@ -371,6 +489,17 @@ class DLC(dj.Manual):
     """
     DLC definition table:
     stores local paths to keypoints and processed keypoints files
+
+    NOTE: unlike Video above, this is the ONE table populate_rig() does not
+    fill (deliberately excluded from keys2tables_vr4mice.py's `tables` dict) -
+    populate()/make() below are the sole entry point, so a DLC file arriving
+    late (after its dataset's pickle was already moved to processed) is
+    always picked up the same way, regardless of pickle location.
+    populate() defaults to pending-only keys (Video x ModelName minus existing
+    DLC rows), resolves paths via IMG_SRC candidates, and inserts only when
+    files exist. Wired into run.py ("dlc" mode) and
+    cron_scenario.py. Use DLC().populate({"dataset": ...}) to backfill one
+    known case.
     """
 
     definition = """
@@ -381,22 +510,44 @@ class DLC(dj.Manual):
     proc_filepath: varchar(255)  # computed dlc metrics
     """
 
-    def get_keys(self):
-        keys = []
-        video_keys = Video().fetch("dataset", "camera", "doe", as_dict=True)
-        model_name = ModelName().fetch("model_name", as_dict=True)
-        for vk in video_keys:
-            for mn in model_name:
-                keys.append({**vk, **mn})
-        return keys
+    def get_keys(self, restriction=None, pending_only=True):
+        """Return Video x ModelName keys, optionally restricted.
 
-    def populate(self):
-        """Populate DLC by iterating all dataset/camera/model keys."""
-        keys = self.get_keys()
+        Args:
+            restriction: Optional DataJoint restriction (e.g. a key dict such
+                as {"dataset": "Xestia_2026-08-10_1"}) applied to Video before
+                the cross-join with ModelName.
+            pending_only: When True (default), return only keys that are not
+                yet present in DLC, avoiding full rescans of already-populated
+                keyspace.
+        """
+        video_query = Video() if restriction is None else Video() & restriction
+        keyspace = video_query * ModelName()
+        if pending_only:
+            keyspace = keyspace - DLC().proj("dataset", "camera", "doe", "model_name")
+        return keyspace.fetch("dataset", "camera", "doe", "model_name", as_dict=True)
+
+    def populate(
+        self, restriction=None, local_src="/data", data_root="/data", pending_only=True
+    ):
+        """Populate DLC rows from the Video x ModelName key space.
+
+        Args:
+            restriction: Optional DataJoint restriction (e.g. a key dict) to
+                scope population to a subset, e.g.
+                DLC().populate({"dataset": "Xestia_2026-08-10_1"}).
+            local_src: Root passed through to get_files_paths() (defaults to
+                the production "/data"; override for tests/non-standard roots).
+            data_root: Data-folder root passed through to get_files_paths()
+                (its "data" argument).
+            pending_only: When True (default), only attempt missing DLC rows
+                (Video x ModelName minus existing DLC keys).
+        """
+        keys = self.get_keys(restriction=restriction, pending_only=pending_only)
         for key in keys:
-            self.make(key)
+            self.make(key, local_src=local_src, data_root=data_root)
 
-    def make(self, key):
+    def make(self, key, local_src="/data", data_root="/data"):
         """Insert a DLC row using keypoints and processed paths."""
         from vr4mice.actions.populate_rig import get_files_paths
 
@@ -405,13 +556,46 @@ class DLC(dj.Manual):
 
         try:
             logger.info(f"{key['dataset']}")
-            paths = get_files_paths(key["dataset"])
+
+            if self & key:
+                logger.debug(
+                    "%s already populated for key %s", self.__class__.__name__, key
+                )
+                return
+
+            paths = get_files_paths(key["dataset"], local_src=local_src, data=data_root)
             keypoints_filepath = (
                 f"{paths['dlc_path']['dst']}/{paths['dlc_path']['filename']}"
             )
             proc_filepath = (
                 f"{paths['proc_path']['dst']}/{paths['proc_path']['filename']}"
             )
+
+            for field, value in (
+                ("keypoints_filepath", keypoints_filepath),
+                ("proc_filepath", proc_filepath),
+            ):
+                value_text = str(value).strip()
+                if value_text in ("", "0", "False", "None"):
+                    logger.warning(
+                        "Transient missing file for %s, key: %s. Invalid %s for DLC insert: %r.",
+                        self.__class__.__name__,
+                        key,
+                        field,
+                        value,
+                    )
+                    return
+                resolved = Path(value_text).expanduser()
+                if not resolved.is_file():
+                    logger.warning(
+                        "Transient missing file for %s, key: %s. DLC source path is not a file for %s: '%s'.",
+                        self.__class__.__name__,
+                        key,
+                        field,
+                        resolved,
+                    )
+                    return
+
             data = {
                 "keypoints_filepath": keypoints_filepath,
                 "proc_filepath": proc_filepath,
@@ -526,7 +710,7 @@ class SignalsPhotodiode(dj.Computed):
     generated_send_time    : <blob>         # time that the signal gets sent from the dlc processor
     generated_signal       : <blob>         # the signal that is generated by the dlc processor
     signal_type=NULL       : varchar(32)      # type of signal generated (e.g., 'pulse', 'pulse_geo')
-    signal_delay=NULL      : float            # delay between signal generation and photodiode response (seconds)
+    signal_delay=NULL      : float32          # delay between signal generation and photodiode response (seconds)
     """
 
     def make(self, key):
@@ -552,7 +736,7 @@ class SignalsPhotodiode(dj.Computed):
             proc_filepath = (
                 f"{paths['proc_path']['dst']}/{paths['proc_path']['filename']}"
             )
-            if not os.path.exists(proc_filepath):
+            if not Path(proc_filepath).expanduser().is_file():
                 logger.debug(
                     "PROC file not found, skipping latency for %s",
                     key["dataset"],
@@ -641,7 +825,7 @@ class GuiParams(dj.Manual):
     distractor=NULL: <blob>                   # new
     target_size=NULL: <blob>                  # new
     grey_screen_active=NULL: <blob>           # new
-    camera_type=NULL: float                 # new
+    camera_type=NULL: float32               # new
     prob_obj_on_left=NULL: <blob>             # the probability that the object of interest is one the left
     slit_size_param=NULL: <blob>              # new 
     block_length_param=NULL: <blob>           # new 
@@ -669,7 +853,7 @@ class TrainingPhaseType(dj.Lookup):
     """
 
     definition = """
-    idx: int
+    idx: int32
     ---
     training_phase: varchar(128)
     """
@@ -818,7 +1002,7 @@ class Object(dj.Lookup):
     """
 
     definition = """
-    idx: int
+    idx: int32
     ---
     object: varchar(128)
     """

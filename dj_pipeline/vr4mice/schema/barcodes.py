@@ -1,5 +1,7 @@
 """Schema for barcodes recorded through the Teensy synchronization channel."""
 
+from pathlib import Path
+
 import datajoint as dj
 import numpy as np
 
@@ -18,12 +20,17 @@ schema = schema_config.get_schema(schema_name, locals())
 
 logger = logger.Logger.get_logger()
 
-TEENSY_TTL_START_DATE = "2026-06-01"
-
 
 @schema
 class TeensyTTL(dj.Imported):
-    """Raw Teensy barcode channel imported from a DLC PROC file."""
+    """Raw Teensy barcode channel imported from a DLC PROC file.
+
+    Threshold semantics:
+    a session is eligible when its resolved Batch (via DatasetBatch) has
+    ``has_neural_data=True``. Batch membership boundaries come from
+    ``Batch.resolve`` (latest ``start_date <= doe``), so boundary dates are
+    inclusive for the newer batch.
+    """
 
     definition = """
     -> vr4mice.DLC
@@ -33,7 +40,14 @@ class TeensyTTL(dj.Imported):
     has_ttl=0: bool  # True when aligned, non-empty Teensy TTL arrays are available
     """
 
-    key_source = vr4mice.DLC & f"doe > '{TEENSY_TTL_START_DATE}'"
+    # Gate by resolved batch membership (not direct date filtering here):
+    # DLC session -> DatasetBatch -> Batch(has_neural_data=True).
+    # Per-session mixed TTL availability is still handled by has_ttl.
+    key_source = (
+        vr4mice.DLC.proj()
+        * vr4mice.DatasetBatch.proj("batch_name")
+        * (vr4mice.Batch & {"has_neural_data": True}).proj("batch_name")
+    )
 
     def make(self, key):
         """Load the raw Teensy TTL arrays from one DLC PROC file."""
@@ -48,9 +62,23 @@ class TeensyTTL(dj.Imported):
         if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
+        proc_filepath_raw = None
+        proc_path = None
         try:
-            proc_filepath = (vr4mice.DLC & key).fetch1("proc_filepath")
-            proc_data = np.load(proc_filepath, allow_pickle=True)
+            proc_filepath_raw = (vr4mice.DLC & key).fetch1("proc_filepath")
+            proc_path = Path(str(proc_filepath_raw)).expanduser()
+
+            if not proc_path.is_file():
+                logger.warning(
+                    "Transient missing file for %s, key: %s. DLC PROC file not found for TeensyTTL. Looked for: '%s' (raw proc_filepath=%r)",
+                    self.__class__.__name__,
+                    key,
+                    proc_path,
+                    proc_filepath_raw,
+                )
+                return
+
+            proc_data = np.load(proc_path, allow_pickle=True)
             if isinstance(proc_data, np.ndarray) and proc_data.ndim == 0:
                 proc_data = proc_data.item()
 
@@ -67,14 +95,16 @@ class TeensyTTL(dj.Imported):
             logger.info("%s populated for %s", self.__class__.__name__, key)
 
         except Exception as err:
-            dataset = key["dataset"]
+            dataset = key.get("dataset", "unknown")
             vr4mice.FailedSession().add_entry(
                 f"{dataset}", f"{self.__class__.__name__}", str(err)
             )
             logger.warning(
-                "Can't populate %s, key: %s. Error: %s.",
+                "Can't populate %s, key: %s. proc_filepath=%r, looked_for=%s. Recorded in FailedSession. Error: %s.",
                 self.__class__.__name__,
                 key,
+                proc_filepath_raw,
+                proc_path,
                 err,
             )
             return None

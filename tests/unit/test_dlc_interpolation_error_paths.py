@@ -14,6 +14,9 @@ DLC_MODULE_PATH = PROJECT_ROOT / "dj_pipeline" / "vr4mice" / "schema" / "dlc.py"
 INTERP_MODULE_PATH = (
     PROJECT_ROOT / "dj_pipeline" / "vr4mice" / "schema" / "interpolated_trajectories.py"
 )
+VR4MICE_CORE_MODULE_PATH = (
+    PROJECT_ROOT / "dj_pipeline" / "vr4mice" / "schema" / "vr4mice.py"
+)
 
 
 def _identity_schema_decorator(_name, _locals):
@@ -60,7 +63,9 @@ def dlc_module():
     analysis_pkg = ModuleType("vr4mice.analysis")
     dlc_helpers_mod = ModuleType("vr4mice.analysis.dlc_helpers")
     dlc_helpers_mod.sync_keypoint_table = MagicMock()
-    dlc_helpers_mod.df_to_dj = MagicMock(return_value={"data": [], "headers": [], "scorer": None})
+    dlc_helpers_mod.df_to_dj = MagicMock(
+        return_value={"data": [], "headers": [], "scorer": None}
+    )
     dlc_helpers_mod.get_offline_dlc_variables = MagicMock(return_value=pd.DataFrame())
     analysis_pkg.dlc_helpers = dlc_helpers_mod
 
@@ -87,6 +92,9 @@ def dlc_module():
 def interp_module():
     dj_stub = ModuleType("datajoint")
     dj_stub.Computed = type("Computed", (), {})
+    dj_errors_mod = ModuleType("datajoint.errors")
+    dj_errors_mod.DuplicateError = type("DuplicateError", (Exception,), {})
+    dj_stub.errors = dj_errors_mod
 
     logger_mod = ModuleType("vr4mice.utils.logger")
     logger_mod.Logger = type(
@@ -131,6 +139,7 @@ def interp_module():
 
     stubs = {
         "datajoint": dj_stub,
+        "datajoint.errors": dj_errors_mod,
         "vr4mice": vr4mice_pkg,
         "vr4mice.schema": schema_pkg,
         "vr4mice.schema.vr4mice": vr4mice_schema_mod,
@@ -148,6 +157,60 @@ def interp_module():
         INTERP_MODULE_PATH,
         stubs,
     )
+
+
+@pytest.fixture(scope="module")
+def vr4mice_core_module():
+    dj_stub = ModuleType("datajoint")
+    dj_stub.Lookup = type("Lookup", (), {})
+    dj_stub.Manual = type("Manual", (), {})
+    dj_stub.Computed = type("Computed", (), {})
+
+    logger_mod = ModuleType("vr4mice.utils.logger")
+    logger_mod.Logger = type(
+        "Logger",
+        (),
+        {"get_logger": staticmethod(lambda: MagicMock())},
+    )
+
+    schema_config_mod = ModuleType("vr4mice.utils.schema_config")
+    schema_config_mod.get_schema = _identity_schema_decorator
+
+    utils_pkg = ModuleType("vr4mice.utils")
+    utils_pkg.logger = logger_mod
+    utils_pkg.schema_config = schema_config_mod
+
+    populate_rig_mod = ModuleType("vr4mice.actions.populate_rig")
+    populate_rig_mod.get_files_paths = MagicMock()
+
+    actions_pkg = ModuleType("vr4mice.actions")
+    actions_pkg.__path__ = []
+    actions_pkg.populate_rig = populate_rig_mod
+
+    schema_pkg = ModuleType("vr4mice.schema")
+
+    vr4mice_pkg = ModuleType("vr4mice")
+    vr4mice_pkg.utils = utils_pkg
+    vr4mice_pkg.actions = actions_pkg
+    vr4mice_pkg.schema = schema_pkg
+
+    stubs = {
+        "datajoint": dj_stub,
+        "vr4mice": vr4mice_pkg,
+        "vr4mice.utils": utils_pkg,
+        "vr4mice.utils.logger": logger_mod,
+        "vr4mice.utils.schema_config": schema_config_mod,
+        "vr4mice.actions": actions_pkg,
+        "vr4mice.actions.populate_rig": populate_rig_mod,
+        "vr4mice.schema": schema_pkg,
+    }
+
+    with patch.dict("os.environ", {"DJ_LAB": "mathis-lab"}, clear=False):
+        return _load_module(
+            "_vr4mice_core_error_paths_unit_test",
+            VR4MICE_CORE_MODULE_PATH,
+            stubs,
+        )
 
 
 class _AlwaysMissingTable:
@@ -194,13 +257,118 @@ class TestDlcErrorPaths:
         failed_session_cls.should_skip = MagicMock(return_value=False)
         dlc_module.vr4mice.FailedSession = failed_session_cls
 
-        dlc_module.vr4mice.DLC = MagicMock(return_value=_SelfRelation(fetch1_value="/tmp/proc.npy"))
+        dlc_module.vr4mice.DLC = MagicMock(
+            return_value=_SelfRelation(fetch1_value="/tmp/proc.npy")
+        )
 
-        with patch.object(dlc_module.np, "load", side_effect=RuntimeError("bad proc")):
+        with patch.object(dlc_module.Path, "is_file", return_value=True), patch.object(
+            dlc_module.np, "load", side_effect=RuntimeError("bad proc")
+        ):
             result = dlc_module.DLCProcessor.make(table, key)
 
         assert result is None
         failed_session_row.add_entry.assert_called_once()
+
+
+class TestVr4miceDlcTransientInvariant:
+    def test_dlc_make_missing_file_is_transient_then_late_file_inserts(
+        self, vr4mice_core_module, tmp_path
+    ):
+        """Missing DLC/PROC must be transient (no FailedSession), then insert later."""
+
+        module = vr4mice_core_module
+        make_fn = module.DLC.make
+        key = {
+            "dataset": "Whale_2026-07-08_1",
+            "camera": "Imagingsource",
+            "doe": "2026-07-08",
+            "model_name": "DLC",
+        }
+
+        # FailedSession must not be touched on transient missing files.
+        failed_session_row = MagicMock()
+        failed_session_cls = MagicMock(return_value=failed_session_row)
+        failed_session_cls.should_skip = MagicMock(return_value=False)
+        module.FailedSession = failed_session_cls
+
+        # Patch global DLC() insert target used inside DLC.make.
+        inserted_rows = []
+
+        class _InsertTarget:
+            def insert1(self, data, skip_duplicates=True):
+                inserted_rows.append((data, skip_duplicates))
+
+        module.DLC = MagicMock(return_value=_InsertTarget())
+
+        # `self & key` duplicate guard should be false in both passes.
+        class _SelfTable:
+            def __and__(self, _key):
+                return False
+
+        self_table = _SelfTable()
+
+        dlc_file = tmp_path / "dlc_video" / "Imagingsource_Whale_2026-07-08_1_DLC.hdf5"
+        proc_file = tmp_path / "dlc_video" / "Imagingsource_Whale_2026-07-08_1_PROC"
+
+        actions_pkg = ModuleType("vr4mice.actions")
+        actions_pkg.__path__ = []
+        populate_rig_mod = ModuleType("vr4mice.actions.populate_rig")
+        populate_rig_mod.get_files_paths = lambda *_args, **_kwargs: {
+            "dlc_path": {
+                "dst": str(dlc_file.parent),
+                "filename": dlc_file.name,
+            },
+            "proc_path": {
+                "dst": str(proc_file.parent),
+                "filename": proc_file.name,
+            },
+        }
+
+        with patch.dict(
+            sys.modules,
+            {
+                "vr4mice.actions": actions_pkg,
+                "vr4mice.actions.populate_rig": populate_rig_mod,
+            },
+            clear=False,
+        ):
+            # Pass 1: files absent -> transient skip, no FailedSession, no insert.
+            make_fn(self_table, key)
+            assert inserted_rows == []
+            failed_session_row.add_entry.assert_not_called()
+
+            # Pass 2: files appear later -> insert succeeds.
+            dlc_file.parent.mkdir(parents=True, exist_ok=True)
+            dlc_file.touch()
+            proc_file.touch()
+
+            make_fn(self_table, key)
+            assert len(inserted_rows) == 1
+            inserted_data, skip_duplicates = inserted_rows[0]
+            assert skip_duplicates is True
+            assert inserted_data["dataset"] == key["dataset"]
+            assert inserted_data["keypoints_filepath"].endswith("_DLC.hdf5")
+            assert inserted_data["proc_filepath"].endswith("_PROC")
+            failed_session_row.add_entry.assert_not_called()
+
+    def test_dlcprocessor_make_missing_file_is_transient_skip(self, dlc_module):
+        key = {"dataset": "Whale_2026-07-08_1"}
+        table = _AlwaysMissingTable()
+
+        failed_session_row = MagicMock()
+        failed_session_cls = MagicMock(return_value=failed_session_row)
+        failed_session_cls.should_skip = MagicMock(return_value=False)
+        dlc_module.vr4mice.FailedSession = failed_session_cls
+
+        dlc_module.vr4mice.DLC = MagicMock(
+            return_value=_SelfRelation(fetch1_value="/tmp/missing_proc.npy")
+        )
+
+        with patch.object(dlc_module.Path, "is_file", return_value=False):
+            result = dlc_module.DLCProcessor.make(table, key)
+
+        assert result is None
+        failed_session_row.add_entry.assert_not_called()
 
     def test_syncdlckptsdf_make_records_failed_session_on_sync_error(self, dlc_module):
         key = {"dataset": "Whale_2026-07-08_1"}
@@ -211,7 +379,9 @@ class TestDlcErrorPaths:
         failed_session_cls.should_skip = MagicMock(return_value=False)
         dlc_module.vr4mice.FailedSession = failed_session_cls
 
-        dlc_module.dlc_helpers.sync_keypoint_table = MagicMock(side_effect=ValueError("sync failed"))
+        dlc_module.dlc_helpers.sync_keypoint_table = MagicMock(
+            side_effect=ValueError("sync failed")
+        )
 
         result = dlc_module.SyncDLCKptsDf.make(table, key)
 
@@ -300,14 +470,18 @@ class TestInterpolatedErrorPaths:
         table.insert1.assert_not_called()
         failed_session_row.add_entry.assert_called_once()
 
-    def test_interpolated_trials_records_failed_session_on_interpolate_error(self, interp_module):
+    def test_interpolated_trials_records_failed_session_on_interpolate_error(
+        self, interp_module
+    ):
         key, failed_session_row = self._setup_base_analysis(interp_module)
         table = _AlwaysMissingTable()
 
         interp_module.dlc.OfflineKinematics = MagicMock(
             return_value=MagicMock(
                 get_data=MagicMock(
-                    return_value=pd.DataFrame({"heading_dir": [0.0], "head_angle": [0.0]})
+                    return_value=pd.DataFrame(
+                        {"heading_dir": [0.0], "head_angle": [0.0]}
+                    )
                 )
             )
         )

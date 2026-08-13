@@ -16,7 +16,7 @@ env:
   DJ_LAB: test
   GUI: "false"
   EMAIL: "false"
-  IMG_SRC: Imagingsource
+  IMG_SRC: Imagingsource,vr4mice
   DATABASE_USE_TLS: "false"
   MYSQL_IMAGE: mysql:8.0
 

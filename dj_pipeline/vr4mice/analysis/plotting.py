@@ -32,6 +32,27 @@ colors_rewarded = ["black", "red"]
 reward_is_binary = lambda df: set(df["reward"].unique()) == {0.0, 1.0}
 
 
+def _safe_sem(values: pd.Series) -> float:
+    """Return SEM for >=2 non-NaN samples, else NaN without SciPy warnings."""
+    valid = pd.Series(values).dropna()
+    if len(valid) < 2:
+        return np.nan
+    return stats.sem(valid, nan_policy="omit")
+
+
+def _safe_se_interval(values: pd.Series) -> tuple[float, float]:
+    """Return mean +/- SEM interval for seaborn, or NaNs for <2 samples."""
+    valid = pd.Series(values).dropna()
+    if len(valid) < 2:
+        return (np.nan, np.nan)
+
+    mean = float(valid.mean())
+    sem = _safe_sem(valid)
+    if not np.isfinite(sem):
+        return (np.nan, np.nan)
+    return (mean - sem, mean + sem)
+
+
 def _create_axes(
     ax: Optional[matplotlib.axes.Axes], per_aperture: bool, num_aperture: int
 ):
@@ -587,7 +608,6 @@ def plot_session_3d(
                 dec_x = trial_decision["x"].values[0]
                 dec_y = trial_decision["y"].values[0]
                 dec_time = trial_decision["trial_length"].values[0]
-                print("Decision Time:", dec_time)
 
                 # Plot decision point as a larger marker
                 ax.scatter(
@@ -752,7 +772,7 @@ def _plot_bar_counts(
         hue="mouse_name" if per_mouse else "lab_id" if per_lab else None,
         alpha=0.7 if per_mouse else 1,
         color="black",
-        errorbar="se",
+        errorbar=_safe_se_interval,
         palette=(
             ["grey"] * counts["mouse_name"].nunique()
             if per_mouse
@@ -1218,6 +1238,7 @@ def plot_rate(
     ax: Optional[matplotlib.axes.Axes] = None,
     cmap: str = "Set1",
     color_sessions_by_lab: bool = True,
+    print_stats: bool = True,
 ):
     """Plot the rate for a given `label_x` column per session or per aperture.
 
@@ -1237,6 +1258,7 @@ def plot_rate(
         cmap (str, optional): Color map for the plot. Default is "Set1".
         color_sessions_by_lab (bool, optional): If True and per_lab=True with plot_bias=True,
             color individual session points by lab. If False, use grey. Default is True.
+        print_stats (bool, optional): If True, print per-aperture stats and tests.
     """
 
     num_aperture = len(df.aperture.unique())
@@ -1321,10 +1343,12 @@ def plot_rate(
                         counts[counts["aperture"] == i]["count"],
                         counts[counts["aperture"] == j]["count"],
                     )
-                    print(f"{i}-{j}: {stat}")
+                    if print_stats:
+                        print(f"{i}-{j}: {stat}")
             mean = counts[counts["aperture"] == i]["count"].mean()
             sem = counts[counts["aperture"] == i]["count"].sem()
-            print(f"{i}: mean={mean:.3f} ± {sem:.3f}")
+            if print_stats:
+                print(f"{i}: mean={mean:.3f} ± {sem:.3f}")
 
     if plot_bias:
         data_for_stats = counts
@@ -1347,7 +1371,8 @@ def plot_rate(
                     t_null, p_null = stats.ttest_1samp(
                         data_for_stats[data_for_stats["aperture"] == i]["count"], 0
                     )
-                    print(f"{i} vs chance 0: t={t_null:.2f}, p={p_null:.3f}")
+                    if print_stats:
+                        print(f"{i} vs chance 0: t={t_null:.2f}, p={p_null:.3f}")
     return counts
 
 
@@ -1477,6 +1502,18 @@ def plot_time_to_reward(
     if label_x == "aperture":
         counts.aperture = counts.aperture.astype(float)
     counts.sort_values(by=label_x, inplace=True)
+
+    # Not every session has both categories of label_x (e.g. no incorrect
+    # trials, or no left choices); only keep the labels for categories that
+    # are actually present, in the same order, so tick positions and labels
+    # always match in count.
+    present = list(counts[label_x].unique())
+    if len(present) != len(xticks):
+        try:
+            xticks = [xticks[int(v)] for v in present]
+        except (ValueError, IndexError):
+            xticks = [str(v) for v in present]
+
     mean_counts = counts.groupby(["dataset", label_x], as_index=False)["count"].mean()
 
     mean_counts[label_x] = mean_counts[label_x].astype(str)
@@ -1510,6 +1547,7 @@ def pairplot_std_decision_point(
     per_mouse: bool = False,
     per_lab: bool = False,
     cmap: str = "Set2",
+    print_stats: bool = True,
 ):
     """Plot the decision point based on a specified label parameter.
 
@@ -1518,6 +1556,7 @@ def pairplot_std_decision_point(
         label_parameter (str): Column label for the parameter to plot.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
         per_mouse (bool): If True, group plots by mouse_name.
+        print_stats (bool): If True, print pairwise t-test diagnostics.
     """
     ax = _create_axes(ax=ax, per_aperture=False, num_aperture=1)
 
@@ -1562,7 +1601,8 @@ def pairplot_std_decision_point(
                     counts[counts["aperture"] == i][label_parameter],
                     counts[counts["aperture"] == j][label_parameter],
                 )
-                print(f"{i}-{j}: {stat}")
+                if print_stats:
+                    print(f"{i}-{j}: {stat}")
 
 
 def pairplot_average_decision_point(
@@ -1572,6 +1612,7 @@ def pairplot_average_decision_point(
     per_mouse: bool = False,
     per_lab: bool = False,
     cmap: str = "Set2",
+    print_stats: bool = True,
 ):
     """Plot the decision point based on a specified label parameter.
 
@@ -1579,6 +1620,7 @@ def pairplot_average_decision_point(
         df (pd.DataFrame): DataFrame containing the data to plot.
         label_parameter (str): Column label for the parameter to plot.
         ax (matplotlib.axes.Axes, optional): Matplotlib Axes object to plot on. Default is None.
+        print_stats (bool): If True, print pairwise and per-aperture stats.
     """
     ax = _create_axes(ax=ax, per_aperture=False, num_aperture=1)
 
@@ -1637,22 +1679,24 @@ def pairplot_average_decision_point(
 
     stats_results = []
     for i in counts.aperture.unique():
+        aperture_values = counts[counts["aperture"] == i][label_parameter]
         for j in counts.aperture.unique():
             if i < j:
                 stat = stats.ttest_rel(
                     counts[counts["aperture"] == i][label_parameter],
                     counts[counts["aperture"] == j][label_parameter],
                 )
-                print(f"{i}-{j}: {stat}")
-                print(
-                    " mean difference: ",
-                    counts[counts["aperture"] == j][label_parameter].mean()
-                    - counts[counts["aperture"] == i][label_parameter].mean(),
-                )
+                if print_stats:
+                    print(f"{i}-{j}: {stat}")
+                    print(
+                        " mean difference: ",
+                        counts[counts["aperture"] == j][label_parameter].mean()
+                        - counts[counts["aperture"] == i][label_parameter].mean(),
+                    )
                 stats_results.append((i, j, stat.statistic, stat.pvalue))
-        print(
-            f"mean: {counts[counts['aperture'] == i][label_parameter].mean()} +/- {stats.sem(counts[counts['aperture'] == i][label_parameter], nan_policy='omit')}"
-        )
+        sem = _safe_sem(aperture_values)
+        if print_stats:
+            print(f"mean: {aperture_values.mean()} +/- {sem}")
     return counts, stats_results
 
 

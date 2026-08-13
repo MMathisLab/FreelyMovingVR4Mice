@@ -32,8 +32,10 @@ from populate_rig import (
     collect_population_targets,
     is_dataset_fully_populated,
     row_exists,
+    build_row,
     populate_dataset_tables,
     move_dataset_files,
+    UNRESOLVED,
 )
 from unittest.mock import MagicMock, patch
 
@@ -41,6 +43,7 @@ from unittest.mock import MagicMock, patch
 # ==============================================================================
 # Tests for get_filenames
 # ==============================================================================
+
 
 class TestGetFilenames:
     """Tests for get_filenames function - discovers files by extension."""
@@ -117,6 +120,7 @@ class TestGetFilenames:
 # Tests for get_new_file
 # ==============================================================================
 
+
 class TestGetNewFile:
     """Tests for get_new_file function - loads data from files."""
 
@@ -176,6 +180,7 @@ class TestGetNewFile:
 # Tests for parse_date
 # ==============================================================================
 
+
 class TestParseDate:
     """Tests for parse_date function - extracts date from filename."""
 
@@ -230,6 +235,7 @@ class TestParseDate:
 # Tests for get_files_paths
 # ==============================================================================
 
+
 class TestGetFilesPaths:
     """Tests for get_files_paths function - generates file paths dictionary."""
 
@@ -248,9 +254,16 @@ class TestGetFilesPaths:
         result = get_files_paths("Mouse_2024-01-01_1")
 
         required_keys = [
-            "teensy_path", "dlc_path", "camera_path", "video_path",
-            "proc_path", "gui_output", "video_meta", "time_stamp",
-            "doe", "dataset"
+            "teensy_path",
+            "dlc_path",
+            "camera_path",
+            "video_path",
+            "proc_path",
+            "gui_output",
+            "video_meta",
+            "time_stamp",
+            "doe",
+            "dataset",
         ]
         for key in required_keys:
             assert key in result, f"Missing key: {key}"
@@ -283,31 +296,74 @@ class TestGetFilesPaths:
         result = get_files_paths("Mouse_2024-01-01_1")
 
         assert "Imagingsource" in result["dlc_path"]["filename"]
-        assert result["dlc_path"]["filename"] == "Imagingsource_Mouse_2024-01-01_1_DLC.hdf5"
+        assert (
+            result["dlc_path"]["filename"]
+            == "Imagingsource_Mouse_2024-01-01_1_DLC.hdf5"
+        )
 
     def test_get_files_paths_camera_path_filename(self, mock_env):
         """Should generate correct camera timestamp filename."""
         result = get_files_paths("Mouse_2024-01-01_1")
 
-        assert result["camera_path"]["filename"] == "Imagingsource_Mouse_2024-01-01_1_TS.npy"
+        assert (
+            result["camera_path"]["filename"]
+            == "Imagingsource_Mouse_2024-01-01_1_TS.npy"
+        )
+
+    def test_get_files_paths_camera_path_prefers_existing_camera_variant(
+        self, mock_env, tmp_path
+    ):
+        """Should pick existing TS_<prefix>_<dataset>_CAMERA*.npy when present."""
+        dlc_dir = tmp_path / "dlc_video"
+        dlc_dir.mkdir()
+
+        dataset = "Xestia_2026-07-30_1"
+        ts_file = dlc_dir / "TS_Imagingsource_Xestia_2026-07-30_1_CAMERA3.npy"
+        ts_file.touch()
+
+        result = get_files_paths(dataset, local_src=str(tmp_path))
+
+        assert result["camera_path"]["filename"] == ts_file.name
+
+    def test_get_files_paths_camera_path_prefers_existing_legacy_variant(
+        self, mock_env, tmp_path
+    ):
+        """Should keep supporting existing <prefix>_<dataset>_TS.npy files."""
+        dlc_dir = tmp_path / "dlc_video"
+        dlc_dir.mkdir()
+
+        dataset = "Mouse_2024-01-01_1"
+        ts_file = dlc_dir / "Imagingsource_Mouse_2024-01-01_1_TS.npy"
+        ts_file.touch()
+
+        result = get_files_paths(dataset, local_src=str(tmp_path))
+
+        assert result["camera_path"]["filename"] == ts_file.name
 
     def test_get_files_paths_video_path_filename(self, mock_env):
         """Should generate correct game video filename."""
         result = get_files_paths("Mouse_2024-01-01_1")
 
-        assert result["video_path"]["filename"] == "Imagingsource_Mouse_2024-01-01_1_VIDEO.avi"
+        assert (
+            result["video_path"]["filename"]
+            == "Imagingsource_Mouse_2024-01-01_1_VIDEO.avi"
+        )
 
     def test_get_files_paths_video_path_src_is_filename(self, mock_env):
         """video_path src should use the remote-only video filename convention."""
         result = get_files_paths("Mouse_2024-01-01_1")
 
-        assert result["video_path"]["src"] == "Imagingsource_Mouse_2024-01-01_1_VIDEO.avi"
+        assert (
+            result["video_path"]["src"] == "Imagingsource_Mouse_2024-01-01_1_VIDEO.avi"
+        )
 
     def test_get_files_paths_proc_path_filename(self, mock_env):
         """Should generate correct PROC filename."""
         result = get_files_paths("Mouse_2024-01-01_1")
 
-        assert result["proc_path"]["filename"] == "Imagingsource_Mouse_2024-01-01_1_PROC"
+        assert (
+            result["proc_path"]["filename"] == "Imagingsource_Mouse_2024-01-01_1_PROC"
+        )
 
     def test_get_files_paths_gui_output_filename(self, mock_env):
         """Should generate gui output npy filename from dataset name."""
@@ -343,17 +399,51 @@ class TestGetFilesPaths:
     def test_get_files_paths_custom_paths(self, mock_env):
         """Should use custom local_src and data paths."""
         result = get_files_paths(
-            "Mouse_2024-01-01_1",
-            local_src="/custom/path",
-            data="/custom/data"
+            "Mouse_2024-01-01_1", local_src="/custom/path", data="/custom/data"
         )
 
         assert "/custom/path" in result["teensy_path"]["dst"]
+
+    def test_get_files_paths_discovers_late_dlc_after_raw_move(
+        self, mock_env, tmp_path
+    ):
+        """Late DLC/PROC arrival should be discoverable after raw files were moved."""
+        dataset = "Flamingo_2026-02-05_1"
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        dlc_dir = tmp_path / "dlc_video"
+        dlc_dir.mkdir()
+
+        # Simulate initial ingest source files then move them to processed.
+        (data_dir / f"{dataset}.pickle").touch()
+        (data_dir / f"{dataset}.npy").touch()
+        move_dataset_files(dataset, str(data_dir), "processed", srcf=str(tmp_path))
+
+        assert not (data_dir / f"{dataset}.pickle").exists()
+        assert (tmp_path / "processed" / f"{dataset}.pickle").exists()
+
+        # Before late arrival, path resolver falls back to default naming.
+        before = get_files_paths(dataset, local_src=str(tmp_path), data=str(data_dir))
+        assert before["dlc_path"]["filename"].endswith("_DLC.hdf5")
+        assert before["proc_path"]["filename"].endswith("_PROC")
+
+        # Late arrival: DLC and PROC appear in dlc_video after raw files moved.
+        dlc_name = f"Imagingsource_{dataset}_DLC.hdf5"
+        proc_name = f"Imagingsource_{dataset}_PROC"
+        (dlc_dir / dlc_name).touch()
+        (dlc_dir / proc_name).touch()
+
+        after = get_files_paths(dataset, local_src=str(tmp_path), data=str(data_dir))
+        assert after["dlc_path"]["filename"] == dlc_name
+        assert after["proc_path"]["filename"] == proc_name
+        assert after["dlc_path"]["dst"] == str(dlc_dir)
+        assert after["proc_path"]["dst"] == str(dlc_dir)
 
 
 # ==============================================================================
 # Tests for check_keys
 # ==============================================================================
+
 
 class TestCheckKeys:
     """Tests for check_keys function - validates schema keys."""
@@ -394,10 +484,7 @@ class TestCheckKeys:
     def test_check_keys_local_def_key(self):
         """Should accept keys defined in local_def."""
         raw_data = {"key1": "value1"}
-        schema = {
-            "local_def": {"key2": lambda: "generated"},
-            "transformer": {}
-        }
+        schema = {"local_def": {"key2": lambda: "generated"}, "transformer": {}}
 
         result, none_vals = check_keys(["key1", "key2"], raw_data, "test_table", schema)
 
@@ -407,10 +494,7 @@ class TestCheckKeys:
     def test_check_keys_transformer_key(self):
         """Should accept keys that can be transformed from raw_data."""
         raw_data = {"original_key": "value"}
-        schema = {
-            "local_def": {},
-            "transformer": {"transformed_key": "original_key"}
-        }
+        schema = {"local_def": {}, "transformer": {"transformed_key": "original_key"}}
 
         result, none_vals = check_keys(
             ["transformed_key"], raw_data, "test_table", schema
@@ -428,10 +512,48 @@ class TestCheckKeys:
         assert result is True
         assert none_vals == {}
 
+    def test_check_keys_missing_nullable_key_logs_debug(self):
+        """Missing nullable columns should be logged at debug level."""
+        raw_data = {}
+        attr = MagicMock()
+        attr.nullable = True
+        table = MagicMock()
+        table.heading.attributes = {"missing_key": attr}
+        schema = {
+            "local_def": {},
+            "transformer": {},
+            "dj_tables": {"Metadata": table},
+        }
+
+        with patch("populate_rig.logger") as mock_logger:
+            result, none_vals = check_keys(
+                ["missing_key"], raw_data, "Metadata", schema, none=True
+            )
+
+        assert result is True
+        assert none_vals == {"missing_key": None}
+        mock_logger.debug.assert_called_once()
+        mock_logger.warning.assert_not_called()
+
+    def test_check_keys_missing_unknown_key_logs_warning(self):
+        """Missing non-nullable/unknown keys should keep warning behavior."""
+        raw_data = {}
+        schema = {"local_def": {}, "transformer": {}}
+
+        with patch("populate_rig.logger") as mock_logger:
+            result, none_vals = check_keys(
+                ["missing_key"], raw_data, "Metadata", schema, none=True
+            )
+
+        assert result is True
+        assert none_vals == {"missing_key": None}
+        mock_logger.warning.assert_called_once()
+
 
 # ==============================================================================
 # Tests with mock pickle data
 # ==============================================================================
+
 
 class TestWithMockData:
     """Tests using mock synthetic data."""
@@ -472,6 +594,7 @@ class TestWithMockData:
 # Tests for check_keys edge cases
 # ==============================================================================
 
+
 class TestCheckKeysEdgeCases:
     """Tests for edge cases in check_keys function."""
 
@@ -482,10 +605,7 @@ class TestCheckKeysEdgeCases:
         when found through a transformer.
         """
         raw_data = {"source_key": "value"}
-        schema = {
-            "local_def": {},
-            "transformer": {"target_key": "source_key"}
-        }
+        schema = {"local_def": {}, "transformer": {"target_key": "source_key"}}
 
         # Call with a key that will be found via transformer
         result, none_vals = check_keys(
@@ -508,12 +628,15 @@ class TestCheckKeysEdgeCases:
                 "transformed1": "source1",
                 "transformed2": "source2",
                 "missing_transform": "nonexistent_source",
-            }
+            },
         }
 
         result, none_vals = check_keys(
             ["transformed1", "transformed2", "missing_transform"],
-            raw_data, "test_table", schema, none=True
+            raw_data,
+            "test_table",
+            schema,
+            none=True,
         )
 
         assert result is True
@@ -525,6 +648,7 @@ class TestCheckKeysEdgeCases:
 # ==============================================================================
 # Tests for populate function
 # ==============================================================================
+
 
 class TestPopulate:
     """Tests for populate function - inserts data into database tables.
@@ -563,6 +687,7 @@ class TestPopulate:
 
     def test_populate_uses_local_def_function(self, mock_table):
         """populate should use local_def functions to generate values."""
+
         def custom_generator(raw_data=None, key=None, **kwargs):
             return f"generated_{key}"
 
@@ -654,6 +779,7 @@ class TestPopulate:
 # Tests for populate_rig function
 # ==============================================================================
 
+
 class TestPopulateRig:
     """Tests for populate_rig function - main workflow orchestration.
 
@@ -690,7 +816,9 @@ class TestPopulateRig:
         # Mock the schema and populate to isolate file discovery logic
         with patch("populate_rig.dj_schema") as mock_schema:
             # Simulate dataset not in database
-            mock_schema.vr4mice.Dataset.return_value.__and__.return_value.fetch.return_value = []
+            mock_schema.vr4mice.Dataset.return_value.__and__.return_value.fetch.return_value = (
+                []
+            )
 
             # Mock vr4mice schema to prevent actual population
             with patch("populate_rig.vr4mice", {"tables": {}}):
@@ -739,7 +867,9 @@ class TestPopulateRig:
             pickle.dump(sample_pickle_data, f)
 
         with patch("populate_rig.dj_schema") as mock_schema:
-            mock_schema.vr4mice.Dataset.return_value.__and__.return_value.fetch.return_value = []
+            mock_schema.vr4mice.Dataset.return_value.__and__.return_value.fetch.return_value = (
+                []
+            )
 
             # In GUI mode, should return None when npy is missing (early return)
             with patch.dict(os.environ, {"GUI": "true"}):
@@ -763,7 +893,9 @@ class TestPopulateRig:
                 # Should process npy file
                 populate_rig(path=str(tmp_path))
 
-    def test_populate_rig_generates_file_paths_without_gui(self, tmp_path, sample_pickle_data):
+    def test_populate_rig_generates_file_paths_without_gui(
+        self, tmp_path, sample_pickle_data
+    ):
         """populate_rig should generate file paths when GUI npy is missing."""
         # Create pickle file without corresponding npy
         pickle_path = tmp_path / "NoGuiMouse_2024-01-01_1.pickle"
@@ -771,7 +903,9 @@ class TestPopulateRig:
             pickle.dump(sample_pickle_data, f)
 
         with patch("populate_rig.dj_schema") as mock_schema:
-            mock_schema.vr4mice.Dataset.return_value.__and__.return_value.fetch.return_value = []
+            mock_schema.vr4mice.Dataset.return_value.__and__.return_value.fetch.return_value = (
+                []
+            )
 
             # Mock vr4mice to verify it receives generated file paths
             with patch("populate_rig.vr4mice") as mock_vr4mice:
@@ -793,6 +927,27 @@ class TestPopulateRig:
 
 class TestAtomicPopulationHelpers:
     """Tests for all-or-nothing populate checks."""
+
+    class _Rel:
+        def __init__(self, exists):
+            self._exists = exists
+
+        def __len__(self):
+            return 1 if self._exists else 0
+
+    class _FakeTable:
+        def __init__(self):
+            self.primary_key = ("dataset",)
+            self.rows = {}
+            self.insert_calls = 0
+
+        def __and__(self, key):
+            dataset = key.get("dataset") if isinstance(key, dict) else None
+            return TestAtomicPopulationHelpers._Rel(dataset in self.rows)
+
+        def insert1(self, data, skip_duplicates=True):
+            self.insert_calls += 1
+            self.rows[data["dataset"]] = dict(data)
 
     def test_is_dataset_fully_populated_requires_all_targets(self):
         schema = {
@@ -821,9 +976,131 @@ class TestAtomicPopulationHelpers:
             }
         }
         schema["dj_tables"]["Session"].__and__.return_value.__len__.return_value = 0
-        assert (
-            row_exists(schema, "Session", {"mouse_name": "Mouse", "day": 1}) is False
+        assert row_exists(schema, "Session", {"mouse_name": "Mouse", "day": 1}) is False
+
+    def test_populate_dataset_tables_skips_unresolved_get_path_field(self):
+        """Rows with unresolved get_path field must be skipped (not inserted)."""
+
+        def fake_get_path(raw_data=None, key=None, **kwargs):
+            return False
+
+        fake_get_path.__name__ = "get_path"
+
+        table = self._FakeTable()
+        schema = {
+            "tables": {"Video": ["dataset", "timestamp_filepath"]},
+            "dj_tables": {"Video": table},
+            "local_def": {"timestamp_filepath": fake_get_path},
+            "transformer": {},
+        }
+        raw_data = {"dataset": "Mouse_2024-01-01_1"}
+
+        complete = populate_dataset_tables(
+            "Mouse_2024-01-01_1",
+            raw_data,
+            schemas=[schema],
+            srcf="/data",
+            dstf="processed",
         )
+
+        assert complete is False
+        assert table.insert_calls == 0
+        assert "Mouse_2024-01-01_1" not in table.rows
+
+    def test_populate_dataset_tables_retries_after_unresolved_field_resolves(self):
+        """Skipped unresolved rows should be inserted on a later successful retry."""
+        state = {"resolved": False}
+
+        def fake_get_path(raw_data=None, key=None, **kwargs):
+            if not state["resolved"]:
+                return False
+            return "/data/dlc_video/Imagingsource_Mouse_2024-01-01_1_TS.npy"
+
+        fake_get_path.__name__ = "get_path"
+
+        table = self._FakeTable()
+        schema = {
+            "tables": {"Video": ["dataset", "timestamp_filepath"]},
+            "dj_tables": {"Video": table},
+            "local_def": {"timestamp_filepath": fake_get_path},
+            "transformer": {},
+        }
+        raw_data = {"dataset": "Mouse_2024-01-01_1"}
+
+        first_complete = populate_dataset_tables(
+            "Mouse_2024-01-01_1",
+            raw_data,
+            schemas=[schema],
+            srcf="/data",
+            dstf="processed",
+        )
+        assert first_complete is False
+        assert table.insert_calls == 0
+
+        state["resolved"] = True
+        second_complete = populate_dataset_tables(
+            "Mouse_2024-01-01_1",
+            raw_data,
+            schemas=[schema],
+            srcf="/data",
+            dstf="processed",
+        )
+        assert second_complete is True
+        assert table.insert_calls == 1
+        assert table.rows["Mouse_2024-01-01_1"]["timestamp_filepath"].endswith(
+            "_TS.npy"
+        )
+
+    def test_populate_dataset_tables_keeps_legit_boolean_false_values(self):
+        """Legitimate False payloads must not be treated as unresolved."""
+
+        def bool_false_local_def(raw_data=None, key=None, **kwargs):
+            return False
+
+        bool_false_local_def.__name__ = "some_other_resolver"
+
+        table = self._FakeTable()
+        schema = {
+            "tables": {"GuiParams": ["dataset", "grey_screen_active"]},
+            "dj_tables": {"GuiParams": table},
+            "local_def": {"grey_screen_active": bool_false_local_def},
+            "transformer": {},
+        }
+        raw_data = {"dataset": "Mouse_2024-01-01_1"}
+
+        complete = populate_dataset_tables(
+            "Mouse_2024-01-01_1",
+            raw_data,
+            schemas=[schema],
+            srcf="/data",
+            dstf="processed",
+        )
+
+        assert complete is True
+        assert table.insert_calls == 1
+        assert table.rows["Mouse_2024-01-01_1"]["grey_screen_active"] is False
+
+    def test_build_row_converts_get_path_false_to_unresolved_sentinel(self):
+        """Legacy get_path False signal should be normalized to UNRESOLVED."""
+
+        def fake_get_path(raw_data=None, key=None, **kwargs):
+            return False
+
+        fake_get_path.__name__ = "get_path"
+
+        schema = {
+            "local_def": {"timestamp_filepath": fake_get_path},
+            "transformer": {},
+        }
+        row = build_row(
+            "Video",
+            ["dataset", "timestamp_filepath"],
+            {"dataset": "Mouse_2024-01-01_1"},
+            schema,
+            move=False,
+        )
+
+        assert row["timestamp_filepath"] is UNRESOLVED
 
 
 # ==============================================================================
