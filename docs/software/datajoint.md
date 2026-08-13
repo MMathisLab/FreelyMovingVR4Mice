@@ -421,7 +421,7 @@ Barcode events decoded from the TTL signal sampled by the Teensy.
 ```python
 class BarcodeSync(dj.Computed)
 ```
-**Depends on:** `base.Base`, `np_pipeline.schemas.acquisition.RecordingProbe`, `np_pipeline.schemas.session_link.RecordingSessionLink`, `np_pipeline.schemas.barcodes.ProbeBarcodeExtraction`  
+**Depends on:** `barcodes.TeensyBarcodes`, `np_pipeline.schemas.barcodes.ProbeBarcodeExtraction` (table key), plus `base.Base` and `np_pipeline.schemas.session_link.RecordingSessionLink` in `key_source` filtering  
 Fits a linear regression + interpolator mapping VR Unity/game time to NP probe
 time, from barcode values shared between `barcodes.TeensyBarcodes.Event` and
 `np_pipeline`'s `ProbeBarcodeExtraction.Event`. `key_source` is restricted to

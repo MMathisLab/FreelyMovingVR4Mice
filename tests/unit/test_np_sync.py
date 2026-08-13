@@ -201,6 +201,16 @@ def test_schema_make_fails_ambiguous_matches_directly_without_event_count_tie_br
     assert "event_count matching" not in make_src
 
 
+def test_schema_make_has_quality_gate_for_min_shared_and_overlap():
+    text = SCHEMA_NP_SYNC_PY.read_text()
+    make_src = _function_source(text, "    def make(self, key):")
+
+    assert "min_shared_barcodes = 20" in text
+    assert "min_barcode_overlap = 0.90" in text
+    assert "Insufficient shared barcodes for reliable NP-VR alignment" in make_src
+    assert "Insufficient NP-VR barcode overlap for reliable alignment" in make_src
+
+
 def test_schema_module_docstring_states_vr_only_sessions_excluded_from_key_source():
     text = SCHEMA_NP_SYNC_PY.read_text()
 

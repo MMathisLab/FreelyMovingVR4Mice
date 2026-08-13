@@ -24,7 +24,9 @@ try:
 except ModuleNotFoundError:
     import sys
 
-    sys.path.insert(0, "/np_pipeline")
+    # Keep np_pipeline imports resilient when process CWD is not /app.
+    sys.path.insert(0, "/app/np_pipeline/src")
+    sys.path.insert(0, "/app/np_pipeline")
     from np_pipeline.schemas import barcodes as np_barcodes, session_link
 
 from vr4mice.analysis.np_sync import DEFAULT_SKIP_FIRST_N_BARCODES, align_barcodes
@@ -92,6 +94,8 @@ class BarcodeSync(dj.Computed):
         return source
 
     skip_first_n_barcodes = DEFAULT_SKIP_FIRST_N_BARCODES
+    min_shared_barcodes = 20
+    min_barcode_overlap = 0.90
 
     def make(self, key):
         """Fit and insert one VR-time-to-NP-time alignment.
@@ -168,6 +172,42 @@ class BarcodeSync(dj.Computed):
             # Measure overlap on full streams (independent of fit-time skipping)
             # so DEFAULT_SKIP_FIRST_N_BARCODES does not bias this quality metric.
             full_shared_barcodes = np.intersect1d(vr_values, np_values)
+            np_unique_barcodes = np.unique(np_values)
+            barcode_overlap = len(full_shared_barcodes) / len(np_unique_barcodes)
+
+            if len(fit.shared_barcodes) < self.min_shared_barcodes:
+                reason = (
+                    "Insufficient shared barcodes for reliable NP-VR alignment "
+                    f"(shared={len(fit.shared_barcodes)}, "
+                    f"min_required={self.min_shared_barcodes})"
+                )
+                vr4mice.FailedSession().add_entry(
+                    f"{key['dataset']}", f"{self.__class__.__name__}", reason
+                )
+                logger.warning(
+                    "%s %s for dataset %s",
+                    self.__class__.__name__,
+                    reason,
+                    key["dataset"],
+                )
+                return
+
+            if barcode_overlap <= self.min_barcode_overlap:
+                reason = (
+                    "Insufficient NP-VR barcode overlap for reliable alignment "
+                    f"(overlap={barcode_overlap:.4f}, "
+                    f"min_required>{self.min_barcode_overlap:.4f})"
+                )
+                vr4mice.FailedSession().add_entry(
+                    f"{key['dataset']}", f"{self.__class__.__name__}", reason
+                )
+                logger.warning(
+                    "%s %s for dataset %s",
+                    self.__class__.__name__,
+                    reason,
+                    key["dataset"],
+                )
+                return
 
             self.insert1(
                 {
@@ -177,7 +217,7 @@ class BarcodeSync(dj.Computed):
                     "intercept": fit.intercept,
                     "r2": fit.r2,
                     "interpol_func": pickle.dumps(fit.interpol_func),
-                    "barcode_overlap": len(full_shared_barcodes) / len(np_values),
+                    "barcode_overlap": barcode_overlap,
                 }
             )
             logger.info(

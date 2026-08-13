@@ -25,7 +25,7 @@ services:
       - MPLCONFIGDIR=/app/.cache/matplotlib
       - XDG_CONFIG_HOME=/app/.cache
       - PATH=/app/.local/bin:/usr/local/bin:/usr/bin:/bin
-      - PYTHONPATH=app/np_pipeline/src:${PYTHONPATH}
+      - PYTHONPATH=/app/np_pipeline/src:/app/np_pipeline:${PYTHONPATH}
       - TAG=${TAG}
     network_mode: ${CLIENT_NETWORK_MODE:-host}
     # Run via bash so the bind-mounted script does not need +x on shared/NFS checkouts.
