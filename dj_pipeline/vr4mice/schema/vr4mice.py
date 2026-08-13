@@ -440,6 +440,14 @@ class Video(dj.Manual):
     Video definition table:
     Stores raw video files metadata, as well as timestamp files
     and the path to the raw video on the rig's PC
+
+    NOTE: populated by populate_rig() ingestion
+    (vr4mice/actions/populate_rig.py), which inserts Video rows as part of
+    the Dataset ingestion transaction before moving source files.
+
+    Video does not expose a custom table-level populate path; this avoids a
+    speculative/unused API surface that can diverge from production ingest.
+    If a dataset needs backfill, re-run populate_rig() for the relevant data.
     """
 
     definition = """
@@ -455,55 +463,6 @@ class Video(dj.Manual):
     timestamp_filepath="": varchar(255)
     
     """
-    # idx to reference the video in analysis table
-
-    def get_keys(self):
-        keys = []
-        dataset_keys = Dataset().fetch("dataset", as_dict=True)
-        camera_keys = Camera().fetch("camera", as_dict=True)
-        for dk in dataset_keys:
-            for ck in camera_keys:
-                keys.append({**dk, **ck})
-        return keys
-
-    def populate(self):
-        """Populate Video by iterating all dataset/camera keys."""
-        keys = self.get_keys()
-        for key in keys:
-            self.make(key)
-
-    def make(self, key):
-        """Insert a Video row from rig files for a dataset."""
-        from vr4mice.actions.populate_rig import get_files_paths
-
-        if FailedSession.should_skip(key, self.__class__.__name__, logger):
-            return
-
-        try:
-            logger.info(f"{key['dataset']}")
-            paths = get_files_paths(key["dataset"])
-            video_filepath = (
-                f"{paths['video_path']['dst']}/{paths['video_path']['filename']}"
-            )
-            timestamp_filepath = (
-                f"{paths['camera_path']['dst']}/{paths['camera_path']['filename']}"
-            )
-            video_meta = paths["video_meta"]
-            data = {
-                "doe": paths["doe"],
-                "video_filepath": video_filepath,
-                "timestamp_filepath": timestamp_filepath,
-            }
-            data = {**key, **data, **video_meta}
-            Video().insert1(data, skip_duplicates=True)
-
-        except Exception as err:
-            dataset = key["dataset"]
-            FailedSession().add_entry(
-                f"{dataset}", f"{self.__class__.__name__}", str(err)
-            )
-            err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
-            logger.warning(err)
 
 
 @schema
@@ -530,6 +489,17 @@ class DLC(dj.Manual):
     """
     DLC definition table:
     stores local paths to keypoints and processed keypoints files
+
+    NOTE: unlike Video above, this is the ONE table populate_rig() does not
+    fill (deliberately excluded from keys2tables_vr4mice.py's `tables` dict) -
+    populate()/make() below are the sole entry point, so a DLC file arriving
+    late (after its dataset's pickle was already moved to processed) is
+    always picked up the same way, regardless of pickle location.
+    populate() defaults to pending-only keys (Video x ModelName minus existing
+    DLC rows), resolves paths via IMG_SRC candidates, and inserts only when
+    files exist. Wired into run.py ("dlc" mode) and
+    cron_scenario.py. Use DLC().populate({"dataset": ...}) to backfill one
+    known case.
     """
 
     definition = """
@@ -540,22 +510,44 @@ class DLC(dj.Manual):
     proc_filepath: varchar(255)  # computed dlc metrics
     """
 
-    def get_keys(self):
-        keys = []
-        video_keys = Video().fetch("dataset", "camera", "doe", as_dict=True)
-        model_name = ModelName().fetch("model_name", as_dict=True)
-        for vk in video_keys:
-            for mn in model_name:
-                keys.append({**vk, **mn})
-        return keys
+    def get_keys(self, restriction=None, pending_only=True):
+        """Return Video x ModelName keys, optionally restricted.
 
-    def populate(self):
-        """Populate DLC rows from the full Video x ModelName key space."""
-        keys = self.get_keys()
+        Args:
+            restriction: Optional DataJoint restriction (e.g. a key dict such
+                as {"dataset": "Xestia_2026-08-10_1"}) applied to Video before
+                the cross-join with ModelName.
+            pending_only: When True (default), return only keys that are not
+                yet present in DLC, avoiding full rescans of already-populated
+                keyspace.
+        """
+        video_query = Video() if restriction is None else Video() & restriction
+        keyspace = video_query * ModelName()
+        if pending_only:
+            keyspace = keyspace - DLC().proj("dataset", "camera", "doe", "model_name")
+        return keyspace.fetch("dataset", "camera", "doe", "model_name", as_dict=True)
+
+    def populate(
+        self, restriction=None, local_src="/data", data_root="/data", pending_only=True
+    ):
+        """Populate DLC rows from the Video x ModelName key space.
+
+        Args:
+            restriction: Optional DataJoint restriction (e.g. a key dict) to
+                scope population to a subset, e.g.
+                DLC().populate({"dataset": "Xestia_2026-08-10_1"}).
+            local_src: Root passed through to get_files_paths() (defaults to
+                the production "/data"; override for tests/non-standard roots).
+            data_root: Data-folder root passed through to get_files_paths()
+                (its "data" argument).
+            pending_only: When True (default), only attempt missing DLC rows
+                (Video x ModelName minus existing DLC keys).
+        """
+        keys = self.get_keys(restriction=restriction, pending_only=pending_only)
         for key in keys:
-            self.make(key)
+            self.make(key, local_src=local_src, data_root=data_root)
 
-    def make(self, key):
+    def make(self, key, local_src="/data", data_root="/data"):
         """Insert a DLC row using keypoints and processed paths."""
         from vr4mice.actions.populate_rig import get_files_paths
 
@@ -571,7 +563,7 @@ class DLC(dj.Manual):
                 )
                 return
 
-            paths = get_files_paths(key["dataset"])
+            paths = get_files_paths(key["dataset"], local_src=local_src, data=data_root)
             keypoints_filepath = (
                 f"{paths['dlc_path']['dst']}/{paths['dlc_path']['filename']}"
             )
