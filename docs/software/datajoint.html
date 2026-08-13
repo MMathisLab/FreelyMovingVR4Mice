@@ -428,6 +428,8 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#session-metrics-py"><code class="docutils literal notranslate"><span class="pre">session_metrics.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decision-py"><code class="docutils literal notranslate"><span class="pre">decision.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inputs-videos-py"><code class="docutils literal notranslate"><span class="pre">inputs_videos.py</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#barcodes-py"><code class="docutils literal notranslate"><span class="pre">barcodes.py</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#np-sync-py"><code class="docutils literal notranslate"><span class="pre">np_sync.py</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -789,6 +791,40 @@ Extracts the binary sync trace from the sync ROI video.</p>
 <p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">VideoSyncSignal</span></code>, <code class="docutils literal notranslate"><span class="pre">vr4mice.State</span></code><br />
 Aligns game steps to video frames using photodiode when available; stores QA metrics.</p>
 </section>
+<section id="barcodes-py">
+<h3><code class="docutils literal notranslate"><span class="pre">barcodes.py</span></code><a class="headerlink" href="#barcodes-py" title="Permalink to this heading">#</a></h3>
+<p><em>Schema for barcodes recorded through the Teensy synchronization channel.</em></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TeensyTTL</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Imported</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">vr4mice.DLC</span></code><br />
+Raw Teensy barcode channel imported from a DLC PROC file.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TeensyBarcodes</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">TeensyTTL</span></code>, <code class="docutils literal notranslate"><span class="pre">dlc.DLCProcessor</span></code>, <code class="docutils literal notranslate"><span class="pre">base_analysis.DataFrame</span></code><br />
+Barcode events decoded from the TTL signal sampled by the Teensy.</p>
+</section>
+<section id="np-sync-py">
+<h3><code class="docutils literal notranslate"><span class="pre">np_sync.py</span></code><a class="headerlink" href="#np-sync-py" title="Permalink to this heading">#</a></h3>
+<p><em>Alignment of VR (behavior) time to Neuropixels (NP) native time via shared barcodes.</em></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">BarcodeSync</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">Computed</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Depends on:</strong> <code class="docutils literal notranslate"><span class="pre">barcodes.TeensyBarcodes</span></code>, <code class="docutils literal notranslate"><span class="pre">np_pipeline.schemas.barcodes.ProbeBarcodeExtraction</span></code> (table key), plus <code class="docutils literal notranslate"><span class="pre">base.Base</span></code> and <code class="docutils literal notranslate"><span class="pre">np_pipeline.schemas.session_link.RecordingSessionLink</span></code> in <code class="docutils literal notranslate"><span class="pre">key_source</span></code> filtering<br />
+Fits a linear regression + interpolator mapping VR Unity/game time to NP probe
+time, from barcode values shared between <code class="docutils literal notranslate"><span class="pre">barcodes.TeensyBarcodes.Event</span></code> and
+<code class="docutils literal notranslate"><span class="pre">np_pipeline</span></code>’s <code class="docutils literal notranslate"><span class="pre">ProbeBarcodeExtraction.Event</span></code>. <code class="docutils literal notranslate"><span class="pre">key_source</span></code> is restricted to
+datasets with a linked, successfully barcode-decoded NP recording, so <code class="docutils literal notranslate"><span class="pre">populate()</span></code>
+is a no-op — not an error — for VR-only sessions with no neural data. Use
+<code class="docutils literal notranslate"><span class="pre">align_timepoints</span></code>/<code class="docutils literal notranslate"><span class="pre">align_timepoints_lin</span></code> to convert VR times to NP times.</p>
+<blockquote>
+<div><p><strong>Cross-repo foreign keys.</strong> <code class="docutils literal notranslate"><span class="pre">BarcodeSync</span></code> references <code class="docutils literal notranslate"><span class="pre">np_pipeline</span></code> tables
+directly via <code class="docutils literal notranslate"><span class="pre">-&gt;</span> </code>. Requires <code class="docutils literal notranslate"><span class="pre">vr4mice</span></code> and <code class="docutils literal notranslate"><span class="pre">np_pipeline</span></code> to share one MySQL
+server (<code class="docutils literal notranslate"><span class="pre">DJ_HOST</span></code>). <code class="docutils literal notranslate"><span class="pre">np_sync</span></code> is imported as its own isolated step in
+<code class="docutils literal notranslate"><span class="pre">run.py</span></code>/<code class="docutils literal notranslate"><span class="pre">cron_scenario.py</span></code>, so a missing <code class="docutils literal notranslate"><span class="pre">np_pipeline</span></code> only skips NP sync.</p>
+</div></blockquote>
+</section>
 </section>
 </section>
 
@@ -873,6 +909,8 @@ Aligns game steps to video frames using photodiode when available; stores QA met
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#session-metrics-py"><code class="docutils literal notranslate"><span class="pre">session_metrics.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decision-py"><code class="docutils literal notranslate"><span class="pre">decision.py</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inputs-videos-py"><code class="docutils literal notranslate"><span class="pre">inputs_videos.py</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#barcodes-py"><code class="docutils literal notranslate"><span class="pre">barcodes.py</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#np-sync-py"><code class="docutils literal notranslate"><span class="pre">np_sync.py</span></code></a></li>
 </ul>
 </li>
 </ul>
