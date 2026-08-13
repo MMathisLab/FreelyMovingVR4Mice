@@ -421,10 +421,10 @@ Barcode events decoded from the TTL signal sampled by the Teensy.
 ```python
 class BarcodeSync(dj.Computed)
 ```
-**Depends on:** `base.Base`, `np_pipeline.schemas.session_link.RecordingSessionLink`, `np_pipeline.schemas.acquisition.OneBoxDaq`  
-Fits a linear regression + interpolator mapping VR Unity/game time to NP OneBox DAQ
+**Depends on:** `base.Base`, `np_pipeline.schemas.acquisition.RecordingProbe`, `np_pipeline.schemas.session_link.RecordingSessionLink`, `np_pipeline.schemas.barcodes.ProbeBarcodeExtraction`  
+Fits a linear regression + interpolator mapping VR Unity/game time to NP probe
 time, from barcode values shared between `barcodes.TeensyBarcodes.Event` and
-`np_pipeline`'s `OneBoxBarcodeExtraction.Event`. `key_source` is restricted to
+`np_pipeline`'s `ProbeBarcodeExtraction.Event`. `key_source` is restricted to
 datasets with a linked, successfully barcode-decoded NP recording, so `populate()`
 is a no-op — not an error — for VR-only sessions with no neural data. Use
 `align_timepoints`/`align_timepoints_lin` to convert VR times to NP times.

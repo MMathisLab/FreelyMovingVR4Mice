@@ -1,11 +1,10 @@
 """Alignment of VR (behavior) time to Neuropixels (NP) native time via shared barcodes.
 
 Not every VR ``Dataset`` has a corresponding NP recording. ``BarcodeSync.key_source``
-includes datasets with successful VR barcode extraction, while strict NP linkage
-matching is performed inside ``make()`` via ``base.Base`` +
-``session_link.RecordingSessionLink`` + successful NP probe barcode extraction.
-Datasets with no strict NP match are recorded in ``vr4mice.FailedSession`` and
-skipped cleanly.
+contains only strict VR/NP matches (via ``base.Base`` +
+``session_link.RecordingSessionLink`` + successful NP probe barcode extraction),
+so VR-only datasets are excluded from this table and are not visited by
+``populate()``.
 
 Cross-repo foreign keys: ``BarcodeSync`` references ``np_pipeline`` tables
 directly via ``-> ``. This requires ``vr4mice`` and ``np_pipeline`` to share one
@@ -108,7 +107,8 @@ class BarcodeSync(dj.Computed):
     The table is explicitly keyed by ``TeensyBarcodes`` (VR side) and
     ``ProbeBarcodeExtraction`` (NP side). ``key_source`` enforces strict matching
     through ``base.Base`` + ``RecordingSessionLink`` + ``recording_id`` so
-    ``populate()`` only visits related rows.
+    ``populate()`` only visits related rows; sessions with no strict NP match are
+    invisible to this table.
 
     Downstream code should not fetch ``slope``/``intercept``/``interpol_func``
     directly; use ``align_timepoints``/``align_timepoints_lin`` instead.
@@ -158,7 +158,10 @@ class BarcodeSync(dj.Computed):
                 )
 
             if selected is None:
-                reason = "No eligible NP barcode source for dataset from strict session-link matching"
+                reason = (
+                    "No eligible NP barcode source after key selection "
+                    "(possible concurrent data change)"
+                )
                 vr4mice.FailedSession().add_entry(
                     f"{key['dataset']}", f"{self.__class__.__name__}", reason
                 )
@@ -185,6 +188,23 @@ class BarcodeSync(dj.Computed):
             np_values, np_times = (
                 np_barcodes.ProbeBarcodeExtraction.Event & np_key
             ).fetch("barcode_value", "onset_time", order_by="barcode_index")
+
+            if len(np_values) == 0:
+                reason = (
+                    "No NP barcode events found for key at populate time "
+                    "(events may have been removed after key_source selection)"
+                )
+                vr4mice.FailedSession().add_entry(
+                    f"{key['dataset']}", f"{self.__class__.__name__}", reason
+                )
+                logger.warning(
+                    "%s %s. key: %s, np_key: %s",
+                    self.__class__.__name__,
+                    reason,
+                    key,
+                    np_key,
+                )
+                return
 
             fit = align_barcodes(
                 vr_times,
@@ -252,7 +272,9 @@ class BarcodeSync(dj.Computed):
             A list of NP-side times (or `None`), same length and order as `timepoints`.
         """
         interpol_func = pickle.loads((cls & key).fetch1("interpol_func"))
-        timepoints = np.array(timepoints, dtype=np.float64)
+        timepoints = np.array(
+            [np.nan if tx is None else tx for tx in timepoints], dtype=np.float64
+        )
         return [
             float(tx) if not np.isnan(tx) else None for tx in interpol_func(timepoints)
         ]

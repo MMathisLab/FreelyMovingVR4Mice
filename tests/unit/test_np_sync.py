@@ -5,6 +5,8 @@ behavioral analysis stays unaffected when np_pipeline is unavailable.
 import importlib
 import sys
 import ast
+import textwrap
+import pickle
 from pathlib import Path
 
 import numpy as np
@@ -125,10 +127,33 @@ def _load_schema_helpers():
     namespace = {}
     for function_name in (
         "_dataset_identity",
+        "_row_day_iso",
         "_candidate_sort_key",
     ):
         exec(_top_level_function_source(text, function_name), namespace)
     return namespace
+
+
+def _load_schema_align_timepoints_method():
+    """Load BarcodeSync.align_timepoints from source without importing DB deps."""
+    text = SCHEMA_NP_SYNC_PY.read_text()
+    module = ast.parse(text)
+
+    method_src = None
+    for node in module.body:
+        if isinstance(node, ast.ClassDef) and node.name == "BarcodeSync":
+            for item in node.body:
+                if isinstance(item, ast.FunctionDef) and item.name == "align_timepoints":
+                    method_src = ast.get_source_segment(text, item)
+                    break
+            break
+
+    if method_src is None:
+        raise ValueError("BarcodeSync.align_timepoints not found")
+
+    namespace = {"np": np, "pickle": pickle}
+    exec(textwrap.dedent(method_src), namespace)
+    return namespace["align_timepoints"]
 
 
 def test_schema_dataset_identity_parses():
@@ -208,6 +233,23 @@ def test_schema_candidate_sort_key_without_identity_prefers_event_count():
     assert ranked[0]["recording_id"] == "rec_high"
 
 
+def test_schema_align_timepoints_preserves_none_entries():
+    align_timepoints = _load_schema_align_timepoints_method()
+
+    class _FakeRelation:
+        def fetch1(self, field_name):
+            assert field_name == "interpol_func"
+            return pickle.dumps(np.square)
+
+    class _FakeCls:
+        def __and__(self, key):
+            assert key == {"dataset": "dummy"}
+            return _FakeRelation()
+
+    aligned = align_timepoints(_FakeCls(), {"dataset": "dummy"}, [1.0, None, 2.0])
+    assert aligned == [1.0, None, 4.0]
+
+
 def test_cron_scenario_core_schemas_import_excludes_np_sync():
     """import_core_schemas() must not import np_sync, so a missing np_pipeline
     can't null out the whole behavioral core_schemas tuple (see import_np_sync_schema,
@@ -230,3 +272,18 @@ def test_run_py_np_sync_mode_catches_broad_exception():
     assert "from vr4mice.schema import np_sync" in block
     assert "except Exception as err:" in block
     assert "except ModuleNotFoundError" not in block
+
+
+def test_schema_make_handles_empty_np_events_with_clear_reason():
+    text = SCHEMA_NP_SYNC_PY.read_text()
+    make_src = _function_source(text, "    def make(self, key):")
+
+    assert "if len(np_values) == 0:" in make_src
+    assert "No NP barcode events found for key at populate time" in make_src
+
+
+def test_schema_module_docstring_states_vr_only_sessions_excluded_from_key_source():
+    text = SCHEMA_NP_SYNC_PY.read_text()
+
+    assert "so VR-only datasets are excluded from this table" in text
+    assert "are not visited by" in text
