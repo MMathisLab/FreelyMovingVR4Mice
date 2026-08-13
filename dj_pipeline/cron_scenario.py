@@ -290,17 +290,27 @@ def main():
             lambda: summary_emails.send_pending_summary_emails(logger=logger),
         )
 
+    def import_decision_schema():
+        from vr4mice.schema import decision
+
+        return decision
+
     def import_np_sync_schema():
-        # np_sync depends on the separate np_pipeline package/repo, unlike the
-        # core_schemas above. Imported in its own run_import call (not bundled
-        # into import_core_schemas) so a missing/unreachable NP repo only skips
-        # this one step, without nulling out the rest of the behavioral pipeline.
         from vr4mice.schema import np_sync
 
         return np_sync
 
-    np_sync = run_import("import np_sync schema", import_np_sync_schema)
-    if np_sync:
+    # np_sync depends on the separate np_pipeline package/repo and should not
+    # fail the whole cron scenario when unavailable in a deployment/CI setup.
+    try:
+        np_sync = import_np_sync_schema()
+    except Exception as err:
+        logger.warning(
+            "Skipping np_sync: np_pipeline is not available (%s). "
+            "Behavioral analysis is unaffected.",
+            err,
+        )
+    else:
         from vr4mice.utils.populate_helpers import populate_pending
 
         run_step(
@@ -311,11 +321,6 @@ def main():
                 logger=logger,
             ),
         )
-
-    def import_decision_schema():
-        from vr4mice.schema import decision
-
-        return decision
 
     decision = run_import("import decision schema", import_decision_schema)
     if decision:
