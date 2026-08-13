@@ -32,8 +32,10 @@ from populate_rig import (
     collect_population_targets,
     is_dataset_fully_populated,
     row_exists,
+    build_row,
     populate_dataset_tables,
     move_dataset_files,
+    UNRESOLVED,
 )
 from unittest.mock import MagicMock, patch
 
@@ -401,6 +403,41 @@ class TestGetFilesPaths:
         )
 
         assert "/custom/path" in result["teensy_path"]["dst"]
+
+    def test_get_files_paths_discovers_late_dlc_after_raw_move(
+        self, mock_env, tmp_path
+    ):
+        """Late DLC/PROC arrival should be discoverable after raw files were moved."""
+        dataset = "Flamingo_2026-02-05_1"
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        dlc_dir = tmp_path / "dlc_video"
+        dlc_dir.mkdir()
+
+        # Simulate initial ingest source files then move them to processed.
+        (data_dir / f"{dataset}.pickle").touch()
+        (data_dir / f"{dataset}.npy").touch()
+        move_dataset_files(dataset, str(data_dir), "processed", srcf=str(tmp_path))
+
+        assert not (data_dir / f"{dataset}.pickle").exists()
+        assert (tmp_path / "processed" / f"{dataset}.pickle").exists()
+
+        # Before late arrival, path resolver falls back to default naming.
+        before = get_files_paths(dataset, local_src=str(tmp_path), data=str(data_dir))
+        assert before["dlc_path"]["filename"].endswith("_DLC.hdf5")
+        assert before["proc_path"]["filename"].endswith("_PROC")
+
+        # Late arrival: DLC and PROC appear in dlc_video after raw files moved.
+        dlc_name = f"Imagingsource_{dataset}_DLC.hdf5"
+        proc_name = f"Imagingsource_{dataset}_PROC"
+        (dlc_dir / dlc_name).touch()
+        (dlc_dir / proc_name).touch()
+
+        after = get_files_paths(dataset, local_src=str(tmp_path), data=str(data_dir))
+        assert after["dlc_path"]["filename"] == dlc_name
+        assert after["proc_path"]["filename"] == proc_name
+        assert after["dlc_path"]["dst"] == str(dlc_dir)
+        assert after["proc_path"]["dst"] == str(dlc_dir)
 
 
 # ==============================================================================
@@ -891,6 +928,27 @@ class TestPopulateRig:
 class TestAtomicPopulationHelpers:
     """Tests for all-or-nothing populate checks."""
 
+    class _Rel:
+        def __init__(self, exists):
+            self._exists = exists
+
+        def __len__(self):
+            return 1 if self._exists else 0
+
+    class _FakeTable:
+        def __init__(self):
+            self.primary_key = ("dataset",)
+            self.rows = {}
+            self.insert_calls = 0
+
+        def __and__(self, key):
+            dataset = key.get("dataset") if isinstance(key, dict) else None
+            return TestAtomicPopulationHelpers._Rel(dataset in self.rows)
+
+        def insert1(self, data, skip_duplicates=True):
+            self.insert_calls += 1
+            self.rows[data["dataset"]] = dict(data)
+
     def test_is_dataset_fully_populated_requires_all_targets(self):
         schema = {
             "dj_tables": {
@@ -919,6 +977,130 @@ class TestAtomicPopulationHelpers:
         }
         schema["dj_tables"]["Session"].__and__.return_value.__len__.return_value = 0
         assert row_exists(schema, "Session", {"mouse_name": "Mouse", "day": 1}) is False
+
+    def test_populate_dataset_tables_skips_unresolved_get_path_field(self):
+        """Rows with unresolved get_path field must be skipped (not inserted)."""
+
+        def fake_get_path(raw_data=None, key=None, **kwargs):
+            return False
+
+        fake_get_path.__name__ = "get_path"
+
+        table = self._FakeTable()
+        schema = {
+            "tables": {"Video": ["dataset", "timestamp_filepath"]},
+            "dj_tables": {"Video": table},
+            "local_def": {"timestamp_filepath": fake_get_path},
+            "transformer": {},
+        }
+        raw_data = {"dataset": "Mouse_2024-01-01_1"}
+
+        complete = populate_dataset_tables(
+            "Mouse_2024-01-01_1",
+            raw_data,
+            schemas=[schema],
+            srcf="/data",
+            dstf="processed",
+        )
+
+        assert complete is False
+        assert table.insert_calls == 0
+        assert "Mouse_2024-01-01_1" not in table.rows
+
+    def test_populate_dataset_tables_retries_after_unresolved_field_resolves(self):
+        """Skipped unresolved rows should be inserted on a later successful retry."""
+        state = {"resolved": False}
+
+        def fake_get_path(raw_data=None, key=None, **kwargs):
+            if not state["resolved"]:
+                return False
+            return "/data/dlc_video/Imagingsource_Mouse_2024-01-01_1_TS.npy"
+
+        fake_get_path.__name__ = "get_path"
+
+        table = self._FakeTable()
+        schema = {
+            "tables": {"Video": ["dataset", "timestamp_filepath"]},
+            "dj_tables": {"Video": table},
+            "local_def": {"timestamp_filepath": fake_get_path},
+            "transformer": {},
+        }
+        raw_data = {"dataset": "Mouse_2024-01-01_1"}
+
+        first_complete = populate_dataset_tables(
+            "Mouse_2024-01-01_1",
+            raw_data,
+            schemas=[schema],
+            srcf="/data",
+            dstf="processed",
+        )
+        assert first_complete is False
+        assert table.insert_calls == 0
+
+        state["resolved"] = True
+        second_complete = populate_dataset_tables(
+            "Mouse_2024-01-01_1",
+            raw_data,
+            schemas=[schema],
+            srcf="/data",
+            dstf="processed",
+        )
+        assert second_complete is True
+        assert table.insert_calls == 1
+        assert table.rows["Mouse_2024-01-01_1"]["timestamp_filepath"].endswith(
+            "_TS.npy"
+        )
+
+    def test_populate_dataset_tables_keeps_legit_boolean_false_values(self):
+        """Legitimate False payloads must not be treated as unresolved."""
+
+        def bool_false_local_def(raw_data=None, key=None, **kwargs):
+            return False
+
+        bool_false_local_def.__name__ = "some_other_resolver"
+
+        table = self._FakeTable()
+        schema = {
+            "tables": {"GuiParams": ["dataset", "grey_screen_active"]},
+            "dj_tables": {"GuiParams": table},
+            "local_def": {"grey_screen_active": bool_false_local_def},
+            "transformer": {},
+        }
+        raw_data = {"dataset": "Mouse_2024-01-01_1"}
+
+        complete = populate_dataset_tables(
+            "Mouse_2024-01-01_1",
+            raw_data,
+            schemas=[schema],
+            srcf="/data",
+            dstf="processed",
+        )
+
+        assert complete is True
+        assert table.insert_calls == 1
+        assert table.rows["Mouse_2024-01-01_1"]["grey_screen_active"] is False
+
+    def test_build_row_converts_get_path_false_to_unresolved_sentinel(self):
+        """Legacy get_path False signal should be normalized to UNRESOLVED."""
+
+        def fake_get_path(raw_data=None, key=None, **kwargs):
+            return False
+
+        fake_get_path.__name__ = "get_path"
+
+        schema = {
+            "local_def": {"timestamp_filepath": fake_get_path},
+            "transformer": {},
+        }
+        row = build_row(
+            "Video",
+            ["dataset", "timestamp_filepath"],
+            {"dataset": "Mouse_2024-01-01_1"},
+            schema,
+            move=False,
+        )
+
+        assert row["timestamp_filepath"] is UNRESOLVED
 
 
 # ==============================================================================

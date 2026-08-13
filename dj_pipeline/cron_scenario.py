@@ -160,6 +160,18 @@ def main():
         )
 
         run_step(
+            # Sole entry point for vr4mice.DLC (intentionally excluded from
+            # populate_rig()'s ingestion targets - see the NOTE on
+            # vr4mice.DLC). Works regardless of pickle location, so it
+            # correctly handles a DLC file arriving after its dataset's
+            # pickle was already moved to processed.
+            # Load-bearing invariant: DLC.make treats missing DLC/PROC files
+            # as transient (log + return, no FailedSession row), so later
+            # arrivals are retried instead of blacklisted by should_skip().
+            "vr4mice.DLC.populate",
+            lambda: vr4mice.DLC().populate(pending_only=True),
+        )
+        run_step(
             "dlc.DLCProcessor.populate",
             lambda: populate_pending(dlc.DLCProcessor, vr4mice.DLC, logger=logger),
         )

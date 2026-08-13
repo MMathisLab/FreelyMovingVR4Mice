@@ -155,6 +155,14 @@ if __name__ == "__main__":
 
         create_folder_if_not_exist("/data/summary_plots")
 
+        # Sole entry point for vr4mice.DLC (intentionally excluded from
+        # populate_rig()'s ingestion targets). Works regardless of pickle
+        # location, including DLC files that arrive after raw ingest.
+        # Load-bearing invariant: DLC.make treats missing DLC/PROC files as
+        # transient (log + return, no FailedSession row). If that changes,
+        # late-arriving datasets would be blacklisted by should_skip().
+        vr4mice.DLC().populate(pending_only=True)
+
         populate_pending(dlc.DLCProcessor, vr4mice.DLC, logger=logger)
         populate_pending(
             barcodes.TeensyTTL,
