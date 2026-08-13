@@ -37,10 +37,15 @@ BUILD_ARGS := \
 .PHONY: build_all git_info git-whoami git-user-env git-user-local up_all base_install down_all client_build client_up \
 	client_stop client_rm client_down ipython bash mysql aws notebook sync_build \
 	sync_up add-cron cron-local cron-aws cron-now cron-aws-only cron-reboot import-dumps export-dumps \
-	check-compose-project
+	check-compose-project format
 
 check-compose-project:
 	@bash docker/check_compose_conflict.sh "$(COMPOSE_PROJECT)"
+
+# Matches CI's formatter.yml: black==22.6 against dj_pipeline.
+format:
+	pip install --quiet black==22.6
+	black .
 
 # Fail with logs if the client service is not running (common after compose project / name mismatch).
 define verify_client_running

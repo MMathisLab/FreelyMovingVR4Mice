@@ -25,6 +25,9 @@ logger = Logger.get_logger()
     "latency": compute latencies based on photodiode signals
     "inputs_videos": process input videos and extract frames
     "decision": analyze decision-making metrics
+    "np_sync": align VR time to Neuropixels time via barcodes (requires the
+        np_pipeline package/repo; skips gracefully, without affecting any other
+        mode, if it isn't installed or no dataset has a linked NP recording yet)
     "maintenance": rebuild DataJoint lineage tables (one-time setup)
 """
 
@@ -77,9 +80,10 @@ if __name__ == "__main__":
             "sync_days",
             "inputs_videos",
             "decision",
+            "np_sync",
             "maintenance",
         ],
-        help="Mode to execute: 'connect', 'populate', 'summary', 'dlc', 'fetch', 'sync_days', 'analysis', 'inputs_videos', 'decision', 'maintenance'",
+        help="Mode to execute: 'connect', 'populate', 'summary', 'dlc', 'fetch', 'sync_days', 'analysis', 'inputs_videos', 'decision', 'np_sync', 'maintenance'",
     )
 
     args = parser.parse_args()
@@ -280,6 +284,29 @@ if __name__ == "__main__":
         decision.DecisionPoints().populate()
         decision.PredictionModel10Windows().populate()
         decision.DecisionPoints10Windows().populate()
+
+    elif args.mode == "np_sync":
+        # np_sync depends on the separate np_pipeline package/repo, which may be
+        # absent (ModuleNotFoundError) or unreachable (e.g. its own DB connection
+        # fails while its schema modules activate). Either way, isolate the
+        # failure to this mode so every other (purely behavioral) mode is
+        # unaffected.
+        try:
+            from vr4mice.schema import np_sync
+        except Exception as err:
+            logger.warning(
+                "Skipping np_sync: np_pipeline is not available (%s). "
+                "Behavioral analysis is unaffected.",
+                err,
+            )
+        else:
+            from vr4mice.utils.populate_helpers import populate_pending
+
+            populate_pending(
+                np_sync.BarcodeSync,
+                np_sync.BarcodeSync().key_source,
+                logger=logger,
+            )
 
     elif args.mode == "fetch":
         from vr4mice.actions.fetch_data import fetch_data
