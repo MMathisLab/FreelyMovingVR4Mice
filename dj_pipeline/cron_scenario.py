@@ -304,9 +304,16 @@ def main():
     # fail the whole cron scenario when unavailable in a deployment/CI setup.
     try:
         np_sync = import_np_sync_schema()
-    except Exception as err:
+    except ModuleNotFoundError as err:
         logger.warning(
             "Skipping np_sync: np_pipeline is not available (%s). "
+            "Behavioral analysis is unaffected.",
+            err,
+        )
+    except Exception as err:
+        logger.warning(
+            "Skipping np_sync: schema initialization failed (%s). "
+            "This is typically a schema/DB compatibility issue, not a missing package. "
             "Behavioral analysis is unaffected.",
             err,
         )
@@ -323,7 +330,7 @@ def main():
         )
 
     decision = run_import("import decision schema", import_decision_schema)
-    if decision:
+    if decision and core_schemas:
         run_step(
             "decision.sync_lookup_contents",
             decision.sync_lookup_contents,
@@ -374,6 +381,10 @@ def main():
             lambda: decision.DecisionPoints10Windows().populate(
                 *decision_populate_args
             ),
+        )
+    elif decision and not core_schemas:
+        logger.warning(
+            "Skipping decision: core schema stage failed earlier, so dependency order prerequisites were not guaranteed."
         )
 
     if not args.aws:
