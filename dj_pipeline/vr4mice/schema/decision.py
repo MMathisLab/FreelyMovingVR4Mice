@@ -160,6 +160,12 @@ class ExperimentMember(dj.Imported):
     -> vr4mice.Batch
     """
 
+    @property
+    def key_source(self):
+        # Lineage this table to DatasetBatch so decision membership is only
+        # scheduled after batch resolution has been materialized.
+        return vr4mice.DatasetBatch
+
     def make(self, key):
         try:
             if not (Dataset & key & BEHAVIOR_DATASET_RESTRICTION):
@@ -194,11 +200,6 @@ class ExperimentMember(dj.Imported):
 
             label_info = label_info[0]
 
-            if not (vr4mice.DatasetBatch & key):
-                raise ValueError(
-                    f"DatasetBatch missing for '{key['dataset']}'; "
-                    "run vr4mice.DatasetBatch.populate() first"
-                )
             batch_name = (vr4mice.DatasetBatch & key).fetch1("batch_name")
 
             self.insert1(
@@ -447,8 +448,8 @@ class PredictionModel(dj.Computed):
         # LabelSet/ModelParams/ExperimentSet/ExperimentStage/Batch - most
         # combos have no data (e.g. "training" stage, or a batch that hasn't
         # run a given task yet), and make() raises for those.
-        included_combos = dj.U("set_name", "stage_name", "batch_name") & (
-            InclusionStatus * ExperimentMember & {"included": 1}
+        included_combos = (InclusionStatus * ExperimentMember & {"included": 1}).proj(
+            "set_name", "stage_name", "batch_name"
         )
         return LabelSet.proj() * ModelParams.proj() * included_combos
 
@@ -667,8 +668,8 @@ class PredictionModel10Windows(dj.Computed):
     def key_source(self):
         # See PredictionModel.key_source: restrict to (set_name, stage_name,
         # batch_name) combos that actually have included sessions.
-        included_combos = dj.U("set_name", "stage_name", "batch_name") & (
-            InclusionStatus * ExperimentMember & {"included": 1}
+        included_combos = (InclusionStatus * ExperimentMember & {"included": 1}).proj(
+            "set_name", "stage_name", "batch_name"
         )
         return LabelSet.proj() * ModelParams.proj() * included_combos
 

@@ -18,6 +18,7 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 RUN_PY = REPO_ROOT / "dj_pipeline" / "run.py"
 CRON_SCENARIO_PY = REPO_ROOT / "dj_pipeline" / "cron_scenario.py"
 SCHEMA_NP_SYNC_PY = REPO_ROOT / "dj_pipeline" / "vr4mice" / "schema" / "np_sync.py"
+SCHEMA_DECISION_PY = REPO_ROOT / "dj_pipeline" / "vr4mice" / "schema" / "decision.py"
 
 
 def _linear_barcode_streams(*, n=20, slope=2.0, intercept=100.0, skip_vr=0, skip_np=0):
@@ -173,6 +174,40 @@ def test_run_py_np_sync_mode_catches_broad_exception():
     assert "from vr4mice.schema import np_sync" in block
     assert "except Exception as err:" in block
     assert "except ModuleNotFoundError" not in block
+
+
+def test_run_py_decision_mode_orders_datasetbatch_before_decision_tables():
+    text = RUN_PY.read_text()
+    start = text.index('elif args.mode == "decision":')
+    end = text.index('elif args.mode == "np_sync":')
+    block = text[start:end]
+
+    sync_lookup_idx = block.index("decision.sync_lookup_contents()")
+    dataset_batch_idx = block.index("vr4mice.DatasetBatch().populate()")
+    member_idx = block.index("decision.ExperimentMember().populate()")
+
+    assert sync_lookup_idx < dataset_batch_idx < member_idx
+
+
+def test_cron_scenario_orders_batch_sync_before_datasetbatch_and_gates_decision_on_core():
+    text = CRON_SCENARIO_PY.read_text()
+
+    batch_sync_idx = text.index('"vr4mice.Batch.sync_contents"')
+    dataset_batch_idx = text.index('"vr4mice.DatasetBatch.populate"')
+    decision_gate_idx = text.index("if decision and core_schemas:")
+    decision_member_idx = text.index('"decision.ExperimentMember.populate"')
+
+    assert batch_sync_idx < dataset_batch_idx < decision_gate_idx < decision_member_idx
+
+
+def test_decision_experimentmember_key_source_is_datasetbatch_lineaged():
+    text = SCHEMA_DECISION_PY.read_text()
+    start = text.index("class ExperimentMember")
+    end = text.index("class InclusionStatus")
+    block = text[start:end]
+
+    assert "def key_source(self):" in block
+    assert "return vr4mice.DatasetBatch" in block
 
 
 def test_schema_make_handles_empty_np_events_with_clear_reason():
