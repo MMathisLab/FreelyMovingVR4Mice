@@ -172,9 +172,12 @@ def align_barcodes(
             "cannot fit VR-to-NP alignment"
         )
 
-    vr_times, vr_values, n_trimmed_leading, n_trimmed_trailing = (
-        _trim_repetitive_boundary_timebins(vr_times, vr_values)
-    )
+    (
+        vr_times,
+        vr_values,
+        n_trimmed_leading,
+        n_trimmed_trailing,
+    ) = _trim_repetitive_boundary_timebins(vr_times, vr_values)
 
     shared_barcodes, vr_index, np_index = np.intersect1d(
         vr_values, np_values, return_indices=True
