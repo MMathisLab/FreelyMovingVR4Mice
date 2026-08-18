@@ -1,5 +1,7 @@
 """Unit tests for Teensy barcode decoding."""
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -10,6 +12,14 @@ from barcodes import (
     normalize_ttl_read,
 )
 from dlc_helpers import align_timestamps_to_step_time
+
+SCHEMA_BARCODES_PY = (
+    Path(__file__).parent.parent.parent
+    / "dj_pipeline"
+    / "vr4mice"
+    / "schema"
+    / "barcodes.py"
+)
 
 
 def _barcode_edges(value: int, *, start_ms: int):
@@ -154,3 +164,16 @@ def test_align_timestamps_to_step_time_returns_nan_outside_step_range():
     assert np.isnan(result[0])
     assert result[1] == pytest.approx(0.10)
     assert np.isnan(result[2])
+
+
+def test_teensy_barcodes_schema_allows_null_onset_time_unity():
+    text = SCHEMA_BARCODES_PY.read_text()
+
+    assert "onset_time_unity=NULL: float64" in text
+
+
+def test_teensy_barcodes_make_converts_non_finite_unity_times_to_null():
+    text = SCHEMA_BARCODES_PY.read_text()
+
+    assert "if np.isfinite(onset_step_time)" in text
+    assert "else None" in text

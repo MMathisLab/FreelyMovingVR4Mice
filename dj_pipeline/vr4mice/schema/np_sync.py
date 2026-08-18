@@ -153,6 +153,32 @@ class BarcodeSync(dj.Computed):
                 np_barcodes.ProbeBarcodeExtraction.Event & key
             ).to_arrays("barcode_value", "onset_time", order_by="barcode_index")
 
+            vr_values = np.asarray(vr_values)
+            vr_times = np.asarray(vr_times, dtype=np.float64)
+            np_values = np.asarray(np_values)
+            np_times = np.asarray(np_times, dtype=np.float64)
+
+            vr_finite = np.isfinite(vr_times)
+            n_vr_dropped = int((~vr_finite).sum())
+            if n_vr_dropped:
+                vr_values = vr_values[vr_finite]
+                vr_times = vr_times[vr_finite]
+
+            np_finite = np.isfinite(np_times)
+            n_np_dropped = int((~np_finite).sum())
+            if n_np_dropped:
+                np_values = np_values[np_finite]
+                np_times = np_times[np_finite]
+
+            if n_vr_dropped or n_np_dropped:
+                logger.info(
+                    "%s dropped %d non-finite VR and %d non-finite NP barcode events for %s",
+                    self.__class__.__name__,
+                    n_vr_dropped,
+                    n_np_dropped,
+                    key,
+                )
+
             if len(np_values) == 0:
                 reason = (
                     "No NP barcode events found for key at populate time "

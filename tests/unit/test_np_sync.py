@@ -119,12 +119,27 @@ def test_align_barcodes_interpol_func_maps_vr_time_to_np_time():
     assert fit.interpol_func(5.0) == pytest.approx(110.0)
 
 
-def test_align_barcodes_rejects_non_finite_tie_points():
+def test_align_barcodes_drops_non_finite_tie_points():
     vr_times, vr_values, np_times, np_values = _linear_barcode_streams(n=40)
     vr_times = vr_times.copy()
     vr_times[4] = np.nan
+    np_times = np_times.copy()
+    np_times[7] = np.inf
 
-    with pytest.raises(ValueError, match="NaN or infinite"):
+    fit = align_barcodes(vr_times, vr_values, np_times, np_values)
+
+    assert fit.slope == pytest.approx(2.0)
+    assert fit.intercept == pytest.approx(100.0)
+    assert len(fit.shared_barcodes) == 38
+
+
+def test_align_barcodes_requires_finite_tie_points_after_filtering():
+    vr_times = np.array([np.nan, np.nan, np.nan])
+    vr_values = np.array([1, 2, 3])
+    np_times = np.array([100.0, 101.0, 102.0])
+    np_values = np.array([1, 2, 3])
+
+    with pytest.raises(ValueError, match="finite timepoint"):
         align_barcodes(vr_times, vr_values, np_times, np_values)
 
 
@@ -286,6 +301,15 @@ def test_schema_make_handles_empty_np_events_with_clear_reason():
 
     assert "if len(np_values) == 0:" in make_src
     assert "No NP barcode events found for key at populate time" in make_src
+
+
+def test_schema_make_filters_non_finite_tie_point_times_before_alignment():
+    text = SCHEMA_NP_SYNC_PY.read_text()
+    make_src = _function_source(text, "    def make(self, key):")
+
+    assert "vr_finite = np.isfinite(vr_times)" in make_src
+    assert "np_finite = np.isfinite(np_times)" in make_src
+    assert "dropped %d non-finite VR and %d non-finite NP barcode events" in make_src
 
 
 def test_schema_make_uses_key_only_without_identity_parsing():

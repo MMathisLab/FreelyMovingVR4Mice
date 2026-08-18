@@ -127,10 +127,10 @@ def align_barcodes(
     https://github.com/AdaptiveMotorControlLab/auxPipelines-DataJoint_Mathis,
     adapted for this repo's VR (vr4mice) / NP (np_pipeline) schemas.
 
-    Before fitting, the function validates 1D, finite, non-empty inputs,
-    trims repetitive boundary Unity timebins on the VR stream, intersects
-    shared barcode values, and requires at least ``MIN_TIE_POINTS`` shared
-    tie points.
+    Before fitting, the function validates 1D and non-empty inputs, drops
+    barcode events with non-finite times on either stream, trims repetitive
+    boundary Unity timebins on the VR stream, intersects shared barcode values,
+    and requires at least ``MIN_TIE_POINTS`` shared tie points.
 
     Args:
         vr_times: VR-side barcode onset times, ordered by event index (chronological).
@@ -143,8 +143,8 @@ def align_barcodes(
 
     Raises:
         ValueError: If shapes differ, inputs are not 1D, either stream is empty,
-            non-finite timepoints are present, or fewer than
-            ``MIN_TIE_POINTS`` shared tie points remain after preprocessing.
+            or fewer than ``MIN_TIE_POINTS`` shared tie points remain after
+            preprocessing.
     """
     vr_times = np.asarray(vr_times)
     vr_values = np.asarray(vr_values)
@@ -159,13 +159,22 @@ def align_barcodes(
         raise ValueError("barcode streams must be one-dimensional")
     if vr_times.size == 0 or np_times.size == 0:
         raise ValueError("both barcode streams must be non-empty")
-    for name, times in (("onset_time_unity", vr_times), ("NP onset_time", np_times)):
-        n_bad = int((~np.isfinite(times)).sum())
-        if n_bad:
-            raise ValueError(
-                f"{n_bad} of {times.size} {name} values are NaN or infinite and "
-                "cannot be used as tie points"
-            )
+
+    vr_finite = np.isfinite(vr_times)
+    if not np.all(vr_finite):
+        vr_times = vr_times[vr_finite]
+        vr_values = vr_values[vr_finite]
+
+    np_finite = np.isfinite(np_times)
+    if not np.all(np_finite):
+        np_times = np_times[np_finite]
+        np_values = np_values[np_finite]
+
+    if vr_times.size == 0 or np_times.size == 0:
+        raise ValueError(
+            "both barcode streams must contain at least one finite timepoint"
+        )
+
     if np.unique(vr_times).size == 1:
         raise ValueError(
             "All barcode events have the same onset_time_unity; "
