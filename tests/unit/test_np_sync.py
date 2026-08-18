@@ -61,21 +61,18 @@ def test_align_barcodes_uses_only_shared_barcode_values():
     assert fit.slope == pytest.approx(2.0)
 
 
-def test_align_barcodes_skip_first_n_excludes_leading_vr_events():
-    vr_times, vr_values, np_times, np_values = _linear_barcode_streams(n=20)
-    # Corrupt the first two VR onset times so an unskipped fit would be biased.
-    vr_times = vr_times.copy()
-    vr_times[:2] += 1000.0
+def test_align_barcodes_trims_repetitive_boundary_timebins():
+    vr_values = np.arange(8)
+    np_values = np.arange(8)
 
-    biased_fit = align_barcodes(vr_times, vr_values, np_times, np_values)
-    assert biased_fit.slope != pytest.approx(2.0)
+    # First two and last two events collapse onto one Unity timebin each.
+    vr_times = np.array([0.0, 0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 6.0], dtype=np.float64)
+    np_times = 2.0 * np.arange(8, dtype=np.float64) + 100.0
 
-    corrected_fit = align_barcodes(
-        vr_times, vr_values, np_times, np_values, skip_first_n_barcodes=2
-    )
-    assert corrected_fit.slope == pytest.approx(2.0)
-    assert corrected_fit.intercept == pytest.approx(100.0)
-    assert len(corrected_fit.shared_barcodes) == 18
+    fit = align_barcodes(vr_times, vr_values, np_times, np_values)
+    assert fit.slope == pytest.approx(2.0)
+    assert fit.intercept == pytest.approx(100.0)
+    assert len(fit.shared_barcodes) == 4
 
 
 def test_align_barcodes_interpol_func_maps_vr_time_to_np_time():

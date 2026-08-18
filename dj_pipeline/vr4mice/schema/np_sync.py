@@ -29,7 +29,7 @@ except ModuleNotFoundError:
     sys.path.insert(0, "/app/np_pipeline")
     from np_pipeline.schemas import barcodes as np_barcodes, session_link
 
-from vr4mice.analysis.np_sync import DEFAULT_SKIP_FIRST_N_BARCODES, align_barcodes
+from vr4mice.analysis.np_sync import align_barcodes
 from vr4mice.schema import base
 from vr4mice.schema import barcodes as vr_barcodes
 from vr4mice.schema import vr4mice
@@ -75,7 +75,6 @@ class BarcodeSync(dj.Computed):
     -> vr_barcodes.TeensyBarcodes
     -> np_barcodes.ProbeBarcodeExtraction
     ---
-    skip_first_n_barcodes: int32  # leading VR barcode events excluded from the fit
     slope: float64  # Slope of the linear fit mapping VR time to NP time
     intercept: float64  # Intercept of the linear fit mapping VR time to NP time
     r2: float64  # R-squared value of the linear fit
@@ -93,7 +92,6 @@ class BarcodeSync(dj.Computed):
             )
         return source
 
-    skip_first_n_barcodes = DEFAULT_SKIP_FIRST_N_BARCODES
     min_shared_barcodes = 20
     min_barcode_overlap = 0.90
 
@@ -166,11 +164,10 @@ class BarcodeSync(dj.Computed):
                 vr_values,
                 np_times,
                 np_values,
-                skip_first_n_barcodes=self.skip_first_n_barcodes,
             )
 
-            # Measure overlap on full streams (independent of fit-time skipping)
-            # so DEFAULT_SKIP_FIRST_N_BARCODES does not bias this quality metric.
+            # Measure overlap on full streams (independent of fit-time trimming)
+            # so fit preprocessing does not bias this quality metric.
             full_shared_barcodes = np.intersect1d(vr_values, np_values)
             np_unique_barcodes = np.unique(np_values)
             barcode_overlap = len(full_shared_barcodes) / len(np_unique_barcodes)
@@ -212,7 +209,6 @@ class BarcodeSync(dj.Computed):
             self.insert1(
                 {
                     **key,
-                    "skip_first_n_barcodes": self.skip_first_n_barcodes,
                     "slope": fit.slope,
                     "intercept": fit.intercept,
                     "r2": fit.r2,

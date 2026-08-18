@@ -8,13 +8,57 @@ import numpy as np
 import scipy.interpolate
 import scipy.stats
 
-# Number of leading (chronologically earliest) VR barcode events excluded from the
-# regression fit by default. DLC-live starts receiving data slightly after the
-# Unity/game stream does, which is why downstream analysis already drops
-# `trial == 1` as a DLC-live initialization trial (see vr4mice/analysis/analysis.py).
-# Barcodes in that same early window can carry an unreliable onset_time_unity,
-# biasing the fit if used as tie points, so we drop the earliest few by default.
-DEFAULT_SKIP_FIRST_N_BARCODES = 10
+
+def _same_timebin(a: float, b: float) -> bool:
+    """Return True when two onset_time_unity values belong to the same bin."""
+    return bool(np.isclose(a, b, rtol=0.0, atol=1e-12, equal_nan=True))
+
+
+def _leading_repetitive_run_length(vr_times: np.ndarray) -> int:
+    """Length of the first consecutive equal-time run."""
+    if vr_times.size == 0:
+        return 0
+
+    run_length = 1
+    while run_length < vr_times.size and _same_timebin(
+        vr_times[run_length - 1], vr_times[run_length]
+    ):
+        run_length += 1
+    return run_length
+
+
+def _trailing_repetitive_run_length(vr_times: np.ndarray) -> int:
+    """Length of the last consecutive equal-time run."""
+    if vr_times.size == 0:
+        return 0
+
+    run_length = 1
+    idx = vr_times.size - 1
+    while idx > 0 and _same_timebin(vr_times[idx], vr_times[idx - 1]):
+        run_length += 1
+        idx -= 1
+    return run_length
+
+
+def _trim_repetitive_boundary_timebins(
+    vr_times: np.ndarray, vr_values: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    """Drop consecutive repetitive onset_time_unity runs at start and end.
+
+    When the first/last VR barcode events all map to the same Unity timebin,
+    those boundary runs are unreliable for cross-clock fitting and are removed.
+    """
+    leading_run = _leading_repetitive_run_length(vr_times)
+    if leading_run >= 2:
+        vr_times = vr_times[leading_run:]
+        vr_values = vr_values[leading_run:]
+
+    trailing_run = _trailing_repetitive_run_length(vr_times)
+    if trailing_run >= 2:
+        vr_times = vr_times[:-trailing_run]
+        vr_values = vr_values[:-trailing_run]
+
+    return vr_times, vr_values
 
 
 @dataclass(frozen=True)
@@ -47,9 +91,22 @@ def align_barcodes(
         vr_values: VR-side barcode integer payloads, same order as `vr_times`.
         np_times: NP-side barcode onset times, ordered by event index.
         np_values: NP-side barcode integer payloads, same order as `np_times`.
-        skip_first_n_barcodes: number of leading (earliest) VR events to exclude
-            before matching, to avoid the DLC-live startup-lag window.
+        skip_first_n_barcodes: legacy number of leading VR events to exclude
+            before matching. Defaults to 0; boundary repetitive-bin trimming is
+            applied first and should usually be sufficient.
     """
+    vr_times = np.asarray(vr_times)
+    vr_values = np.asarray(vr_values)
+    np_times = np.asarray(np_times)
+    np_values = np.asarray(np_values)
+
+    if vr_times.shape != vr_values.shape:
+        raise ValueError("vr_times and vr_values must have matching shapes")
+    if np_times.shape != np_values.shape:
+        raise ValueError("np_times and np_values must have matching shapes")
+
+    vr_times, vr_values = _trim_repetitive_boundary_timebins(vr_times, vr_values)
+
     if skip_first_n_barcodes:
         vr_times = vr_times[skip_first_n_barcodes:]
         vr_values = vr_values[skip_first_n_barcodes:]
@@ -60,6 +117,12 @@ def align_barcodes(
 
     vr_shared_times = np.asarray(vr_times)[vr_index]
     np_shared_times = np.asarray(np_times)[np_index]
+
+    if vr_shared_times.size < 2:
+        raise ValueError(
+            "Need at least 2 shared barcode events after boundary trimming "
+            "to fit VR-to-NP alignment"
+        )
 
     linreg = scipy.stats.linregress(vr_shared_times, np_shared_times)
     interpol_func = scipy.interpolate.interp1d(
