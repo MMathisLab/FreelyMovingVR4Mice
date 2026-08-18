@@ -283,8 +283,12 @@ class ActiveSensingTask(UnityTask):
         self.dlc_time_step = []
         self.trial_mouse_report_delay = []
 
-        # self.set_channel()
-        # self.reset_environment()
+    def stop(self):
+        """Stop the task: parent's teardown, plus closing the DLC socket client if one was opened."""
+        super().stop()
+        dlc_client = getattr(self, "dlcClient", None)
+        if dlc_client is not None:
+            dlc_client.close()
 
     def _get_dlc_on_frame(self):
         """

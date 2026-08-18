@@ -1,10 +1,10 @@
-"""
-GUI to run teensy experiments
-    - system setup information taken from system_setup.json (which is written by system_setup.py)
+"""Teensy experiment GUI.
 
-GK 05/07/2019
+Loads rig and task setup from JSON configuration files and runs experiment
+sessions.
 
-Note(mary): API documentation added 11/08/2022
+Original implementation: GK (2019-05-07)
+API documentation additions: mary (2022-11-08)
 """
 
 import os
@@ -602,6 +602,20 @@ class TeensyExperimentGUI(object):
                                  parent=self.window)
             self.task_on.set(1)
         else:
+            # Re-initializing replaces self.task, so any unsaved data from the
+            # previous task becomes unreachable. Let experimenters cancel to
+            # save first, or explicitly proceed and discard old task access.
+            if self.task is not None and not self.saved_ok:
+                proceed = messagebox.askokcancel(
+                    "Unsaved Data",
+                    "The previous task's data has not been saved.\n"
+                    "Click Cancel to save first, or OK to initialize a new task and discard access to the previous task data.",
+                    parent=self.window,
+                )
+                if not proceed:
+                    self.task_on.set(0)
+                    return
+
             task_object = getattr(self.task_module, self.task_name.get())
             task_params = copy.deepcopy(self.task_params[self.task_name.get()])
             try:
@@ -609,21 +623,24 @@ class TeensyExperimentGUI(object):
             except Exception as err:
                 self.task = None
                 self.task_info = {}
-                self.task_label["text"] = "No Task"
+                self.task_label["text"] = "No Task"
                 self.task_on.set(0)
-                try:
-                    self._reset_progress_labels()
-                except Exception:
-                    pass
-                finally:
-                    self.info_labels = []
-                    self.value_labels = []
+                try:
+                    self._reset_progress_labels()
+                except Exception:
+                    pass
+                finally:
+                    self.info_labels = []
+                    self.value_labels = []
                 messagebox.showerror(
                     "Task Initialization Failed",
                     f"Could not initialize task '{self.task_name.get()}'.\n{err}",
                     parent=self.window,
                 )
                 return
+            # This is a fresh task with nothing saved yet, regardless of whether
+            # the previous task's data was ever saved.
+            self.saved_ok = False
             parent_class = [c.__name__ for c in self.task.__class__.__mro__]
             self.gui_task = True if 'GuiTask' in parent_class else False
             self.unity_task = True if 'UnityTask' in parent_class else False
@@ -742,8 +759,21 @@ class TeensyExperimentGUI(object):
             Args:
                 data_to_save: output form task (return of self.task.get_data())
                 filename(str): path and name of file to save
+
+            Note:
+                `self.saved_ok` is only set on success.
         """
-        pickle.dump(data_to_save, open(filename, 'wb'))
+        try:
+            with open(filename, 'wb') as f:
+                pickle.dump(data_to_save, f)
+        except Exception as e:
+            messagebox.showerror(
+                "Save Failed",
+                "Failed to save data to %s:\n%s" % (filename, e),
+                parent=self.window,
+            )
+            return
+
         messagebox.showinfo("File Saved", "File saved to %s" % filename, parent=self.window)
         self.saved_ok = True
 
@@ -800,16 +830,21 @@ class TeensyExperimentGUI(object):
 
     def check_close(self):
         """
-            method used for close bottom callback
+            method used for close button callback (and the window's X button)
             checks if there is a running task and if all data saved
         """
         if self.task_on.get():
             messagebox.showerror("Task Open", "Task is currently open. Please stop task before closing.",
                                  parent=self.window)
+        elif not self.saved_ok:
+            if messagebox.askokcancel(
+                "Exit",
+                "ARE YOU SURE YOU SAVED YOUR Data?",
+                parent=self.window,
+            ):
+                self.gui_on = False
         else:
-            if not self.saved_ok:
-                if messagebox.askokcancel("Exit", "ARE YOU SURE YOU SAVED YOUR Data?"):
-                    self.gui_on = False
+            self.gui_on = False
 
     def close_window(self):
         """
@@ -969,6 +1004,10 @@ class TeensyExperimentGUI(object):
         Button(window, text="Close", command=self.check_close).grid(sticky="nsew", row=cur_row, column=1, columnspan=1)
         cur_row += 1
 
+        # route the window's own [X] close button through the same "did you save?" check
+        # instead of letting Tkinter destroy the window unprompted
+        window.protocol("WM_DELETE_WINDOW", self.check_close)
+
         # configure size of empty rows
         col_count, row_count = window.grid_size()
         for r in range(row_count):
@@ -985,20 +1024,45 @@ class TeensyExperimentGUI(object):
         print_delay = .01
         last_print = time.time()
 
+        def _warn_use_gui_close():
+            try:
+                messagebox.showwarning(
+                    "Use the GUI to Close",
+                    "Ctrl+C does not safely close this program.\n"
+                    "Please use the \"Stop\"/\"Close\" buttons in the GUI instead.",
+                    parent=self.window,
+                )
+            except KeyboardInterrupt:
+                # Repeated Ctrl+C while the modal warning is focused should not abort
+                # cleanup handling.
+                pass
+
         while self.gui_on:
-            curr_time = time.time()
-            if self.task_on_button:
-                if curr_time - last_print > print_delay:
-                    self.check_task_progress()
-                    last_print = curr_time
-            elif self.task_on.get() == 1:
-                self.task_on.set(0)
-                if self.gui_task:
-                    self.task.window.destroy()
+            try:
+                curr_time = time.time()
+                if self.task_on_button:
+                    if curr_time - last_print > print_delay:
+                        self.check_task_progress()
+                        last_print = curr_time
+                elif self.task_on.get() == 1:
+                    self.task_on.set(0)
+                    if self.gui_task:
+                        self.task.window.destroy()
 
-            self.window.update()
+                self.window.update()
+            except KeyboardInterrupt:
+                # Ctrl+C is not a supported way to close this GUI (see run_a_session.md):
+                # it can skip Teensy/Unity/socket cleanup, so just warn and keep running
+                # instead of exiting -- the experimenter should use "Close"/"Stop" instead.
+                _warn_use_gui_close()
 
-        self.close_window()
+        while True:
+            try:
+                self.close_window()
+                break
+            except KeyboardInterrupt:
+                # Keep trying to shut down even if Ctrl+C is pressed during teardown.
+                continue
 
 
 def main():
