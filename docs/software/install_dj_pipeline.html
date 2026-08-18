@@ -725,7 +725,7 @@ You can add an SSH config alias (e.g., <code class="docutils literal notranslate
 <h4>Host Jupyter (legacy / outside Docker)<a class="headerlink" href="#host-jupyter-legacy-outside-docker" title="Permalink to this heading">#</a></h4>
 <ol class="arabic">
 <li><p>Install matching packages and base schemas:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>notebook<span class="w"> </span><span class="s2">&quot;datajoint&gt;=2.0.1&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>notebook<span class="w"> </span><span class="s2">"datajoint&gt;=2.0.1"</span>
 pip<span class="w"> </span>install<span class="w"> </span>base/base_actions/
 pip<span class="w"> </span>install<span class="w"> </span>base/base_min_schemas/
 </pre></div>
@@ -893,8 +893,8 @@ mkdir<span class="w"> </span>-p<span class="w"> </span>/shared
 </pre></div>
 </div>
 <p><strong>Upgrading 5.7 → 8.0</strong> (keep data): run MySQL 5.7 against the datadir, shut down cleanly, then switch to 8.0:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>db<span class="w"> </span>mysql<span class="w"> </span>-uroot<span class="w"> </span>-p<span class="s2">&quot;</span><span class="si">${</span><span class="nv">MYSQL_ROOT_PASSWORD</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-e<span class="w"> </span><span class="s2">&quot;SET GLOBAL innodb_fast_shutdown=0; SHUTDOWN;&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>db<span class="w"> </span>mysql<span class="w"> </span>-uroot<span class="w"> </span>-p<span class="s2">"</span><span class="si">${</span><span class="nv">MYSQL_ROOT_PASSWORD</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-e<span class="w"> </span><span class="s2">"SET GLOBAL innodb_fast_shutdown=0; SHUTDOWN;"</span>
 <span class="c1"># set DB_IMAGE=mysql:8.0 in .env.compose, then:</span>
 make<span class="w"> </span>up_all
 </pre></div>
@@ -1065,7 +1065,7 @@ make<span class="w"> </span>run_gui
 <p><strong>4. Install Python dependencies</strong></p>
 <div class="highlight-bat notranslate"><div class="highlight"><pre><span></span><span class="k">cd</span> C:\vr4mice\gui_transfer
 python -m pip install --upgrade pip
-python -m pip install PyQt5 numpy <span class="s2">&quot;moviepy&gt;=1.0.3&quot;</span>
+python -m pip install PyQt5 numpy <span class="s2">"moviepy&gt;=1.0.3"</span>
 </pre></div>
 </div>
 <p><strong>5. Create and edit config</strong></p>
@@ -1437,12 +1437,12 @@ make<span class="w"> </span>git-whoami
 ssh<span class="w"> </span>-T<span class="w"> </span>git@github.com
 
 <span class="c1"># Shared checkout (recommended):</span>
-<span class="nb">eval</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$$</span><span class="s2">(make git-user-env NAME=&#39;Your Name&#39; EMAIL=&#39;you@example.com&#39;)&quot;</span>
+<span class="nb">eval</span><span class="w"> </span><span class="s2">"</span><span class="nv">$$</span><span class="s2">(make git-user-env NAME='Your Name' EMAIL='you@example.com')"</span>
 git<span class="w"> </span>pull
 </pre></div>
 </div>
 <p>Personal clone only:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>git-user-local<span class="w"> </span><span class="nv">NAME</span><span class="o">=</span><span class="s1">&#39;Your Name&#39;</span><span class="w"> </span><span class="nv">EMAIL</span><span class="o">=</span><span class="s1">&#39;you@example.com&#39;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>git-user-local<span class="w"> </span><span class="nv">NAME</span><span class="o">=</span><span class="s1">'Your Name'</span><span class="w"> </span><span class="nv">EMAIL</span><span class="o">=</span><span class="s1">'you@example.com'</span>
 </pre></div>
 </div>
 <p>If <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">pull</span></code> / <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span></code> fails with permissions on <code class="docutils literal notranslate"><span class="pre">.git/</span></code>, ask the admin to fix group write access on the repo, or <strong>clone your own copy</strong> elsewhere:</p>
@@ -1457,8 +1457,8 @@ git<span class="w"> </span>pull
 <p><strong>Client only</strong> (connect to an existing DB — typical on a shared server):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/path/to/shared/FreelyMovingVR4Mice/dj_pipeline
 
-<span class="c1"># Per-user compose project (avoids clashing with others&#39; containers) — in .env.compose or export:</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">COMPOSE_PROJECT</span><span class="o">=</span><span class="s2">&quot;vr4mice_</span><span class="si">${</span><span class="nv">USER</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="c1"># Per-user compose project (avoids clashing with others' containers) — in .env.compose or export:</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">COMPOSE_PROJECT</span><span class="o">=</span><span class="s2">"vr4mice_</span><span class="si">${</span><span class="nv">USER</span><span class="si">}</span><span class="s2">"</span>
 
 <span class="c1"># Pipeline credentials stay in .env (or export DJ_* if the shared .env is not yours)</span>
 
@@ -1470,7 +1470,7 @@ make<span class="w"> </span>ipython
 <p><strong>Full stack</strong> (your own DB + client — dev / sandbox):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/path/to/shared/FreelyMovingVR4Mice/dj_pipeline
 
-<span class="nb">export</span><span class="w"> </span><span class="nv">COMPOSE_PROJECT</span><span class="o">=</span><span class="s2">&quot;vr4mice_</span><span class="si">${</span><span class="nv">USER</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">COMPOSE_PROJECT</span><span class="o">=</span><span class="s2">"vr4mice_</span><span class="si">${</span><span class="nv">USER</span><span class="si">}</span><span class="s2">"</span>
 <span class="nb">export</span><span class="w"> </span><span class="nv">DB_PORT</span><span class="o">=</span><span class="m">3310</span><span class="w">     </span><span class="c1"># pick a free port; check with: ss -ltn | grep 3309</span>
 
 <span class="c1"># Point to your own data dirs in .env.compose (or quick_start.sh), then:</span>
@@ -1520,11 +1520,11 @@ Update paths and credentials to match your storage backend.</p>
 </ul>
 <p>Example removal (one table):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">vr4mice</span>
-<span class="p">(</span><span class="n">vr4mice</span><span class="o">.</span><span class="n">FailedSession</span><span class="p">()</span> <span class="o">&amp;</span> <span class="s1">&#39;dataset=&quot;Grizzly_2026-01-29_1&quot;&#39;</span> <span class="o">&amp;</span> <span class="s1">&#39;failed_table_name=&quot;DataFrame&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+<span class="p">(</span><span class="n">vr4mice</span><span class="o">.</span><span class="n">FailedSession</span><span class="p">()</span> <span class="o">&amp;</span> <span class="s1">'dataset="Grizzly_2026-01-29_1"'</span> <span class="o">&amp;</span> <span class="s1">'failed_table_name="DataFrame"'</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Bulk cleanup after duplicate-key fixes:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">vr4mice</span><span class="o">.</span><span class="n">FailedSession</span><span class="p">()</span> <span class="o">&amp;</span> <span class="s1">&#39;failed_table_name=&quot;SignalsPhotodiode&quot;&#39;</span> <span class="o">&amp;</span> <span class="s1">&#39;error_message LIKE &quot;%Duplicate entry%&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">vr4mice</span><span class="o">.</span><span class="n">FailedSession</span><span class="p">()</span> <span class="o">&amp;</span> <span class="s1">'failed_table_name="SignalsPhotodiode"'</span> <span class="o">&amp;</span> <span class="s1">'error_message LIKE "%Duplicate entry%"'</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
@@ -1556,9 +1556,9 @@ lookup). From Python or a notebook:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">base_schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">exp</span>
 <span class="n">exp</span><span class="o">.</span><span class="n">Experimenter</span><span class="o">.</span><span class="n">insert1</span><span class="p">(</span>
     <span class="nb">dict</span><span class="p">(</span>
-        <span class="n">experimenter_name</span><span class="o">=</span><span class="s2">&quot;experimenter_a&quot;</span><span class="p">,</span>
-        <span class="n">full_name</span><span class="o">=</span><span class="s2">&quot;Example User&quot;</span><span class="p">,</span>
-        <span class="n">mail</span><span class="o">=</span><span class="s2">&quot;user@example.com&quot;</span><span class="p">,</span>
+        <span class="n">experimenter_name</span><span class="o">=</span><span class="s2">"experimenter_a"</span><span class="p">,</span>
+        <span class="n">full_name</span><span class="o">=</span><span class="s2">"Example User"</span><span class="p">,</span>
+        <span class="n">mail</span><span class="o">=</span><span class="s2">"user@example.com"</span><span class="p">,</span>
     <span class="p">),</span>
     <span class="n">skip_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
@@ -1583,7 +1583,7 @@ cron calls <code class="docutils literal notranslate"><span class="pre">send_pen
 <p>Inspect pending or sent emails:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">vr4mice.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">summary_emails</span>
 <span class="n">summary_emails</span><span class="o">.</span><span class="n">pending_summary_email_keys</span><span class="p">()</span>
-<span class="p">(</span><span class="n">summary_emails</span><span class="o">.</span><span class="n">SummaryPlotEmail</span><span class="p">()</span> <span class="o">&amp;</span> <span class="s2">&quot;send_error IS NULL&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
+<span class="p">(</span><span class="n">summary_emails</span><span class="o">.</span><span class="n">SummaryPlotEmail</span><span class="p">()</span> <span class="o">&amp;</span> <span class="s2">"send_error IS NULL"</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
