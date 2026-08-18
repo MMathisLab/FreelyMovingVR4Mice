@@ -77,7 +77,13 @@ class BarcodeSync(dj.Computed):
     ---
     slope: float64  # Slope of the linear fit mapping VR time to NP time
     intercept: float64  # Intercept of the linear fit mapping VR time to NP time
-    r2: float64  # R-squared value of the linear fit
+    r2: float64  # R-squared of the fit. NOT a quality signal -- gate on rmse_ms
+    rmse_ms: float64  # RMS fit residual in milliseconds; the quality gate
+    max_abs_residual_ms: float64  # Largest single tie-point residual, milliseconds
+    n_shared_barcodes: int32  # Tie points the fit actually used
+    n_trimmed_leading: int32  # Leading events dropped as repetitive onset_time_unity run
+    n_trimmed_trailing: int32  # Trailing events dropped as repetitive onset_time_unity run
+    n_rejected_outliers: int32  # Tie points dropped as residual outliers
     interpol_func: <blob>  # pickled scipy.interpolate.interp1d, VR time -> NP time
     barcode_overlap: float64  # Fraction of NP barcodes also found on the VR side
     """
@@ -94,6 +100,10 @@ class BarcodeSync(dj.Computed):
 
     min_shared_barcodes = 20
     min_barcode_overlap = 0.90
+    # The healthy cohort spans 5.98-8.10 ms against a Unity quantization floor of
+    # 18.5/sqrt(12) ~ 5.3 ms. 15 ms is ~2x the worst good fit and still an order of
+    # magnitude below the failures it catches.
+    max_rmse_ms = 15.0
 
     def make(self, key):
         """Fit and insert one VR-time-to-NP-time alignment.
@@ -206,21 +216,51 @@ class BarcodeSync(dj.Computed):
                 )
                 return
 
+            if fit.rmse_ms > self.max_rmse_ms:
+                reason = (
+                    "Barcode alignment residuals too large for reliable NP-VR "
+                    f"alignment (rmse_ms={fit.rmse_ms:.2f}, "
+                    f"max_allowed={self.max_rmse_ms:.2f}, "
+                    f"max_abs_residual_ms={fit.max_abs_residual_ms:.1f}, "
+                    f"n_shared={len(fit.shared_barcodes)})"
+                )
+                vr4mice.FailedSession().add_entry(
+                    f"{key['dataset']}", f"{self.__class__.__name__}", reason
+                )
+                logger.warning(
+                    "%s %s for dataset %s",
+                    self.__class__.__name__,
+                    reason,
+                    key["dataset"],
+                )
+                return
+
             self.insert1(
                 {
                     **key,
                     "slope": fit.slope,
                     "intercept": fit.intercept,
                     "r2": fit.r2,
+                    "rmse_ms": fit.rmse_ms,
+                    "max_abs_residual_ms": fit.max_abs_residual_ms,
+                    "n_shared_barcodes": len(fit.shared_barcodes),
+                    "n_trimmed_leading": fit.n_trimmed_leading,
+                    "n_trimmed_trailing": fit.n_trimmed_trailing,
+                    "n_rejected_outliers": fit.n_rejected_outliers,
                     "interpol_func": pickle.dumps(fit.interpol_func),
                     "barcode_overlap": barcode_overlap,
                 }
             )
             logger.info(
-                "%s aligned %d shared barcodes for %s",
+                "%s aligned %d shared barcodes for %s (rmse=%.2f ms, "
+                "trimmed %d leading / %d trailing, rejected %d outliers)",
                 self.__class__.__name__,
                 len(fit.shared_barcodes),
                 key,
+                fit.rmse_ms,
+                fit.n_trimmed_leading,
+                fit.n_trimmed_trailing,
+                fit.n_rejected_outliers,
             )
 
         except Exception as err:
