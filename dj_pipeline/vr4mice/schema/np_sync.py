@@ -81,8 +81,7 @@ class BarcodeSync(dj.Computed):
     rmse_ms: float64  # RMS fit residual in milliseconds; the quality gate
     max_abs_residual_ms: float64  # Largest single tie-point residual, milliseconds
     n_shared_barcodes: int32  # Tie points the fit actually used
-    n_trimmed_leading: int32  # Leading events dropped as repetitive onset_time_unity run
-    n_trimmed_trailing: int32  # Trailing events dropped as repetitive onset_time_unity run
+    n_unmapped_vr_events: int32  # VR events dropped because onset_time_unity is NULL/NaN/inf
     n_rejected_outliers: int32  # Tie points dropped as residual outliers
     interpol_func: <blob>  # pickled scipy.interpolate.interp1d, VR time -> NP time
     barcode_overlap: float64  # Fraction of NP barcodes also found on the VR side
@@ -270,8 +269,7 @@ class BarcodeSync(dj.Computed):
                     "rmse_ms": fit.rmse_ms,
                     "max_abs_residual_ms": fit.max_abs_residual_ms,
                     "n_shared_barcodes": len(fit.shared_barcodes),
-                    "n_trimmed_leading": fit.n_trimmed_leading,
-                    "n_trimmed_trailing": fit.n_trimmed_trailing,
+                    "n_unmapped_vr_events": n_vr_dropped,
                     "n_rejected_outliers": fit.n_rejected_outliers,
                     "interpol_func": pickle.dumps(fit.interpol_func),
                     "barcode_overlap": barcode_overlap,
@@ -279,13 +277,12 @@ class BarcodeSync(dj.Computed):
             )
             logger.info(
                 "%s aligned %d shared barcodes for %s (rmse=%.2f ms, "
-                "trimmed %d leading / %d trailing, rejected %d outliers)",
+                "dropped %d unmapped VR events, rejected %d outliers)",
                 self.__class__.__name__,
                 len(fit.shared_barcodes),
                 key,
                 fit.rmse_ms,
-                fit.n_trimmed_leading,
-                fit.n_trimmed_trailing,
+                n_vr_dropped,
                 fit.n_rejected_outliers,
             )
 

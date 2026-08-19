@@ -96,7 +96,7 @@ def test_align_barcodes_trims_repetitive_boundary_timebins():
     assert fit.n_trimmed_trailing == 2
 
 
-def test_align_barcodes_reports_real_clamped_prefix_length():
+def test_align_barcodes_reports_real_repetitive_boundary_prefix_length():
     n = 60
     vr_times, vr_values, np_times, np_values = _linear_barcode_streams(n=n)
     vr_times = vr_times.copy()
@@ -349,8 +349,7 @@ def test_schema_definition_stores_alignment_diagnostics():
     assert "rmse_ms: float64" in text
     assert "max_abs_residual_ms: float64" in text
     assert "n_shared_barcodes: int32" in text
-    assert "n_trimmed_leading: int32" in text
-    assert "n_trimmed_trailing: int32" in text
+    assert "n_unmapped_vr_events: int32" in text
     assert "n_rejected_outliers: int32" in text
 
 
