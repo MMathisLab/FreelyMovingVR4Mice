@@ -44,7 +44,26 @@ def test_align_barcodes_recovers_known_linear_fit():
     assert fit.slope == pytest.approx(2.0)
     assert fit.intercept == pytest.approx(100.0)
     assert fit.r2 == pytest.approx(1.0)
+    assert fit.rmse_ms == pytest.approx(0.0)
+    assert fit.max_abs_residual_ms == pytest.approx(0.0)
     assert len(fit.shared_barcodes) == 20
+    assert fit.n_trimmed_leading == 0
+    assert fit.n_trimmed_trailing == 0
+    assert fit.n_rejected_outliers == 0
+
+
+def test_align_barcodes_is_a_no_op_on_a_clean_stream():
+    """Clean sessions should be left untouched by guards and robust rejection."""
+    vr_times, vr_values, np_times, np_values = _linear_barcode_streams(n=40)
+
+    guarded = align_barcodes(vr_times, vr_values, np_times, np_values)
+    raw = align_barcodes(
+        vr_times, vr_values, np_times, np_values, reject_outliers=False
+    )
+
+    assert (guarded.slope, guarded.intercept) == (raw.slope, raw.intercept)
+    assert guarded.n_rejected_outliers == 0
+    assert (guarded.n_trimmed_leading, guarded.n_trimmed_trailing) == (0, 0)
 
 
 def test_align_barcodes_uses_only_shared_barcode_values():
@@ -61,21 +80,33 @@ def test_align_barcodes_uses_only_shared_barcode_values():
     assert fit.slope == pytest.approx(2.0)
 
 
-def test_align_barcodes_skip_first_n_excludes_leading_vr_events():
-    vr_times, vr_values, np_times, np_values = _linear_barcode_streams(n=20)
-    # Corrupt the first two VR onset times so an unskipped fit would be biased.
+def test_align_barcodes_trims_repetitive_boundary_timebins():
+    vr_values = np.arange(8)
+    np_values = np.arange(8)
+
+    # First two and last two events collapse onto one Unity timebin each.
+    vr_times = np.array([0.0, 0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 6.0], dtype=np.float64)
+    np_times = 2.0 * np.arange(8, dtype=np.float64) + 100.0
+
+    fit = align_barcodes(vr_times, vr_values, np_times, np_values)
+    assert fit.slope == pytest.approx(2.0)
+    assert fit.intercept == pytest.approx(100.0)
+    assert len(fit.shared_barcodes) == 4
+    assert fit.n_trimmed_leading == 2
+    assert fit.n_trimmed_trailing == 2
+
+
+def test_align_barcodes_reports_real_repetitive_boundary_prefix_length():
+    n = 60
+    vr_times, vr_values, np_times, np_values = _linear_barcode_streams(n=n)
     vr_times = vr_times.copy()
-    vr_times[:2] += 1000.0
+    vr_times[:17] = vr_times[16]
 
-    biased_fit = align_barcodes(vr_times, vr_values, np_times, np_values)
-    assert biased_fit.slope != pytest.approx(2.0)
+    fit = align_barcodes(vr_times, vr_values, np_times, np_values)
 
-    corrected_fit = align_barcodes(
-        vr_times, vr_values, np_times, np_values, skip_first_n_barcodes=2
-    )
-    assert corrected_fit.slope == pytest.approx(2.0)
-    assert corrected_fit.intercept == pytest.approx(100.0)
-    assert len(corrected_fit.shared_barcodes) == 18
+    assert fit.n_trimmed_leading == 17
+    assert len(fit.shared_barcodes) == n - 17
+    assert fit.slope == pytest.approx(2.0)
 
 
 def test_align_barcodes_interpol_func_maps_vr_time_to_np_time():
@@ -86,6 +117,95 @@ def test_align_barcodes_interpol_func_maps_vr_time_to_np_time():
     fit = align_barcodes(vr_times, vr_values, np_times, np_values)
 
     assert fit.interpol_func(5.0) == pytest.approx(110.0)
+
+
+def test_align_barcodes_drops_non_finite_tie_points():
+    vr_times, vr_values, np_times, np_values = _linear_barcode_streams(n=40)
+    vr_times = vr_times.copy()
+    vr_times[4] = np.nan
+    np_times = np_times.copy()
+    np_times[7] = np.inf
+
+    fit = align_barcodes(vr_times, vr_values, np_times, np_values)
+
+    assert fit.slope == pytest.approx(2.0)
+    assert fit.intercept == pytest.approx(100.0)
+    assert len(fit.shared_barcodes) == 38
+
+
+def test_align_barcodes_requires_finite_tie_points_after_filtering():
+    vr_times = np.array([np.nan, np.nan, np.nan])
+    vr_values = np.array([1, 2, 3])
+    np_times = np.array([100.0, 101.0, 102.0])
+    np_values = np.array([1, 2, 3])
+
+    with pytest.raises(ValueError, match="finite timepoint"):
+        align_barcodes(vr_times, vr_values, np_times, np_values)
+
+
+def test_align_barcodes_requires_three_tie_points():
+    values = np.arange(2)
+
+    with pytest.raises(ValueError, match="at least 3"):
+        align_barcodes(
+            np.array([0.0, 1.0]), values, np.array([100.0, 102.0]), values
+        )
+
+
+def test_align_barcodes_accepts_reject_outliers_keyword():
+    vr_times, vr_values, np_times, np_values = _linear_barcode_streams(
+        slope=2.0, intercept=100.0
+    )
+
+    fit = align_barcodes(
+        vr_times,
+        vr_values,
+        np_times,
+        np_values,
+        reject_outliers=False,
+    )
+    assert fit.slope == pytest.approx(2.0)
+
+
+def test_align_barcodes_rejects_a_single_displaced_tie_point():
+    vr_times, vr_values, np_times, np_values = _linear_barcode_streams(n=40)
+    np_times = np_times.copy()
+    np_times[17] += 0.725
+
+    fit = align_barcodes(vr_times, vr_values, np_times, np_values)
+
+    assert fit.n_rejected_outliers == 1
+    assert fit.slope == pytest.approx(2.0)
+    assert fit.rmse_ms == pytest.approx(0.0, abs=1e-6)
+
+
+def test_align_barcodes_rejection_floor_spares_unity_quantization():
+    for displacement_ms, expected in ((29, 0), (31, 1)):
+        vr_times, vr_values, np_times, np_values = _linear_barcode_streams(n=200)
+        np_times = np_times.copy()
+        np_times[100] += displacement_ms / 1000.0
+
+        fit = align_barcodes(vr_times, vr_values, np_times, np_values)
+
+        assert fit.n_rejected_outliers == expected, displacement_ms
+
+
+def test_align_barcodes_raises_when_disagreement_is_not_isolated():
+    vr_times, vr_values, np_times, np_values = _linear_barcode_streams(n=40)
+    np_times = np_times.copy()
+    np_times[::4] += 0.5
+
+    with pytest.raises(ValueError, match="not simply linear"):
+        align_barcodes(vr_times, vr_values, np_times, np_values)
+
+
+def test_align_barcodes_raises_on_degenerate_onset_time_unity():
+    vr_values = np.arange(6)
+
+    with pytest.raises(ValueError, match="same onset_time_unity"):
+        align_barcodes(
+            np.zeros(6), vr_values, np.arange(6, dtype=np.float64), vr_values
+        )
 
 
 def test_analysis_np_sync_has_no_datajoint_or_np_pipeline_dependency(monkeypatch):
@@ -183,6 +303,15 @@ def test_schema_make_handles_empty_np_events_with_clear_reason():
     assert "No NP barcode events found for key at populate time" in make_src
 
 
+def test_schema_make_filters_non_finite_tie_point_times_before_alignment():
+    text = SCHEMA_NP_SYNC_PY.read_text()
+    make_src = _function_source(text, "    def make(self, key):")
+
+    assert "vr_finite = np.isfinite(vr_times)" in make_src
+    assert "np_finite = np.isfinite(np_times)" in make_src
+    assert "dropped %d non-finite VR and %d non-finite NP barcode events" in make_src
+
+
 def test_schema_make_uses_key_only_without_identity_parsing():
     text = SCHEMA_NP_SYNC_PY.read_text()
     make_src = _function_source(text, "    def make(self, key):")
@@ -207,8 +336,21 @@ def test_schema_make_has_quality_gate_for_min_shared_and_overlap():
 
     assert "min_shared_barcodes = 20" in text
     assert "min_barcode_overlap = 0.90" in text
+    assert "max_rmse_ms = 15.0" in text
     assert "Insufficient shared barcodes for reliable NP-VR alignment" in make_src
     assert "Insufficient NP-VR barcode overlap for reliable alignment" in make_src
+    assert "Barcode alignment residuals too large for reliable NP-VR" in make_src
+    assert "max_allowed={self.max_rmse_ms:.2f}" in make_src
+
+
+def test_schema_definition_stores_alignment_diagnostics():
+    text = SCHEMA_NP_SYNC_PY.read_text()
+
+    assert "rmse_ms: float64" in text
+    assert "max_abs_residual_ms: float64" in text
+    assert "n_shared_barcodes: int32" in text
+    assert "n_unmapped_vr_events: int32" in text
+    assert "n_rejected_outliers: int32" in text
 
 
 def test_schema_module_docstring_states_vr_only_sessions_excluded_from_key_source():
