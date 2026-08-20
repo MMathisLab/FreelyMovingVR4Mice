@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
     elif args.mode == "populate":
         from vr4mice.actions.populate_rig import populate_rig
-        from vr4mice.schema import vr4mice
+        from vr4mice.schema import base, vr4mice
         from vr4mice.utils.populate_helpers import populate_pending
 
         if args.aws:
@@ -114,6 +114,7 @@ if __name__ == "__main__":
         # populate run.
         populate_rig(path=path, move=move)
         populate_pending(vr4mice.Collab, vr4mice.Dataset, logger=logger)
+        populate_pending(base.Base, vr4mice.Dataset, logger=logger)
         vr4mice.Batch.insert(vr4mice.Batch.contents, skip_duplicates=True)
         vr4mice.DatasetBatch().populate()
 
