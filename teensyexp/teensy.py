@@ -63,17 +63,26 @@ class Teensy(object):
         buffer = None
         delta = 1
         while self.reading:
-            if self.ser.inWaiting() > delta:
+            try:
+                waiting = self.ser.inWaiting() > delta
+            except (serial.SerialException, OSError):
+                # Serial port was closed (e.g. by close()) while this thread was running.
+                break
+            if waiting:
+                try:
+                    new_bytes = self.ser.read()
+                except (serial.SerialException, OSError):
+                    break
                 if buffer:
-                    buffer = buffer + self.ser.read()
+                    buffer = buffer + new_bytes
                 else:
-                    buffer = self.ser.read()
+                    buffer = new_bytes
                 if self.end_bytes in buffer:
                     lines = buffer.split(self.end_bytes)
                     buffer = lines[-1]
                     this_read = struct.unpack('h' * self.n_inputs, lines[-2])
                     self.input_data.append(list((time.time(),) + this_read))
- 
+
     def start_read_buffer(self):
         """
             method that starts the reader thread (reader for serial buffer), writer for (input_data)
@@ -81,7 +90,8 @@ class Teensy(object):
         """
         self.start_read_time = time.time()
         self.reading = True
-        threading.Thread(target=self.read_on_thread, daemon=True).start()
+        self._read_thread = threading.Thread(target=self.read_on_thread, daemon=True)
+        self._read_thread.start()
 
     def read(self, index=-1, input=None):
         """
@@ -179,4 +189,7 @@ class Teensy(object):
             stop serial communication and update reading state attribute to False via stop()
         """
         self.stop()
+        read_thread = getattr(self, "_read_thread", None)
+        if read_thread is not None:
+            read_thread.join(timeout=2)
         self.ser.close()
