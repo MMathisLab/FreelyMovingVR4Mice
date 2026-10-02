@@ -6,6 +6,8 @@
 
 FreelyMovingVR4Mice is the MLAI lab codebase for running the freely moving VR mouse rig. It brings together the Python control stack, task scripts, DeepLabCut integration, Teensy hardware control, Unity assets, and the documentation needed to build, calibrate, and run experiments.
 
+Here is how to reproduce the figures and DataJoint database: https://mmathislab.github.io/FreelyMovingVR4Mice/docs/paper.html
+
 Happy experimenting 🙂
 
 ## What is in this repository 🔎
