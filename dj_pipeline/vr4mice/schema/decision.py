@@ -162,9 +162,10 @@ class ExperimentMember(dj.Imported):
 
     @property
     def key_source(self):
-        # Lineage this table to DatasetBatch so decision membership is only
-        # scheduled after batch resolution has been materialized.
-        return vr4mice.DatasetBatch
+        # Per dataset, but only once its batch is resolved. Restricting Dataset
+        # (rather than returning DatasetBatch) keeps the key anchored to this
+        # table's own PK parent whatever DatasetBatch's key looks like.
+        return Dataset & vr4mice.DatasetBatch
 
     def make(self, key):
         try:
@@ -448,8 +449,8 @@ class PredictionModel(dj.Computed):
         # LabelSet/ModelParams/ExperimentSet/ExperimentStage/Batch - most
         # combos have no data (e.g. "training" stage, or a batch that hasn't
         # run a given task yet), and make() raises for those.
-        included_combos = (InclusionStatus * ExperimentMember & {"included": 1}).proj(
-            "set_name", "stage_name", "batch_name"
+        included_combos = dj.U("set_name", "stage_name", "batch_name") & (
+            InclusionStatus * ExperimentMember & {"included": 1}
         )
         return LabelSet.proj() * ModelParams.proj() * included_combos
 
@@ -668,8 +669,10 @@ class PredictionModel10Windows(dj.Computed):
     def key_source(self):
         # See PredictionModel.key_source: restrict to (set_name, stage_name,
         # batch_name) combos that actually have included sessions.
-        included_combos = (InclusionStatus * ExperimentMember & {"included": 1}).proj(
-            "set_name", "stage_name", "batch_name"
+        # dj.U (not .proj) so the combos are deduplicated and keyed by the 3-tuple
+        # rather than by dataset.
+        included_combos = dj.U("set_name", "stage_name", "batch_name") & (
+            InclusionStatus * ExperimentMember & {"included": 1}
         )
         return LabelSet.proj() * ModelParams.proj() * included_combos
 

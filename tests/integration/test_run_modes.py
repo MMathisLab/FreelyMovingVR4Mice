@@ -544,6 +544,33 @@ class TestConnectMode:
 
         assert hasattr(base, "Base")
 
+    @pytest.mark.parametrize("model_name", ["PredictionModel", "PredictionModel10Windows"])
+    def test_decision_prediction_model_key_source_resolves_to_master_key(
+        self, dj_config, model_name
+    ):
+        """key_source must expose exactly the master's primary key; a join/projection
+        regression there would silently change what populate() visits."""
+        from vr4mice.schema import decision
+
+        model = getattr(decision, model_name)
+
+        assert set(model.key_source.primary_key) == {
+            "label_set_id",
+            "param_id",
+            "set_name",
+            "stage_name",
+            "batch_name",
+        }
+        assert set(model.key_source.primary_key) == set(model.primary_key)
+
+    def test_decision_experimentmember_key_source_is_keyed_by_own_pk(self, dj_config):
+        """ExperimentMember.key_source stays keyed by the table's own primary key."""
+        from vr4mice.schema import decision
+
+        assert set(decision.ExperimentMember().key_source.primary_key) == set(
+            decision.ExperimentMember.primary_key
+        )
+
 
 # ==============================================================================
 # Populate Mode Tests

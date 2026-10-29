@@ -327,7 +327,7 @@ def test_decision_experimentmember_key_source_is_datasetbatch_lineaged():
     block = text[start:end]
 
     assert "def key_source(self):" in block
-    assert "return vr4mice.DatasetBatch" in block
+    assert "return Dataset & vr4mice.DatasetBatch" in block
 
 
 def test_schema_make_handles_empty_np_events_with_clear_reason():
