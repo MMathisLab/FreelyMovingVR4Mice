@@ -154,7 +154,9 @@ class DatasetBatch(dj.Computed):
 
     def _record_failure(self, key, message):
         logger.warning(f"{message} (dataset '{key['dataset']}')")
-        FailedSession().add_entry(key["dataset"], self.__class__.__name__, message[:1024])
+        FailedSession().add_entry(
+            key["dataset"], self.__class__.__name__, message[:1024]
+        )
 
     def make(self, key):
         # Unresolved datasets are recorded in FailedSession (not just logged) so
