@@ -10,4 +10,5 @@ vr4mice_cron_init
 vr4mice_git_info
 vr4mice_compose_up db client
 
+vr4mice_run_sync_days
 vr4mice_run_cron_scenario local

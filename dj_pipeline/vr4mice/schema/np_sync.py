@@ -29,7 +29,7 @@ except ModuleNotFoundError:
     sys.path.insert(0, "/app/np_pipeline")
     from np_pipeline.schemas import barcodes as np_barcodes, session_link
 
-from vr4mice.analysis.np_sync import DEFAULT_SKIP_FIRST_N_BARCODES, align_barcodes
+from vr4mice.analysis.np_sync import align_barcodes
 from vr4mice.schema import base
 from vr4mice.schema import barcodes as vr_barcodes
 from vr4mice.schema import vr4mice
@@ -75,10 +75,14 @@ class BarcodeSync(dj.Computed):
     -> vr_barcodes.TeensyBarcodes
     -> np_barcodes.ProbeBarcodeExtraction
     ---
-    skip_first_n_barcodes: int32  # leading VR barcode events excluded from the fit
     slope: float64  # Slope of the linear fit mapping VR time to NP time
     intercept: float64  # Intercept of the linear fit mapping VR time to NP time
-    r2: float64  # R-squared value of the linear fit
+    r2: float64  # R-squared of the fit. NOT a quality signal -- gate on rmse_ms
+    rmse_ms: float64  # RMS fit residual in milliseconds; the quality gate
+    max_abs_residual_ms: float64  # Largest single tie-point residual, milliseconds
+    n_shared_barcodes: int32  # Tie points the fit actually used
+    n_unmapped_vr_events: int32  # VR events dropped because onset_time_unity is NULL/NaN/inf
+    n_rejected_outliers: int32  # Tie points dropped as residual outliers
     interpol_func: <blob>  # pickled scipy.interpolate.interp1d, VR time -> NP time
     barcode_overlap: float64  # Fraction of NP barcodes also found on the VR side
     """
@@ -93,9 +97,12 @@ class BarcodeSync(dj.Computed):
             )
         return source
 
-    skip_first_n_barcodes = DEFAULT_SKIP_FIRST_N_BARCODES
     min_shared_barcodes = 20
     min_barcode_overlap = 0.90
+    # The healthy cohort spans 5.98-8.10 ms against a Unity quantization floor of
+    # 18.5/sqrt(12) ~ 5.3 ms. 15 ms is ~2x the worst good fit and still an order of
+    # magnitude below the failures it catches.
+    max_rmse_ms = 15.0
 
     def make(self, key):
         """Fit and insert one VR-time-to-NP-time alignment.
@@ -145,6 +152,32 @@ class BarcodeSync(dj.Computed):
                 np_barcodes.ProbeBarcodeExtraction.Event & key
             ).to_arrays("barcode_value", "onset_time", order_by="barcode_index")
 
+            vr_values = np.asarray(vr_values)
+            vr_times = np.asarray(vr_times, dtype=np.float64)
+            np_values = np.asarray(np_values)
+            np_times = np.asarray(np_times, dtype=np.float64)
+
+            vr_finite = np.isfinite(vr_times)
+            n_vr_dropped = int((~vr_finite).sum())
+            if n_vr_dropped:
+                vr_values = vr_values[vr_finite]
+                vr_times = vr_times[vr_finite]
+
+            np_finite = np.isfinite(np_times)
+            n_np_dropped = int((~np_finite).sum())
+            if n_np_dropped:
+                np_values = np_values[np_finite]
+                np_times = np_times[np_finite]
+
+            if n_vr_dropped or n_np_dropped:
+                logger.info(
+                    "%s dropped %d non-finite VR and %d non-finite NP barcode events for %s",
+                    self.__class__.__name__,
+                    n_vr_dropped,
+                    n_np_dropped,
+                    key,
+                )
+
             if len(np_values) == 0:
                 reason = (
                     "No NP barcode events found for key at populate time "
@@ -166,11 +199,10 @@ class BarcodeSync(dj.Computed):
                 vr_values,
                 np_times,
                 np_values,
-                skip_first_n_barcodes=self.skip_first_n_barcodes,
             )
 
-            # Measure overlap on full streams (independent of fit-time skipping)
-            # so DEFAULT_SKIP_FIRST_N_BARCODES does not bias this quality metric.
+            # Measure overlap on full streams (independent of fit-time trimming)
+            # so fit preprocessing does not bias this quality metric.
             full_shared_barcodes = np.intersect1d(vr_values, np_values)
             np_unique_barcodes = np.unique(np_values)
             barcode_overlap = len(full_shared_barcodes) / len(np_unique_barcodes)
@@ -209,22 +241,49 @@ class BarcodeSync(dj.Computed):
                 )
                 return
 
+            if fit.rmse_ms > self.max_rmse_ms:
+                reason = (
+                    "Barcode alignment residuals too large for reliable NP-VR "
+                    f"alignment (rmse_ms={fit.rmse_ms:.2f}, "
+                    f"max_allowed={self.max_rmse_ms:.2f}, "
+                    f"max_abs_residual_ms={fit.max_abs_residual_ms:.1f}, "
+                    f"n_shared={len(fit.shared_barcodes)})"
+                )
+                vr4mice.FailedSession().add_entry(
+                    f"{key['dataset']}", f"{self.__class__.__name__}", reason
+                )
+                logger.warning(
+                    "%s %s for dataset %s",
+                    self.__class__.__name__,
+                    reason,
+                    key["dataset"],
+                )
+                return
+
             self.insert1(
                 {
                     **key,
-                    "skip_first_n_barcodes": self.skip_first_n_barcodes,
                     "slope": fit.slope,
                     "intercept": fit.intercept,
                     "r2": fit.r2,
+                    "rmse_ms": fit.rmse_ms,
+                    "max_abs_residual_ms": fit.max_abs_residual_ms,
+                    "n_shared_barcodes": len(fit.shared_barcodes),
+                    "n_unmapped_vr_events": n_vr_dropped,
+                    "n_rejected_outliers": fit.n_rejected_outliers,
                     "interpol_func": pickle.dumps(fit.interpol_func),
                     "barcode_overlap": barcode_overlap,
                 }
             )
             logger.info(
-                "%s aligned %d shared barcodes for %s",
+                "%s aligned %d shared barcodes for %s (rmse=%.2f ms, "
+                "dropped %d unmapped VR events, rejected %d outliers)",
                 self.__class__.__name__,
                 len(fit.shared_barcodes),
                 key,
+                fit.rmse_ms,
+                n_vr_dropped,
+                fit.n_rejected_outliers,
             )
 
         except Exception as err:

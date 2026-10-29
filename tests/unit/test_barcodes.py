@@ -1,5 +1,7 @@
 """Unit tests for Teensy barcode decoding."""
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -10,6 +12,14 @@ from barcodes import (
     normalize_ttl_read,
 )
 from dlc_helpers import align_timestamps_to_step_time
+
+SCHEMA_BARCODES_PY = (
+    Path(__file__).parent.parent.parent
+    / "dj_pipeline"
+    / "vr4mice"
+    / "schema"
+    / "barcodes.py"
+)
 
 
 def _barcode_edges(value: int, *, start_ms: int):
@@ -111,7 +121,7 @@ def test_decode_teensy_barcodes_returns_no_events_for_constant_signal():
     [
         ([0, 1], [0], [10, 11], "same shape"),
         ([0, 1], [0, 1], [10], "same shape"),
-        ([0, 0], [0, 1], [10, 11], "strictly increasing"),
+        ([1, 0], [0, 1], [10, 11], "non-decreasing"),
     ],
 )
 def test_decode_teensy_barcodes_validates_sample_arrays(
@@ -119,6 +129,17 @@ def test_decode_teensy_barcodes_validates_sample_arrays(
 ):
     with pytest.raises(ValueError, match=message):
         decode_teensy_barcodes(times, states, photodiode_times)
+
+
+def test_decode_teensy_barcodes_allows_duplicate_times_with_same_ttl_state():
+    result = decode_teensy_barcodes(
+        [0, 0, 1, 2],
+        [0, 0, 0, 0],
+        [10.0, 10.0, 11.0, 12.0],
+    )
+
+    assert result.events == ()
+    assert result.quality["edge_count"] == 0
 
 
 def test_align_timestamps_to_data_frame_step_time():
@@ -130,3 +151,29 @@ def test_align_timestamps_to_data_frame_step_time():
     )
 
     assert result.tolist() == pytest.approx([0.10, 0.30, 0.40])
+
+
+def test_align_timestamps_to_step_time_returns_nan_outside_step_range():
+    step_time = np.asarray([0.10, 0.20, 0.30, 0.40])
+
+    result = align_timestamps_to_step_time(
+        np.asarray([0.05, 0.14, 0.45]),
+        step_time,
+    )
+
+    assert np.isnan(result[0])
+    assert result[1] == pytest.approx(0.10)
+    assert np.isnan(result[2])
+
+
+def test_teensy_barcodes_schema_allows_null_onset_time_unity():
+    text = SCHEMA_BARCODES_PY.read_text()
+
+    assert "onset_time_unity=NULL: float64" in text
+
+
+def test_teensy_barcodes_make_converts_non_finite_unity_times_to_null():
+    text = SCHEMA_BARCODES_PY.read_text()
+
+    assert "if np.isfinite(onset_step_time)" in text
+    assert "else None" in text

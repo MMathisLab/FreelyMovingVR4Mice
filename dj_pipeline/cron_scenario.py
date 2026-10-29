@@ -86,6 +86,7 @@ def main():
         from vr4mice.schema import (
             vr4mice,
             barcodes,
+            base,
             base_analysis,
             dlc,
             interpolated_trajectories,
@@ -97,6 +98,7 @@ def main():
         return (
             vr4mice,
             barcodes,
+            base,
             base_analysis,
             dlc,
             interpolated_trajectories,
@@ -115,6 +117,7 @@ def main():
         (
             vr4mice,
             barcodes,
+            base,
             base_analysis,
             dlc,
             interpolated_trajectories,
@@ -139,6 +142,10 @@ def main():
         run_step(
             "vr4mice.Collab.populate",
             lambda: populate_pending(vr4mice.Collab, vr4mice.Dataset, logger=logger),
+        )
+        run_step(
+            "base.Base.populate",
+            lambda: populate_pending(base.Base, vr4mice.Dataset, logger=logger),
         )
         run_step(
             "base_analysis.DataFrame.populate",

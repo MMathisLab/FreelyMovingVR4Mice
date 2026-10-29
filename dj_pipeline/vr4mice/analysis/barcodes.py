@@ -95,8 +95,8 @@ def decode_teensy_barcodes(
         raise ValueError(
             "teensy_time, ttl_read, and photodiode_time must have the same shape"
         )
-    if times.size and np.any(np.diff(times) <= 0):
-        raise ValueError("teensy_time must be strictly increasing")
+    if times.size and np.any(np.diff(times) < 0):
+        raise ValueError("teensy_time must be non-decreasing")
     if not np.isfinite(continuous_times).all():
         raise ValueError("photodiode_time must contain only finite timestamps")
 
