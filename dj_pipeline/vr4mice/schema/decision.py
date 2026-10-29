@@ -225,9 +225,13 @@ class InclusionStatus(dj.Computed):
     """Inclusion status per dataset and experiment set role."""
 
     definition = """
-    -> ExperimentMember
+    -> ExperimentMember             # dataset + set/stage/session_label/batch membership key
     ---
-    included : bool
+    included : bool                 # True if dataset passes current inclusion criteria
+    criteria_evaluated : bool       # True when reward-based criteria were actually evaluated
+    criteria_params : longblob      # Dict snapshot of criteria parameters used during evaluation
+    best_extreme_reward : float     # Max reward between narrowest and widest occluder apertures
+    reward_drop : float             # Reward(widest_aperture) - Reward(narrowest_aperture)
     """
 
     def make(self, key):
@@ -238,12 +242,28 @@ class InclusionStatus(dj.Computed):
 
             logger.info(f"{self.__class__.__name__} population started for {key}.")
 
+            heading_fields = set(self.heading.names)
+
+            def _insert_inclusion_row(row_dict):
+                """Insert only fields that exist in the current table heading."""
+                filtered_row = {k: v for k, v in row_dict.items() if k in heading_fields}
+                self.insert1(filtered_row)
+
             # Get stage_name from ExperimentMember
             stage_name = (ExperimentMember & key).fetch1("stage_name")
             # session_label = (ExperimentMember & key).fetch1("session_label")
 
             if stage_name == "training":
-                self.insert1({**key, "included": False})
+                _insert_inclusion_row(
+                    {
+                        **key,
+                        "included": False,
+                        "criteria_evaluated": False,
+                        "criteria_params": {},
+                        "best_extreme_reward": np.nan,
+                        "reward_drop": np.nan,
+                    }
+                )
                 return
 
             excluded_reason = vr4mice.ExcludedDataset.matches(key["dataset"])
@@ -251,7 +271,16 @@ class InclusionStatus(dj.Computed):
                 logger.debug(
                     f"Skipping excluded dataset for {self.__class__.__name__}: {key['dataset']} ({excluded_reason})"
                 )
-                self.insert1({**key, "included": False})
+                _insert_inclusion_row(
+                    {
+                        **key,
+                        "included": False,
+                        "criteria_evaluated": False,
+                        "criteria_params": {"excluded_reason": excluded_reason},
+                        "best_extreme_reward": np.nan,
+                        "reward_drop": np.nan,
+                    }
+                )
                 return
 
             tables = TrialMetrics() * (Dataset() & key)
@@ -259,7 +288,16 @@ class InclusionStatus(dj.Computed):
             trial_df = tables.fetch(as_dict=True)
 
             if not trial_df:
-                self.insert1({**key, "included": False})
+                _insert_inclusion_row(
+                    {
+                        **key,
+                        "included": False,
+                        "criteria_evaluated": False,
+                        "criteria_params": {},
+                        "best_extreme_reward": np.nan,
+                        "reward_drop": np.nan,
+                    }
+                )
                 return
 
             trial_df = pd.concat([pd.DataFrame(x) for x in trial_df])
@@ -267,9 +305,56 @@ class InclusionStatus(dj.Computed):
 
             from vr4mice.analysis.utils import apply_inclusion_criteria
 
-            filtered_df, _ = apply_inclusion_criteria(trial_df)
-            included = not filtered_df.empty
-            self.insert1({**key, "included": included})
+            _, reward_table, criteria = apply_inclusion_criteria(
+                trial_df,
+                return_details=True,
+            )
+
+            def _get_row_scalar(row: pd.Series, field: str, default=np.nan):
+                """Extract a scalar from a row that may use MultiIndex columns."""
+                value = default
+
+                if isinstance(row.index, pd.MultiIndex):
+                    matches = [col for col in row.index if col[0] == field]
+                    if matches:
+                        value = row[matches[0]]
+                elif field in row.index:
+                    value = row[field]
+
+                if isinstance(value, pd.Series):
+                    value = value.iloc[0] if len(value) > 0 else default
+
+                return value
+
+            dataset = key["dataset"]
+            if dataset in reward_table.index:
+                row = reward_table.loc[dataset]
+                if isinstance(row, pd.DataFrame):
+                    row = row.iloc[0]
+                included_value = _get_row_scalar(row, "included_by_criteria", False)
+                best_extreme_reward_value = _get_row_scalar(
+                    row, "best_extreme_reward", np.nan
+                )
+                reward_drop_value = _get_row_scalar(row, "reward_drop", np.nan)
+
+                included = bool(included_value)
+                best_extreme_reward = float(best_extreme_reward_value)
+                reward_drop = float(reward_drop_value)
+            else:
+                included = False
+                best_extreme_reward = np.nan
+                reward_drop = np.nan
+
+            _insert_inclusion_row(
+                {
+                    **key,
+                    "included": included,
+                    "criteria_evaluated": True,
+                    "criteria_params": criteria,
+                    "best_extreme_reward": best_extreme_reward,
+                    "reward_drop": reward_drop,
+                }
+            )
         except Exception as err:
             dataset = key.get("dataset") if isinstance(key, dict) else None
             if dataset:

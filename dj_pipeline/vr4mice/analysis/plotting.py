@@ -2057,6 +2057,7 @@ def plot_mouse_trial_lineplot(
     color="black",
     normalize=False,
     normalize_df=None,
+    print_zero_shot=False,
 ):
     """
     Plot per-mouse rolling trial averages as lines.
@@ -2153,6 +2154,8 @@ def plot_mouse_trial_lineplot(
                 linewidth=1,
                 alpha=0.7,
             )
+            if print_zero_shot:
+                print(f"Zero-shot baseline and SEM: {baseline_value:.3f} ± {baseline_means.sem():.3f}")
 
     ax.set_xlabel("Trial")
     ax.set_ylabel(f"Rolling {label}")
