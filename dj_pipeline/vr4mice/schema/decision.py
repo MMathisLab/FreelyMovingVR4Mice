@@ -160,6 +160,13 @@ class ExperimentMember(dj.Imported):
     -> vr4mice.Batch
     """
 
+    @property
+    def key_source(self):
+        # Per dataset, but only once its batch is resolved. Restricting Dataset
+        # (rather than returning DatasetBatch) keeps the key anchored to this
+        # table's own PK parent whatever DatasetBatch's key looks like.
+        return Dataset & vr4mice.DatasetBatch
+
     def make(self, key):
         try:
             if not (Dataset & key & BEHAVIOR_DATASET_RESTRICTION):
@@ -194,11 +201,6 @@ class ExperimentMember(dj.Imported):
 
             label_info = label_info[0]
 
-            if not (vr4mice.DatasetBatch & key):
-                raise ValueError(
-                    f"DatasetBatch missing for '{key['dataset']}'; "
-                    "run vr4mice.DatasetBatch.populate() first"
-                )
             batch_name = (vr4mice.DatasetBatch & key).fetch1("batch_name")
 
             self.insert1(
@@ -667,6 +669,8 @@ class PredictionModel10Windows(dj.Computed):
     def key_source(self):
         # See PredictionModel.key_source: restrict to (set_name, stage_name,
         # batch_name) combos that actually have included sessions.
+        # dj.U (not .proj) so the combos are deduplicated and keyed by the 3-tuple
+        # rather than by dataset.
         included_combos = dj.U("set_name", "stage_name", "batch_name") & (
             InclusionStatus * ExperimentMember & {"included": 1}
         )

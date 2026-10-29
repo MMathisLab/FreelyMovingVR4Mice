@@ -43,9 +43,8 @@ class TeensyTTL(dj.Imported):
     # Gate by resolved batch membership (not direct date filtering here):
     # DLC session -> DatasetBatch -> Batch(has_neural_data=True).
     # Per-session mixed TTL availability is still handled by has_ttl.
-    key_source = (
-        vr4mice.DLC.proj()
-        * vr4mice.DatasetBatch.proj("batch_name")
+    key_source = vr4mice.DLC() & (
+        vr4mice.DatasetBatch.proj("batch_name")
         * (vr4mice.Batch & {"has_neural_data": True}).proj("batch_name")
     )
 
