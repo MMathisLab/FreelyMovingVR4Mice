@@ -13,6 +13,8 @@ except ImportError:
 from utils.helpers import get_max, get_pattern
 from utils.utils import check_files
 from utils.session_files import (
+    INPUT_VIDEO_FOLDER,
+    INPUT_VIDEO_KEYS,
     PATH_KEYS_FOR_SEARCH,
     dataset_stem_from_filename,
     find_related_files,
@@ -28,6 +30,9 @@ def get_type(filename):
 
     Returns:
        str: A string representing the type of the file. The possible values are:
+           - "input_video_path" / "input_ts_path": camera 2 (input screen) video and
+             timestamps of the 3-camera setup ("_VIDEO2." / "_CAMERA2.")
+           - "back_camera": camera 1 files, not transferred
            - "video_path": If the filename contains "VIDEO".
            - "camera_path": If the file contains "TS" (timestamps from camera gui)
            - "dlc_path": If the file is a DLC model file
@@ -35,14 +40,20 @@ def get_type(filename):
            - "teensy_path": If the file is not any of the above types, returns "teensy_path"
            (as it's the only one file that hasn't keyword)
     """
-    types = {
-        "video_path": "VIDEO",  # get video type, duration
-        "camera_path": "TS",
-        "dlc_path": "DLC",  # precise type : model name
-        "proc_path": "PROC",
-    }
+    # checked in order: the 3-camera folders hold VIDEO1/2/3 and CAMERA1/2/3 side by
+    # side, and only camera 3 (DLC top view) is the session video/timestamps
+    types = [
+        ("input_video_path", "_VIDEO2."),
+        ("input_ts_path", "_CAMERA2."),
+        ("back_camera", "_VIDEO1."),
+        ("back_camera", "_CAMERA1."),
+        ("video_path", "VIDEO"),  # get video type, duration
+        ("camera_path", "TS"),
+        ("dlc_path", "DLC"),  # precise type : model name
+        ("proc_path", "PROC"),
+    ]
 
-    for key, value in types.items():
+    for key, value in types:
         if value in filename:
             return key
     return "teensy_path"
@@ -66,6 +77,8 @@ def _set_path_format():
             "*_*_*_*_DLC.hdf5",
         ],  # precise type : model name
         "proc_path": ["*PROC"],
+        "input_video_path": "*_*_*_*_VIDEO2.avi",
+        "input_ts_path": "TS_*_*_*_*_CAMERA2.npy",
     }
 
 
@@ -82,24 +95,25 @@ def _set_labels():
         "camera_path": "camera",  # ts
         "video_path": "video",
         "proc_path": "proc",
+        "input_video_path": "input video",
+        "input_ts_path": "input timestamps",
         # "self_path"
     }
 
 
 def _path_is_remote(key):
     """
-    Determines whether the specified file type is expected to have a remote path or not.
-    Currently, it's the case only of video_path-typed file
+    Determines whether the specified file type is not sent to the pipeline server.
+    It's the case of the video_path-typed file (stays on the rig) and of the input
+    videos (copied to the Synology instead, see utils.copy_input_videos)
 
     Args:
       key (str): The file type (key) to check.
 
     Returns:
-      bool: True if the file type is expected to have a remote path, False otherwise.
+      bool: True if the file type is not sent with scp, False otherwise.
     """
-    if key == "video_path":
-        return True
-    return False
+    return key == "video_path" or key in INPUT_VIDEO_KEYS
 
 
 def get_dst_folder(key):
@@ -116,6 +130,8 @@ def get_dst_folder(key):
     """
     if key == "teensy_path" or key == "gui_output":
         return "data"
+    if key in INPUT_VIDEO_KEYS:
+        return INPUT_VIDEO_FOLDER
     return "dlc_video"
 
 
@@ -142,9 +158,11 @@ class Transfer(Template):
         self.cache_paths = dict()
 
         if keys is None:
-            self.keys = _set_labels().keys()
-        else:
-            self.keys = keys
+            keys = _set_labels().keys()
+        # the input video slots only show when a Synology destination is configured
+        self.keys = [
+            k for k in keys if k not in INPUT_VIDEO_KEYS or config.get_input_video_dst
+        ]
 
     def get_nick(self):
         """
@@ -190,6 +208,19 @@ class Transfer(Template):
           list: The keys.
         """
         return self.keys
+
+    def get_optional_keys(self):
+        """
+        Keys that can be left empty at submit (checked in utils.check_input_video).
+        """
+        return [k for k in INPUT_VIDEO_KEYS if k in self.keys]
+
+    def get_input_video_files(self):
+        """
+        Get the selected input video and timestamps, {key: file info or None}.
+        Empty if no Synology destination is configured.
+        """
+        return {k: self.transfer_file.get(k) for k in self.get_optional_keys()}
 
     def get_info(self):
         """
@@ -439,7 +470,10 @@ class Transfer(Template):
 
         """
 
-        dst_folder = config.get_dst_path
+        if key in INPUT_VIDEO_KEYS:
+            dst_folder = config.get_input_video_dst
+        else:
+            dst_folder = config.get_dst_path
         dst = Path(dst_folder).joinpath(get_dst_folder(key))
 
         self.transfer_file[key] = {
