@@ -171,6 +171,7 @@ jobs:
             summary_emails
             inputs_videos
             decision
+            information_maps
             base
             mice
             exp
