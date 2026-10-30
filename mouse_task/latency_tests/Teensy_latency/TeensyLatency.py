@@ -23,7 +23,20 @@ class TeensyLatency:
 
     def read_on_thread(self):
         while self.reading_teensy and not self.stop_event.is_set():
-            line = self.ser.readline().decode("utf-8").rstrip()
+            try:
+                raw_line = self.ser.readline()
+            except (serial.SerialException, OSError):
+                # Serial port was closed (e.g. by close_serial()) while readline() was blocked.
+                break
+            except TypeError as err:
+                # On some Windows/pyserial versions, close() racing readline()
+                # raises: "byref() argument must be a ctypes instance, not 'NoneType'".
+                if "byref() argument must be a ctypes instance" in str(err):
+                    break
+                raise
+            if not raw_line:
+                continue  # timeout with no data
+            line = raw_line.decode("utf-8").rstrip()
             now = time.time()  # Current time
             try:
                 self._handle_line(line, now)
@@ -32,15 +45,16 @@ class TeensyLatency:
 
     def start_read_buffer(self):
         """Start the reader thread for serial buffer, writer for `input_data`, save start time."""
-        self.ser = serial.Serial(self.com, self.baudrate)
+        self.ser = serial.Serial(self.com, self.baudrate, timeout=0.5)
         self.start_read_time = time.time()
-        threading.Thread(target=self.read_on_thread, daemon=True).start()
-
+        self._reader_thread = threading.Thread(target=self.read_on_thread, daemon=True)
+        self._reader_thread.start()
     def _stop_reading(self):
         """Stop reading from teensy and close serial connection."""
         self.reading_teensy = False
         self.stop_event.set()
-
     def close_serial(self):
         self._stop_reading()
+        if hasattr(self, '_reader_thread') and self._reader_thread.is_alive():
+            self._reader_thread.join(timeout=2.0)
         self.ser.close()

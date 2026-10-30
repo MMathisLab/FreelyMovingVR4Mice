@@ -381,11 +381,34 @@ With camera prefix from `IMG_SRC` (default `Imagingsource`), a full session typi
 
 The server-side mirror is `vr4mice/actions/populate_rig.py` → `get_files_paths()`.
 
+### Multi-camera rigs
+
+Some rigs run more than one camera at once (currently 3). Each camera's timestamp/video file
+carries its camera index as a suffix directly after the keyword, with no underscore in between:
+
+| Role | Example filename | GUI key |
+|------|------------------|---------|
+| Camera timestamps (camera 3) | `TS_vr4mice_Testmouse_2023-02-22_2_CAMERA3.npy` | `camera_path` |
+| Video (camera 3) | `vr4mice_Testmouse_2023-02-22_2_VIDEO3.avi` | `video_path` |
+
+`camera_number_from_filename()` in `utils/session_files.py` extracts that index (`CAMERA\d+` /
+`VIDEO\d+`, case-insensitive). `find_related_files()` uses it so autofill stays consistent
+across a single camera's files:
+
+- Pick a numbered `camera_path`/`video_path` file by hand → the sibling of the *other* role is
+  constrained to the same camera number, instead of grabbing whichever camera sorts first.
+- Pick a file with no camera number of its own (DLC, PROC, teensy) → which camera to autofill is
+  ambiguous, so it defaults to `DEFAULT_CAMERA_NUMBER` (currently `3`) rather than camera 1.
+- Single-camera rigs (no `CAMERA`/`VIDEO` suffix anywhere) are unaffected — this logic only
+  kicks in once more than one camera number is present for a session.
+
 ### How the GUI classifies files
 
 1. **Validation** — `modules/transfer.py` → `_set_path_format()` (glob patterns for the file picker).
 2. **Type tag** — `get_type()` scans for keywords: `VIDEO`, `TS`, `DLC`, `PROC`; otherwise `teensy_path`.
-3. **Sibling search** — `find_related_files()` lists configured rig folders and keeps files whose stem matches the selected session.
+3. **Sibling search** — `find_related_files()` lists configured rig folders, keeps files whose
+   stem matches the selected session, and (see *Multi-camera rigs* above) disambiguates by
+   camera number when more than one camera's files are present.
 
 ### If formats change
 
@@ -395,6 +418,7 @@ The server-side mirror is `vr4mice/actions/populate_rig.py` → `get_files_paths
 | Different date format | Stem parsing, auto-fill | Enter mouse/date/attempt manually |
 | New file category | Not shown in transfer section | Requires new GUI key + populate path |
 | Mouse names with `_` | Wrong stem split | Avoid underscores in mouse names or update regex |
+| Rig's default camera count/index changes | Ambiguous DLC/PROC/teensy pick defaults to the wrong camera | Update `DEFAULT_CAMERA_NUMBER` in `utils/session_files.py`, or select camera/video files by hand |
 
 ### Code to update (checklist)
 
@@ -402,7 +426,7 @@ When changing rig naming, edit **together**:
 
 | File | What to change |
 |------|----------------|
-| `gui_transfer/utils/session_files.py` | `SESSION_RE`, validation helpers |
+| `gui_transfer/utils/session_files.py` | `SESSION_RE`, `CAMERA_NUMBER_RE`, `DEFAULT_CAMERA_NUMBER`, validation helpers |
 | `gui_transfer/modules/transfer.py` | `_set_path_format()`, `get_type()`, transfer keys |
 | `vr4mice/actions/populate_rig.py` | `get_files_paths()` |
 | `tests/unit/test_gui_transfer.py` | Golden filename examples |

@@ -14,6 +14,7 @@ from utils.helpers import get_max, get_pattern
 from utils.utils import check_files
 from utils.session_files import (
     PATH_KEYS_FOR_SEARCH,
+    camera_number_from_filename,
     dataset_stem_from_filename,
     find_related_files,
 )
@@ -89,7 +90,8 @@ def _set_labels():
 def _path_is_remote(key):
     """
     Determines whether the specified file type is expected to have a remote path or not.
-    Currently, it's the case only of video_path-typed file
+    Currently, it's the case only of video_path-typed file. In this module,
+    "remote" means the file is not part of the transfer/move set (it stays on rig).
 
     Args:
       key (str): The file type (key) to check.
@@ -211,8 +213,10 @@ class Transfer(Template):
         Returns:
           dict or None: The transfer file for the specified key, or all transfer files.
         """
-        if key is not None and key in self.get_keys():
-            return self.transfer_file[key]
+        if key is not None:
+            if key in self.transfer_file:
+                return self.transfer_file[key]
+            return None
 
         if send is True:
             ret = dict()
@@ -226,10 +230,17 @@ class Transfer(Template):
     def get_processed_files(self):
         """
         Get files that should be moved to processed_path after a successful submit.
+
+        Every file that was actually transferred (i.e. not remote-only, see
+        _path_is_remote) moves to processed_path once submit succeeds -
+        that's teensy/dlc/camera/proc plus the GUI-generated gui_output.
+        video_path is excluded: videos stay on the rig, they're never
+        transferred, so there's nothing to move.
         """
         ret = list()
-        for key in ("gui_output", "teensy_path"):
-            info = self.get_transfer_files(key=key)
+        for key, info in self.transfer_file.items():
+            if _path_is_remote(key):
+                continue
             if info:
                 ret.append(info)
         return ret
@@ -402,16 +413,25 @@ class Transfer(Template):
     def _pre_fetch_files(self, filenames, skip_path=None):
         """
         Find sibling session files across configured rig folders.
+
+        On multi-camera rigs, the picked file's camera index (if any, e.g.
+        "..._CAMERA3.npy" / "..._VIDEO3.avi") constrains which sibling
+        camera/video file gets auto-filled, so it matches the camera the
+        user actually selected instead of whichever camera sorts first.
         """
         dataset_stem = dataset_stem_from_filename(filenames)
         if not dataset_stem:
             logger.warning(f"Could not parse session from filename: {filenames}")
             return []
 
+        camera_number = camera_number_from_filename(filenames)
+
         path_by_key = {
             path_key: config.get_path(path_key) for path_key in PATH_KEYS_FOR_SEARCH
         }
-        related = find_related_files(dataset_stem, path_by_key, get_type)
+        related = find_related_files(
+            dataset_stem, path_by_key, get_type, camera_number=camera_number
+        )
         skip_resolved = Path(skip_path).resolve() if skip_path else None
 
         processed_keys = list()

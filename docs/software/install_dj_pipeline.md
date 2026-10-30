@@ -539,6 +539,12 @@ The rig GUI and **`populate_rig`** on the server assume the same session filenam
 
 Classification uses keyword tags (`TS`, `DLC`, `VIDEO`, `PROC`) and glob patterns in `gui_transfer/modules/transfer.py`; parsing lives in `gui_transfer/utils/session_files.py`. The server mirror is `vr4mice/actions/populate_rig.py` → `get_files_paths()`.
 
+**Multi-camera rigs:** on rigs with more than one camera, timestamp/video filenames carry a
+camera index suffix (`..._CAMERA3.npy`, `..._VIDEO3.avi`). `camera_number_from_filename()` +
+`find_related_files()` in `gui_transfer/utils/session_files.py` keep sibling autofill on the same
+camera; when the picked file has no camera number of its own (DLC/PROC/teensy) and several
+cameras are present, autofill defaults to `DEFAULT_CAMERA_NUMBER`. Details: `dj_pipeline/gui_transfer/README.md` → *Multi-camera rigs*.
+
 **If naming changes**, update GUI + populate + tests in one change set — patterns are **not** configurable in `config.json`. Full checklist and limitations: `dj_pipeline/gui_transfer/README.md` → *Rig filename contract*.
 
 Further GUI module details: `dj_pipeline/gui_transfer/README.md`.
