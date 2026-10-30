@@ -98,6 +98,17 @@ def check_rig_paths(config_dict):
     return warnings
 
 
+def check_input_video_dst(config_dict):
+    """Optional Synology folder for input videos (does not write anything)."""
+    value = config_dict.get("input_video_dst")
+    if not value:
+        return None, "input_video_dst not set: input videos are not transferred"
+    path = Path(value)
+    if not path.is_dir():
+        return False, f"input_video_dst not reachable (Synology mounted?): {path}"
+    return True, f"input videos go to {path / 'raw_input_videos'}"
+
+
 def test_menu_access(config_dict):
     ip = str(config_dict.get("ip", ""))
     if "localhost" in ip:
@@ -163,6 +174,9 @@ def main(argv=None):
     if config_dict:
         for warning in check_rig_paths(config_dict):
             _warn(warning)
+        ok, message = check_input_video_dst(config_dict)
+        (_warn if ok is None else _ok if ok else _fail)(message)
+        failures += 0 if ok is not False else 1
 
     if args.test_menu:
         if not config_dict:

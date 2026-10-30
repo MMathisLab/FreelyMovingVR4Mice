@@ -17,5 +17,7 @@
   "camera_path": "/data/dlc_video_raw",
   "teensy_path": "/data/raw",
 
-  "processed_path": "/data/processed_rig"
+  "processed_path": "/data/processed_rig",
+
+  "input_video_dst": ""
 }

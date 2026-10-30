@@ -383,6 +383,26 @@ def main():
             ),
         )
 
+    def import_information_maps_schema():
+        from vr4mice.schema import information_maps
+
+        return information_maps
+
+    # Session-independent: only computes maps for apertures newly added to
+    # OcclusionAperture.contents, so this is a no-op on most runs.
+    information_maps = run_import(
+        "import information_maps schema", import_information_maps_schema
+    )
+    if information_maps:
+        run_step(
+            "information_maps.sync_lookup_contents",
+            information_maps.sync_lookup_contents,
+        )
+        run_step(
+            "information_maps.InformationMap.populate",
+            lambda: information_maps.InformationMap().populate(),
+        )
+
     if not args.aws:
 
         def import_inputs_videos_schema():
@@ -394,36 +414,45 @@ def main():
             "import inputs_videos schema", import_inputs_videos_schema
         )
         if inputs_videos:
-            from vr4mice.schema import vr4mice
             from vr4mice.utils.populate_helpers import populate_pending
 
+            # Report misnamed, unpaired or unmatched video files (VideoFileIssue)
+            run_step(
+                "inputs_videos.check_video_files",
+                inputs_videos.check_video_files,
+            )
+            # Old setup (OBS recording); 3-camera datasets are excluded by key_source.
             run_step(
                 "inputs_videos.RawVideo.populate",
                 lambda: populate_pending(
-                    inputs_videos.RawVideo, vr4mice.Dataset, logger=logger
+                    inputs_videos.RawVideo,
+                    inputs_videos.RawVideo().key_source,
+                    logger=logger,
                 ),
             )
             run_step(
-                "inputs_videos.ProcessedVideo.populate",
+                "inputs_videos.RawVideoSync.populate",
                 lambda: populate_pending(
-                    inputs_videos.ProcessedVideo,
+                    inputs_videos.RawVideoSync,
                     inputs_videos.RawVideo,
                     logger=logger,
                 ),
             )
+            # 3-camera setup (camera-2 input video with frame timestamps).
             run_step(
-                "inputs_videos.VideoSyncSignal.populate",
+                "inputs_videos.InputVideo.populate",
                 lambda: populate_pending(
-                    inputs_videos.VideoSyncSignal,
-                    inputs_videos.ProcessedVideo,
+                    inputs_videos.InputVideo,
+                    inputs_videos.InputVideo().key_source,
                     logger=logger,
                 ),
             )
+            # Frame of each game step, for both setups
             run_step(
-                "inputs_videos.AlignedVideoFrame.populate",
+                "inputs_videos.StepVideoFrame.populate",
                 lambda: populate_pending(
-                    inputs_videos.AlignedVideoFrame,
-                    inputs_videos.VideoSyncSignal,
+                    inputs_videos.StepVideoFrame,
+                    inputs_videos.StepVideoFrame().key_source,
                     logger=logger,
                 ),
             )

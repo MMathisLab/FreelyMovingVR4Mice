@@ -372,31 +372,80 @@ Decision points computed from 10-window model predictions.
 
 ### `inputs_videos.py`
 
-*Video input schema for sync/crop/align operations on session recordings.*
+*Aligns the input video (what the mouse sees) to game steps, for both recording setups, in one end table.*
+
+Datasets with `{prefix}_{dataset}_VIDEO2.avi` and `TS_{prefix}_{dataset}_CAMERA2.npy`
+in `/vr4mice_screen_recordings/raw_input_videos/` (3-camera setup) go through
+`InputVideo`; all others through the OBS recording (`RawVideo` → `RawVideoSync`).
+Both end in `StepVideoFrame`, fetched the same way whatever the setup.
+
+Before populating, `check_video_files()` audits both folders into `VideoFileIssue`
+(unexpected names, VIDEO2 without its CAMERA2 timestamps or the reverse, other
+cameras' files, sessions not ingested in `vr4mice.Dataset`, sessions with both
+setups). Each table then checks its own inputs and records any problem in
+`FailedSession` for that session only, so the other sessions keep populating;
+fix the files, then delete the `FailedSession` rows to retry.
+
+```python
+class VideoFileIssue(dj.Manual)
+```
+Current problems with the files in `raw_screen_recordings/` and `raw_input_videos/`
+(refreshed at each `run.py inputs_videos` / cron run).
+
+```python
+class ObsVideoLayout(dj.Lookup)
+```
+**Depends on:** `vr4mice.Batch`  
+Mouse-view panel ROI in the OBS recordings, per batch (the screen layout changed).
 
 ```python
 class RawVideo(dj.Imported)
 ```
 **Depends on:** `vr4mice.Dataset`  
-Stores the raw OBS recording path for a dataset.
+Raw OBS recording path (`<dataset>.mkv` or `.mp4` in `raw_screen_recordings/`); 3-camera datasets are excluded. Rejected if unreadable or not 1920x1080.
 
 ```python
-class ProcessedVideo(dj.Computed)
+class RawVideoSync(dj.Computed)
 ```
 **Depends on:** `RawVideo`  
-Stores cropped/truncated OBS videos and ROI metadata.
+Sync square of the recording: located automatically (pixels switching between dark
+and bright) and its mean intensity read in every frame of the raw recording. Also
+measures `seek_offset`: OpenCV seeking is not frame-accurate in every file (H.264
+in AVI lands 6 frames early); frames are read with this correction.
 
 ```python
-class VideoSyncSignal(dj.Computed)
+class InputVideo(dj.Imported)
 ```
-**Depends on:** `ProcessedVideo`  
-Extracts the binary sync trace from the sync ROI video.
+**Depends on:** `vr4mice.Dataset`  
+3-camera setup: camera-2 input video path, frame count, per-frame unix timestamps,
+the mouse-view panel ROI, the sync square and `seek_offset`. Rejected if the video is
+not 640x480 or shows no sync square (another camera), if the frame count differs
+from the number of timestamps, or if the timestamps are not unix times on the
+session's date, at a plausible rate without gaps over 2 s.
 
 ```python
-class AlignedVideoFrame(dj.Computed)
+class StepVideoFrame(dj.Computed)
 ```
-**Depends on:** `VideoSyncSignal`, `vr4mice.State`  
-Aligns game steps to video frames using photodiode when available; stores QA metrics.
+**Depends on:** `vr4mice.State`, plus `InputVideo` or `RawVideoSync` (and `vr4mice.SignalsPhotodiode`, `vr4mice.DatasetBatch` for OBS)  
+`frame_ids[i]`: first frame captured at or after game step `i`, -1 outside the video,
+indexed in `video_path`; `video_source` (`obs`/`camera`) and `align_method`
+(`photodiode`/`timestamps`) say how. Camera: matched on the camera timestamps
+(`State.start_time + step_time`, same host clock). OBS: sync square edges in the
+recording are matched with the photodiode edges (game time:
+`photodiode_time - State.start_time`); coarse offset from the random pulse_geo
+intervals, or for regular `pulse` trains (batch1) from the first edge of each
+train (needs >= 1 s without pulses before it in both), then a growing window with outlier rejection fits
+`video_time = offset + drift * game_time`, plus a running median of the residuals
+to follow local timing errors. QA: at least 10 pairs, 80% of expected edges
+paired, RMS under 20 ms, and for regular pulses the same pulse count in the video
+and the photodiode. Camera videos are checked the same way: the sync square edges
+at the camera timestamps must match photodiode edges (>= 80%), which catches a
+video paired with the wrong timestamps or session. `sync_match_fraction` stores
+that match for both setups. Sessions failing a check, without a pulse/pulse_geo
+photodiode (OBS), or with under 90% of steps inside the video are recorded in
+`FailedSession` instead.
+`align_step_to_frames(key, timepoints)` (game seconds) and `get_frame(key, frame_index)`
+(cropped mouse-view panel) work the same for both setups.
 
 ### `barcodes.py`
 
@@ -413,6 +462,28 @@ class TeensyBarcodes(dj.Computed)
 ```
 **Depends on:** `TeensyTTL`, `dlc.DLCProcessor`, `base_analysis.DataFrame`  
 Barcode events decoded from the TTL signal sampled by the Teensy.
+
+### `information_maps.py`
+
+*Target visibility across the arena per occlusion level (session-independent).*
+
+```python
+class OcclusionAperture(dj.Lookup)
+```
+Occluder aperture widths in game units, with the percent of target visible (calibrated for contrast, inferred for shape).
+Add a row to `contents` and run `run.py info_maps` to compute a new map.
+
+```python
+class InformationMap(dj.Computed)
+```
+**Depends on:** `OcclusionAperture`  
+Stores the percent of target visible (copied from `OcclusionAperture`), converts
+the game aperture to info-map arena units and computes the unnormalized
+information map with the fixed rig geometry (`ARENA` and the `compute_info_map`
+defaults in `vr4mice/analysis/information_maps.py`), stored as a blob;
+nothing is written to disk. `(InformationMap & key).plot()` returns the heatmap
+figure. Populated by `run.py info_maps`.
+
 
 ### `np_sync.py`
 

@@ -44,6 +44,7 @@ Use this order on a **new rig** or when replacing an old `-aux` checkout:
    | `remote_dst` | Upload destination on the server |
    | `gui_output_folder` | Where the GUI writes session metadata locally |
    | `teensy_path`, `processed_path`, … | Rig paths for file transfer (see `config/config.py` example) |
+   | `input_video_dst` | Optional: Synology folder for input videos (see [Input videos](#input-videos-3-camera-setup)) |
 
 5. Start the GUI:
    ```bash
@@ -123,6 +124,7 @@ Edit `config\config.json` in Notepad or VS Code. Use forward slashes in paths (`
 | `teensy_path` | `C:/vr4mice/raw` | Folder with `.pickle` files |
 | `dlc_path`, `camera_path`, … | `C:/vr4mice/dlc_video_raw` | Folders scanned for related session files |
 | `processed_path` | `C:/vr4mice/processed_rig` | Where files move after successful submit |
+| `input_video_dst` | `Z:/vr4mice/raw_screen_recordings` | Optional: Synology folder for input videos (see [Input videos](#input-videos-3-camera-setup)) |
 
 Adjust every path to match your rig’s Teensy / camera / DLC layout.
 
@@ -378,13 +380,17 @@ With camera prefix from `IMG_SRC` (default `Imagingsource`), a full session typi
 | DLC output | `Imagingsource_Testmouse_2023-02-22_2_DLC.hdf5` | `dlc_path` |
 | Processed kinematics | `Imagingsource_Testmouse_2023-02-22_2_PROC` | `proc_path` |
 | Video (metadata only; stays on rig) | `Imagingsource_Testmouse_2023-02-22_2_VIDEO.avi` | `video_path` |
+| Input video, camera 2 (to the Synology) | `vr4mice_Testmouse_2023-02-22_2_VIDEO2.avi` | `input_video_path` |
+| Input video timestamps (to the Synology) | `TS_vr4mice_Testmouse_2023-02-22_2_CAMERA2.npy` | `input_ts_path` |
+
+In 3-camera sessions (`<dataset>/run_XXXX/` folders), camera 3 is the DLC top view (`VIDEO3`, `TS_..._CAMERA3.npy` → `video_path` / `camera_path`), camera 2 films the input screen, and camera 1 (back camera) is not transferred.
 
 The server-side mirror is `vr4mice/actions/populate_rig.py` → `get_files_paths()`.
 
 ### How the GUI classifies files
 
 1. **Validation** — `modules/transfer.py` → `_set_path_format()` (glob patterns for the file picker).
-2. **Type tag** — `get_type()` scans for keywords: `VIDEO`, `TS`, `DLC`, `PROC`; otherwise `teensy_path`.
+2. **Type tag** — `get_type()` scans for keywords, in order: `_VIDEO2.` / `_CAMERA2.` (input video), `_VIDEO1.` / `_CAMERA1.` (back camera, ignored), `VIDEO`, `TS`, `DLC`, `PROC`; otherwise `teensy_path`.
 3. **Sibling search** — `find_related_files()` lists configured rig folders and keeps files whose stem matches the selected session.
 
 ### If formats change
@@ -413,6 +419,24 @@ Run tests after changes:
 ```bash
 cd tests && python -m pytest unit/test_gui_transfer.py -v --confcutdir=unit
 ```
+
+## Input videos (3-camera setup)
+
+With `input_video_dst` set in `config.json`, the transfer section has two more slots, **input video** (`*_VIDEO2.avi`) and **input timestamps** (`TS_*_CAMERA2.npy`). They fill in like the other files when you pick a file of the session's `run_XXXX/` folder.
+
+They are not sent to the pipeline server with `scp`: after the server transfer succeeds, the GUI copies them to `<input_video_dst>/raw_input_videos/`. That folder is where the pipeline's `InputVideo` table reads them (`input_video_dst` is the Synology folder mounted as `SCREEN_RECORDINGS_PATH` on the server). The files stay on the rig.
+
+Before anything is sent, Submit checks the pair against the session:
+
+- both files are present, named `<prefix>_<dataset>_VIDEO2.avi` and `TS_<prefix>_<dataset>_CAMERA2.npy` with the session's dataset, and sit in the same folder;
+- that folder is not another session's (catches files named after the wrong attempt);
+- the timestamps are unix times from the session's day and increasing.
+
+A failed check blocks the submit and lists the problems. If no input video is selected, the GUI asks whether to submit without it.
+
+On the Synology, a file is copied to `<name>.part` and renamed when complete. An existing file is never overwritten: the same size counts as already copied, a different size stops with an error. The pipeline runs the remaining checks: frame count against the timestamps, the sync square against the photodiode, and coverage of the game. Failures go to `FailedSession` and `VideoFileIssue`.
+
+`python check_rig_setup.py` reports whether `input_video_dst` is reachable. Older input videos are copied with `dj_pipeline/backup/transfer_input_videos.py`.
 
 ## GUI modules
 
