@@ -423,7 +423,7 @@ class ModelParams(dj.Lookup):
 
 @schema
 class PredictionModel(dj.Computed):
-    """Train logistic regression model per mouse using LOGO cross-validation."""
+    """Train logistic regression model with leave-one-session-out cross-validation."""
 
     definition = """
     -> LabelSet
@@ -432,7 +432,7 @@ class PredictionModel(dj.Computed):
     -> ExperimentStage
     -> vr4mice.Batch
     ---
-    coefficients : <blob>     # coefficients per session (per_mouse=True)
+    coefficients : <blob>     # coefficients per session (per_session=True)
     n_sessions : int32          # number of sessions included
     sessions : <blob>         # list of session dataset names
     random_state : int32        # random state used for reproducibility
@@ -553,7 +553,7 @@ class PredictionModel(dj.Computed):
             df_model, coef, _ = regression.predict_decision(
                 df=interpolated_df,
                 label=label_set,
-                per_mouse=True,
+                per_session=True,
                 max_iter=params["max_iter"],
                 scale_data=params["scale_data"],
                 random_state=random_state,
@@ -873,7 +873,7 @@ class PredictionModel10Windows(dj.Computed):
                 df_model, coef, scalers = regression.predict_decision(
                     df=window_df,
                     label=label_set,
-                    per_mouse=True,
+                    per_session=True,
                     max_iter=params["max_iter"],
                     scale_data=params["scale_data"],
                     random_state=random_state,

@@ -1,4 +1,5 @@
 import copy
+import warnings
 from typing import List, Optional, Tuple, Union
 
 import matplotlib as mpl
@@ -49,10 +50,11 @@ def predict_decision(
     df,
     label: List[str],
     n_splits: int = 10,
-    per_mouse: bool = True,
+    per_session: bool = True,
     max_iter: int = 100,
     scale_data: bool = True,
     random_state: Optional[int] = None,
+    per_mouse: Optional[bool] = None,
 ) -> Tuple[pd.DataFrame, npt.NDArray, List[Optional[dict]]]:
 
     """Predict the animal's decision based on the `label` data, through a logistic regression.
@@ -61,11 +63,12 @@ def predict_decision(
         df: The dataframe.
         label: A list of column names in the `df` dataframe.
         n_splits: The number of splits fo the cross validation.
-        per_mouse: If `True` split the data per session, else split
-            randomly across all sessions. If per_mouse, we train on
+        per_session: If `True` split the data per session, else split
+            randomly across all sessions. If per_session, we train on
             all sessions but one, and test on the left out session.
         scale_data: If `True`, standardize the data before fitting the model.
         random_state: Random state for reproducibility.
+        per_mouse: Deprecated alias for ``per_session`` kept for backward compatibility.
 
     Returns:
         A tuple of the input dataframe with added ``accuracy`` and ``proba_left`` columns,
@@ -86,6 +89,15 @@ def predict_decision(
         ```
     """
 
+    if per_mouse is not None:
+        warnings.warn(
+            "'per_mouse' is deprecated and will be removed in a future release; "
+            "use 'per_session' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        per_session = per_mouse
+
     data = np.asarray(df[label].values)
     labels = df.trial_left_choice.values
 
@@ -98,7 +110,7 @@ def predict_decision(
         max_iter=max_iter, random_state=random_state
     )
 
-    if per_mouse:
+    if per_session:
         sessions = df.dataset.values
         coefs = np.empty((len(np.unique(sessions)), n_features + 1))
         scalers = []

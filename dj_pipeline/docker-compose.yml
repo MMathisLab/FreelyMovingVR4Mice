@@ -1,3 +1,5 @@
+name: ${COMPOSE_PROJECT:-vr4mice}
+
 services:
   db:
     image: ${DB_IMAGE:-mysql:8.0}
@@ -23,6 +25,7 @@ services:
       - MPLCONFIGDIR=/app/.cache/matplotlib
       - XDG_CONFIG_HOME=/app/.cache
       - PATH=/app/.local/bin:/usr/local/bin:/usr/bin:/bin
+      - PYTHONPATH=/app/np_pipeline/src:/app/np_pipeline:${PYTHONPATH}
       - TAG=${TAG}
     network_mode: ${CLIENT_NETWORK_MODE:-host}
     # Run via bash so the bind-mounted script does not need +x on shared/NFS checkouts.
@@ -36,7 +39,8 @@ services:
       - "${SCREEN_RECORDINGS_PATH:-/mnt/neuropixel_data/vr4mice/raw_screen_recordings}:/vr4mice_screen_recordings"
       - "./base/base_min_schemas:/base_schemas"
       - "./base/base_actions:/base_actions"
-    ports: 
+      - "${NP_PIPELINE_SRC_PATH:-./np_pipeline_stub}:/app/np_pipeline"
+    ports:
       - "${JUPYTER_PORT:-8887}:8888"
     working_dir: /app
     env_file:

@@ -167,6 +167,7 @@ jobs:
             interpolated_trajectories
             session_metrics
             latency_tests
+            np_sync
             summary_emails
             inputs_videos
             decision
@@ -275,6 +276,10 @@ jobs:
           dataframe_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM base_analysis.__data_frame;')"
           summary_plot_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM base_analysis.__summary_plots;')"
           summary_email_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM summary_emails.summary_plot_email WHERE send_error IS NULL;')"
+          np_sync_barcode_sync_count=""
+          if grep -qx 'np_sync' "$RUNNER_TEMP/mysql-dump/schemas.txt"; then
+            np_sync_barcode_sync_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM np_sync.__barcode_sync;')"
+          fi
           if [ "${summary_email_count}" -lt 1 ] 2>/dev/null; then
             echo "summary_emails tables:" >&2
             docker exec vr4mice-mysql-restore mysql -uroot -psimple -e 'SHOW TABLES FROM summary_emails;' >&2 || true
@@ -290,6 +295,11 @@ jobs:
           echo "base_analysis.__data_frame rows: ${dataframe_count}"
           echo "base_analysis.__summary_plots rows: ${summary_plot_count}"
           echo "summary_emails.summary_plot_email successful rows: ${summary_email_count}"
+          if [ -n "${np_sync_barcode_sync_count}" ]; then
+            echo "np_sync.__barcode_sync rows: ${np_sync_barcode_sync_count}"
+          else
+            echo "np_sync schema not present in dump; skipping np_sync.__barcode_sync row-count check"
+          fi
 
           test "${dataset_count}" -ge 1
           test "${batch_count}" -ge 2
@@ -298,6 +308,9 @@ jobs:
           test "${state_count}" -ge 1
           test "${dataframe_count}" -ge 1
           test "${summary_plot_count}" -ge 1
+          if [ -n "${np_sync_barcode_sync_count}" ]; then
+            test "${np_sync_barcode_sync_count}" -ge 1
+          fi
 
       - name: Verify decision tables (--aws populated)
         run: |

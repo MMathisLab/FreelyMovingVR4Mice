@@ -86,6 +86,7 @@ def main():
         from vr4mice.schema import (
             vr4mice,
             barcodes,
+            base,
             base_analysis,
             dlc,
             interpolated_trajectories,
@@ -97,6 +98,7 @@ def main():
         return (
             vr4mice,
             barcodes,
+            base,
             base_analysis,
             dlc,
             interpolated_trajectories,
@@ -115,6 +117,7 @@ def main():
         (
             vr4mice,
             barcodes,
+            base,
             base_analysis,
             dlc,
             interpolated_trajectories,
@@ -139,6 +142,10 @@ def main():
         run_step(
             "vr4mice.Collab.populate",
             lambda: populate_pending(vr4mice.Collab, vr4mice.Dataset, logger=logger),
+        )
+        run_step(
+            "base.Base.populate",
+            lambda: populate_pending(base.Base, vr4mice.Dataset, logger=logger),
         )
         run_step(
             "base_analysis.DataFrame.populate",
@@ -294,6 +301,33 @@ def main():
         from vr4mice.schema import decision
 
         return decision
+
+    def import_np_sync_schema():
+        from vr4mice.schema import np_sync
+
+        return np_sync
+
+    # np_sync depends on the separate np_pipeline package/repo and should not
+    # fail the whole cron scenario when unavailable in a deployment/CI setup.
+    try:
+        np_sync = import_np_sync_schema()
+    except Exception as err:
+        logger.warning(
+            "Skipping np_sync: np_pipeline is not available (%s). "
+            "Behavioral analysis is unaffected.",
+            err,
+        )
+    else:
+        from vr4mice.utils.populate_helpers import populate_pending
+
+        run_step(
+            "np_sync.BarcodeSync.populate",
+            lambda: populate_pending(
+                np_sync.BarcodeSync,
+                np_sync.BarcodeSync().key_source,
+                logger=logger,
+            ),
+        )
 
     decision = run_import("import decision schema", import_decision_schema)
     if decision:

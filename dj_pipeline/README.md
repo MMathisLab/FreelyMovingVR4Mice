@@ -298,6 +298,7 @@ When using the local Docker database, `DJ_HOST` port must match `DB_PORT` in `.e
 - `COMPOSE_PROJECT` (default `vr4mice`) — must match between `make`, cron scripts, and manual `docker compose -p …` calls
 - `DB_BIND_IP`, `DB_PORT`, `MYSQL_ROOT_PASSWORD`
 - `DB_DATA_PATH`, `SHARED_PATH`, `DATA_PATH`, `SCREEN_RECORDINGS_PATH`
+- `NP_PIPELINE_SRC_PATH` (optional): path to a real `FreelyMoving_Mouse_NP` checkout. If unset, compose mounts `./np_pipeline_stub`, and only `run.py np_sync` is skipped while the rest of the pipeline remains functional.
 - `CLIENT_IMAGE`, `CLIENT_CONTAINER_NAME`, `DB_CONTAINER_NAME`, `CLIENT_NETWORK_MODE`, `JUPYTER_PORT`
 
 Remote/AWS DB credentials for scheduled AWS runs live in `.env-aws` (copy from `.env-aws.example`); this file is **not** committed.
