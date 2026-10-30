@@ -53,6 +53,8 @@ PROCESSOR_REGISTRY.pop("dlc_inference_w_pd_sync", None)
 logger = logging.getLogger(__name__)
 
 
+# NOTE(celia): This could be moved to a shared helper if other processors adopt
+# the new DLC GUI and need the same legacy-compatible session naming.
 def build_session_stem(
     mouse: str,
     date: str,
