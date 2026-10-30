@@ -1,4 +1,5 @@
 import json
+import os
 import shutil
 import subprocess
 from datetime import datetime
@@ -9,7 +10,7 @@ from PyQt5.QtWidgets import QComboBox, QLabel, QLineEdit, QPlainTextEdit
 import numpy as np
 from config.config import config, logger
 from utils.alert import AlertMsg
-from utils.session_files import check_file_format
+from utils.session_files import check_file_format, check_input_video_pair
 
 
 def load_dj_input(path_dj_data, path_json):
@@ -170,8 +171,11 @@ def check_missing_data(widget, args):
         return False
 
     keys_files = args["transfer"].get_keys()
+    optional_keys = args["transfer"].get_optional_keys()
     existed_keys = transfer_file.keys()
     for k in keys_files:
+        if k in optional_keys:
+            continue
         if k not in existed_keys or transfer_file[k] is None:
             # allert attach key file
             msg = (
@@ -184,6 +188,88 @@ def check_missing_data(widget, args):
             return False
 
     return True
+
+
+def check_input_video(widget, transfer, dataset):
+    """
+    Check the input video and timestamps selected for the Synology before submitting.
+
+    Asks for confirmation when none is selected (e.g. camera 2 not recorded), and
+    blocks the submit when they do not belong to this session.
+
+    Args:
+      widget (QWidget): The widget on which the alert message should be displayed.
+      transfer (Transfer): The transfer module.
+      dataset (str): The session name the files are submitted with.
+
+    Returns:
+      bool: True if the submit can go on, False otherwise.
+    """
+    files = transfer.get_input_video_files()
+    if not files:
+        return True  # no Synology destination configured
+
+    paths = {
+        key: Path(info["src"]).joinpath(info["filename"]) if info else None
+        for key, info in files.items()
+    }
+    if all(path is None for path in paths.values()):
+        msg = (
+            f"No input video (VIDEO2 + CAMERA2) selected for {dataset}.\n"
+            "Submit without it?"
+        )
+        return AlertMsg(widget, msg, cancel=True).exec() != 0
+
+    problems = check_input_video_pair(
+        dataset, paths["input_video_path"], paths["input_ts_path"]
+    )
+    if problems:
+        logger.warning(f"Input video check failed for {dataset}: {problems}")
+        msg = f"Input video files do not match session {dataset}:\n- " + "\n- ".join(
+            problems
+        )
+        AlertMsg(widget, msg).exec()
+        return False
+    return True
+
+
+def copy_input_videos(files):
+    """
+    Copy the input video and timestamps to the Synology (raw_input_videos/).
+
+    Each file goes to <name>.part first and is renamed once its size matches, so the
+    pipeline never reads a partial video. Existing files are never overwritten: the
+    same size counts as already copied, another size is an error.
+
+    Args:
+      files (dict): {key: file info with "src", "dst", "filename"} or None values.
+
+    Returns:
+      tuple (ok: bool, message: str)
+    """
+    for info in files.values():
+        if not info:
+            continue
+        src = Path(info["src"]).joinpath(info["filename"])
+        dst = Path(info["dst"]).joinpath(info["filename"])
+        size = src.stat().st_size
+        if dst.exists():
+            if dst.stat().st_size == size:
+                logger.info(f"Already on the Synology: {dst}")
+                continue
+            return False, f"{dst} already exists with another size, not overwritten"
+        try:
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            part = dst.with_name(dst.name + ".part")
+            logger.info(f"Copying {src} -> {dst}")
+            shutil.copyfile(src, part)
+            if part.stat().st_size != size:
+                part.unlink()
+                return False, f"{dst.name}: size mismatch after copy"
+            os.replace(part, dst)
+        except OSError as e:
+            return False, f"{dst.name}: {e}"
+    return True, ""
 
 
 def check_files(key, filename, format, current_mouse=None):

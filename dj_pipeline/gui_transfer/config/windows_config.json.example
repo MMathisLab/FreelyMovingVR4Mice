@@ -17,5 +17,7 @@
   "camera_path": "C:/vr4mice/dlc_video_raw",
   "teensy_path": "C:/vr4mice/raw",
 
-  "processed_path": "C:/vr4mice/processed_rig"
+  "processed_path": "C:/vr4mice/processed_rig",
+
+  "input_video_dst": "Z:/vr4mice/raw_screen_recordings"
 }

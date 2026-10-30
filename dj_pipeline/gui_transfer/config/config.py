@@ -47,8 +47,15 @@ config.json example
   "camera_path": "/data/dlc_video_raw",
   "teensy_path": "/data/raw",
 
-  "processed_path": "/data/processed_rig"
+  "processed_path": "/data/processed_rig",
+
+  "input_video_dst": "Z:/vr4mice/raw_screen_recordings"
 }
+
+"input_video_dst" is optional: the Synology folder mounted as SCREEN_RECORDINGS_PATH
+on the pipeline server. When set, the GUI copies the input video (VIDEO2) and its
+timestamps (CAMERA2) to its raw_input_videos/ subfolder. Leave it out or empty to
+not transfer input videos.
 
 """
 
@@ -138,6 +145,8 @@ class Config:
         Returns the path to the cache file.
     get_processed_path()
         Returns the path to the configured processed data folder.
+    get_input_video_dst()
+        Returns the Synology folder for input videos, or None.
     get_path(key)
         Returns the path for a given key.
     get_config(key)
@@ -220,6 +229,11 @@ class Config:
     @property
     def get_processed_path(self):
         return self.config_dict["processed_path"]
+
+    @property
+    def get_input_video_dst(self):
+        """Synology folder for input videos, or None when not configured."""
+        return self.config_dict.get("input_video_dst") or None
 
     def get_path(self, key):
         if key in self.config_dict.keys():

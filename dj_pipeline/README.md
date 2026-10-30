@@ -115,6 +115,11 @@ Defaults shown by the script:
 - `/mnt/database/shared` → `/shared`
 - `/mnt/database/vr4mice/vr4mice_database/data` → `/data`
 - `/mnt/neuropixel_data/vr4mice/raw_screen_recordings` → `/vr4mice_screen_recordings`
+  - `raw_screen_recordings/<dataset>.mkv`: OBS input recordings (old setup)
+  - `raw_input_videos/`: 3-camera setup input videos, `vr4mice_<dataset>_VIDEO2.avi`
+    with `TS_vr4mice_<dataset>_CAMERA2.npy`, flat (no `run_0001/`). Check that the
+    attempt number in each filename matches the session folder before copying:
+    some rig files carry the wrong one (e.g. the `_2026-08-11_2` sessions).
 - repo root (`./`) → `/app`
 - `./base/base_min_schemas` → `/base_schemas`
 - `./base/base_actions` → `/base_actions`
@@ -252,6 +257,8 @@ In `docker-compose.yml`, map host storage for database and data volumes:
 - Use persistent paths (e.g., `/mnt/database/...`) on the server.
 Network mode:
 - Default is `host`. Set `CLIENT_NETWORK_MODE=bridge` in `.env.compose` if you need bridge networking.
+
+The Compose `client` service is capped at 12 logical CPUs worth of CPU time to leave host CPU headroom on larger machines. This is a per-container limit, not a Docker-wide limit or a reservation of dedicated CPUs.
 
 ### Deployment defaults (quick_start.sh)
 When using `bash quick_start.sh` in **deployment** mode, the default host paths map to:
