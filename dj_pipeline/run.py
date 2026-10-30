@@ -25,6 +25,7 @@ logger = Logger.get_logger()
     "latency": compute latencies based on photodiode signals
     "inputs_videos": process input videos and extract frames
     "decision": analyze decision-making metrics
+    "info_maps": compute information maps per occlusion level
     "np_sync": align VR time to Neuropixels time via barcodes (requires the
         np_pipeline package/repo; skips gracefully, without affecting any other
         mode, if it isn't installed or no dataset has a linked NP recording yet)
@@ -80,10 +81,11 @@ if __name__ == "__main__":
             "sync_days",
             "inputs_videos",
             "decision",
+            "info_maps",
             "np_sync",
             "maintenance",
         ],
-        help="Mode to execute: 'connect', 'populate', 'summary', 'dlc', 'fetch', 'sync_days', 'analysis', 'inputs_videos', 'decision', 'np_sync', 'maintenance'",
+        help="Mode to execute: 'connect', 'populate', 'summary', 'dlc', 'fetch', 'sync_days', 'analysis', 'inputs_videos', 'decision', 'info_maps', 'np_sync', 'maintenance'",
     )
 
     args = parser.parse_args()
@@ -285,6 +287,12 @@ if __name__ == "__main__":
         decision.DecisionPoints().populate()
         decision.PredictionModel10Windows().populate()
         decision.DecisionPoints10Windows().populate()
+
+    elif args.mode == "info_maps":
+        from vr4mice.schema import information_maps
+
+        information_maps.sync_lookup_contents()
+        information_maps.InformationMap().populate()
 
     elif args.mode == "np_sync":
         # np_sync depends on the separate np_pipeline package/repo, which may be

@@ -414,6 +414,28 @@ class TeensyBarcodes(dj.Computed)
 **Depends on:** `TeensyTTL`, `dlc.DLCProcessor`, `base_analysis.DataFrame`  
 Barcode events decoded from the TTL signal sampled by the Teensy.
 
+### `information_maps.py`
+
+*Target visibility across the arena per occlusion level (session-independent).*
+
+```python
+class OcclusionAperture(dj.Lookup)
+```
+Occluder aperture widths in game units, with the percent of target visible (calibrated for contrast, inferred for shape).
+Add a row to `contents` and run `run.py info_maps` to compute a new map.
+
+```python
+class InformationMap(dj.Computed)
+```
+**Depends on:** `OcclusionAperture`  
+Stores the percent of target visible (copied from `OcclusionAperture`), converts
+the game aperture to info-map arena units and computes the unnormalized
+information map with the fixed rig geometry (`ARENA` and the `compute_info_map`
+defaults in `vr4mice/analysis/information_maps.py`), stored as a blob;
+nothing is written to disk. `(InformationMap & key).plot()` returns the heatmap
+figure. Populated by `run.py info_maps`.
+
+
 ### `np_sync.py`
 
 *Alignment of VR (behavior) time to Neuropixels (NP) native time via shared barcodes.*
