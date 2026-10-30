@@ -427,9 +427,7 @@ def apply_inclusion_criteria(
     pivoted_reward["narrowest_aperture_used"] = row_reward_stats[
         "narrowest_aperture_used"
     ]
-    pivoted_reward["widest_aperture_used"] = row_reward_stats[
-        "widest_aperture_used"
-    ]
+    pivoted_reward["widest_aperture_used"] = row_reward_stats["widest_aperture_used"]
 
     pivoted_reward["passes_min_reward"] = (
         pivoted_reward["best_extreme_reward"] > min_reward
