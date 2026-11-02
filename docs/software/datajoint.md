@@ -426,7 +426,7 @@ session's date, at a plausible rate without gaps over 2 s.
 ```python
 class StepVideoFrame(dj.Computed)
 ```
-**Depends on:** `vr4mice.State`, plus `InputVideo` or `RawVideoSync` (and `vr4mice.SignalsPhotodiode` or `dlc.DLCProcessor`, `vr4mice.DatasetBatch` for OBS)  
+**Depends on:** `vr4mice.State` and `dlc.DLCProcessor` (waits for the session's PROC), plus `InputVideo` or `RawVideoSync` (and `vr4mice.SignalsPhotodiode` or `dlc.DLCProcessor`, `vr4mice.DatasetBatch` for OBS)  
 `frame_ids[i]`: frame showing game step `i` on screen (the one the mouse reacts to), the
 first frame at or after `step_time[i] + display_lag`, -1 outside the video, indexed in
 `video_path`. `step_frame_ids` keeps the frame captured at the step's own time.

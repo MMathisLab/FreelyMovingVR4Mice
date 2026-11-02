@@ -516,8 +516,13 @@ class StepVideoFrame(dj.Computed):
 
     @property
     def key_source(self):
+        # Wait for the session's PROC (dlc.DLCProcessor, populated before
+        # SignalsPhotodiode in the same run): it can arrive after the pickle, and
+        # aligning before it would skip the photodiode check for good.
+        from vr4mice.schema import dlc
+
         keys = InputVideo.fetch("KEY") + RawVideoSync.fetch("KEY")
-        return vr4mice.State.proj() & keys
+        return vr4mice.State.proj() & keys & dlc.DLCProcessor.proj()
 
     def make(self, key):
         """Match each game step to an input video frame and store QA."""
@@ -814,6 +819,85 @@ class StepVideoFrame(dj.Computed):
             else:
                 result.append(int(np.ceil(np.interp(tp, times, frames) - 1e-9)))
         return result
+
+    @classmethod
+    def trial_frames(cls, key, trial: int, decision_xy=None) -> dict:
+        """Displayed frames at the initiation, decision and end of a trial.
+
+        Steps come from ``base_analysis.DataFrame`` (trial, iti, reward, x, y).
+        Initiation is the trial's first non-ITI step; Decision the active step
+        closest to ``decision_xy`` (x, y of ``DecisionPoints10Windows``), left
+        out when None; Reward the first rewarded step, or "End (no reward)" the
+        last active step of an unrewarded trial.
+
+        Returns:
+            {label: frame index (``frame_ids``), or None outside the video}
+        """
+        from vr4mice.schema.base_analysis import DataFrame
+
+        df = DataFrame().get_data(
+            key=key, columns=["step_time", "trial", "iti", "reward", "x", "y"]
+        )
+        if df is None or df is False:
+            raise ValueError(f"No base_analysis.DataFrame for {key}")
+        step_time, frame_ids = (cls & key).fetch1("step_time", "frame_ids")
+        steps = pd.merge_asof(
+            df.sort_values("step_time").reset_index(drop=True),
+            pd.DataFrame(
+                {
+                    "step_time": np.asarray(step_time, dtype=float),
+                    "frame_id": np.asarray(frame_ids),
+                }
+            ),
+            on="step_time",
+            direction="nearest",
+        )
+        in_trial = steps[steps["trial"] == trial]
+        active = in_trial[in_trial["iti"] == 0]
+        if active.empty:
+            raise ValueError(f"Trial {trial} has no active steps in {key}")
+
+        frames = {"Initiation": active["frame_id"].iloc[0]}
+        if decision_xy is not None:
+            x, y = (float(v) for v in decision_xy)
+            distance = np.hypot(active["x"] - x, active["y"] - y)
+            frames["Decision"] = active["frame_id"].loc[distance.idxmin()]
+        rewarded = in_trial[in_trial["reward"] > 0]
+        if len(rewarded):
+            frames["Reward"] = rewarded["frame_id"].iloc[0]
+        else:
+            frames["End (no reward)"] = active["frame_id"].iloc[-1]
+        return {k: (int(f) if f >= 0 else None) for k, f in frames.items()}
+
+    @classmethod
+    def plot_trial_frames(
+        cls, key, trial: int, decision_xy=None, axes=None, size=FRAME_OUTPUT_SIZE
+    ):
+        """Plot the displayed frames of ``trial_frames`` (one axis per frame).
+
+        Args:
+            key: StepVideoFrame key.
+            trial: Trial number (``base_analysis.DataFrame.trial``).
+            decision_xy: (x, y) of the decision point, or None.
+            axes: Axes to draw in (as many as frames); new figure when None.
+            size: (width, height) of the panels, see ``get_frame``.
+
+        Returns:
+            The axes.
+        """
+        import matplotlib.pyplot as plt
+
+        frames = cls.trial_frames(key, trial, decision_xy)
+        if axes is None:
+            _, axes = plt.subplots(1, len(frames), figsize=(4 * len(frames), 2.6))
+        for ax, (label, frame) in zip(np.ravel(axes), frames.items()):
+            ax.axis("off")
+            if frame is None:
+                ax.set_title(f"{label}\n(outside the video)")
+                continue
+            ax.imshow(cls.get_frame(key, frame, size=size)[..., ::-1])  # BGR -> RGB
+            ax.set_title(label)
+        return axes
 
     @classmethod
     def get_frame(cls, key, frame_index: int, size=FRAME_OUTPUT_SIZE):
