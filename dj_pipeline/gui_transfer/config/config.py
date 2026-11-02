@@ -49,7 +49,7 @@ config.json example
 
   "processed_path": "/data/processed_rig",
 
-  "input_video_dst": "Z:/vr4mice/raw_screen_recordings"
+  "input_video_dst": "Z:/vr4mice"
 }
 
 "input_video_dst" is optional: the Synology folder mounted as SCREEN_RECORDINGS_PATH

@@ -124,7 +124,7 @@ Edit `config\config.json` in Notepad or VS Code. Use forward slashes in paths (`
 | `teensy_path` | `C:/vr4mice/raw` | Folder with `.pickle` files |
 | `dlc_path`, `camera_path`, … | `C:/vr4mice/dlc_video_raw` | Folders scanned for related session files |
 | `processed_path` | `C:/vr4mice/processed_rig` | Where files move after successful submit |
-| `input_video_dst` | `Z:/vr4mice/raw_screen_recordings` | Optional: Synology folder for input videos (see [Input videos](#input-videos-3-camera-setup)) |
+| `input_video_dst` | `Z:/vr4mice` | Optional: Synology folder for input videos (see [Input videos](#input-videos-3-camera-setup)) |
 
 Adjust every path to match your rig’s Teensy / camera / DLC layout.
 
