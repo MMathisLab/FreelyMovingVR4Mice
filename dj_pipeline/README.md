@@ -114,7 +114,7 @@ Defaults shown by the script:
 - `/mnt/database/vr4mice/vr4mice_database/database` → `/var/lib/mysql`
 - `/mnt/database/shared` → `/shared`
 - `/mnt/database/vr4mice/vr4mice_database/data` → `/data`
-- `/mnt/neuropixel_data/vr4mice/raw_screen_recordings` → `/vr4mice_screen_recordings`
+- `/mnt/neuropixel_data/vr4mice` → `/vr4mice_screen_recordings`
   - `raw_screen_recordings/<dataset>.mkv`: OBS input recordings (old setup)
   - `raw_input_videos/`: 3-camera setup input videos, `vr4mice_<dataset>_VIDEO2.avi`
     with `TS_vr4mice_<dataset>_CAMERA2.npy`, flat (no `run_0001/`). Check that the
@@ -265,7 +265,7 @@ When using `bash quick_start.sh` in **deployment** mode, the default host paths 
 - `/mnt/database/vr4mice/vr4mice_database/database` → `/var/lib/mysql`
 - `/mnt/database/shared` → `/shared`
 - `/mnt/database/vr4mice/vr4mice_database/data` → `/data`
-- `/mnt/neuropixel_data/vr4mice/raw_screen_recordings` → `/vr4mice_screen_recordings`
+- `/mnt/neuropixel_data/vr4mice` → `/vr4mice_screen_recordings`
 - repo root (`./`) → `/app`
 - `./base/base_min_schemas` → `/base_schemas`
 - `./base/base_actions` → `/base_actions`

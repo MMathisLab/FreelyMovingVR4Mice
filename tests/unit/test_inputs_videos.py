@@ -23,6 +23,8 @@ from inputs_videos import (  # noqa: E402
     align_steps_to_frames_by_timestamps,
     binarize_sync_trace,
     crop_frame,
+    find_scene_changes,
+    resize_frame,
     find_input_video_files,
     find_sync_square,
     list_input_video_files,
@@ -195,6 +197,28 @@ class TestReadVideoFrame:
             read_video_frame(str(tmp_path / "absent.avi"), 0)
 
 
+def test_find_scene_changes(tmp_path):
+    path = str(tmp_path / "trials.avi")
+    writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"MJPG"), 30, (100, 80))
+    for i in range(80):
+        frame = np.full((80, 100, 3), 90, dtype=np.uint8)
+        if i >= 30:  # trial scene appears at frame 30, in the panel only
+            frame[50:80, 0:40] = 200
+        frame[0:10, 90:100] = 255 * (i % 2)  # sync square outside the panel
+        writer.write(frame)
+    writer.release()
+    panel = (0, 40, 50, 40)
+    assert find_scene_changes(path, panel, [24, 27]) == [30, 30]
+    assert find_scene_changes(path, panel, [60]) == [None]  # no change near 60
+
+
+def test_resize_frame_to_common_size():
+    camera_panel = np.zeros((237, 316, 3), dtype=np.uint8)
+    obs_panel = np.zeros((511, 926, 3), dtype=np.uint8)
+    for panel in (camera_panel, obs_panel):
+        assert resize_frame(panel, (948, 535)).shape == (535, 948, 3)
+
+
 def test_crop_frame_takes_x_y_width_height():
     frame = np.arange(480 * 640 * 3).reshape(480, 640, 3)
     crop = crop_frame(frame, (0, 243, 316, 237))
@@ -305,6 +329,39 @@ class TestAlignByPhotodiode:
         )
         assert qa["pair_fraction"] > 0.95
         assert np.nanmax(np.abs(frames - truth)) <= 1.0
+
+    @pytest.mark.parametrize("regular", [False, True])
+    def test_generated_signal_stands_in_for_photodiode(self, regular):
+        # No photodiode: the PROC's generated signal, one sample per DLC frame
+        # (100 Hz), on only at the sample sending each pulse, at send time =
+        # display time - delay; the fallback adds the display delay back.
+        video_df, photodiode_df, steps, truth = _sync_session(
+            regular=regular, pulse_start=2.0, video_start=7.3
+        )
+        display = np.round(photodiode_df["photodiode_read"].to_numpy()) > 420
+        display_t = photodiode_df["time_stamp"].to_numpy()
+        onsets = display_t[1:][display[1:] & ~display[:-1]]
+        send_t = np.arange(-5.0, 300.0, 0.01)
+        signal = np.zeros(send_t.size)
+        signal[np.searchsorted(send_t, onsets - 0.06)] = 1.0
+        generated_df = pd.DataFrame(
+            {"time_stamp": send_t + 0.062, "photodiode_read": signal}
+        )
+        frames, qa = align_steps_to_frames_by_photodiode(
+            video_df,
+            generated_df,
+            steps,
+            regular_pulses=regular,
+            pd_lowpass=False,
+            pd_level_percentiles=(0, 100),
+        )
+        assert qa["pair_fraction"] > 0.95
+        assert np.nanmax(np.abs(frames - truth)) <= 1.0
+        # short pulses: the default percentile levels see a flat signal
+        with pytest.raises(ValueError):
+            align_steps_to_frames_by_photodiode(
+                video_df, generated_df, steps, regular_pulses=regular
+            )
 
     def test_regular_pulses_recording_started_mid_train_fails(self):
         # video starts 10 s after game start, pulses from 2 s: first video edge

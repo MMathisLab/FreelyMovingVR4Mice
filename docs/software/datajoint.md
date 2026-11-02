@@ -426,26 +426,38 @@ session's date, at a plausible rate without gaps over 2 s.
 ```python
 class StepVideoFrame(dj.Computed)
 ```
-**Depends on:** `vr4mice.State`, plus `InputVideo` or `RawVideoSync` (and `vr4mice.SignalsPhotodiode`, `vr4mice.DatasetBatch` for OBS)  
-`frame_ids[i]`: first frame captured at or after game step `i`, -1 outside the video,
-indexed in `video_path`; `video_source` (`obs`/`camera`) and `align_method`
-(`photodiode`/`timestamps`) say how. Camera: matched on the camera timestamps
+**Depends on:** `vr4mice.State`, plus `InputVideo` or `RawVideoSync` (and `vr4mice.SignalsPhotodiode` or `dlc.DLCProcessor`, `vr4mice.DatasetBatch` for OBS)  
+`frame_ids[i]`: frame showing game step `i` on screen (the one the mouse reacts to), the
+first frame at or after `step_time[i] + display_lag`, -1 outside the video, indexed in
+`video_path`. `step_frame_ids` keeps the frame captured at the step's own time.
+`display_lag` (step to screen, ~50 ms) is measured per session as the median delay
+of the scene change after up to 40 trial starts (`display_lag_trials`; 54 ms default
+under 5 clear starts); a lag outside 0-200 ms or a spread over 25 ms fails the
+session (misaligned video). The pose behind a step was captured ~94 ms before it is
+on screen (Xestia_2026-07-30_1). `video_source` (`obs`/`camera`) and `align_method`
+(`photodiode`/`timestamps`/`generated_signal`) say how. Camera: matched on the camera timestamps
 (`State.start_time + step_time`, same host clock). OBS: sync square edges in the
 recording are matched with the photodiode edges (game time:
 `photodiode_time - State.start_time`); coarse offset from the random pulse_geo
 intervals, or for regular `pulse` trains (batch1) from the first edge of each
 train (needs >= 1 s without pulses before it in both), then a growing window with outlier rejection fits
 `video_time = offset + drift * game_time`, plus a running median of the residuals
-to follow local timing errors. QA: at least 10 pairs, 80% of expected edges
+to follow local timing errors. Without a photodiode (no `SignalsPhotodiode` row,
+e.g. batch1), the generated sync signal that drives the square stands in for it:
+PROC send times from `dlc.DLCProcessor` (pulse/pulse_geo inferred from the
+pulse intervals) plus `GENERATED_SIGNAL_DISPLAY_DELAY` (62 ms, measured on
+Xestia_2026-08-21_1; stored in `generated_signal_delay`), `align_method = generated_signal`.
+QA: at least 10 pairs, 80% of expected edges
 paired, RMS under 20 ms, and for regular pulses the same pulse count in the video
 and the photodiode. Camera videos are checked the same way: the sync square edges
 at the camera timestamps must match photodiode edges (>= 80%), which catches a
 video paired with the wrong timestamps or session. `sync_match_fraction` stores
 that match for both setups. Sessions failing a check, without a pulse/pulse_geo
-photodiode (OBS), or with under 90% of steps inside the video are recorded in
+sync signal (OBS), or with under 90% of steps inside the video are recorded in
 `FailedSession` instead.
-`align_step_to_frames(key, timepoints)` (game seconds) and `get_frame(key, frame_index)`
-(cropped mouse-view panel) work the same for both setups.
+`align_step_to_frames(key, timepoints, displayed=True)` (game seconds) and `get_frame(key, frame_index)`
+(cropped mouse-view panel, resized to `FRAME_OUTPUT_SIZE` = 948x535 for every setup;
+`size=None` for the native crop) work the same for both setups.
 
 ### `barcodes.py`
 

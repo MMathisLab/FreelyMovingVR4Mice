@@ -228,6 +228,7 @@ def _preprocess_photodiode(
     pd_threshold: float = 0.5,
     invert: bool = False,
     level_percentiles: Tuple[float, float] = (5.0, 95.0),
+    lowpass: bool = True,
 ) -> np.ndarray:
     """Binarize the photodiode: optional low-pass filter, then a level threshold.
 
@@ -242,6 +243,7 @@ def _preprocess_photodiode(
         pd_threshold: Threshold on the scaled signal (0 = low level, 1 = high level).
         invert: If True, the square is "on" when the photodiode is low.
         level_percentiles: Percentiles taken as the low and high levels.
+        lowpass: Low-pass filter the signal first (noisy analog photodiode).
 
     Returns:
         Binarized photodiode signal (1 = square on).
@@ -249,7 +251,7 @@ def _preprocess_photodiode(
     pd_read = np.asarray(pd_read, dtype=float)
     # Low-pass filter when sampled fast enough (>= ~1 kHz recordings)
     sampling_rate = int(1 // np.mean(np.diff(pd_ts))) if len(pd_ts) > 1 else 50
-    if sampling_rate > 70:
+    if lowpass and sampling_rate > 70:
         pd_read = filter_pulsed_signal(
             signal=pd_read, sample_rate=sampling_rate, cutoff_freq=50
         )
@@ -416,6 +418,8 @@ def align_steps_to_frames_by_photodiode(
     residual_window: int = 41,
     regular_pulses: bool = False,
     min_quiet: float = 1.0,
+    pd_lowpass: bool = True,
+    pd_level_percentiles: Tuple[float, float] = (5.0, 95.0),
 ) -> Tuple[np.ndarray, Dict[str, float]]:
     """
     Align step times to video frames using the photodiode signal.
@@ -458,6 +462,12 @@ def align_steps_to_frames_by_photodiode(
             before the first edge, in both the video and the photodiode, so the
             first edges are the start of the pulse train and not a later pulse
             (which would shift every frame by whole pulse periods).
+        pd_lowpass: Low-pass filter the photodiode before thresholding. False
+            for a clean digital signal, e.g. the generated sync signal (PROC
+            send times, shifted by the display delay) used when there is no
+            photodiode.
+        pd_level_percentiles: Percentiles of the photodiode taken as its low
+            and high levels; (0, 100) for a digital signal with short pulses.
     """
     video_ts = np.asarray(video_df["timestamps"], dtype=float)
     video_frames = np.asarray(video_df["frame_ids"], dtype=float)
@@ -473,7 +483,12 @@ def align_steps_to_frames_by_photodiode(
     errors = []
     for invert in (False, True) if pd_invert is None else (pd_invert,):
         pd_bin = _preprocess_photodiode(
-            pd_read, pd_ts, pd_threshold=pd_threshold, invert=invert
+            pd_read,
+            pd_ts,
+            pd_threshold=pd_threshold,
+            invert=invert,
+            level_percentiles=pd_level_percentiles,
+            lowpass=pd_lowpass,
         )
         pd_edges = _detect_edges(pd_ts, pd_bin, min_separation=min_edge_separation)
         if regular_pulses and len(video_edges) and len(pd_edges):
@@ -766,7 +781,11 @@ def measure_seek_offset(
             ]
         )
         order = np.argsort(diffs)
-        if diffs[order[0]] > 0.5 or diffs[order[1]] - diffs[order[0]] < 0.02:
+        best, second = diffs[order[0]], diffs[order[1]]
+        # the same decoder gives identical frames, so the true match is ~0 and any
+        # other is larger, even by little on near-static screens (mean |diff| of
+        # 0.002 over 20 thumbnails is still hundreds of grey levels)
+        if best > 0.5 or second <= 2 * best + 1e-4:
             continue  # sequence not unique around this probe (static screens)
         offsets.append(candidates[order[0]] - probe)
 
@@ -816,6 +835,76 @@ def crop_frame(frame: np.ndarray, roi: Tuple[int, int, int, int]) -> np.ndarray:
     """Return the (x, y, width, height) region of a frame (rows = y, cols = x)."""
     x, y, w, h = (int(v) for v in roi)
     return frame[y : y + h, x : x + w]
+
+
+def find_scene_changes(
+    video_path: str,
+    roi: Tuple[int, int, int, int],
+    frames: Iterable[int],
+    seek_offset: int = 0,
+    before: int = 5,
+    after: int = 30,
+    thumbnail: Tuple[int, int] = (80, 60),
+    min_contrast: float = 10.0,
+    min_change: float = 2.0,
+) -> List[Optional[int]]:
+    """First frame of the largest change in ``roi`` around each of ``frames``.
+
+    Used at trial starts, where the scene switches at once (inter-trial screen
+    to objects): the frames from ``before`` frames before to ``after`` frames
+    after each one are read, and the largest frame-to-frame difference marks
+    the change. None where no clear change is found: the largest difference is
+    under ``min_change`` grey levels, or under ``min_contrast`` times the
+    median difference in the window.
+
+    Args:
+        video_path: Video file.
+        roi: (x, y, width, height) region compared (the mouse-view panel).
+        frames: Frame index around which to look for each change.
+        seek_offset: See ``measure_seek_offset``.
+        before: Frames read before each frame.
+        after: Frames read after each frame.
+        thumbnail: (width, height) the region is reduced to before comparing.
+        min_contrast: Minimum ratio of the change to the median difference.
+        min_change: Minimum change, mean absolute grey-level difference.
+    """
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        raise IOError(f"Failed to open video file: {video_path}")
+    changes = []
+    try:
+        for frame in frames:
+            first = max(int(frame) - before, 0)
+            cap.set(cv2.CAP_PROP_POS_FRAMES, first - seek_offset)
+            thumbs = []
+            for _ in range(int(frame) + after + 1 - first):
+                success, image = cap.read()
+                if not success:
+                    break
+                gray = cv2.cvtColor(crop_frame(image, roi), cv2.COLOR_BGR2GRAY)
+                thumbs.append(cv2.resize(gray, thumbnail).astype(np.int16))
+            if len(thumbs) < 3:
+                changes.append(None)
+                continue
+            diffs = np.array(
+                [np.abs(b - a).mean() for a, b in zip(thumbs[:-1], thumbs[1:])]
+            )
+            k = int(np.argmax(diffs))
+            clear = diffs[k] >= min_change and diffs[k] >= min_contrast * max(
+                np.median(diffs), 0.1
+            )
+            changes.append(first + k + 1 if clear else None)
+    finally:
+        cap.release()
+    return changes
+
+
+def resize_frame(frame: np.ndarray, size: Tuple[int, int]) -> np.ndarray:
+    """Resize a frame to (width, height): area averaging to shrink, linear to grow."""
+    width, height = (int(v) for v in size)
+    shrink = width * height < frame.shape[0] * frame.shape[1]
+    interpolation = cv2.INTER_AREA if shrink else cv2.INTER_LINEAR
+    return cv2.resize(frame, (width, height), interpolation=interpolation)
 
 
 # ---------------------------------------------------------------------------
