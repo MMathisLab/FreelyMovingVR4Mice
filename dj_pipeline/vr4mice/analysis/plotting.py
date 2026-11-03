@@ -2155,7 +2155,9 @@ def plot_mouse_trial_lineplot(
                 alpha=0.7,
             )
             if print_zero_shot:
-                print(f"Zero-shot baseline and SEM: {baseline_value:.3f} ± {baseline_means.sem():.3f}")
+                print(
+                    f"Zero-shot baseline and SEM: {baseline_value:.3f} ± {baseline_means.sem():.3f}"
+                )
 
     ax.set_xlabel("Trial")
     ax.set_ylabel(f"Rolling {label}")
