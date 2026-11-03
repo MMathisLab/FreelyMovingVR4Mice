@@ -246,7 +246,9 @@ class InclusionStatus(dj.Computed):
 
             def _insert_inclusion_row(row_dict):
                 """Insert only fields that exist in the current table heading."""
-                filtered_row = {k: v for k, v in row_dict.items() if k in heading_fields}
+                filtered_row = {
+                    k: v for k, v in row_dict.items() if k in heading_fields
+                }
                 self.insert1(filtered_row)
 
             # Get stage_name from ExperimentMember

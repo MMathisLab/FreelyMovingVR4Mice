@@ -53,31 +53,15 @@ DataJoint pipeline, run from the client Docker container, optionally scheduled v
 6. **Environment-specific**: local server (`run.py inputs_videos`, `run.py fetch` → refreshes rig GUI dropdown) vs AWS/remote (`run.py decision --aws`, on `/data/processed`).
 7. **Summaries**: `run.py summary` → `SummaryPlots` (emails sent when `EMAIL=true`).
 
-Key directories inside `dj_pipeline/`:
-- `vr4mice/schema/` — DataJoint table definitions (`vr4mice.py`, `base_analysis.py`, `dlc.py`, `interpolated_trajectories.py`, `latency_tests.py`, `session_metrics.py`, `inputs_videos.py`, `decision.py`).
-- `vr4mice/analysis/` — analysis/plotting logic (`dlc_helpers.py`, `analysis.py`, `plotting.py`, `regression.py`, `stats.py`, `summary_dj.py`).
-- `vr4mice/actions/` — orchestration (`populate_rig.py`, `helpers_dj.py`, `fetch_data.py`, `sync_days.py`).
-- `vr4mice/utils/` — logging, DB connection, schema config, email.
-- `base/base_schemas` vs `base/base_min_schemas` — full vs minimal `exp`/`mice` schema definitions (minimal used when full schemas unavailable, e.g. GUI/collab contexts); each is its own installable package (has its own `setup.cfg`), installed with `pip install --no-deps`.
-- `gui_transfer/` — rig-side GUI config/data transfer; produces `gui_menu.npy`, copied to the rig at GUI startup.
-- `run.py` (manual CLI) vs `cron_scenario.py` (scheduled full-pipeline run) — two entrypoints into the same underlying actions.
-- `docker/entrypoint.sh` creates the runtime user (PUID/PGID) and drops privileges via `gosu`; `docker/cron_common.sh` has shared cron helpers.
+`base/base_schemas` vs `base/base_min_schemas` — full vs minimal `exp`/`mice` schema definitions (minimal used when full schemas unavailable, e.g. GUI/collab contexts); each is its own installable package, installed with `pip install --no-deps`. `run.py` (manual CLI) and `cron_scenario.py` (scheduled) are two entrypoints into the same actions.
 
 Full narrative doc: `dj_pipeline/README.md` (also published in the project book).
 
 ## `teensyexp` / `mouse_task` architecture (rig control)
 
-- `teensyexp/teensy_experiment.py` — the Tkinter GUI (`TeensyExperimentGUI`) that drives an experiment session: loads per-rig config from `system_setup.json`, builds the task parameter form via `inspect` on the task class's `__init__`, and handles Start/Save Data callbacks.
-- `teensyexp/teensy.py` — serial interface to the Teensy microcontroller.
-- `teensyexp/tasks_abc/task.py` — `Task` base class (informal ABC) that every task extends: owns the teensy handle, state-tracking (`move_to_state`), and the `loop()`/`get_info()`/`get_data()` contract the GUI calls into every frame.
-- `teensyexp/tasks_abc/unity_task.py` — `UnityTask(Task)`, wraps a `mlagents_envs.UnityEnvironment` (ML-Agents side channels for float properties/env params), for tasks whose "game" is a Unity build.
-- `teensyexp/tasks_abc/dlc_socket.py` / `dlc_deque_socket.py` — socket-based bridges to real-time DeepLabCut pose data.
-- `mouse_task/task_active_sensing.py` — `ActiveSensingTask`, the concrete `UnityTask` subclass used by essentially all current task variants (detection/discrimination, with/without occluders, shape variants).
+The GUI (`teensyexp/teensy_experiment.py`) builds its task parameter form via `inspect` on the task class's `__init__`; every task extends `teensyexp/tasks_abc/task.py` (`loop()`/`get_info()`/`get_data()` contract). `mouse_task/task_active_sensing.py` (`ActiveSensingTask`, a `UnityTask`) backs essentially all current variants.
 
-**Task variants are config-driven, not one-Python-file-per-task.** `mouse_task/_registry.py` reads `mouse_task/configs/common.yaml` (defaults for every parameter) plus one `mouse_task/configs/tasks/<name>.yaml` per variant (just the overrides + `class_name` + `description`), deep-merges them via `mouse_task.helpers.load_task_config`, and **generates** an `ActiveSensingTask` subclass per YAML with a real, `inspect`-able `__init__` signature (required because the GUI reads args/defaults via `inspect.getargspec` to build its editable parameter form). Generated classes are re-exported as `mouse_task.<ClassName>`. To add a new task variant, add a YAML under `mouse_task/configs/tasks/` — no Python required (see `mouse_task/configs/README.md`).
-- `mouse_task/dlc_utils/` — DLC processor variants (`dlc_processor_socket.py`, `dlc_processor_socket_pd.py`, `dlc_processor_socket_pd_sync.py`, plus `fake_processors/` for testing without real hardware).
-- `mouse_task/teensy/` — Arduino/Teensy firmware sketches (barcodes, dual water valve, photodiode reads).
-- `mouse_task/latency_tests/` — standalone scripts for measuring socket/Unity/Arduino latency, not part of the main task flow.
+**Task variants are config-driven, not one-Python-file-per-task.** `mouse_task/_registry.py` reads `mouse_task/configs/common.yaml` (defaults for every parameter) plus one `mouse_task/configs/tasks/<name>.yaml` per variant (just the overrides + `class_name` + `description`), deep-merges them via `mouse_task.helpers.load_task_config`, and **generates** an `ActiveSensingTask` subclass per YAML with a real, `inspect`-able `__init__` signature (required because the GUI reads args/defaults via `inspect.getargspec` to build its editable parameter form). Generated classes are re-exported as `mouse_task.<ClassName>`. To add a new task variant, add a YAML under `mouse_task/configs/tasks/` — no Python required (see `mouse_task/configs/README.md`). `mouse_task/dlc_utils/fake_processors/` lets you test without real hardware.
 
 ## Governance & workflow norms (from `docs/developer_guide.md`)
 
