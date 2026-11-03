@@ -228,8 +228,8 @@ class InclusionStatus(dj.Computed):
     -> ExperimentMember                      # dataset + set/stage/session_label/batch membership key
     ---
     included : bool                          # True if dataset passes current inclusion criteria
-    criteria_evaluated : bool                # True when reward-based criteria were actually evaluated
-    criteria_params : <blob>.                # Dict snapshot of criteria parameters used during evaluation
+    criteria_evaluated = null : bool         # True when reward-based criteria were evaluated; NULL for rows written before this column existed
+    criteria_params = null : <blob>          # Dict snapshot of criteria parameters used during evaluation; NULL for pre-existing rows
     best_extreme_reward = null : float32     # Max reward between narrowest and widest occluder apertures
     reward_drop = null : float32             # Reward(widest_aperture) - Reward(narrowest_aperture)
     """
@@ -242,28 +242,19 @@ class InclusionStatus(dj.Computed):
 
             logger.info(f"{self.__class__.__name__} population started for {key}.")
 
-            heading_fields = set(self.heading.names)
-
-            def _insert_inclusion_row(row_dict):
-                """Insert only fields that exist in the current table heading."""
-                filtered_row = {
-                    k: v for k, v in row_dict.items() if k in heading_fields
-                }
-                self.insert1(filtered_row)
-
             # Get stage_name from ExperimentMember
             stage_name = (ExperimentMember & key).fetch1("stage_name")
             # session_label = (ExperimentMember & key).fetch1("session_label")
 
             if stage_name == "training":
-                _insert_inclusion_row(
+                self.insert1(
                     {
                         **key,
                         "included": False,
                         "criteria_evaluated": False,
                         "criteria_params": {},
-                        "best_extreme_reward": np.nan,
-                        "reward_drop": np.nan,
+                        "best_extreme_reward": None,
+                        "reward_drop": None,
                     }
                 )
                 return
@@ -273,14 +264,14 @@ class InclusionStatus(dj.Computed):
                 logger.debug(
                     f"Skipping excluded dataset for {self.__class__.__name__}: {key['dataset']} ({excluded_reason})"
                 )
-                _insert_inclusion_row(
+                self.insert1(
                     {
                         **key,
                         "included": False,
                         "criteria_evaluated": False,
                         "criteria_params": {"excluded_reason": excluded_reason},
-                        "best_extreme_reward": np.nan,
-                        "reward_drop": np.nan,
+                        "best_extreme_reward": None,
+                        "reward_drop": None,
                     }
                 )
                 return
@@ -290,14 +281,14 @@ class InclusionStatus(dj.Computed):
             trial_df = tables.fetch(as_dict=True)
 
             if not trial_df:
-                _insert_inclusion_row(
+                self.insert1(
                     {
                         **key,
                         "included": False,
                         "criteria_evaluated": False,
                         "criteria_params": {},
-                        "best_extreme_reward": np.nan,
-                        "reward_drop": np.nan,
+                        "best_extreme_reward": None,
+                        "reward_drop": None,
                     }
                 )
                 return
@@ -340,14 +331,20 @@ class InclusionStatus(dj.Computed):
                 reward_drop_value = _get_row_scalar(row, "reward_drop", np.nan)
 
                 included = bool(included_value)
-                best_extreme_reward = float(best_extreme_reward_value)
-                reward_drop = float(reward_drop_value)
+                best_extreme_reward = (
+                    None
+                    if pd.isna(best_extreme_reward_value)
+                    else float(best_extreme_reward_value)
+                )
+                reward_drop = (
+                    None if pd.isna(reward_drop_value) else float(reward_drop_value)
+                )
             else:
                 included = False
-                best_extreme_reward = np.nan
-                reward_drop = np.nan
+                best_extreme_reward = None
+                reward_drop = None
 
-            _insert_inclusion_row(
+            self.insert1(
                 {
                     **key,
                     "included": included,
