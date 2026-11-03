@@ -225,13 +225,13 @@ class InclusionStatus(dj.Computed):
     """Inclusion status per dataset and experiment set role."""
 
     definition = """
-    -> ExperimentMember             # dataset + set/stage/session_label/batch membership key
+    -> ExperimentMember                      # dataset + set/stage/session_label/batch membership key
     ---
-    included : bool                 # True if dataset passes current inclusion criteria
-    criteria_evaluated : bool       # True when reward-based criteria were actually evaluated
-    criteria_params : longblob      # Dict snapshot of criteria parameters used during evaluation
-    best_extreme_reward : float     # Max reward between narrowest and widest occluder apertures
-    reward_drop : float             # Reward(widest_aperture) - Reward(narrowest_aperture)
+    included : bool                          # True if dataset passes current inclusion criteria
+    criteria_evaluated : bool                # True when reward-based criteria were actually evaluated
+    criteria_params : <blob>.                # Dict snapshot of criteria parameters used during evaluation
+    best_extreme_reward = null : float32     # Max reward between narrowest and widest occluder apertures
+    reward_drop = null : float32             # Reward(widest_aperture) - Reward(narrowest_aperture)
     """
 
     def make(self, key):
