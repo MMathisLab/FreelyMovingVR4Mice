@@ -17,7 +17,8 @@ It is designed to run from the client container and can be scheduled via cron.
 6. **Environment-specific** (manual or via `cron_scenario.py`):
    - **Local server**: `run.py inputs_videos`, then `run.py fetch` → refreshes `/shared/gui_menu.npy` for the rig GUI.
    - **AWS / remote** (`--aws`): `run.py decision` on `/data/processed`.
-7. **Summaries**: `run.py summary` → `SummaryPlots` for sessions with both `DataFrame` and `BoxDataFrame`; cron also runs `summary_emails.send_pending_summary_emails` to send or retry plot notification emails (see [Emails](#emails)).
+7. **Information maps** (session-independent, run by `cron_scenario.py` in both local and `--aws` modes): `run.py info_maps` → `information_maps.InformationMap`, one map per `OcclusionAperture` row, stored as a blob in the table (plot one with `(InformationMap & key).plot()`). To compute a new map, add an aperture to `OcclusionAperture.contents` and re-run.
+8. **Summaries**: `run.py summary` → `SummaryPlots` for sessions with both `DataFrame` and `BoxDataFrame`; cron also runs `summary_emails.send_pending_summary_emails` to send or retry plot notification emails (see [Emails](#emails)).
 
 **After upgrading to DataJoint 2.x** (once per rig, before relying on cron):
 

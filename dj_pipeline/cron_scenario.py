@@ -383,6 +383,26 @@ def main():
             ),
         )
 
+    def import_information_maps_schema():
+        from vr4mice.schema import information_maps
+
+        return information_maps
+
+    # Session-independent: only computes maps for apertures newly added to
+    # OcclusionAperture.contents, so this is a no-op on most runs.
+    information_maps = run_import(
+        "import information_maps schema", import_information_maps_schema
+    )
+    if information_maps:
+        run_step(
+            "information_maps.sync_lookup_contents",
+            information_maps.sync_lookup_contents,
+        )
+        run_step(
+            "information_maps.InformationMap.populate",
+            lambda: information_maps.InformationMap().populate(),
+        )
+
     if not args.aws:
 
         def import_inputs_videos_schema():
