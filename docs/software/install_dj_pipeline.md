@@ -111,7 +111,7 @@ Defaults shown by the script:
 - `/mnt/database/vr4mice/vr4mice_database/database` → `/var/lib/mysql`
 - `/mnt/database/shared` → `/shared`
 - `/mnt/database/vr4mice/vr4mice_database/data` → `/data`
-- `/mnt/neuropixel_data/vr4mice/raw_screen_recordings` → `/vr4mice_screen_recordings`
+- `/mnt/neuropixel_data/vr4mice` → `/vr4mice_screen_recordings`
 - repo root (`./`) → `/app`
 - `./base/base_min_schemas` → `/base_schemas`
 - `./base/base_actions` → `/base_actions`
@@ -257,7 +257,7 @@ When using `bash quick_start.sh` in **deployment** mode, the default host paths 
 - `/mnt/database/vr4mice/vr4mice_database/database` → `/var/lib/mysql`
 - `/mnt/database/shared` → `/shared`
 - `/mnt/database/vr4mice/vr4mice_database/data` → `/data`
-- `/mnt/neuropixel_data/vr4mice/raw_screen_recordings` → `/vr4mice_screen_recordings`
+- `/mnt/neuropixel_data/vr4mice` → `/vr4mice_screen_recordings`
 - repo root (`./`) → `/app`
 - `./base/base_min_schemas` → `/base_schemas`
 - `./base/base_actions` → `/base_actions`

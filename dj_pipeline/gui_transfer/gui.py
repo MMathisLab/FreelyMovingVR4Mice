@@ -5,8 +5,11 @@ from utils.alert import AlertMsg
 from utils.logger import Logger
 from utils.utils import (
     adjust_keys,
+    check_input_video,
     check_missing_data,
+    copy_input_videos,
     generate_file,
+    get_dataset,
     get_filled_info,
     move_files,
     transfer_files,
@@ -91,6 +94,10 @@ class Gui(QWidget):
                     key2info=a.get_key2info(),
                 )
 
+        dataset = get_dataset(args["mouse"].get_info(), args["exp"].get_info())
+        if not check_input_video(self, args["transfer"], dataset):
+            return False
+
         # generate output files
         npy_file, json_file = generate_file(args)
         if npy_file is None or json_file is None:
@@ -102,6 +109,17 @@ class Gui(QWidget):
 
         if not transfer_files(args["transfer"].get_transfer_files(send=True)):
             msg = "Problem during scp transfer!"
+            dlg = AlertMsg(self, msg)
+            dlg.exec()
+            return False
+
+        ok, error = copy_input_videos(args["transfer"].get_input_video_files())
+        if not ok:
+            logger.warning(f"Input video copy failed: {error}")
+            msg = (
+                "Data was sent to the server, but the input video copy to the "
+                f"Synology failed:\n{error}\nFix it and submit again."
+            )
             dlg = AlertMsg(self, msg)
             dlg.exec()
             return False
