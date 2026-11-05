@@ -212,7 +212,7 @@ def build_row(
 
     for a in attributes:
         if a in schema["local_def"].keys():
-            data[a] = schema["local_def"][a](
+            value = schema["local_def"][a](
                 raw_data=raw_data,
                 key=a,
                 transformer=schema["transformer"],
@@ -220,6 +220,15 @@ def build_row(
                 dstf=dstf,
                 move=move,
             )
+            # get_path historically returns False when source files are missing.
+            # Convert that legacy signal to an explicit sentinel to avoid
+            # colliding with legitimate boolean False payload values.
+            if (
+                value is False
+                and getattr(schema["local_def"].get(a), "__name__", None) == "get_path"
+            ):
+                value = UNRESOLVED
+            data[a] = value
         else:
             label = a
             change = False
@@ -380,6 +389,17 @@ def populate_dataset_tables(
             if row_exists(schema, table_name, row):
                 continue
 
+            unresolved = [field for field, value in row.items() if value is UNRESOLVED]
+            if unresolved:
+                logger.warning(
+                    "Skipping %s for dataset %s: could not resolve %s "
+                    "(source file likely missing). Will retry on a later run.",
+                    table_name,
+                    dataset,
+                    unresolved,
+                )
+                continue
+
             logger.info("Populating: %s", table_name)
             schema["dj_tables"][table_name].insert1(
                 row, skip_duplicates=SKIP_DUPLICATES
@@ -493,7 +513,7 @@ def parse_date(filename):
 
 def _img_src_candidates() -> list:
     """Return IMG_SRC candidate prefixes from env as an ordered list."""
-    raw = os.environ.get("IMG_SRC", "Imagingsource")
+    raw = os.environ.get("IMG_SRC", "Imagingsource,vr4mice")
     # Support comma/semicolon separated lists while remaining backward compatible.
     parts = [p.strip() for chunk in raw.split(";") for p in chunk.split(",")]
     candidates = [p for p in parts if p]

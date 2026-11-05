@@ -3,7 +3,9 @@ Integration tests for the vr4mice pipeline using the golden dataset.
 
 Tests are organized by pipeline mode (matching run.py's mode argument):
 - connect: Schema imports and database connectivity
-- populate: Dataset, MouseState, State, Video, DLC table population
+- populate: Dataset, MouseState, State, Video table population (DLC is
+  populated separately via vr4mice.DLC().populate(), matching run.py "dlc"
+  mode - see the NOTE on vr4mice.DLC)
 - analysis: DataFrame, BoxDataFrame, SummaryPlots population
 - dlc: DLCProcessor, DLCKptsDf, SyncDLCKptsDf, OfflineKinematics population
 - interp: InterpolatedTrials, MeanXYTrajectory, YBinnedXYTrajectory,
@@ -370,7 +372,10 @@ def populated_db(dj_config, pipeline_test_data, test_dataset_name, test_camera_p
     raw_data["video_meta"] = session_metadata["video_meta"]
     raw_data["doe"] = files_info["doe"]
 
-    # Run check_keys + populate for each table, same as populate_rig()'s inner loop
+    # Run check_keys + populate for each table, same as populate_rig()'s inner loop.
+    # DLC is intentionally NOT in vr4mice_schema_dict["tables"] (it's excluded
+    # from populate_rig()'s path on purpose - see the NOTE on vr4mice.DLC) so
+    # it's populated separately below, the same way run.py "dlc" mode does.
     for table_name, attributes in vr4mice_schema_dict["tables"].items():
         flag, none_vals = check_keys(
             attributes, raw_data, table_name, schema=vr4mice_schema_dict
@@ -386,6 +391,13 @@ def populated_db(dj_config, pipeline_test_data, test_dataset_name, test_camera_p
                 dstf="processed",
                 move=False,
             )
+
+    # DLC's sole entry point: vr4mice.DLC().populate() (see run.py "dlc" mode).
+    # local_src/data are overridden to point at the temp dirs used here instead
+    # of the production "/data" default.
+    vr4mice.DLC().populate(
+        {"dataset": test_dataset_name}, local_src=srcf, data_root=str(data_dir)
+    )
 
     # Verify the 5 core tables populated (fail fast if pipeline broke)
     assert len(vr4mice.Dataset()) == 1, "Dataset not populated"
@@ -793,6 +805,39 @@ class TestAnalysisMode:
 
 class TestDlcMode:
     """Tests for dlc mode - requires populate."""
+
+    def test_dlc_pending_only_excludes_existing_keys(self, populated_db):
+        """Verify pending_only=True excludes already-populated DLC keys."""
+        vr4mice = populated_db["vr4mice"]
+        dataset = populated_db["dataset_key"]["dataset"]
+
+        all_keys = vr4mice.DLC().get_keys(
+            restriction={"dataset": dataset}, pending_only=False
+        )
+        pending_keys = vr4mice.DLC().get_keys(
+            restriction={"dataset": dataset}, pending_only=True
+        )
+
+        assert len(all_keys) == 1, "Expected one Video x ModelName key"
+        assert len(pending_keys) == 0, "No pending keys expected after insert"
+
+    def test_dlc_populate_pending_only_second_run_is_noop(self, populated_db):
+        """Verify a second pending_only populate run does not insert rows."""
+        vr4mice = populated_db["vr4mice"]
+        dataset = populated_db["dataset_key"]["dataset"]
+        data_dir = populated_db["test_data"]["data_dir"]
+        srcf = str(data_dir.parent)
+
+        before = len(vr4mice.DLC())
+        vr4mice.DLC().populate(
+            {"dataset": dataset},
+            local_src=srcf,
+            data_root=str(data_dir),
+            pending_only=True,
+        )
+        after = len(vr4mice.DLC())
+
+        assert before == after, "Second pending_only populate run should be a no-op"
 
     def test_dlcprocessor_populates(self, populated_db, golden_baseline):
         """Verify DLCProcessor.populate() creates entry."""

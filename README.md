@@ -4,9 +4,17 @@
   <img src="docs/images/paper_videos/video_s1.gif" width="90%" alt="Supplementary Video S1" />
 </p>
 
-FreelyMovingVR4Mice is the MLAI lab codebase for running the freely moving VR mouse rig. It brings together the Python control stack, task scripts, DeepLabCut integration, Teensy hardware control, Unity assets, and the documentation needed to build, calibrate, and run experiments.
+FreelyMovingVR4Mice is the MLAI lab codebase for running the freely moving VR mouse rig. It brings together the Python control stack, task scripts, DeepLabCut integration, Teensy hardware control, Unity assets, and the [project documentation](https://mmathislab.github.io/FreelyMovingVR4Mice) needed to build, calibrate, and run experiments.
 
 Happy experimenting 🙂
+
+## Reproduce the paper figures 📊
+
+[**Open the paper notebooks and reproduction guide →**](https://mmathislab.github.io/FreelyMovingVR4Mice/docs/paper.html)
+
+Access the analysis notebooks, figure-generation workflows, and DataJoint database instructions.
+
+[Download the public dataset (Zenodo)](https://zenodo.org/records/21099082)
 
 ## What is in this repository 🔎
 
@@ -41,18 +49,6 @@ pip install -e .
 
 You are all set to start 😄
 
-## Important links 🔗
-
-- [Project documentation 📚](https://mmathislab.github.io/FreelyMovingVR4Mice)
-- [Public data release (Zenodo) 🗂️](https://zenodo.org/records/21099082)
-- [Installation guide ⚙️](docs/software_installation/installation.md)
-- [Run a session ▶️](docs/software_installation/run_a_session.md)
-- [Config file setup 🧩](docs/software_installation/config_file_setup.md)
-- [Install DeepLabCut-live-GUI 🐭](https://github.com/DeepLabCut/DeepLabCut-live-GUI)
-- [User guide 🧭](docs/user_guide.md)
-- [VR4Mice overview 🕶️](docs/vr4mice_overview.md)
-- [Hardware build and calibration docs 🔧](docs/hardware/building_the_box.md)
-- [Software package docs 🧪](docs/software_package/active_sensing_task.md)
 
 ## Hardware and software requirements 🛠️
 

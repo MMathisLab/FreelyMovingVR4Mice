@@ -12,6 +12,7 @@ It is designed to run from the client container and can be scheduled via cron.
 2. **Ingest**: `run.py populate` → raw tables in `vr4mice`/`base`.
 3. **Analysis**: `run.py analysis` → `base_analysis` tables (`DataFrame`, `BoxDataFrame`, `GitCommit`).
 4. **DLC + interpolation**: `run.py dlc` then `run.py interp` (includes `session_metrics` tables).
+   - `run.py dlc` runs `vr4mice.DLC().populate()` before the usual `DLCProcessor`/`DLCKptsDf` steps. `vr4mice.DLC` is the one table `run.py populate` (step 2) never fills — it's intentionally excluded from `keys2tables_vr4mice.py`'s ingest table list so there's a single entry point for it, since ingest only scans `/data/data` for new raw pickle/npy files and a dataset's pickle is often moved to `processed` before its DLC keypoints file shows up in `/data/dlc_video`. `DLC().populate()` checks every `Video x ModelName` key directly (regardless of pickle location) and inserts only when the expected `{IMG_SRC}_{dataset}_DLC.hdf5`/`.h5` file actually exists on disk. `vr4mice.Video` itself is still populated inline during ingest (step 2), same as the other raw tables.
 5. **Latency**: `run.py latency` → photodiode alignment tables.
 6. **Environment-specific** (manual or via `cron_scenario.py`):
    - **Local server**: `run.py inputs_videos`, then `run.py fetch` → refreshes `/shared/gui_menu.npy` for the rig GUI.
@@ -297,6 +298,7 @@ When using the local Docker database, `DJ_HOST` port must match `DB_PORT` in `.e
 - `COMPOSE_PROJECT` (default `vr4mice`) — must match between `make`, cron scripts, and manual `docker compose -p …` calls
 - `DB_BIND_IP`, `DB_PORT`, `MYSQL_ROOT_PASSWORD`
 - `DB_DATA_PATH`, `SHARED_PATH`, `DATA_PATH`, `SCREEN_RECORDINGS_PATH`
+- `NP_PIPELINE_SRC_PATH` (optional): path to a real `FreelyMoving_Mouse_NP` checkout. If unset, compose mounts `./np_pipeline_stub`, and only `run.py np_sync` is skipped while the rest of the pipeline remains functional.
 - `CLIENT_IMAGE`, `CLIENT_CONTAINER_NAME`, `DB_CONTAINER_NAME`, `CLIENT_NETWORK_MODE`, `JUPYTER_PORT`
 
 Remote/AWS DB credentials for scheduled AWS runs live in `.env-aws` (copy from `.env-aws.example`); this file is **not** committed.

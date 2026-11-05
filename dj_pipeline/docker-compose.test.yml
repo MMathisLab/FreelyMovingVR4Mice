@@ -27,7 +27,7 @@ services:
       DJ_USER: root
       DJ_PASSWORD: simple
       DJ_LAB: test
-      IMG_SRC: Imagingsource
+      IMG_SRC: Imagingsource,vr4mice
       GUI: "false"
       EMAIL: "false"
       DATABASE_USE_TLS: "false"

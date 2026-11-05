@@ -67,3 +67,12 @@ vr4mice_run_cron_scenario() {
   fi
   vr4mice_exec_client "${cmd}"
 }
+
+vr4mice_run_sync_days() {
+  # Resync the per-experiment `day` stored in the raw .npy files before ingest, so
+  # (mouse_name, day, attempt) does not collide across dates (the GUI can reset day
+  # to 1). Runs in the client container against /data/data, and must run BEFORE
+  # populate_rig moves the files to processed/.
+  vr4mice_check_env_file ".env" ".env.example"
+  vr4mice_exec_client "${BASE_INSTALL} && set -a && source .env && set +a && python run.py sync_days"
+}

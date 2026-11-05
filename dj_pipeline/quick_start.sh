@@ -364,7 +364,7 @@ os.environ["DJ_LAB"] = "mathis-lab"
 os.environ["GUI"] = "${GUI_FLAG}"
 os.environ["EMAIL"] = "${EMAIL_FLAG}"
 os.environ["VR4MICE_EMAIL_RECIPIENTS"] = "mathislab"
-os.environ["IMG_SRC"] = "Imagingsource"
+os.environ["IMG_SRC"] = "Imagingsource,vr4mice"
 os.environ["DJ_SUPPORT_FILEPATH_MANAGEMENT"] = "TRUE"
 os.environ["DJ_SUPPORT_ADAPTED_TYPES"] = "TRUE"
 EOF

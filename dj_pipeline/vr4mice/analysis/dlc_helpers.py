@@ -367,8 +367,22 @@ def align_timestamps_to_step_time(
     if np.any(np.diff(step_time) < 0):
         raise ValueError("step_time must be sorted in ascending order")
 
-    indices = find_closest_indices(step_time.tolist(), timestamps.tolist())
-    return step_time[np.asarray(indices, dtype=int)]
+    aligned = np.full(timestamps.shape, np.nan, dtype=np.float64)
+    in_range = (timestamps >= step_time[0]) & (timestamps <= step_time[-1])
+    if not np.any(in_range):
+        return aligned
+
+    ts = timestamps[in_range]
+    idx = np.searchsorted(step_time, ts, side="left")
+    left_idx = np.clip(idx - 1, 0, step_time.size - 1)
+    right_idx = np.clip(idx, 0, step_time.size - 1)
+
+    left = step_time[left_idx]
+    right = step_time[right_idx]
+    choose_right = (idx > 0) & (idx < step_time.size) & ((ts - left) > (right - ts))
+    nearest_idx = np.where(choose_right, right_idx, left_idx)
+    aligned[in_range] = step_time[nearest_idx]
+    return aligned
 
 
 def compute_circular_angular_velocity(
