@@ -54,7 +54,7 @@ You are all set to start 😄
 
 - Python 3.10.12
 - Windows 10 or newer
-- Unity 2022.3.15f1
+- Unity 2022.3.25f1 (only needed to edit the scene; see below for prebuilt players)
 - Teensy 4.0 or newer
 - A GPU-capable machine for DeepLabCut-based tracking
 
@@ -62,6 +62,23 @@ The recommended setup uses two separate environments:
 
 - `vr4mice` for the main control GUI and task runner
 - `dlclive_gui` for DeepLabCut-live-GUI and real-time pose extraction
+
+### Prebuilt Unity players
+
+The `Unity build` workflow builds `AugmentedReality/` for Windows and Linux on every change to it.
+Each run keeps the zips as artifacts for 30 days. Pushing a tag named `unity-v*` attaches them to a
+GitHub Release, where anyone can download them:
+
+```bash
+curl -LO https://github.com/MMathisLab/FreelyMovingVR4Mice/releases/download/unity-v1.0.0/vr4mice-unity-win64.zip
+```
+
+`vr4mice-unity-win64.zip` contains `Augmented_reality.exe` for the rig. `vr4mice-unity-linux64.zip`
+contains `augmented_reality.x86_64` for headless runs. To cut a release:
+
+```bash
+git tag unity-v1.0.0 && git push origin unity-v1.0.0
+```
 
 ## Citation
 

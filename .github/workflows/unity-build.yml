@@ -1,0 +1,142 @@
+name: Unity build
+
+# Builds the AugmentedReality player for Windows (rig) and Linux (headless runs).
+# A push of a tag named unity-v* also attaches both zips to a GitHub Release.
+# Secrets: UNITY_EMAIL, UNITY_PASSWORD, and UNITY_LICENSE (Personal, .ulf contents)
+# or UNITY_SERIAL (Plus/Pro). See https://game.ci/docs/github/activation
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'unity-v*'
+    paths:
+      - 'AugmentedReality/Assets/**'
+      - 'AugmentedReality/Packages/**'
+      - 'AugmentedReality/ProjectSettings/**'
+      - '.github/workflows/unity-build.yml'
+  pull_request:
+    paths:
+      - 'AugmentedReality/Assets/**'
+      - 'AugmentedReality/Packages/**'
+      - 'AugmentedReality/ProjectSettings/**'
+      - '.github/workflows/unity-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unity-build-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: Build ${{ matrix.targetPlatform }}
+    # PRs from forks get no secrets, so the license step would fail.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - targetPlatform: StandaloneLinux64
+            buildName: augmented_reality
+            zipName: vr4mice-unity-linux64
+          - targetPlatform: StandaloneWindows64
+            buildName: Augmented_reality
+            zipName: vr4mice-unity-win64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: AugmentedReality/Library
+          key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('AugmentedReality/Assets/**', 'AugmentedReality/Packages/**', 'AugmentedReality/ProjectSettings/**') }}
+          restore-keys: |
+            Library-${{ matrix.targetPlatform }}-
+
+      - name: Build player
+        uses: game-ci/unity-builder@v6
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          projectPath: AugmentedReality
+          targetPlatform: ${{ matrix.targetPlatform }}
+          buildName: ${{ matrix.buildName }}
+
+      # The builder runs in Docker as root, so the build files are root-owned.
+      - name: Take ownership of the build
+        run: sudo chown -R "$(id -u):$(id -g)" build
+
+      - name: Name the Linux executable augmented_reality.x86_64
+        if: matrix.targetPlatform == 'StandaloneLinux64'
+        working-directory: build/StandaloneLinux64
+        run: |
+          set -euo pipefail
+          if [ ! -f augmented_reality.x86_64 ]; then
+            mv augmented_reality augmented_reality.x86_64
+          fi
+          chmod +x augmented_reality.x86_64
+          ls -la
+
+      - name: Smoke-test the Linux player
+        if: matrix.targetPlatform == 'StandaloneLinux64'
+        working-directory: build/StandaloneLinux64
+        run: |
+          set -uo pipefail
+          # Pass if the player runs headless for 30 s (timeout exit 124) or exits cleanly.
+          status=0
+          timeout 30 ./augmented_reality.x86_64 -batchmode -nographics -logFile player.log || status=$?
+          tail -n 40 player.log || true
+          rm -f player.log
+          if [ "$status" -ne 124 ] && [ "$status" -ne 0 ]; then
+            echo "Player exited with status $status"
+            exit 1
+          fi
+
+      - name: Zip the build
+        working-directory: build/${{ matrix.targetPlatform }}
+        run: zip -qr "${GITHUB_WORKSPACE}/${{ matrix.zipName }}.zip" .
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.zipName }}
+          path: ${{ matrix.zipName }}.zip
+          retention-days: 30
+
+  release:
+    name: Publish release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/unity-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create release with the zips
+        working-directory: dist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          sha256sum ./*.zip > SHA256SUMS
+          gh release create "${GITHUB_REF_NAME}" ./*.zip SHA256SUMS \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "Unity build ${GITHUB_REF_NAME}" \
+            --generate-notes
