@@ -2,8 +2,10 @@ name: Unity build
 
 # Builds the AugmentedReality player for Windows (rig) and Linux (headless runs).
 # A push of a tag named unity-v* also attaches both zips to a GitHub Release.
-# Secrets: UNITY_EMAIL, UNITY_PASSWORD, and UNITY_LICENSE (Personal, .ulf contents)
-# or UNITY_SERIAL (Plus/Pro). See https://game.ci/docs/github/activation
+# Secrets: UNITY_EMAIL and UNITY_PASSWORD of a Unity account without two-factor
+# login are enough. GameCI then activates a seat of that account's license.
+# Add UNITY_SERIAL for a Plus or Pro serial. UNITY_LICENSE (.ulf contents) is
+# optional. See https://game.ci/docs/github/activation
 #
 # Branch pushes and PRs only run when a file that goes into the player changes.
 # The paths filter lists those files. ML-Agents/Timers holds timer logs that the
