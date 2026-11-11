@@ -400,7 +400,7 @@ def apply_inclusion_criteria(
             return pd.Series(
                 {
                     "reward_drop": np.nan,
-                    "best_extreme_reward": np.nan,
+                    "best_extreme_reward": valid_rewards.max(),
                     "narrowest_aperture_used": np.nan,
                     "widest_aperture_used": np.nan,
                 }
