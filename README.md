@@ -65,20 +65,32 @@ The recommended setup uses two separate environments:
 
 ### Prebuilt Unity players
 
-The `Unity build` workflow builds `AugmentedReality/` for Windows and Linux on every change to it.
-Each run keeps the zips as artifacts for 30 days. Pushing a tag named `unity-v*` attaches them to a
-GitHub Release, where anyone can download them:
+The `Unity build` workflow builds `AugmentedReality/` for Windows and Linux. It runs on pull requests
+and pushes to `main` that change `Assets/`, `Packages/` or `ProjectSettings/`, and you can start it by
+hand from the Actions tab. Each run keeps the zips as artifacts for 30 days. Pushing a tag named
+`unity-v*` attaches them to a GitHub Release, where anyone can download them:
 
 ```bash
-curl -LO https://github.com/MMathisLab/FreelyMovingVR4Mice/releases/download/unity-v1.0.0/vr4mice-unity-win64.zip
+curl -fLO https://github.com/MMathisLab/FreelyMovingVR4Mice/releases/download/unity-v1.0.0/vr4mice-unity-win64.zip
+curl -fLO https://github.com/MMathisLab/FreelyMovingVR4Mice/releases/download/unity-v1.0.0/SHA256SUMS
+sha256sum -c --ignore-missing SHA256SUMS
 ```
+
+On Windows, compare the output of `certutil -hashfile vr4mice-unity-win64.zip SHA256` with the line
+in `SHA256SUMS`.
 
 `vr4mice-unity-win64.zip` contains `Augmented_reality.exe` for the rig. `vr4mice-unity-linux64.zip`
-contains `augmented_reality.x86_64` for headless runs. To cut a release:
+contains `augmented_reality.x86_64` for headless runs.
+
+To publish a release, tag a commit on `main` whose `Unity build` run passed, and push the tag:
 
 ```bash
-git tag unity-v1.0.0 && git push origin unity-v1.0.0
+git tag unity-v1.0.0 <commit>
+git push origin unity-v1.0.0
 ```
+
+The release job refuses tags that point outside `main`. Use a new version for every release. Pushing
+a tag needs write access to the repository, and the release is public.
 
 ## Citation
 
