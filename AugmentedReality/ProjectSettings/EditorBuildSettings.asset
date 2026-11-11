@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Augmented_reality_box.unity
+    guid: fffbd8059d6e8e930877f2e572ef10b7
   m_configObjects: {}
