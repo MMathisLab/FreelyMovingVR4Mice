@@ -183,7 +183,7 @@ def set_channel(self):
         self.channel.set_float_parameter("slitSize", this_slit_size)
         self.channel.set_float_parameter("slit_depth", this_slit_depth)
         self.channel.set_float_parameter("targetsFromMidline", this_target_spread)
-        self.channel.set_float_parameter("targetsheight", this_target_height)
+        self.channel.set_float_parameter("targetsHeight", this_target_height)
         self.channel.set_float_parameter("mouseReportDelay", this_mouse_report_delay)
         self.channel.set_float_parameter("startBoxDelay", self.start_box_delay)
         self.channel.set_float_parameter("velocityThreshold", self.velocity_threshold)
