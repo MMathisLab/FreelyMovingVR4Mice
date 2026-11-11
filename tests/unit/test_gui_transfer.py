@@ -272,3 +272,132 @@ def test_adjust_keys_uses_display_text(gui_modules):
     primary_keys = {"Rig": "rig_id"}
     utils.adjust_keys(info, {"Rig": None}, key2info, primary_keys)
     assert info == {"rig_id": 12}
+
+
+def test_get_type_three_cameras(transfer_module):
+    get_type = transfer_module.get_type
+    ds = "vr4mice_Xestia_2026-08-21_1"
+    assert get_type(f"{ds}_VIDEO2.avi") == "input_video_path"
+    assert get_type(f"TS_{ds}_CAMERA2.npy") == "input_ts_path"
+    assert get_type(f"{ds}_VIDEO1.avi") == "back_camera"
+    assert get_type(f"TS_{ds}_CAMERA1.npy") == "back_camera"
+    assert get_type(f"{ds}_VIDEO3.avi") == "video_path"
+    assert get_type(f"TS_{ds}_CAMERA3.npy") == "camera_path"
+
+
+def test_find_related_files_three_cameras(transfer_module, tmp_path):
+    from utils.session_files import find_related_files
+
+    stem = "Xestia_2026-08-21_1"
+    run = tmp_path / stem / "run_0001"
+    run.mkdir(parents=True)
+    for name in (
+        f"TS_vr4mice_{stem}_CAMERA1.npy",
+        f"TS_vr4mice_{stem}_CAMERA2.npy",
+        f"TS_vr4mice_{stem}_CAMERA3.npy",
+        f"vr4mice_{stem}_VIDEO1.avi",
+        f"vr4mice_{stem}_VIDEO2.avi",
+        f"vr4mice_{stem}_VIDEO3.avi",
+    ):
+        (run / name).write_text("x")
+    related = find_related_files(stem, {"dlc_path": str(run)}, transfer_module.get_type)
+    assert related["camera_path"].name == f"TS_vr4mice_{stem}_CAMERA3.npy"
+    assert related["video_path"].name == f"vr4mice_{stem}_VIDEO3.avi"
+    assert related["input_video_path"].name == f"vr4mice_{stem}_VIDEO2.avi"
+    assert related["input_ts_path"].name == f"TS_vr4mice_{stem}_CAMERA2.npy"
+
+
+def test_input_videos_not_sent_with_scp(transfer_module):
+    for key in ("input_video_path", "input_ts_path"):
+        assert transfer_module._path_is_remote(key)
+        assert transfer_module.get_dst_folder(key) == "raw_input_videos"
+    assert not transfer_module._path_is_remote("camera_path")
+
+
+def _input_pair(folder, dataset, day=None, times=None):
+    from datetime import datetime
+
+    folder.mkdir(parents=True, exist_ok=True)
+    video = folder / f"vr4mice_{dataset}_VIDEO2.avi"
+    stamps = folder / f"TS_vr4mice_{dataset}_CAMERA2.npy"
+    video.write_bytes(b"v" * 20)
+    if times is None:
+        start = datetime.fromisoformat(day or dataset.split("_")[1]).timestamp()
+        times = start + 12 * 3600 + np.arange(100) * 0.008
+    np.save(stamps, np.asarray(times, dtype=float))
+    return video, stamps
+
+
+def test_check_input_video_pair_ok(gui_modules, tmp_path):
+    from utils.session_files import check_input_video_pair
+
+    dataset = "Xestia_2026-08-21_1"
+    video, stamps = _input_pair(tmp_path / dataset / "run_0001", dataset)
+    assert check_input_video_pair(dataset, video, stamps) == []
+
+
+def test_check_input_video_pair_problems(gui_modules, tmp_path):
+    from utils.session_files import check_input_video_pair
+
+    dataset = "Yurumi_2026-08-11_2"
+    # rig naming bug: files of the _2 session named after attempt 1
+    video, stamps = _input_pair(tmp_path / dataset / "run_0001", "Yurumi_2026-08-11_1")
+    problems = check_input_video_pair("Yurumi_2026-08-11_1", video, stamps)
+    assert problems == [f"the files are in the folder of session {dataset}"]
+    assert len(check_input_video_pair(dataset, video, stamps)) == 2  # both names
+
+    video, stamps = _input_pair(tmp_path / "a", dataset, day="2026-09-01")
+    assert "recorded on 2026-09-01" in check_input_video_pair(dataset, video, stamps)[0]
+
+    video, stamps = _input_pair(tmp_path / "b", dataset, times=[1.0, 2.0])
+    assert "unix times" in check_input_video_pair(dataset, video, stamps)[0]
+
+    video, stamps = _input_pair(tmp_path / "c", dataset)
+    times = np.load(stamps)
+    np.save(stamps, times[::-1])
+    assert "not increasing" in check_input_video_pair(dataset, video, stamps)[0]
+
+    assert "missing" in check_input_video_pair(dataset, video, None)[0]
+
+    other_video, _ = _input_pair(tmp_path / "d", dataset)
+    assert check_input_video_pair(dataset, other_video, stamps) == [
+        "the video and the timestamps are in different folders"
+    ]
+
+
+def test_copy_input_videos(gui_modules, tmp_path):
+    utils = gui_modules["utils"]
+    dataset = "Xestia_2026-08-21_1"
+    video, stamps = _input_pair(tmp_path / "rig", dataset)
+    share = tmp_path / "share" / "raw_input_videos"
+    files = {
+        "input_video_path": {
+            "src": str(video.parent),
+            "dst": str(share),
+            "filename": video.name,
+        },
+        "input_ts_path": {
+            "src": str(stamps.parent),
+            "dst": str(share),
+            "filename": stamps.name,
+        },
+    }
+    assert utils.copy_input_videos(files) == (True, "")
+    assert (share / video.name).read_bytes() == video.read_bytes()
+    assert video.exists()  # stays on the rig
+    assert not list(share.glob("*.part"))
+
+    assert utils.copy_input_videos(files) == (True, "")  # already there
+    (share / video.name).write_bytes(b"other")
+    ok, message = utils.copy_input_videos(files)
+    assert not ok and "not overwritten" in message
+    assert (share / video.name).read_bytes() == b"other"
+    assert utils.copy_input_videos({"input_video_path": None}) == (True, "")
+
+
+def test_input_video_dst_optional(gui_modules):
+    config = gui_modules["config"].config
+    assert config.get_input_video_dst is None
+    assert gui_modules["config"].Config.validate()[0]
+    config.update("input_video_dst", "/share")
+    assert config.get_input_video_dst == "/share"

@@ -372,31 +372,92 @@ Decision points computed from 10-window model predictions.
 
 ### `inputs_videos.py`
 
-*Video input schema for sync/crop/align operations on session recordings.*
+*Aligns the input video (what the mouse sees) to game steps, for both recording setups, in one end table.*
+
+Datasets with `{prefix}_{dataset}_VIDEO2.avi` and `TS_{prefix}_{dataset}_CAMERA2.npy`
+in `/vr4mice_screen_recordings/raw_input_videos/` (3-camera setup) go through
+`InputVideo`; all others through the OBS recording (`RawVideo` → `RawVideoSync`).
+Both end in `StepVideoFrame`, fetched the same way whatever the setup.
+
+Before populating, `check_video_files()` audits both folders into `VideoFileIssue`
+(unexpected names, VIDEO2 without its CAMERA2 timestamps or the reverse, other
+cameras' files, sessions not ingested in `vr4mice.Dataset`, sessions with both
+setups). Each table then checks its own inputs and records any problem in
+`FailedSession` for that session only, so the other sessions keep populating;
+fix the files, then delete the `FailedSession` rows to retry.
+
+```python
+class VideoFileIssue(dj.Manual)
+```
+Current problems with the files in `raw_screen_recordings/` and `raw_input_videos/`
+(refreshed at each `run.py inputs_videos` / cron run).
+
+```python
+class ObsVideoLayout(dj.Lookup)
+```
+**Depends on:** `vr4mice.Batch`  
+Mouse-view panel ROI in the OBS recordings, per batch (the screen layout changed).
 
 ```python
 class RawVideo(dj.Imported)
 ```
 **Depends on:** `vr4mice.Dataset`  
-Stores the raw OBS recording path for a dataset.
+Raw OBS recording path (`<dataset>.mkv` or `.mp4` in `raw_screen_recordings/`); 3-camera datasets are excluded. Rejected if unreadable or not 1920x1080.
 
 ```python
-class ProcessedVideo(dj.Computed)
+class RawVideoSync(dj.Computed)
 ```
 **Depends on:** `RawVideo`  
-Stores cropped/truncated OBS videos and ROI metadata.
+Sync square of the recording: located automatically (pixels switching between dark
+and bright) and its mean intensity read in every frame of the raw recording. Also
+measures `seek_offset`: OpenCV seeking is not frame-accurate in every file (H.264
+in AVI lands 6 frames early); frames are read with this correction.
 
 ```python
-class VideoSyncSignal(dj.Computed)
+class InputVideo(dj.Imported)
 ```
-**Depends on:** `ProcessedVideo`  
-Extracts the binary sync trace from the sync ROI video.
+**Depends on:** `vr4mice.Dataset`  
+3-camera setup: camera-2 input video path, frame count, per-frame unix timestamps,
+the mouse-view panel ROI, the sync square and `seek_offset`. Rejected if the video is
+not 640x480 or shows no sync square (another camera), if the frame count differs
+from the number of timestamps, or if the timestamps are not unix times on the
+session's date, at a plausible rate without gaps over 2 s.
 
 ```python
-class AlignedVideoFrame(dj.Computed)
+class StepVideoFrame(dj.Computed)
 ```
-**Depends on:** `VideoSyncSignal`, `vr4mice.State`  
-Aligns game steps to video frames using photodiode when available; stores QA metrics.
+**Depends on:** `vr4mice.State` and `dlc.DLCProcessor` (waits for the session's PROC), plus `InputVideo` or `RawVideoSync` (and `vr4mice.SignalsPhotodiode` or `dlc.DLCProcessor`, `vr4mice.DatasetBatch` for OBS)  
+`frame_ids[i]`: frame showing game step `i` on screen (the one the mouse reacts to), the
+first frame at or after `step_time[i] + display_lag`, -1 outside the video, indexed in
+`video_path`. `step_frame_ids` keeps the frame captured at the step's own time.
+`display_lag` (step to screen, ~50 ms) is measured per session as the median delay
+of the scene change after up to 40 trial starts (`display_lag_trials`; 54 ms default
+under 5 clear starts); a lag outside 0-200 ms or a spread over 25 ms fails the
+session (misaligned video). The pose behind a step was captured ~94 ms before it is
+on screen (Xestia_2026-07-30_1). `video_source` (`obs`/`camera`) and `align_method`
+(`photodiode`/`timestamps`/`generated_signal`) say how. Camera: matched on the camera timestamps
+(`State.start_time + step_time`, same host clock). OBS: sync square edges in the
+recording are matched with the photodiode edges (game time:
+`photodiode_time - State.start_time`); coarse offset from the random pulse_geo
+intervals, or for regular `pulse` trains (batch1) from the first edge of each
+train (needs >= 1 s without pulses before it in both), then a growing window with outlier rejection fits
+`video_time = offset + drift * game_time`, plus a running median of the residuals
+to follow local timing errors. Without a photodiode (no `SignalsPhotodiode` row,
+e.g. batch1), the generated sync signal that drives the square stands in for it:
+PROC send times from `dlc.DLCProcessor` (pulse/pulse_geo inferred from the
+pulse intervals) plus `GENERATED_SIGNAL_DISPLAY_DELAY` (62 ms, measured on
+Xestia_2026-08-21_1; stored in `generated_signal_delay`), `align_method = generated_signal`.
+QA: at least 10 pairs, 80% of expected edges
+paired, RMS under 20 ms, and for regular pulses the same pulse count in the video
+and the photodiode. Camera videos are checked the same way: the sync square edges
+at the camera timestamps must match photodiode edges (>= 80%), which catches a
+video paired with the wrong timestamps or session. `sync_match_fraction` stores
+that match for both setups. Sessions failing a check, without a pulse/pulse_geo
+sync signal (OBS), or with under 90% of steps inside the video are recorded in
+`FailedSession` instead.
+`align_step_to_frames(key, timepoints, displayed=True)` (game seconds) and `get_frame(key, frame_index)`
+(cropped mouse-view panel, resized to `FRAME_OUTPUT_SIZE` = 948x535 for every setup;
+`size=None` for the native crop) work the same for both setups.
 
 ### `barcodes.py`
 
