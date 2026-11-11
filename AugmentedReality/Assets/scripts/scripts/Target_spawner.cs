@@ -14,8 +14,8 @@ public class Target_spawner : MonoBehaviour
     public GameObject blue_target;
     public GameObject green_target;
     public float target_rotation = 0f;
-    public GameObject Ri_wall;
-    public GameObject Le_wall;
+    [System.NonSerialized] public GameObject Ri_wall;
+    [System.NonSerialized] public GameObject Le_wall;
     public GameObject occluding_wall;
     public GameObject middle_occluding_wall;
     public float probGreenLeft;
@@ -69,8 +69,9 @@ public class Target_spawner : MonoBehaviour
     public void walls_reset(){
 
         hslitSize =  slitSize/2;
-        Destroy(Le_wall);
-        Destroy(Ri_wall);
+        if (Le_wall != null) { Destroy(Le_wall); Le_wall = null; }
+        if (Ri_wall != null) { Destroy(Ri_wall); Ri_wall = null; }
+        if (occlusion_type == 0f) return;
         occlusion_slit();
         //Ri_wall.transform.position.x = +5f + hslitSize;
 
