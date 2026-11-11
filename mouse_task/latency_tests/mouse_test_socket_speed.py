@@ -280,7 +280,7 @@ class ARVisualdiscrim_socket_test(UnityTask):
         self.channel.set_property("slitSize", this_slit_size)
         self.channel.set_property("slit_depth", this_slit_depth)
         self.channel.set_property("targetsFromMidline", this_target_spread)
-        self.channel.set_property("targetsheight", this_target_height)
+        self.channel.set_property("targetsHeight", this_target_height)
         self.channel.set_property("mouseReportDelay", this_mouse_report_delay)
         self.channel.set_property("startBoxDelay", self.start_box_delay)
         self.channel.set_property("velocityThreshold", self.velocity_threshold)
