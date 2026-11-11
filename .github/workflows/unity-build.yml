@@ -4,6 +4,11 @@ name: Unity build
 # A push of a tag named unity-v* also attaches both zips to a GitHub Release.
 # Secrets: UNITY_EMAIL, UNITY_PASSWORD, and UNITY_LICENSE (Personal, .ulf contents)
 # or UNITY_SERIAL (Plus/Pro). See https://game.ci/docs/github/activation
+#
+# Branch pushes and PRs only run when a file that goes into the player changes.
+# The paths filter lists those files. ML-Agents/Timers holds timer logs that the
+# editor writes, so it is left out. GitHub skips paths filters for tag pushes,
+# so a unity-v* tag always builds.
 
 on:
   push:
@@ -13,12 +18,17 @@ on:
       - 'unity-v*'
     paths:
       - 'AugmentedReality/Assets/**'
+      - '!AugmentedReality/Assets/ML-Agents/Timers/**'
+      - '!AugmentedReality/Assets/**/*.md'
       - 'AugmentedReality/Packages/**'
       - 'AugmentedReality/ProjectSettings/**'
       - '.github/workflows/unity-build.yml'
   pull_request:
+    # Keep in sync with the push paths above.
     paths:
       - 'AugmentedReality/Assets/**'
+      - '!AugmentedReality/Assets/ML-Agents/Timers/**'
+      - '!AugmentedReality/Assets/**/*.md'
       - 'AugmentedReality/Packages/**'
       - 'AugmentedReality/ProjectSettings/**'
       - '.github/workflows/unity-build.yml'
@@ -57,7 +67,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: AugmentedReality/Library
-          key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('AugmentedReality/Assets/**', 'AugmentedReality/Packages/**', 'AugmentedReality/ProjectSettings/**') }}
+          key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('AugmentedReality/Assets/**', '!AugmentedReality/Assets/ML-Agents/Timers/**', 'AugmentedReality/Packages/**', 'AugmentedReality/ProjectSettings/**') }}
           restore-keys: |
             Library-${{ matrix.targetPlatform }}-
 
@@ -93,15 +103,27 @@ jobs:
         working-directory: build/StandaloneLinux64
         run: |
           set -uo pipefail
-          # Pass if the player runs headless for 30 s (timeout exit 124) or exits cleanly.
+          # Pass if the player runs headless for 30 s (timeout exit 124) or exits cleanly,
+          # the scene logs its startup line, and no C# exception reaches the log.
+          # Shader and ALSA "ERROR" lines are expected without a GPU or sound card.
           status=0
-          timeout 30 ./augmented_reality.x86_64 -batchmode -nographics -logFile player.log || status=$?
+          timeout --kill-after=10 30 ./augmented_reality.x86_64 -batchmode -nographics -logFile player.log || status=$?
           tail -n 40 player.log || true
-          rm -f player.log
+          fail=0
           if [ "$status" -ne 124 ] && [ "$status" -ne 0 ]; then
             echo "Player exited with status $status"
-            exit 1
+            fail=1
           fi
+          if ! grep -q "displays connected" player.log; then
+            echo "The scene did not log its startup line (activate_displays.cs)"
+            fail=1
+          fi
+          if grep -E "Exception" player.log; then
+            echo "The player logged an exception"
+            fail=1
+          fi
+          rm -f player.log
+          exit "$fail"
 
       - name: Zip the build
         working-directory: build/${{ matrix.targetPlatform }}
@@ -123,12 +145,27 @@ jobs:
       contents: write
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Releases only ship code that went through review on main.
+      - name: Check that the tag points to a commit on main
+        run: |
+          set -euo pipefail
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "Tag ${GITHUB_REF_NAME} points to $(git rev-parse HEAD), which is not on main."
+            exit 1
+          fi
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
 
+      # Re-running the workflow for a tag replaces the assets of its release.
       - name: Create release with the zips
         working-directory: dist
         env:
@@ -136,7 +173,13 @@ jobs:
         run: |
           set -euo pipefail
           sha256sum ./*.zip > SHA256SUMS
-          gh release create "${GITHUB_REF_NAME}" ./*.zip SHA256SUMS \
-            --repo "${GITHUB_REPOSITORY}" \
-            --title "Unity build ${GITHUB_REF_NAME}" \
-            --generate-notes
+          if gh release view "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" > /dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" ./*.zip SHA256SUMS \
+              --repo "${GITHUB_REPOSITORY}" --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" ./*.zip SHA256SUMS \
+              --repo "${GITHUB_REPOSITORY}" \
+              --verify-tag \
+              --title "Unity build ${GITHUB_REF_NAME}" \
+              --notes "Unity player built from ${GITHUB_SHA} by the Unity build workflow. Unzip vr4mice-unity-win64.zip for the rig, or vr4mice-unity-linux64.zip for headless runs on Linux."
+          fi
