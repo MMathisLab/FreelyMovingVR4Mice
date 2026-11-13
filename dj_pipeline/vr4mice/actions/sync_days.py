@@ -1,13 +1,24 @@
+import os
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
+from typing import Iterable, List, Optional, Sequence, Union
 
 import numpy as np
 
 from vr4mice.actions.populate_rig import get_filenames, get_new_file
+from vr4mice.utils.logger import Logger
 
 """
     Script that helps to synchronise the days of experiments if there is a mismatch.
 """
+logger = Logger.get_logger()
+
+DEFAULT_GUI_PATHS = ("/data/data", "/data/processed")
+
+
+class SyncDaysError(RuntimeError):
+    """Raised when day sync cannot load or rewrite a file that needs updating."""
 
 
 def mouse_in_db(name, date, date_format="%Y-%m-%d"):
@@ -26,7 +37,7 @@ def mouse_in_db(name, date, date_format="%Y-%m-%d"):
     """
     from base_schemas.schemas import mice
 
-    mouse = mice.Mouse() & 'mouse_name = "%s"' % name
+    mouse = mice.Mouse() & {"mouse_name": name}
 
     start_date = mouse.get_starting_date()
     if start_date is None:
@@ -36,62 +47,181 @@ def mouse_in_db(name, date, date_format="%Y-%m-%d"):
     return (date - start_date).days + 1
 
 
-def sync_days(path, date_format="%Y-%m-%d"):
+def _normalize_paths(
+    paths: Optional[Union[str, Sequence[str]]],
+) -> List[str]:
+    if paths is None:
+        candidates = list(DEFAULT_GUI_PATHS)
+    elif isinstance(paths, str):
+        candidates = [paths]
+    else:
+        candidates = list(paths)
+
+    existing = [os.path.normpath(path) for path in candidates if os.path.isdir(path)]
+    return existing
+
+
+def _collect_gui_npy_files(paths: Iterable[str]) -> List[tuple[str, str, str]]:
+    """Return (folder, filename, dataset_stem) for every GUI .npy under paths."""
+    entries: List[tuple[str, str, str]] = []
+    for path in paths:
+        dir_list = get_filenames([".npy"], path)
+        if ".npy" not in dir_list:
+            continue
+        for filename in dir_list[".npy"]:
+            entries.append((path, filename, filename.split(".")[0]))
+    return entries
+
+
+def _days_from_exp_dates(
+    sessions: List[List[str]], date_format: str = "%Y-%m-%d"
+) -> dict[str, int]:
     """
-    Synchronize the info about current experiment day for every mouse dataset
-    Sorts dates, and updates day values in the .npy files according to calculated order.
+    Assign experiment day numbers from calendar dates for one mouse.
+
+    First session date is day 1; gaps between calendar dates add to the day index
+    (e.g. Jan 1 → day 1, Jan 3 → day 3). Multiple attempts on the same date share
+    the same day number.
+    """
+    days = {}
+    sorted_sessions = sorted(
+        sessions, key=lambda row: datetime.strptime(row[0], date_format)
+    )
+    idx = 1
+    prev_date = ""
+
+    for date, name, attempt in sorted_sessions:
+        if date != prev_date:
+            if prev_date:
+                d1 = datetime.strptime(prev_date, date_format)
+                d2 = datetime.strptime(date, date_format)
+                idx += int((d2 - d1).days)
+            prev_date = date
+        days[f"{name}_{date}_{attempt}"] = idx
+
+    return days
+
+
+def sync_days(
+    paths: Optional[Union[str, Sequence[str]]] = None,
+    date_format: str = "%Y-%m-%d",
+) -> None:
+    """
+    Synchronize experiment day values in GUI .npy files.
+
+    Day is always relative to each mouse's experiment timeline:
+    - If the mouse already has exp.Session rows, day = (doe − first session doe) + 1.
+    - Otherwise day is inferred from session filenames on disk (earliest date = day 1),
+      scanning all requested folders together so data/ and processed/ stay consistent.
+
+    Raises SyncDaysError if any file that needs a day check/update cannot be loaded
+    or rewritten (e.g. PermissionError). Callers that populate exp.Session must not
+    continue after that — wrong on-disk day values would be ingested.
 
     Args:
-    path (str): A string representing the path of the directory containing datasets files
-    date_format (str, optional): A string representing the date format used in the data files' names.
-    Defaults to "%Y-%m-%d".
+        paths: One folder, a list of folders, or None. When None, scans both
+            /data/data and /data/processed together.
+        date_format: Date format used in dataset filenames.
     """
-    ext = [".npy"]
+    paths = _normalize_paths(paths)
+    if not paths:
+        logger.debug("No GUI folders found for day sync (%s).", DEFAULT_GUI_PATHS)
+        return
 
-    dir_list = get_filenames(ext, path)
+    file_entries = _collect_gui_npy_files(paths)
+    if not file_entries:
+        logger.info("No .npy files to sync in %s", paths)
+        return
 
-    dir_list = dir_list[".npy"]
+    logger.info(
+        "Syncing experiment days across %d GUI file(s) in %s",
+        len(file_entries),
+        ", ".join(paths),
+    )
 
-    ret_arr = dict()
-    raw_dir = list()
+    ret_arr = {}
+    raw_dir = []
+    seen_datasets = set()
 
-    for filename in dir_list:
-        filename = filename.split(".")[0]
-        tmp = filename.split("_")
+    for _path, _filename, dataset in file_entries:
+        if dataset in seen_datasets:
+            continue
+        seen_datasets.add(dataset)
+
+        tmp = dataset.split("_")
+        if len(tmp) < 3:
+            logger.warning("Skipping unparseable dataset stem %r", dataset)
+            continue
         date = tmp[1]
         name = tmp[0]
         attempt = tmp[2]
 
-        ret = mouse_in_db(name, date)  # check if mice in the database
-        if ret == None:
+        ret = mouse_in_db(name, date)
+        if ret is None:
             raw_dir.append([date, name, attempt])
         else:
-            print(ret)
-            ret_arr[filename] = ret
+            logger.debug("Day for %s from DB: %d", dataset, ret)
+            ret_arr[dataset] = ret
 
-    sorted_dir = sorted(raw_dir, key=lambda day: datetime.strptime(day[0], date_format))
+    by_mouse: dict[str, List[List[str]]] = defaultdict(list)
+    for date, name, attempt in raw_dir:
+        by_mouse[name].append([date, name, attempt])
 
-    idx = 1
-    prec = ""
+    for name, sessions in by_mouse.items():
+        ret_arr.update(_days_from_exp_dates(sessions, date_format=date_format))
+        logger.debug(
+            "Inferred days for %s from %d on-disk session(s).", name, len(sessions)
+        )
 
-    for elm in sorted_dir:
+    failures: List[str] = []
 
-        if elm[0] != prec:
-            if prec != "":
-                # check difference in days:
-                d1 = datetime.strptime(prec, date_format)
-                d2 = datetime.strptime(elm[0], date_format)
-                delta = d2 - d1
-                idx += int(delta.days)
-            prec = elm[0]
+    for folder, filename, dataset in file_entries:
+        if dataset not in ret_arr:
+            continue
 
-        ret_arr[elm[1] + "_" + elm[0] + "_" + elm[2]] = idx
+        day = int(ret_arr[dataset])
+        try:
+            raw_data_npy, _ = get_new_file(filename, folder)
+        except Exception as err:
+            failures.append(
+                f"{folder}/{filename}: cannot load ({type(err).__name__}: {err})"
+            )
+            continue
 
-    for f in dir_list:
-        raw_data_npy, dataset = get_new_file(f, path)
+        if not isinstance(raw_data_npy, dict):
+            failures.append(
+                f"{folder}/{filename}: .npy root is {type(raw_data_npy).__name__}, "
+                "not a dict"
+            )
+            continue
 
-        if dataset in ret_arr.keys():
-            idx = ret_arr[dataset]
-            if raw_data_npy["day"] != idx:
-                raw_data_npy["day"] = idx
-                np.save(str(Path(path).joinpath(f)), raw_data_npy)
+        old_day = raw_data_npy.get("day")
+        try:
+            old_day_int = int(old_day) if old_day is not None else None
+        except (TypeError, ValueError):
+            old_day_int = None
+
+        if old_day_int == day:
+            continue
+
+        raw_data_npy["day"] = day
+        out_path = Path(folder).joinpath(filename)
+        try:
+            np.save(str(out_path), raw_data_npy)
+        except Exception as err:
+            failures.append(
+                f"{out_path}: cannot write day {old_day} -> {day} "
+                f"({type(err).__name__}: {err})"
+            )
+            continue
+        logger.info("Updated day for %s in %s: %s -> %s", dataset, folder, old_day, day)
+
+    if failures:
+        preview = "; ".join(failures[:10])
+        if len(failures) > 10:
+            preview += f"; ... and {len(failures) - 10} more"
+        raise SyncDaysError(
+            f"sync_days failed for {len(failures)} file(s); refusing to continue "
+            f"with possibly wrong day values. Fix permissions or files, then retry. "
+            f"{preview}"
+        )

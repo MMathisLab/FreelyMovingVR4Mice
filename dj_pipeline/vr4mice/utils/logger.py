@@ -1,4 +1,7 @@
 import logging
+import os
+import sys
+import tempfile
 from datetime import datetime as dt
 from pathlib import Path
 
@@ -30,6 +33,26 @@ def _has_stream_handler(logger) -> bool:
     )
 
 
+def _resolve_log_filepath() -> Path | None:
+    """Pick a writable log path; None means file logging unavailable."""
+    log_filename = dt.now().strftime("log_%y%m%d_%H%M%S.log")
+    candidates = [
+        Path.cwd() / "logs",
+        Path(os.environ.get("HOME", "/tmp")) / ".vr4mice" / "logs",
+        Path(tempfile.gettempdir()) / "vr4mice_logs",
+    ]
+    for folder in candidates:
+        try:
+            folder.mkdir(parents=True, exist_ok=True)
+            path = folder / log_filename
+            with open(path, "a+", encoding="utf-8"):
+                pass
+            return path
+        except OSError:
+            continue
+    return None
+
+
 class Logger:
     __logger = None
 
@@ -38,11 +61,6 @@ class Logger:
         if cls.__logger:
             return cls.__logger
 
-        log_filename = dt.now().strftime("log_%y%m%d_%H%M%S.log")
-        logs_folder = Path(__name__).parent / "logs"
-        logs_folder.mkdir(parents=True, exist_ok=True)
-
-        log_filepath = logs_folder / log_filename
         logging_level = logging.INFO  # lowest level, tracks everything
 
         # create utils with parameters, handlers, etc
@@ -53,14 +71,22 @@ class Logger:
         file_formatter = logging.Formatter(
             ":%(asctime)s::%(levelname)s::%(filename)s::%(funcName)s::%(lineno)d::%(message)s"
         )
-        if not _has_file_handler(logger, log_filepath):
-            file_handler = logging.FileHandler(log_filepath, mode="a+")
-            file_handler.setFormatter(file_formatter)
-            logger.addHandler(file_handler)
+        log_filepath = _resolve_log_filepath()
+        if log_filepath is not None and not _has_file_handler(logger, log_filepath):
+            try:
+                file_handler = logging.FileHandler(log_filepath, mode="a+")
+                file_handler.setFormatter(file_formatter)
+                logger.addHandler(file_handler)
+            except OSError as err:
+                print(
+                    f"warning: cannot write log file {log_filepath} ({err}); "
+                    "continuing with stdout only",
+                    file=sys.stderr,
+                )
 
         if write_stdout and not _has_stream_handler(logger):
             stream_handler = logging.StreamHandler()
-            stream_formatter = formatter = logging.Formatter(
+            stream_formatter = logging.Formatter(
                 "%(asctime)-s::%(levelname)s::%(filename)s::%(message)s"
             )
             stream_handler.setFormatter(stream_formatter)

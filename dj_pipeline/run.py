@@ -29,6 +29,9 @@ logger = Logger.get_logger()
         np_pipeline package/repo; skips gracefully, without affecting any other
         mode, if it isn't installed or no dataset has a linked NP recording yet)
     "maintenance": rebuild DataJoint lineage tables (one-time setup)
+
+    Recovery / cleanup (recover_base, cleanup_orphans, cleanup_mice): run_base.py
+    Mice registry sync: make -f mysql.mk sync-mice-from-main (host)
 """
 
 
@@ -320,7 +323,7 @@ if __name__ == "__main__":
     elif args.mode == "sync_days":
         from vr4mice.actions.sync_days import sync_days
 
-        sync_days(path="/data/data")
+        sync_days()
 
     elif args.mode == "maintenance":
         from vr4mice.utils.maintenance import rebuild_lineage

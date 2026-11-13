@@ -45,6 +45,7 @@ parts:
   chapters:
   - file: docs/software/install_dj_pipeline.md
   - file: docs/software/datajoint.md
+  - file: docs/software/base_schema_sync.md
   - file: docs/software/data_import_export.md
 - caption: Software - Tests
   chapters:
