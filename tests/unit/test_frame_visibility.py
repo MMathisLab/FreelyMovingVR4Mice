@@ -1,0 +1,243 @@
+import numpy as np
+import pytest
+
+import frame_visibility as visibility
+
+
+def _panel(*, white=False, black=False):
+    panel = np.full((237, 316, 3), 90, dtype=np.uint8)
+    if white:
+        panel[70:88, 70:88] = 240
+    if black:
+        panel[80:96, 120:138] = 30
+    return panel
+
+
+def _describe(
+    panels,
+    frames,
+    *,
+    white_target=True,
+    distractor=True,
+    episodes=None,
+    iti=None,
+    pose=None,
+    target_left=None,
+    occluders=False,
+    frame_workers=1,
+):
+    decoded = []
+
+    def read_panels(frame_ids):
+        for frame_id in frame_ids:
+            decoded.append(frame_id)
+            yield panels[frame_id]
+
+    n_steps = len(frames)
+    iti = np.zeros(n_steps, dtype=bool) if iti is None else np.asarray(iti)
+    descriptors, calibration, fits = visibility.describe_steps(
+        read_panels,
+        frames,
+        np.zeros(n_steps) if episodes is None else episodes,
+        iti,
+        np.zeros((n_steps, 2)) if pose is None else pose,
+        np.zeros(n_steps, dtype=bool) if target_left is None else target_left,
+        target_is_white=white_target,
+        has_distractor=distractor,
+        has_occluders=occluders,
+        frame_workers=frame_workers,
+    )
+    expected = (set(np.asarray(frames)[~iti]) - {-1}) | set(
+        calibration["frame_pairs"].ravel()
+    )
+    assert sorted(decoded) == sorted(expected)
+    return descriptors, calibration, fits
+
+
+def test_mapped_steps_and_contrast_polarity():
+    panels = {
+        2: _panel(),
+        4: _panel(white=True),
+        7: _panel(black=True),
+        9: _panel(white=True, black=True),
+    }
+    frames = [-1, 2, 4, 4, 7, 9, -1]
+    regular, _, fits = _describe(panels, frames)
+    inverted, _, _ = _describe(panels, frames, white_target=False)
+
+    np.testing.assert_array_equal(regular["step_index"], [1, 2, 3, 4, 5])
+    np.testing.assert_array_equal(regular["frame_id"], [2, 4, 4, 7, 9])
+    np.testing.assert_array_equal(regular["t_px"], [0, 324, 324, 0, 324])
+    np.testing.assert_array_equal(regular["d_px"], [0, 0, 0, 288, 288])
+    np.testing.assert_array_equal(inverted["t_px"], regular["d_px"])
+    np.testing.assert_array_equal(inverted["d_px"], regular["t_px"])
+    np.testing.assert_array_equal(
+        inverted["total_visible_px"], regular["total_visible_px"]
+    )
+    np.testing.assert_array_equal(
+        regular["visibility_state"],
+        ["neither", "target_only", "target_only", "distractor_only", "both"],
+    )
+    np.testing.assert_array_equal(
+        inverted["visibility_state"],
+        ["neither", "distractor_only", "distractor_only", "target_only", "both"],
+    )
+    assert fits["t_new_surf"]["target_right"]["status"] == "insufficient_trials"
+    assert np.isnan(regular["t_new_surf"]).all()
+
+
+def test_target_only_zeroes_iti_even_if_it_shares_an_active_frame():
+    panels = {0: _panel(white=True, black=True)}
+    result, _, fits = _describe(
+        panels, [0, 0], white_target=False, distractor=False, iti=[True, False]
+    )
+
+    np.testing.assert_array_equal(result["t_px"], [0, 288])
+    np.testing.assert_array_equal(result["d_px"], [0, 0])
+    np.testing.assert_array_equal(
+        result["visibility_state"], ["neither", "target_only"]
+    )
+    np.testing.assert_array_equal(result["d_new_surf"], [np.nan, 0])
+    assert fits["d_new_surf"]["status"] == "absent"
+
+
+def test_iti_frames_are_decoded_only_for_calibration_and_never_segmented(monkeypatch):
+    frames = [0, 0, 1, 2, 4, 4, 6, 8, 9, 11, 12, 15]
+    iti = [True] * 4 + [False] * 3 + [True] * 2 + [False] * 3
+    panels = {frame: _panel(white=not is_iti) for frame, is_iti in zip(frames, iti)}
+    ids = {id(panel): frame for frame, panel in panels.items()}
+    segmented = []
+    segment_frame = visibility.segment_frame
+
+    def track_segmentation(panel, *args, **kwargs):
+        segmented.append(ids[id(panel)])
+        return segment_frame(panel, *args, **kwargs)
+
+    monkeypatch.setattr(visibility, "segment_frame", track_segmentation)
+    result, calibration, _ = _describe(
+        panels, frames, episodes=[0] * 7 + [1] * 5, iti=iti
+    )
+    np.testing.assert_array_equal(calibration["frame_pairs"], [[1, 6], [8, 12]])
+    assert segmented == [4, 6, 11, 12, 15]
+    assert np.all(result["total_visible_px"][iti] == 0)
+
+
+def test_all_iti_steps_never_open_the_video():
+    result, _, _ = _describe({}, [0, 1], iti=[True, True])
+    np.testing.assert_array_equal(result["visibility_state"], ["neither", "neither"])
+
+
+def test_parallel_frame_workers_match_serial_results():
+    panels = {i: _panel(white=i % 2 == 0, black=i % 3 == 0) for i in range(10)}
+    frames = [-1, *range(10), 9]
+    serial, _, _ = _describe(panels, frames)
+    parallel, _, _ = _describe(panels, frames, frame_workers=2)
+    for name, values in serial.items():
+        np.testing.assert_array_equal(parallel[name], values)
+
+
+def test_novelty_resets_and_is_counted_once_per_frame(monkeypatch):
+    def fit(pose, observations, episodes):
+        if not len(pose):
+            return {"status": "insufficient_trials"}
+        _, x, y, width, height = observations[0]
+        if x > 100:
+            width *= 2
+        return {
+            "status": "fitted",
+            "degree": 1,
+            "pose_center": np.zeros(2),
+            "pose_scale": np.ones(2),
+            "coefficients": np.array([[0, x, y, width, height], [0] * 5, [0] * 5]),
+        }
+
+    monkeypatch.setattr(visibility, "_fit_silhouette", fit)
+    panels = {i: _panel(white=True, black=True) for i in range(3)}
+    options = dict(
+        episodes=[0, 0, 0, 0, 1, 1], iti=[True, False, False, False, False, False]
+    )
+    frames = [0, 0, 0, 1, 1, 2]
+    regular, _, _ = _describe(panels, frames, **options)
+    inverted, _, _ = _describe(panels, frames, white_target=False, **options)
+
+    np.testing.assert_array_equal(regular["t_new_surf"], [np.nan, 1, 0, 0, 1, 0])
+    distractor_reveal = regular["d_new_surf"][1]
+    assert 0 < distractor_reveal < 1
+    np.testing.assert_array_equal(
+        regular["d_new_surf"], [np.nan, distractor_reveal, 0, 0, distractor_reveal, 0]
+    )
+    np.testing.assert_array_equal(inverted["t_new_surf"], regular["d_new_surf"])
+    np.testing.assert_array_equal(inverted["d_new_surf"], regular["t_new_surf"])
+
+
+def test_unoccluded_fit_uses_pose_and_handles_insufficient_support():
+    rng = np.random.default_rng(8)
+    pose = rng.normal(size=(70, 2))
+    episodes = np.repeat(np.arange(7), 10)
+    x, z = pose.T
+    observations = np.column_stack((x**2 - z, x + 50, z + 40, x * 0 + 20, z + 30))
+    fit = visibility._fit_silhouette(pose, observations, episodes)
+    assert fit["status"] == "fitted"
+    np.testing.assert_allclose(
+        visibility._poly_features(
+            (pose - fit["pose_center"]) / fit["pose_scale"], fit["degree"]
+        )
+        @ fit["coefficients"],
+        observations,
+        atol=1e-9,
+    )
+    assert (
+        visibility._fit_silhouette(np.zeros_like(pose), observations, episodes)[
+            "status"
+        ]
+        == "insufficient_pose_support"
+    )
+
+
+def test_silhouette_models_distinguish_target_sides_at_the_same_pose():
+    rng = np.random.default_rng(4)
+    pose = rng.normal(size=(40, 2))
+    episodes = np.repeat(np.arange(8), 5)
+    x, z = pose.T
+    observations = np.column_stack((x + z, 80 + x, 110 + z, 45 + x, 50 + z))
+    other_side = observations.copy()
+    other_side[:, 1] += 140
+    boxes, fits = visibility._predict_silhouettes(
+        np.vstack((pose, pose, pose[:1])),
+        np.vstack((observations, other_side, np.full((1, 5), np.nan))),
+        np.r_[episodes, episodes + 8, 16],
+        np.r_[np.ones(40), np.zeros(40), np.nan],
+    )
+    assert all(fit["status"] == "fitted" for fit in fits.values())
+    np.testing.assert_allclose(boxes[:40], observations[:, 1:])
+    np.testing.assert_allclose(boxes[40:80], other_side[:, 1:])
+    assert np.isnan(boxes[80]).all()
+
+
+def test_visible_mask_outside_silhouette_is_missing_and_preserves_novelty():
+    mask = _panel(white=True)[:, :, 0] > 200
+    boxes = np.array([[220, 78.5, 18, 18], *([[78.5, 78.5, 18, 18]] * 3)])
+    values = visibility.surface_novelty(
+        [mask, mask, mask, np.zeros_like(mask)], boxes, [1, 1, 1, 1]
+    )
+    np.testing.assert_array_equal(values, [np.nan, 1.0, 0.0, 0.0])
+
+
+def test_no_mapped_steps_needs_no_video():
+    result, _, _ = _describe({}, [-1, -1])
+    assert all(column.size == 0 for column in result.values())
+
+
+def test_truncated_reader_fails_session():
+    with pytest.raises(ValueError, match="shorter"):
+        visibility.describe_steps(
+            lambda _: iter(()),
+            [0],
+            [0],
+            [False],
+            [[0, 0]],
+            [False],
+            target_is_white=True,
+            has_distractor=True,
+            has_occluders=True,
+        )

@@ -80,16 +80,22 @@ def read_sync_trace(
 ) -> np.ndarray:
     """Mean intensity inside the sync square for every frame of a video.
 
-    The ROI is shrunk by ``inset`` pixels on each side to avoid its edges.
+    The ROI is shrunk by up to ``inset`` pixels on each side, preserving at
+    least one pixel along each axis. A negative inset raises ValueError.
     ``start`` and ``n_frames`` read only a window of the video; ``seek_offset``
     (see ``measure_seek_offset``) corrects where seeking to ``start`` lands.
 
     Returns:
         uint8 array with one value per frame read.
     """
+    if inset < 0:
+        raise ValueError("inset must be nonnegative")
+
     x, y, w, h = (int(v) for v in sync_roi)
-    x0, y0 = x + inset, y + inset
-    x1, y1 = max(x + w - inset, x0 + 1), max(y + h - inset, y0 + 1)
+    inset_x = min(inset, (w - 1) // 2)
+    inset_y = min(inset, (h - 1) // 2)
+    x0, y0 = x + inset_x, y + inset_y
+    x1, y1 = x + w - inset_x, y + h - inset_y
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise IOError(f"Failed to open video file: {video_path}")
@@ -905,6 +911,60 @@ def resize_frame(frame: np.ndarray, size: Tuple[int, int]) -> np.ndarray:
     shrink = width * height < frame.shape[0] * frame.shape[1]
     interpolation = cv2.INTER_AREA if shrink else cv2.INTER_LINEAR
     return cv2.resize(frame, (width, height), interpolation=interpolation)
+
+
+def iter_video_panels(video_path, frame_ids, roi, size, *, seek_offset=0):
+    """Read cropped video panels with a single decoder.
+
+    Args:
+        video_path: Path to the video file.
+        frame_ids: Iterable of zero-based frame indices in strictly increasing
+            order.
+        roi: Crop rectangle ``(x, y, width, height)`` in source pixels, with
+            ``x`` and ``y`` at the top-left corner.
+        size: Output panel size ``(width, height)`` in pixels.
+        seek_offset: Measured landing index minus requested index, in frames.
+            Defaults to zero.
+
+    Yields:
+        np.ndarray: One BGR panel per frame index, in input order, with shape
+        ``(height, width, 3)``. Panels are resized to ``size`` as needed.
+    """
+    try:
+        os.stat(video_path)
+    except FileNotFoundError as err:
+        raise FileNotFoundError(f"Video path does not exist: {video_path}") from err
+    cap = cv2.VideoCapture(str(video_path))
+    try:
+        if not cap.isOpened():
+            raise OSError(f"Cannot open video {video_path}")
+        n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        next_frame = 0
+        for frame_id in frame_ids:
+            if frame_id < next_frame or frame_id >= n_frames:
+                raise ValueError(
+                    f"Invalid or out-of-order frame {frame_id} in {video_path}"
+                )
+            if frame_id - next_frame > 120:
+                start = min(int(frame_id), n_frames - 1 + min(seek_offset, 0))
+                if not cap.set(cv2.CAP_PROP_POS_FRAMES, start - seek_offset):
+                    raise OSError(f"Cannot seek to frame {frame_id} in {video_path}")
+                next_frame = start
+            for skipped in range(next_frame, frame_id):
+                if not cap.grab():
+                    raise OSError(
+                        f"Cannot advance past frame {skipped} in {video_path}"
+                    )
+            ok, frame = cap.read()
+            if not ok:
+                raise OSError(f"Cannot read frame {frame_id} in {video_path}")
+            panel = crop_frame(frame, roi)
+            if panel.shape[:2] != (roi[3], roi[2]):
+                raise ValueError(f"Invalid panel crop {roi} in {video_path}")
+            yield panel if panel.shape[:2] == size[::-1] else resize_frame(panel, size)
+            next_frame = frame_id + 1
+    finally:
+        cap.release()
 
 
 # ---------------------------------------------------------------------------

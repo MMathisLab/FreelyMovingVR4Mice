@@ -1,6 +1,10 @@
 """Unit tests for the 3-camera input video helpers in analysis/inputs_videos.py."""
 
+import importlib.util
 import sys
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 import cv2
 import numpy as np
@@ -24,6 +28,7 @@ from inputs_videos import (  # noqa: E402
     binarize_sync_trace,
     crop_frame,
     find_scene_changes,
+    iter_video_panels,
     resize_frame,
     find_input_video_files,
     find_sync_square,
@@ -34,6 +39,135 @@ from inputs_videos import (  # noqa: E402
 )
 
 FRAME_TIMES = np.array([10.0, 10.1, 10.2, 10.3, 10.4])
+
+
+@pytest.fixture
+def video_schema(monkeypatch):
+    class TableMeta(type):
+        def __and__(cls, key):
+            return cls
+
+    class Table(metaclass=TableMeta):
+        pass
+
+    monkeypatch.setitem(
+        sys.modules,
+        "datajoint",
+        SimpleNamespace(Computed=Table, Imported=Table, Lookup=Table, Manual=Table),
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "vr4mice.utils.schema_config",
+        SimpleNamespace(get_schema=lambda *_: lambda cls: cls),
+    )
+    monkeypatch.setitem(
+        sys.modules, "vr4mice.analysis.inputs_videos", sys.modules["inputs_videos"]
+    )
+    schema_path = (
+        Path(__file__).resolve().parents[2]
+        / "dj_pipeline/vr4mice/schema/inputs_videos.py"
+    )
+    spec = importlib.util.spec_from_file_location(
+        "_input_video_test_schema", schema_path
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_query_frames_uses_camera_timestamps(video_schema, monkeypatch):
+    alignment = video_schema.StepVideoFrame
+    monkeypatch.setattr(
+        alignment,
+        "fetch1",
+        MagicMock(return_value=([-0.05, 0.05, 0.15, 0.3], "camera", None, None, 0.05)),
+        raising=False,
+    )
+    state = MagicMock()
+    state.__and__.return_value.fetch1.return_value = [10.0]
+    monkeypatch.setattr(video_schema, "vr4mice", SimpleNamespace(State=state))
+    monkeypatch.setattr(
+        video_schema.InputVideo,
+        "fetch1",
+        MagicMock(return_value=FRAME_TIMES[:3]),
+        raising=False,
+    )
+
+    queries = [-0.01, 0.06, 0.1, 0.25]
+    captured = alignment.align_step_to_frames({}, queries, displayed=False)
+    assert captured == [None, 1, 1, None]
+    assert alignment.align_step_to_frames({}, [0.06, 0.18]) == [2, None]
+
+
+def test_query_frames_uses_obs_clock_fit(video_schema, monkeypatch):
+    alignment = video_schema.StepVideoFrame
+    monkeypatch.setattr(
+        alignment,
+        "fetch1",
+        MagicMock(return_value=([0.0, 0.05, 0.15, 0.3], "obs", -0.02, 1.5, 0.07)),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        video_schema.RawVideoSync,
+        "fetch1",
+        MagicMock(return_value=(10.0, 4)),
+        raising=False,
+    )
+
+    queries = [0.0, 0.06, 0.13, 0.21]
+    captured = alignment.align_step_to_frames({}, queries, displayed=False)
+    assert captured == [None, 1, 2, 3]
+    assert alignment.align_step_to_frames({}, queries) == [1, 2, 3, None]
+    with pytest.raises(ValueError, match="out of bounds"):
+        alignment.align_step_to_frames({}, [0.31])
+
+
+def test_iter_video_panels_reports_missing_path(tmp_path):
+    with pytest.raises(FileNotFoundError, match="missing.avi"):
+        list(iter_video_panels(tmp_path / "missing.avi", [0], (0, 0, 8, 6), (4, 3)))
+
+
+def test_iter_video_panels_reuses_decoder_and_corrects_seeks(monkeypatch, tmp_path):
+    class Capture:
+        frame = 0
+        released = False
+
+        def isOpened(self):
+            return True
+
+        def get(self, prop):
+            assert prop == cv2.CAP_PROP_FRAME_COUNT
+            return 200
+
+        def set(self, prop, value):
+            assert prop == cv2.CAP_PROP_POS_FRAMES
+            self.frame = value - 6
+            return True
+
+        def grab(self):
+            self.frame += 1
+            return True
+
+        def read(self):
+            frame = np.full((8, 10, 3), self.frame, dtype=np.uint8)
+            self.frame += 1
+            return True, frame
+
+        def release(self):
+            self.released = True
+
+    cap = Capture()
+    monkeypatch.setattr(cv2, "VideoCapture", lambda _: cap)
+    path = tmp_path / "video.avi"
+    path.touch()
+    panels = list(
+        iter_video_panels(
+            path, [2, 195, 199], (1, 2, 8, 6), (4, 3), seek_offset=-6
+        )
+    )
+    assert [panel.shape for panel in panels] == [(3, 4, 3)] * 3
+    assert [panel[0, 0, 0] for panel in panels] == [2, 195, 199]
+    assert cap.released
 
 
 class TestAlignStepsToFramesByTimestamps:
@@ -408,6 +542,30 @@ class TestSyncSquare:
         assert trace.dtype == np.uint8
         assert len(trace) == len(self.STATES)
         np.testing.assert_array_equal(binarize_sync_trace(trace), self.STATES)
+
+    @pytest.mark.parametrize(
+        ("size", "insets"), [((2, 2), (0, 0)), ((2, 9), (0, 3)), ((9, 2), (3, 0))]
+    )
+    def test_trace_clamps_inset_per_axis(self, monkeypatch, size, insets):
+        x, y = 2, 3
+        w, h = size
+        inset_x, inset_y = insets
+        frames = []
+        for level in (0, 255):
+            frame = np.full((16, 16, 3), 120, dtype=np.uint8)
+            frame[y + inset_y : y + h - inset_y, x + inset_x : x + w - inset_x] = level
+            frames.append((True, frame))
+        capture = MagicMock()
+        capture.read.side_effect = [*frames, (False, None)]
+        monkeypatch.setattr(cv2, "VideoCapture", lambda _: capture)
+
+        np.testing.assert_array_equal(
+            read_sync_trace("obs.avi", (x, y, w, h)), [0, 255]
+        )
+
+    def test_trace_rejects_negative_inset(self):
+        with pytest.raises(ValueError, match="inset must be nonnegative"):
+            read_sync_trace("obs.avi", self.SQUARE, inset=-1)
 
     def test_no_square_raises(self, tmp_path):
         path = str(tmp_path / "flat.avi")

@@ -162,9 +162,9 @@ def check_video_files(
 
     Flags unexpected names, half camera pairs (VIDEO2 without its CAMERA2
     timestamps or the reverse), other cameras' files, sessions not ingested in
-    vr4mice.Dataset, and sessions with both an OBS and a camera video. Issues
-    that are gone are removed. Half pairs of ingested sessions are also recorded
-    in FailedSession for InputVideo.
+    vr4mice.Dataset, and sessions with both an OBS and a camera video. Missing
+    partners are tracked in ``VideoFileIssue`` and cleared on the next audit
+    after both files arrive. The audit also removes other resolved issues.
 
     Returns:
         The current issues as (folder, file name, issue) tuples.
@@ -206,12 +206,6 @@ def check_video_files(
 
     for folder, name, issue in issues:
         logger.warning("Input video file issue: %s/%s: %s", folder, name, issue)
-        if folder == folders["camera"] and issue.startswith("no "):
-            dataset = next((d for d in known if f"_{d}_" in name), None)
-            if dataset and not issue.startswith("no session"):
-                vr4mice.FailedSession().add_entry(
-                    dataset, "InputVideo", f"{name}: {issue}"[:1024]
-                )
     return issues
 
 
@@ -788,37 +782,47 @@ class StepVideoFrame(dj.Computed):
 
     @classmethod
     def align_step_to_frames(cls, key, timepoints: list, displayed: bool = True):
-        """Return the input video frame for each timepoint (game seconds).
+        """Return the first input video frame at or after each query time.
 
         Timepoints are in the ``State.step_time`` base and must lie within the
-        session's step times (ValueError otherwise). Returns None for a
-        timepoint outside the input video. ``displayed`` gives the frame showing
-        the game at that time (``frame_ids``); False, the frame captured at that
-        time (``step_frame_ids``).
+        session's step times (ValueError otherwise). The lookup uses camera
+        timestamps or the stored OBS offset and drift. When ``displayed`` is
+        True, the display lag is added on the recording clock. Returns None
+        for a query outside the input video.
         """
-        column = "frame_ids" if displayed else "step_frame_ids"
-        step_time, frame_ids = (cls & key).fetch1("step_time", column)
+        from vr4mice.analysis.inputs_videos import align_steps_to_frames_by_timestamps
+
+        step_time, source, offset, drift, display_lag = (cls & key).fetch1(
+            "step_time", "video_source", "offset", "drift", "display_lag"
+        )
         step_time = np.asarray(step_time, dtype=float)
-        frame_ids = np.asarray(frame_ids)
         min_time, max_time = np.min(step_time), np.max(step_time)
 
         for tp in timepoints:
             if not isinstance(tp, (int, float)):
                 raise TypeError(f"Timepoint {tp} is not a number.")
-            if tp < min_time or tp > max_time:
+            if not min_time <= tp <= max_time:
                 raise ValueError(
                     f"Timepoint {tp} is out of bounds. Valid range: [{min_time:.3f}, {max_time:.3f}] seconds."
                 )
 
-        inside = frame_ids >= 0
-        times, frames = step_time[inside], frame_ids[inside]
-        result = []
-        for tp in timepoints:
-            if not times.size or tp < times[0] or tp > times[-1]:
-                result.append(None)
-            else:
-                result.append(int(np.ceil(np.interp(tp, times, frames) - 1e-9)))
-        return result
+        query_times = np.asarray(timepoints, dtype=float)
+        if not query_times.size:
+            return []
+
+        if source == "camera":
+            start_time = (vr4mice.State & key).fetch1("start_time")
+            video_times = float(np.ravel(start_time)[0]) + query_times
+            frame_times = (InputVideo & key).fetch1("timestamps")
+        else:
+            fps, n_frames = (RawVideoSync & key).fetch1("fps", "n_frames")
+            video_times = offset + drift * query_times
+            frame_times = np.arange(n_frames) / fps
+
+        if displayed:
+            video_times += display_lag
+        frames = align_steps_to_frames_by_timestamps(video_times, frame_times)
+        return [int(frame) if frame >= 0 else None for frame in frames]
 
     @classmethod
     def trial_frames(cls, key, trial: int, decision_xy=None) -> dict:
@@ -922,3 +926,127 @@ class StepVideoFrame(dj.Computed):
         frame = read_video_frame(video_path, frame_index, seek_offset=seek_offset)
         panel = crop_frame(frame, visual_roi)
         return panel if size is None else resize_frame(panel, size)
+
+
+@schema
+class FrameVisibility(dj.Computed):
+    """Step-aligned visibility of the target and distractor in contrast videos.
+
+    Pixel counts refer to a 316×237 panel for both video sources. Surface novelty
+    is a fraction of the predicted 2-D silhouette first seen in the trial.
+    Populate explicitly from a machine with access to the recordings.
+    """
+
+    definition = """
+    -> StepVideoFrame
+    ---
+    descriptors: <blob>  # aligned column arrays for steps with a displayed frame
+    calibration: <blob>  # panel geometry, segmentation parameters and sample frames
+    surface_fit: <blob>   # per-object fit status and fitted silhouette coefficients
+    """
+
+    @property
+    def key_source(self):
+        from vr4mice.schema.decision import SessionLabel
+
+        labels = (SessionLabel & self._contrast_sets).fetch("KEY")
+        return StepVideoFrame.proj() & (vr4mice.Dataset & labels).proj()
+
+    _contrast_sets = [
+        {"set_name": "contrast_white_target"},
+        {"set_name": "contrast_black_target"},
+    ]
+
+    def make(self, key, *, frame_workers=1):
+        """Populate one supported session and record session-specific failures."""
+        from vr4mice.analysis.frame_visibility import validate_frame_workers
+        from vr4mice.schema.decision import SessionLabel
+
+        table_name = self.__class__.__name__
+        if vr4mice.FailedSession.should_skip(key, table_name, logger):
+            return
+
+        label = (vr4mice.Dataset & key).fetch1("session_label")
+        contrast = SessionLabel & {"session_label": label} & self._contrast_sets
+        if not contrast:
+            logger.warning(
+                "Skipping FrameVisibility for %s: unsupported task %s",
+                key["dataset"],
+                label,
+            )
+            return
+
+        set_name, stage_name = contrast.fetch1("set_name", "stage_name")
+        frame_workers = validate_frame_workers(frame_workers)
+        try:
+            self._make_session(key, label, set_name, stage_name, frame_workers)
+        except Exception as err:
+            _record_failure(key["dataset"], table_name, err)
+
+    def _make_session(self, key, label, set_name, stage_name, frame_workers):
+        from vr4mice.analysis.frame_visibility import PANEL_SIZE, describe_steps
+        from vr4mice.analysis.inputs_videos import iter_video_panels
+
+        video = (StepVideoFrame & key).fetch1()
+        steps = np.asarray(video["step"], dtype=np.int64).ravel()
+        times = np.asarray(video["step_time"], dtype=float).ravel()
+        if steps.size != times.size or steps.size != np.size(video["frame_ids"]):
+            raise ValueError(
+                "Step and time arrays must align with the displayed-frame mapping"
+            )
+        episode, occlusion_type = (vr4mice.State & key).fetch1(
+            "episode", "occlusion_type"
+        )
+        iti, x, z, target_left = (vr4mice.MouseState & key).fetch1(
+            "iti", "x_pos", "z_pos", "obj_left"
+        )
+        gui = vr4mice.GuiParams & key
+        distractor = gui.fetch1("distractor") if gui else None
+        has_distractor = not label.startswith(("ar_det_", "ar_detection_"))
+        if distractor is not None and np.size(distractor):
+            flags = np.asarray(distractor, dtype=float)
+            known = np.isfinite(flags)
+            if known.any():
+                has_distractor = bool(np.any(flags[known] != 0))
+        has_occluders = stage_name in ("dual_occlusion", "multi_occlusion")
+        if occlusion_type is not None and np.size(occlusion_type):
+            modes = np.asarray(occlusion_type, dtype=float)
+            if np.isfinite(modes).any():
+                has_occluders = bool(np.any(np.isfinite(modes) & (modes != 0)))
+
+        def read_panels(frame_ids):
+            for panel in iter_video_panels(
+                video["video_path"],
+                frame_ids,
+                video["visual_roi"],
+                PANEL_SIZE,
+                seek_offset=video["seek_offset"],
+            ):
+                yield cv2.cvtColor(panel, cv2.COLOR_BGR2RGB)
+
+        descriptors, calibration, surface_fit = describe_steps(
+            read_panels,
+            video["frame_ids"],
+            episode,
+            iti,
+            np.column_stack((np.ravel(x), np.ravel(z))),
+            target_left,
+            target_is_white=set_name == "contrast_white_target",
+            has_distractor=has_distractor,
+            has_occluders=has_occluders,
+            frame_workers=frame_workers,
+        )
+        step_index = descriptors["step_index"]
+        descriptors.update(step=steps[step_index], step_time=times[step_index])
+        self.insert1(
+            {
+                **key,
+                "descriptors": descriptors,
+                "calibration": calibration,
+                "surface_fit": surface_fit,
+            }
+        )
+
+    def fetch_dataframe(self):
+        """Return the descriptor rows for a restriction to one dataset."""
+        return pd.DataFrame(self.fetch1("descriptors"))
