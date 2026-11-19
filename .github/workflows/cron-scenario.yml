@@ -346,3 +346,14 @@ jobs:
           test "${label_set_count}" -ge 1
           # batch2 counts are logged for visibility and depend on available batch2 input datasets.
           # PredictionModel/DecisionPoints and PredictionModel10Windows/DecisionPoints10Windows need multi-session data to train so no test; logged for visibility only
+
+      - name: Verify information map tables
+        run: |
+          occlusion_aperture_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM information_maps.`#occlusion_aperture`;')"
+          information_map_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM information_maps.__information_map;')"
+
+          echo "information_maps.#occlusion_aperture rows: ${occlusion_aperture_count}"
+          echo "information_maps.__information_map rows: ${information_map_count}"
+
+          test "${occlusion_aperture_count}" -ge 1
+          test "${information_map_count}" -eq "${occlusion_aperture_count}"

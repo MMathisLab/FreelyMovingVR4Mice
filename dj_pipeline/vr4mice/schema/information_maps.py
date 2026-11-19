@@ -64,7 +64,6 @@ class InformationMap(dj.Computed):
     definition = """
     -> OcclusionAperture
     ---
-    visible_percent = null : int16  # percent of target visible, copied from OcclusionAperture
     infomap_aperture : float64      # aperture width converted to info-map arena units
     info_map : <blob>               # unnormalized info map, (x_resolution, y_resolution)
     """
@@ -72,8 +71,6 @@ class InformationMap(dj.Computed):
     def make(self, key):
         """Compute the info map for one aperture with the default arena geometry."""
         visible_percent = (OcclusionAperture & key).fetch1("visible_percent")
-        if visible_percent != visible_percent:  # null may come back as NaN
-            visible_percent = None
         game_aperture = float(key["game_aperture"])
         infomap_aperture = information_maps.convert_game_to_infomap_aperture(
             game_aperture
@@ -94,7 +91,6 @@ class InformationMap(dj.Computed):
         self.insert1(
             {
                 **key,
-                "visible_percent": visible_percent,
                 "infomap_aperture": infomap_aperture,
                 "info_map": info_map,
             }
@@ -110,7 +106,8 @@ class InformationMap(dj.Computed):
         if game_aperture is not None:
             restricted = self & {"game_aperture": game_aperture}
         elif visible_percent is not None:
-            restricted = self & {"visible_percent": visible_percent}
+            apertures = OcclusionAperture & {"visible_percent": visible_percent}
+            restricted = self & apertures.proj()
         else:
             restricted = self
         if len(restricted) != 1:
@@ -138,18 +135,20 @@ class InformationMap(dj.Computed):
         Returns the matplotlib figure; save it with ``fig.savefig(path)``.
         """
         entry = self.select(game_aperture, visible_percent).fetch1()
+        aperture = OcclusionAperture & {"game_aperture": entry["game_aperture"]}
+        visible_percent = aperture.fetch1("visible_percent")
         print(
             information_maps.aperture_label(
                 entry["infomap_aperture"],
                 entry["game_aperture"],
-                entry["visible_percent"],
+                visible_percent,
             )
         )
         return information_maps.plot_info_map(
             entry["info_map"],
             entry["infomap_aperture"],
             entry["game_aperture"],
-            entry["visible_percent"],
+            visible_percent,
             **plot_kwargs,
         )
 
