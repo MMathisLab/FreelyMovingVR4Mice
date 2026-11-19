@@ -185,10 +185,11 @@ def _get_segment_area_sorted(angles, radius):
     if angles.size == 0:
         return np.array([0.0, 0.0], dtype=float)
     if 0 in angles:
-        diffs = np.diff(angles, append=angles[-1] - angles[0])
+        # The legacy calculation omits the endpoint span when zero is visible.
+        diffs = np.diff(angles, append=angles[-1])
     else:
         diffs = np.abs(np.diff(angles, append=angles[0]))
-    central_angle = np.max([np.max(diffs), np.min(diffs)])
+    central_angle = np.max(diffs)
     area = 0.5 * radius**2 * (central_angle - np.sin(central_angle))
     area_c = np.abs(np.pi * radius**2 - area)
     return np.array([area, area_c])
