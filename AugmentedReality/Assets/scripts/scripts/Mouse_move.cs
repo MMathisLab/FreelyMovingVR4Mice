@@ -107,9 +107,7 @@ public class Mouse_move : Agent
       ITIScreenOff();
       ITI = false;
 
-      if (plane.GetComponent<Target_spawner>().occlusion_type > 0f){
-      		plane.GetComponent<Target_spawner>().walls_reset();
-	  }
+      plane.GetComponent<Target_spawner>().walls_reset();
 
 		stopwatch.Restart();
         lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
