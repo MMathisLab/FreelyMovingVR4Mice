@@ -262,16 +262,31 @@ if __name__ == "__main__":
         from vr4mice.schema import inputs_videos, vr4mice
         from vr4mice.utils.populate_helpers import populate_pending
 
-        populate_pending(inputs_videos.RawVideo, vr4mice.Dataset, logger=logger)
+        # OBS videos use the batch's screen layout (inputs_videos.ObsVideoLayout)
+        vr4mice.DatasetBatch().populate()
+        # Report misnamed, unpaired or unmatched video files (VideoFileIssue);
+        # never blocks the populates below
+        try:
+            inputs_videos.check_video_files()
+        except Exception as err:
+            logger.warning("Input video file check failed: %s", err)
+        # Old setup (OBS recording); 3-camera datasets are excluded by key_source.
         populate_pending(
-            inputs_videos.ProcessedVideo, inputs_videos.RawVideo, logger=logger
+            inputs_videos.RawVideo, inputs_videos.RawVideo().key_source, logger=logger
         )
         populate_pending(
-            inputs_videos.VideoSyncSignal, inputs_videos.ProcessedVideo, logger=logger
+            inputs_videos.RawVideoSync, inputs_videos.RawVideo, logger=logger
         )
+        # 3-camera setup (camera-2 input video with frame timestamps).
         populate_pending(
-            inputs_videos.AlignedVideoFrame,
-            inputs_videos.VideoSyncSignal,
+            inputs_videos.InputVideo,
+            inputs_videos.InputVideo().key_source,
+            logger=logger,
+        )
+        # Frame of each game step, for both setups
+        populate_pending(
+            inputs_videos.StepVideoFrame,
+            inputs_videos.StepVideoFrame().key_source,
             logger=logger,
         )
 

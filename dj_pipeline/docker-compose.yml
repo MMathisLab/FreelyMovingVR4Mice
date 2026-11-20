@@ -14,6 +14,7 @@ services:
   client:
     image: ${CLIENT_IMAGE:-mmathislab/vr4mice_app:0.1.0}
     container_name: ${CLIENT_CONTAINER_NAME:-vr4mice_${USER}}
+    cpus: 12.0
     build:
       context: .
       dockerfile: Dockerfile
@@ -36,7 +37,7 @@ services:
       - "./:/app"
       - "${SHARED_PATH:-/mnt/database/shared}:/shared"
       - "${DATA_PATH:-/mnt/database/vr4mice/vr4mice_database/data}:/data"
-      - "${SCREEN_RECORDINGS_PATH:-/mnt/neuropixel_data/vr4mice/raw_screen_recordings}:/vr4mice_screen_recordings"
+      - "${SCREEN_RECORDINGS_PATH:-/mnt/neuropixel_data/vr4mice}:/vr4mice_screen_recordings"
       - "./base/base_min_schemas:/base_schemas"
       - "./base/base_actions:/base_actions"
       - "${NP_PIPELINE_SRC_PATH:-./np_pipeline_stub}:/app/np_pipeline"
