@@ -298,6 +298,22 @@ class InclusionStatus(dj.Computed):
         table["passes_min_reward"] = reward > min_reward.astype(float)
         return table
 
+    def _insert_row(self, row):
+        """Insert a row, leaving out columns missing from an older table.
+
+        Tables declared before the criteria columns existed only have
+        ``included``. Delete and repopulate after altering or redeclaring the
+        table to store the criteria.
+        """
+        missing = [name for name in row if name not in self.heading.names]
+        if missing:
+            logger.warning(
+                "%s on the database lacks %s; inserting without them.",
+                self.__class__.__name__,
+                missing,
+            )
+        self.insert1({k: v for k, v in row.items() if k not in missing})
+
     def make(self, key):
         try:
 
@@ -311,7 +327,7 @@ class InclusionStatus(dj.Computed):
             # session_label = (ExperimentMember & key).fetch1("session_label")
 
             if stage_name == "training":
-                self.insert1(
+                self._insert_row(
                     {
                         **key,
                         "included": False,
@@ -328,7 +344,7 @@ class InclusionStatus(dj.Computed):
                 logger.debug(
                     f"Skipping excluded dataset for {self.__class__.__name__}: {key['dataset']} ({excluded_reason})"
                 )
-                self.insert1(
+                self._insert_row(
                     {
                         **key,
                         "included": False,
@@ -345,7 +361,7 @@ class InclusionStatus(dj.Computed):
             trial_df = tables.fetch(as_dict=True)
 
             if not trial_df:
-                self.insert1(
+                self._insert_row(
                     {
                         **key,
                         "included": False,
@@ -410,7 +426,7 @@ class InclusionStatus(dj.Computed):
                 best_extreme_reward = None
                 reward_drop = None
 
-            self.insert1(
+            self._insert_row(
                 {
                     **key,
                     "included": included,

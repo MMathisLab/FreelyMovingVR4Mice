@@ -436,10 +436,11 @@ def apply_inclusion_criteria(
     narrowest_reward = pivoted_reward[("trial_rewarded", narrowest_aperture)]
     widest_reward = pivoted_reward[("trial_rewarded", widest_aperture)]
 
-    # NaN comparisons are False, so a missing extreme excludes the dataset.
-    missing_extreme = pivoted_reward.index[
-        narrowest_reward.isna() | widest_reward.isna()
-    ]
+    # Both extremes are required whichever criteria are enabled.
+    pivoted_reward["has_extreme_rewards"] = (
+        narrowest_reward.notna() & widest_reward.notna()
+    )
+    missing_extreme = pivoted_reward.index[~pivoted_reward["has_extreme_rewards"]]
     if len(missing_extreme):
         logger.warning(
             "Excluded for lacking a reward at aperture %s or %s: %s",
@@ -464,7 +465,9 @@ def apply_inclusion_criteria(
         pivoted_reward["passes_narrow_reward"] = narrowest_reward > min_narrow_reward
         pivoted_reward["passes_reward_drop"] |= pivoted_reward["passes_narrow_reward"]
 
-    pivoted_reward["included_by_criteria"] = pivoted_reward["passes_min_reward"]
+    pivoted_reward["included_by_criteria"] = (
+        pivoted_reward["has_extreme_rewards"] & pivoted_reward["passes_min_reward"]
+    )
     if consider_reward_drop:
         pivoted_reward["included_by_criteria"] &= pivoted_reward["passes_reward_drop"]
 
