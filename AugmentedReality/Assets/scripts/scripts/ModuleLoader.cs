@@ -38,17 +38,23 @@ public static class ModuleLoader
 		var args = Environment.GetCommandLineArgs();
 		for (int i = 0; i < args.Length - 1; i++)
 		{
-			if (args[i] == "-modules") return args[i + 1];
+			if (args[i] == "-modules") return RequestedModulesDir(args[i + 1]);
 		}
 		// Application.dataPath is <build>/<name>_Data in a player and <project>/Assets in the editor.
 		return Path.Combine(Path.GetDirectoryName(Application.dataPath), "Modules");
 	}
 
+	// Most builds have no <build>/Modules, but a -modules folder that is missing is a typo worth seeing.
+	static string RequestedModulesDir(string dir)
+	{
+		if (!Directory.Exists(dir)) Debug.LogWarning($"ModuleLoader: -modules folder {dir} does not exist");
+		return dir;
+	}
+
 	static List<IRigModule> Load(string dir)
 	{
 		var found = new List<IRigModule>();
-		if (!Directory.Exists(dir)) return found;
-		foreach (var path in Directory.GetFiles(dir, "*.dll").OrderBy(p => p, StringComparer.Ordinal))
+		foreach (var path in ModuleFiles(dir))
 		{
 			Type[] types;
 			try
@@ -77,5 +83,21 @@ public static class ModuleLoader
 			}
 		}
 		return found;
+	}
+
+	// An unreadable folder must not abort agent initialization, so log it and load nothing.
+	static List<string> ModuleFiles(string dir)
+	{
+		if (!Directory.Exists(dir)) return new List<string>();
+		try
+		{
+			return Directory.GetFiles(dir, "*.dll").OrderBy(p => p, StringComparer.Ordinal).ToList();
+		}
+		catch (Exception e)
+		{
+			Debug.LogError($"ModuleLoader: cannot list {dir}");
+			Debug.LogException(e);
+			return new List<string>();
+		}
 	}
 }
