@@ -46,6 +46,40 @@ clean_model_labels = [
 ]
 
 
+def prepare_trial_model_features(
+    trials: pd.DataFrame, labels: List[str]
+) -> pd.DataFrame:
+    """Add requested initial-position and previous-choice features.
+
+    Args:
+        trials: Trajectory samples in acquisition order within each trial.
+        labels: Feature names requested by the model.
+
+    Returns:
+        A copy with the requested derived features. The first trial in each
+        session has a previous-choice value of zero.
+    """
+    trials = trials.copy()
+    for feature, coordinate in (("trial_init_x", "x"), ("trial_init_y", "y")):
+        if feature in labels:
+            trials[feature] = trials.groupby(["dataset", "trial"])[
+                coordinate
+            ].transform("first")
+    if "trial_history" in labels:
+        choices = (
+            trials.groupby(["dataset", "trial"], as_index=False)["trial_left_choice"]
+            .first()
+            .sort_values(["dataset", "trial"])
+        )
+        choices["trial_history"] = (
+            choices.groupby("dataset")["trial_left_choice"].shift(1).fillna(0)
+        )
+        trials["trial_history"] = pd.MultiIndex.from_frame(
+            trials[["dataset", "trial"]]
+        ).map(choices.set_index(["dataset", "trial"])["trial_history"])
+    return trials
+
+
 def predict_decision(
     df,
     label: List[str],
@@ -658,9 +692,6 @@ def _evaluate_thresholds(
     """Evaluate thresholds with session-specific baselines."""
     threshold_evals_norm = []
     for threshold in thresholds:
-        print(
-            f"Analyzing decision points with threshold_uncertainty {threshold} (normalized)..."
-        )
         decision_points_threshold = all_decision_points[
             all_decision_points.threshold_uncertainty == threshold
         ]
@@ -827,6 +858,62 @@ def _minmax_scale_series(series: pd.Series) -> pd.Series:
     if np.isclose(max_val, min_val):
         return series.where(series.isna(), 0.0)
     return (series - min_val) / (max_val - min_val)
+
+
+def summarize_window_prediction(
+    predictions: pd.DataFrame, final_window: int, *, include_windows: bool = False
+) -> dict | tuple[dict, pd.DataFrame]:
+    """Summarize sample accuracy, BIC, and final-window BIC variability.
+
+    Accuracy and BIC are averaged within a window first, so each window has
+    equal weight. The BIC coefficient of variation measures trial-to-trial
+    variability: each trial's BIC in a window is averaged over its samples, the
+    CV is taken across trials within each session, and then averaged over
+    sessions, so every session counts equally.
+
+    Note: the published figure 4 analysis grouped by trial number across
+    sessions, which pairs unrelated trials and mixes in session offsets. A CV
+    within a single trial and window is always zero, because the 10-sample
+    sliding BIC window spans the whole 10-sample trial window.
+
+    With ``include_windows=True``, return the summary and the per-window metrics
+    used to calculate it.
+    """
+    trial_bic = predictions.groupby(["dataset", "model_idx", "trial"])["bic"].mean()
+    session_bic = trial_bic.groupby(["dataset", "model_idx"]).agg(["mean", "std"])
+    session_cv = session_bic["std"] / session_bic["mean"].where(
+        session_bic["mean"] != 0
+    )
+    windows = predictions.groupby("model_idx")[["accuracy", "bic"]].mean()
+    windows["coef_var_bic"] = session_cv.groupby("model_idx").mean()
+    summary = windows[["accuracy", "bic"]].mean().to_dict()
+    summary["cv_end"] = windows["coef_var_bic"].get(final_window, np.nan)
+    return (summary, windows.reset_index()) if include_windows else summary
+
+
+def rank_window_models(metrics: pd.DataFrame) -> pd.DataFrame:
+    """Rank model candidates by the composite score used in dual_regression."""
+    columns = ["accuracy", "bic", "cv_end"]
+    ranked = metrics.loc[np.isfinite(metrics[columns]).all(axis=1)].copy()
+    ranked["accuracy_norm"] = _minmax_scale_series(ranked["accuracy"])
+    ranked["bic_norm"] = 1 - _minmax_scale_series(ranked["bic"])
+    ranked["cv_norm"] = 1 - _minmax_scale_series(ranked["cv_end"])
+    ranked["score"] = (
+        ranked["accuracy_norm"] + ranked["bic_norm"] + ranked["cv_norm"]
+    ) / 3
+    return ranked.sort_values(
+        ["score", "bic", "label_set_id", "param_id"],
+        ascending=[False, True, True, True],
+    )
+
+
+def rank_turning_thresholds(evaluations: pd.DataFrame) -> pd.Series:
+    """Rank thresholds by mean normalized turning score across sessions."""
+    valid = evaluations.loc[np.isfinite(evaluations["jump_score_norm"])]
+    scores = valid.groupby("threshold")["jump_score_norm"].mean()
+    # Prefer the stricter, lower uncertainty threshold on a tie.
+    scores = scores.sort_index(key=lambda thresholds: thresholds.astype(float))
+    return scores.sort_values(ascending=False, kind="stable")
 
 
 def select_threshold(

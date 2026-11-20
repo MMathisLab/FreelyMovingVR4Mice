@@ -363,22 +363,24 @@ def main():
         run_step("decision.LabelSet.fill", lambda: decision.LabelSet.fill())
 
         run_step(
-            "decision.PredictionModel.populate",
-            lambda: decision.PredictionModel().populate(*decision_populate_args),
-        )
-        run_step(
-            "decision.DecisionPoints.populate",
-            lambda: decision.DecisionPoints().populate(*decision_populate_args),
-        )
-        run_step(
             "decision.PredictionModel10Windows.populate",
             lambda: decision.PredictionModel10Windows().populate(
                 *decision_populate_args
             ),
         )
         run_step(
+            "decision.BestLabelSet10Windows.populate",
+            lambda: decision.BestLabelSet10Windows().populate(*decision_populate_args),
+        )
+        run_step(
             "decision.DecisionPoints10Windows.populate",
             lambda: decision.DecisionPoints10Windows().populate(
+                *decision_populate_args
+            ),
+        )
+        run_step(
+            "decision.BestDecisionThreshold10Windows.populate",
+            lambda: decision.BestDecisionThreshold10Windows().populate(
                 *decision_populate_args
             ),
         )
@@ -453,6 +455,15 @@ def main():
                 lambda: populate_pending(
                     inputs_videos.StepVideoFrame,
                     inputs_videos.StepVideoFrame().key_source,
+                    logger=logger,
+                ),
+            )
+
+            run_step(
+                "inputs_videos.FrameVisibility.populate",
+                lambda: populate_pending(
+                    inputs_videos.FrameVisibility,
+                    inputs_videos.FrameVisibility().key_source,
                     logger=logger,
                 ),
             )

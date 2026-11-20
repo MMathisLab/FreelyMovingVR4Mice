@@ -8,6 +8,10 @@ from regression import (
     compute_bic,
     compute_bic_sliding_window,
     predict_decision,
+    prepare_trial_model_features,
+    rank_turning_thresholds,
+    rank_window_models,
+    summarize_window_prediction,
 )
 
 
@@ -109,3 +113,109 @@ class TestMinMaxScaleSeries:
         pd.testing.assert_series_equal(
             scaled, pd.Series([0.0, 0.0, 0.0]), check_names=False
         )
+
+
+def test_window_summary_weights_windows_equally_and_takes_cv_across_trials():
+    predictions = pd.DataFrame(
+        {
+            "dataset": ["a", "a", "a", "a", "a", "b", "b"],
+            "trial": [1, 1, 1, 2, 2, 1, 2],
+            "model_idx": [0, 9, 9, 9, 9, 9, 9],
+            "accuracy": [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "bic": [30.0, 10.0, 10.0, 20.0, 20.0, 30.0, 30.0],
+        }
+    )
+    summary, windows = summarize_window_prediction(
+        predictions, final_window=9, include_windows=True
+    )
+    assert summarize_window_prediction(predictions, final_window=9) == summary
+    # Final window: session a has trial BICs [10, 20], session b [30, 30];
+    # trials sharing a number across sessions are not paired.
+    expected_cv = (np.std([10.0, 20.0], ddof=1) / 15.0 + 0.0) / 2
+    assert summary["accuracy"] == 0.5
+    assert summary["bic"] == 25.0
+    assert np.isclose(summary["cv_end"], expected_cv)
+    assert windows["model_idx"].tolist() == [0, 9]
+    assert windows["bic"].tolist() == [30.0, 20.0]
+    assert np.isclose(
+        windows.loc[windows["model_idx"] == 9, "coef_var_bic"].item(), expected_cv
+    )
+
+
+def test_model_ranking_matches_notebook_composite():
+    metrics = pd.DataFrame(
+        {
+            "label_set_id": [8, 1, 3, 4, 2, 5, 6, 7, 9],
+            "param_id": [1] * 9,
+            "accuracy": [
+                0.857214,
+                0.852138,
+                0.845184,
+                0.851404,
+                0.784125,
+                0.851274,
+                0.859978,
+                0.625270,
+                0.99,
+            ],
+            "bic": [
+                17.155089,
+                17.375687,
+                12.991663,
+                18.002356,
+                15.272077,
+                33.294042,
+                40.030106,
+                23.043837,
+                1,
+            ],
+            "cv_end": [
+                0.001278,
+                0.001122,
+                0.053966,
+                0.021914,
+                0.003919,
+                0.000562,
+                0.000436,
+                0.205756,
+                np.nan,
+            ],
+        }
+    )
+    ranked = rank_window_models(metrics)
+    assert ranked["label_set_id"].tolist() == [8, 1, 3, 4, 2, 5, 6, 7]
+    np.testing.assert_allclose(ranked["score"].iloc[0], 0.943381, atol=1e-5)
+    np.testing.assert_allclose(
+        ranked["score"], ranked[["accuracy_norm", "bic_norm", "cv_norm"]].mean(axis=1)
+    )
+    assert np.isfinite(rank_window_models(metrics.iloc[:1])["score"].iloc[0])
+
+
+def test_turning_threshold_uses_mean_over_finite_session_scores():
+    evaluations = pd.DataFrame(
+        {
+            "threshold": ["0.2", "0.2", "0.1", "0.1", "0.3", "0.4"],
+            "jump_score_norm": [3.0, 1.0, 2.0, 2.0, np.inf, np.nan],
+            "n_trials": [200, 2, 20, 30, 1, 1],
+        }
+    )
+    assert rank_turning_thresholds(evaluations).to_dict() == {"0.1": 2.0, "0.2": 2.0}
+
+
+def test_trial_model_features_keep_sessions_separate():
+    trials = pd.DataFrame(
+        {
+            "dataset": ["a", "a", "b", "a", "b", "b"],
+            "trial": [2, 2, 1, 1, 2, 2],
+            "trial_left_choice": [0, 0, 0, 1, 1, 1],
+            "x": [1, 2, 3, 4, 5, 6],
+            "y": [6, 5, 4, 3, 2, 1],
+        }
+    )
+    features = prepare_trial_model_features(
+        trials, ["trial_init_x", "trial_init_y", "trial_history"]
+    )
+    assert features["trial_init_x"].tolist() == [1, 1, 3, 4, 5, 5]
+    assert features["trial_init_y"].tolist() == [6, 6, 4, 3, 2, 2]
+    assert features["trial_history"].tolist() == [1, 1, 0, 0, 0, 0]
+    assert "trial_history" not in trials
