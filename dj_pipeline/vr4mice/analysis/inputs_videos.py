@@ -827,8 +827,21 @@ def read_video_frame(video_path: str, frame_index: int, seek_offset: int = 0):
             f"frame_index {frame_index} out of bounds (0 to {total_frames - 1})"
         )
 
-    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index - seek_offset)
-    success, frame = cap.read()
+    # Seeking lands seek_offset frames from the requested position, so seek to
+    # a frame within reach and decode forward to frame_index (as in
+    # iter_video_panels): with a negative offset, the last frames would need a
+    # position past the end; with a positive one, the first frames a negative
+    # one, so those are read from the start without seeking.
+    start = min(frame_index, total_frames - 1 + min(seek_offset, 0))
+    if start < max(seek_offset, 0):
+        start = 0
+    elif not cap.set(cv2.CAP_PROP_POS_FRAMES, start - seek_offset):
+        cap.release()
+        raise RuntimeError(f"Could not seek to frame {frame_index} in {video_path}")
+    frame = None
+    success = all(cap.grab() for _ in range(frame_index - start))
+    if success:
+        success, frame = cap.read()
     cap.release()
 
     if not success or frame is None:

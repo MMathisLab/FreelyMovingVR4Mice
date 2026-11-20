@@ -80,7 +80,9 @@ def test_query_frames_uses_camera_timestamps(video_schema, monkeypatch):
     monkeypatch.setattr(
         alignment,
         "fetch1",
-        MagicMock(return_value=([-0.05, 0.05, 0.15, 0.3], "camera", None, None, 0.05)),
+        MagicMock(
+            return_value=([-0.05, 0.05, 0.15, 0.3], None, "camera", None, None, 0.05)
+        ),
         raising=False,
     )
     state = MagicMock()
@@ -104,7 +106,7 @@ def test_query_frames_uses_obs_clock_fit(video_schema, monkeypatch):
     monkeypatch.setattr(
         alignment,
         "fetch1",
-        MagicMock(return_value=([0.0, 0.05, 0.15, 0.3], "obs", -0.02, 1.5, 0.07)),
+        MagicMock(return_value=([0.0, 0.05, 0.15, 0.3], None, "obs", -0.02, 1.5, 0.07)),
         raising=False,
     )
     monkeypatch.setattr(
@@ -120,6 +122,36 @@ def test_query_frames_uses_obs_clock_fit(video_schema, monkeypatch):
     assert alignment.align_step_to_frames({}, queries) == [1, 2, 3, None]
     with pytest.raises(ValueError, match="out of bounds"):
         alignment.align_step_to_frames({}, [0.31])
+
+
+def test_query_frames_use_the_stored_corrected_obs_clock(video_schema, monkeypatch):
+    # The stored mapping includes a +0.1 s residual correction after the first
+    # step (dropped frames) that offset + drift alone (here the identity) misses.
+    # The first step is outside the video.
+    step_time = [0.0, 0.1, 0.2, 0.3]
+    step_video_time = [np.nan, 0.2, 0.3, 0.4]
+    alignment = video_schema.StepVideoFrame
+    monkeypatch.setattr(
+        alignment,
+        "fetch1",
+        MagicMock(return_value=(step_time, step_video_time, "obs", 0.0, 1.0, 0.1)),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        video_schema.RawVideoSync,
+        "fetch1",
+        MagicMock(return_value=(10.0, 6)),
+        raising=False,
+    )
+
+    # A step's own time returns the frame make() stored for it
+    assert alignment.align_step_to_frames({}, step_time[1:], displayed=False) == [
+        2,
+        3,
+        4,
+    ]
+    assert alignment.align_step_to_frames({}, [0.15, 0.3]) == [4, 5]
+    assert alignment.align_step_to_frames({}, [0.0], displayed=False) == [None]
 
 
 def test_iter_video_panels_reports_missing_path(tmp_path):
@@ -161,9 +193,7 @@ def test_iter_video_panels_reuses_decoder_and_corrects_seeks(monkeypatch, tmp_pa
     path = tmp_path / "video.avi"
     path.touch()
     panels = list(
-        iter_video_panels(
-            path, [2, 195, 199], (1, 2, 8, 6), (4, 3), seek_offset=-6
-        )
+        iter_video_panels(path, [2, 195, 199], (1, 2, 8, 6), (4, 3), seek_offset=-6)
     )
     assert [panel.shape for panel in panels] == [(3, 4, 3)] * 3
     assert [panel[0, 0, 0] for panel in panels] == [2, 195, 199]
@@ -329,6 +359,62 @@ class TestReadVideoFrame:
     def test_missing_file_raises(self, tmp_path):
         with pytest.raises(FileNotFoundError):
             read_video_frame(str(tmp_path / "absent.avi"), 0)
+
+
+class _OffsetCapture:
+    """Video of ``n_frames`` frames whose value is their index.
+
+    Seeking to position ``p > 0`` lands on frame ``p + offset`` (H.264 in AVI);
+    position 0 is exact, and a position past the last frame fails. Reading past
+    the last frame fails, as for a real file.
+    """
+
+    def __init__(self, n_frames, offset):
+        self.n_frames, self.offset, self.frame = n_frames, offset, 0
+
+    def isOpened(self):
+        return True
+
+    def get(self, prop):
+        assert prop == cv2.CAP_PROP_FRAME_COUNT
+        return self.n_frames
+
+    def set(self, prop, value):
+        assert prop == cv2.CAP_PROP_POS_FRAMES
+        if value >= self.n_frames:
+            self.frame = self.n_frames
+            return False
+        self.frame = int(value) + self.offset if value > 0 else 0
+        return True
+
+    def grab(self):
+        self.frame += 1
+        return self.frame <= self.n_frames
+
+    def read(self):
+        if not 0 <= self.frame < self.n_frames:
+            return False, None
+        frame = np.full((4, 4, 3), self.frame, dtype=np.uint8)
+        self.frame += 1
+        return True, frame
+
+    def release(self):
+        pass
+
+
+@pytest.mark.parametrize("offset", [-6, 0, 3])
+@pytest.mark.parametrize("frame_index", [0, 2, 100, 193, 194, 199])
+def test_read_video_frame_corrects_seeks_up_to_the_last_frame(
+    monkeypatch, tmp_path, offset, frame_index
+):
+    # With offset -6, frame 199 used to seek to position 205, past the end.
+    monkeypatch.setattr(cv2, "VideoCapture", lambda _: _OffsetCapture(200, offset))
+    path = tmp_path / "video.avi"
+    path.touch()
+
+    frame = read_video_frame(str(path), frame_index, seek_offset=offset)
+
+    assert frame[0, 0, 0] == frame_index
 
 
 def test_find_scene_changes(tmp_path):
