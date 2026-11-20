@@ -234,6 +234,86 @@ class InclusionStatus(dj.Computed):
     reward_drop = null : float32             # Reward(widest_aperture) - Reward(narrowest_aperture)
     """
 
+    # Published (batch1) selection: widest-aperture reward > 0.7 and an absolute
+    # widest-narrowest reward drop < 0.25. See utils.apply_inclusion_criteria.
+    default_criteria = {
+        "min_reward": 0.7,
+        "reward_basis": "widest",
+        "max_reward_drop": 0.25,
+        "consider_reward_drop": True,
+        "min_narrow_reward": None,
+    }
+    # Overrides of default_criteria, keyed by batch_name. The criteria used are
+    # stored in criteria_params. Changing them requires deleting and
+    # repopulating the affected rows.
+    criteria_by_batch = {
+        # Batch2 (Neuropixels): the reward criterion uses the better of the two
+        # extreme apertures, and a session with a large drop is kept while its
+        # narrowest-aperture reward is above chance.
+        "batch2": {
+            "reward_basis": "best_extreme",
+            "min_narrow_reward": 0.5,
+        },
+    }
+
+    @classmethod
+    def criteria_for(cls, batch_name):
+        """Return the inclusion criteria applied to a batch."""
+        return {**cls.default_criteria, **cls.criteria_by_batch.get(batch_name, {})}
+
+    @classmethod
+    def inclusion_table(cls, restriction):
+        """Return the stored inclusion results and criteria per dataset.
+
+        Args:
+            restriction: Restriction on ExperimentMember, for example
+                ``{"session_label": ..., "batch_name": ...}``.
+
+        Returns:
+            A DataFrame indexed by dataset with the membership keys,
+            ``included``, ``best_extreme_reward``, ``reward_drop``, one column
+            per stored criteria parameter, and ``passes_min_reward``: whether
+            the reward criterion alone passes, ignoring the reward drop.
+            Empty when nothing matches.
+        """
+        rows = (cls() * ExperimentMember & restriction).fetch(as_dict=True)
+        if not rows:
+            return pd.DataFrame()
+        table = pd.DataFrame(rows).set_index("dataset").sort_index()
+        table["included"] = table["included"].astype(bool)
+        criteria = pd.DataFrame(
+            [params or {} for params in table.pop("criteria_params")],
+            index=table.index,
+        )
+        table = table.join(criteria)
+
+        best = table["best_extreme_reward"].astype(float)
+        drop = table["reward_drop"].astype(float)
+        # drop = widest - narrowest, so the widest reward is the best one
+        # unless the drop is negative.
+        widest = best.where(drop >= 0, best + drop)
+        basis = table.get("reward_basis", pd.Series(index=table.index, dtype=object))
+        reward = widest.where(basis == "widest", best)
+        min_reward = table.get("min_reward", pd.Series(np.nan, index=table.index))
+        table["passes_min_reward"] = reward > min_reward.astype(float)
+        return table
+
+    def _insert_row(self, row):
+        """Insert a row, leaving out columns missing from an older table.
+
+        Tables declared before the criteria columns existed only have
+        ``included``. Delete and repopulate after altering or redeclaring the
+        table to store the criteria.
+        """
+        missing = [name for name in row if name not in self.heading.names]
+        if missing:
+            logger.warning(
+                "%s on the database lacks %s; inserting without them.",
+                self.__class__.__name__,
+                missing,
+            )
+        self.insert1({k: v for k, v in row.items() if k not in missing})
+
     def make(self, key):
         try:
 
@@ -247,7 +327,7 @@ class InclusionStatus(dj.Computed):
             # session_label = (ExperimentMember & key).fetch1("session_label")
 
             if stage_name == "training":
-                self.insert1(
+                self._insert_row(
                     {
                         **key,
                         "included": False,
@@ -264,7 +344,7 @@ class InclusionStatus(dj.Computed):
                 logger.debug(
                     f"Skipping excluded dataset for {self.__class__.__name__}: {key['dataset']} ({excluded_reason})"
                 )
-                self.insert1(
+                self._insert_row(
                     {
                         **key,
                         "included": False,
@@ -281,7 +361,7 @@ class InclusionStatus(dj.Computed):
             trial_df = tables.fetch(as_dict=True)
 
             if not trial_df:
-                self.insert1(
+                self._insert_row(
                     {
                         **key,
                         "included": False,
@@ -298,9 +378,11 @@ class InclusionStatus(dj.Computed):
 
             from vr4mice.analysis.utils import apply_inclusion_criteria
 
+            batch_name = (ExperimentMember & key).fetch1("batch_name")
             _, reward_table, criteria = apply_inclusion_criteria(
                 trial_df,
                 return_details=True,
+                **self.criteria_for(batch_name),
             )
 
             def _get_row_scalar(row: pd.Series, field: str, default=np.nan):
@@ -344,7 +426,7 @@ class InclusionStatus(dj.Computed):
                 best_extreme_reward = None
                 reward_drop = None
 
-            self.insert1(
+            self._insert_row(
                 {
                     **key,
                     "included": included,
@@ -757,9 +839,12 @@ class PredictionModel10Windows(dj.Computed):
         return LabelSet.proj() * ModelParams.proj() * included_combos
 
     class SessionPrediction(dj.Part):
+        # References InclusionStatus (same `dataset` key as Dataset) so that
+        # deleting or dropping inclusion results also removes the models
+        # trained on them.
         definition = """
         -> master
-        -> Dataset
+        -> InclusionStatus
         ---
         n_samples : int32                # number of samples in the session
         mean_accuracy : float32          # mean accuracy for this session

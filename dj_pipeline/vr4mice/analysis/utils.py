@@ -336,37 +336,85 @@ def apply_inclusion_criteria(
     consider_reward_drop: Optional[bool] = True,
     min_reward: float = 0.7,
     max_reward_drop: float = 0.25,
+    reward_basis: str = "widest",
+    min_narrow_reward: Optional[float] = None,
     return_details: bool = False,
 ) -> tuple:
     """Filter datasets by reward-based inclusion criteria.
 
-    Inclusion is based on two aperture extremes (narrowest and widest):
-    1) `best_extreme_reward`: max(reward_narrowest, reward_widest) must be > `min_reward`.
-    2) Optional reward-drop rule when `consider_reward_drop=True`:
-       abs(reward_widest - reward_narrowest) must be < `max_reward_drop`.
+    Rewards are compared at the narrowest and widest apertures present in
+    ``data``. The defaults reproduce the published (batch1) selection:
+
+    1. Reward: the widest-aperture reward must be > ``min_reward``. With
+       ``reward_basis="best_extreme"``, the larger of the narrowest and widest
+       rewards is used instead.
+    2. Reward drop, when ``consider_reward_drop`` is True:
+       ``abs(reward_widest - reward_narrowest)`` must be < ``max_reward_drop``.
+       If ``min_narrow_reward`` is set, a dataset whose narrowest-aperture
+       reward is > ``min_narrow_reward`` also passes this criterion (e.g. 0.5:
+       a large drop is tolerated while the hardest condition is above chance).
+
+    Apertures are rounded to two decimals before grouping, so float noise does
+    not split one aperture into two. Rewards are averaged within each trial,
+    then across trials, ignoring missing values. A dataset without a reward at
+    either extreme aperture (for example, sessions from tasks with different
+    apertures in one call) is excluded, with a warning.
 
     Args:
-        data (pd.DataFrame): Input dataframe containing at least
-            `dataset`, `aperture`, `trial`, and `trial_rewarded`.
-        return_excluded (bool, optional): If True, return rows from datasets
-            that fail criteria instead of those that pass.
-        consider_reward_drop (bool, optional): Whether to apply the reward-drop
-            criterion in addition to the `min_reward` criterion.
-        min_reward (float, optional): Minimum threshold applied to
-            `best_extreme_reward`.
-        max_reward_drop (float, optional): Maximum allowed absolute reward
-            difference between widest and narrowest apertures.
-        return_details (bool, optional): If True, also return a criteria
-            metadata dict used for this evaluation.
+        data: Input dataframe containing at least ``dataset``, ``aperture``,
+            ``trial``, and ``trial_rewarded``.
+        return_excluded: If True, return rows from datasets that fail the
+            criteria instead of those that pass.
+        consider_reward_drop: Whether to apply the reward-drop criterion.
+        min_reward: Minimum reward, applied according to ``reward_basis``.
+        max_reward_drop: Maximum absolute reward difference between the widest
+            and narrowest apertures.
+        reward_basis: ``"widest"`` or ``"best_extreme"``.
+        min_narrow_reward: Optional narrowest-aperture reward above which the
+            reward-drop criterion passes on its own. None disables it.
+        return_details: If True, also return the criteria used.
 
     Returns:
-        tuple: `(filtered_data, reward_table)` when `return_details=False`.
-        tuple: `(filtered_data, reward_table, criteria_details)` when
-        `return_details=True`.
+        ``(filtered_data, reward_table)``, or ``(filtered_data, reward_table,
+        criteria_details)`` when ``return_details`` is True.
+
+    Raises:
+        ValueError: If columns are missing, there are no trials, apertures are
+            not numeric, fewer than two apertures are present, or a criterion
+            is out of range.
     """
-    reward_table = data.groupby(["dataset", "aperture", "trial"], as_index=False)[
-        "trial_rewarded"
-    ].mean()
+    reward_bases = ("widest", "best_extreme")
+    if reward_basis not in reward_bases:
+        raise ValueError(
+            f"reward_basis must be one of {reward_bases}, got {reward_basis!r}"
+        )
+    if not 0 <= min_reward <= 1:
+        raise ValueError(f"min_reward must be within [0, 1], got {min_reward}")
+    if not 0 <= max_reward_drop <= 1:
+        raise ValueError(
+            f"max_reward_drop must be within [0, 1], got {max_reward_drop}"
+        )
+    if min_narrow_reward is not None and not 0 <= min_narrow_reward <= 1:
+        raise ValueError(
+            f"min_narrow_reward must be None or within [0, 1], got {min_narrow_reward}"
+        )
+    required = ["dataset", "aperture", "trial", "trial_rewarded"]
+    missing = [column for column in required if column not in data.columns]
+    if missing:
+        raise ValueError(f"Inclusion criteria need columns {missing}")
+    if data.empty:
+        raise ValueError("No trials to apply inclusion criteria to")
+
+    try:
+        apertures = pd.to_numeric(data["aperture"]).round(2)
+    except (TypeError, ValueError) as err:
+        raise ValueError("Apertures must be numeric") from err
+    reward_table = (
+        data[required]
+        .assign(aperture=apertures)
+        .groupby(["dataset", "aperture", "trial"], as_index=False)["trial_rewarded"]
+        .mean()
+    )
     reward_table = reward_table.groupby(["dataset", "aperture"], as_index=False)[
         "trial_rewarded"
     ].mean()
@@ -385,73 +433,58 @@ def apply_inclusion_criteria(
 
     narrowest_aperture = min(aperture_values)
     widest_aperture = max(aperture_values)
+    narrowest_reward = pivoted_reward[("trial_rewarded", narrowest_aperture)]
+    widest_reward = pivoted_reward[("trial_rewarded", widest_aperture)]
 
-    reward_columns_sorted = sorted(
-        [col for col in pivoted_reward.columns if col[0] == "trial_rewarded"],
-        key=lambda col: col[1],
+    # Both extremes are required whichever criteria are enabled.
+    pivoted_reward["has_extreme_rewards"] = (
+        narrowest_reward.notna() & widest_reward.notna()
     )
-
-    def _compute_row_reward_stats(row: pd.Series) -> pd.Series:
-        """Compute drop on row-wise non-NaN aperture extremes."""
-        rewards = row[reward_columns_sorted]
-        valid_rewards = rewards.dropna()
-
-        if len(valid_rewards) < 2:
-            return pd.Series(
-                {
-                    "reward_drop": np.nan,
-                    "best_extreme_reward": valid_rewards.max(),
-                    "narrowest_aperture_used": np.nan,
-                    "widest_aperture_used": np.nan,
-                }
-            )
-
-        narrowest_col = valid_rewards.index[0]
-        widest_col = valid_rewards.index[-1]
-        narrowest_reward = valid_rewards.iloc[0]
-        widest_reward = valid_rewards.iloc[-1]
-
-        return pd.Series(
-            {
-                "reward_drop": widest_reward - narrowest_reward,
-                "best_extreme_reward": max(widest_reward, narrowest_reward),
-                "narrowest_aperture_used": float(narrowest_col[1]),
-                "widest_aperture_used": float(widest_col[1]),
-            }
+    missing_extreme = pivoted_reward.index[~pivoted_reward["has_extreme_rewards"]]
+    if len(missing_extreme):
+        logger.warning(
+            "Excluded for lacking a reward at aperture %s or %s: %s",
+            narrowest_aperture,
+            widest_aperture,
+            ", ".join(map(str, missing_extreme)),
         )
-
-    row_reward_stats = pivoted_reward.apply(_compute_row_reward_stats, axis=1)
-
-    pivoted_reward["reward_drop"] = row_reward_stats["reward_drop"]
-    pivoted_reward["best_extreme_reward"] = row_reward_stats["best_extreme_reward"]
-    pivoted_reward["narrowest_aperture_used"] = row_reward_stats[
-        "narrowest_aperture_used"
-    ]
-    pivoted_reward["widest_aperture_used"] = row_reward_stats["widest_aperture_used"]
-
-    pivoted_reward["passes_min_reward"] = (
-        pivoted_reward["best_extreme_reward"] > min_reward
+    pivoted_reward["reward_drop"] = widest_reward - narrowest_reward
+    pivoted_reward["best_extreme_reward"] = pd.concat(
+        [narrowest_reward, widest_reward], axis=1
+    ).max(axis=1, skipna=False)
+    criterion_reward = (
+        widest_reward
+        if reward_basis == "widest"
+        else pivoted_reward["best_extreme_reward"]
     )
+    pivoted_reward["passes_min_reward"] = criterion_reward > min_reward
     pivoted_reward["passes_reward_drop"] = (
-        abs(pivoted_reward["reward_drop"]) < max_reward_drop
+        pivoted_reward["reward_drop"].abs() < max_reward_drop
     )
+    if min_narrow_reward is not None:
+        pivoted_reward["passes_narrow_reward"] = narrowest_reward > min_narrow_reward
+        pivoted_reward["passes_reward_drop"] |= pivoted_reward["passes_narrow_reward"]
 
+    pivoted_reward["included_by_criteria"] = (
+        pivoted_reward["has_extreme_rewards"] & pivoted_reward["passes_min_reward"]
+    )
     if consider_reward_drop:
-        pivoted_reward["included_by_criteria"] = (
-            pivoted_reward["passes_min_reward"] & pivoted_reward["passes_reward_drop"]
-        )
-    else:
-        pivoted_reward["included_by_criteria"] = pivoted_reward["passes_min_reward"]
+        pivoted_reward["included_by_criteria"] &= pivoted_reward["passes_reward_drop"]
 
-    # Include criteria metadata directly in reward_table
-    pivoted_reward["criteria_min_reward"] = float(min_reward)
-    pivoted_reward["criteria_max_reward_drop"] = float(max_reward_drop)
-    pivoted_reward["criteria_consider_reward_drop"] = bool(consider_reward_drop)
-    pivoted_reward["criteria_narrowest_aperture"] = float(narrowest_aperture)
-    pivoted_reward["criteria_widest_aperture"] = float(widest_aperture)
-    pivoted_reward["criteria_aperture_values"] = [list(aperture_values)] * len(
-        pivoted_reward
-    )
+    criteria_details = {
+        "min_reward": float(min_reward),
+        "reward_basis": reward_basis,
+        "max_reward_drop": float(max_reward_drop),
+        "consider_reward_drop": bool(consider_reward_drop),
+        "min_narrow_reward": (
+            None if min_narrow_reward is None else float(min_narrow_reward)
+        ),
+        "narrowest_aperture": float(narrowest_aperture),
+        "widest_aperture": float(widest_aperture),
+        "aperture_values": [float(value) for value in aperture_values],
+    }
+    for name, value in criteria_details.items():
+        pivoted_reward[f"criteria_{name}"] = [value] * len(pivoted_reward)
 
     reward_table = pivoted_reward
     included_datasets = reward_table.index[reward_table["included_by_criteria"]]
@@ -460,15 +493,6 @@ def apply_inclusion_criteria(
         filtered_data = data[data.dataset.isin(included_datasets) == 0]
     else:
         filtered_data = data[data.dataset.isin(included_datasets)]
-
-    criteria_details = {
-        "min_reward": float(min_reward),
-        "max_reward_drop": float(max_reward_drop),
-        "consider_reward_drop": bool(consider_reward_drop),
-        "narrowest_aperture": float(narrowest_aperture),
-        "widest_aperture": float(widest_aperture),
-        "aperture_values": list(aperture_values),
-    }
 
     if return_details:
         return filtered_data, reward_table, criteria_details
