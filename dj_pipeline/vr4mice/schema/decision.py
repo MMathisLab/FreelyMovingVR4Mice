@@ -823,9 +823,12 @@ class PredictionModel10Windows(dj.Computed):
         return LabelSet.proj() * ModelParams.proj() * included_combos
 
     class SessionPrediction(dj.Part):
+        # References InclusionStatus (same `dataset` key as Dataset) so that
+        # deleting or dropping inclusion results also removes the models
+        # trained on them.
         definition = """
         -> master
-        -> Dataset
+        -> InclusionStatus
         ---
         n_samples : int32                # number of samples in the session
         mean_accuracy : float32          # mean accuracy for this session
