@@ -3,32 +3,30 @@
 import importlib.util
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from types import ModuleType
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
 
-UTILS_PATH = (
-    Path(__file__).resolve().parents[2]
-    / "dj_pipeline"
-    / "vr4mice"
-    / "analysis"
-    / "utils.py"
-)
 
+def _load_inclusion_criteria():
+    """Load apply_inclusion_criteria from utils.py.
 
-@pytest.fixture(scope="module")
-def utils_module():
-    spec = importlib.util.spec_from_file_location("inclusion_utils", UTILS_PATH)
+    The module is loaded under its own name so it does not shadow the
+    ``utils`` package used by other tests. Its ``vr4mice.analysis.analysis``
+    import, unused by this function, gets an empty placeholder module.
+    """
+    path = Path(__file__).resolve().parents[2] / "dj_pipeline/vr4mice/analysis/utils.py"
+    spec = importlib.util.spec_from_file_location("analysis_utils", path)
     module = importlib.util.module_from_spec(spec)
-    with patch.dict(sys.modules, {"vr4mice.analysis.analysis": MagicMock()}):
+    placeholder = {"vr4mice.analysis.analysis": ModuleType("vr4mice.analysis.analysis")}
+    with patch.dict(sys.modules, placeholder):
         spec.loader.exec_module(module)
-    return module
+    return module.apply_inclusion_criteria
 
 
-@pytest.fixture
-def apply_inclusion_criteria(utils_module):
-    return utils_module.apply_inclusion_criteria
+apply_inclusion_criteria = _load_inclusion_criteria()
 
 
 def _trials(rewards):
@@ -52,13 +50,15 @@ PAPER_SESSIONS = {
 }
 
 
-def _included(apply, rewards, **criteria):
-    _, table, details = apply(_trials(rewards), return_details=True, **criteria)
+def _included(rewards, **criteria):
+    _, table, details = apply_inclusion_criteria(
+        _trials(rewards), return_details=True, **criteria
+    )
     return set(table.index[table["included_by_criteria"]]), details
 
 
-def test_defaults_reproduce_the_published_selection(apply_inclusion_criteria):
-    included, details = _included(apply_inclusion_criteria, PAPER_SESSIONS)
+def test_defaults_reproduce_the_published_selection():
+    included, details = _included(PAPER_SESSIONS)
 
     assert included == {"J731_2024-12-05_1"}
     assert details == {
@@ -73,29 +73,25 @@ def test_defaults_reproduce_the_published_selection(apply_inclusion_criteria):
     }
 
 
-def test_best_extreme_basis_accepts_a_high_narrow_reward(apply_inclusion_criteria):
-    included, _ = _included(
-        apply_inclusion_criteria, PAPER_SESSIONS, reward_basis="best_extreme"
-    )
+def test_best_extreme_basis_accepts_a_high_narrow_reward():
+    included, _ = _included(PAPER_SESSIONS, reward_basis="best_extreme")
 
     assert included == {"J731_2024-12-04_1", "J731_2024-12-05_1"}
 
 
-def test_narrow_reward_floor_passes_the_drop_criterion(apply_inclusion_criteria):
+def test_narrow_reward_floor_passes_the_drop_criterion():
     rewards = {
         **PAPER_SESSIONS,
         "Xestia_2026-07-28_1": {4.3: 0.629032, 12.0: 0.943089},  # drop 0.314
     }
 
-    included, details = _included(
-        apply_inclusion_criteria, rewards, min_narrow_reward=0.55
-    )
+    included, details = _included(rewards, min_narrow_reward=0.55)
 
     assert included == {"J731_2024-12-05_1", "Xestia_2026-07-28_1"}
     assert details["min_narrow_reward"] == 0.55
 
 
-def test_missing_extreme_aperture_excludes_the_dataset(apply_inclusion_criteria):
+def test_missing_extreme_aperture_excludes_the_dataset():
     rewards = {"full": {4.3: 0.8, 12.0: 0.9}, "no_narrow": {12.0: 0.9}}
 
     filtered, table = apply_inclusion_criteria(_trials(rewards))
@@ -104,7 +100,7 @@ def test_missing_extreme_aperture_excludes_the_dataset(apply_inclusion_criteria)
     assert not table["included_by_criteria"]["no_narrow"]
 
 
-def test_rejects_unknown_reward_basis(apply_inclusion_criteria):
+def test_rejects_unknown_reward_basis():
     with pytest.raises(ValueError, match="reward_basis"):
         apply_inclusion_criteria(_trials(PAPER_SESSIONS), reward_basis="narrowest")
 
@@ -147,23 +143,21 @@ BATCH2_CRITERIA = {"reward_basis": "best_extreme", "min_narrow_reward": 0.5}
     ],
     ids=["dual_occlusion", "multi_occlusion"],
 )
-def test_batch2_criteria(apply_inclusion_criteria, rewards, excluded):
-    included, _ = _included(apply_inclusion_criteria, rewards, **BATCH2_CRITERIA)
+def test_batch2_criteria(rewards, excluded):
+    included, _ = _included(rewards, **BATCH2_CRITERIA)
 
     assert included == set(rewards) - excluded
 
 
-def test_narrow_reward_floor_is_strict(apply_inclusion_criteria):
+def test_narrow_reward_floor_is_strict():
     rewards = {"at_chance": {3.0: 0.5, 12.0: 0.9}, "above": {3.0: 0.51, 12.0: 0.9}}
 
-    included, _ = _included(apply_inclusion_criteria, rewards, **BATCH2_CRITERIA)
+    included, _ = _included(rewards, **BATCH2_CRITERIA)
 
     assert included == {"above"}
 
 
-def test_trial_rewards_are_averaged_within_then_across_trials(
-    apply_inclusion_criteria,
-):
+def test_trial_rewards_are_averaged_within_then_across_trials():
     # Two rows for trial 0 (mean 1.0) and one for trial 1 (0.0): mean 0.5, not
     # the row mean of 2/3. A missing reward is ignored.
     data = pd.DataFrame(
@@ -180,7 +174,7 @@ def test_trial_rewards_are_averaged_within_then_across_trials(
     assert table["trial_rewarded"].loc["d"].tolist() == [0.5, 1.0]
 
 
-def test_aperture_float_noise_is_merged(apply_inclusion_criteria):
+def test_aperture_float_noise_is_merged():
     data = _trials({"d": {4.3: 0.8, 12.0: 0.9}})
     data = pd.concat(
         [data, data.assign(aperture=data.aperture + 1e-9, trial=data.trial + 10)]
@@ -191,25 +185,39 @@ def test_aperture_float_noise_is_merged(apply_inclusion_criteria):
     assert details["aperture_values"] == [4.3, 12.0]
 
 
-def test_all_missing_rewards_at_an_extreme_exclude_with_a_warning(utils_module):
-    data = _trials({"ok": {4.3: 0.8, 12.0: 0.9}, "nan": {4.3: 0.8, 12.0: 0.9}})
-    data.loc[(data.dataset == "nan") & (data.aperture == 4.3), "trial_rewarded"] = (
-        float("nan")
-    )
-    utils_module.logger.reset_mock()
+@pytest.mark.parametrize("reward_basis", ["widest", "best_extreme"])
+@pytest.mark.parametrize("consider_reward_drop", [True, False])
+def test_missing_extreme_excludes_whatever_criteria_are_enabled(
+    reward_basis, consider_reward_drop
+):
+    # A high wide reward alone must not include a session with no narrow trials.
+    rewards = {"full": {4.3: 0.8, 12.0: 0.9}, "no_narrow": {12.0: 0.9}}
 
-    filtered, _ = utils_module.apply_inclusion_criteria(data)
+    included, _ = _included(
+        rewards,
+        reward_basis=reward_basis,
+        consider_reward_drop=consider_reward_drop,
+    )
+
+    assert included == {"full"}
+
+
+def test_missing_rewards_at_an_extreme_exclude_the_dataset():
+    data = _trials({"ok": {4.3: 0.8, 12.0: 0.9}, "nan": {4.3: 0.8, 12.0: 0.9}})
+    data.loc[
+        (data.dataset == "nan") & (data.aperture == 4.3), "trial_rewarded"
+    ] = float("nan")
+
+    filtered, table = apply_inclusion_criteria(data)
 
     assert set(filtered.dataset) == {"ok"}
-    message = utils_module.logger.warning.call_args.args
-    assert "nan" in message[-1]
+    assert not table["has_extreme_rewards"]["nan"]
 
 
-def test_floor_is_ignored_without_the_drop_criterion(apply_inclusion_criteria):
+def test_floor_is_ignored_without_the_drop_criterion():
     rewards = {"big_drop": {4.3: 0.4, 12.0: 0.9}}
 
     included, _ = _included(
-        apply_inclusion_criteria,
         rewards,
         consider_reward_drop=False,
         min_narrow_reward=0.5,
@@ -218,7 +226,7 @@ def test_floor_is_ignored_without_the_drop_criterion(apply_inclusion_criteria):
     assert included == {"big_drop"}
 
 
-def test_return_excluded_returns_the_complement(apply_inclusion_criteria):
+def test_return_excluded_returns_the_complement():
     data = _trials(PAPER_SESSIONS)
 
     kept, _ = apply_inclusion_criteria(data)
@@ -261,6 +269,6 @@ def test_return_excluded_returns_the_complement(apply_inclusion_criteria):
         "nan_floor",
     ],
 )
-def test_invalid_inputs_raise(apply_inclusion_criteria, data, criteria, match):
+def test_invalid_inputs_raise(data, criteria, match):
     with pytest.raises(ValueError, match=match):
         apply_inclusion_criteria(data, **criteria)
