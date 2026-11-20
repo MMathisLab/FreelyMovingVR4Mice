@@ -1,5 +1,7 @@
 """Decision analysis schema for regression models and decision points."""
 
+import warnings
+
 import datajoint as dj
 import pandas as pd
 import numpy as np
@@ -589,7 +591,7 @@ class ModelParams(dj.Lookup):
 
 @schema
 class PredictionModel(dj.Computed):
-    """Train logistic regression model with leave-one-session-out cross-validation."""
+    """Deprecated single-window model, retained for historical analyses."""
 
     definition = """
     -> LabelSet
@@ -605,6 +607,15 @@ class PredictionModel(dj.Computed):
     mean_accuracy : float32     # mean accuracy across sessions
     bic : float32               # Bayesian Information Criterion for the model
     """
+
+    def populate(self, *restrictions, **kwargs):
+        """Populate legacy models for historical reproductions."""
+        warnings.warn(
+            "PredictionModel is deprecated. Use PredictionModel10Windows for new analyses.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return super().populate(*restrictions, **kwargs)
 
     @property
     def key_source(self):
@@ -989,33 +1000,9 @@ class PredictionModel10Windows(dj.Computed):
             ]
             interpolated_df["aperture"] = interpolated_df["aperture"].astype(float)
 
-            if "trial_init_x" in label_set:
-                interpolated_df["trial_init_x"] = interpolated_df.groupby(
-                    ["dataset", "trial"]
-                )["x"].transform("first")
-
-            if "trial_init_y" in label_set:
-                interpolated_df["trial_init_y"] = interpolated_df.groupby(
-                    ["dataset", "trial"]
-                )["y"].transform("first")
-
-            if "trial_history" in label_set:
-                trial_choices = (
-                    interpolated_df.groupby(["dataset", "trial"], as_index=False)
-                    .agg({"trial_left_choice": "first"})
-                    .sort_values(["dataset", "trial"])
-                )
-                trial_choices["trial_history"] = (
-                    trial_choices.groupby("dataset")["trial_left_choice"]
-                    .shift(1)
-                    .fillna(0)
-                )
-                interpolated_df = interpolated_df.merge(
-                    trial_choices[["dataset", "trial", "trial_history"]],
-                    on=["dataset", "trial"],
-                    how="left",
-                )
-
+            interpolated_df = regression.prepare_trial_model_features(
+                interpolated_df, label_set
+            )
             interpolated_df = self._assign_trial_windows_10(interpolated_df)
 
             random_state = 42
@@ -1179,6 +1166,99 @@ class PredictionModel10Windows(dj.Computed):
 
 
 @schema
+class BestLabelSet10Windows(dj.Computed):
+    """Select the best label set and parameters per experiment set, stage, and batch."""
+
+    definition = """
+    -> ExperimentSet
+    -> ExperimentStage
+    -> vr4mice.Batch
+    ---
+    -> PredictionModel10Windows
+    score : float64            # mean of normalized accuracy, inverted BIC and inverted final-window BIC CV
+    """
+
+    @property
+    def key_source(self):
+        return dj.U("set_name", "stage_name", "batch_name") & (
+            PredictionModel10Windows.SessionPrediction.proj()
+        )
+
+    @property
+    def session_predictions(self):
+        """Return the existing session predictions for the selected model keys."""
+        winners = self.proj("label_set_id", "param_id")
+        included = (InclusionStatus & {"included": 1}).proj()
+        return PredictionModel10Windows.SessionPrediction & winners & included
+
+    @staticmethod
+    def model_comparison(key):
+        """Recompute the model-selection criteria from currently stored predictions.
+
+        Args:
+            key: Cohort key with ``set_name``, ``stage_name``, and ``batch_name``.
+
+        Returns:
+            Two DataFrames containing per-window accuracy, BIC, and BIC CV,
+            and the ranked candidates with their raw and normalized metrics.
+            The stored winner's score reflects the candidates at population time.
+        """
+        model_parts, window_parts = [], []
+        for model in (PredictionModel10Windows & key).fetch(
+            "label_set_id", "param_id", "n_sessions", as_dict=True
+        ):
+            model_key = {name: model[name] for name in ("label_set_id", "param_id")}
+            sessions = (
+                PredictionModel10Windows.SessionPrediction & key & model_key
+            ).fetch("dataset", "trial", "accuracy", "bic", "model_idx", as_dict=True)
+            if not sessions or len(sessions) != model["n_sessions"]:
+                continue
+            predictions = pd.concat(
+                [pd.DataFrame(session) for session in sessions], ignore_index=True
+            )
+            if predictions.empty:
+                continue
+            metrics, windows = regression.summarize_window_prediction(
+                predictions, WINDOW_COUNT - 1, include_windows=True
+            )
+            model_parts.append({**model_key, **metrics})
+            window_parts.append(windows.assign(**model_key))
+
+        if not model_parts:
+            return pd.DataFrame(), pd.DataFrame()
+        return (
+            pd.concat(window_parts, ignore_index=True),
+            regression.rank_window_models(pd.DataFrame(model_parts)),
+        )
+
+    def make(self, key):
+        logger.info(f"{self.__class__.__name__} population started for {key}.")
+        _, ranked = self.model_comparison(key)
+        if ranked.empty:
+            logger.warning("No scorable 10-window model for %s", key)
+            return
+        winner = ranked.to_dict("records")[0]
+        self.insert1(
+            {
+                **key,
+                "label_set_id": winner["label_set_id"],
+                "param_id": winner["param_id"],
+                "score": winner["score"],
+            }
+        )
+        logger.info(
+            "%s populated for %s: label_set_id=%s, param_id=%s, score=%.3f "
+            "(%d candidates)",
+            self.__class__.__name__,
+            key,
+            winner["label_set_id"],
+            winner["param_id"],
+            winner["score"],
+            len(ranked),
+        )
+
+
+@schema
 class DecisionThreshold(dj.Lookup):
     """Lookup table for different uncertainty thresholds to define decision points."""
 
@@ -1196,7 +1276,7 @@ class DecisionThreshold(dj.Lookup):
 
 @schema
 class DecisionPoints(dj.Computed):
-    """Decision point and corresponding per-trial data."""
+    """Deprecated single-window decision points, retained for historical analyses."""
 
     definition = """
     -> PredictionModel.SessionPrediction
@@ -1211,6 +1291,15 @@ class DecisionPoints(dj.Computed):
     x: <blob>                     # x position of the decision point in the trial
     y: <blob>                     # y position of the decision point in the trial
     """
+
+    def populate(self, *restrictions, **kwargs):
+        """Populate legacy decision points for historical reproductions."""
+        warnings.warn(
+            "DecisionPoints is deprecated. Use DecisionPoints10Windows for new analyses.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return super().populate(*restrictions, **kwargs)
 
     def make(self, key):
         """Compute decision points from model predictions and trials."""
@@ -1280,7 +1369,7 @@ class DecisionPoints(dj.Computed):
 
 @schema
 class DecisionPoints10Windows(dj.Computed):
-    """Decision points computed from 10-window model predictions."""
+    """Candidate decision points for the selected 10-window model."""
 
     definition = """
     -> PredictionModel10Windows.SessionPrediction
@@ -1296,6 +1385,11 @@ class DecisionPoints10Windows(dj.Computed):
     y: <blob>                     # y position of the decision point in the trial
     """
 
+    @property
+    def key_source(self):
+        predictions = BestLabelSet10Windows().session_predictions
+        return predictions.proj() * DecisionThreshold.proj()
+
     def make(self, key):
         """Compute decision points from 10-window model predictions and trials."""
         if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
@@ -1304,17 +1398,13 @@ class DecisionPoints10Windows(dj.Computed):
         logger.info(f"{self.__class__.__name__} population started for {key}.")
 
         try:
-            # Only compute decision points for sessions included in the analysis
-            if not (InclusionStatus() & key & {"included": 1}):
+            predictions = BestLabelSet10Windows().session_predictions & key
+            if not predictions:
                 return
-
-            threshold_uncertainty = float(
-                (DecisionThreshold & key).fetch1("threshold_uncertainty")
+            threshold_uncertainty = float(key["threshold_uncertainty"])
+            trial, proba_left, trial_length = predictions.fetch1(
+                "trial", "proba_left", "trial_length"
             )
-
-            trial, proba_left, trial_length = (
-                PredictionModel10Windows.SessionPrediction & key
-            ).fetch1("trial", "proba_left", "trial_length")
             predictions_df = pd.DataFrame(
                 {
                     "dataset": key["dataset"],
@@ -1366,3 +1456,131 @@ class DecisionPoints10Windows(dj.Computed):
                 )
             logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
             return None
+
+
+@schema
+class BestDecisionThreshold10Windows(dj.Computed):
+    """Select one threshold for the winning 10-window model."""
+
+    definition = """
+    -> BestLabelSet10Windows
+    ---
+    -> DecisionThreshold
+    turning_score : float64    # mean normalized turning score across sessions
+    """
+
+    @property
+    def session_decisions(self):
+        """Return stored decision points for the selected models and thresholds."""
+        predictions = BestLabelSet10Windows().session_predictions.proj()
+        return (
+            DecisionPoints10Windows & predictions & self.proj("threshold_uncertainty")
+        )
+
+    @classmethod
+    def threshold_comparison(cls, key):
+        """Recompute threshold criteria from the winning model's stored points.
+
+        Args:
+            key: Cohort key with ``set_name``, ``stage_name``, and ``batch_name``.
+
+        Returns:
+            A DataFrame of turning metrics per threshold and session. The
+            stored turning score is the mean normalized score at population time.
+        """
+        model = BestLabelSet10Windows() & key
+        point_rows = (DecisionPoints10Windows & model.session_predictions.proj()).fetch(
+            "dataset",
+            "threshold_uncertainty",
+            "trial",
+            "aperture",
+            "trial_length",
+            "y",
+            as_dict=True,
+            order_by=["dataset", "threshold_uncertainty"],
+        )
+        if not point_rows:
+            return pd.DataFrame()
+
+        points, trajectories = cls._threshold_inputs(point_rows)
+        if points.empty:
+            return pd.DataFrame()
+        return regression.select_threshold(points.dropna(subset=["y"]), trajectories)
+
+    def make(self, key):
+        logger.info(f"{self.__class__.__name__} population started for {key}.")
+        try:
+            evaluations = self.threshold_comparison(key)
+        except ValueError as err:
+            logger.warning(
+                "Cannot score 10-window decision thresholds for %s: %s", key, err
+            )
+            return
+        if evaluations.empty:
+            logger.warning(
+                "No sessions with a complete threshold comparison for %s", key
+            )
+            return
+        scores = regression.rank_turning_thresholds(evaluations)
+        if scores.empty:
+            logger.warning("No finite turning score for %s", key)
+            return
+        self.insert1(
+            {
+                **key,
+                "threshold_uncertainty": scores.index[0],
+                "turning_score": float(scores.iloc[0]),
+            }
+        )
+        logger.info(
+            "%s populated for %s: threshold_uncertainty=%s, turning_score=%.3f "
+            "(%d sessions)",
+            self.__class__.__name__,
+            key,
+            scores.index[0],
+            float(scores.iloc[0]),
+            evaluations["dataset"].nunique(),
+        )
+
+    @staticmethod
+    def _threshold_inputs(point_rows):
+        """Load stored points and trajectories for sessions with all thresholds."""
+        thresholds = sorted(DecisionThreshold.fetch("threshold_uncertainty"))
+        rows_by_session = {}
+        for row in point_rows:
+            rows_by_session.setdefault(row["dataset"], {})[
+                row["threshold_uncertainty"]
+            ] = row
+
+        point_parts, trajectory_parts = [], []
+        for dataset, rows in rows_by_session.items():
+            if any(threshold not in rows for threshold in thresholds):
+                continue
+            source = InterpolatedTrials & {"dataset": dataset}
+            if not source:
+                logger.warning("Missing InterpolatedTrials for %s", dataset)
+                continue
+            trajectory = pd.DataFrame(source.fetch1())
+            if trajectory.empty:
+                continue
+            trajectory["aperture"] = trajectory["aperture"].astype(float)
+            trajectory["head_angle_flipped"] = (
+                trajectory["head_angle"] * trajectory["flip_one_side"]
+            )
+            trajectory["heading_dir_flipped"] = (
+                trajectory["heading_dir"] * trajectory["flip_one_side"]
+            )
+            session_points = pd.concat(
+                [pd.DataFrame(rows[threshold]) for threshold in thresholds],
+                ignore_index=True,
+            )
+            session_points["aperture"] = session_points["aperture"].astype(float)
+            point_parts.append(session_points)
+            trajectory_parts.append(trajectory)
+
+        if not point_parts:
+            return pd.DataFrame(), pd.DataFrame()
+        return (
+            pd.concat(point_parts, ignore_index=True),
+            pd.concat(trajectory_parts, ignore_index=True),
+        )

@@ -1048,7 +1048,7 @@ class FrameVisibility(dj.Computed):
 
     Pixel counts refer to a 316×237 panel for both video sources. Surface novelty
     is a fraction of the predicted 2-D silhouette first seen in the trial.
-    Populate explicitly from a machine with access to the recordings.
+    Populated by the input video pipeline on machines with access to the recordings.
     """
 
     definition = """
@@ -1164,3 +1164,28 @@ class FrameVisibility(dj.Computed):
     def fetch_dataframe(self):
         """Return the descriptor rows for a restriction to one dataset."""
         return pd.DataFrame(self.fetch1("descriptors"))
+
+    def trial_progress(self, n_points=100):
+        """Return visibility per trial on the InterpolatedTrials progress grid.
+
+        Args:
+            n_points: Number of interpolated samples per trial.
+
+        Returns:
+            One row per dataset, trial and ``trial_step`` (``trial_length *
+            n_points``) with mean ``t_px``, ``d_px`` and ``total_visible_px``
+            over the mapped active steps, and their count ``n_steps``.
+        """
+        from vr4mice.analysis.frame_visibility import visibility_by_trial_progress
+
+        parts = []
+        for key in self.fetch("KEY"):
+            descriptors = (self & key).fetch1("descriptors")
+            step_time = (StepVideoFrame & key).fetch1("step_time")
+            episode = (vr4mice.State & key).fetch1("episode")
+            iti = (vr4mice.MouseState & key).fetch1("iti")
+            progress = visibility_by_trial_progress(
+                descriptors, episode, step_time, iti, n_points=n_points
+            )
+            parts.append(pd.DataFrame(progress).assign(dataset=key["dataset"]))
+        return pd.concat(parts, ignore_index=True) if parts else pd.DataFrame()
