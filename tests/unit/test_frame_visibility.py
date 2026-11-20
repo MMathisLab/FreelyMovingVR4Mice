@@ -241,3 +241,31 @@ def test_truncated_reader_fails_session():
             has_distractor=True,
             has_occluders=True,
         )
+
+
+def test_trial_progress_places_active_steps_on_the_interpolation_grid():
+    descriptors = {
+        "step_index": np.array([0, 1, 2, 3, 4, 5, 7]),
+        "t_px": np.array([1.0, 2.0, 4.0, 8.0, 100.0, 10.0, 30.0]),
+    }
+    episodes = [1, 1, 1, 1, 1, 2, 2, 2]
+    times = [0.0, 1.0, 2.0, 3.0, 4.0, 10.0, 11.0, 12.0]
+    iti = [0, 0, 0, 0, 1, 0, 0, 0]
+
+    # Trial 1 spans 0-3 s (the ITI step at 4 s is excluded); trial 2 spans
+    # 10-12 s although its middle step has no displayed frame.
+    progress = visibility.visibility_by_trial_progress(
+        descriptors, episodes, times, iti, n_points=3, columns=("t_px",)
+    )
+
+    assert progress["trial"].tolist() == [1, 1, 1, 2, 2]
+    assert progress["trial_step"].tolist() == [0, 1, 2, 0, 2]
+    assert progress["n_steps"].tolist() == [1, 2, 1, 1, 1]
+    assert progress["t_px"].tolist() == [1.0, 3.0, 8.0, 10.0, 30.0]
+
+
+def test_trial_progress_requires_aligned_step_arrays():
+    with pytest.raises(ValueError, match="align"):
+        visibility.visibility_by_trial_progress(
+            {"step_index": np.array([0])}, [1, 1], [0.0], [0, 0]
+        )

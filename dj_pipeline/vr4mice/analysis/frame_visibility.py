@@ -1030,6 +1030,77 @@ def describe_steps(
     return descriptors, calibration_info, fit_status
 
 
+def visibility_by_trial_progress(
+    descriptors,
+    episodes,
+    step_times,
+    iti,
+    *,
+    n_points=100,
+    columns=("t_px", "d_px", "total_visible_px"),
+):
+    """Average step visibility on the interpolated trial-progress grid.
+
+    InterpolatedTrials resamples the active part of each trial (ITI excluded)
+    to ``n_points`` evenly spaced samples from its first to its last step, with
+    ``trial_length = trial_step / n_points``. Each mapped active step is placed
+    on the nearest sample by the fraction of the trial's active time elapsed.
+
+    Args:
+        descriptors: Column arrays from ``describe_steps``.
+        episodes: Trial ID per game step.
+        step_times: Time per game step.
+        iti: Inter-trial interval flag per game step.
+        n_points: Number of interpolated samples per trial.
+        columns: Descriptor columns to average.
+
+    Returns:
+        Column arrays with one entry per trial and sample that has at least one
+        mapped step: ``trial``, ``trial_step``, ``n_steps`` and the mean of each
+        requested column.
+    """
+    episodes = np.asarray(episodes, dtype=float).ravel()
+    step_times = np.asarray(step_times, dtype=float).ravel()
+    iti = np.asarray(iti, dtype=bool).ravel()
+    if not len(episodes) == len(step_times) == len(iti):
+        raise ValueError("Episodes, step times and ITI must align by step")
+    if n_points < 2:
+        raise ValueError("n_points must be at least 2")
+
+    active = ~iti & np.isfinite(episodes) & np.isfinite(step_times)
+    trials, trial_of_step = np.unique(episodes[active], return_inverse=True)
+    start = np.full(trials.size, np.inf)
+    end = np.full(trials.size, -np.inf)
+    np.minimum.at(start, trial_of_step, step_times[active])
+    np.maximum.at(end, trial_of_step, step_times[active])
+
+    step_index = np.asarray(descriptors["step_index"], dtype=np.int64)
+    mapped = active[step_index]
+    trial_pos = np.searchsorted(trials, episodes[step_index][mapped])
+    duration = end[trial_pos] - start[trial_pos]
+    elapsed = step_times[step_index][mapped] - start[trial_pos]
+    fraction = np.divide(
+        elapsed, duration, out=np.zeros_like(elapsed), where=duration > 0
+    )
+    sample = np.rint(fraction * (n_points - 1)).astype(np.int64)
+
+    groups, group_of_step = np.unique(
+        trial_pos * n_points + sample, return_inverse=True
+    )
+    counts = np.bincount(group_of_step, minlength=groups.size)
+    result = {
+        "trial": trials[groups // n_points].astype(np.int64),
+        "trial_step": groups % n_points,
+        "n_steps": counts,
+    }
+    for column in columns:
+        values = np.asarray(descriptors[column], dtype=float)[mapped]
+        result[column] = (
+            np.bincount(group_of_step, weights=values, minlength=groups.size) / counts
+        )
+    return result
+
+
 def _unpack_mask(data):
     """Restore an active-frame object mask.
 
