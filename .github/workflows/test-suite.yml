@@ -62,10 +62,11 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build \
+          docker build --progress=plain \
             --build-arg user_name="$(id -un)" \
             --build-arg uid="$(id -u)" \
             --build-arg gid="$(id -g)" \
+            --build-arg APT_MIRROR=http://azure.archive.ubuntu.com/ubuntu/ \
             -t vr4mice_app:test-image \
             ./dj_pipeline
 

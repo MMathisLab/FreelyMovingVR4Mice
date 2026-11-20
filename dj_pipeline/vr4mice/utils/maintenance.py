@@ -38,6 +38,7 @@ def _schema_pairs() -> Iterable[Tuple[str, object]]:
         base_analysis,
         decision,
         dlc,
+        information_maps,
         inputs_videos,
         interpolated_trajectories,
         latency_tests,
@@ -62,6 +63,7 @@ def _schema_pairs() -> Iterable[Tuple[str, object]]:
         ("latency_tests", latency_tests.schema),
         ("inputs_videos", inputs_videos.schema),
         ("decision", decision.schema),
+        ("information_maps", information_maps.schema),
     )
 
 
