@@ -494,6 +494,7 @@ class StepVideoFrame(dj.Computed):
     n_steps: int32                      # number of game steps
     step: <blob>                        # step indices (State.step)
     step_time: <blob>                   # step times, game seconds (State.step_time)
+    step_video_time=null: <blob>        # each step's time on the video clock (s): camera timestamps, or the residual-corrected OBS fit (frame / fps); NaN outside the video
     frame_ids: <blob>                   # frame showing each step on screen (step_time + display_lag), -1 outside the video
     step_frame_ids: <blob>              # frame captured at each step's time (no display lag), -1 outside the video
     display_lag: float64                # step to screen delay (s), median over trial starts
@@ -549,6 +550,17 @@ class StepVideoFrame(dj.Computed):
             )
             row["display_lag"] = lag
             row["display_lag_trials"] = n_trials
+            # Keep the clock mapping so lookups match frame_ids (OBS: includes
+            # the residual correction for dropped frames). Tables declared
+            # before this column get it with StepVideoFrame.alter().
+            if "step_video_time" in self.heading.names:
+                row["step_video_time"] = step_video_time
+            else:
+                logger.warning(
+                    "%s has no step_video_time column: run "
+                    "StepVideoFrame.alter(), then fill_step_video_time()",
+                    self.__class__.__name__,
+                )
 
             frame_ids = row["frame_ids"]
             n_outside = int((frame_ids < 0).sum())
@@ -785,15 +797,26 @@ class StepVideoFrame(dj.Computed):
         """Return the first input video frame at or after each query time.
 
         Timepoints are in the ``State.step_time`` base and must lie within the
-        session's step times (ValueError otherwise). The lookup uses camera
-        timestamps or the stored OBS offset and drift. When ``displayed`` is
-        True, the display lag is added on the recording clock. Returns None
-        for a query outside the input video.
+        session's step times (ValueError otherwise). Query times are mapped to
+        the video clock by interpolating ``step_video_time``, the mapping
+        ``frame_ids`` was built from, so a step's own time returns its
+        ``step_frame_ids`` (or ``frame_ids`` when displayed) entry. Rows
+        populated before that column fall back to the camera timestamps or the
+        OBS offset and drift, without the OBS residual correction. When
+        ``displayed`` is True, the display lag is added on the recording clock.
+        Returns None for a query outside the input video.
         """
         from vr4mice.analysis.inputs_videos import align_steps_to_frames_by_timestamps
 
-        step_time, source, offset, drift, display_lag = (cls & key).fetch1(
-            "step_time", "video_source", "offset", "drift", "display_lag"
+        step_time, step_video_time, source, offset, drift, display_lag = (
+            cls & key
+        ).fetch1(
+            "step_time",
+            "step_video_time",
+            "video_source",
+            "offset",
+            "drift",
+            "display_lag",
         )
         step_time = np.asarray(step_time, dtype=float)
         min_time, max_time = np.min(step_time), np.max(step_time)
@@ -811,18 +834,79 @@ class StepVideoFrame(dj.Computed):
             return []
 
         if source == "camera":
-            start_time = (vr4mice.State & key).fetch1("start_time")
-            video_times = float(np.ravel(start_time)[0]) + query_times
             frame_times = (InputVideo & key).fetch1("timestamps")
         else:
             fps, n_frames = (RawVideoSync & key).fetch1("fps", "n_frames")
-            video_times = offset + drift * query_times
             frame_times = np.arange(n_frames) / fps
+
+        if step_video_time is not None:
+            # Piecewise linear between steps; NaN next to steps outside the video
+            order = np.argsort(step_time, kind="stable")
+            video_times = np.interp(
+                query_times,
+                step_time[order],
+                np.asarray(step_video_time, dtype=float)[order],
+            )
+        elif source == "camera":
+            start_time = (vr4mice.State & key).fetch1("start_time")
+            video_times = float(np.ravel(start_time)[0]) + query_times
+        else:
+            logger.warning(
+                "%s: no step_video_time stored, using the OBS fit without its "
+                "residual correction; run StepVideoFrame.fill_step_video_time()",
+                key.get("dataset", key) if isinstance(key, dict) else key,
+            )
+            video_times = offset + drift * query_times
 
         if displayed:
             video_times += display_lag
         frames = align_steps_to_frames_by_timestamps(video_times, frame_times)
         return [int(frame) if frame >= 0 else None for frame in frames]
+
+    @classmethod
+    def fill_step_video_time(cls, restriction=None):
+        """Store ``step_video_time`` for rows populated before it existed.
+
+        Camera rows use ``State.start_time + step_time``. OBS rows recompute the
+        sync fit from stored data (no video reading) and are updated only if it
+        reproduces the stored ``step_frame_ids``, so ``frame_ids`` and the
+        tables built on them stay valid.
+
+        Args:
+            restriction: Optional restriction on the rows to fill.
+
+        Returns:
+            Keys left unfilled because the fit no longer reproduces their
+            frames; delete and repopulate those rows.
+        """
+        rows = cls & "step_video_time IS NULL"
+        if restriction is not None:
+            rows = rows & restriction
+        unfilled = []
+        for key in rows.fetch("KEY"):
+            source, step_frame_ids = (cls & key).fetch1(
+                "video_source", "step_frame_ids"
+            )
+            start_time, step_time = (vr4mice.State & key).fetch1(
+                "start_time", "step_time"
+            )
+            start_time = float(np.ravel(start_time)[0])
+            step_time = np.asarray(step_time, dtype=float)
+            if source == "camera":
+                step_video_time = start_time + step_time
+            else:
+                aligned = cls._align_obs(key, start_time, step_time)
+                if not np.array_equal(aligned["frame_ids"], step_frame_ids):
+                    logger.warning(
+                        "%s: the sync fit no longer reproduces step_frame_ids; "
+                        "delete and repopulate this row",
+                        key["dataset"],
+                    )
+                    unfilled.append(key)
+                    continue
+                step_video_time = aligned["step_video_time"]
+            cls().update1({**key, "step_video_time": step_video_time})
+        return unfilled
 
     @classmethod
     def trial_frames(cls, key, trial: int, decision_xy=None) -> dict:
