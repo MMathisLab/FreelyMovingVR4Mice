@@ -416,7 +416,8 @@ class InputVideo(dj.Imported):
                     "height": height,
                     # Mouse-view panel (bottom-left screen) in the 640x480 frame:
                     # the batch2 OBS panel (ObsVideoLayout) scaled from 1920x1080
-                    # (x / 3, y * 4 / 9), down to the bottom edge.
+                    # (x / 3, y * 4 / 9), down to the bottom edge. Checked on
+                    # Xestia_2026-07-30_1.
                     "visual_roi": (0, 243, 316, 237),
                     "sync_roi": sync_roi,
                     "seek_offset": measure_seek_offset(video_path),
