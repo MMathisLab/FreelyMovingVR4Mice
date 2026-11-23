@@ -963,6 +963,41 @@ def find_scene_changes(
     return changes
 
 
+def trial_start_steps(iti) -> np.ndarray:
+    """Step index of each trial start: the first non-ITI step after an ITI step."""
+    iti = np.asarray(iti, dtype=float).ravel()
+    return np.flatnonzero((iti[1:] == 0) & (iti[:-1] == 1)) + 1
+
+
+def scene_onsets(starts, change_frames, step_video_time, frame_times):
+    """Frame and delay at which each trial's scene reaches the video.
+
+    Args:
+        starts: Step index of each trial start.
+        change_frames: Frame of the scene change found at each start
+            (``find_scene_changes``), None where none was found.
+        step_video_time: Each step's time on the video clock (s).
+        frame_times: Each frame's time on the video clock (s).
+
+    Returns:
+        ``(onset_frames, delays)``: per start, the first frame showing the new
+        scene (-1 when unknown) and its time after the start step (s, NaN when
+        unknown). A change before the start step is rejected.
+    """
+    step_video_time = np.asarray(step_video_time, dtype=float).ravel()
+    frame_times = np.asarray(frame_times, dtype=float).ravel()
+    onset_frames = np.full(len(starts), -1, dtype=np.int64)
+    delays = np.full(len(starts), np.nan)
+    for i, (start, frame) in enumerate(zip(starts, change_frames)):
+        if frame is None or not 0 <= frame < len(frame_times):
+            continue
+        delay = frame_times[frame] - step_video_time[start]
+        if np.isfinite(delay) and delay >= 0:
+            onset_frames[i] = frame
+            delays[i] = delay
+    return onset_frames, delays
+
+
 def resize_frame(frame: np.ndarray, size: Tuple[int, int]) -> np.ndarray:
     """Resize a frame to (width, height): area averaging to shrink, linear to grow."""
     width, height = (int(v) for v in size)

@@ -237,6 +237,14 @@ def main():
             ),
         )
         run_step(
+            "interpolated_trajectories.TrialSampleTimes.populate",
+            lambda: populate_pending(
+                interpolated_trajectories.TrialSampleTimes,
+                interpolated_trajectories.InterpolatedTrials,
+                logger=logger,
+            ),
+        )
+        run_step(
             "interpolated_trajectories.MeanXYTrajectory.populate",
             lambda: populate_pending(
                 interpolated_trajectories.MeanXYTrajectory,

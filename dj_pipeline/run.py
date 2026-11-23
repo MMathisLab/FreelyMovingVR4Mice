@@ -209,6 +209,11 @@ if __name__ == "__main__":
             logger=logger,
         )
         populate_pending(
+            interpolated_trajectories.TrialSampleTimes,
+            interpolated_trajectories.InterpolatedTrials,
+            logger=logger,
+        )
+        populate_pending(
             interpolated_trajectories.MeanXYTrajectory,
             interpolated_trajectories.InterpolatedTrials,
             logger=logger,
@@ -236,6 +241,7 @@ if __name__ == "__main__":
         session_metrics.TrialMetrics().populate(keys)
 
         interpolated_trajectories.InterpolatedTrials().populate(keys)
+        interpolated_trajectories.TrialSampleTimes().populate(keys)
 
         interpolated_trajectories.MeanXYTrajectory().populate()
         interpolated_trajectories.YBinnedXYTrajectory().populate()

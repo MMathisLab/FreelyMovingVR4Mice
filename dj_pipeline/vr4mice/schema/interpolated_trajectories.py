@@ -54,6 +54,25 @@ class InterpolatedTrials(dj.Computed):
     velocity_x_fliped: <blob> # x-velocity of each trial progression point flipped
     """
 
+    @staticmethod
+    def load_inputs(key):
+        """Return the active behaviour rows and box of a session, as interpolated.
+
+        The rows are ``base_analysis.DataFrame`` with ``trial_rewarded`` and the
+        offline head kinematics, ITI excluded. Returns None without
+        OfflineKinematics.
+        """
+        df = (base_analysis.DataFrame()).get_data(key=key)
+        df["trial_rewarded"] = (base_analysis.DataFrame()).get_rewarded(key=key)
+        box_df = (base_analysis.BoxDataFrame()).get_data(key=key)
+        offline_kinematics_df = (dlc.OfflineKinematics()).get_data(
+            columns=["heading_dir", "head_angle"], key=key
+        )
+        if not isinstance(offline_kinematics_df, pd.DataFrame):
+            return None
+        df = pd.concat([df, offline_kinematics_df], axis=1)
+        return df[df.iti == 0.0], box_df
+
     def make(self, key):
         """Interpolate trials and store per-trial trajectories."""
         from vr4mice.analysis.utils import interpolate_j_shaped
@@ -71,13 +90,8 @@ class InterpolatedTrials(dj.Computed):
             if len(base_analysis.DataFrame & key) > 0:
 
                 logger.info(f"{self.__class__.__name__}: populate key: {key}")
-                df = (base_analysis.DataFrame()).get_data(key=key)
-                df["trial_rewarded"] = (base_analysis.DataFrame()).get_rewarded(key=key)
-                box_df = (base_analysis.BoxDataFrame()).get_data(key=key)
-                offline_kinematics_df = (dlc.OfflineKinematics()).get_data(
-                    columns=["heading_dir", "head_angle"], key=key
-                )
-                if not isinstance(offline_kinematics_df, pd.DataFrame):
+                inputs = self.load_inputs(key)
+                if inputs is None:
                     reason = (
                         "Missing OfflineKinematics; likely missing DLC/sync inputs. "
                         "Skipping populate."
@@ -89,8 +103,7 @@ class InterpolatedTrials(dj.Computed):
                         f"{self.__class__.__name__}: missing OfflineKinematics for key {key}; likely missing DLC/sync inputs. Skipping populate."
                     )
                     return
-                df = pd.concat([df, offline_kinematics_df], axis=1)
-                df = df[df.iti == 0.0]
+                df, box_df = inputs
                 interpolated_df = interpolate_j_shaped(df, box_df=box_df)
                 interpolated_df = interpolated_df.drop(
                     columns=["time", "dataset", "trial_step"]
@@ -122,6 +135,57 @@ class InterpolatedTrials(dj.Computed):
             )
             err = f"Can't populate {self.__class__.__name__}, key: {key}. Error: {err}."
             logger.warning(err)
+
+
+@schema
+class TrialSampleTimes(dj.Computed):
+    """Game time of each InterpolatedTrials sample.
+
+    InterpolatedTrials indexes its samples by trial progression only. This
+    table stores their time on the ``State.step_time`` clock, computed from the
+    same rows and sample positions (``utils.prepare_j_shaped_trials`` and
+    ``utils.trial_grid_times``), to align other time series (e.g. frame
+    visibility) with the trajectories. Repopulate it with InterpolatedTrials.
+    """
+
+    definition = """
+    -> InterpolatedTrials
+    ---
+    trial: <blob>       # trial number per sample, in InterpolatedTrials order
+    trial_step: <blob>  # sample index within its trial (trial_length * n_points)
+    step_time: <blob>   # sample time, game seconds (State.step_time clock)
+    """
+
+    def make(self, key):
+        """Compute the sample times and check them against InterpolatedTrials."""
+        from vr4mice.analysis.utils import prepare_j_shaped_trials, trial_grid_times
+
+        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+            return
+        try:
+            inputs = InterpolatedTrials.load_inputs(key)
+            if inputs is None:
+                raise ValueError("Missing OfflineKinematics")
+            grid = trial_grid_times(prepare_j_shaped_trials(*inputs)[0])
+            stored = np.asarray((InterpolatedTrials & key).fetch1("trial"), dtype=float)
+            if not np.array_equal(stored, grid["trial"].to_numpy(dtype=float)):
+                raise ValueError(
+                    f"{len(grid)} samples do not match the {len(stored)} stored in "
+                    "InterpolatedTrials: repopulate InterpolatedTrials"
+                )
+            self.insert1(
+                {
+                    **key,
+                    "trial": grid["trial"].to_numpy(),
+                    "trial_step": grid["trial_step"].to_numpy(),
+                    "step_time": grid["step_time"].to_numpy(),
+                }
+            )
+        except Exception as err:
+            vr4mice.FailedSession().add_entry(
+                f"{key['dataset']}", f"{self.__class__.__name__}", str(err)
+            )
+            logger.warning(f"Error {self.__class__.__name__}, key: {key}; {err}")
 
 
 @schema

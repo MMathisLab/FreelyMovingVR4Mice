@@ -337,29 +337,91 @@ def test_truncated_reader_fails_session():
         )
 
 
-def test_trial_progress_places_active_steps_on_the_interpolation_grid():
+def _shown_frames():
+    # Steps every 0.1 s; step 3 has no displayed frame (outside the video).
     descriptors = {
-        "step_index": np.array([0, 1, 2, 3, 4, 5, 7]),
-        "t_px": np.array([1.0, 2.0, 4.0, 8.0, 100.0, 10.0, 30.0]),
+        "step_index": np.array([0, 1, 2, 4]),
+        "t_px": np.array([1.0, 2.0, 4.0, 8.0]),
     }
-    episodes = [1, 1, 1, 1, 1, 2, 2, 2]
-    times = [0.0, 1.0, 2.0, 3.0, 4.0, 10.0, 11.0, 12.0]
-    iti = [0, 0, 0, 0, 1, 0, 0, 0]
+    step_times = np.array([0.0, 0.1, 0.2, 0.3, 0.4])
+    return descriptors, step_times
 
-    # Trial 1 spans 0-3 s (the ITI step at 4 s is excluded); trial 2 spans
-    # 10-12 s although its middle step has no displayed frame.
-    progress = visibility.visibility_by_trial_progress(
-        descriptors, episodes, times, iti, n_points=3, columns=("t_px",)
+
+def test_visibility_takes_the_frame_on_screen_after_the_display_lag():
+    descriptors, step_times = _shown_frames()
+
+    # With a 0.05 s lag, step 0's frame is on screen from 0.05 s, step 1's
+    # from 0.15 s. Step 3 has no frame, so step 2's frame (shown at 0.25 s) is
+    # held until step 4's at 0.45 s.
+    values = visibility.visibility_at_times(
+        descriptors,
+        step_times,
+        [0.0, 0.05, 0.1, 0.16, 0.3, 0.44, 0.46],
+        display_lag=0.05,
+        max_gap=0.25,
+        columns=("t_px",),
     )
 
-    assert progress["trial"].tolist() == [1, 1, 1, 2, 2]
-    assert progress["trial_step"].tolist() == [0, 1, 2, 0, 2]
-    assert progress["n_steps"].tolist() == [1, 2, 1, 1, 1]
-    assert progress["t_px"].tolist() == [1.0, 3.0, 8.0, 10.0, 30.0]
+    np.testing.assert_array_equal(
+        values["t_px"], [np.nan, 1.0, 1.0, 2.0, 4.0, 4.0, 8.0]
+    )
 
 
-def test_trial_progress_requires_aligned_step_arrays():
-    with pytest.raises(ValueError, match="align"):
-        visibility.visibility_by_trial_progress(
-            {"step_index": np.array([0])}, [1, 1], [0.0], [0, 0]
-        )
+def test_visibility_is_missing_where_no_frame_is_held():
+    descriptors, step_times = _shown_frames()
+
+    # Step 2's frame is shown at 0.2 s; at 0.35 s it is held 0.15 s, longer
+    # than max_gap, and after the last frame queries are also too far.
+    values = visibility.visibility_at_times(
+        descriptors,
+        step_times,
+        [0.25, 0.35, 0.4, 1.0, np.nan],
+        max_gap=0.1,
+        columns=("t_px",),
+    )
+
+    np.testing.assert_array_equal(values["t_px"], [4.0, np.nan, 8.0, np.nan, np.nan])
+
+
+def _scene():
+    # Steps every 0.1 s: ITI at steps 0-1 and 5, trials start at steps 2 and 6.
+    step_times = np.arange(9) * 0.1
+    iti = np.array([1, 1, 0, 0, 0, 1, 0, 0, 0])
+    return step_times, iti, np.array([2, 6])
+
+
+def test_scene_is_shown_from_the_trial_onset_frame():
+    step_times, iti, starts = _scene()
+    # Queries in trial 1 (from 0.2 s) and trial 2 (from 0.6 s). Trial 1's scene
+    # reaches the video at frame 31, one frame after its first step's frame
+    # (30); trial 2's onset is unknown, so its first step's frame counts.
+    query = [0.25, 0.35, 0.45, 0.65, 0.75]
+    frames = [30, 31, 32, 60, 61]
+    steps = [1, 2, 3, 5, 6]  # first query of each trial still shows the ITI
+    shown = visibility.trial_scene_shown(
+        query, frames, steps, step_times, iti, starts, [31, -1]
+    )
+    np.testing.assert_array_equal(shown, [False, True, True, False, True])
+
+    # The first active step's frame is before the onset: previous scene
+    shown = visibility.trial_scene_shown(
+        [0.35, 0.45], [30, 31], [2, 3], step_times, iti, starts, [31, -1]
+    )
+    np.testing.assert_array_equal(shown, [False, True])
+
+
+def test_scene_is_not_shown_without_a_frame_or_before_any_trial():
+    step_times, iti, starts = _scene()
+    shown = visibility.trial_scene_shown(
+        [0.05, 0.35, np.nan],
+        [10, np.nan, 40],
+        [0, np.nan, 3],
+        step_times,
+        iti,
+        starts,
+        [-1, -1],
+    )
+    np.testing.assert_array_equal(shown, [False, False, False])
+    assert not visibility.trial_scene_shown(
+        [0.35], [30], [3], step_times, iti, [], []
+    ).any()

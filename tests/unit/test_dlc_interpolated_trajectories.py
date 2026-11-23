@@ -1,4 +1,5 @@
-"""Unit tests for DLC/interpolation schema error-handling branches."""
+"""Unit tests for the DLC and interpolated trajectory schemas: error-handling
+branches and the InterpolatedTrials sample grid (utils.trial_grid_times)."""
 
 import importlib.util
 import sys
@@ -6,6 +7,7 @@ from pathlib import Path
 from types import ModuleType, SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -17,6 +19,7 @@ INTERP_MODULE_PATH = (
 VR4MICE_CORE_MODULE_PATH = (
     PROJECT_ROOT / "dj_pipeline" / "vr4mice" / "schema" / "vr4mice.py"
 )
+ANALYSIS_UTILS_PATH = PROJECT_ROOT / "dj_pipeline" / "vr4mice" / "analysis" / "utils.py"
 
 
 def _identity_schema_decorator(_name, _locals):
@@ -504,3 +507,139 @@ class TestInterpolatedErrorPaths:
             interp_module.InterpolatedTrials.make(table, key)
 
         failed_session_row.add_entry.assert_called_once()
+
+
+@pytest.fixture(scope="module")
+def analysis_utils():
+    # Own module name, so it does not shadow the ``utils`` package of other
+    # tests; the unused vr4mice.analysis.analysis import gets a placeholder.
+    return _load_module(
+        "analysis_utils_grid",
+        ANALYSIS_UTILS_PATH,
+        {"vr4mice.analysis.analysis": ModuleType("vr4mice.analysis.analysis")},
+    )
+
+
+def _retained_rows():
+    """20 ms rows of two trials after dropping incomplete rows.
+
+    Trial 1 lost its first three rows (missing pose), so its retained rows start
+    at index 3 (0.06 s); trial 2 lost a row in the middle.
+    """
+    index = [3, 4, 5, 6, 7, 10, 11, 13, 14]
+    step_time = 0.02 * np.array(index, dtype=float)
+    return pd.DataFrame(
+        {
+            "dataset": "d",
+            "trial": [1, 1, 1, 1, 1, 2, 2, 2, 2],
+            "step_time": step_time,
+            "x": step_time * 10,
+        },
+        index=index,
+    )
+
+
+class TestTrialSampleGrid:
+    def test_grid_spans_the_retained_rows_of_each_trial(self, analysis_utils):
+        grid = analysis_utils.trial_grid_times(_retained_rows(), n_points=5)
+
+        trial1 = grid[grid.trial == 1]
+        assert trial1["trial_step"].tolist() == [0, 1, 2, 3, 4]
+        # Starts at the first retained row (0.06 s), not the trial's first step
+        np.testing.assert_allclose(trial1["step_time"], np.linspace(0.06, 0.14, 5))
+        trial2 = grid[grid.trial == 2]
+        np.testing.assert_allclose(trial2["step_time"], np.linspace(0.20, 0.28, 5))
+
+    def test_grid_times_are_the_interpolated_samples(self, analysis_utils):
+        rows = _retained_rows()
+
+        grid = analysis_utils.trial_grid_times(rows, n_points=5)
+        interpolated = analysis_utils.interpolate(
+            rows,
+            n_points=5,
+            value_columns=["step_time"],
+            interpolation_columns=["dataset", "trial"],
+        )
+
+        # Same sample positions, so the same moments (step_time is linear in
+        # the index here, so the spline reproduces it exactly)
+        np.testing.assert_allclose(grid["step_time"], interpolated["step_time"])
+        assert grid["trial"].tolist() == interpolated["trial"].astype(int).tolist()
+
+
+class _FailedSessions:
+    entries = []
+
+    @staticmethod
+    def should_skip(*_):
+        return False
+
+    def add_entry(self, *entry):
+        self.entries.append(entry)
+
+
+class _StoredTrials:
+    """InterpolatedTrials with one session's stored samples and inputs."""
+
+    def __init__(self, trials, rows):
+        self.trials, self.rows = trials, rows
+
+    def __and__(self, _key):
+        return self
+
+    def fetch1(self, _attribute):
+        return self.trials
+
+    def load_inputs(self, _key):
+        return self.rows, None
+
+
+class TestTrialSampleTimes:
+    def _make(self, interp_module, analysis_utils, monkeypatch, stored_trials):
+        utils_mod = ModuleType("vr4mice.analysis.utils")
+        utils_mod.prepare_j_shaped_trials = lambda rows, _box: (rows, [])
+        utils_mod.trial_grid_times = lambda rows: analysis_utils.trial_grid_times(
+            rows, n_points=5
+        )
+        monkeypatch.setitem(sys.modules, "vr4mice.analysis.utils", utils_mod)
+        monkeypatch.setattr(interp_module.vr4mice, "FailedSession", _FailedSessions)
+        monkeypatch.setattr(_FailedSessions, "entries", [])
+        monkeypatch.setattr(
+            interp_module,
+            "InterpolatedTrials",
+            _StoredTrials(stored_trials, _retained_rows()),
+        )
+        inserted = []
+        table = interp_module.TrialSampleTimes()
+        table.insert1 = inserted.append
+        interp_module.TrialSampleTimes.make(table, {"dataset": "d"})
+        return inserted, _FailedSessions.entries
+
+    def test_stores_the_sample_times_of_the_stored_trials(
+        self, interp_module, analysis_utils, monkeypatch
+    ):
+        inserted, failures = self._make(
+            interp_module, analysis_utils, monkeypatch, [1.0] * 5 + [2.0] * 5
+        )
+
+        assert not failures
+        (row,) = inserted
+        assert row["dataset"] == "d"
+        np.testing.assert_array_equal(row["trial"], [1] * 5 + [2] * 5)
+        np.testing.assert_array_equal(row["trial_step"], [0, 1, 2, 3, 4] * 2)
+        np.testing.assert_allclose(
+            row["step_time"], np.r_[np.linspace(0.06, 0.14, 5), np.linspace(0.2, 0.28, 5)]
+        )
+
+    def test_samples_not_matching_interpolated_trials_fail_the_session(
+        self, interp_module, analysis_utils, monkeypatch
+    ):
+        # InterpolatedTrials was computed from other rows: trial 2 is missing
+        inserted, failures = self._make(
+            interp_module, analysis_utils, monkeypatch, [1.0] * 5
+        )
+
+        assert not inserted
+        ((dataset, table, reason),) = failures
+        assert (dataset, table) == ("d", "TrialSampleTimes")
+        assert "repopulate InterpolatedTrials" in reason
