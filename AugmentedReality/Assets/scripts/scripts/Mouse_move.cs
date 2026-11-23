@@ -62,6 +62,12 @@ public class Mouse_move : Agent
     float lastFrameTime;
 
 
+	// Runs once, before ML-Agents collects sensors. Installs optional modules (see ModuleLoader.cs).
+	public override void Initialize()
+	{
+		ModuleLoader.InstallAll(this);
+	}
+
 	// Start is called before the first frame update
 	void Start()
 	{
