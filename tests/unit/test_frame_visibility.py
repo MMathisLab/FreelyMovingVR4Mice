@@ -55,20 +55,24 @@ def _describe(
 
 
 def test_mapped_steps_and_contrast_polarity():
+    # Two ITI frames (0, 1) before the trial calibrate the segmentation
     panels = {
+        0: _panel(),
+        1: _panel(),
         2: _panel(),
         4: _panel(white=True),
         7: _panel(black=True),
         9: _panel(white=True, black=True),
     }
-    frames = [-1, 2, 4, 4, 7, 9, -1]
-    regular, _, fits = _describe(panels, frames)
-    inverted, _, _ = _describe(panels, frames, white_target=False)
+    frames = [0, 1, -1, 2, 4, 4, 7, 9, -1]
+    iti = [True, True] + [False] * 7
+    regular, _, fits = _describe(panels, frames, iti=iti)
+    inverted, _, _ = _describe(panels, frames, iti=iti, white_target=False)
 
-    np.testing.assert_array_equal(regular["step_index"], [1, 2, 3, 4, 5])
-    np.testing.assert_array_equal(regular["frame_id"], [2, 4, 4, 7, 9])
-    np.testing.assert_array_equal(regular["t_px"], [0, 324, 324, 0, 324])
-    np.testing.assert_array_equal(regular["d_px"], [0, 0, 0, 288, 288])
+    np.testing.assert_array_equal(regular["step_index"], [0, 1, 3, 4, 5, 6, 7])
+    np.testing.assert_array_equal(regular["frame_id"], [0, 1, 2, 4, 4, 7, 9])
+    np.testing.assert_array_equal(regular["t_px"], [0, 0, 0, 324, 324, 0, 324])
+    np.testing.assert_array_equal(regular["d_px"], [0, 0, 0, 0, 0, 288, 288])
     np.testing.assert_array_equal(inverted["t_px"], regular["d_px"])
     np.testing.assert_array_equal(inverted["d_px"], regular["t_px"])
     np.testing.assert_array_equal(
@@ -76,28 +80,33 @@ def test_mapped_steps_and_contrast_polarity():
     )
     np.testing.assert_array_equal(
         regular["visibility_state"],
-        ["neither", "target_only", "target_only", "distractor_only", "both"],
+        ["neither"] * 3 + ["target_only", "target_only", "distractor_only", "both"],
     )
     np.testing.assert_array_equal(
         inverted["visibility_state"],
-        ["neither", "distractor_only", "distractor_only", "target_only", "both"],
+        ["neither"] * 3 + ["distractor_only", "distractor_only", "target_only", "both"],
     )
     assert fits["t_new_surf"]["target_right"]["status"] == "insufficient_trials"
     assert np.isnan(regular["t_new_surf"]).all()
 
 
 def test_target_only_zeroes_iti_even_if_it_shares_an_active_frame():
-    panels = {0: _panel(white=True, black=True)}
+    # ITI frames 0 and 1 calibrate; the last ITI step shares frame 2
+    panels = {0: _panel(), 1: _panel(), 2: _panel(white=True, black=True)}
     result, _, fits = _describe(
-        panels, [0, 0], white_target=False, distractor=False, iti=[True, False]
+        panels,
+        [0, 1, 2, 2],
+        white_target=False,
+        distractor=False,
+        iti=[True, True, True, False],
     )
 
-    np.testing.assert_array_equal(result["t_px"], [0, 288])
-    np.testing.assert_array_equal(result["d_px"], [0, 0])
+    np.testing.assert_array_equal(result["t_px"], [0, 0, 0, 288])
+    np.testing.assert_array_equal(result["d_px"], [0, 0, 0, 0])
     np.testing.assert_array_equal(
-        result["visibility_state"], ["neither", "target_only"]
+        result["visibility_state"], ["neither"] * 3 + ["target_only"]
     )
-    np.testing.assert_array_equal(result["d_new_surf"], [np.nan, 0])
+    np.testing.assert_array_equal(result["d_new_surf"], [np.nan] * 3 + [0])
     assert fits["d_new_surf"]["status"] == "absent"
 
 
@@ -128,10 +137,15 @@ def test_all_iti_steps_never_open_the_video():
 
 
 def test_parallel_frame_workers_match_serial_results():
-    panels = {i: _panel(white=i % 2 == 0, black=i % 3 == 0) for i in range(10)}
-    frames = [-1, *range(10), 9]
-    serial, _, _ = _describe(panels, frames)
-    parallel, _, _ = _describe(panels, frames, frame_workers=2)
+    # ITI frames 0 and 1 (no objects) calibrate
+    panels = {
+        i: _panel(white=i > 1 and i % 2 == 0, black=i > 1 and i % 3 == 0)
+        for i in range(12)
+    }
+    frames = [0, 1, -1, *range(2, 12), 11]
+    iti = [True, True] + [False] * 12
+    serial, _, _ = _describe(panels, frames, iti=iti)
+    parallel, _, _ = _describe(panels, frames, iti=iti, frame_workers=2)
     for name, values in serial.items():
         np.testing.assert_array_equal(parallel[name], values)
 
@@ -152,19 +166,20 @@ def test_novelty_resets_and_is_counted_once_per_frame(monkeypatch):
         }
 
     monkeypatch.setattr(visibility, "_fit_silhouette", fit)
-    panels = {i: _panel(white=True, black=True) for i in range(3)}
-    options = dict(
-        episodes=[0, 0, 0, 0, 1, 1], iti=[True, False, False, False, False, False]
-    )
-    frames = [0, 0, 0, 1, 1, 2]
+    # ITI frames 0 and 1 calibrate; the last ITI step shares frame 2
+    panels = {0: _panel(), 1: _panel()}
+    panels.update({i: _panel(white=True, black=True) for i in range(2, 5)})
+    options = dict(episodes=[0, 0, 0, 0, 0, 0, 1, 1], iti=[True] * 3 + [False] * 5)
+    frames = [0, 1, 2, 2, 2, 3, 3, 4]
     regular, _, _ = _describe(panels, frames, **options)
     inverted, _, _ = _describe(panels, frames, white_target=False, **options)
 
-    np.testing.assert_array_equal(regular["t_new_surf"], [np.nan, 1, 0, 0, 1, 0])
-    distractor_reveal = regular["d_new_surf"][1]
+    np.testing.assert_array_equal(regular["t_new_surf"], [np.nan] * 3 + [1, 0, 0, 1, 0])
+    distractor_reveal = regular["d_new_surf"][3]
     assert 0 < distractor_reveal < 1
     np.testing.assert_array_equal(
-        regular["d_new_surf"], [np.nan, distractor_reveal, 0, 0, distractor_reveal, 0]
+        regular["d_new_surf"],
+        [np.nan] * 3 + [distractor_reveal, 0, 0, distractor_reveal, 0],
     )
     np.testing.assert_array_equal(inverted["t_new_surf"], regular["d_new_surf"])
     np.testing.assert_array_equal(inverted["d_new_surf"], regular["t_new_surf"])
@@ -322,15 +337,21 @@ def test_iti_frames_all_showing_an_object_fail_calibration():
         )
 
 
+def test_session_without_iti_before_its_trials_fails():
+    # Active frames but no ITI to calibrate the segmentation on
+    with pytest.raises(ValueError, match="cannot calibrate"):
+        _describe({0: _panel(white=True), 1: _panel()}, [0, 1])
+
+
 def test_truncated_reader_fails_session():
     with pytest.raises(ValueError, match="shorter"):
         visibility.describe_steps(
             lambda _: iter(()),
-            [0],
-            [0],
-            [False],
-            [[0, 0]],
-            [False],
+            [0, 1, 2],
+            [0, 0, 0],
+            [True, True, False],
+            np.zeros((3, 2)),
+            [False] * 3,
             target_is_white=True,
             has_distractor=True,
             has_occluders=True,

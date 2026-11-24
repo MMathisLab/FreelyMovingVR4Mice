@@ -504,8 +504,10 @@ def test_find_scene_changes(tmp_path):
         writer.write(frame)
     writer.release()
     panel = (0, 40, 50, 40)
-    assert find_scene_changes(path, panel, [24, 27]) == [30, 30]
-    assert find_scene_changes(path, panel, [60]) == [None]  # no change near 60
+    options = dict(before=5, after=30, min_change=1.0, min_contrast=10.0)
+    assert find_scene_changes(path, panel, [24, 27], **options) == [30, 30]
+    # no change near 60
+    assert find_scene_changes(path, panel, [60], **options) == [None]
 
 
 def test_trial_starts_are_the_first_active_step_after_an_iti():
@@ -591,12 +593,10 @@ def test_display_lag_is_the_median_scene_change_delay(
     assert n_trials == 6
     assert lag == pytest.approx(2 / 30)
 
-    # Too few trial starts: the default lag
+    # Too few trial starts with a scene change: the session fails
     params = _params(video_schema, min_display_lag_trials=7)
-    assert measure({"dataset": "d"}, row, frame_times, frame_times, params) == (
-        params["default_display_lag"],
-        0,
-    )
+    with pytest.raises(ValueError, match="at 6 of 6 trial starts only"):
+        measure({"dataset": "d"}, row, frame_times, frame_times, params)
     # Longer than max_display_lag: misaligned
     params = _params(video_schema, max_display_lag=0.05)
     with pytest.raises(ValueError, match="misaligned"):

@@ -447,7 +447,8 @@ class StepVideoFrame(dj.Computed):
 
     The step's content comes from the pose the task read at the step; that pose
     was captured by the DLC camera earlier still (~94 ms before the screen on
-    Xestia_2026-07-30_1, vs 54 ms for display_lag).
+    Xestia_2026-07-30_1, measured when its display lag came out at 54 ms; the
+    current measurement gives 49 ms).
 
     Clocks:
 
@@ -482,7 +483,7 @@ class StepVideoFrame(dj.Computed):
     frame_ids: <blob>                   # frame showing each step on screen (step_time + display_lag), -1 outside the video
     step_frame_ids: <blob>              # frame captured at each step's time (no display lag), -1 outside the video
     display_lag: float64                # step to screen delay (s), median over trial starts
-    display_lag_trials: int32           # trial starts measured (0 when default_display_lag is used)
+    display_lag_trials: int32           # trial starts the lag was measured on
     trial_start_steps: <blob>           # step index of each trial start (first non-ITI step after an ITI)
     scene_onset_frames: <blob>          # per trial start: first frame showing the trial's scene, -1 without a clear change
     scene_onset_delay: <blob>           # per trial start: time (s) from the start step to that frame (video clock), NaN without one
@@ -514,14 +515,15 @@ class StepVideoFrame(dj.Computed):
         # video read each). Judgement call: jitter is ~1 refresh (17 ms), so
         # the median of 40 is within a few ms.
         display_lag_trials=40,
-        # Display lag: with fewer clear scene changes, default_display_lag is
-        # used. Judgement call: fewer is not robust to one wrong detection.
+        # Display lag: with fewer clear scene changes the session fails (too
+        # few trial starts in the video, or frames not showing the switches).
+        # Judgement call: fewer is not robust to one wrong detection; correct
+        # sessions find a change at nearly every start (Xestia_2026-07-30_1:
+        # 39/40 before scene_change_min_change was lowered).
         min_display_lag_trials=5,
-        # s, display lag when it cannot be measured. Measured on
-        # Xestia_2026-07-30_1: 54 ms (44-61 ms 10th-90th percentile).
-        default_display_lag=0.054,
         # s, a lag outside (0, this) means misaligned video: the session
-        # fails. Lags measured so far are 49-54 ms.
+        # fails. Lags measured so far: 49 ms (Xestia_2026-07-27_1 and
+        # Xestia_2026-07-30_1).
         max_display_lag=0.2,
         # s, trial starts' lags spread more (median absolute deviation) means
         # misaligned video: the session fails. Correct sessions jitter ~1
@@ -540,12 +542,15 @@ class StepVideoFrame(dj.Computed):
         # change in the window wins, and later ones (fast turns) would win.
         scene_onset_margin=0.1,
         # Grey levels: a trial start's scene change must change the 80x60
-        # panel thumbnail by this much on average. Judgement call: a switch
-        # changes it by tens of levels.
-        scene_change_min_change=2.0,
+        # panel thumbnail by this much on average. Xestia_2026-07-30_1: most
+        # switches change it by 2-33 levels, but trials whose walls stay and
+        # only the objects appear by 1.4-2.0; the noise (median change in the
+        # window) is at most 0.02. 1.0 catches all of them, 50x the noise.
+        scene_change_min_change=1.0,
         # The scene change must be this many times the window's median
-        # frame-to-frame change. Judgement call: separates switches from the
-        # mouse's own movement.
+        # frame-to-frame change. Separates switches from the mouse's own
+        # movement; on Xestia_2026-07-30_1 every switch is at least 14x the
+        # median (most over 100x).
         scene_change_min_contrast=10.0,
     )
 
@@ -714,13 +719,13 @@ class StepVideoFrame(dj.Computed):
             ]
         )
         if len(lags) < params["min_display_lag_trials"]:
-            logger.warning(
-                "%s: display lag measured at %d trial starts only, using %.0f ms",
-                key["dataset"],
-                len(lags),
-                params["default_display_lag"] * 1000,
+            raise ValueError(
+                f"Scene change found at {len(lags)} of {len(starts)} trial starts "
+                f"only (minimum {params['min_display_lag_trials']}) in "
+                f"{pathlib.Path(row['video_path']).name}: too few trial starts "
+                "in the video, or frames not showing the scene switches (frozen, "
+                "black, wrong panel)?"
             )
-            return params["default_display_lag"], 0
         lag = float(np.median(lags))
         spread = float(np.median(np.abs(lags - lag)))
         max_lag, max_spread = (

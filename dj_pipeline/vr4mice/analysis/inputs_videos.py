@@ -905,12 +905,13 @@ def find_scene_changes(
     video_path: str,
     roi: Tuple[int, int, int, int],
     frames: Iterable[int],
+    *,
+    before: int,
+    after: int,
+    min_change: float,
+    min_contrast: float,
     seek_offset: int = 0,
-    before: int = 5,
-    after: int = 30,
     thumbnail: Tuple[int, int] = (80, 60),
-    min_contrast: float = 10.0,
-    min_change: float = 2.0,
 ) -> List[Optional[int]]:
     """First frame of the largest change in ``roi`` around each of ``frames``.
 
@@ -919,18 +920,18 @@ def find_scene_changes(
     after each one are read, and the largest frame-to-frame difference marks
     the change. None where no clear change is found: the largest difference is
     under ``min_change`` grey levels, or under ``min_contrast`` times the
-    median difference in the window.
+    median difference in the window (the frame-to-frame noise).
 
     Args:
         video_path: Video file.
         roi: (x, y, width, height) region compared (the mouse-view panel).
         frames: Frame index around which to look for each change.
-        seek_offset: See ``measure_seek_offset``.
         before: Frames read before each frame.
         after: Frames read after each frame.
-        thumbnail: (width, height) the region is reduced to before comparing.
-        min_contrast: Minimum ratio of the change to the median difference.
         min_change: Minimum change, mean absolute grey-level difference.
+        min_contrast: Minimum ratio of the change to the median difference.
+        seek_offset: See ``measure_seek_offset``.
+        thumbnail: (width, height) the region is reduced to before comparing.
     """
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -954,8 +955,8 @@ def find_scene_changes(
                 [np.abs(b - a).mean() for a, b in zip(thumbs[:-1], thumbs[1:])]
             )
             k = int(np.argmax(diffs))
-            clear = diffs[k] >= min_change and diffs[k] >= min_contrast * max(
-                np.median(diffs), 0.1
+            clear = diffs[k] >= min_change and diffs[k] >= min_contrast * np.median(
+                diffs
             )
             changes.append(first + k + 1 if clear else None)
     finally:

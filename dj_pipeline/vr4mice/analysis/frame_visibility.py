@@ -681,7 +681,12 @@ def _calibrate_session(read_panels, frames, episodes, iti, *, has_occluders):
 
     Returns:
         Tuple of segmentation parameters, sampled ITI/active frame pairs, and
-        RGB panels keyed by frame ID. Uses defaults if no pairs are available.
+        RGB panels keyed by frame ID; parameters are None without active
+        frames (nothing to segment).
+
+    Raises:
+        ValueError: Active frames but no trial with two ITI frames before it to
+            calibrate on (every session has an ITI before each trial).
     """
     calibration = _calibration_frames(frames, episodes, iti)
     calibration_panels = dict(_read_panels(read_panels, np.unique(calibration)))
@@ -692,8 +697,13 @@ def _calibrate_session(read_panels, frames, episodes, iti, *, has_occluders):
             [calibration_panels[f] for f in np.unique(objects)],
             has_occluders=has_occluders,
         )
+    elif (~np.asarray(iti, dtype=bool)).any():
+        raise ValueError(
+            "No trial has two distinct ITI frames before its first active frame: "
+            "cannot calibrate the segmentation (ITI missing or outside the video?)"
+        )
     else:
-        params = DEFAULT_PARAMS.copy()
+        params = None
     return params, calibration, calibration_panels
 
 
@@ -1032,7 +1042,7 @@ def describe_steps(
     calibration_info = {
         "parameters": params,
         "frame_pairs": calibration,
-        "status": "fitted" if calibration.size else "defaults",
+        "status": "fitted" if calibration.size else "no active frames",
         "panel_size": PANEL_SIZE,
         "surface_grid": grid,
     }
