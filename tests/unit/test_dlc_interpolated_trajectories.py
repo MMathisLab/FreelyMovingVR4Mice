@@ -607,7 +607,8 @@ class TestTrialSampleTimes:
         monkeypatch.setattr(
             interp_module,
             "InterpolatedTrials",
-            _StoredTrials(stored_trials, _retained_rows()),
+            # InterpolatedTrials stores DataFrame.to_dict() columns
+            _StoredTrials(pd.Series(stored_trials).to_dict(), _retained_rows()),
         )
         inserted = []
         table = interp_module.TrialSampleTimes()

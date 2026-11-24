@@ -430,59 +430,6 @@ class InputVideo(dj.Imported):
 
 
 @schema
-class AlignmentParams(dj.Lookup):
-    """Parameters of StepVideoFrame.make: what each does and why its value.
-
-    Each column's comment says what it changes and where its value comes from
-    (``AlignmentParams.heading``). StepVideoFrame (and FrameVisibility) hold one
-    row per session and parameter set, like the decision tables with
-    ``ModelParams``: every set here is populated for every session. A set's
-    values never change once populated: add a new set instead.
-    """
-
-    definition = """
-    params_version: int16
-    ---
-    description: varchar(255)  # what changed from the previous version
-    min_sync_match: float64  # camera videos rejected below this fraction of sync square edges matching photodiode edges (wrong recording). Judgement call, not measured: compare with StepVideoFrame.sync_match_fraction
-    min_step_coverage: float64  # rejected below this fraction of game steps inside the video (another session's video, cut recording). Judgement call, not measured
-    generated_signal_display_delay: float64  # s, OBS without photodiode: added to the generated sync signal's send times (PROC). Measured on Xestia_2026-08-21_1: 62 ms, within ~2 ms of the photodiode
-    display_lag_trials: int16  # display lag: trial starts measured, spread over the session. Judgement call: jitter ~1 refresh (17 ms), so the median of 40 is within a few ms
-    min_display_lag_trials: int16  # display lag: with fewer clear scene changes, default_display_lag is used. Judgement call: fewer is not robust to one wrong detection
-    default_display_lag: float64  # s, display lag when it cannot be measured. Measured on Xestia_2026-07-30_1: 54 ms (44-61 ms 10th-90th percentile)
-    max_display_lag: float64  # s, a lag outside (0, this) means misaligned video: the session fails. Lags measured so far are 49-54 ms
-    max_display_lag_spread: float64  # s, trial starts' lags spread more (median absolute deviation) means misaligned video: the session fails. Correct sessions jitter ~1 refresh (17 ms); 25 ms is 1.5 refreshes
-    lag_search_before: float64  # s, display lag: video read from this long before each trial start step's frame, so an early change (negative lag, misaligned) is seen and rejected
-    lag_search_after: float64  # s, display lag: video read up to this long after each start step's frame. Must hold the change even in a misaligned video so it is rejected, not missed: 2.5x max_display_lag
-    scene_onset_margin: float64  # s, trial scene onsets searched up to the session display_lag plus this. 4x max_display_lag_spread; short because the largest change in the window wins (fast turns)
-    scene_change_min_change: float64  # grey levels, a trial start's scene change must change the 80x60 panel thumbnail by this much on average. Judgement call: a switch changes it by tens of levels
-    scene_change_min_contrast: float64  # the scene change must be this many times the window's median frame-to-frame change. Judgement call: separates switches from the mouse's own movement
-    """
-    contents = [
-        dict(
-            params_version=1,
-            description=(
-                "Constants of commit 466a3ab7 (2026-11-02); lag search window in "
-                "seconds; trial scene onsets searched up to display lag + margin"
-            ),
-            min_sync_match=0.8,
-            min_step_coverage=0.9,
-            generated_signal_display_delay=0.062,
-            display_lag_trials=40,
-            min_display_lag_trials=5,
-            default_display_lag=0.054,
-            max_display_lag=0.2,
-            max_display_lag_spread=0.025,
-            lag_search_before=0.1,
-            lag_search_after=0.5,
-            scene_onset_margin=0.1,
-            scene_change_min_change=2.0,
-            scene_change_min_contrast=10.0,
-        ),
-    ]
-
-
-@schema
 class StepVideoFrame(dj.Computed):
     """Input video frame of each game step, for OBS and camera recordings alike.
 
@@ -496,8 +443,7 @@ class StepVideoFrame(dj.Computed):
     means misaligned frames. Each trial's own scene onset is stored too
     (``scene_onset_frames``): single trials reach the screen about a refresh
     before or after the session's lag. The parameters used are in
-    ``AlignmentParams``; one row per session and parameter set
-    (``params_version``), so restrict to a version when several exist.
+    ``alignment_params`` (also stored in each row).
 
     The step's content comes from the pose the task read at the step; that pose
     was captured by the DLC camera earlier still (~94 ms before the screen on
@@ -522,8 +468,8 @@ class StepVideoFrame(dj.Computed):
 
     definition = """
     -> vr4mice.State                    # game steps
-    -> AlignmentParams                  # parameters used
     ---
+    alignment_params: <blob>            # parameters used (StepVideoFrame.alignment_params)
     video_source: enum('obs', 'camera') # recording setup of the input video
     align_method: enum('photodiode', 'timestamps', 'generated_signal') # how frames were matched to steps
     video_path: varchar(255)            # video indexed by frame_ids
@@ -550,6 +496,59 @@ class StepVideoFrame(dj.Computed):
     generated_signal_delay=null: float64 # generated_signal: delay added to send times (s)
     """
 
+    # Parameters of make(), stored in each row (alignment_params) so a row
+    # records the values it was computed with. Changing one needs a repopulate.
+    alignment_params = dict(
+        # Camera videos rejected below this fraction of sync square edges
+        # matching photodiode edges (wrong recording). Judgement call, not
+        # measured: compare with sync_match_fraction of populated sessions.
+        min_sync_match=0.8,
+        # Rejected below this fraction of game steps inside the video (another
+        # session's video, cut recording). Judgement call, not measured.
+        min_step_coverage=0.9,
+        # s, OBS without photodiode: added to the generated sync signal's send
+        # times (PROC). Measured on Xestia_2026-08-21_1: 62 ms, within ~2 ms of
+        # the photodiode.
+        generated_signal_display_delay=0.062,
+        # Display lag: trial starts measured, spread over the session (one
+        # video read each). Judgement call: jitter is ~1 refresh (17 ms), so
+        # the median of 40 is within a few ms.
+        display_lag_trials=40,
+        # Display lag: with fewer clear scene changes, default_display_lag is
+        # used. Judgement call: fewer is not robust to one wrong detection.
+        min_display_lag_trials=5,
+        # s, display lag when it cannot be measured. Measured on
+        # Xestia_2026-07-30_1: 54 ms (44-61 ms 10th-90th percentile).
+        default_display_lag=0.054,
+        # s, a lag outside (0, this) means misaligned video: the session
+        # fails. Lags measured so far are 49-54 ms.
+        max_display_lag=0.2,
+        # s, trial starts' lags spread more (median absolute deviation) means
+        # misaligned video: the session fails. Correct sessions jitter ~1
+        # refresh (17 ms); 25 ms is 1.5 refreshes.
+        max_display_lag_spread=0.025,
+        # s, display lag: video read from this long before each trial start
+        # step's frame, so an early change (negative lag, misaligned video) is
+        # seen and rejected.
+        lag_search_before=0.1,
+        # s, display lag: video read up to this long after each start step's
+        # frame. Must hold the change even in a misaligned video, so that it is
+        # rejected rather than missed: 2.5x max_display_lag.
+        lag_search_after=0.5,
+        # s, each trial's scene onset is searched up to the session display lag
+        # plus this. 4x max_display_lag_spread; short because the largest
+        # change in the window wins, and later ones (fast turns) would win.
+        scene_onset_margin=0.1,
+        # Grey levels: a trial start's scene change must change the 80x60
+        # panel thumbnail by this much on average. Judgement call: a switch
+        # changes it by tens of levels.
+        scene_change_min_change=2.0,
+        # The scene change must be this many times the window's median
+        # frame-to-frame change. Judgement call: separates switches from the
+        # mouse's own movement.
+        scene_change_min_contrast=10.0,
+    )
+
     @property
     def key_source(self):
         # Wait for the session's PROC (dlc.DLCProcessor, populated before
@@ -558,14 +557,14 @@ class StepVideoFrame(dj.Computed):
         from vr4mice.schema import dlc
 
         keys = InputVideo.fetch("KEY") + RawVideoSync.fetch("KEY")
-        sessions = vr4mice.State.proj() & keys & dlc.DLCProcessor.proj()
-        return sessions * AlignmentParams.proj()
+        return vr4mice.State.proj() & keys & dlc.DLCProcessor.proj()
 
     def make(self, key):
         """Match each game step to an input video frame and store QA."""
         from vr4mice.analysis.inputs_videos import align_steps_to_frames_by_timestamps
 
-        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+        table_name = self.__class__.__name__
+        if vr4mice.FailedSession.should_skip(key, table_name, logger):
             return
 
         # Missing inputs that are added later (a new batch): not a failure,
@@ -581,7 +580,7 @@ class StepVideoFrame(dj.Computed):
             return
 
         try:
-            params = (AlignmentParams & key).fetch1()
+            params = self.alignment_params
             start_time, step, step_time = (vr4mice.State & key).fetch1(
                 "start_time", "step", "step_time"
             )
@@ -629,6 +628,7 @@ class StepVideoFrame(dj.Computed):
                 {
                     **key,
                     **row,
+                    "alignment_params": params,
                     "n_steps": len(step_time),
                     "step": step,
                     "step_time": step_time,
@@ -636,7 +636,7 @@ class StepVideoFrame(dj.Computed):
                 }
             )
         except Exception as err:
-            _record_failure(key["dataset"], self.__class__.__name__, err)
+            _record_failure(key["dataset"], table_name, err)
             return None
 
     @staticmethod
@@ -675,7 +675,7 @@ class StepVideoFrame(dj.Computed):
 
     @classmethod
     def _measure_display_lag(cls, key, row, step_video_time, frame_times, params):
-        """Step to screen delay (s) and trial starts measured (``AlignmentParams``).
+        """Step to screen delay (s) and trial starts measured (``alignment_params``).
 
         The median of (frame of the scene change - start step time) over up to
         ``display_lag_trials`` trial starts, where the scene switches at once.
@@ -968,17 +968,27 @@ class StepVideoFrame(dj.Computed):
 
         frame_times = cls._frame_times(key, source)
 
-        # Piecewise linear between steps; NaN next to steps outside the video
-        order = np.argsort(step_time, kind="stable")
-        video_times = np.interp(
-            query_times,
-            step_time[order],
-            np.asarray(step_video_time, dtype=float)[order],
-        )
+        video_times = cls.to_video_clock(step_time, step_video_time, query_times)
         if displayed:
             video_times += display_lag
         frames = align_steps_to_frames_by_timestamps(video_times, frame_times)
         return [int(frame) if frame >= 0 else None for frame in frames]
+
+    @staticmethod
+    def to_video_clock(step_time, step_video_time, times):
+        """Map game times (``step_time`` clock) to the video clock.
+
+        Piecewise linear between steps on ``step_video_time``, the mapping
+        ``frame_ids`` was built from (OBS: with the residual correction for
+        dropped frames); NaN next to steps outside the video.
+        """
+        step_time = np.asarray(step_time, dtype=float)
+        order = np.argsort(step_time, kind="stable")
+        return np.interp(
+            np.asarray(times, dtype=float),
+            step_time[order],
+            np.asarray(step_video_time, dtype=float)[order],
+        )
 
     @classmethod
     def trial_frames(cls, key, trial: int, decision_xy=None) -> dict:
@@ -1219,11 +1229,12 @@ class FrameVisibility(dj.Computed):
 
         Sample times come from ``interpolated_trajectories.TrialSampleTimes``,
         so ``trial_step`` is the same moment as in InterpolatedTrials. Each
-        sample takes the frame on screen at its time (``display_lag`` after the
-        frame's step).
+        sample time is mapped to the video clock (``step_video_time``) and
+        takes the last described frame captured at or before it: the screen as
+        recorded, so the display lag is already in the frames.
 
         Returns:
-            One row per dataset, ``params_version``, trial and ``trial_step``
+            One row per dataset, trial and ``trial_step``
             (``trial_length * n_points``) with the sample's ``step_time``, the ``t_px``, ``d_px``
             and ``total_visible_px`` of the frame on screen (NaN without a
             frame), and ``scene_shown``: False while the screen still shows the
@@ -1252,19 +1263,22 @@ class FrameVisibility(dj.Computed):
                 "trial", "trial_step", "step_time"
             )
             descriptors = (self & key).fetch1("descriptors")
-            step_time, display_lag, starts, onset_frames = (
+            step_time, step_video_time, source, starts, onset_frames = (
                 StepVideoFrame & key
             ).fetch1(
-                "step_time", "display_lag", "trial_start_steps", "scene_onset_frames"
+                "step_time",
+                "step_video_time",
+                "video_source",
+                "trial_start_steps",
+                "scene_onset_frames",
             )
             iti = np.asarray(
                 (vr4mice.MouseState & key).fetch1("iti"), dtype=float
             ).ravel()
             values = visibility_at_times(
                 descriptors,
-                step_time,
-                sample_time,
-                display_lag=display_lag,
+                StepVideoFrame._frame_times(key, source),
+                StepVideoFrame.to_video_clock(step_time, step_video_time, sample_time),
                 columns=("t_px", "d_px", "total_visible_px", "frame_id", "step_index"),
             )
             shown_frames = values.pop("frame_id")
@@ -1282,7 +1296,6 @@ class FrameVisibility(dj.Computed):
                 pd.DataFrame(
                     {
                         "dataset": key["dataset"],
-                        "params_version": key["params_version"],
                         "trial": np.asarray(trial, dtype=np.int64),
                         "trial_step": np.asarray(trial_step, dtype=np.int64),
                         "step_time": np.asarray(sample_time, dtype=float),

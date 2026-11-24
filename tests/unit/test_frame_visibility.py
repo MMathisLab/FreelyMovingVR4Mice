@@ -337,27 +337,25 @@ def test_truncated_reader_fails_session():
         )
 
 
-def _shown_frames():
-    # Steps every 0.1 s; step 3 has no displayed frame (outside the video).
+def _shown_frames(frame_ids):
+    # Steps 0, 1, 2 and 4 shown on frames ``frame_ids`` of a 20 fps video; step
+    # 3 has no displayed frame (outside the video).
     descriptors = {
         "step_index": np.array([0, 1, 2, 4]),
+        "frame_id": np.array(frame_ids),
         "t_px": np.array([1.0, 2.0, 4.0, 8.0]),
     }
-    step_times = np.array([0.0, 0.1, 0.2, 0.3, 0.4])
-    return descriptors, step_times
+    return descriptors, np.arange(10) * 0.05
 
 
-def test_visibility_takes_the_frame_on_screen_after_the_display_lag():
-    descriptors, step_times = _shown_frames()
-
-    # With a 0.05 s lag, step 0's frame is on screen from 0.05 s, step 1's
-    # from 0.15 s. Step 3 has no frame, so step 2's frame (shown at 0.25 s) is
-    # held until step 4's at 0.45 s.
+def test_visibility_takes_the_last_frame_captured_by_the_query_time():
+    # Frames captured at 0.05, 0.15, 0.25 and 0.45 s (video clock); step 2's
+    # frame is held until step 4's.
+    descriptors, frame_times = _shown_frames([1, 3, 5, 9])
     values = visibility.visibility_at_times(
         descriptors,
-        step_times,
+        frame_times,
         [0.0, 0.05, 0.1, 0.16, 0.3, 0.44, 0.46],
-        display_lag=0.05,
         max_gap=0.25,
         columns=("t_px",),
     )
@@ -368,19 +366,40 @@ def test_visibility_takes_the_frame_on_screen_after_the_display_lag():
 
 
 def test_visibility_is_missing_where_no_frame_is_held():
-    descriptors, step_times = _shown_frames()
-
-    # Step 2's frame is shown at 0.2 s; at 0.35 s it is held 0.15 s, longer
-    # than max_gap, and after the last frame queries are also too far.
+    # Frames captured at 0, 0.1, 0.2 and 0.4 s. At 0.35 s step 2's frame is
+    # held 0.15 s, longer than max_gap, and after the last frame queries are
+    # also too far.
+    descriptors, frame_times = _shown_frames([0, 2, 4, 8])
     values = visibility.visibility_at_times(
         descriptors,
-        step_times,
+        frame_times,
         [0.25, 0.35, 0.4, 1.0, np.nan],
         max_gap=0.1,
         columns=("t_px",),
     )
 
     np.testing.assert_array_equal(values["t_px"], [4.0, np.nan, 8.0, np.nan, np.nan])
+
+
+def test_a_frame_is_not_shown_before_it_is_captured():
+    # 30 fps: the scene's frame 11 is captured at 0.367 s, so at 0.35 s the
+    # screen still shows frame 10. Steps 2 and 3 share frame 11, which shows
+    # the later one.
+    descriptors = {
+        "step_index": np.array([1, 2, 3]),
+        "frame_id": np.array([10, 11, 11]),
+        "t_px": np.array([0.0, 5.0, 6.0]),
+    }
+    values = visibility.visibility_at_times(
+        descriptors,
+        np.arange(20) / 30,
+        [0.35, 0.37],
+        columns=("frame_id", "step_index", "t_px"),
+    )
+
+    np.testing.assert_array_equal(values["frame_id"], [10, 11])
+    np.testing.assert_array_equal(values["step_index"], [1, 3])
+    np.testing.assert_array_equal(values["t_px"], [0.0, 6.0])
 
 
 def _scene():

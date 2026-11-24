@@ -167,7 +167,10 @@ class TrialSampleTimes(dj.Computed):
             if inputs is None:
                 raise ValueError("Missing OfflineKinematics")
             grid = trial_grid_times(prepare_j_shaped_trials(*inputs)[0])
-            stored = np.asarray((InterpolatedTrials & key).fetch1("trial"), dtype=float)
+            # Stored with DataFrame.to_dict(): {row index: trial}, in row order
+            stored = pd.Series(
+                (InterpolatedTrials & key).fetch1("trial"), dtype=float
+            ).to_numpy()
             if not np.array_equal(stored, grid["trial"].to_numpy(dtype=float)):
                 raise ValueError(
                     f"{len(grid)} samples do not match the {len(stored)} stored in "

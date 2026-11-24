@@ -530,22 +530,10 @@ def test_scene_onsets_time_each_trial_from_its_start_step():
 
 
 def _params(video_schema, **changes):
-    """AlignmentParams version 1, with ``changes``."""
-    params = dict(video_schema.AlignmentParams.contents[0])
+    """StepVideoFrame.alignment_params, with ``changes``."""
+    params = dict(video_schema.StepVideoFrame.alignment_params)
     assert changes.keys() <= params.keys()
     return {**params, **changes}
-
-
-def test_alignment_params_contents_fill_every_column(video_schema):
-    # Each contents row sets exactly the columns of the definition
-    definition = video_schema.AlignmentParams.definition
-    columns = [
-        line.split(":")[0].strip()
-        for line in definition.splitlines()
-        if ":" in line and not line.strip().startswith("#")
-    ]
-    for row in video_schema.AlignmentParams.contents:
-        assert list(row) == columns
 
 
 def _trial_video(tmp_path, video_schema, monkeypatch, lags, turn_at=None):

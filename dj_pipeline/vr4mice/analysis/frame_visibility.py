@@ -1041,43 +1041,43 @@ def describe_steps(
 
 def visibility_at_times(
     descriptors,
-    step_times,
+    frame_times,
     query_times,
     *,
-    display_lag=0.0,
     max_gap=0.1,
     columns=("t_px", "d_px", "total_visible_px"),
 ):
-    """Visibility of the frame on screen at each query time.
+    """Visibility of the frame on screen at each query time, on the video clock.
 
-    The frame showing a step is on screen from ``display_lag`` after the step
-    until the next mapped frame. Each query takes the last frame shown at or
-    before it, including ITI frames, which have no visible objects.
+    Each query takes the last described frame captured at or before it, ITI
+    frames included (no visible objects). Frames are the recorded screen, so
+    the display lag is already in them: nothing is added to the queries.
 
     Args:
-        descriptors: Column arrays from ``describe_steps``.
-        step_times: Time per game step (indexed by ``step_index``).
-        query_times: Times to evaluate, on the ``step_times`` clock.
-        display_lag: Step to screen delay (s), ``StepVideoFrame.display_lag``.
+        descriptors: Column arrays from ``describe_steps`` (with ``frame_id``).
+        frame_times: Capture time of each video frame (indexed by
+            ``frame_id``), on the video clock.
+        query_times: Times to evaluate, on the video clock
+            (``StepVideoFrame.to_video_clock``).
         max_gap: Longest time (s) a frame is held: queries further from the
-            last shown frame, e.g. in a stretch of steps outside the video, are
-            NaN.
+            last described frame, e.g. in a stretch of steps outside the video,
+            are NaN.
         columns: Descriptor columns to return.
 
     Returns:
         Column arrays aligned with ``query_times``, NaN without a frame.
     """
-    step_times = np.asarray(step_times, dtype=float).ravel()
     query_times = np.asarray(query_times, dtype=float).ravel()
-    step_index = np.asarray(descriptors["step_index"], dtype=np.int64)
-    shown = step_times[step_index] + display_lag
-    order = np.argsort(shown, kind="stable")
-    shown = shown[order]
+    frame_id = np.asarray(descriptors["frame_id"], dtype=np.int64)
+    captured = np.asarray(frame_times, dtype=float).ravel()[frame_id]
+    # Steps sharing a frame: the latest one, whose content the frame shows
+    order = np.lexsort((np.asarray(descriptors["step_index"]), captured))
+    captured = captured[order]
 
-    latest = np.searchsorted(shown, query_times, side="right") - 1
+    latest = np.searchsorted(captured, query_times, side="right") - 1
     found = latest >= 0
     held = np.full(query_times.shape, np.inf)
-    held[found] = query_times[found] - shown[latest[found]]
+    held[found] = query_times[found] - captured[latest[found]]
     valid = np.isfinite(query_times) & (held <= max_gap)
     latest = np.where(valid, latest, 0)
 
