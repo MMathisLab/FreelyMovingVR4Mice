@@ -1293,12 +1293,6 @@ class TestCameraAlignment:
     ):
         session = _camera_session(tmp_path, lag=2)
         key, failures = _camera_tables(video_schema, monkeypatch, session)
-        monkeypatch.setattr(
-            video_schema.StepVideoFrame,
-            "heading",
-            SimpleNamespace(names=["step_video_time"]),
-            raising=False,
-        )
         inserted = []
         table = video_schema.StepVideoFrame()
         table.insert1 = inserted.append
@@ -1316,6 +1310,30 @@ class TestCameraAlignment:
         # Shown 2 frames later; the last 2 steps are shown after the video ends
         np.testing.assert_array_equal(row["frame_ids"], np.r_[np.arange(2, n), -1, -1])
         assert row["n_steps_outside_video"] == 2
+        assert row["alignment_params"] == video_schema.StepVideoFrame.alignment_params
+        # Each trial's scene onset: 2 frames after its start step (every 2 s)
+        starts = np.arange(30, n, 60)
+        np.testing.assert_array_equal(row["trial_start_steps"], starts)
+        np.testing.assert_array_equal(row["scene_onset_frames"], starts + 2)
+        np.testing.assert_allclose(row["scene_onset_delay"], 2 / 30, atol=1e-5)
+
+    def test_make_fails_when_the_display_lag_cannot_be_measured(
+        self, video_schema, monkeypatch, tmp_path
+    ):
+        # Fewer clear scene changes than required (15 trial starts here): the
+        # session fails instead of taking a default lag
+        session = _camera_session(tmp_path)
+        key, failures = _camera_tables(video_schema, monkeypatch, session)
+        monkeypatch.setattr(
+            video_schema.StepVideoFrame,
+            "alignment_params",
+            _params(video_schema, min_display_lag_trials=16),
+        )
+        table = video_schema.StepVideoFrame()
+        table.insert1 = lambda row: pytest.fail("session stored with a default lag")
+        table.make(key)
+        ((_, _, message),) = failures.entries
+        assert "Scene change found at 15 of 15 trial starts only" in message
 
     def test_make_records_a_video_from_another_session(
         self, video_schema, monkeypatch, tmp_path
@@ -1581,12 +1599,6 @@ class TestFrameVisibilityMake:
     def _make(self, video_schema, monkeypatch, tmp_path, label, set_name, stage):
         session = _camera_session(tmp_path)
         key, failures = _camera_tables(video_schema, monkeypatch, session)
-        monkeypatch.setattr(
-            video_schema.StepVideoFrame,
-            "heading",
-            SimpleNamespace(names=["step_video_time"]),
-            raising=False,
-        )
         aligned = []
         steps = video_schema.StepVideoFrame()
         steps.insert1 = aligned.append
