@@ -14,7 +14,9 @@ services:
   client:
     image: ${CLIENT_IMAGE:-mmathislab/vr4mice_app:0.1.0}
     container_name: ${CLIENT_CONTAINER_NAME:-vr4mice_${USER}}
-    cpus: 12.0
+    # CPU limit for the client (set CLIENT_CPUS in .env.compose on shared
+    # servers); unset or 0 means no limit, so it starts on any host.
+    cpus: ${CLIENT_CPUS:-0}
     build:
       context: .
       dockerfile: Dockerfile

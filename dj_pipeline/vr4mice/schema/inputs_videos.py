@@ -526,6 +526,18 @@ class StepVideoFrame(dj.Computed):
         if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
+        # Missing inputs that are added later (a new batch): not a failure,
+        # or FailedSession would skip the session for good. Retried next time.
+        missing = None if InputVideo & key else self._obs_layout_missing(key)
+        if missing:
+            logger.warning(
+                "Skipping %s for %s until %s",
+                self.__class__.__name__,
+                key["dataset"],
+                missing,
+            )
+            return
+
         try:
             start_time, step, step_time = (vr4mice.State & key).fetch1(
                 "start_time", "step", "step_time"
@@ -587,6 +599,20 @@ class StepVideoFrame(dj.Computed):
         except Exception as err:
             _record_failure(key["dataset"], self.__class__.__name__, err)
             return None
+
+    @staticmethod
+    def _obs_layout_missing(key):
+        """What an OBS session still lacks to know its mouse-view panel, or None."""
+        batch = vr4mice.DatasetBatch & key
+        if not batch:
+            return "it has a DatasetBatch row (run vr4mice.DatasetBatch.populate())"
+        batch_name = batch.fetch1("batch_name")
+        if not ObsVideoLayout & {"batch_name": batch_name}:
+            return (
+                f"ObsVideoLayout has a row for {batch_name} (its mouse-view panel "
+                "in the recordings)"
+            )
+        return None
 
     @staticmethod
     def _measure_display_lag(key, row, step_video_time, frame_times):
@@ -737,10 +763,8 @@ class StepVideoFrame(dj.Computed):
                 f"{align_method} times ({sync_time[0]:.0f} to {sync_time[-1]:.0f} s "
                 "game time) do not overlap the game steps: not on the game clock?"
             )
-        batch = vr4mice.DatasetBatch & key
-        if not batch:
-            raise ValueError("No DatasetBatch row: run vr4mice.DatasetBatch.populate()")
-        batch_name = batch.fetch1("batch_name")
+        # Present: checked by _obs_layout_missing before make's try
+        batch_name = (vr4mice.DatasetBatch & key).fetch1("batch_name")
         visual_roi = (ObsVideoLayout & {"batch_name": batch_name}).fetch1("visual_roi")
 
         video_path = (RawVideo & key).fetch1("video_path")

@@ -154,6 +154,81 @@ def test_query_frames_use_the_stored_corrected_obs_clock(video_schema, monkeypat
     assert alignment.align_step_to_frames({}, [0.0], displayed=False) == [None]
 
 
+class _Rows:
+    """Table stand-in: rows (dicts) restricted by dict keys they share."""
+
+    def __init__(self, *rows):
+        self.rows = list(rows)
+
+    def __and__(self, key):
+        keys = key if isinstance(key, list) else [key]  # a list restricts by OR
+        return _Rows(
+            *(
+                r
+                for r in self.rows
+                if any(all(r[k] == v for k, v in k_.items() if k in r) for k_ in keys)
+            )
+        )
+
+    def __bool__(self):
+        return bool(self.rows)
+
+    def fetch1(self, *attributes):
+        (row,) = self.rows
+        if not attributes:
+            return dict(row)
+        values = tuple(row[a] for a in attributes)
+        return values[0] if len(values) == 1 else values
+
+
+def test_obs_session_waits_for_its_batch_layout_without_failing(
+    video_schema, monkeypatch
+):
+    failures = []
+
+    class State:
+        def __and__(self, _key):
+            return self
+
+        def fetch1(self, *attributes):
+            raise RuntimeError("alignment attempted")
+
+    class FailedSession:
+        should_skip = staticmethod(lambda *args: False)
+
+        def add_entry(self, *args):
+            failures.append(args)
+
+    def use(batches, layouts):
+        monkeypatch.setattr(
+            video_schema,
+            "vr4mice",
+            SimpleNamespace(
+                FailedSession=FailedSession,
+                DatasetBatch=_Rows(*batches),
+                State=State(),
+            ),
+        )
+        monkeypatch.setattr(video_schema, "ObsVideoLayout", _Rows(*layouts))
+        monkeypatch.setattr(video_schema, "InputVideo", _Rows())
+
+    key = {"dataset": "d"}
+    batch3 = {"dataset": "d", "batch_name": "batch3"}
+    table = video_schema.StepVideoFrame()
+
+    use([], [])  # not in DatasetBatch yet
+    table.make(key)
+    use([batch3], [{"batch_name": "batch2"}])  # batch3 has no layout yet
+    table.make(key)
+    assert failures == []
+
+    # Once the layout is added, the session is aligned (here: fails further on)
+    use([batch3], [{"batch_name": "batch3"}])
+    table.make(key)
+    assert [args[:2] for args in failures] == [("d", "StepVideoFrame")]
+    assert "alignment attempted" in failures[0][2]
+
+
 def test_iter_video_panels_reports_missing_path(tmp_path):
     with pytest.raises(FileNotFoundError, match="missing.avi"):
         list(iter_video_panels(tmp_path / "missing.avi", [0], (0, 0, 8, 6), (4, 3)))
@@ -519,6 +594,13 @@ class TestAlignByPhotodiode:
         assert qa["pair_fraction"] > 0.95
         assert np.nanmax(np.abs(frames - truth)) <= 1.0
 
+    def test_recording_started_long_before_the_game(self):
+        # OBS started 90 s before the game: offsets beyond 60 s are searched
+        video_df, photodiode_df, steps, truth = _sync_session(video_start=90.0)
+        frames, qa = align_steps_to_frames_by_photodiode(video_df, photodiode_df, steps)
+        assert qa["pair_fraction"] > 0.95
+        assert np.nanmax(np.abs(frames - truth)) <= 1.0
+
     def test_inverted_photodiode_polarity_detected(self):
         video_df, photodiode_df, steps, truth = _sync_session(invert_pd=True)
         frames, qa = align_steps_to_frames_by_photodiode(video_df, photodiode_df, steps)
@@ -582,6 +664,22 @@ class TestAlignByPhotodiode:
             align_steps_to_frames_by_photodiode(
                 video_df, generated_df, steps, regular_pulses=regular
             )
+
+    def test_regular_pulses_ignore_a_stray_flash_before_the_train(self):
+        # A window flashes over the sync region 4 s (10 periods) before the
+        # train: anchored on it, every frame would be 240 frames off while all
+        # later edges still pair.
+        video_df, photodiode_df, steps, truth = _sync_session(
+            regular=True, pulse_start=2.0, video_start=7.3
+        )
+        game_time = video_df["timestamps"] / 1.0001 - 7.3
+        flash = (game_time >= 2.06 - 4.0) & (game_time < 2.06 - 3.8)
+        video_df.loc[flash, "signals"] = 1
+        frames, qa = align_steps_to_frames_by_photodiode(
+            video_df, photodiode_df, steps, regular_pulses=True
+        )
+        assert qa["pair_fraction"] > 0.95
+        assert np.nanmax(np.abs(frames - truth)) <= 1.0
 
     def test_regular_pulses_recording_started_mid_train_fails(self):
         # video starts 10 s after game start, pulses from 2 s: first video edge
@@ -861,3 +959,561 @@ class TestSeekOffset:
         writer.release()
         with pytest.raises(ValueError, match="too alike"):
             measure_seek_offset(path, probes=(100, 200))
+
+
+# ---------------------------------------------------------------------------
+# Schema: alignment decisions run on synthetic recordings (no database)
+
+_DATASET = "Testmouse_2026-07-30_1"
+_START = 1_785_412_800.0  # 2026-07-30 12:00 UTC, the dataset's date
+_PANEL = (0, 243, 316, 237)  # mouse-view panel of the camera-2 video
+
+
+def _pulse_train(rng, seconds):
+    """Irregular (pulse_geo-like) sync pulses: start and end times (s)."""
+    starts = np.cumsum(rng.uniform(0.23, 1.2, size=400))
+    starts = starts[starts < seconds - 0.5]
+    return starts, starts + np.diff(np.append(starts, seconds)) / 2
+
+
+def _is_on(starts, ends, t):
+    k = np.searchsorted(starts, t, side="right") - 1
+    return (k >= 0) & (t < ends[np.clip(k, 0, None)])
+
+
+def _camera_session(tmp_path, *, seconds=30, fps=30, lag=2, seed=0):
+    """3-camera recording: 640x480 video of the screens, timestamps, photodiode.
+
+    One game step per frame, at the frame's time. ITI and trial alternate every
+    second; each trial's scene (a bright block in the mouse-view panel) appears
+    ``lag`` frames after its first step. The sync square follows irregular
+    pulses, which the photodiode sees at the same times. A frame code in the
+    top-left corner keeps every frame unique (seek offset measurement).
+    """
+    rng = np.random.default_rng(seed)
+    n = seconds * fps
+    frame_time = np.arange(n) / fps  # game time; the video starts at game time 0
+    iti = (np.arange(n) // fps) % 2 == 0
+    scene = np.zeros(n, dtype=bool)
+    scene[lag:] = ~iti[:-lag]
+    starts, ends = _pulse_train(rng, seconds)
+
+    path = str(tmp_path / f"Cam_{_DATASET}_VIDEO2.avi")
+    writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"MJPG"), fps, (640, 480))
+    for i in range(n):
+        frame = np.full((480, 640, 3), 70, dtype=np.uint8)
+        if scene[i]:
+            frame[300:400, 50:250] = 210
+        frame[210:260, 600:630] = 250 if _is_on(starts, ends, frame_time[i]) else 5
+        for bit in range(11):  # frame code
+            frame[0:16, 16 * bit : 16 * bit + 16] = 255 if i >> bit & 1 else 0
+        writer.write(frame)
+    writer.release()
+
+    timestamps = _START + frame_time
+    pd_time = _START + np.arange(-2.0, seconds + 2.0, 0.001)
+    pd_read = 400.0 + 40.0 * _is_on(starts, ends, pd_time - _START)
+    pd_read += rng.normal(0, 2, pd_read.size)
+    return SimpleNamespace(
+        path=path,
+        fps=fps,
+        lag=lag,
+        timestamps=timestamps,
+        step_time=frame_time,  # step i at frame i's time
+        iti=iti.astype(float),
+        pd_time=pd_time,
+        pd_read=pd_read,
+    )
+
+
+class _FailedSessions:
+    def __init__(self):
+        self.entries = []
+
+    def __call__(self):
+        return self
+
+    @staticmethod
+    def should_skip(*args):
+        return False
+
+    def add_entry(self, dataset, table, message):
+        self.entries.append((dataset, table, message))
+
+
+def _camera_tables(video_schema, monkeypatch, session, *, photodiode=True):
+    """Stand-ins for the tables StepVideoFrame reads, holding ``session``."""
+    from inputs_videos import find_sync_square
+
+    key = {"dataset": _DATASET}
+    failures = _FailedSessions()
+    monkeypatch.setattr(
+        video_schema,
+        "vr4mice",
+        SimpleNamespace(
+            FailedSession=failures,
+            State=_Rows(
+                {
+                    **key,
+                    "start_time": [_START],
+                    "step": np.arange(len(session.step_time)),
+                    "step_time": session.step_time,
+                }
+            ),
+            MouseState=_Rows({**key, "iti": session.iti}),
+            SignalsPhotodiode=_Rows(
+                *(
+                    [
+                        {
+                            **key,
+                            "photodiode_time": session.pd_time,
+                            "photodiode_read": session.pd_read,
+                        }
+                    ]
+                    if photodiode
+                    else []
+                )
+            ),
+        ),
+    )
+    monkeypatch.setattr(
+        video_schema,
+        "InputVideo",
+        _Rows(
+            {
+                **key,
+                "video_path": session.path,
+                "timestamps": session.timestamps,
+                "visual_roi": _PANEL,
+                "sync_roi": find_sync_square(session.path),
+                "seek_offset": 0,
+            }
+        ),
+    )
+    return key, failures
+
+
+class TestCameraAlignment:
+    def test_steps_match_the_camera_timestamps_checked_by_the_photodiode(
+        self, video_schema, monkeypatch, tmp_path
+    ):
+        session = _camera_session(tmp_path)
+        key, _ = _camera_tables(video_schema, monkeypatch, session)
+        row = video_schema.StepVideoFrame._align_camera(key, _START, session.step_time)
+
+        assert row["align_method"] == "timestamps"
+        assert row["sync_match_fraction"] > 0.95
+        np.testing.assert_array_equal(row["frame_ids"], np.arange(len(session.iti)))
+        np.testing.assert_allclose(row["step_video_time"], _START + session.step_time)
+
+    def test_photodiode_of_another_session_is_rejected(
+        self, video_schema, monkeypatch, tmp_path
+    ):
+        session = _camera_session(tmp_path)
+        other = _camera_session(tmp_path / "other", seed=1)
+        session.pd_read = other.pd_read  # another sync pulse train
+        key, _ = _camera_tables(video_schema, monkeypatch, session)
+        with pytest.raises(ValueError, match="match the photodiode"):
+            video_schema.StepVideoFrame._align_camera(key, _START, session.step_time)
+
+    def test_without_photodiode_the_video_is_not_checked(
+        self, video_schema, monkeypatch, tmp_path
+    ):
+        session = _camera_session(tmp_path)
+        key, _ = _camera_tables(video_schema, monkeypatch, session, photodiode=False)
+        row = video_schema.StepVideoFrame._align_camera(key, _START, session.step_time)
+        assert row["sync_match_fraction"] is None
+
+    def test_make_stores_frames_shown_after_the_measured_display_lag(
+        self, video_schema, monkeypatch, tmp_path
+    ):
+        session = _camera_session(tmp_path, lag=2)
+        key, failures = _camera_tables(video_schema, monkeypatch, session)
+        monkeypatch.setattr(
+            video_schema.StepVideoFrame,
+            "heading",
+            SimpleNamespace(names=["step_video_time"]),
+            raising=False,
+        )
+        inserted = []
+        table = video_schema.StepVideoFrame()
+        table.insert1 = inserted.append
+        table.make(key)
+
+        assert failures.entries == []
+        (row,) = inserted
+        n = len(session.iti)
+        assert row["video_source"] == "camera"
+        assert row["display_lag"] == pytest.approx(2 / 30, abs=1e-5)
+        assert row["display_lag_trials"] == 15  # every trial start
+        np.testing.assert_array_equal(row["step_frame_ids"], np.arange(n))
+        # Shown 2 frames later; the last 2 steps are shown after the video ends
+        np.testing.assert_array_equal(row["frame_ids"], np.r_[np.arange(2, n), -1, -1])
+        assert row["n_steps_outside_video"] == 2
+
+    def test_make_records_a_video_from_another_session(
+        self, video_schema, monkeypatch, tmp_path
+    ):
+        session = _camera_session(tmp_path)
+        session.step_time = session.step_time + 3600  # steps an hour later
+        key, failures = _camera_tables(
+            video_schema, monkeypatch, session, photodiode=False
+        )
+        table = video_schema.StepVideoFrame()
+        table.insert1 = lambda row: pytest.fail("misaligned session stored")
+        table.make(key)
+        ((dataset, name, message),) = failures.entries
+        assert (dataset, name) == (_DATASET, "StepVideoFrame")
+
+
+class TestVideoIngestion:
+    def test_input_video_is_checked_and_its_sync_square_found(
+        self, video_schema, monkeypatch, tmp_path
+    ):
+        session = _camera_session(tmp_path)
+        stamps = tmp_path / f"TS_Cam_{_DATASET}_CAMERA2.npy"
+        np.save(stamps, session.timestamps)
+        failures = _FailedSessions()
+        monkeypatch.setattr(
+            video_schema, "vr4mice", SimpleNamespace(FailedSession=failures)
+        )
+        monkeypatch.setattr(
+            video_schema,
+            "input_video_files",
+            lambda: {_DATASET: (session.path, str(stamps))},
+        )
+        inserted = []
+        table = video_schema.InputVideo()
+        table.insert1 = inserted.append
+        table.make({"dataset": _DATASET})
+
+        assert failures.entries == []
+        (row,) = inserted
+        assert (row["width"], row["height"], row["n_frames"]) == (640, 480, 900)
+        x, y, w, h = row["sync_roi"]
+        assert 595 <= x <= 605 and 205 <= y <= 215 and w >= 25 and h >= 45
+        assert row["seek_offset"] == 0
+
+        # Timestamps of another camera (other frame count): rejected
+        np.save(stamps, session.timestamps[:-10])
+        inserted.clear()
+        table.make({"dataset": _DATASET})
+        assert inserted == []
+        assert "frames but the timestamps file has" in failures.entries[-1][2]
+
+    def test_raw_video_sync_reads_the_square_in_every_frame(
+        self, video_schema, monkeypatch, tmp_path
+    ):
+        session = _camera_session(tmp_path)
+        failures = _FailedSessions()
+        monkeypatch.setattr(
+            video_schema, "vr4mice", SimpleNamespace(FailedSession=failures)
+        )
+        monkeypatch.setattr(
+            video_schema,
+            "RawVideo",
+            _Rows({"dataset": _DATASET, "video_path": session.path}),
+        )
+        inserted = []
+        table = video_schema.RawVideoSync()
+        table.insert1 = inserted.append
+        table.make({"dataset": _DATASET})
+
+        assert failures.entries == []
+        (row,) = inserted
+        assert row["fps"] == pytest.approx(30)
+        assert row["n_frames"] == 900
+        on = _is_on(*_pulse_train(np.random.default_rng(0), 30), np.arange(900) / 30)
+        np.testing.assert_array_equal(row["sync_trace"] > 128, on)
+
+
+class TestObsAlignment:
+    """_align_obs: photodiode, or the PROC's generated signal in its place."""
+
+    def _tables(self, video_schema, monkeypatch, video_df, *, photodiode=None):
+        key = {"dataset": _DATASET}
+        monkeypatch.setattr(
+            video_schema,
+            "vr4mice",
+            SimpleNamespace(
+                SignalsPhotodiode=_Rows(
+                    *([{**key, **photodiode}] if photodiode else [])
+                ),
+                DatasetBatch=_Rows({**key, "batch_name": "batch2"}),
+            ),
+        )
+        monkeypatch.setattr(
+            video_schema,
+            "ObsVideoLayout",
+            _Rows({"batch_name": "batch2", "visual_roi": (0, 545, 948, 535)}),
+        )
+        monkeypatch.setattr(
+            video_schema, "RawVideo", _Rows({**key, "video_path": "obs.mkv"})
+        )
+        monkeypatch.setattr(
+            video_schema,
+            "RawVideoSync",
+            _Rows(
+                {
+                    **key,
+                    "fps": 60.0,
+                    "sync_trace": 20 + 200 * video_df["signals"].to_numpy(),
+                    "seek_offset": 0,
+                }
+            ),
+        )
+        return key
+
+    def _proc(self, monkeypatch, send_time, signal, signal_type=None):
+        """dlc.DLCProcessor holding one PROC file's generated signal."""
+
+        class DLCProcessor:
+            heading = SimpleNamespace(names=["time_stamp", "signal", "signal_type"])
+
+            def __and__(self, _key):
+                return self
+
+            def fetch(self, *attributes, as_dict=True):
+                row = {
+                    "time_stamp": send_time,
+                    "signal": signal,
+                    "signal_type": signal_type,
+                }
+                return (
+                    [{a: row[a] for a in attributes}] if send_time is not None else []
+                )
+
+        monkeypatch.setattr(
+            sys.modules["vr4mice.schema"],
+            "dlc",
+            SimpleNamespace(DLCProcessor=DLCProcessor()),
+            raising=False,
+        )
+
+    def test_photodiode_is_used_when_present(self, video_schema, monkeypatch):
+        video_df, photodiode_df, steps, truth = _sync_session(video_start=7.3)
+        key = self._tables(
+            video_schema,
+            monkeypatch,
+            video_df,
+            photodiode={
+                "photodiode_time": _START + photodiode_df["time_stamp"].to_numpy(),
+                "photodiode_read": photodiode_df["photodiode_read"].to_numpy(),
+                "signal_type": "pulse_geo",
+            },
+        )
+        row = video_schema.StepVideoFrame._align_obs(key, _START, steps)
+
+        assert row["align_method"] == "photodiode"
+        assert row["generated_signal_delay"] is None
+        assert np.nanmax(np.abs(row["step_video_time"] * 60 - truth)) <= 1.0
+
+    @pytest.mark.parametrize("regular", [False, True])
+    def test_generated_signal_is_shifted_by_its_display_delay(
+        self, video_schema, monkeypatch, regular
+    ):
+        # PROC sends each pulse GENERATED_SIGNAL_DISPLAY_DELAY before the screen
+        # shows it: one 100 Hz sample on per pulse, unix send times. Without
+        # the delay, or the clean-signal options, frames would be off.
+        video_df, photodiode_df, steps, truth = _sync_session(
+            regular=regular, pulse_start=2.0, video_start=7.3
+        )
+        display = np.round(photodiode_df["photodiode_read"].to_numpy()) > 420
+        display_t = photodiode_df["time_stamp"].to_numpy()
+        onsets = display_t[1:][display[1:] & ~display[:-1]] - 0.06  # square delay
+        delay = video_schema.GENERATED_SIGNAL_DISPLAY_DELAY
+        send_t = np.arange(-5.0, 300.0, 0.01)
+        signal = np.zeros(send_t.size)
+        signal[np.searchsorted(send_t, onsets - delay)] = 1.0
+        self._proc(monkeypatch, _START + send_t, signal)  # signal type inferred
+        key = self._tables(video_schema, monkeypatch, video_df)
+        row = video_schema.StepVideoFrame._align_obs(key, _START, steps)
+
+        assert row["align_method"] == "generated_signal"
+        assert row["generated_signal_delay"] == delay
+        assert (
+            np.nanmax(np.abs(row["step_video_time"] * 60 - (truth + 0.06 * 60))) <= 1.0
+        )
+
+
+class TestLoadGeneratedSignal:
+    def _proc(self, monkeypatch, *args, **kwargs):
+        TestObsAlignment._proc(None, monkeypatch, *args, **kwargs)
+
+    def _pulses(self, intervals):
+        send_time = _START + np.arange(0, 60, 0.01)
+        signal = np.zeros(send_time.size)
+        onsets = np.cumsum(intervals)
+        signal[np.searchsorted(send_time, _START + onsets[onsets < 59])] = 1
+        return send_time, signal
+
+    def test_signal_type_is_inferred_from_the_pulse_intervals(
+        self, video_schema, monkeypatch
+    ):
+        rng = np.random.default_rng(0)
+        self._proc(monkeypatch, *self._pulses(np.full(100, 0.4)))
+        assert video_schema.load_generated_signal({})[2] == "pulse"
+        self._proc(monkeypatch, *self._pulses(rng.uniform(0.23, 1.2, 100)))
+        assert video_schema.load_generated_signal({})[2] == "pulse_geo"
+
+    def test_stored_signal_type_is_used(self, video_schema, monkeypatch):
+        send_time, signal = self._pulses(np.full(100, 0.4))
+        self._proc(monkeypatch, send_time, signal, signal_type="pulse_geo")
+        assert video_schema.load_generated_signal({})[2] == "pulse_geo"
+
+    def test_missing_or_too_short_signal_fails(self, video_schema, monkeypatch):
+        self._proc(monkeypatch, None, None)
+        with pytest.raises(ValueError, match="no generated sync signal"):
+            video_schema.load_generated_signal({})
+        self._proc(monkeypatch, *self._pulses(np.full(5, 0.4)))
+        with pytest.raises(ValueError, match="pulses only"):
+            video_schema.load_generated_signal({})
+
+
+class TestRawVideo:
+    def _make(self, video_schema, monkeypatch, tmp_path):
+        failures = _FailedSessions()
+        monkeypatch.setattr(
+            video_schema, "vr4mice", SimpleNamespace(FailedSession=failures)
+        )
+        monkeypatch.setattr(video_schema, "OBS_VIDEO_DIR", str(tmp_path))
+        inserted = []
+        table = video_schema.RawVideo()
+        table.insert1 = inserted.append
+        table.make({"dataset": _DATASET})
+        return inserted, failures.entries
+
+    def _video(self, path, size):
+        writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"MJPG"), 60, size)
+        for _ in range(3):
+            writer.write(np.zeros((size[1], size[0], 3), dtype=np.uint8))
+        writer.release()
+
+    def test_obs_recording_is_found_and_checked(
+        self, video_schema, monkeypatch, tmp_path
+    ):
+        # No recording: not a failure, many sessions have none
+        assert self._make(video_schema, monkeypatch, tmp_path) == ([], [])
+
+        self._video(tmp_path / f"{_DATASET}.mp4", (1920, 1080))
+        inserted, failures = self._make(video_schema, monkeypatch, tmp_path)
+        assert failures == []
+        assert inserted[0]["video_path"] == str(tmp_path / f"{_DATASET}.mp4")
+
+    def test_recording_of_another_size_is_rejected(
+        self, video_schema, monkeypatch, tmp_path
+    ):
+        self._video(tmp_path / f"{_DATASET}.mkv", (640, 480))
+        inserted, failures = self._make(video_schema, monkeypatch, tmp_path)
+        assert inserted == []
+        assert "not an OBS recording" in failures[0][2]
+
+
+class TestFrameVisibilityMake:
+    """Session decisions of FrameVisibility.make, on the synthetic recording."""
+
+    def _make(self, video_schema, monkeypatch, tmp_path, label, set_name, stage):
+        session = _camera_session(tmp_path)
+        key, failures = _camera_tables(video_schema, monkeypatch, session)
+        monkeypatch.setattr(
+            video_schema.StepVideoFrame,
+            "heading",
+            SimpleNamespace(names=["step_video_time"]),
+            raising=False,
+        )
+        aligned = []
+        steps = video_schema.StepVideoFrame()
+        steps.insert1 = aligned.append
+        steps.make(key)
+        (row,) = aligned
+
+        n = len(session.iti)
+        trial = np.cumsum(np.r_[0, np.diff(session.iti) < 0])  # +1 at each start
+        tables = video_schema.vr4mice
+        tables.Dataset = _Rows({**key, "session_label": label})
+        tables.State = _Rows({**key, "episode": trial, "occlusion_type": None})
+        tables.MouseState = _Rows(
+            {
+                **key,
+                "iti": session.iti,
+                "x_pos": np.zeros(n),
+                "z_pos": np.zeros(n),
+                "obj_left": np.zeros(n),
+            }
+        )
+        tables.GuiParams = _Rows()
+        monkeypatch.setattr(video_schema, "StepVideoFrame", _Rows({**key, **row}))
+        monkeypatch.setitem(
+            sys.modules,
+            "vr4mice.schema.decision",
+            SimpleNamespace(
+                SessionLabel=_Rows(
+                    {"session_label": label, "set_name": set_name, "stage_name": stage}
+                )
+            ),
+        )
+        import frame_visibility
+
+        monkeypatch.setitem(
+            sys.modules, "vr4mice.analysis.frame_visibility", frame_visibility
+        )
+        inserted = []
+        table = video_schema.FrameVisibility()
+        table.insert1 = inserted.append
+        table.make(key)
+        assert failures.entries == []
+        return session, inserted
+
+    def test_white_target_is_counted_in_trials_only(
+        self, video_schema, monkeypatch, tmp_path
+    ):
+        session, (row,) = self._make(
+            video_schema,
+            monkeypatch,
+            tmp_path,
+            "contrast_white_v1",
+            "contrast_white_target",
+            "dual",
+        )
+        d = row["descriptors"]
+        # Each step's frame, 2 frames later, shows its own scene: the block
+        # (100x200 px) in trial steps, nothing in ITI steps
+        in_trial = session.iti[d["step_index"]] == 0
+        assert np.all(np.abs(d["t_px"][in_trial] - 20000) < 100)
+        assert (d["t_px"][~in_trial] == 0).all()
+        assert (d["d_px"] == 0).all()
+        assert row["calibration"]["status"] == "fitted"
+
+    def test_white_object_is_the_distractor_of_a_black_target(
+        self, video_schema, monkeypatch, tmp_path
+    ):
+        _, (row,) = self._make(
+            video_schema,
+            monkeypatch,
+            tmp_path,
+            "contrast_black_v1",
+            "contrast_black_target",
+            "dual",
+        )
+        d = row["descriptors"]
+        assert (d["t_px"] == 0).all()
+        assert d["d_px"].max() > 0
+
+    def test_detection_task_has_no_distractor(
+        self, video_schema, monkeypatch, tmp_path
+    ):
+        _, (row,) = self._make(
+            video_schema,
+            monkeypatch,
+            tmp_path,
+            "ar_det_black",
+            "contrast_black_target",
+            "dual",
+        )
+        assert (row["descriptors"]["d_px"] == 0).all()
+
+    def test_unsupported_task_is_skipped(self, video_schema, monkeypatch, tmp_path):
+        _, inserted = self._make(
+            video_schema, monkeypatch, tmp_path, "foraging_v1", "foraging", "dual"
+        )
+        assert inserted == []

@@ -395,6 +395,36 @@ def test_copy_input_videos(gui_modules, tmp_path):
     assert utils.copy_input_videos({"input_video_path": None}) == (True, "")
 
 
+def test_input_video_copy_checked_before_sending(gui_modules, tmp_path):
+    utils = gui_modules["utils"]
+    dataset = "Xestia_2026-08-21_1"
+    video, stamps = _input_pair(tmp_path / "rig", dataset)
+
+    def files(share):
+        return {
+            "input_video_path": {
+                "src": str(video.parent),
+                "dst": str(share / "raw_input_videos"),
+                "filename": video.name,
+            },
+            "input_ts_path": None,
+        }
+
+    # Synology (Z:) not mapped: its folder is missing
+    ok, message = utils.check_input_video_copy(files(tmp_path / "unmapped"))
+    assert not ok and "not reachable" in message
+
+    share = tmp_path / "share"
+    share.mkdir()
+    assert utils.check_input_video_copy(files(share)) == (True, "")
+    assert not list((share / "raw_input_videos").iterdir())  # probe removed
+
+    # A different file under the same name would block the copy
+    (share / "raw_input_videos" / video.name).write_bytes(b"other")
+    ok, message = utils.check_input_video_copy(files(share))
+    assert not ok and "not overwritten" in message
+
+
 def test_input_video_dst_optional(gui_modules):
     config = gui_modules["config"].config
     assert config.get_input_video_dst is None

@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+import tempfile
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -231,6 +232,39 @@ def check_input_video(widget, transfer, dataset):
         AlertMsg(widget, msg).exec()
         return False
     return True
+
+
+def check_input_video_copy(files):
+    """
+    Check, before anything is sent, that ``copy_input_videos`` can succeed.
+
+    Run before the scp transfer: otherwise an unmapped or read-only Synology is
+    only found after the server data was sent, and submitting again regenerates
+    and resends everything.
+
+    Args:
+      files (dict): {key: file info with "src", "dst", "filename"} or None values.
+
+    Returns:
+      tuple (ok: bool, message: str)
+    """
+    for info in files.values():
+        if not info:
+            continue
+        dst = Path(info["dst"])
+        if not dst.parent.is_dir():
+            return False, f"{dst.parent} not reachable (Synology not mounted?)"
+        try:
+            dst.mkdir(exist_ok=True)
+            with tempfile.NamedTemporaryFile(dir=dst):
+                pass
+        except OSError as e:
+            return False, f"{dst} not writable: {e}"
+        target = dst / info["filename"]
+        size = Path(info["src"]).joinpath(info["filename"]).stat().st_size
+        if target.exists() and target.stat().st_size != size:
+            return False, f"{target} already exists with another size, not overwritten"
+    return True, ""
 
 
 def copy_input_videos(files):

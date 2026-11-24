@@ -273,8 +273,6 @@ def _preprocess_photodiode(
 def _estimate_edge_offset(
     video_edges: np.ndarray,
     pd_edges: np.ndarray,
-    max_offset: float = 60.0,
-    bin_size: float = 0.005,
     window: float = 0.05,
     n_video_edges: int = 50,
 ) -> float:
@@ -282,16 +280,16 @@ def _estimate_edge_offset(
 
     The sync signal (pulse_geo) has irregular inter-pulse intervals, so only
     the true offset lines up many video/photodiode edge pairs at once: it is
-    the peak of the pairwise edge time differences. Only the first video edges
-    are used, so drift or dropped frames have not yet spread the peak, and the
-    histogram is summed over ``window`` to tolerate the remaining spread.
+    where the pairwise edge time differences are densest, counted within
+    ``window`` to tolerate frame timing. Only the first video edges are used,
+    so drift or dropped frames have not yet spread the peak. Every offset at
+    which the two trains overlap is searched, so the recording may start any
+    time before or after the game.
 
     Args:
         video_edges: Rising edge times of the video sync signal (s).
         pd_edges: Rising edge times of the photodiode (s).
-        max_offset: Largest offset searched (s).
-        bin_size: Histogram bin size (s).
-        window: Width over which histogram counts are summed (s).
+        window: Width within which differences count together (s).
         n_video_edges: Number of leading video edges used.
 
     Returns:
@@ -299,16 +297,36 @@ def _estimate_edge_offset(
     """
     v = np.asarray(video_edges, dtype=float)[:n_video_edges]
     p = np.asarray(pd_edges, dtype=float)
-    diffs = (v[None, :] - p[:, None]).ravel()
-    diffs = diffs[np.abs(diffs) <= max_offset]
-    if diffs.size == 0:
-        raise ValueError("No video/photodiode edges within max_offset")
-    bins = np.arange(-max_offset, max_offset + bin_size, bin_size)
-    hist, bin_edges = np.histogram(diffs, bins=bins)
-    width = max(int(round(window / bin_size)), 1)
-    summed = np.convolve(hist, np.ones(width), mode="same")
-    peak = int(np.argmax(summed))
-    return float(bin_edges[peak] + bin_size / 2)
+    diffs = np.sort((v[None, :] - p[:, None]).ravel())
+    # Differences within window of each one: the densest window holds the offset
+    counts = np.searchsorted(diffs, diffs + window, side="right") - np.arange(
+        len(diffs)
+    )
+    first = int(np.argmax(counts))
+    return float(np.median(diffs[first : first + counts[first]]))
+
+
+def _pulse_train_start(edges: np.ndarray, tolerance: float) -> int:
+    """Index of the first edge of a regular pulse train.
+
+    The train starts at the first edge followed by three intervals at the
+    train's period (median interval, within ``tolerance``). Edges before it are
+    strays, e.g. a window flashing over the sync region before the game: as the
+    first edge, a stray a whole number of periods early would shift every frame
+    by those periods while all later edges still pair. Three intervals: one or
+    two strays at about the period cannot be told from pulses anyway.
+
+    Raises:
+        ValueError: No such run of regular intervals.
+    """
+    intervals = np.diff(np.asarray(edges, dtype=float))
+    if len(intervals) < 3:
+        raise ValueError(f"{len(edges)} sync edges only: no regular pulse train")
+    regular = np.abs(intervals - np.median(intervals)) <= tolerance
+    runs = np.flatnonzero(np.convolve(regular, np.ones(3), mode="valid") == 3)
+    if not len(runs):
+        raise ValueError("No run of regular sync pulses")
+    return int(runs[0])
 
 
 def _robust_offset_drift(
@@ -348,7 +366,6 @@ def _fit_photodiode_edges(
     video_edges: np.ndarray,
     pd_edges: np.ndarray,
     max_gap: float,
-    max_offset: float,
     allow_drift: bool,
     initial_span: float = 20.0,
     anchor: str = "pattern",
@@ -370,7 +387,7 @@ def _fit_photodiode_edges(
     if len(video_edges) == 0 or len(pd_edges) == 0:
         raise ValueError("No sync edges in video or photodiode signal")
     if anchor == "pattern":
-        offset = _estimate_edge_offset(video_edges, pd_edges, max_offset=max_offset)
+        offset = _estimate_edge_offset(video_edges, pd_edges)
     elif anchor == "first_edge":
         offset = float(video_edges[0] - pd_edges[0])
     else:
@@ -412,7 +429,6 @@ def align_steps_to_frames_by_photodiode(
     photodiode_df: pd.DataFrame,
     step_times: np.ndarray,
     max_gap: float = 0.1,
-    max_offset: float = 60.0,
     min_edge_separation: float = 0.1,
     pd_threshold: float = 0.5,
     pd_invert: Optional[bool] = None,
@@ -447,7 +463,6 @@ def align_steps_to_frames_by_photodiode(
             ``step_times`` (game time: unix time - State.start_time).
         step_times: Array of game step times to align.
         max_gap: Maximum time gap to pair edges after the coarse offset (s).
-        max_offset: Largest video/photodiode offset searched (s).
         min_edge_separation: Minimum separation between edges to consider them
             distinct (s); sync pulses are >= ~0.2 s apart.
         pd_threshold: Threshold on the scaled photodiode (0.5 = midpoint).
@@ -462,12 +477,13 @@ def align_steps_to_frames_by_photodiode(
         residual_window: Number of paired edges in the running median of the
             fit residuals (~0.5 s apart for pulse_geo).
         regular_pulses: True for a regular sync signal ("pulse"): the trains
-            are anchored on their first edges instead of their interval
-            pattern, so the recording must start before the pulses.
+            are anchored on their first pulses instead of their interval
+            pattern, so the recording must start before the pulses. Stray
+            edges before a train (``_pulse_train_start``) are left out.
         min_quiet: With regular pulses, minimum time (s) without sync edges
-            before the first edge, in both the video and the photodiode, so the
-            first edges are the start of the pulse train and not a later pulse
-            (which would shift every frame by whole pulse periods).
+            before the train's first pulse, in both the video and the
+            photodiode, so it is the start of the pulse train and not a later
+            pulse (which would shift every frame by whole pulse periods).
         pd_lowpass: Low-pass filter the photodiode before thresholding. False
             for a clean digital signal, e.g. the generated sync signal (PROC
             send times, shifted by the display delay) used when there is no
@@ -497,9 +513,23 @@ def align_steps_to_frames_by_photodiode(
             lowpass=pd_lowpass,
         )
         pd_edges = _detect_edges(pd_ts, pd_bin, min_separation=min_edge_separation)
+        train_edges = video_edges
         if regular_pulses and len(video_edges) and len(pd_edges):
-            quiet_video = video_edges[0] - video_ts[0]
-            quiet_pd = pd_edges[0] - pd_ts[0]
+            try:
+                v_start = _pulse_train_start(video_edges, max_gap)
+                p_start = _pulse_train_start(pd_edges, max_gap)
+            except ValueError as err:
+                errors.append(f"invert={invert}: {err}")
+                continue
+            # Time without edges before each train: since the recording start,
+            # or since the last stray edge
+            quiet_video = video_edges[v_start] - (
+                video_edges[v_start - 1] if v_start else video_ts[0]
+            )
+            quiet_pd = pd_edges[p_start] - (
+                pd_edges[p_start - 1] if p_start else pd_ts[0]
+            )
+            train_edges, pd_edges = video_edges[v_start:], pd_edges[p_start:]
             if min(quiet_video, quiet_pd) < min_quiet:
                 errors.append(
                     f"invert={invert}: regular pulses but no quiet period before "
@@ -518,7 +548,7 @@ def align_steps_to_frames_by_photodiode(
                 continue
             # Regular trains all look alike: only the pulse count tells a
             # recording of another session (or a cut recording) apart.
-            n_video, n_pd = len(video_edges), len(pd_edges)
+            n_video, n_pd = len(train_edges), len(pd_edges)
             if abs(n_video - n_pd) > max(0.05 * n_pd, 5):
                 errors.append(
                     f"invert={invert}: {n_video} sync pulses in the video but "
@@ -528,10 +558,9 @@ def align_steps_to_frames_by_photodiode(
                 continue
         try:
             offset, drift, qa, p_pairs, v_pairs = _fit_photodiode_edges(
-                video_edges,
+                train_edges,
                 pd_edges,
                 max_gap,
-                max_offset,
                 allow_drift,
                 anchor="first_edge" if regular_pulses else "pattern",
             )
@@ -541,7 +570,7 @@ def align_steps_to_frames_by_photodiode(
         # QA: enough pairs, low residuals, and most expected edges paired
         mapped = offset + drift * pd_edges
         n_pd_in_video = int(((mapped >= video_ts[0]) & (mapped <= video_ts[-1])).sum())
-        n_expected = max(min(n_pd_in_video, len(video_edges)), 1)
+        n_expected = max(min(n_pd_in_video, len(train_edges)), 1)
         qa["pair_fraction"] = qa["pair_count"] / n_expected
         if (
             qa["pair_count"] < min_pairs

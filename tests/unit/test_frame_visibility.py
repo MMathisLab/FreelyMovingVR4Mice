@@ -228,6 +228,100 @@ def test_no_mapped_steps_needs_no_video():
     assert all(column.size == 0 for column in result.values())
 
 
+def _arena(*, white=False, black=False):
+    """Panel with structure: sky, floor band, occluder slab, objects.
+
+    Sky (grey 90) down to row 187, a brighter floor (150) below. An occluder
+    slab: front face (33, 35, 37) in columns 150-179 and a side face
+    (40, 40, 44) in columns 180-185, rows 40-169. ``white``: a white object
+    (240) in rows 80-129, columns 120-169, half behind the slab. ``black``: a
+    black object (20) standing on the floor, rows 100-187, columns 40-80, with
+    a shaded rim (120) in the floor band, rows 188-198, not dark itself.
+    """
+    panel = np.full((237, 316, 3), 90, dtype=np.uint8)
+    panel[188:] = 150
+    if white:
+        panel[80:130, 120:170] = 240
+    if black:
+        panel[100:188, 40:81] = 20
+        panel[188:199, 40:81] = 120
+    panel[40:170, 150:180] = (33, 35, 37)
+    panel[40:170, 180:186] = (40, 40, 44)
+    return panel
+
+
+def test_calibration_finds_dark_threshold_floor_and_slab_colours():
+    params = visibility.fit_session_params(
+        [_arena()] * 2, [_arena(white=True, black=True)], has_occluders=True
+    )
+    # dark threshold from the histogram valley, between slab faces and sky
+    assert params["t_dark"] != visibility.DEFAULT_PARAMS["t_dark"]
+    assert 41 < params["t_dark"] < 90
+    assert params["y_floor"] == 188
+    assert params["t_white"] == pytest.approx(1.1 * 90)
+    assert params["t_white_floor"] == pytest.approx(1.05 * 150)
+    assert params["band_dev_thr"] is not None
+    assert params["front_color"] == [33, 35, 37]
+    assert params["face_palette"] == [[40, 40, 44]]
+
+
+def test_occluder_is_not_counted_as_object_and_hides_the_white_one():
+    params = visibility.fit_session_params(
+        [_arena()] * 2, [_arena(white=True, black=True)], has_occluders=True
+    )
+    labels = visibility.segment_frame(
+        _arena(white=True, black=True), params, has_occluders=True
+    )
+    counts = {
+        name: int((labels == value).sum())
+        for name, value in [
+            ("white", visibility.WHITE),
+            ("black", visibility.BLACK),
+            ("occluder", visibility.OCCLUDER),
+        ]
+    }
+    assert counts["occluder"] == 130 * (30 + 6)  # front and side faces
+    assert counts["white"] == 50 * 30  # the half in front of the slab
+    # body, plus its shaded rim recovered by floor-band growth
+    assert counts["black"] == 88 * 41 + 11 * 41
+
+    # Without occluder detection, the dark slab is taken for a black object
+    unoccluded = visibility.segment_frame(
+        _arena(white=True, black=True), params, has_occluders=False
+    )
+    assert (unoccluded == visibility.BLACK).sum() > counts["black"] + 130 * 30
+
+
+def test_shaded_rim_needs_floor_band_growth():
+    params = visibility.fit_session_params(
+        [_arena()] * 2, [_arena(black=True)], has_occluders=True
+    )
+    params["band_dev_thr"] = None  # no growth
+    labels = visibility.segment_frame(_arena(black=True), params, has_occluders=True)
+    assert (labels == visibility.BLACK).sum() == 88 * 41
+
+
+def test_white_threshold_is_fitted_on_the_iti_background():
+    params = visibility.fit_session_params([_panel()], [_panel(white=True)])
+    assert params["t_white"] == pytest.approx(1.1 * 90)
+
+
+def test_unreachable_white_threshold_fails_instead_of_counting_nothing():
+    # One background pixel at 235 would put the threshold at 258 (> 255)
+    bright_pixel = _panel()
+    bright_pixel[10, 10] = 235
+    with pytest.raises(ValueError, match="t_white 258 is above 255"):
+        visibility.fit_session_params([bright_pixel], [_panel(white=True)])
+
+
+def test_iti_frames_all_showing_an_object_fail_calibration():
+    # The threshold then comes from the object (240): 264, above 255
+    with pytest.raises(ValueError, match="t_white 264 is above 255"):
+        visibility.fit_session_params(
+            [_panel(white=True), _panel(white=True)], [_panel(white=True)]
+        )
+
+
 def test_truncated_reader_fails_session():
     with pytest.raises(ValueError, match="shorter"):
         visibility.describe_steps(

@@ -370,6 +370,15 @@ def fit_session_params(
     p["y_floor"] = int(over[0]) if over.size else int(free.shape[1])
     if over.size:
         p["t_white_floor"] = float(1.05 * rowmax[p["y_floor"] :].max())
+    # Luminance is at most 255: a higher threshold would silently count no
+    # white pixel in the whole session
+    for name in ("t_white", "t_white_floor"):
+        if p[name] > 255:
+            raise ValueError(
+                f"{name} {p[name]:.0f} is above 255, so no white object can be "
+                "detected: the ITI background is too bright (a stray bright "
+                "pixel, or an object still on screen in every sampled ITI frame)"
+            )
 
     # floor-band deviation threshold: 99.5th percentile of |pixel - row background| over the band of
     # the object-free frames (row background = per-row median over non-dark pixels)

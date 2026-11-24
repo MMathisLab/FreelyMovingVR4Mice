@@ -8,7 +8,9 @@ Two kinds of input video (see ``vr4mice/schema/inputs_videos.py``):
   ``TS_{prefix}_<dataset>_CAMERA2.npy``, found in
   ``<videos_dlc>/<dataset>/run_XXXX/`` -> ``<dest>/raw_input_videos/`` (flat)
 
-``<dest>`` is the share mounted as SCREEN_RECORDINGS_PATH on the server.
+``<dest>`` is the share mounted as SCREEN_RECORDINGS_PATH on the server, the
+folder that holds ``raw_screen_recordings/`` and ``raw_input_videos/`` (the
+script adds them: do not include them in ``--dest``).
 
 Nothing is copied without ``--run``: by default the script only prints what it
 would do. Existing files are never overwritten: a destination file with the same
@@ -19,7 +21,7 @@ pipeline never sees a partial video.
 Example (Windows, from the repo root)::
 
     python dj_pipeline/backup/transfer_input_videos.py ^
-        --dest "\\\\neuropixels_backup\\vr4mice\\raw_screen_recordings" ^
+        --dest "\\\\neuropixels_backup\\vr4mice" ^
         --obs-src "C:\\Users\\Windows\\Videos" ^
         --camera-src "D:\\AR_data\\raw_data\\Videos_dlc"
 
@@ -179,7 +181,10 @@ def main(argv=None) -> int:
         "--dest",
         type=Path,
         required=True,
-        help="Share mounted as SCREEN_RECORDINGS_PATH on the server",
+        help=(
+            "Share mounted as SCREEN_RECORDINGS_PATH on the server; "
+            "raw_screen_recordings/ and raw_input_videos/ are added to it"
+        ),
     )
     parser.add_argument(
         "--obs-src", type=Path, help="Folder with <dataset>.mkv/.mp4 OBS recordings"
