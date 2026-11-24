@@ -83,6 +83,7 @@ jobs:
           projectPath: AugmentedReality
           targetPlatform: ${{ matrix.targetPlatform }}
           buildName: ${{ matrix.buildName }}
+          cliVersion: v0.1.77
 
       # The builder runs in Docker as root, so the build files are root-owned.
       - name: Take ownership of the build
