@@ -62,6 +62,12 @@ public class Mouse_move : Agent
     float lastFrameTime;
 
 
+	// Runs once, before ML-Agents collects sensors. Installs optional modules (see ModuleLoader.cs).
+	public override void Initialize()
+	{
+		ModuleLoader.InstallAll(this);
+	}
+
 	// Start is called before the first frame update
 	void Start()
 	{
@@ -107,9 +113,7 @@ public class Mouse_move : Agent
       ITIScreenOff();
       ITI = false;
 
-      if (plane.GetComponent<Target_spawner>().occlusion_type > 0f){
-      		plane.GetComponent<Target_spawner>().walls_reset();
-	  }
+      plane.GetComponent<Target_spawner>().walls_reset();
 
 		stopwatch.Restart();
         lastFrameTime = (float)stopwatch.Elapsed.TotalSeconds;
