@@ -1,38 +1,43 @@
 #!/usr/bin/env python3
+"""Generate unnormalized information maps for calibrated occlusion shapes.
+
+Standalone CLI around ``vr4mice/analysis/information_maps.py``. The same maps
+are computed in the pipeline by ``information_maps.InformationMap``
+(``run.py info_maps``); see that module for the occlusion/visibility
+calibration between game and info-map aperture units.
+
+Input modes (exactly one):
+- ``--aperture-widths``: widths in info-map arena units, e.g. 8.7 12.3 17.3.
+- ``--game-aperture-widths``: widths in game units, converted with the
+    calibration (e.g. 15 4 7.75 5.57 10.78).
+"""
+
 import argparse
-from dataclasses import dataclass
+import sys
 from pathlib import Path
-import matplotlib.pyplot as plt
+
 import numpy as np
-from utils import info_map
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-@dataclass
-class Arena:
-    length: float
-    width: float
-    height: float
-
-
-class Aperture:
-    def __init__(self, arena: Arena, opening_width: float):
-        if opening_width < 0:
-            raise ValueError("Aperture width must be >= 0.")
-        if opening_width >= arena.width:
-            raise ValueError("Aperture width must be smaller than arena width.")
-
-        gap_width = opening_width / 2.0
-        self.height = arena.height
-        self.width = arena.width / 2.0 - gap_width
-        self.gap_width = gap_width
-        self.wall_depth = arena.length - 10
-        self.left_wall_edge = (self.width, self.wall_depth)
-        self.right_wall_edge = (arena.width / 2.0 + gap_width, self.wall_depth)
-        self.left_wall = (0, self.wall_depth)
-        self.right_wall = (arena.width / 2.0 + gap_width, self.wall_depth)
+from vr4mice.analysis.information_maps import (  # noqa: E402
+    Arena,
+    compute_info_map,
+    convert_game_to_infomap_aperture,
+    info_map_filename,
+    save_info_map_plot,
+)
 
 
 def parse_args():
+    """Parse CLI arguments for info-map generation.
+
+    Note:
+        `--aperture-widths` should be provided in info-map arena units. For
+        standard occlusion shapes, use 8.7 (0% visible), 12.3 (10%),
+        17.3 (35%), 24.5 (72%) and 34.6 (99%), which correspond to in-game
+        aperture widths 3.0, 4.2, 6.0, 8.48 and 12.0 respectively.
+    """
     default_out_dir = Path.cwd() / "data"
     parser = argparse.ArgumentParser(
         description=(
@@ -43,8 +48,18 @@ def parse_args():
         "--aperture-widths",
         type=float,
         nargs="+",
-        required=True,
-        help="Aperture opening widths in arena units.",
+        default=None,
+        help="Aperture opening widths in info-map arena units.",
+    )
+    parser.add_argument(
+        "--game-aperture-widths",
+        type=float,
+        nargs="+",
+        default=None,
+        help=(
+            "Aperture widths in game units; values are converted to info-map "
+            "arena units using calibration correspondences."
+        ),
     )
     parser.add_argument("--arena-length", type=float, default=52.0)
     parser.add_argument("--arena-width", type=float, default=52.0)
@@ -81,106 +96,66 @@ def parse_args():
         default="info_matrix_unnormalized",
         help="Output filename prefix.",
     )
-
     parser.add_argument(
         "--plot",
         action="store_true",
         help="Save a heatmap PNG next to each generated .npy info map.",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
 
-
-def validate_opening_width(opening_width: float, arena_width: float) -> None:
-    if opening_width < 0:
-        raise ValueError(f"Aperture width must be >= 0; got {opening_width}.")
-    if opening_width >= arena_width:
-        raise ValueError(
-            f"Aperture width must be smaller than arena width ({arena_width}); "
-            f"got {opening_width}."
+    if (args.aperture_widths is None) == (args.game_aperture_widths is None):
+        parser.error(
+            "provide exactly one of: --aperture-widths, --game-aperture-widths."
         )
 
-
-def target_circle_centers(arena: Arena):
-    """Position target circles at fixed separation of 23 units."""
-    fixed_separation = 23.0
-    circle_l = (
-        arena.width / 2.0 - fixed_separation / 2.0,
-        arena.width,
-        arena.height / 2.0,
-    )
-    circle_r = (
-        arena.width / 2.0 + fixed_separation / 2.0,
-        arena.width,
-        arena.height / 2.0,
-    )
-    return circle_l, circle_r
-
-
-def save_info_map_plot(info_mat, output_path: Path, width_label: str):
-    fig, ax = plt.subplots(figsize=(6, 5))
-    image = ax.imshow(info_mat, cmap="cividis", origin="lower", aspect="auto")
-    min_val = info_mat.min()
-    max_val = info_mat.max()
-    ax.set_title(
-        f"Unnormalized Info Map (aperture width={width_label})\nmin={min_val:.3f}, max={max_val:.3f}"
-    )
-    ax.set_xlabel("Y index")
-    ax.set_ylabel("X index")
-    fig.colorbar(image, ax=ax, label="Information")
-    fig.tight_layout()
-    fig.savefig(output_path, dpi=200)
-    plt.close(fig)
+    return args
 
 
 def main():
     args = parse_args()
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
+    if args.game_aperture_widths is not None:
+        args.aperture_widths = []
+        for game_aperture in args.game_aperture_widths:
+            infomap_aperture = convert_game_to_infomap_aperture(game_aperture)
+            args.aperture_widths.append(infomap_aperture)
+            print(
+                f"  game_aperture={game_aperture:.3f} | "
+                f"infomap_aperture={infomap_aperture:.3f}"
+            )
+
     arena = Arena(
         length=args.arena_length,
         width=args.arena_width,
         height=args.arena_height,
     )
-    if args.y_resolution is None:
-        y_resolution = int(round(arena.length - 10))
-    else:
-        y_resolution = args.y_resolution
-    if y_resolution <= 0:
-        raise ValueError(f"y_resolution must be > 0; got {y_resolution}.")
 
-    for opening_width in args.aperture_widths:
-        validate_opening_width(opening_width, arena.width)
-        if np.isclose(opening_width, 0.0):
-            info_mat = np.zeros((args.x_resolution, y_resolution))
-        else:
-            aperture = Aperture(arena=arena, opening_width=opening_width)
-            circle_l, circle_r = target_circle_centers(arena)
+    for infomap_aperture in args.aperture_widths:
+        info_map = compute_info_map(
+            infomap_aperture=infomap_aperture,
+            arena=arena,
+            radius=args.radius,
+            x_resolution=args.x_resolution,
+            y_resolution=args.y_resolution,
+            source_height=args.source_height,
+            angle_step_degrees=args.angle_step_degrees,
+        )
 
-            info_mat = info_map(
-                arena=arena,
-                circle1_center=circle_l,
-                circle2_center=circle_r,
-                aperture=aperture,
-                radius=args.radius,
-                x_resolution=args.x_resolution,
-                y_resolution=y_resolution,
-                source_height=args.source_height,
-                angle_step_degrees=args.angle_step_degrees,
-            )
-
-        width_label = f"{opening_width:g}"
-        output_path = args.out_dir / f"{args.prefix}_{width_label}w.npy"
-        np.save(output_path, info_mat)
+        output_path = args.out_dir / (
+            info_map_filename(infomap_aperture, prefix=args.prefix) + ".npy"
+        )
+        np.save(output_path, info_map)
         print(
-            f"Saved {output_path} | aperture_width={opening_width:g} "
-            f"(shape={info_mat.shape})"
+            f"Saved {output_path} | infomap_aperture={infomap_aperture:g} "
+            f"(shape={info_map.shape})"
         )
         if args.plot:
             plot_output_path = output_path.with_suffix(".png")
             save_info_map_plot(
-                info_mat=info_mat,
+                info_map=info_map,
                 output_path=plot_output_path,
-                width_label=width_label,
+                infomap_aperture=infomap_aperture,
             )
             print(f"Saved plot {plot_output_path}")
 
