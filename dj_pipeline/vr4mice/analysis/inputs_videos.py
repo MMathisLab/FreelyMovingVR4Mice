@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 from vr4mice.analysis.latency_testing import (
     filter_pulsed_signal,
-    find_rising_edges,
 )
 
 # ---------------------------------------------------------------------------
@@ -116,7 +115,7 @@ def read_sync_trace(
 def binarize_sync_trace(trace: np.ndarray) -> np.ndarray:
     """Square on (1) / off (0) per frame, thresholded midway between its two levels."""
     trace = np.asarray(trace, dtype=float)
-    low, high = np.percentile(trace, [5, 95])
+    low, high = np.nanpercentile(trace, [5, 95])
     return (trace > (low + high) / 2).astype(int)
 
 
@@ -140,10 +139,22 @@ def _dedup_edges(edges: np.ndarray, min_separation: float = 0.01) -> np.ndarray:
     return np.asarray(keep)
 
 
+def _rising_edge_times(timestamps: np.ndarray, binary_signal: np.ndarray) -> np.ndarray:
+    """Time of each off -> on switch, midway between the last off and first on sample.
+
+    The switch happened somewhere in between: the first "on" sample alone would
+    place it half a sample interval late on average (~17 ms for a 30 fps video).
+    """
+    t = np.asarray(timestamps, dtype=float)
+    on = np.asarray(binary_signal) >= 0.5
+    rising = np.flatnonzero(~on[:-1] & on[1:]) + 1
+    return (t[rising - 1] + t[rising]) / 2
+
+
 def _detect_edges(
     timestamps: np.ndarray, binary_signal: np.ndarray, min_separation: float = 0.01
 ) -> np.ndarray:
-    edges = find_rising_edges(np.asarray(timestamps), np.asarray(binary_signal))
+    edges = _rising_edge_times(timestamps, binary_signal)
     return _dedup_edges(edges, min_separation=min_separation)
 
 
@@ -262,7 +273,7 @@ def _preprocess_photodiode(
             signal=pd_read, sample_rate=sampling_rate, cutoff_freq=50
         )
 
-    low, high = np.percentile(pd_read, level_percentiles)
+    low, high = np.nanpercentile(pd_read, level_percentiles)
     if high <= low:
         return np.zeros(len(pd_read), dtype=int)
     scaled = (pd_read - low) / (high - low)
@@ -500,6 +511,9 @@ def align_steps_to_frames_by_photodiode(
     # Photodiode times stay on the game clock (no re-zeroing), like step_times
     pd_ts = np.asarray(photodiode_df["time_stamp"], dtype=float)
     pd_read = np.asarray(photodiode_df["photodiode_read"], dtype=float)
+    # Missing samples (NaN) would make the filter and levels NaN: dropped
+    finite = np.isfinite(pd_ts) & np.isfinite(pd_read)
+    pd_ts, pd_read = pd_ts[finite], pd_read[finite]
 
     best = None
     errors = []
@@ -807,6 +821,8 @@ def measure_seek_offset(
             for c in range(probe - window, probe + window + 1)
             if all(c + k in sequential for k in range(sequence))
         ]
+        if len(candidates) < 2:
+            continue  # video too short around this probe to compare positions
         diffs = np.array(
             [
                 np.abs(
@@ -1081,25 +1097,50 @@ def audit_video_files(
         if prefix not in prefixes:
             issues.append(("camera", name, f"unknown prefix {prefix!r} (IMG_SRC)"))
             continue
-        (videos if video else stamps)[dataset] = name
+        (videos if video else stamps).setdefault(dataset, {})[prefix] = name
 
+    # The pipeline pairs a video with the timestamps of the same prefix
+    # (find_input_video_files)
     for dataset in sorted(set(videos) | set(stamps)):
-        if dataset not in stamps:
-            issues.append(
-                (
-                    "camera",
-                    videos[dataset],
-                    f"no TS_..._CAMERA{camera}.npy timestamps for it",
+        dataset_videos, dataset_stamps = videos.get(dataset, {}), stamps.get(
+            dataset, {}
+        )
+        paired = sorted(set(dataset_videos) & set(dataset_stamps))
+        if dataset_videos and dataset_stamps and not paired:
+            for name in dataset_videos.values():
+                issues.append(
+                    (
+                        "camera",
+                        name,
+                        "its timestamps have another prefix "
+                        f"({', '.join(sorted(dataset_stamps))}): files are paired "
+                        "by prefix",
+                    )
                 )
-            )
-        elif dataset not in videos:
-            issues.append(
-                ("camera", stamps[dataset], f"no ..._VIDEO{camera}.avi for it")
-            )
-        elif dataset not in known:
-            for name in (videos[dataset], stamps[dataset]):
-                issues.append(("camera", name, not_ingested.format(dataset)))
-        if dataset in obs_datasets and dataset in videos and dataset in stamps:
+            for name in dataset_stamps.values():
+                issues.append(
+                    (
+                        "camera",
+                        name,
+                        "its video has another prefix "
+                        f"({', '.join(sorted(dataset_videos))}): files are paired "
+                        "by prefix",
+                    )
+                )
+            continue
+        for prefix, name in dataset_videos.items():
+            if prefix not in dataset_stamps:
+                issues.append(
+                    ("camera", name, f"no TS_..._CAMERA{camera}.npy timestamps for it")
+                )
+        for prefix, name in dataset_stamps.items():
+            if prefix not in dataset_videos:
+                issues.append(("camera", name, f"no ..._VIDEO{camera}.avi for it"))
+        if paired and dataset not in known:
+            for prefix in paired:
+                for name in (dataset_videos[prefix], dataset_stamps[prefix]):
+                    issues.append(("camera", name, not_ingested.format(dataset)))
+        if paired and dataset in obs_datasets:
             issues.append(
                 (
                     "obs",
@@ -1202,6 +1243,9 @@ def verify_sync_against_photodiode(
     """
     frame_times = np.asarray(frame_times, dtype=float)
     pd_time = np.asarray(pd_time, dtype=float)
+    pd_read = np.asarray(pd_read, dtype=float)
+    finite = np.isfinite(pd_time) & np.isfinite(pd_read)  # missing samples
+    pd_time, pd_read = pd_time[finite], pd_read[finite]
     n = len(frame_times)
     edge_times = []
     for start in np.linspace(0.1 * n, 0.9 * n - window, n_windows).astype(int):
@@ -1211,9 +1255,8 @@ def verify_sync_against_photodiode(
         )
         if trace.size < 2 or np.ptp(trace) < 50:
             continue  # square not switching in this window
-        on = binarize_sync_trace(trace)
-        rises = np.flatnonzero((on[:-1] == 0) & (on[1:] == 1)) + 1
-        edge_times.extend(frame_times[start + rises[start + rises < n]])
+        times = frame_times[start : start + len(trace)]
+        edge_times.extend(_rising_edge_times(times, binarize_sync_trace(trace)))
     edge_times = np.asarray(edge_times)
 
     best = {

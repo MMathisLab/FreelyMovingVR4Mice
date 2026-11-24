@@ -264,6 +264,10 @@ if __name__ == "__main__":
 
         # OBS videos use the batch's screen layout (inputs_videos.ObsVideoLayout)
         vr4mice.DatasetBatch().populate()
+        # Photodiode first (as in the latency mode): StepVideoFrame aligns OBS
+        # sessions on it and checks camera sessions against it, and is not
+        # redone if it arrives later
+        populate_pending(vr4mice.SignalsPhotodiode, vr4mice.Dataset, logger=logger)
         # Report misnamed, unpaired or unmatched video files (VideoFileIssue);
         # never blocks the populates below
         try:

@@ -431,3 +431,35 @@ def test_input_video_dst_optional(gui_modules):
     assert gui_modules["config"].Config.validate()[0]
     config.update("input_video_dst", "/share")
     assert config.get_input_video_dst == "/share"
+
+
+def test_copy_runs_off_the_qt_thread(gui_modules, monkeypatch):
+    # A long copy must not block the window: Qt events keep being processed
+    monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
+    import time
+
+    from PyQt5.QtCore import QTimer
+    from PyQt5.QtWidgets import QApplication, QWidget
+
+    app = QApplication.instance() or QApplication([])
+    gui = importlib.import_module("gui")
+    window = QWidget()
+    ticks = []
+    timer = QTimer()
+    timer.timeout.connect(lambda: ticks.append(1))
+    timer.start(20)
+
+    def slow_copy(seconds):
+        time.sleep(seconds)
+        return True, ""
+
+    assert gui.Gui._run_in_background(window, "Copying", slow_copy, 0.5) == (True, "")
+    timer.stop()
+    assert len(ticks) >= 5  # the window kept running during the copy
+
+    def broken():
+        raise OSError("share gone")
+
+    with pytest.raises(OSError, match="share gone"):
+        gui.Gui._run_in_background(window, "Copying", broken)
+    assert app is not None

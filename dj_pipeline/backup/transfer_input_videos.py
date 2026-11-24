@@ -109,6 +109,12 @@ def plan_camera(camera_src: Path, dest: Path, datasets, since, fix_names, proble
             stamps = sorted(run.glob(f"TS_*_CAMERA{CAMERA}.npy"))
             if len(videos) == 1 and len(stamps) == 1:
                 pairs.append((videos[0], stamps[0]))
+            elif videos or stamps:  # half pair, or several: not a clear pair
+                problems.append(
+                    f"{dataset}: {run.name} has {len(videos)} VIDEO{CAMERA} and "
+                    f"{len(stamps)} CAMERA{CAMERA} file(s), not one of each; "
+                    "skipped"
+                )
         if not pairs:
             continue  # old-setup session or nothing recorded with camera 2
         if len(pairs) > 1:
@@ -120,8 +126,15 @@ def plan_camera(camera_src: Path, dest: Path, datasets, since, fix_names, proble
             continue
 
         video, stamps = pairs[0]
-        named = {DATASET_RE.search(p.name).group(0) for p in (video, stamps)}
-        video_dataset = DATASET_RE.search(video.name).group(0)
+        found = [DATASET_RE.search(p.name) for p in (video, stamps)]
+        if not all(found):
+            problems.append(
+                f"{dataset}: no dataset name in {video.name} / {stamps.name}; "
+                "skipped"
+            )
+            continue
+        named = {match.group(0) for match in found}
+        video_dataset = found[0].group(0)
         prefix = video.name[: video.name.index(video_dataset)].rstrip("_")
         note = ""
         if named != {dataset}:
@@ -162,13 +175,20 @@ def copy_file(copy: Copy) -> str:
         if copy.dst.stat().st_size == size:
             return "already there"
         return f"CONFLICT: {copy.dst} exists with another size, not overwritten"
-    copy.dst.parent.mkdir(parents=True, exist_ok=True)
     part = copy.dst.with_name(copy.dst.name + ".part")
-    shutil.copy2(copy.src, part)
-    if part.stat().st_size != size:
-        part.unlink()
-        return "FAILED: size mismatch after copy, removed the partial file"
-    os.replace(part, copy.dst)
+    try:
+        copy.dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(copy.src, part)
+        if part.stat().st_size != size:
+            part.unlink()
+            return "FAILED: size mismatch after copy, removed the partial file"
+        os.replace(part, copy.dst)
+    except OSError as err:  # one failed copy does not stop the batch
+        try:
+            part.unlink(missing_ok=True)
+        except OSError:
+            pass  # no partial file to remove (destination unreachable)
+        return f"FAILED: {err}"
     return "copied"
 
 

@@ -192,7 +192,11 @@ def check_video_files(
         )
     ]
 
-    current = {(folder, name): issue for folder, name, issue in issues}
+    # One row per file: a file with several problems keeps them all
+    current = {}
+    for folder, name, issue in issues:
+        key = (folder, name)
+        current[key] = f"{current[key]}; {issue}" if key in current else issue
     for row in VideoFileIssue.fetch("KEY"):
         if (row["folder"], row["file_name"]) not in current:
             (VideoFileIssue & row).delete_quick()
@@ -636,11 +640,13 @@ class StepVideoFrame(dj.Computed):
             step_frame_ids[starts],
             seek_offset=row["seek_offset"],
         )
+        # The scene switched between frame j - 1 (old scene) and j: timed at
+        # their midpoint, as sync edges, not half a frame late at frame j
         lags = np.array(
             [
-                frame_times[j] - step_video_time[s]
+                (frame_times[j - 1] + frame_times[j]) / 2 - step_video_time[s]
                 for s, j in zip(starts, changes)
-                if j is not None and j < len(frame_times)
+                if j is not None and 0 < j < len(frame_times)
             ]
         )
         if len(lags) < MIN_DISPLAY_LAG_TRIALS:

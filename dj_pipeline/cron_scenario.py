@@ -416,11 +416,15 @@ def main():
         if inputs_videos:
             from vr4mice.utils.populate_helpers import populate_pending
 
-            # Report misnamed, unpaired or unmatched video files (VideoFileIssue)
-            run_step(
-                "inputs_videos.check_video_files",
-                inputs_videos.check_video_files,
-            )
+            # Report misnamed, unpaired or unmatched video files (VideoFileIssue);
+            # an audit only: its errors never fail the nightly run
+            def check_video_files():
+                try:
+                    inputs_videos.check_video_files()
+                except Exception as err:
+                    logger.warning("Input video file check failed: %s", err)
+
+            run_step("inputs_videos.check_video_files", check_video_files)
             # Old setup (OBS recording); 3-camera datasets are excluded by key_source.
             run_step(
                 "inputs_videos.RawVideo.populate",

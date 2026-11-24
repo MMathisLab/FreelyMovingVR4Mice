@@ -128,3 +128,37 @@ def test_since_filter(sources):
     obs, _, dest = sources
     copies = transfer.plan_obs(obs, dest, None, transfer.date(2026, 1, 1))
     assert [c.dataset for c in copies] == ["Xestia_2026-06-29_1"]
+
+
+def test_half_pairs_and_stray_files_are_reported_not_fatal(sources):
+    _, cam, dest = sources
+    # A video without its timestamps
+    half = cam / "Ocelot_2026-08-20_1" / "run_0001"
+    _touch(half / "vr4mice_Ocelot_2026-08-20_1_VIDEO2.avi")
+    # A stray pair whose names carry no dataset
+    stray = cam / "Puma_2026-08-19_1" / "run_0001"
+    _touch(stray / "copy_VIDEO2.avi")
+    _touch(stray / "TS_copy_CAMERA2.npy")
+    problems = []
+    copies = transfer.plan_camera(cam, dest, None, None, False, problems)
+
+    assert {c.dataset for c in copies} == {"Xestia_2026-08-21_1"}
+    assert any("Ocelot_2026-08-20_1" in p and "not one of each" in p for p in problems)
+    assert any("Puma_2026-08-19_1" in p and "no dataset name" in p for p in problems)
+
+
+def test_a_failed_copy_does_not_stop_the_batch(sources, tmp_path):
+    obs, _, _ = sources
+    blocked = tmp_path / "blocked"
+    blocked.write_text("a file where the destination folder should be")
+    failed = transfer.Copy(
+        "obs", "Xestia_2026-06-29_1", obs / "Xestia_2026-06-29_1.mp4", blocked / "x.mp4"
+    )
+    assert transfer.copy_file(failed).startswith("FAILED:")
+    ok = transfer.Copy(
+        "obs",
+        "Xestia_2026-06-29_1",
+        obs / "Xestia_2026-06-29_1.mp4",
+        tmp_path / "share" / "x.mp4",
+    )
+    assert transfer.copy_file(ok) == "copied"

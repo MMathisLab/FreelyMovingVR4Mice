@@ -1144,7 +1144,9 @@ class TestCameraAlignment:
         (row,) = inserted
         n = len(session.iti)
         assert row["video_source"] == "camera"
-        assert row["display_lag"] == pytest.approx(2 / 30, abs=1e-5)
+        # The scene first shows on frame s + 2 and was absent on s + 1: the
+        # switch is timed between them, 1.5 frames after the step
+        assert row["display_lag"] == pytest.approx(1.5 / 30, abs=1e-5)
         assert row["display_lag_trials"] == 15  # every trial start
         np.testing.assert_array_equal(row["step_frame_ids"], np.arange(n))
         # Shown 2 frames later; the last 2 steps are shown after the video ends
@@ -1517,3 +1519,96 @@ class TestFrameVisibilityMake:
             video_schema, monkeypatch, tmp_path, "foraging_v1", "foraging", "dual"
         )
         assert inserted == []
+
+
+class TestPrecisionAndRobustness:
+    def test_edges_are_timed_between_the_last_off_and_first_on_sample(self):
+        from inputs_videos import _detect_edges
+
+        frame_times = np.arange(10) / 30
+        on = np.array([0, 0, 0, 1, 1, 0, 0, 1, 1, 1])
+        # Switches between frames 2-3 and 6-7: half a frame before the first "on"
+        np.testing.assert_allclose(_detect_edges(frame_times, on), [2.5 / 30, 6.5 / 30])
+
+    def test_missing_photodiode_samples_do_not_hide_the_sync_edges(self):
+        video_df, photodiode_df, steps, truth = _sync_session(video_start=7.3)
+        photodiode_df.loc[5000:5100, "photodiode_read"] = np.nan  # dropout
+        frames, qa = align_steps_to_frames_by_photodiode(video_df, photodiode_df, steps)
+        assert qa["pair_fraction"] > 0.95
+        assert np.nanmax(np.abs(frames - truth)) <= 1.0
+
+    def test_seek_offset_of_a_video_too_short_to_probe(self, tmp_path):
+        # Too few frames around the probes to compare positions: reported, not
+        # an IndexError
+        path = str(tmp_path / "short.avi")
+        writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"MJPG"), 30, (64, 48))
+        for i in range(21):
+            writer.write(np.full((48, 64, 3), i * 10, dtype=np.uint8))
+        writer.release()
+        with pytest.raises(ValueError, match="Could not measure seek accuracy"):
+            measure_seek_offset(path, window=0, sequence=20)
+
+    def test_audit_reports_a_video_and_timestamps_with_different_prefixes(self):
+        dataset = "Xestia_2026-08-21_1"
+        issues = audit_video_files(
+            [],
+            [
+                f"Imagingsource_{dataset}_VIDEO2.avi",
+                f"TS_vr4mice_{dataset}_CAMERA2.npy",
+            ],
+            [dataset],
+            ["Imagingsource", "vr4mice"],
+        )
+        assert [
+            (name.split("_")[0], "another prefix" in issue) for _, name, issue in issues
+        ] == [
+            ("Imagingsource", True),
+            ("TS", True),
+        ]
+
+    def test_a_file_with_two_problems_keeps_both(
+        self, video_schema, monkeypatch, tmp_path
+    ):
+        # VideoFileIssue holds one row per file: both problems in its issue
+        camera, obs = tmp_path / "raw_input_videos", tmp_path / "raw_screen_recordings"
+        camera.mkdir()
+        obs.mkdir()
+        dataset = "Xestia_2026-08-21_1"
+        # OBS recording of a session not ingested, which also has camera files
+        (obs / f"{dataset}.mkv").touch()
+        (camera / f"Imagingsource_{dataset}_VIDEO2.avi").touch()
+        (camera / f"TS_vr4mice_{dataset}_CAMERA2.npy").touch()
+        (camera / f"TS_Imagingsource_{dataset}_CAMERA2.npy").touch()
+
+        class VideoFileIssue:
+            rows = []
+
+            @classmethod
+            def fetch(cls, *args):
+                return []
+
+            @classmethod
+            def insert(cls, rows, replace=False):
+                cls.rows = list(rows)
+
+        monkeypatch.setattr(video_schema, "VideoFileIssue", VideoFileIssue)
+        monkeypatch.setattr(
+            video_schema,
+            "vr4mice",
+            SimpleNamespace(Dataset=SimpleNamespace(fetch=lambda *_: [])),
+        )
+        monkeypatch.setitem(
+            sys.modules,
+            "vr4mice.actions.populate_rig",
+            SimpleNamespace(_img_src_candidates=lambda: ["Imagingsource", "vr4mice"]),
+        )
+        video_schema.check_video_files(str(obs), str(camera))
+
+        rows = {r["file_name"]: r["issue"] for r in VideoFileIssue.rows}
+        obs_issue = rows[f"{dataset}.mkv"]
+        assert "no session" in obs_issue and "also has camera files" in obs_issue
+        video_issue = rows[f"Imagingsource_{dataset}_VIDEO2.avi"]
+        assert "no session" in video_issue  # not ingested
+        stamps_issue = rows[f"TS_vr4mice_{dataset}_CAMERA2.npy"]
+        assert "no ..._VIDEO2.avi" in stamps_issue
+        assert len(VideoFileIssue.rows) == 4
