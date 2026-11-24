@@ -152,24 +152,38 @@ class DatasetBatch(dj.Computed):
     doe : date   # experiment date parsed from the dataset name
     """
 
+    def _record_failure(self, key, message):
+        logger.warning(f"{message} (dataset '{key['dataset']}')")
+        FailedSession().add_entry(
+            key["dataset"], self.__class__.__name__, message[:1024]
+        )
+
     def make(self, key):
+        # Unresolved datasets are recorded in FailedSession (not just logged) so
+        # they are visible, but deliberately not skipped via should_skip: they
+        # stay in key_source and are retried once e.g. a Batch is added.
         parts = key["dataset"].split("_")
         if len(parts) < 2:
-            logger.warning(f"Could not parse date from dataset '{key['dataset']}'")
+            self._record_failure(key, "Could not parse date from dataset name")
             return
         try:
             doe = datetime.date.fromisoformat(parts[1])
         except ValueError:
-            logger.warning(f"Could not parse date from dataset '{key['dataset']}'")
+            self._record_failure(key, "Could not parse date from dataset name")
             return
 
         try:
             batch_name = Batch.resolve(doe)
         except ValueError as err:
-            logger.warning(f"{err} (dataset '{key['dataset']}')")
+            self._record_failure(key, str(err))
             return
 
         self.insert1({**key, "batch_name": batch_name, "doe": doe})
+        # Clear a stale failure from an earlier run now that it resolved.
+        (
+            FailedSession
+            & {"dataset": key["dataset"], "failed_table_name": self.__class__.__name__}
+        ).delete_quick()
 
 
 @schema
