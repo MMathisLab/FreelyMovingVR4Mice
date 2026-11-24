@@ -528,7 +528,8 @@ def test_scene_onsets_time_each_trial_from_its_start_step():
         starts, [5, None, 13, 20, 19], step_video_time, frame_times
     )
     np.testing.assert_array_equal(frames, [5, -1, -1, -1, -1])
-    np.testing.assert_allclose(delays, [0.1, np.nan, np.nan, np.nan, np.nan])
+    # switch between frame 4 (0.4 s, old scene) and 5 (0.5 s): 0.45 s
+    np.testing.assert_allclose(delays, [0.05, np.nan, np.nan, np.nan, np.nan])
 
 
 def _params(video_schema, **changes):
@@ -591,14 +592,15 @@ def test_display_lag_is_the_median_scene_change_delay(
     measure = video_schema.StepVideoFrame._measure_display_lag
     lag, n_trials = measure({}, row, frame_times, frame_times, _params(video_schema))
     assert n_trials == 6
-    assert lag == pytest.approx(2 / 30)
+    # median scene change 2 frames after the start: switch at 1.5 frames
+    assert lag == pytest.approx(1.5 / 30)
 
     # Too few trial starts with a scene change: the session fails
     params = _params(video_schema, min_display_lag_trials=7)
     with pytest.raises(ValueError, match="at 6 of 6 trial starts only"):
         measure({"dataset": "d"}, row, frame_times, frame_times, params)
     # Longer than max_display_lag: misaligned
-    params = _params(video_schema, max_display_lag=0.05)
+    params = _params(video_schema, max_display_lag=0.04)  # lag is 50 ms
     with pytest.raises(ValueError, match="misaligned"):
         measure({}, row, frame_times, frame_times, params)
 
@@ -667,7 +669,7 @@ def test_scene_onsets_are_measured_at_every_trial_start(
     np.testing.assert_array_equal(onsets["trial_start_steps"], [6, 28, 43])
     np.testing.assert_array_equal(onsets["scene_onset_frames"], [11, 45, -1])
     np.testing.assert_allclose(
-        onsets["scene_onset_delay"], [11 / 30 - 0.3, 45 / 30 - 1.4, np.nan]
+        onsets["scene_onset_delay"], [10.5 / 30 - 0.3, 44.5 / 30 - 1.4, np.nan]
     )
 
 
@@ -1263,7 +1265,9 @@ class TestCameraAlignment:
     ):
         session = _camera_session(tmp_path)
         key, _ = _camera_tables(video_schema, monkeypatch, session)
-        row = video_schema.StepVideoFrame._align_camera(key, _START, session.step_time)
+        row = video_schema.StepVideoFrame._align_camera(
+            key, _START, session.step_time, _params(video_schema)
+        )
 
         assert row["align_method"] == "timestamps"
         assert row["sync_match_fraction"] > 0.95
@@ -1278,14 +1282,18 @@ class TestCameraAlignment:
         session.pd_read = other.pd_read  # another sync pulse train
         key, _ = _camera_tables(video_schema, monkeypatch, session)
         with pytest.raises(ValueError, match="match the photodiode"):
-            video_schema.StepVideoFrame._align_camera(key, _START, session.step_time)
+            video_schema.StepVideoFrame._align_camera(
+                key, _START, session.step_time, _params(video_schema)
+            )
 
     def test_without_photodiode_the_video_is_not_checked(
         self, video_schema, monkeypatch, tmp_path
     ):
         session = _camera_session(tmp_path)
         key, _ = _camera_tables(video_schema, monkeypatch, session, photodiode=False)
-        row = video_schema.StepVideoFrame._align_camera(key, _START, session.step_time)
+        row = video_schema.StepVideoFrame._align_camera(
+            key, _START, session.step_time, _params(video_schema)
+        )
         assert row["sync_match_fraction"] is None
 
     def test_make_stores_frames_shown_after_the_measured_display_lag(
@@ -1315,7 +1323,7 @@ class TestCameraAlignment:
         starts = np.arange(30, n, 60)
         np.testing.assert_array_equal(row["trial_start_steps"], starts)
         np.testing.assert_array_equal(row["scene_onset_frames"], starts + 2)
-        np.testing.assert_allclose(row["scene_onset_delay"], 2 / 30, atol=1e-5)
+        np.testing.assert_allclose(row["scene_onset_delay"], 1.5 / 30, atol=1e-5)
 
     def test_make_fails_when_the_display_lag_cannot_be_measured(
         self, video_schema, monkeypatch, tmp_path
@@ -1486,7 +1494,9 @@ class TestObsAlignment:
                 "signal_type": "pulse_geo",
             },
         )
-        row = video_schema.StepVideoFrame._align_obs(key, _START, steps)
+        row = video_schema.StepVideoFrame._align_obs(
+            key, _START, steps, _params(video_schema)
+        )
 
         assert row["align_method"] == "photodiode"
         assert row["generated_signal_delay"] is None
@@ -1496,7 +1506,7 @@ class TestObsAlignment:
     def test_generated_signal_is_shifted_by_its_display_delay(
         self, video_schema, monkeypatch, regular
     ):
-        # PROC sends each pulse GENERATED_SIGNAL_DISPLAY_DELAY before the screen
+        # PROC sends each pulse generated_signal_display_delay before the screen
         # shows it: one 100 Hz sample on per pulse, unix send times. Without
         # the delay, or the clean-signal options, frames would be off.
         video_df, photodiode_df, steps, truth = _sync_session(
@@ -1505,13 +1515,15 @@ class TestObsAlignment:
         display = np.round(photodiode_df["photodiode_read"].to_numpy()) > 420
         display_t = photodiode_df["time_stamp"].to_numpy()
         onsets = display_t[1:][display[1:] & ~display[:-1]] - 0.06  # square delay
-        delay = video_schema.GENERATED_SIGNAL_DISPLAY_DELAY
+        delay = _params(video_schema)["generated_signal_display_delay"]
         send_t = np.arange(-5.0, 300.0, 0.01)
         signal = np.zeros(send_t.size)
         signal[np.searchsorted(send_t, onsets - delay)] = 1.0
         self._proc(monkeypatch, _START + send_t, signal)  # signal type inferred
         key = self._tables(video_schema, monkeypatch, video_df)
-        row = video_schema.StepVideoFrame._align_obs(key, _START, steps)
+        row = video_schema.StepVideoFrame._align_obs(
+            key, _START, steps, _params(video_schema)
+        )
 
         assert row["align_method"] == "generated_signal"
         assert row["generated_signal_delay"] == delay

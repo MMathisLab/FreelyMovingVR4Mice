@@ -970,6 +970,17 @@ def trial_start_steps(iti) -> np.ndarray:
     return np.flatnonzero((iti[1:] == 0) & (iti[:-1] == 1)) + 1
 
 
+def switch_time(frame_times, frame: int, step_time: float) -> float:
+    """When the screen switched, given the first frame showing it after a step.
+
+    The switch happened after the step and after the previous frame (which
+    still shows the old screen), and by ``frame``: timed midway, like sync
+    edges, rather than half a frame late at ``frame`` itself.
+    """
+    start = frame_times[frame - 1] if frame > 0 else frame_times[0]
+    return (max(start, step_time) + frame_times[frame]) / 2
+
+
 def scene_onsets(starts, change_frames, step_video_time, frame_times):
     """Frame and delay at which each trial's scene reaches the video.
 
@@ -982,8 +993,9 @@ def scene_onsets(starts, change_frames, step_video_time, frame_times):
 
     Returns:
         ``(onset_frames, delays)``: per start, the first frame showing the new
-        scene (-1 when unknown) and its time after the start step (s, NaN when
-        unknown). A change before the start step is rejected.
+        scene (-1 when unknown) and the switch's time after the start step
+        (s, ``switch_time``; NaN when unknown). A change before the start step
+        is rejected.
     """
     step_video_time = np.asarray(step_video_time, dtype=float).ravel()
     frame_times = np.asarray(frame_times, dtype=float).ravel()
@@ -992,8 +1004,11 @@ def scene_onsets(starts, change_frames, step_video_time, frame_times):
     for i, (start, frame) in enumerate(zip(starts, change_frames)):
         if frame is None or not 0 <= frame < len(frame_times):
             continue
-        delay = frame_times[frame] - step_video_time[start]
-        if np.isfinite(delay) and delay >= 0:
+        step_time = step_video_time[start]
+        if not np.isfinite(step_time) or frame_times[frame] < step_time:
+            continue
+        delay = switch_time(frame_times, frame, step_time) - step_time
+        if np.isfinite(delay):
             onset_frames[i] = frame
             delays[i] = delay
     return onset_frames, delays

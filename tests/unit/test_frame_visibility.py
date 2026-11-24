@@ -243,6 +243,12 @@ def test_no_mapped_steps_needs_no_video():
     assert all(column.size == 0 for column in result.values())
 
 
+def test_session_without_iti_before_its_trials_fails():
+    # Active frames but no ITI to calibrate the segmentation on
+    with pytest.raises(ValueError, match="cannot calibrate"):
+        _describe({0: _panel(white=True), 1: _panel()}, [0, 1])
+
+
 def _arena(*, white=False, black=False):
     """Panel with structure: sky, floor band, occluder slab, objects.
 
@@ -335,12 +341,6 @@ def test_iti_frames_all_showing_an_object_fail_calibration():
         visibility.fit_session_params(
             [_panel(white=True), _panel(white=True)], [_panel(white=True)]
         )
-
-
-def test_session_without_iti_before_its_trials_fails():
-    # Active frames but no ITI to calibrate the segmentation on
-    with pytest.raises(ValueError, match="cannot calibrate"):
-        _describe({0: _panel(white=True), 1: _panel()}, [0, 1])
 
 
 def test_truncated_reader_fails_session():

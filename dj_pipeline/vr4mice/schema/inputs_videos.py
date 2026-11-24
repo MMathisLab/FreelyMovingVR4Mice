@@ -685,7 +685,7 @@ class StepVideoFrame(dj.Computed):
         The median of (frame of the scene change - start step time) over up to
         ``display_lag_trials`` trial starts, where the scene switches at once.
         """
-        from vr4mice.analysis.inputs_videos import trial_start_steps
+        from vr4mice.analysis.inputs_videos import switch_time, trial_start_steps
 
         step_frame_ids = np.asarray(row["step_frame_ids"])
         frame_times = np.asarray(frame_times, dtype=float)
@@ -709,13 +709,13 @@ class StepVideoFrame(dj.Computed):
                 after=params["lag_search_after"],
                 params=params,
             )
-        # The scene switched between frame j - 1 (old scene) and j: timed at
-        # their midpoint, as sync edges, not half a frame late at frame j
+        # Timed between the frame before the change and the change, not half
+        # a frame late at the change (switch_time)
         lags = np.array(
             [
-                (frame_times[j - 1] + frame_times[j]) / 2 - step_video_time[s]
+                switch_time(frame_times, j, step_video_time[s]) - step_video_time[s]
                 for s, j in zip(starts, changes)
-                if j is not None and 0 < j < len(frame_times)
+                if j is not None and j < len(frame_times)
             ]
         )
         if len(lags) < params["min_display_lag_trials"]:
