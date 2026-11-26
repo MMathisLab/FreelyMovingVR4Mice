@@ -905,12 +905,13 @@ def find_scene_changes(
     video_path: str,
     roi: Tuple[int, int, int, int],
     frames: Iterable[int],
+    *,
+    before: int,
+    after: int,
+    min_change: float,
+    min_contrast: float,
     seek_offset: int = 0,
-    before: int = 5,
-    after: int = 30,
     thumbnail: Tuple[int, int] = (80, 60),
-    min_contrast: float = 10.0,
-    min_change: float = 2.0,
 ) -> List[Optional[int]]:
     """First frame of the largest change in ``roi`` around each of ``frames``.
 
@@ -919,18 +920,18 @@ def find_scene_changes(
     after each one are read, and the largest frame-to-frame difference marks
     the change. None where no clear change is found: the largest difference is
     under ``min_change`` grey levels, or under ``min_contrast`` times the
-    median difference in the window.
+    median difference in the window (the frame-to-frame noise).
 
     Args:
         video_path: Video file.
         roi: (x, y, width, height) region compared (the mouse-view panel).
         frames: Frame index around which to look for each change.
-        seek_offset: See ``measure_seek_offset``.
         before: Frames read before each frame.
         after: Frames read after each frame.
-        thumbnail: (width, height) the region is reduced to before comparing.
-        min_contrast: Minimum ratio of the change to the median difference.
         min_change: Minimum change, mean absolute grey-level difference.
+        min_contrast: Minimum ratio of the change to the median difference.
+        seek_offset: See ``measure_seek_offset``.
+        thumbnail: (width, height) the region is reduced to before comparing.
     """
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -954,13 +955,63 @@ def find_scene_changes(
                 [np.abs(b - a).mean() for a, b in zip(thumbs[:-1], thumbs[1:])]
             )
             k = int(np.argmax(diffs))
-            clear = diffs[k] >= min_change and diffs[k] >= min_contrast * max(
-                np.median(diffs), 0.1
+            clear = diffs[k] >= min_change and diffs[k] >= min_contrast * np.median(
+                diffs
             )
             changes.append(first + k + 1 if clear else None)
     finally:
         cap.release()
     return changes
+
+
+def trial_start_steps(iti) -> np.ndarray:
+    """Step index of each trial start: the first non-ITI step after an ITI step."""
+    iti = np.asarray(iti, dtype=float).ravel()
+    return np.flatnonzero((iti[1:] == 0) & (iti[:-1] == 1)) + 1
+
+
+def switch_time(frame_times, frame: int, step_time: float) -> float:
+    """When the screen switched, given the first frame showing it after a step.
+
+    The switch happened after the step and after the previous frame (which
+    still shows the old screen), and by ``frame``: timed midway, like sync
+    edges, rather than half a frame late at ``frame`` itself.
+    """
+    start = frame_times[frame - 1] if frame > 0 else frame_times[0]
+    return (max(start, step_time) + frame_times[frame]) / 2
+
+
+def scene_onsets(starts, change_frames, step_video_time, frame_times):
+    """Frame and delay at which each trial's scene reaches the video.
+
+    Args:
+        starts: Step index of each trial start.
+        change_frames: Frame of the scene change found at each start
+            (``find_scene_changes``), None where none was found.
+        step_video_time: Each step's time on the video clock (s).
+        frame_times: Each frame's time on the video clock (s).
+
+    Returns:
+        ``(onset_frames, delays)``: per start, the first frame showing the new
+        scene (-1 when unknown) and the switch's time after the start step
+        (s, ``switch_time``; NaN when unknown). A change before the start step
+        is rejected.
+    """
+    step_video_time = np.asarray(step_video_time, dtype=float).ravel()
+    frame_times = np.asarray(frame_times, dtype=float).ravel()
+    onset_frames = np.full(len(starts), -1, dtype=np.int64)
+    delays = np.full(len(starts), np.nan)
+    for i, (start, frame) in enumerate(zip(starts, change_frames)):
+        if frame is None or not 0 <= frame < len(frame_times):
+            continue
+        step_time = step_video_time[start]
+        if not np.isfinite(step_time) or frame_times[frame] < step_time:
+            continue
+        delay = switch_time(frame_times, frame, step_time) - step_time
+        if np.isfinite(delay):
+            onset_frames[i] = frame
+            delays[i] = delay
+    return onset_frames, delays
 
 
 def resize_frame(frame: np.ndarray, size: Tuple[int, int]) -> np.ndarray:

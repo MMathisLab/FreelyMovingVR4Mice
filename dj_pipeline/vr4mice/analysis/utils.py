@@ -36,6 +36,11 @@ def create_bins(
     return data
 
 
+def _grid_positions(index: pd.Index, n_points: int) -> np.ndarray:
+    """Evenly spaced positions over a group's retained row index."""
+    return np.linspace(index.min(), index.max(), n_points)
+
+
 def interpolate_group(
     group: pd.DataFrame,
     n_points: int,
@@ -56,7 +61,7 @@ def interpolate_group(
 
     """
     # Generate new evenly spaced x values within the original range for interpolation
-    x_new = np.linspace(group.index.min(), group.index.max(), n_points)
+    x_new = _grid_positions(group.index, n_points)
 
     # Retrieve groupby identifiers (they are uniform within the group)
     ids = {}
@@ -141,8 +146,12 @@ def interpolate(
     return final_interpolated_df
 
 
-def interpolate_j_shaped(big_df, box_df, n_points=100):
+def prepare_j_shaped_trials(big_df, box_df):
+    """Return the rows ``interpolate_j_shaped`` interpolates, and its value columns.
 
+    Adds the derived kinematics to ``big_df`` (in place), keeps J-shaped
+    trials and drops rows with a missing value in any interpolated column.
+    """
     big_df["optimal_p"] = analysis.get_optimal_p(big_df)
     big_df["local_tortuosity"] = analysis.get_local_tortuosity(big_df, window_size=1)
     big_df["flip_one_side"] = big_df["trial_left_choice"].replace([0, 1], [1, -1])
@@ -176,7 +185,45 @@ def interpolate_j_shaped(big_df, box_df, n_points=100):
         logger.warning(
             f"Dropped {len(j_shaped) - len(j_shaped_clean)} rows with NaN values before interpolation in j-shaped trials"
         )
+    return j_shaped_clean, cols_to_check
 
+
+def trial_grid_times(j_shaped, n_points=100):
+    """Times of the ``interpolate_j_shaped`` samples of each trial.
+
+    Uses the same rows and sample positions as the interpolation, so row
+    ``trial_step`` of a trial is the moment of its interpolated sample.
+
+    Args:
+        j_shaped: Rows from ``prepare_j_shaped_trials``, with ``step_time``.
+        n_points: Samples per trial, as in ``interpolate_j_shaped``.
+
+    Returns:
+        DataFrame with ``dataset``, ``trial``, ``trial_step`` and the
+        interpolated ``step_time`` per sample.
+    """
+    parts = []
+    for (dataset, trial), group in j_shaped.groupby(["dataset", "trial"]):
+        positions = _grid_positions(group.index, n_points)
+        parts.append(
+            pd.DataFrame(
+                {
+                    "dataset": dataset,
+                    "trial": int(trial),
+                    "trial_step": np.arange(n_points),
+                    "step_time": np.interp(
+                        positions, group.index, group["step_time"].astype(float)
+                    ),
+                }
+            )
+        )
+    if not parts:
+        return pd.DataFrame(columns=["dataset", "trial", "trial_step", "step_time"])
+    return pd.concat(parts, ignore_index=True)
+
+
+def interpolate_j_shaped(big_df, box_df, n_points=100):
+    j_shaped_clean, cols_to_check = prepare_j_shaped_trials(big_df, box_df)
     interpolated_j_shaped = interpolate(
         j_shaped_clean,
         n_points=n_points,

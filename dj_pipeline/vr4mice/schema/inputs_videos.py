@@ -34,45 +34,12 @@ schema = get_schema(schema_name, locals())
 
 logger = Logger.get_logger()
 
-# OBS recordings: <dataset>.mkv (older) or <dataset>.mp4, 1920x1080
+# Where the recordings are found (pipeline container mount), needed before any
+# table row exists; the file used is stored per row (video_path).
 OBS_VIDEO_DIR = "/vr4mice_screen_recordings/raw_screen_recordings"
-OBS_VIDEO_EXTENSIONS = (".mkv", ".mp4")
-OBS_FRAME_SIZE = (1920, 1080)
-# 3-camera setup: input videos sit next to the OBS recordings, on the same mount.
 INPUT_VIDEO_DIR = "/vr4mice_screen_recordings/raw_input_videos"
+# 3-camera setup: the camera filming the screens (<prefix>_<dataset>_VIDEO2.avi)
 INPUT_VIDEO_CAMERA = 2
-INPUT_VIDEO_FRAME_SIZE = (640, 480)
-# Mouse-view panel (bottom-left screen) in the 640x480 camera-2 video, as
-# (x, y, width, height).
-INPUT_VIDEO_VISUAL_ROI = (0, 243, 316, 237)
-# get_frame returns the mouse-view panel at this (width, height) for every setup:
-# the batch2 OBS panel size. Camera 2 squeezes the 16:9 screen into 640x480, so its
-# 316x237 panel is stretched back; the batch1 OBS panel is 926x511.
-FRAME_OUTPUT_SIZE = (948, 535)
-# Below this fraction of game steps inside the video, the alignment is rejected
-# (e.g. a video from another session saved under the wrong name).
-MIN_STEP_COVERAGE = 0.9
-# Below this fraction of video sync edges matching photodiode edges, the video
-# is rejected (wrong session, or video paired with the wrong timestamps).
-MIN_SYNC_MATCH = 0.8
-# Without a photodiode, OBS videos are aligned on the generated sync signal (PROC
-# send times), which reaches the screen this much later. Measured on
-# Xestia_2026-08-21_1: square visible in the video a median 62 ms after PROC sent
-# it, and within ~2 ms of the photodiode.
-GENERATED_SIGNAL_DISPLAY_DELAY = 0.062
-# A game step's content reaches the screen display_lag after its time. It is
-# measured per session at the trial starts (scene switches at once): the median of
-# (first frame showing the trial - frame time of its first step) over up to
-# DISPLAY_LAG_TRIALS starts. With fewer than MIN_DISPLAY_LAG_TRIALS clear changes,
-# DEFAULT_DISPLAY_LAG is used (measured on Xestia_2026-07-30_1: 54 ms, 44-61 ms
-# 10th-90th percentile). Outside (0, MAX_DISPLAY_LAG) s, or with trials spread more
-# than MAX_DISPLAY_LAG_SPREAD (median absolute deviation), the alignment is
-# rejected: the video is likely misaligned.
-DISPLAY_LAG_TRIALS = 40
-MIN_DISPLAY_LAG_TRIALS = 5
-DEFAULT_DISPLAY_LAG = 0.054
-MAX_DISPLAY_LAG = 0.2
-MAX_DISPLAY_LAG_SPREAD = 0.025
 
 
 def input_video_files(input_video_dir: str = INPUT_VIDEO_DIR) -> dict:
@@ -254,9 +221,10 @@ class RawVideo(dj.Imported):
         if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
             return
 
+        # <dataset>.mkv (older recordings) or <dataset>.mp4
         candidates = [
             pathlib.Path(OBS_VIDEO_DIR) / f"{key['dataset']}{extension}"
-            for extension in OBS_VIDEO_EXTENSIONS
+            for extension in (".mkv", ".mp4")
         ]
         video_path = next((path for path in candidates if path.is_file()), None)
         if video_path is None:
@@ -279,10 +247,12 @@ class RawVideo(dj.Imported):
                 cap.release()
             if n_frames <= 0 or not readable:
                 raise IOError(f"No readable frames in {video_path} (incomplete copy?)")
-            if size != OBS_FRAME_SIZE:
+            # OBS records the whole 1920x1080 screen; ObsVideoLayout's panels
+            # are positions in that frame, so another size cannot be cropped.
+            if size != (1920, 1080):
                 raise ValueError(
                     f"{video_path} is {size[0]}x{size[1]}, OBS recordings are "
-                    f"{OBS_FRAME_SIZE[0]}x{OBS_FRAME_SIZE[1]}: not an OBS recording?"
+                    "1920x1080: not an OBS recording?"
                 )
             self.insert1({**key, "video_path": str(video_path)})
         except Exception as err:
@@ -408,11 +378,13 @@ class InputVideo(dj.Imported):
                 cap.release()
 
             problems = []
-            if (width, height) != INPUT_VIDEO_FRAME_SIZE:
+            # Camera 2's recording resolution; visual_roi below is a position in
+            # this frame, so another size (another camera's video) cannot be
+            # cropped.
+            if (width, height) != (640, 480):
                 problems.append(
                     f"video is {width}x{height}, camera {INPUT_VIDEO_CAMERA} records "
-                    f"{INPUT_VIDEO_FRAME_SIZE[0]}x{INPUT_VIDEO_FRAME_SIZE[1]}: "
-                    "another camera's video?"
+                    "640x480: another camera's video?"
                 )
             if timestamps.ndim != 1 or timestamps.size != n_frames:
                 problems.append(
@@ -442,7 +414,11 @@ class InputVideo(dj.Imported):
                     "n_frames": n_frames,
                     "width": width,
                     "height": height,
-                    "visual_roi": INPUT_VIDEO_VISUAL_ROI,
+                    # Mouse-view panel (bottom-left screen) in the 640x480 frame:
+                    # the batch2 OBS panel (ObsVideoLayout) scaled from 1920x1080
+                    # (x / 3, y * 4 / 9), down to the bottom edge. Checked on
+                    # Xestia_2026-07-30_1.
+                    "visual_roi": (0, 243, 316, 237),
                     "sync_roi": sync_roi,
                     "seek_offset": measure_seek_offset(video_path),
                     "timestamps": timestamps,
@@ -462,13 +438,17 @@ class StepVideoFrame(dj.Computed):
     display_lag``. ``step_frame_ids[i]`` is the first frame captured at or after
     the step's own time, which still shows earlier steps. -1 outside the video.
     Frames are indexed in ``video_path`` and cropped to ``visual_roi`` by
-    ``get_frame``. ``display_lag`` is measured per session at the trial starts
-    (see ``DISPLAY_LAG_TRIALS``), and also checks the alignment: a lag outside
-    (0, ``MAX_DISPLAY_LAG``) s means misaligned frames.
+    ``get_frame``. ``display_lag`` is measured per session at the trial starts,
+    and also checks the alignment: a lag outside (0, ``max_display_lag``) s
+    means misaligned frames. Each trial's own scene onset is stored too
+    (``scene_onset_frames``): single trials reach the screen about a refresh
+    before or after the session's lag. The parameters used are in
+    ``alignment_params`` (also stored in each row).
 
     The step's content comes from the pose the task read at the step; that pose
     was captured by the DLC camera earlier still (~94 ms before the screen on
-    Xestia_2026-07-30_1, vs 54 ms for display_lag).
+    Xestia_2026-07-30_1, measured when its display lag came out at 54 ms; the
+    current measurement gives 49 ms).
 
     Clocks:
 
@@ -482,7 +462,7 @@ class StepVideoFrame(dj.Computed):
       so the recording must start before the pulses.
     - obs without photodiode (align_method "generated_signal"): the same fit on
       the generated sync signal that drives the square (PROC send times from
-      ``dlc.DLCProcessor``, plus ``GENERATED_SIGNAL_DISPLAY_DELAY``, stored in
+      ``dlc.DLCProcessor``, plus ``generated_signal_display_delay``, stored in
       ``generated_signal_delay``), so frames match photodiode-aligned sessions
       up to the delay's variation.
     """
@@ -490,6 +470,7 @@ class StepVideoFrame(dj.Computed):
     definition = """
     -> vr4mice.State                    # game steps
     ---
+    alignment_params: <blob>            # parameters used (StepVideoFrame.alignment_params)
     video_source: enum('obs', 'camera') # recording setup of the input video
     align_method: enum('photodiode', 'timestamps', 'generated_signal') # how frames were matched to steps
     video_path: varchar(255)            # video indexed by frame_ids
@@ -498,11 +479,14 @@ class StepVideoFrame(dj.Computed):
     n_steps: int32                      # number of game steps
     step: <blob>                        # step indices (State.step)
     step_time: <blob>                   # step times, game seconds (State.step_time)
-    step_video_time=null: <blob>        # each step's time on the video clock (s): camera timestamps, or the residual-corrected OBS fit (frame / fps); NaN outside the video
+    step_video_time: <blob>             # each step's time on the video clock (s): camera timestamps, or the residual-corrected OBS fit (frame / fps); NaN outside the video
     frame_ids: <blob>                   # frame showing each step on screen (step_time + display_lag), -1 outside the video
     step_frame_ids: <blob>              # frame captured at each step's time (no display lag), -1 outside the video
     display_lag: float64                # step to screen delay (s), median over trial starts
-    display_lag_trials: int32           # trial starts measured (0 when DEFAULT_DISPLAY_LAG is used)
+    display_lag_trials: int32           # trial starts the lag was measured on
+    trial_start_steps: <blob>           # step index of each trial start (first non-ITI step after an ITI)
+    scene_onset_frames: <blob>          # per trial start: first frame showing the trial's scene, -1 without a clear change
+    scene_onset_delay: <blob>           # per trial start: time (s) from the start step to that frame (video clock), NaN without one
     n_steps_outside_video: int32        # steps without a frame (frame_ids == -1)
     pair_count=null: int32              # obs: paired sync/photodiode edges
     rms=null: float64                   # obs: residual RMS of the edge fit (s)
@@ -512,6 +496,63 @@ class StepVideoFrame(dj.Computed):
     sync_match_fraction=null: float64   # video sync edges matching photodiode edges
     generated_signal_delay=null: float64 # generated_signal: delay added to send times (s)
     """
+
+    # Parameters of make(), stored in each row (alignment_params) so a row
+    # records the values it was computed with. Changing one needs a repopulate.
+    alignment_params = dict(
+        # Camera videos rejected below this fraction of sync square edges
+        # matching photodiode edges (wrong recording). Judgement call, not
+        # measured: compare with sync_match_fraction of populated sessions.
+        min_sync_match=0.8,
+        # Rejected below this fraction of game steps inside the video (another
+        # session's video, cut recording). Judgement call, not measured.
+        min_step_coverage=0.9,
+        # s, OBS without photodiode: added to the generated sync signal's send
+        # times (PROC). Measured on Xestia_2026-08-21_1: 62 ms, within ~2 ms of
+        # the photodiode.
+        generated_signal_display_delay=0.062,
+        # Display lag: trial starts measured, spread over the session (one
+        # video read each). Judgement call: jitter is ~1 refresh (17 ms), so
+        # the median of 40 is within a few ms.
+        display_lag_trials=40,
+        # Display lag: with fewer clear scene changes the session fails (too
+        # few trial starts in the video, or frames not showing the switches).
+        # Judgement call: fewer is not robust to one wrong detection; correct
+        # sessions find a change at nearly every start (Xestia_2026-07-30_1:
+        # 39/40 before scene_change_min_change was lowered).
+        min_display_lag_trials=5,
+        # s, a lag outside (0, this) means misaligned video: the session
+        # fails. Lags measured so far: 49 ms (Xestia_2026-07-27_1 and
+        # Xestia_2026-07-30_1).
+        max_display_lag=0.2,
+        # s, trial starts' lags spread more (median absolute deviation) means
+        # misaligned video: the session fails. Correct sessions jitter ~1
+        # refresh (17 ms); 25 ms is 1.5 refreshes.
+        max_display_lag_spread=0.025,
+        # s, display lag: video read from this long before each trial start
+        # step's frame, so an early change (negative lag, misaligned video) is
+        # seen and rejected.
+        lag_search_before=0.1,
+        # s, display lag: video read up to this long after each start step's
+        # frame. Must hold the change even in a misaligned video, so that it is
+        # rejected rather than missed: 2.5x max_display_lag.
+        lag_search_after=0.5,
+        # s, each trial's scene onset is searched up to the session display lag
+        # plus this. 4x max_display_lag_spread; short because the largest
+        # change in the window wins, and later ones (fast turns) would win.
+        scene_onset_margin=0.1,
+        # Grey levels: a trial start's scene change must change the 80x60
+        # panel thumbnail by this much on average. Xestia_2026-07-30_1: most
+        # switches change it by 2-33 levels, but trials whose walls stay and
+        # only the objects appear by 1.4-2.0; the noise (median change in the
+        # window) is at most 0.02. 1.0 catches all of them, 50x the noise.
+        scene_change_min_change=1.0,
+        # The scene change must be this many times the window's median
+        # frame-to-frame change. Separates switches from the mouse's own
+        # movement; on Xestia_2026-07-30_1 every switch is at least 14x the
+        # median (most over 100x).
+        scene_change_min_contrast=10.0,
+    )
 
     @property
     def key_source(self):
@@ -527,7 +568,8 @@ class StepVideoFrame(dj.Computed):
         """Match each game step to an input video frame and store QA."""
         from vr4mice.analysis.inputs_videos import align_steps_to_frames_by_timestamps
 
-        if vr4mice.FailedSession.should_skip(key, self.__class__.__name__, logger):
+        table_name = self.__class__.__name__
+        if vr4mice.FailedSession.should_skip(key, table_name, logger):
             return
 
         # Missing inputs that are added later (a new batch): not a failure,
@@ -543,6 +585,7 @@ class StepVideoFrame(dj.Computed):
             return
 
         try:
+            params = self.alignment_params
             start_time, step, step_time = (vr4mice.State & key).fetch1(
                 "start_time", "step", "step_time"
             )
@@ -550,50 +593,47 @@ class StepVideoFrame(dj.Computed):
             step_time = np.asarray(step_time, dtype=float)
 
             if InputVideo & key:
-                row = self._align_camera(key, start_time, step_time)
+                row = self._align_camera(key, start_time, step_time, params)
             else:
-                row = self._align_obs(key, start_time, step_time)
+                row = self._align_obs(key, start_time, step_time, params)
 
-            # Steps and frames on the video clock (s); frames shown on screen
-            step_video_time = row.pop("step_video_time")
+            # Steps and frames on the video clock (s); frames shown on screen.
+            # step_video_time is kept so lookups match frame_ids (OBS: includes
+            # the residual correction for dropped frames).
+            step_video_time = row["step_video_time"]
             frame_times = row.pop("frame_times")
             row["step_frame_ids"] = row.pop("frame_ids")
             lag, n_trials = self._measure_display_lag(
-                key, row, step_video_time, frame_times
+                key, row, step_video_time, frame_times, params
             )
             row["frame_ids"] = align_steps_to_frames_by_timestamps(
                 step_video_time + lag, frame_times
             )
             row["display_lag"] = lag
             row["display_lag_trials"] = n_trials
-            # Keep the clock mapping so lookups match frame_ids (OBS: includes
-            # the residual correction for dropped frames). Tables declared
-            # before this column get it with StepVideoFrame.alter().
-            if "step_video_time" in self.heading.names:
-                row["step_video_time"] = step_video_time
-            else:
-                logger.warning(
-                    "%s has no step_video_time column: run "
-                    "StepVideoFrame.alter(), then fill_step_video_time()",
-                    self.__class__.__name__,
+            row.update(
+                self._measure_scene_onsets(
+                    key, row, step_video_time, frame_times, params
                 )
+            )
 
             frame_ids = row["frame_ids"]
             n_outside = int((frame_ids < 0).sum())
             coverage = 1 - n_outside / max(len(frame_ids), 1)
-            if coverage < MIN_STEP_COVERAGE:
+            if coverage < params["min_step_coverage"]:
                 raise ValueError(
                     f"{pathlib.Path(row['video_path']).name} covers {coverage:.1%} "
                     f"of the game steps ({len(step_time)} steps over "
                     f"{step_time[-1] - step_time[0]:.0f} s; minimum "
-                    f"{MIN_STEP_COVERAGE:.0%}): another session's video, or a cut "
-                    "recording?"
+                    f"{params['min_step_coverage']:.0%}): another session's "
+                    "video, or a cut recording?"
                 )
 
             self.insert1(
                 {
                     **key,
                     **row,
+                    "alignment_params": params,
                     "n_steps": len(step_time),
                     "step": step,
                     "step_time": step_time,
@@ -601,7 +641,7 @@ class StepVideoFrame(dj.Computed):
                 }
             )
         except Exception as err:
-            _record_failure(key["dataset"], self.__class__.__name__, err)
+            _record_failure(key["dataset"], table_name, err)
             return None
 
     @staticmethod
@@ -619,58 +659,135 @@ class StepVideoFrame(dj.Computed):
         return None
 
     @staticmethod
-    def _measure_display_lag(key, row, step_video_time, frame_times):
-        """Step to screen delay (s) and trial starts measured (see DISPLAY_LAG_TRIALS)."""
+    def _scene_changes(row, frames, frame_times, before, after, params):
+        """``find_scene_changes`` at ``frames``, from ``before`` frames to ``after`` s.
+
+        ``after`` is converted to frames with the video's median frame interval.
+        """
         from vr4mice.analysis.inputs_videos import find_scene_changes
 
-        step_frame_ids = row["step_frame_ids"]
-        iti = np.asarray((vr4mice.MouseState & key).fetch1("iti"), dtype=float).ravel()
-        n = min(len(iti), len(step_frame_ids))
-        starts = np.flatnonzero((iti[1:n] == 0) & (iti[: n - 1] == 1)) + 1
-        starts = starts[step_frame_ids[starts] >= 0]
-        if len(starts) > DISPLAY_LAG_TRIALS:
-            starts = starts[
-                np.unique(
-                    np.linspace(0, len(starts) - 1, DISPLAY_LAG_TRIALS).astype(int)
-                )
-            ]
-        changes = find_scene_changes(
+        frame_interval = float(np.median(np.diff(frame_times)))
+        return find_scene_changes(
             row["video_path"],
             row["visual_roi"],
-            step_frame_ids[starts],
+            frames,
             seek_offset=row["seek_offset"],
+            before=before,
+            after=int(np.ceil(after / frame_interval)),
+            min_change=params["scene_change_min_change"],
+            min_contrast=params["scene_change_min_contrast"],
         )
-        # The scene switched between frame j - 1 (old scene) and j: timed at
-        # their midpoint, as sync edges, not half a frame late at frame j
+
+    @classmethod
+    def _measure_display_lag(cls, key, row, step_video_time, frame_times, params):
+        """Step to screen delay (s) and trial starts measured (``alignment_params``).
+
+        The median of (frame of the scene change - start step time) over up to
+        ``display_lag_trials`` trial starts, where the scene switches at once.
+        """
+        from vr4mice.analysis.inputs_videos import switch_time, trial_start_steps
+
+        step_frame_ids = np.asarray(row["step_frame_ids"])
+        frame_times = np.asarray(frame_times, dtype=float)
+        iti = np.asarray((vr4mice.MouseState & key).fetch1("iti"), dtype=float).ravel()
+        n = min(len(iti), len(step_frame_ids))
+        starts = trial_start_steps(iti[:n])
+        starts = starts[step_frame_ids[starts] >= 0]
+        n_trials = int(params["display_lag_trials"])
+        if len(starts) > n_trials:
+            starts = starts[
+                np.unique(np.linspace(0, len(starts) - 1, n_trials).astype(int))
+            ]
+        changes = []
+        if len(starts) and len(frame_times) > 1:
+            frame_interval = float(np.median(np.diff(frame_times)))
+            changes = cls._scene_changes(
+                row,
+                step_frame_ids[starts],
+                frame_times,
+                before=int(np.ceil(params["lag_search_before"] / frame_interval)),
+                after=params["lag_search_after"],
+                params=params,
+            )
+        # Timed between the frame before the change and the change, not half
+        # a frame late at the change (switch_time)
         lags = np.array(
             [
-                (frame_times[j - 1] + frame_times[j]) / 2 - step_video_time[s]
+                switch_time(frame_times, j, step_video_time[s]) - step_video_time[s]
                 for s, j in zip(starts, changes)
-                if j is not None and 0 < j < len(frame_times)
+                if j is not None and j < len(frame_times)
             ]
         )
-        if len(lags) < MIN_DISPLAY_LAG_TRIALS:
-            logger.warning(
-                "%s: display lag measured at %d trial starts only, using %.0f ms",
-                key["dataset"],
-                len(lags),
-                DEFAULT_DISPLAY_LAG * 1000,
+        if len(lags) < params["min_display_lag_trials"]:
+            raise ValueError(
+                f"Scene change found at {len(lags)} of {len(starts)} trial starts "
+                f"only (minimum {params['min_display_lag_trials']}) in "
+                f"{pathlib.Path(row['video_path']).name}: too few trial starts "
+                "in the video, or frames not showing the scene switches (frozen, "
+                "black, wrong panel)?"
             )
-            return DEFAULT_DISPLAY_LAG, 0
         lag = float(np.median(lags))
         spread = float(np.median(np.abs(lags - lag)))
-        if not 0 < lag < MAX_DISPLAY_LAG or spread > MAX_DISPLAY_LAG_SPREAD:
+        max_lag, max_spread = (
+            params["max_display_lag"],
+            params["max_display_lag_spread"],
+        )
+        if not 0 < lag < max_lag or spread > max_spread:
             raise ValueError(
                 f"Trial starts appear {lag * 1000:.0f} ms (spread "
                 f"{spread * 1000:.0f} ms, {len(lags)} trials) after their steps "
                 f"in {pathlib.Path(row['video_path']).name}; expected 0-"
-                f"{MAX_DISPLAY_LAG * 1000:.0f} ms, spread under "
-                f"{MAX_DISPLAY_LAG_SPREAD * 1000:.0f} ms: misaligned video?"
+                f"{max_lag * 1000:.0f} ms, spread under "
+                f"{max_spread * 1000:.0f} ms: misaligned video?"
             )
         return lag, len(lags)
 
+    @classmethod
+    def _measure_scene_onsets(cls, key, row, step_video_time, frame_times, params):
+        """Columns with the frame and delay of every trial's scene onset.
+
+        Found like the display lag (largest scene change after the start step's
+        frame), from the frame before the start step's (so a change on that
+        frame is seen) to ``display_lag + scene_onset_margin`` after it.
+        """
+        from vr4mice.analysis.inputs_videos import scene_onsets, trial_start_steps
+
+        step_frame_ids = np.asarray(row["step_frame_ids"])
+        frame_times = np.asarray(frame_times, dtype=float)
+        iti = np.asarray((vr4mice.MouseState & key).fetch1("iti"), dtype=float).ravel()
+        starts = trial_start_steps(iti[: min(len(iti), len(step_frame_ids))])
+        changes = [None] * len(starts)
+        in_video = np.flatnonzero(step_frame_ids[starts] >= 0)
+        if len(in_video) and len(frame_times) > 1:
+            found = cls._scene_changes(
+                row,
+                step_frame_ids[starts[in_video]],
+                frame_times,
+                before=1,  # a change between this frame and the start's is seen
+                after=row["display_lag"] + params["scene_onset_margin"],
+                params=params,
+            )
+            for i, frame in zip(in_video, found):
+                changes[i] = frame
+        onset_frames, delays = scene_onsets(
+            starts, changes, step_video_time, frame_times
+        )
+        return {
+            "trial_start_steps": starts,
+            "scene_onset_frames": onset_frames,
+            "scene_onset_delay": delays,
+        }
+
     @staticmethod
-    def _align_camera(key, start_time, step_time):
+    def _frame_times(key, source):
+        """Each input video frame's time on the video clock (s)."""
+        if source == "camera":
+            return np.asarray((InputVideo & key).fetch1("timestamps"), dtype=float)
+        fps, n_frames = (RawVideoSync & key).fetch1("fps", "n_frames")
+        return np.arange(n_frames) / fps
+
+    @staticmethod
+    def _align_camera(key, start_time, step_time, params):
         """Camera recording: match steps to frames on the camera timestamps."""
         from vr4mice.analysis.inputs_videos import (
             align_steps_to_frames_by_timestamps,
@@ -700,14 +817,14 @@ class StepVideoFrame(dj.Computed):
                 seek_offset=seek_offset,
             )
             sync_match = check["match_fraction"]
-            if sync_match < MIN_SYNC_MATCH:
+            if sync_match < params["min_sync_match"]:
                 raise ValueError(
                     f"{pathlib.Path(video_path).name}: sync square edges at the "
                     f"camera timestamps match the photodiode for {sync_match:.0%} "
                     f"of {check['n_edges']} edges (median gap "
                     f"{check['median_gap'] * 1000:.0f} ms; minimum "
-                    f"{MIN_SYNC_MATCH:.0%}): video and timestamps not from the "
-                    "same recording, or another session?"
+                    f"{params['min_sync_match']:.0%}): video and timestamps not "
+                    "from the same recording, or another session?"
                 )
         else:
             logger.warning(
@@ -728,7 +845,7 @@ class StepVideoFrame(dj.Computed):
         }
 
     @staticmethod
-    def _align_obs(key, start_time, step_time):
+    def _align_obs(key, start_time, step_time, params):
         """OBS recording: match steps to frames with the photodiode sync edges.
 
         Without a photodiode, the generated sync signal stands in for it.
@@ -748,7 +865,7 @@ class StepVideoFrame(dj.Computed):
         else:
             sync_time, sync_level, signal_type = load_generated_signal(key)
             align_method = "generated_signal"
-            display_delay = GENERATED_SIGNAL_DISPLAY_DELAY
+            display_delay = params["generated_signal_display_delay"]
             sync_time = sync_time + display_delay
             # clean 0/1 signal, possibly short pulses: no filter, min/max levels
             signal_options = {"pd_lowpass": False, "pd_level_percentiles": (0, 100)}
@@ -830,23 +947,14 @@ class StepVideoFrame(dj.Computed):
         session's step times (ValueError otherwise). Query times are mapped to
         the video clock by interpolating ``step_video_time``, the mapping
         ``frame_ids`` was built from, so a step's own time returns its
-        ``step_frame_ids`` (or ``frame_ids`` when displayed) entry. Rows
-        populated before that column fall back to the camera timestamps or the
-        OBS offset and drift, without the OBS residual correction. When
+        ``step_frame_ids`` (or ``frame_ids`` when displayed) entry. When
         ``displayed`` is True, the display lag is added on the recording clock.
         Returns None for a query outside the input video.
         """
         from vr4mice.analysis.inputs_videos import align_steps_to_frames_by_timestamps
 
-        step_time, step_video_time, source, offset, drift, display_lag = (
-            cls & key
-        ).fetch1(
-            "step_time",
-            "step_video_time",
-            "video_source",
-            "offset",
-            "drift",
-            "display_lag",
+        step_time, step_video_time, source, display_lag = (cls & key).fetch1(
+            "step_time", "step_video_time", "video_source", "display_lag"
         )
         step_time = np.asarray(step_time, dtype=float)
         min_time, max_time = np.min(step_time), np.max(step_time)
@@ -863,80 +971,29 @@ class StepVideoFrame(dj.Computed):
         if not query_times.size:
             return []
 
-        if source == "camera":
-            frame_times = (InputVideo & key).fetch1("timestamps")
-        else:
-            fps, n_frames = (RawVideoSync & key).fetch1("fps", "n_frames")
-            frame_times = np.arange(n_frames) / fps
+        frame_times = cls._frame_times(key, source)
 
-        if step_video_time is not None:
-            # Piecewise linear between steps; NaN next to steps outside the video
-            order = np.argsort(step_time, kind="stable")
-            video_times = np.interp(
-                query_times,
-                step_time[order],
-                np.asarray(step_video_time, dtype=float)[order],
-            )
-        elif source == "camera":
-            start_time = (vr4mice.State & key).fetch1("start_time")
-            video_times = float(np.ravel(start_time)[0]) + query_times
-        else:
-            logger.warning(
-                "%s: no step_video_time stored, using the OBS fit without its "
-                "residual correction; run StepVideoFrame.fill_step_video_time()",
-                key.get("dataset", key) if isinstance(key, dict) else key,
-            )
-            video_times = offset + drift * query_times
-
+        video_times = cls.to_video_clock(step_time, step_video_time, query_times)
         if displayed:
             video_times += display_lag
         frames = align_steps_to_frames_by_timestamps(video_times, frame_times)
         return [int(frame) if frame >= 0 else None for frame in frames]
 
-    @classmethod
-    def fill_step_video_time(cls, restriction=None):
-        """Store ``step_video_time`` for rows populated before it existed.
+    @staticmethod
+    def to_video_clock(step_time, step_video_time, times):
+        """Map game times (``step_time`` clock) to the video clock.
 
-        Camera rows use ``State.start_time + step_time``. OBS rows recompute the
-        sync fit from stored data (no video reading) and are updated only if it
-        reproduces the stored ``step_frame_ids``, so ``frame_ids`` and the
-        tables built on them stay valid.
-
-        Args:
-            restriction: Optional restriction on the rows to fill.
-
-        Returns:
-            Keys left unfilled because the fit no longer reproduces their
-            frames; delete and repopulate those rows.
+        Piecewise linear between steps on ``step_video_time``, the mapping
+        ``frame_ids`` was built from (OBS: with the residual correction for
+        dropped frames); NaN next to steps outside the video.
         """
-        rows = cls & "step_video_time IS NULL"
-        if restriction is not None:
-            rows = rows & restriction
-        unfilled = []
-        for key in rows.fetch("KEY"):
-            source, step_frame_ids = (cls & key).fetch1(
-                "video_source", "step_frame_ids"
-            )
-            start_time, step_time = (vr4mice.State & key).fetch1(
-                "start_time", "step_time"
-            )
-            start_time = float(np.ravel(start_time)[0])
-            step_time = np.asarray(step_time, dtype=float)
-            if source == "camera":
-                step_video_time = start_time + step_time
-            else:
-                aligned = cls._align_obs(key, start_time, step_time)
-                if not np.array_equal(aligned["frame_ids"], step_frame_ids):
-                    logger.warning(
-                        "%s: the sync fit no longer reproduces step_frame_ids; "
-                        "delete and repopulate this row",
-                        key["dataset"],
-                    )
-                    unfilled.append(key)
-                    continue
-                step_video_time = aligned["step_video_time"]
-            cls().update1({**key, "step_video_time": step_video_time})
-        return unfilled
+        step_time = np.asarray(step_time, dtype=float)
+        order = np.argsort(step_time, kind="stable")
+        return np.interp(
+            np.asarray(times, dtype=float),
+            step_time[order],
+            np.asarray(step_video_time, dtype=float)[order],
+        )
 
     @classmethod
     def trial_frames(cls, key, trial: int, decision_xy=None) -> dict:
@@ -989,7 +1046,7 @@ class StepVideoFrame(dj.Computed):
 
     @classmethod
     def plot_trial_frames(
-        cls, key, trial: int, decision_xy=None, axes=None, size=FRAME_OUTPUT_SIZE
+        cls, key, trial: int, decision_xy=None, axes=None, size="common"
     ):
         """Plot the displayed frames of ``trial_frames`` (one axis per frame).
 
@@ -1018,15 +1075,17 @@ class StepVideoFrame(dj.Computed):
         return axes
 
     @classmethod
-    def get_frame(cls, key, frame_index: int, size=FRAME_OUTPUT_SIZE):
+    def get_frame(cls, key, frame_index: int, size="common"):
         """Return the mouse-view panel of frame `frame_index` (BGR, as read by OpenCV).
 
         Args:
             key: StepVideoFrame key.
             frame_index: Frame in ``video_path`` (from ``frame_ids``).
-            size: (width, height) of the returned panel, the same for OBS and
-                camera videos so they compare directly; None for the native crop
-                (926x511 batch1 OBS, 948x535 batch2 OBS, 316x237 camera).
+            size: (width, height) of the returned panel; "common" for the
+                largest OBS panel (``ObsVideoLayout``, batch2: 948x535), the same
+                for every setup so frames compare directly (the 316x237 camera
+                panel, squeezed from 16:9 into 640x480, is stretched back); None
+                for the native crop.
         """
         from vr4mice.analysis.inputs_videos import (
             crop_frame,
@@ -1039,7 +1098,12 @@ class StepVideoFrame(dj.Computed):
         )
         frame = read_video_frame(video_path, frame_index, seek_offset=seek_offset)
         panel = crop_frame(frame, visual_roi)
-        return panel if size is None else resize_frame(panel, size)
+        if size is None:
+            return panel
+        if isinstance(size, str) and size == "common":
+            rois = ObsVideoLayout.fetch("visual_roi")
+            size = max((int(roi[2]), int(roi[3])) for roi in rois)
+        return resize_frame(panel, size)
 
 
 @schema
@@ -1048,7 +1112,7 @@ class FrameVisibility(dj.Computed):
 
     Pixel counts refer to a 316×237 panel for both video sources. Surface novelty
     is a fraction of the predicted 2-D silhouette first seen in the trial.
-    Populate explicitly from a machine with access to the recordings.
+    Populated by the input video pipeline on machines with access to the recordings.
     """
 
     definition = """
@@ -1164,3 +1228,110 @@ class FrameVisibility(dj.Computed):
     def fetch_dataframe(self):
         """Return the descriptor rows for a restriction to one dataset."""
         return pd.DataFrame(self.fetch1("descriptors"))
+
+    def trial_progress(self):
+        """Return visibility on the InterpolatedTrials samples of each trial.
+
+        Sample times come from ``interpolated_trajectories.TrialSampleTimes``,
+        so ``trial_step`` is the same moment as in InterpolatedTrials. Each
+        sample time is mapped to the video clock (``step_video_time``) and
+        takes the last described frame captured at or before it: the screen as
+        recorded, so the display lag is already in the frames.
+
+        Returns:
+            One row per dataset, trial and ``trial_step``
+            (``trial_length * n_points``) with the sample's ``step_time``, the
+            ``t_px``, ``d_px`` and ``total_visible_px`` of the frame on screen
+            (NaN without a frame), ``t_new_surf`` and ``d_new_surf`` (silhouette
+            fraction newly revealed since the trial's previous sample, 0 at its
+            first), and ``scene_shown``: False while the screen still shows the
+            previous scene (display lag and the trial's own scene onset,
+            ``StepVideoFrame.scene_onset_frames``; the display lag alone for
+            trials without a detected onset). Sessions without TrialSampleTimes
+            are skipped; an empty frame with these columns when none is left.
+        """
+        from vr4mice.analysis.frame_visibility import (
+            surface_revealed_between,
+            trial_scene_shown,
+            visibility_at_times,
+        )
+        from vr4mice.schema.interpolated_trajectories import TrialSampleTimes
+
+        keys = self.fetch("KEY")
+        with_samples = (self & TrialSampleTimes).fetch("KEY")
+        if len(with_samples) < len(keys):
+            logger.warning(
+                "%d of %d sessions have no TrialSampleTimes yet: populate it",
+                len(keys) - len(with_samples),
+                len(keys),
+            )
+        parts = []
+        for key in with_samples:
+            trial, trial_step, sample_time = (TrialSampleTimes & key).fetch1(
+                "trial", "trial_step", "step_time"
+            )
+            descriptors = (self & key).fetch1("descriptors")
+            step_time, step_video_time, source, starts, onset_frames = (
+                StepVideoFrame & key
+            ).fetch1(
+                "step_time",
+                "step_video_time",
+                "video_source",
+                "trial_start_steps",
+                "scene_onset_frames",
+            )
+            iti = np.asarray(
+                (vr4mice.MouseState & key).fetch1("iti"), dtype=float
+            ).ravel()
+            frame_times = StepVideoFrame._frame_times(key, source)
+            video_time = StepVideoFrame.to_video_clock(
+                step_time, step_video_time, sample_time
+            )
+            values = visibility_at_times(
+                descriptors,
+                frame_times,
+                video_time,
+                columns=("t_px", "d_px", "total_visible_px", "frame_id", "step_index"),
+            )
+            values.update(
+                surface_revealed_between(descriptors, frame_times, video_time, trial)
+            )
+            shown_frames = values.pop("frame_id")
+            shown_steps = values.pop("step_index")
+            values["scene_shown"] = trial_scene_shown(
+                sample_time,
+                shown_frames,
+                shown_steps,
+                step_time,
+                iti,
+                starts,
+                onset_frames,
+            )
+            parts.append(
+                pd.DataFrame(
+                    {
+                        "dataset": key["dataset"],
+                        "trial": np.asarray(trial, dtype=np.int64),
+                        "trial_step": np.asarray(trial_step, dtype=np.int64),
+                        "step_time": np.asarray(sample_time, dtype=float),
+                        **values,
+                    }
+                )
+            )
+        columns = [
+            "dataset",
+            "trial",
+            "trial_step",
+            "step_time",
+            "t_px",
+            "d_px",
+            "total_visible_px",
+            "t_new_surf",
+            "d_new_surf",
+            "scene_shown",
+        ]
+        return (
+            pd.concat(parts, ignore_index=True)
+            if parts
+            else pd.DataFrame(columns=columns)
+        )

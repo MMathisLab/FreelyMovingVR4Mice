@@ -65,7 +65,7 @@ jobs:
             done
             echo 'xestia_video_fixture=true' >> "$GITHUB_OUTPUT"
           else
-            echo 'Xestia camera-2 fixture is absent; skipping camera ingestion and alignment assertions.'
+            echo 'Xestia camera-2 fixture is absent; skipping camera ingestion, alignment, and visibility assertions.'
             echo 'xestia_video_fixture=false' >> "$GITHUB_OUTPUT"
           fi
 
@@ -340,10 +340,10 @@ jobs:
           inclusion_status_batch1_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) WHERE m.batch_name = "batch1";')"
           inclusion_status_batch2_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__inclusion_status s JOIN decision._experiment_member m USING (dataset) WHERE m.batch_name = "batch2";')"
           label_set_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.`#label_set`;')"
-          prediction_model_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__prediction_model;')"
-          decision_points_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__decision_points;')"
           prediction_model10_windows_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__prediction_model10_windows;')"
           decision_points10_windows_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__decision_points10_windows;')"
+          best_label_set10_windows_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__best_label_set10_windows;')"
+          best_decision_threshold10_windows_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM decision.__best_decision_threshold10_windows;')"
 
           echo "decision._experiment_member rows: ${experiment_member_count}"
           echo "decision._experiment_member batch1 rows: ${experiment_member_batch1_count}"
@@ -352,10 +352,10 @@ jobs:
           echo "decision.__inclusion_status batch1 rows: ${inclusion_status_batch1_count}"
           echo "decision.__inclusion_status batch2 rows: ${inclusion_status_batch2_count}"
           echo "decision.#label_set rows: ${label_set_count}"
-          echo "decision.__prediction_model rows: ${prediction_model_count}"
-          echo "decision.__decision_points rows: ${decision_points_count}"
           echo "decision.__prediction_model10_windows rows: ${prediction_model10_windows_count}"
           echo "decision.__decision_points10_windows rows: ${decision_points10_windows_count}"
+          echo "decision.__best_label_set10_windows rows: ${best_label_set10_windows_count}"
+          echo "decision.__best_decision_threshold10_windows rows: ${best_decision_threshold10_windows_count}"
 
           test "${experiment_member_count}" -ge 1
           test "${experiment_member_batch1_count}" -ge 1
@@ -363,7 +363,7 @@ jobs:
           test "${inclusion_status_batch1_count}" -ge 1
           test "${label_set_count}" -ge 1
           # batch2 counts are logged for visibility and depend on available batch2 input datasets.
-          # PredictionModel/DecisionPoints and PredictionModel10Windows/DecisionPoints10Windows need multi-session data to train so no test; logged for visibility only
+          # The 10-window tables need multiple included sessions per cohort to produce rows.
 
       - name: Verify information map tables
         run: |
@@ -383,10 +383,12 @@ jobs:
           test "${obs_video_layout_count}" -eq 2
           test "${video_file_issue_count}" -eq 1
 
-      - name: Verify Xestia camera ingestion and frame alignment
+      - name: Verify Xestia camera ingestion, frame alignment, and frame visibility
         if: needs.run-pipeline-and-dump.outputs.xestia_video_fixture == 'true'
         run: |
           input_video_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM inputs_videos._input_video WHERE dataset = "Xestia_2026-07-30_1" AND n_frames > 0;')"
           step_video_frame_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM inputs_videos.__step_video_frame WHERE dataset = "Xestia_2026-07-30_1" AND video_source = "camera" AND align_method = "timestamps" AND n_steps > 0;')"
+          frame_visibility_count="$(docker exec vr4mice-mysql-restore mysql -N -uroot -psimple -e 'SELECT COUNT(*) FROM inputs_videos.__frame_visibility WHERE dataset = "Xestia_2026-07-30_1" AND OCTET_LENGTH(descriptors) > 0;')"
           test "${input_video_count}" -eq 1
           test "${step_video_frame_count}" -eq 1
+          test "${frame_visibility_count}" -eq 1

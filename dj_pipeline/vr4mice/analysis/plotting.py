@@ -2544,3 +2544,64 @@ def plot_mean_xy_trajectory(
     plt.axis("off")
 
     return fig, ax
+
+
+def plot_aligned_summary(ax, summary, palette, *, ref_aperture=None, labels=None):
+    """Draw ``frame_visibility.summarize_aligned`` curves on one axis.
+
+    One line per aperture below the reference (mean across sessions), the
+    reference aperture dashed in its own palette colour (grey without one), and,
+    when at least two apertures are below it, their pool thick black with a grey
+    band (SEM across sessions) behind the individual lines. A single aperture is
+    not pooled: the pool would hide it.
+
+    Args:
+        ax: Matplotlib axis.
+        summary: DataFrame from ``summarize_aligned``.
+        palette: {aperture: color}, including the reference aperture if it has one.
+        ref_aperture: Reference aperture, labelled "(ref)"; None for no reference.
+        labels: Optional {aperture: legend label}; default the aperture value.
+    """
+    labels = labels or {}
+    for aperture, curve in summary[summary["kind"] == "aperture"].groupby("aperture"):
+        ax.plot(
+            curve["time"],
+            curve["mean"],
+            color=palette[aperture],
+            linewidth=1.5,
+            label=labels.get(aperture, f"{aperture:g}"),
+            zorder=3,
+        )
+    ref = summary[summary["kind"] == "ref"]
+    if len(ref):
+        ax.plot(
+            ref["time"],
+            ref["mean"],
+            color=palette.get(ref_aperture, "grey"),
+            linestyle="--",
+            linewidth=1.5,
+            label=labels.get(ref_aperture, f"{ref_aperture:g} (ref)"),
+            zorder=3,
+        )
+    pooled = summary[summary["kind"] == "pooled"]
+    if (
+        len(pooled)
+        and summary.loc[summary["kind"] == "aperture", "aperture"].nunique() > 1
+    ):
+        ax.fill_between(
+            pooled["time"],
+            pooled["mean"] - pooled["sem"],
+            pooled["mean"] + pooled["sem"],
+            color="grey",
+            alpha=0.3,
+            linewidth=0,
+        )
+        ax.plot(
+            pooled["time"],
+            pooled["mean"],
+            color="black",
+            linewidth=3,
+            label=f"< {ref_aperture:g} pooled",
+            zorder=2,
+        )
+    ax.axhline(0, color="black", linewidth=0.6, zorder=0)

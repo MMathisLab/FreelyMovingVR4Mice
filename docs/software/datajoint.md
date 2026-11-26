@@ -344,8 +344,8 @@ Stores logistic regression hyperparameter combinations.
 ```python
 class PredictionModel(dj.Computed)
 ```
-**Depends on:** `LabelSet`, `ModelParams`, `ExperimentSet`, `ExperimentStage`  
-Trains logistic regression model per mouse using LOGO cross-validation.
+**Deprecated.** Historical single-window models remain queryable. Use
+`PredictionModel10Windows` for new analyses.
 
 ```python
 class PredictionModel10Windows(dj.Computed)
@@ -361,14 +361,42 @@ Lookup table for different uncertainty thresholds to define decision points.
 ```python
 class DecisionPoints(dj.Computed)
 ```
-**Depends on:** `PredictionModel.SessionPrediction`, `DecisionThreshold`  
-Decision point and corresponding per-trial data.
+**Deprecated.** Historical single-window decision points remain queryable. Use
+`DecisionPoints10Windows` for candidate thresholds and
+`BestDecisionThreshold10Windows().session_decisions` for the selected per-trial points.
 
 ```python
 class DecisionPoints10Windows(dj.Computed)
 ```
 **Depends on:** `PredictionModel10Windows.SessionPrediction`, `DecisionThreshold`  
-Decision points computed from 10-window model predictions.
+Computes candidate decision points for every configured threshold using
+`BestLabelSet10Windows().session_predictions`. This relation selects the
+winning model's existing prediction rows for included sessions.
+
+```python
+class BestLabelSet10Windows(dj.Computed)
+class BestDecisionThreshold10Windows(dj.Computed)
+```
+Each experiment set, stage, and batch has one selected label set, model parameter
+ID, and threshold. Each selection table stores the winning key and score.
+Label-set selection averages normalized accuracy, inverted BIC, and inverted
+final-window BIC coefficient of variation. The coefficient of variation is
+computed within each session and trial. Threshold selection uses the mean
+normalized turning score across sessions with stored `DecisionPoints10Windows`
+rows for every configured threshold. Read the original prediction and decision
+rows through the selection relations.
+
+```python
+predictions = (BestLabelSet10Windows() & cohort).session_predictions
+decision_points = (BestDecisionThreshold10Windows() & cohort).session_decisions
+```
+
+Both the cron scenario and `run.py decision` populate the selection tables.
+Explicit population of a legacy table emits a deprecation warning and remains
+available for reproducing historical analyses.
+Selections reflect the available candidates at population time. If the model or
+threshold pool changes, the selection needs to be recomputed explicitly.
+Previously stored candidate points remain available for historical comparisons.
 
 ### `inputs_videos.py`
 
@@ -458,6 +486,34 @@ sync signal (OBS), or with under 90% of steps inside the video are recorded in
 `align_step_to_frames(key, timepoints, displayed=True)` (game seconds) and `get_frame(key, frame_index)`
 (cropped mouse-view panel, resized to `FRAME_OUTPUT_SIZE` = 948x535 for every setup;
 `size=None` for the native crop) work the same for both setups.
+
+```python
+class FrameVisibility(dj.Computed)
+```
+**Depends on:** `StepVideoFrame`. Uses `decision.SessionLabel` to select contrast
+tasks and determine which color is the target.
+
+One descriptor row per game step with a displayed frame, using the same 316×237
+panel size for OBS and camera-2. Only frames mapped to active steps are segmented.
+The extractor samples up to 30 ITI frames for background calibration. Mapped ITI
+steps have zero pixel counts and visibility state `neither`. `t_px` and `d_px`
+count target and distractor pixels, `total_visible_px` sums them, and
+`visibility_state` reports whether each object is visible. `t_new_surf` and
+`d_new_surf` measure the fraction of the
+estimated 2-D silhouette newly visible within the trial on a 16×16 grid. Surface
+models are fitted separately for left- and right-target trials. Surface values
+are missing during ITI, when the fit is unavailable, or when the predicted
+silhouette misses a visible mask. Shared frames contribute novelty once per trial.
+
+`python run.py inputs_videos` and local cron populate pending eligible sessions
+after frame alignment, using the same recording files.
+For a single session with parallel frame segmentation, use
+`FrameVisibility().populate(key, make_kwargs={"frame_workers": 4})`.
+Use one frame worker when running multiple dataset workers through `populate`.
+Session failures during descriptor computation are recorded under `FrameVisibility`
+in `FailedSession` and skipped on later runs. Unsupported tasks are filtered out.
+Use `(FrameVisibility() & key).fetch_dataframe()` to retrieve the result. The
+table also stores the segmentation calibration and silhouette fit for the session.
 
 ### `barcodes.py`
 

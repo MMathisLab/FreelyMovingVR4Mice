@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 
 import frame_visibility as visibility
@@ -55,20 +56,24 @@ def _describe(
 
 
 def test_mapped_steps_and_contrast_polarity():
+    # Two ITI frames (0, 1) before the trial calibrate the segmentation
     panels = {
+        0: _panel(),
+        1: _panel(),
         2: _panel(),
         4: _panel(white=True),
         7: _panel(black=True),
         9: _panel(white=True, black=True),
     }
-    frames = [-1, 2, 4, 4, 7, 9, -1]
-    regular, _, fits = _describe(panels, frames)
-    inverted, _, _ = _describe(panels, frames, white_target=False)
+    frames = [0, 1, -1, 2, 4, 4, 7, 9, -1]
+    iti = [True, True] + [False] * 7
+    regular, _, fits = _describe(panels, frames, iti=iti)
+    inverted, _, _ = _describe(panels, frames, iti=iti, white_target=False)
 
-    np.testing.assert_array_equal(regular["step_index"], [1, 2, 3, 4, 5])
-    np.testing.assert_array_equal(regular["frame_id"], [2, 4, 4, 7, 9])
-    np.testing.assert_array_equal(regular["t_px"], [0, 324, 324, 0, 324])
-    np.testing.assert_array_equal(regular["d_px"], [0, 0, 0, 288, 288])
+    np.testing.assert_array_equal(regular["step_index"], [0, 1, 3, 4, 5, 6, 7])
+    np.testing.assert_array_equal(regular["frame_id"], [0, 1, 2, 4, 4, 7, 9])
+    np.testing.assert_array_equal(regular["t_px"], [0, 0, 0, 324, 324, 0, 324])
+    np.testing.assert_array_equal(regular["d_px"], [0, 0, 0, 0, 0, 288, 288])
     np.testing.assert_array_equal(inverted["t_px"], regular["d_px"])
     np.testing.assert_array_equal(inverted["d_px"], regular["t_px"])
     np.testing.assert_array_equal(
@@ -76,28 +81,33 @@ def test_mapped_steps_and_contrast_polarity():
     )
     np.testing.assert_array_equal(
         regular["visibility_state"],
-        ["neither", "target_only", "target_only", "distractor_only", "both"],
+        ["neither"] * 3 + ["target_only", "target_only", "distractor_only", "both"],
     )
     np.testing.assert_array_equal(
         inverted["visibility_state"],
-        ["neither", "distractor_only", "distractor_only", "target_only", "both"],
+        ["neither"] * 3 + ["distractor_only", "distractor_only", "target_only", "both"],
     )
     assert fits["t_new_surf"]["target_right"]["status"] == "insufficient_trials"
     assert np.isnan(regular["t_new_surf"]).all()
 
 
 def test_target_only_zeroes_iti_even_if_it_shares_an_active_frame():
-    panels = {0: _panel(white=True, black=True)}
+    # ITI frames 0 and 1 calibrate; the last ITI step shares frame 2
+    panels = {0: _panel(), 1: _panel(), 2: _panel(white=True, black=True)}
     result, _, fits = _describe(
-        panels, [0, 0], white_target=False, distractor=False, iti=[True, False]
+        panels,
+        [0, 1, 2, 2],
+        white_target=False,
+        distractor=False,
+        iti=[True, True, True, False],
     )
 
-    np.testing.assert_array_equal(result["t_px"], [0, 288])
-    np.testing.assert_array_equal(result["d_px"], [0, 0])
+    np.testing.assert_array_equal(result["t_px"], [0, 0, 0, 288])
+    np.testing.assert_array_equal(result["d_px"], [0, 0, 0, 0])
     np.testing.assert_array_equal(
-        result["visibility_state"], ["neither", "target_only"]
+        result["visibility_state"], ["neither"] * 3 + ["target_only"]
     )
-    np.testing.assert_array_equal(result["d_new_surf"], [np.nan, 0])
+    np.testing.assert_array_equal(result["d_new_surf"], [np.nan] * 3 + [0])
     assert fits["d_new_surf"]["status"] == "absent"
 
 
@@ -128,10 +138,15 @@ def test_all_iti_steps_never_open_the_video():
 
 
 def test_parallel_frame_workers_match_serial_results():
-    panels = {i: _panel(white=i % 2 == 0, black=i % 3 == 0) for i in range(10)}
-    frames = [-1, *range(10), 9]
-    serial, _, _ = _describe(panels, frames)
-    parallel, _, _ = _describe(panels, frames, frame_workers=2)
+    # ITI frames 0 and 1 (no objects) calibrate
+    panels = {
+        i: _panel(white=i > 1 and i % 2 == 0, black=i > 1 and i % 3 == 0)
+        for i in range(12)
+    }
+    frames = [0, 1, -1, *range(2, 12), 11]
+    iti = [True, True] + [False] * 12
+    serial, _, _ = _describe(panels, frames, iti=iti)
+    parallel, _, _ = _describe(panels, frames, iti=iti, frame_workers=2)
     for name, values in serial.items():
         np.testing.assert_array_equal(parallel[name], values)
 
@@ -152,19 +167,20 @@ def test_novelty_resets_and_is_counted_once_per_frame(monkeypatch):
         }
 
     monkeypatch.setattr(visibility, "_fit_silhouette", fit)
-    panels = {i: _panel(white=True, black=True) for i in range(3)}
-    options = dict(
-        episodes=[0, 0, 0, 0, 1, 1], iti=[True, False, False, False, False, False]
-    )
-    frames = [0, 0, 0, 1, 1, 2]
+    # ITI frames 0 and 1 calibrate; the last ITI step shares frame 2
+    panels = {0: _panel(), 1: _panel()}
+    panels.update({i: _panel(white=True, black=True) for i in range(2, 5)})
+    options = dict(episodes=[0, 0, 0, 0, 0, 0, 1, 1], iti=[True] * 3 + [False] * 5)
+    frames = [0, 1, 2, 2, 2, 3, 3, 4]
     regular, _, _ = _describe(panels, frames, **options)
     inverted, _, _ = _describe(panels, frames, white_target=False, **options)
 
-    np.testing.assert_array_equal(regular["t_new_surf"], [np.nan, 1, 0, 0, 1, 0])
-    distractor_reveal = regular["d_new_surf"][1]
+    np.testing.assert_array_equal(regular["t_new_surf"], [np.nan] * 3 + [1, 0, 0, 1, 0])
+    distractor_reveal = regular["d_new_surf"][3]
     assert 0 < distractor_reveal < 1
     np.testing.assert_array_equal(
-        regular["d_new_surf"], [np.nan, distractor_reveal, 0, 0, distractor_reveal, 0]
+        regular["d_new_surf"],
+        [np.nan] * 3 + [distractor_reveal, 0, 0, distractor_reveal, 0],
     )
     np.testing.assert_array_equal(inverted["t_new_surf"], regular["d_new_surf"])
     np.testing.assert_array_equal(inverted["d_new_surf"], regular["t_new_surf"])
@@ -226,6 +242,12 @@ def test_visible_mask_outside_silhouette_is_missing_and_preserves_novelty():
 def test_no_mapped_steps_needs_no_video():
     result, _, _ = _describe({}, [-1, -1])
     assert all(column.size == 0 for column in result.values())
+
+
+def test_session_without_iti_before_its_trials_fails():
+    # Active frames but no ITI to calibrate the segmentation on
+    with pytest.raises(ValueError, match="cannot calibrate"):
+        _describe({0: _panel(white=True), 1: _panel()}, [0, 1])
 
 
 def _arena(*, white=False, black=False):
@@ -326,12 +348,234 @@ def test_truncated_reader_fails_session():
     with pytest.raises(ValueError, match="shorter"):
         visibility.describe_steps(
             lambda _: iter(()),
-            [0],
-            [0],
-            [False],
-            [[0, 0]],
-            [False],
+            [0, 1, 2],
+            [0, 0, 0],
+            [True, True, False],
+            np.zeros((3, 2)),
+            [False] * 3,
             target_is_white=True,
             has_distractor=True,
             has_occluders=True,
         )
+
+
+def _shown_frames(frame_ids):
+    # Steps 0, 1, 2 and 4 shown on frames ``frame_ids`` of a 20 fps video; step
+    # 3 has no displayed frame (outside the video).
+    descriptors = {
+        "step_index": np.array([0, 1, 2, 4]),
+        "frame_id": np.array(frame_ids),
+        "t_px": np.array([1.0, 2.0, 4.0, 8.0]),
+    }
+    return descriptors, np.arange(10) * 0.05
+
+
+def test_visibility_takes_the_last_frame_captured_by_the_query_time():
+    # Frames captured at 0.05, 0.15, 0.25 and 0.45 s (video clock); step 2's
+    # frame is held until step 4's.
+    descriptors, frame_times = _shown_frames([1, 3, 5, 9])
+    values = visibility.visibility_at_times(
+        descriptors,
+        frame_times,
+        [0.0, 0.05, 0.1, 0.16, 0.3, 0.44, 0.46],
+        max_gap=0.25,
+        columns=("t_px",),
+    )
+
+    np.testing.assert_array_equal(
+        values["t_px"], [np.nan, 1.0, 1.0, 2.0, 4.0, 4.0, 8.0]
+    )
+
+
+def test_visibility_is_missing_where_no_frame_is_held():
+    # Frames captured at 0, 0.1, 0.2 and 0.4 s. At 0.35 s step 2's frame is
+    # held 0.15 s, longer than max_gap, and after the last frame queries are
+    # also too far.
+    descriptors, frame_times = _shown_frames([0, 2, 4, 8])
+    values = visibility.visibility_at_times(
+        descriptors,
+        frame_times,
+        [0.25, 0.35, 0.4, 1.0, np.nan],
+        max_gap=0.1,
+        columns=("t_px",),
+    )
+
+    np.testing.assert_array_equal(values["t_px"], [4.0, np.nan, 8.0, np.nan, np.nan])
+
+
+def test_a_frame_is_not_shown_before_it_is_captured():
+    # 30 fps: the scene's frame 11 is captured at 0.367 s, so at 0.35 s the
+    # screen still shows frame 10. Steps 2 and 3 share frame 11, which shows
+    # the later one.
+    descriptors = {
+        "step_index": np.array([1, 2, 3]),
+        "frame_id": np.array([10, 11, 11]),
+        "t_px": np.array([0.0, 5.0, 6.0]),
+    }
+    values = visibility.visibility_at_times(
+        descriptors,
+        np.arange(20) / 30,
+        [0.35, 0.37],
+        columns=("frame_id", "step_index", "t_px"),
+    )
+
+    np.testing.assert_array_equal(values["frame_id"], [10, 11])
+    np.testing.assert_array_equal(values["step_index"], [1, 3])
+    np.testing.assert_array_equal(values["t_px"], [0.0, 6.0])
+
+
+def _scene():
+    # Steps every 0.1 s: ITI at steps 0-1 and 5, trials start at steps 2 and 6.
+    step_times = np.arange(9) * 0.1
+    iti = np.array([1, 1, 0, 0, 0, 1, 0, 0, 0])
+    return step_times, iti, np.array([2, 6])
+
+
+def test_scene_is_shown_from_the_trial_onset_frame():
+    step_times, iti, starts = _scene()
+    # Queries in trial 1 (from 0.2 s) and trial 2 (from 0.6 s). Trial 1's scene
+    # reaches the video at frame 31, one frame after its first step's frame
+    # (30); trial 2's onset is unknown, so its first step's frame counts.
+    query = [0.25, 0.35, 0.45, 0.65, 0.75]
+    frames = [30, 31, 32, 60, 61]
+    steps = [1, 2, 3, 5, 6]  # first query of each trial still shows the ITI
+    shown = visibility.trial_scene_shown(
+        query, frames, steps, step_times, iti, starts, [31, -1]
+    )
+    np.testing.assert_array_equal(shown, [False, True, True, False, True])
+
+    # The first active step's frame is before the onset: previous scene
+    shown = visibility.trial_scene_shown(
+        [0.35, 0.45], [30, 31], [2, 3], step_times, iti, starts, [31, -1]
+    )
+    np.testing.assert_array_equal(shown, [False, True])
+
+
+def test_scene_is_not_shown_without_a_frame_or_before_any_trial():
+    step_times, iti, starts = _scene()
+    shown = visibility.trial_scene_shown(
+        [0.05, 0.35, np.nan],
+        [10, np.nan, 40],
+        [0, np.nan, 3],
+        step_times,
+        iti,
+        starts,
+        [-1, -1],
+    )
+    np.testing.assert_array_equal(shown, [False, False, False])
+    assert not visibility.trial_scene_shown(
+        [0.35], [30], [3], step_times, iti, [], []
+    ).any()
+
+
+def test_revealed_surface_is_summed_between_consecutive_samples_of_a_trial():
+    # Frames captured every 0.1 s; novelty is NaN in the ITI and counted once
+    # per frame. Trial 1: samples at 0.15, 0.25, 0.35; trial 2: 0.45, 0.55.
+    descriptors = {
+        "step_index": np.arange(6),
+        "frame_id": np.arange(6),
+        "t_new_surf": np.array([np.nan, 0.5, 0.25, np.nan, 0.4, 0.3]),
+        "d_new_surf": np.full(6, np.nan),
+    }
+    revealed = visibility.surface_revealed_between(
+        descriptors,
+        np.arange(6) * 0.1,
+        [0.15, 0.25, 0.35, 0.45, 0.55],
+        [1, 1, 1, 2, 2],
+    )
+    # The 0.5 and 0.4 revealed before a trial's first sample are not its own
+    np.testing.assert_allclose(revealed["t_new_surf"], [0, 0.25, 0, 0, 0.3])
+    assert np.isnan(revealed["d_new_surf"]).all()  # no silhouette fit
+
+
+def test_decision_time_interpolates_the_trial_progression():
+    samples = pd.DataFrame(
+        {
+            "dataset": "d",
+            "trial": 1,
+            "trial_length": [0.0, 0.5, 1.0],
+            "step_time": [10.0, 12.0, 14.0],
+        }
+    )
+    decisions = pd.DataFrame(
+        {"dataset": ["d", "d"], "trial": [1, 2], "trial_length": [0.25, 0.5]}
+    )
+    times = visibility.decision_times(samples, decisions)
+    assert times.to_dict() == {("d", 1): 11.0}  # trial 2 has no samples
+
+
+def _level_samples(values):
+    return pd.DataFrame(
+        {
+            "dataset": "d",
+            "trial": 1,
+            "aperture": 4.3,
+            "step_time": 10 + np.arange(len(values)) * 0.5,
+            "value": values,
+        }
+    )
+
+
+def test_levels_are_aligned_on_trial_start_or_on_the_decision():
+    samples = _level_samples([1.0, 2.0, 3.0, 4.0, 5.0])  # at 10, 10.5, ..., 12
+    start = visibility.aligned_trial_values(samples, [0, 0.75, 2, 3], value_col="value")
+    np.testing.assert_allclose(start["value"], [1, 2.5, 5, np.nan])
+
+    decision = pd.Series({("d", 1): 11.0})
+    around = visibility.aligned_trial_values(
+        samples, [-0.75, 0], value_col="value", event_times=decision
+    )
+    np.testing.assert_allclose(around["value"], [1.5, 3.0])
+    # A trial without a decision is left out
+    other = visibility.aligned_trial_values(
+        samples, [0], value_col="value", event_times=pd.Series({("d", 2): 11.0})
+    )
+    assert other.empty
+
+    gap = _level_samples([1.0, np.nan, 3.0])  # a blanked sample is skipped
+    filled = visibility.aligned_trial_values(gap, [0.5], value_col="value")
+    np.testing.assert_allclose(filled["value"], [2.0])
+
+
+def test_amounts_are_summed_over_the_trailing_window():
+    samples = _level_samples([0.0, 0.1, 0.2, 0.1, 0.0])  # at 0, 0.5, ..., 2 s
+    amounts = visibility.aligned_trial_values(
+        samples, [0.5, 1.0, 2.0, 3.0], value_col="value", window=1.0
+    )
+    # 0.1 so far (window clipped at the start), 0.3 in the first second, 0.1 in
+    # the last one; past the trial's end there is nothing
+    np.testing.assert_allclose(amounts["value"], [0.1, 0.3, 0.1, np.nan])
+
+
+def test_summary_counts_each_session_once_and_pools_below_the_reference():
+    def rows(dataset, trial, aperture, values):
+        return [(dataset, trial, aperture, t, v) for t, v in enumerate(values)]
+
+    data = (
+        rows("s1", 1, 3.0, [1, 2])
+        + rows("s1", 2, 3.0, [3, 4])
+        + rows("s2", 1, 3.0, [4, 5])
+        + rows("s1", 3, 12.0, [10, 10])
+        + rows("s2", 9, 12.0, [20, 20])
+        + rows("s1", 4, 4.3, [100, 100])
+    )
+    values = pd.DataFrame(
+        data, columns=["dataset", "trial", "aperture", "time", "value"]
+    )
+    summary = visibility.summarize_aligned(values, ref_aperture=12.0)
+
+    def row(kind, aperture=np.nan, time=0):
+        match = summary[(summary.kind == kind) & (summary.time == time)]
+        if kind == "aperture":
+            match = match[match.aperture == aperture]
+        (found,) = match.itertuples()
+        return found
+
+    # s1's two trials average to 2, s2's one trial is 4: mean 3, sem 1
+    three = row("aperture", 3.0)
+    assert (three.mean, three.sem, three.n_sessions) == (3.0, 1.0, 2)
+    assert row("ref").mean == 15.0 and row("ref").sem == 5.0
+    # pooled: s1 averages its three trials below 12 ((1 + 3 + 100) / 3), s2 has 4
+    pooled = row("pooled")
+    assert pooled.mean == pytest.approx((104 / 3 + 4) / 2)
+    assert pooled.n_sessions == 2

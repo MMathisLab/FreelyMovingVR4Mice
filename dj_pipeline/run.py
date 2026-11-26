@@ -23,7 +23,7 @@ logger = Logger.get_logger()
     "sync_days": synchronize days in the dataset (process raw .npy files)
     "interp": interpolate trajectories and compute kinematics
     "latency": compute latencies based on photodiode signals
-    "inputs_videos": process input videos and extract frames
+    "inputs_videos": align input video frames and compute visibility descriptors
     "decision": analyze decision-making metrics
     "info_maps": compute information maps per occlusion level
     "np_sync": align VR time to Neuropixels time via barcodes (requires the
@@ -209,6 +209,11 @@ if __name__ == "__main__":
             logger=logger,
         )
         populate_pending(
+            interpolated_trajectories.TrialSampleTimes,
+            interpolated_trajectories.InterpolatedTrials,
+            logger=logger,
+        )
+        populate_pending(
             interpolated_trajectories.MeanXYTrajectory,
             interpolated_trajectories.InterpolatedTrials,
             logger=logger,
@@ -236,6 +241,7 @@ if __name__ == "__main__":
         session_metrics.TrialMetrics().populate(keys)
 
         interpolated_trajectories.InterpolatedTrials().populate(keys)
+        interpolated_trajectories.TrialSampleTimes().populate(keys)
 
         interpolated_trajectories.MeanXYTrajectory().populate()
         interpolated_trajectories.YBinnedXYTrajectory().populate()
@@ -293,6 +299,14 @@ if __name__ == "__main__":
             inputs_videos.StepVideoFrame().key_source,
             logger=logger,
         )
+        from vr4mice.schema.decision import SessionLabel
+
+        SessionLabel.insert(SessionLabel.contents, skip_duplicates=True)
+        populate_pending(
+            inputs_videos.FrameVisibility,
+            inputs_videos.FrameVisibility().key_source,
+            logger=logger,
+        )
 
     elif args.mode == "decision":
         from vr4mice.schema import decision
@@ -302,10 +316,10 @@ if __name__ == "__main__":
         decision.ExperimentMember().populate()
         decision.InclusionStatus().populate()
         decision.LabelSet().fill()
-        decision.PredictionModel().populate()
-        decision.DecisionPoints().populate()
         decision.PredictionModel10Windows().populate()
+        decision.BestLabelSet10Windows().populate()
         decision.DecisionPoints10Windows().populate()
+        decision.BestDecisionThreshold10Windows().populate()
 
     elif args.mode == "info_maps":
         from vr4mice.schema import information_maps

@@ -16,6 +16,7 @@ from multiprocessing import current_process, get_context
 from operator import index
 
 import numpy as np
+import pandas as pd
 from scipy import ndimage as ndi
 
 PANEL_SIZE = (316, 237)
@@ -681,7 +682,12 @@ def _calibrate_session(read_panels, frames, episodes, iti, *, has_occluders):
 
     Returns:
         Tuple of segmentation parameters, sampled ITI/active frame pairs, and
-        RGB panels keyed by frame ID. Uses defaults if no pairs are available.
+        RGB panels keyed by frame ID; parameters are None without active
+        frames (nothing to segment).
+
+    Raises:
+        ValueError: Active frames but no trial with two ITI frames before it to
+            calibrate on (every session has an ITI before each trial).
     """
     calibration = _calibration_frames(frames, episodes, iti)
     calibration_panels = dict(_read_panels(read_panels, np.unique(calibration)))
@@ -692,8 +698,13 @@ def _calibrate_session(read_panels, frames, episodes, iti, *, has_occluders):
             [calibration_panels[f] for f in np.unique(objects)],
             has_occluders=has_occluders,
         )
+    elif (~np.asarray(iti, dtype=bool)).any():
+        raise ValueError(
+            "No trial has two distinct ITI frames before its first active frame: "
+            "cannot calibrate the segmentation (ITI missing or outside the video?)"
+        )
     else:
-        params = DEFAULT_PARAMS.copy()
+        params = None
     return params, calibration, calibration_panels
 
 
@@ -1032,11 +1043,286 @@ def describe_steps(
     calibration_info = {
         "parameters": params,
         "frame_pairs": calibration,
-        "status": "fitted" if calibration.size else "defaults",
+        "status": "fitted" if calibration.size else "no active frames",
         "panel_size": PANEL_SIZE,
         "surface_grid": grid,
     }
     return descriptors, calibration_info, fit_status
+
+
+def visibility_at_times(
+    descriptors,
+    frame_times,
+    query_times,
+    *,
+    max_gap=0.1,
+    columns=("t_px", "d_px", "total_visible_px"),
+):
+    """Visibility of the frame on screen at each query time, on the video clock.
+
+    Each query takes the last described frame captured at or before it, ITI
+    frames included (no visible objects). Frames are the recorded screen, so
+    the display lag is already in them: nothing is added to the queries.
+
+    Args:
+        descriptors: Column arrays from ``describe_steps`` (with ``frame_id``).
+        frame_times: Capture time of each video frame (indexed by
+            ``frame_id``), on the video clock.
+        query_times: Times to evaluate, on the video clock
+            (``StepVideoFrame.to_video_clock``).
+        max_gap: Longest time (s) a frame is held: queries further from the
+            last described frame, e.g. in a stretch of steps outside the video,
+            are NaN.
+        columns: Descriptor columns to return.
+
+    Returns:
+        Column arrays aligned with ``query_times``, NaN without a frame.
+    """
+    query_times = np.asarray(query_times, dtype=float).ravel()
+    frame_id = np.asarray(descriptors["frame_id"], dtype=np.int64)
+    captured = np.asarray(frame_times, dtype=float).ravel()[frame_id]
+    # Steps sharing a frame: the latest one, whose content the frame shows
+    order = np.lexsort((np.asarray(descriptors["step_index"]), captured))
+    captured = captured[order]
+
+    latest = np.searchsorted(captured, query_times, side="right") - 1
+    found = latest >= 0
+    held = np.full(query_times.shape, np.inf)
+    held[found] = query_times[found] - captured[latest[found]]
+    valid = np.isfinite(query_times) & (held <= max_gap)
+    latest = np.where(valid, latest, 0)
+
+    result = {}
+    for column in columns:
+        values = np.asarray(descriptors[column], dtype=float)[order]
+        result[column] = (
+            np.where(valid, values[latest], np.nan)
+            if values.size
+            else np.full(query_times.shape, np.nan)
+        )
+    return result
+
+
+def trial_scene_shown(
+    query_times, shown_frames, shown_steps, step_times, iti, trial_starts, onset_frames
+):
+    """Whether the frame on screen at each query shows its trial's scene.
+
+    Each query belongs to the last trial start at or before it. Its frame
+    (from ``visibility_at_times``) shows the trial when it belongs to an active
+    step of that trial and, if the trial's scene onset was measured, is at or
+    after the onset frame. Before that, the screen still shows the previous
+    scene.
+
+    Args:
+        query_times: Times queried, on the ``step_times`` clock.
+        shown_frames: Frame on screen at each query, NaN without one.
+        shown_steps: Step that frame shows, NaN without one.
+        step_times: Time per game step.
+        iti: ITI flag per game step.
+        trial_starts: Step index of each trial start.
+        onset_frames: First frame showing each trial's scene, -1 when unknown
+            (the display lag alone then decides).
+
+    Returns:
+        Boolean array aligned with ``query_times``.
+    """
+    query_times = np.asarray(query_times, dtype=float).ravel()
+    shown_frames = np.asarray(shown_frames, dtype=float).ravel()
+    shown_steps = np.asarray(shown_steps, dtype=float).ravel()
+    step_times = np.asarray(step_times, dtype=float).ravel()
+    iti = np.asarray(iti, dtype=float).ravel()
+    starts = np.asarray(trial_starts, dtype=np.int64).ravel()
+    onset_frames = np.asarray(onset_frames, dtype=np.int64).ravel()
+
+    result = np.zeros(query_times.shape, dtype=bool)
+    if not starts.size:
+        return result
+    trial = np.searchsorted(step_times[starts], query_times, side="right") - 1
+    valid = (trial >= 0) & np.isfinite(shown_frames) & np.isfinite(shown_steps)
+    trial, frame = trial[valid], shown_frames[valid]
+    step = shown_steps[valid].astype(np.int64)
+    onset = onset_frames[trial]
+    result[valid] = (
+        (step >= starts[trial]) & (iti[step] == 0) & ((onset < 0) | (frame >= onset))
+    )
+    return result
+
+
+def surface_revealed_between(
+    descriptors,
+    frame_times,
+    query_times,
+    trial,
+    *,
+    columns=("t_new_surf", "d_new_surf"),
+):
+    """Surface newly revealed between consecutive query times of each trial.
+
+    The novelty descriptors hold the fraction of the predicted silhouette first
+    seen at each frame (counted once per frame; NaN in the ITI and without a
+    fit). The amount shown by the frames captured after the previous query and
+    up to this one is summed per query. The first query of a trial gets 0:
+    nothing before it belongs to the trial.
+
+    Args:
+        descriptors: Column arrays from ``describe_steps`` (with ``frame_id``).
+        frame_times: Capture time of each video frame, on the video clock.
+        query_times: Query times on the video clock, increasing within a trial.
+        trial: Trial of each query; a trial's queries are consecutive.
+        columns: Novelty descriptor columns to sum.
+
+    Returns:
+        Column arrays aligned with ``query_times``; NaN for a non-finite query
+        time, or for a column that is NaN everywhere (no silhouette fit).
+    """
+    query_times = np.asarray(query_times, dtype=float).ravel()
+    trial = np.asarray(trial).ravel()
+    frame_id = np.asarray(descriptors["frame_id"], dtype=np.int64)
+    captured = np.asarray(frame_times, dtype=float).ravel()[frame_id]
+    order = np.lexsort((np.asarray(descriptors["step_index"]), captured))
+    captured = captured[order]
+    valid = np.isfinite(query_times)
+    seen = np.searchsorted(captured, np.where(valid, query_times, 0.0), "right")
+    first = np.r_[True, trial[1:] != trial[:-1]] if trial.size else trial.astype(bool)
+
+    result = {}
+    for column in columns:
+        novelty = np.asarray(descriptors[column], dtype=float)[order]
+        if not np.isfinite(novelty).any():
+            result[column] = np.full(query_times.shape, np.nan)
+            continue
+        cumulative = np.r_[0.0, np.cumsum(np.nan_to_num(novelty))]
+        total = np.where(valid, cumulative[seen], np.nan)
+        step = np.diff(total, prepend=total[:1])
+        step[first] = 0.0
+        result[column] = step
+    return result
+
+
+def decision_times(samples, decisions):
+    """Time of each trial's decision, on the samples' ``step_time`` clock.
+
+    Args:
+        samples: DataFrame with ``dataset``, ``trial``, ``trial_length`` (trial
+            progression, 0-1) and ``step_time`` of each trial's samples.
+        decisions: DataFrame with ``dataset``, ``trial`` and ``trial_length``,
+            the progression at which the decision was made.
+
+    Returns:
+        Series of decision times indexed by (dataset, trial), for the trials
+        that have samples.
+    """
+    progress = samples.groupby(["dataset", "trial"])[["trial_length", "step_time"]]
+    decided = decisions.groupby(["dataset", "trial"])["trial_length"].first()
+    times = {}
+    for key, group in progress:
+        if key in decided.index and np.isfinite(decided[key]):
+            times[key] = np.interp(
+                float(decided[key]),
+                group["trial_length"].to_numpy(float),
+                group["step_time"].to_numpy(float),
+            )
+    return pd.Series(times, name="decision_time", dtype=float).rename_axis(
+        ["dataset", "trial"]
+    )
+
+
+def aligned_trial_values(samples, grid, *, value_col, event_times=None, window=None):
+    """Each trial's metric on a time grid relative to trial start or an event.
+
+    Args:
+        samples: DataFrame with ``dataset``, ``trial``, ``aperture``,
+            ``step_time`` (increasing within a trial) and ``value_col``.
+        grid: Times (s) relative to the alignment, increasing.
+        value_col: A level (``window`` None): interpolated between samples,
+            NaN samples left out. Or an amount per sample (``window`` given):
+            summed over the trailing ``window`` seconds up to each grid time,
+            clipped at the trial's first sample (a shorter window just after
+            the start).
+        event_times: Series indexed by (dataset, trial) with the event's time on
+            the ``step_time`` clock (``decision_times``). None aligns on each
+            trial's first sample, the trial start. Trials without an event are
+            left out.
+        window: Trailing window (s) for amounts, see ``value_col``.
+
+    Returns:
+        DataFrame with ``dataset``, ``trial``, ``aperture``, ``time`` and
+        ``value`` per trial and grid time; NaN outside the trial's samples.
+    """
+    grid = np.asarray(grid, dtype=float)
+    rows = []
+    for (dataset, trial), group in samples.groupby(["dataset", "trial"], sort=False):
+        t = group["step_time"].to_numpy(float)
+        if event_times is None:
+            origin = t[0]
+        elif (dataset, trial) in event_times.index:
+            origin = float(event_times[(dataset, trial)])
+        else:
+            continue
+        relative = t - origin
+        v = group[value_col].to_numpy(float)
+        values = np.full(grid.shape, np.nan)
+        if window is None:
+            finite = np.isfinite(v)
+            if finite.sum() >= 2:
+                values = np.interp(
+                    grid, relative[finite], v[finite], left=np.nan, right=np.nan
+                )
+        elif np.isfinite(v).any():
+            cumulative = np.cumsum(np.nan_to_num(v))
+            values = np.interp(grid, relative, cumulative) - np.interp(
+                grid - window, relative, cumulative
+            )
+            values[(grid < relative[0]) | (grid > relative[-1])] = np.nan
+        rows.append(
+            pd.DataFrame(
+                {
+                    "dataset": dataset,
+                    "trial": trial,
+                    "aperture": group["aperture"].iloc[0],
+                    "time": grid,
+                    "value": values,
+                }
+            )
+        )
+    columns = ["dataset", "trial", "aperture", "time", "value"]
+    return pd.concat(rows, ignore_index=True) if rows else pd.DataFrame(columns=columns)
+
+
+def summarize_aligned(values, ref_aperture=None):
+    """Mean and SEM across sessions of aligned trial values, per aperture.
+
+    Each session's trial mean counts once, so sessions with more trials do not
+    weigh more. With ``ref_aperture``, the apertures below it are also pooled.
+
+    Args:
+        values: ``aligned_trial_values`` output.
+        ref_aperture: Reference aperture (e.g. 12, the widest), or None.
+
+    Returns:
+        DataFrame with ``kind`` ("aperture", "ref" or "pooled"), ``aperture``
+        (NaN for "pooled"), ``time``, ``mean``, ``sem`` and ``n_sessions``.
+    """
+    per_session = values.groupby(["aperture", "dataset", "time"], as_index=False)[
+        "value"
+    ].mean()
+
+    def across_sessions(frame, keys):
+        grouped = frame.groupby(keys)["value"]
+        return grouped.agg(["mean", "sem", "count"]).reset_index()
+
+    summary = across_sessions(per_session, ["aperture", "time"])
+    summary["kind"] = np.where(summary["aperture"] == ref_aperture, "ref", "aperture")
+    parts = [summary]
+    if ref_aperture is not None:
+        below = values[values["aperture"] < ref_aperture]
+        pooled = below.groupby(["dataset", "time"], as_index=False)["value"].mean()
+        pooled = across_sessions(pooled, ["time"])
+        pooled["aperture"], pooled["kind"] = np.nan, "pooled"
+        parts.append(pooled)
+    out = pd.concat(parts, ignore_index=True).rename(columns={"count": "n_sessions"})
+    return out[["kind", "aperture", "time", "mean", "sem", "n_sessions"]]
 
 
 def _unpack_mask(data):

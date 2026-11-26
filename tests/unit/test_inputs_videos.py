@@ -35,7 +35,9 @@ from inputs_videos import (  # noqa: E402
     list_input_video_files,
     read_sync_trace,
     read_video_frame,
+    scene_onsets,
     step_alignment_qa,
+    trial_start_steps,
 )
 
 FRAME_TIMES = np.array([10.0, 10.1, 10.2, 10.3, 10.4])
@@ -76,18 +78,15 @@ def video_schema(monkeypatch):
 
 
 def test_query_frames_uses_camera_timestamps(video_schema, monkeypatch):
+    # Camera clock: start_time (10 s) + step_time
+    step_time = np.array([-0.05, 0.05, 0.15, 0.3])
     alignment = video_schema.StepVideoFrame
     monkeypatch.setattr(
         alignment,
         "fetch1",
-        MagicMock(
-            return_value=([-0.05, 0.05, 0.15, 0.3], None, "camera", None, None, 0.05)
-        ),
+        MagicMock(return_value=(step_time, 10.0 + step_time, "camera", 0.05)),
         raising=False,
     )
-    state = MagicMock()
-    state.__and__.return_value.fetch1.return_value = [10.0]
-    monkeypatch.setattr(video_schema, "vr4mice", SimpleNamespace(State=state))
     monkeypatch.setattr(
         video_schema.InputVideo,
         "fetch1",
@@ -95,18 +94,20 @@ def test_query_frames_uses_camera_timestamps(video_schema, monkeypatch):
         raising=False,
     )
 
-    queries = [-0.01, 0.06, 0.1, 0.25]
+    queries = [-0.01, 0.06, 0.09, 0.25]
     captured = alignment.align_step_to_frames({}, queries, displayed=False)
     assert captured == [None, 1, 1, None]
     assert alignment.align_step_to_frames({}, [0.06, 0.18]) == [2, None]
 
 
 def test_query_frames_uses_obs_clock_fit(video_schema, monkeypatch):
+    # OBS clock: video time = -0.02 + 1.5 * game time
+    step_time = np.array([0.0, 0.05, 0.15, 0.3])
     alignment = video_schema.StepVideoFrame
     monkeypatch.setattr(
         alignment,
         "fetch1",
-        MagicMock(return_value=([0.0, 0.05, 0.15, 0.3], None, "obs", -0.02, 1.5, 0.07)),
+        MagicMock(return_value=(step_time, -0.02 + 1.5 * step_time, "obs", 0.07)),
         raising=False,
     )
     monkeypatch.setattr(
@@ -134,7 +135,7 @@ def test_query_frames_use_the_stored_corrected_obs_clock(video_schema, monkeypat
     monkeypatch.setattr(
         alignment,
         "fetch1",
-        MagicMock(return_value=(step_time, step_video_time, "obs", 0.0, 1.0, 0.1)),
+        MagicMock(return_value=(step_time, step_video_time, "obs", 0.1)),
         raising=False,
     )
     monkeypatch.setattr(
@@ -503,8 +504,173 @@ def test_find_scene_changes(tmp_path):
         writer.write(frame)
     writer.release()
     panel = (0, 40, 50, 40)
-    assert find_scene_changes(path, panel, [24, 27]) == [30, 30]
-    assert find_scene_changes(path, panel, [60]) == [None]  # no change near 60
+    options = dict(before=5, after=30, min_change=1.0, min_contrast=10.0)
+    assert find_scene_changes(path, panel, [24, 27], **options) == [30, 30]
+    # no change near 60
+    assert find_scene_changes(path, panel, [60], **options) == [None]
+
+
+def test_trial_starts_are_the_first_active_step_after_an_iti():
+    iti = [0, 0, 1, 1, 0, 0, 1, 0, 0, 1]
+    np.testing.assert_array_equal(trial_start_steps(iti), [4, 7])
+    assert trial_start_steps([]).size == 0
+
+
+def test_scene_onsets_time_each_trial_from_its_start_step():
+    frame_times = np.arange(20) / 10  # 10 fps
+    step_video_time = np.arange(10) * 0.2
+    starts = [2, 5, 7, 8, 9]
+    # trial 2: scene at frame 5 (0.1 s after the start step at 0.4 s); trial 5:
+    # no change found; trial 7: change before its start step; trial 8: change
+    # past the last frame; trial 9: start step outside the video.
+    step_video_time[9] = np.nan
+    frames, delays = scene_onsets(
+        starts, [5, None, 13, 20, 19], step_video_time, frame_times
+    )
+    np.testing.assert_array_equal(frames, [5, -1, -1, -1, -1])
+    # switch between frame 4 (0.4 s, old scene) and 5 (0.5 s): 0.45 s
+    np.testing.assert_allclose(delays, [0.05, np.nan, np.nan, np.nan, np.nan])
+
+
+def _params(video_schema, **changes):
+    """StepVideoFrame.alignment_params, with ``changes``."""
+    params = dict(video_schema.StepVideoFrame.alignment_params)
+    assert changes.keys() <= params.keys()
+    return {**params, **changes}
+
+
+def _trial_video(tmp_path, video_schema, monkeypatch, lags, turn_at=None):
+    """30 fps video with one step per frame: 15 ITI frames, then a 15-frame trial.
+
+    Trial ``i``'s scene appears ``lags[i]`` frames after its start step. With
+    ``turn_at``, a larger change (a fast turn) follows ``turn_at`` frames after
+    each start.
+    """
+    n_frames = 30 * len(lags)
+    path = str(tmp_path / "session.avi")
+    writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"MJPG"), 30, (100, 80))
+    starts = 15 + 30 * np.arange(len(lags))
+    for i in range(n_frames):
+        frame = np.full((80, 100, 3), 90, dtype=np.uint8)
+        trial = i // 30
+        if i >= starts[trial] + lags[trial]:
+            frame[50:80, 0:40] = 160
+        if turn_at is not None and i >= starts[trial] + turn_at:
+            frame[40:80, 0:50] = 255
+        writer.write(frame)
+    writer.release()
+    iti = np.ones(n_frames)
+    for start in starts:
+        iti[start : start + 15] = 0
+
+    class MouseState:
+        def __and__(self, _key):
+            return self
+
+        def fetch1(self, _attribute):
+            return iti
+
+    monkeypatch.setattr(
+        video_schema, "vr4mice", SimpleNamespace(MouseState=MouseState())
+    )
+    row = {
+        "video_path": path,
+        "visual_roi": (0, 40, 50, 40),
+        "seek_offset": 0,
+        "step_frame_ids": np.arange(n_frames),
+    }
+    frame_times = np.arange(n_frames) / 30
+    return row, frame_times, starts
+
+
+def test_display_lag_is_the_median_scene_change_delay(
+    video_schema, monkeypatch, tmp_path
+):
+    row, frame_times, _ = _trial_video(
+        tmp_path, video_schema, monkeypatch, lags=[2, 2, 3, 2, 1, 2]
+    )
+    measure = video_schema.StepVideoFrame._measure_display_lag
+    lag, n_trials = measure({}, row, frame_times, frame_times, _params(video_schema))
+    assert n_trials == 6
+    # median scene change 2 frames after the start: switch at 1.5 frames
+    assert lag == pytest.approx(1.5 / 30)
+
+    # Too few trial starts with a scene change: the session fails
+    params = _params(video_schema, min_display_lag_trials=7)
+    with pytest.raises(ValueError, match="at 6 of 6 trial starts only"):
+        measure({"dataset": "d"}, row, frame_times, frame_times, params)
+    # Longer than max_display_lag: misaligned
+    params = _params(video_schema, max_display_lag=0.04)  # lag is 50 ms
+    with pytest.raises(ValueError, match="misaligned"):
+        measure({}, row, frame_times, frame_times, params)
+
+
+def test_scene_onset_window_ends_at_the_lag_plus_margin(
+    video_schema, monkeypatch, tmp_path
+):
+    # A larger change 8 frames (267 ms) after every start, past the window
+    # (lag 67 ms + margin 100 ms), is not taken for the onset.
+    row, frame_times, starts = _trial_video(
+        tmp_path, video_schema, monkeypatch, lags=[2, 3, 1], turn_at=8
+    )
+    row["display_lag"] = 2 / 30
+    onsets = video_schema.StepVideoFrame._measure_scene_onsets(
+        {}, row, frame_times, frame_times, _params(video_schema)
+    )
+    np.testing.assert_array_equal(onsets["trial_start_steps"], starts)
+    np.testing.assert_array_equal(onsets["scene_onset_frames"], starts + [2, 3, 1])
+
+
+def test_scene_onsets_are_measured_at_every_trial_start(
+    video_schema, monkeypatch, tmp_path
+):
+    # 30 fps video; trial scenes appear at frames 11 and 45 and the screen goes
+    # back to the ITI at frame 30.
+    path = str(tmp_path / "trials.avi")
+    writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"MJPG"), 30, (100, 80))
+    for i in range(60):
+        frame = np.full((80, 100, 3), 90, dtype=np.uint8)
+        if 11 <= i < 30 or i >= 45:
+            frame[50:80, 0:40] = 200
+        writer.write(frame)
+    writer.release()
+    frame_times = np.arange(60) / 30
+
+    # Steps every 50 ms; trials start at steps 6 (frame 9) and 28 (frame 42),
+    # and at step 43, after the end of the video.
+    step_video_time = np.arange(45) * 0.05
+    step_video_time[40:] = np.nan
+    step_frame_ids = np.full(45, -1)
+    step_frame_ids[:40] = np.ceil(step_video_time[:40] * 30 - 1e-9)
+    iti = np.zeros(45)
+    iti[:6] = iti[20:28] = iti[41:43] = 1
+
+    class MouseState:
+        def __and__(self, _key):
+            return self
+
+        def fetch1(self, _attribute):
+            return iti
+
+    monkeypatch.setattr(
+        video_schema, "vr4mice", SimpleNamespace(MouseState=MouseState())
+    )
+    row = {
+        "video_path": path,
+        "visual_roi": (0, 40, 50, 40),
+        "seek_offset": 0,
+        "step_frame_ids": step_frame_ids,
+        "display_lag": 0.05,
+    }
+    onsets = video_schema.StepVideoFrame._measure_scene_onsets(
+        {}, row, step_video_time, frame_times, _params(video_schema)
+    )
+
+    np.testing.assert_array_equal(onsets["trial_start_steps"], [6, 28, 43])
+    np.testing.assert_array_equal(onsets["scene_onset_frames"], [11, 45, -1])
+    np.testing.assert_allclose(
+        onsets["scene_onset_delay"], [10.5 / 30 - 0.3, 44.5 / 30 - 1.4, np.nan]
+    )
 
 
 def test_resize_frame_to_common_size():
@@ -1099,7 +1265,9 @@ class TestCameraAlignment:
     ):
         session = _camera_session(tmp_path)
         key, _ = _camera_tables(video_schema, monkeypatch, session)
-        row = video_schema.StepVideoFrame._align_camera(key, _START, session.step_time)
+        row = video_schema.StepVideoFrame._align_camera(
+            key, _START, session.step_time, _params(video_schema)
+        )
 
         assert row["align_method"] == "timestamps"
         assert row["sync_match_fraction"] > 0.95
@@ -1114,14 +1282,18 @@ class TestCameraAlignment:
         session.pd_read = other.pd_read  # another sync pulse train
         key, _ = _camera_tables(video_schema, monkeypatch, session)
         with pytest.raises(ValueError, match="match the photodiode"):
-            video_schema.StepVideoFrame._align_camera(key, _START, session.step_time)
+            video_schema.StepVideoFrame._align_camera(
+                key, _START, session.step_time, _params(video_schema)
+            )
 
     def test_without_photodiode_the_video_is_not_checked(
         self, video_schema, monkeypatch, tmp_path
     ):
         session = _camera_session(tmp_path)
         key, _ = _camera_tables(video_schema, monkeypatch, session, photodiode=False)
-        row = video_schema.StepVideoFrame._align_camera(key, _START, session.step_time)
+        row = video_schema.StepVideoFrame._align_camera(
+            key, _START, session.step_time, _params(video_schema)
+        )
         assert row["sync_match_fraction"] is None
 
     def test_make_stores_frames_shown_after_the_measured_display_lag(
@@ -1129,12 +1301,6 @@ class TestCameraAlignment:
     ):
         session = _camera_session(tmp_path, lag=2)
         key, failures = _camera_tables(video_schema, monkeypatch, session)
-        monkeypatch.setattr(
-            video_schema.StepVideoFrame,
-            "heading",
-            SimpleNamespace(names=["step_video_time"]),
-            raising=False,
-        )
         inserted = []
         table = video_schema.StepVideoFrame()
         table.insert1 = inserted.append
@@ -1152,6 +1318,30 @@ class TestCameraAlignment:
         # Shown 2 frames later; the last 2 steps are shown after the video ends
         np.testing.assert_array_equal(row["frame_ids"], np.r_[np.arange(2, n), -1, -1])
         assert row["n_steps_outside_video"] == 2
+        assert row["alignment_params"] == video_schema.StepVideoFrame.alignment_params
+        # Each trial's scene onset: 2 frames after its start step (every 2 s)
+        starts = np.arange(30, n, 60)
+        np.testing.assert_array_equal(row["trial_start_steps"], starts)
+        np.testing.assert_array_equal(row["scene_onset_frames"], starts + 2)
+        np.testing.assert_allclose(row["scene_onset_delay"], 1.5 / 30, atol=1e-5)
+
+    def test_make_fails_when_the_display_lag_cannot_be_measured(
+        self, video_schema, monkeypatch, tmp_path
+    ):
+        # Fewer clear scene changes than required (15 trial starts here): the
+        # session fails instead of taking a default lag
+        session = _camera_session(tmp_path)
+        key, failures = _camera_tables(video_schema, monkeypatch, session)
+        monkeypatch.setattr(
+            video_schema.StepVideoFrame,
+            "alignment_params",
+            _params(video_schema, min_display_lag_trials=16),
+        )
+        table = video_schema.StepVideoFrame()
+        table.insert1 = lambda row: pytest.fail("session stored with a default lag")
+        table.make(key)
+        ((_, _, message),) = failures.entries
+        assert "Scene change found at 15 of 15 trial starts only" in message
 
     def test_make_records_a_video_from_another_session(
         self, video_schema, monkeypatch, tmp_path
@@ -1304,7 +1494,9 @@ class TestObsAlignment:
                 "signal_type": "pulse_geo",
             },
         )
-        row = video_schema.StepVideoFrame._align_obs(key, _START, steps)
+        row = video_schema.StepVideoFrame._align_obs(
+            key, _START, steps, _params(video_schema)
+        )
 
         assert row["align_method"] == "photodiode"
         assert row["generated_signal_delay"] is None
@@ -1314,7 +1506,7 @@ class TestObsAlignment:
     def test_generated_signal_is_shifted_by_its_display_delay(
         self, video_schema, monkeypatch, regular
     ):
-        # PROC sends each pulse GENERATED_SIGNAL_DISPLAY_DELAY before the screen
+        # PROC sends each pulse generated_signal_display_delay before the screen
         # shows it: one 100 Hz sample on per pulse, unix send times. Without
         # the delay, or the clean-signal options, frames would be off.
         video_df, photodiode_df, steps, truth = _sync_session(
@@ -1323,13 +1515,15 @@ class TestObsAlignment:
         display = np.round(photodiode_df["photodiode_read"].to_numpy()) > 420
         display_t = photodiode_df["time_stamp"].to_numpy()
         onsets = display_t[1:][display[1:] & ~display[:-1]] - 0.06  # square delay
-        delay = video_schema.GENERATED_SIGNAL_DISPLAY_DELAY
+        delay = _params(video_schema)["generated_signal_display_delay"]
         send_t = np.arange(-5.0, 300.0, 0.01)
         signal = np.zeros(send_t.size)
         signal[np.searchsorted(send_t, onsets - delay)] = 1.0
         self._proc(monkeypatch, _START + send_t, signal)  # signal type inferred
         key = self._tables(video_schema, monkeypatch, video_df)
-        row = video_schema.StepVideoFrame._align_obs(key, _START, steps)
+        row = video_schema.StepVideoFrame._align_obs(
+            key, _START, steps, _params(video_schema)
+        )
 
         assert row["align_method"] == "generated_signal"
         assert row["generated_signal_delay"] == delay
@@ -1417,12 +1611,6 @@ class TestFrameVisibilityMake:
     def _make(self, video_schema, monkeypatch, tmp_path, label, set_name, stage):
         session = _camera_session(tmp_path)
         key, failures = _camera_tables(video_schema, monkeypatch, session)
-        monkeypatch.setattr(
-            video_schema.StepVideoFrame,
-            "heading",
-            SimpleNamespace(names=["step_video_time"]),
-            raising=False,
-        )
         aligned = []
         steps = video_schema.StepVideoFrame()
         steps.insert1 = aligned.append
