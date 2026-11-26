@@ -1240,15 +1240,18 @@ class FrameVisibility(dj.Computed):
 
         Returns:
             One row per dataset, trial and ``trial_step``
-            (``trial_length * n_points``) with the sample's ``step_time``, the ``t_px``, ``d_px``
-            and ``total_visible_px`` of the frame on screen (NaN without a
-            frame), and ``scene_shown``: False while the screen still shows the
+            (``trial_length * n_points``) with the sample's ``step_time``, the
+            ``t_px``, ``d_px`` and ``total_visible_px`` of the frame on screen
+            (NaN without a frame), ``t_new_surf`` and ``d_new_surf`` (silhouette
+            fraction newly revealed since the trial's previous sample, 0 at its
+            first), and ``scene_shown``: False while the screen still shows the
             previous scene (display lag and the trial's own scene onset,
             ``StepVideoFrame.scene_onset_frames``; the display lag alone for
             trials without a detected onset). Sessions without TrialSampleTimes
-            are skipped.
+            are skipped; an empty frame with these columns when none is left.
         """
         from vr4mice.analysis.frame_visibility import (
+            surface_revealed_between,
             trial_scene_shown,
             visibility_at_times,
         )
@@ -1280,11 +1283,18 @@ class FrameVisibility(dj.Computed):
             iti = np.asarray(
                 (vr4mice.MouseState & key).fetch1("iti"), dtype=float
             ).ravel()
+            frame_times = StepVideoFrame._frame_times(key, source)
+            video_time = StepVideoFrame.to_video_clock(
+                step_time, step_video_time, sample_time
+            )
             values = visibility_at_times(
                 descriptors,
-                StepVideoFrame._frame_times(key, source),
-                StepVideoFrame.to_video_clock(step_time, step_video_time, sample_time),
+                frame_times,
+                video_time,
                 columns=("t_px", "d_px", "total_visible_px", "frame_id", "step_index"),
+            )
+            values.update(
+                surface_revealed_between(descriptors, frame_times, video_time, trial)
             )
             shown_frames = values.pop("frame_id")
             shown_steps = values.pop("step_index")
@@ -1308,4 +1318,20 @@ class FrameVisibility(dj.Computed):
                     }
                 )
             )
-        return pd.concat(parts, ignore_index=True) if parts else pd.DataFrame()
+        columns = [
+            "dataset",
+            "trial",
+            "trial_step",
+            "step_time",
+            "t_px",
+            "d_px",
+            "total_visible_px",
+            "t_new_surf",
+            "d_new_surf",
+            "scene_shown",
+        ]
+        return (
+            pd.concat(parts, ignore_index=True)
+            if parts
+            else pd.DataFrame(columns=columns)
+        )

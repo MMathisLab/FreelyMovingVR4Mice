@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 
 import frame_visibility as visibility
@@ -465,3 +466,116 @@ def test_scene_is_not_shown_without_a_frame_or_before_any_trial():
     assert not visibility.trial_scene_shown(
         [0.35], [30], [3], step_times, iti, [], []
     ).any()
+
+
+def test_revealed_surface_is_summed_between_consecutive_samples_of_a_trial():
+    # Frames captured every 0.1 s; novelty is NaN in the ITI and counted once
+    # per frame. Trial 1: samples at 0.15, 0.25, 0.35; trial 2: 0.45, 0.55.
+    descriptors = {
+        "step_index": np.arange(6),
+        "frame_id": np.arange(6),
+        "t_new_surf": np.array([np.nan, 0.5, 0.25, np.nan, 0.4, 0.3]),
+        "d_new_surf": np.full(6, np.nan),
+    }
+    revealed = visibility.surface_revealed_between(
+        descriptors,
+        np.arange(6) * 0.1,
+        [0.15, 0.25, 0.35, 0.45, 0.55],
+        [1, 1, 1, 2, 2],
+    )
+    # The 0.5 and 0.4 revealed before a trial's first sample are not its own
+    np.testing.assert_allclose(revealed["t_new_surf"], [0, 0.25, 0, 0, 0.3])
+    assert np.isnan(revealed["d_new_surf"]).all()  # no silhouette fit
+
+
+def test_decision_time_interpolates_the_trial_progression():
+    samples = pd.DataFrame(
+        {
+            "dataset": "d",
+            "trial": 1,
+            "trial_length": [0.0, 0.5, 1.0],
+            "step_time": [10.0, 12.0, 14.0],
+        }
+    )
+    decisions = pd.DataFrame(
+        {"dataset": ["d", "d"], "trial": [1, 2], "trial_length": [0.25, 0.5]}
+    )
+    times = visibility.decision_times(samples, decisions)
+    assert times.to_dict() == {("d", 1): 11.0}  # trial 2 has no samples
+
+
+def _level_samples(values):
+    return pd.DataFrame(
+        {
+            "dataset": "d",
+            "trial": 1,
+            "aperture": 4.3,
+            "step_time": 10 + np.arange(len(values)) * 0.5,
+            "value": values,
+        }
+    )
+
+
+def test_levels_are_aligned_on_trial_start_or_on_the_decision():
+    samples = _level_samples([1.0, 2.0, 3.0, 4.0, 5.0])  # at 10, 10.5, ..., 12
+    start = visibility.aligned_trial_values(samples, [0, 0.75, 2, 3], value_col="value")
+    np.testing.assert_allclose(start["value"], [1, 2.5, 5, np.nan])
+
+    decision = pd.Series({("d", 1): 11.0})
+    around = visibility.aligned_trial_values(
+        samples, [-0.75, 0], value_col="value", event_times=decision
+    )
+    np.testing.assert_allclose(around["value"], [1.5, 3.0])
+    # A trial without a decision is left out
+    other = visibility.aligned_trial_values(
+        samples, [0], value_col="value", event_times=pd.Series({("d", 2): 11.0})
+    )
+    assert other.empty
+
+    gap = _level_samples([1.0, np.nan, 3.0])  # a blanked sample is skipped
+    filled = visibility.aligned_trial_values(gap, [0.5], value_col="value")
+    np.testing.assert_allclose(filled["value"], [2.0])
+
+
+def test_amounts_are_summed_over_the_trailing_window():
+    samples = _level_samples([0.0, 0.1, 0.2, 0.1, 0.0])  # at 0, 0.5, ..., 2 s
+    amounts = visibility.aligned_trial_values(
+        samples, [0.5, 1.0, 2.0, 3.0], value_col="value", window=1.0
+    )
+    # 0.1 so far (window clipped at the start), 0.3 in the first second, 0.1 in
+    # the last one; past the trial's end there is nothing
+    np.testing.assert_allclose(amounts["value"], [0.1, 0.3, 0.1, np.nan])
+
+
+def test_summary_counts_each_session_once_and_pools_below_the_reference():
+    def rows(dataset, trial, aperture, values):
+        return [(dataset, trial, aperture, t, v) for t, v in enumerate(values)]
+
+    data = (
+        rows("s1", 1, 3.0, [1, 2])
+        + rows("s1", 2, 3.0, [3, 4])
+        + rows("s2", 1, 3.0, [4, 5])
+        + rows("s1", 3, 12.0, [10, 10])
+        + rows("s2", 9, 12.0, [20, 20])
+        + rows("s1", 4, 4.3, [100, 100])
+    )
+    values = pd.DataFrame(
+        data, columns=["dataset", "trial", "aperture", "time", "value"]
+    )
+    summary = visibility.summarize_aligned(values, ref_aperture=12.0)
+
+    def row(kind, aperture=np.nan, time=0):
+        match = summary[(summary.kind == kind) & (summary.time == time)]
+        if kind == "aperture":
+            match = match[match.aperture == aperture]
+        (found,) = match.itertuples()
+        return found
+
+    # s1's two trials average to 2, s2's one trial is 4: mean 3, sem 1
+    three = row("aperture", 3.0)
+    assert (three.mean, three.sem, three.n_sessions) == (3.0, 1.0, 2)
+    assert row("ref").mean == 15.0 and row("ref").sem == 5.0
+    # pooled: s1 averages its three trials below 12 ((1 + 3 + 100) / 3), s2 has 4
+    pooled = row("pooled")
+    assert pooled.mean == pytest.approx((104 / 3 + 4) / 2)
+    assert pooled.n_sessions == 2
